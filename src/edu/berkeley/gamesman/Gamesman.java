@@ -43,6 +43,8 @@ public final class Gamesman {
 		OptionProcessor.initializeOptions(args);
 		OptionProcessor.acceptOption("h", "help", false,
 				"Display this help string and exit");
+		OptionProcessor.acceptOption("d", "debug", false,
+				"Turn on debugging output");
 		OptionProcessor.nextGroup();
 		OptionProcessor.acceptOption("x", "with-graphics", false,
 				"Enables use of graphical displays");
@@ -52,11 +54,12 @@ public final class Gamesman {
 		OptionProcessor.acceptOption("S", "solver", true,
 				"Specifies which solver to use", "TierSolver");
 		OptionProcessor.acceptOption("H", "hasher", true,
-				"Specifies which hasher to use", "GenericHasher");
+				"Specifies which hasher to use", "NullHasher");
 		OptionProcessor.acceptOption("D", "database", true,
 				"Specifies which database backend to use", "FileDatabase");
 		OptionProcessor.acceptOption("M", "master", true,
 				"Specifies which master controller to use", "LocalMaster");
+		OptionProcessor.nextGroup();
 		OptionProcessor
 				.acceptOption("C", "command", true, "Command to execute");
 		OptionProcessor.nextGroup();
@@ -161,7 +164,7 @@ public final class Gamesman {
 		OptionProcessor.acceptOption("v", "hash", true, "The hash value to be manipulated");
 		if(testrun) return;
 		Object state = gm.hashToState(new BigInteger(OptionProcessor.checkOption("hash")));
-		System.out.println(((Game<Object,Object>)gm).stateToString(state));
+		System.out.println(gm.stateToString(state));
 	}
 	
 	/**
@@ -181,7 +184,7 @@ public final class Gamesman {
 		String str = OptionProcessor.checkOption("board");
 		if(str == null)
 			Util.fatalError("Please specify a board to hash");
-		System.out.println(gm.stringToState(str));
+		System.out.println(gm.stateToHash(gm.stringToState(str.toUpperCase())));
 	}
 
 }

@@ -6,7 +6,7 @@ import java.util.Collection;
 import edu.berkeley.gamesman.util.Util;
 
 public abstract class HashedGame<Value> extends Game<char[][], Value> {
-
+/*
 	@Override
 	public final char[][] hashToState(BigInteger hash) {
 		return hasher.unhash(hash);
@@ -36,5 +36,5 @@ public abstract class HashedGame<Value> extends Game<char[][], Value> {
 		Util.assertTrue(false);
 		return null;
 	}
-
+*/
 }

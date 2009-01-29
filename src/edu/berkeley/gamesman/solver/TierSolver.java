@@ -29,7 +29,7 @@ public final class TierSolver extends Solver {
 		
 		for(int i = maxTier-1; i >= 0; i--){
 			Util.debug("Beginning to solve tier "+i);
-			BigInteger start = game.hashOffestForTier(i).subtract(BigInteger.ONE);
+			BigInteger start = game.hashOffsetForTier(i).subtract(BigInteger.ONE);
 			BigInteger current = start;
 			BigInteger end = game.lastHashValueForTier(i);
 			while(current.compareTo(end) <= 0){

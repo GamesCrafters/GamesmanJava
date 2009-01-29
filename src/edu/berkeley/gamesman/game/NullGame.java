@@ -66,10 +66,4 @@ public class NullGame extends Game<Object,Object> {
 		return 0;
 	}
 
-	@Override
-	public Enum possiblePositionValues() {
-		fail();
-		return null;
-	}
-
 }

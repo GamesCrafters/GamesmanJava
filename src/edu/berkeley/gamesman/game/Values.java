@@ -1,6 +1,5 @@
 package edu.berkeley.gamesman.game;
 
-import edu.berkeley.gamesman.util.DBEnum;
 
 /**
  * 
@@ -8,7 +7,7 @@ import edu.berkeley.gamesman.util.DBEnum;
  * @author Steven Schlansker
  *
  */
-public enum Values implements DBEnum {
+public enum Values {
 
 	/**
 	 * Value hasn't been computed yet
@@ -39,7 +38,6 @@ public enum Values implements DBEnum {
 	private int val;
 	private Values(int val) { this.val = val; }
 	public int value() { return val; }
-	public int value(Enum<?> e) { return (e instanceof DBEnum ? ((DBEnum)e).value() : -1 ); }
 	
 	public int maxValue() { int max = 0; for(Values v : this.values()) max = Math.max(v.value(),max); return max; }
 	

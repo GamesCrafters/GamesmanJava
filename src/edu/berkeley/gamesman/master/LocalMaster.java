@@ -32,8 +32,6 @@ public final class LocalMaster implements Master,ProgressMeter {
 		database.initialize(null);
 		
 		solver.setDatabase(database);
-		
-		hasher.setGame(game);
 		game.setHasher(hasher);
 		
 		start = System.currentTimeMillis();

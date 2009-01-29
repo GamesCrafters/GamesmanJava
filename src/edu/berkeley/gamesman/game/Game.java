@@ -8,7 +8,6 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import edu.berkeley.gamesman.hasher.Hasher;
-import edu.berkeley.gamesman.util.DBEnum;
 import edu.berkeley.gamesman.util.OptionProcessor;
 
 /**
@@ -85,20 +84,17 @@ public abstract class Game<State,Value> {
 	public abstract BigInteger stateToHash(State pos);
 	
 	public abstract String stateToString(State pos);
-	public abstract BigInteger stringToState(String pos);
+	public abstract State stringToState(String pos);
 	
 	public abstract int getDefaultBoardWidth();
 	public abstract int getDefaultBoardHeight();
 	
-	/**
-	 * Returns all possible primitive Values of a Position
-	 * Note that if you are returning a primitive Enum class, you have to return
-	 * an /instance/ of the Enum, not the class.  Therefore to indicate you want
-	 * all values of enum Values to be valid, return any constant within Values.
-	 * Ex: return edu.berkeley.gamesman.game.Values.INVALID;
-	 * @return an instance of an Enum class with all representable states
-	 * @see Values
-	 */
-	public abstract Enum possiblePositionValues();
+	public int getGameWidth(){
+		return gameWidth;
+	}
+	
+	public int getGameHeight(){
+		return gameHeight;
+	}
 	
 }
