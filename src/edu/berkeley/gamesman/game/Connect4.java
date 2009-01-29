@@ -7,7 +7,7 @@ import java.util.Collection;
 
 import edu.berkeley.gamesman.hasher.AlternatingRearrangerHasher;
 import edu.berkeley.gamesman.hasher.NullHasher;
-import edu.berkeley.gamesman.hasher.MinUniformPieceHasher;
+import edu.berkeley.gamesman.hasher.C4UniformPieceHasher;
 import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.OptionProcessor;
 import edu.berkeley.gamesman.util.Pair;
@@ -19,7 +19,7 @@ import edu.berkeley.gamesman.util.Util;
  */
 public class Connect4 extends TieredGame<char[][],Values> {
 
-	MinUniformPieceHasher uh = new MinUniformPieceHasher();
+	C4UniformPieceHasher uh = new C4UniformPieceHasher();
 	AlternatingRearrangerHasher ah = new AlternatingRearrangerHasher();
 	
 	final char[] pieces = {'X','O'};
@@ -135,7 +135,7 @@ public class Connect4 extends TieredGame<char[][],Values> {
 	
 	@Override
 	public int numberOfTiers() {
-		return Util.intpow(gameWidth,gameHeight+1)+1;
+		return Util.intpow(gameWidth,gameHeight+1);
 	}
 
 	@Override

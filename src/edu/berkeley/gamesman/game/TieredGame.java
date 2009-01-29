@@ -19,7 +19,7 @@ public abstract class TieredGame<State,Value> extends Game<State,Value> {
 	
 	public BigInteger lastHashValueForTier(int tier){
 		if(tierIndex == null){
-			tierIndex = new BigInteger[numberOfTiers()+1];
+			tierIndex = new BigInteger[numberOfTiers()];
 			tierIndex[0] = BigInteger.ZERO;
 			for(int i = 1; i < tierIndex.length; i++){
 				tierIndex[i] = tierIndex[i-1].add(numHashesForTier(i-1)).add(BigInteger.ONE);
@@ -27,6 +27,8 @@ public abstract class TieredGame<State,Value> extends Game<State,Value> {
 			Util.debug("Hash indices are "+Arrays.toString(tierIndex));
 		}
 		
+		if(tier == tierIndex.length-1)
+			return tierIndex[tier].add(numHashesForTier(tier-1));
 		return tierIndex[tier+1].subtract(BigInteger.ONE);
 	}
 	public abstract BigInteger numHashesForTier(int tier);

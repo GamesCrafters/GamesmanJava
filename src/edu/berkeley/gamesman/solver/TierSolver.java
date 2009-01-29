@@ -44,6 +44,7 @@ public final class TierSolver extends Solver {
 			if(calculated.mod(BigInteger.valueOf(10000)).compareTo(BigInteger.ZERO) == 0)		
 				p.progress(calculated, end);
 			Object state = game.hashToState(current);
+			System.out.println(game.stateToString(state));
 			Collection<?> children = game.validMoves(state);
 			if(children == null)
 				continue;
