@@ -52,14 +52,15 @@ public final class LocalMaster implements Master,TaskFactory {
 	
 	public void run() {
 		System.out.println("Launched!");
-		Barrier b = new Barrier();
 		int threads = Integer.parseInt(OptionProcessor.checkOption("threads"));
 		Util.debug("Launching "+threads+" threads...");
 		List<WorkUnit> list = solver.prepareSolve(game).divide(threads);
 		
 		ArrayList<Thread> myThreads = new ArrayList<Thread>();
+		
+		ThreadGroup solverGroup = new ThreadGroup("Solver Group: "+game);
 		for(WorkUnit w : list){
-			Thread t = new Thread(new LocalMasterRunnable(w));
+			Thread t = new Thread(solverGroup,new LocalMasterRunnable(w));
 			t.start();
 			myThreads.add(t);
 		}

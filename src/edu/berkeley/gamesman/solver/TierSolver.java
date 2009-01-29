@@ -57,14 +57,14 @@ public final class TierSolver extends Solver {
 			} else {
 				ArrayList<DBValue> vals = new ArrayList<DBValue>(children
 						.size());
-				ArrayList<BigInteger> hashes = new ArrayList<BigInteger>(children.size()); // TODO: kill this, debugging only :(
+				//ArrayList<BigInteger> hashes = new ArrayList<BigInteger>(children.size()); // TODO: kill this, debugging only :(
 				for (Object child : children) {
 					vals.add(db.getValue(game.stateToHash(child)));
-					hashes.add(game.stateToHash(child));
+					//hashes.add(game.stateToHash(child));
 				}
-				Util.debug("About to inspect "+current+": "+hashes+" "+vals);
+				//Util.debug("About to inspect "+current+": "+hashes+" "+vals);
 				DBValue newVal = vals.get(0).fold(vals);
-				Util.debug("Set "+current+" to value "+newVal+" from "+hashes+"; "+vals);
+				//Util.debug("Set "+current+" to value "+newVal+" from "+hashes+"; "+vals);
 				db.setValue(current, newVal);
 			}
 		}
