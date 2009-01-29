@@ -191,6 +191,10 @@ public final class DirectoryFilerServer {
 						byte val = din.readByte();
 						db.setValue(loc, Values.Win.wrapValue(val));
 						break;
+					case 7:
+						fd = din.readInt();
+						fds.get(fd).flush();
+						break;
 					default:
 						Util.warn("Bad IO from client");
 						sock.close();

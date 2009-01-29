@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.Socket;
+import java.net.URI;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.security.MessageDigest;
@@ -23,14 +24,11 @@ public final class DirectoryFilerClient {
 	protected DataInputStream din;
 	protected Random r = new Random();
 
-	public DirectoryFilerClient(String url) {
-		URL u = null;
+	public DirectoryFilerClient(URI u) {
 		
-		try {
-			u = new URL(url);
-		} catch (MalformedURLException e1) {
-			Util.fatalError("URL \"" + url + "\" is not well formed: " + e1);
-		}
+		if(!u.getScheme().equals("gdfp"))
+			Util.fatalError("URI has wrong scheme: \""+u+"\"");
+		
 		try {
 			sock = new Socket(u.getHost(), u.getPort());
 		} catch (UnknownHostException e) {
@@ -142,7 +140,12 @@ public final class DirectoryFilerClient {
 
 		@Override
 		public void flush() {
-			Util.warn("Not Implemented");
+			try {
+			dout.write(7);
+			dout.writeInt(fd);
+			} catch (IOException e) {
+				Util.fatalError("IO error while communicating with server: " + e);
+			}
 		}
 
 		@Override

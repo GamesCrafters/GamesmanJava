@@ -1,6 +1,8 @@
 package edu.berkeley.gamesman.database;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 import edu.berkeley.gamesman.core.Database;
@@ -16,6 +18,7 @@ public class RemoteDatabase extends Database {
 	@Override
 	public void close() {
 		real.close();
+		dfc.close();
 	}
 
 	@Override
@@ -29,13 +32,17 @@ public class RemoteDatabase extends Database {
 	}
 
 	@Override
-	public void initialize(String url, DBValue exampleValue) {
-		dfc = new DirectoryFilerClient(url);
+	public void initialize(String uri, DBValue exampleValue) {
+		try {
+			dfc = new DirectoryFilerClient(new URI(uri));
+		} catch (URISyntaxException e1) {
+			Util.fatalError("Bad URI \""+uri+"\": "+e1);
+		}
 		ex = exampleValue;
 		try {
-			real = dfc.openDatabase(new URL(url).getFile());
-		} catch (MalformedURLException e) {
-			Util.fatalError("Bad URL \""+url+"\": "+e);
+			real = dfc.openDatabase(new URI(uri).getPath());
+		} catch (URISyntaxException e) {
+			Util.fatalError("Bad URI \""+uri+"\": "+e);
 		}
 	}
 

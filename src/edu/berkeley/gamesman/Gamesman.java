@@ -9,6 +9,9 @@ import java.io.LineNumberInputStream;
 import java.io.LineNumberReader;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
+import java.net.URI;
+import java.net.URISyntaxException;
+
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Hasher;
@@ -249,13 +252,13 @@ public final class Gamesman {
 		quit, halt, ls, open, close, read, write
 	}
 
-	public void executedirectoryConnect() {
+	public void executedirectoryConnect() throws URISyntaxException {
 		OptionProcessor.acceptOption("u", "url", true, "The URL to connect to",
 				"gdf://game@localhost:4263/");
 		if (testrun)
 			return;
-		DirectoryFilerClient dfc = new DirectoryFilerClient(OptionProcessor
-				.checkOption("url"));
+		DirectoryFilerClient dfc = new DirectoryFilerClient(new URI(OptionProcessor
+				.checkOption("url")));
 
 		LineNumberReader input = new LineNumberReader(new InputStreamReader(
 				System.in));

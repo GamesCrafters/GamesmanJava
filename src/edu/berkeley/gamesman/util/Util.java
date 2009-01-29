@@ -153,16 +153,6 @@ public final class Util {
 	}
 	
 	public static File getChild(File dir, final String childname){
-		if(!dir.isDirectory()){
-			Util.warn("Attempted to cd into a non-directory: "+dir);
-			return null;
-		}
-		
-		return dir.listFiles(new FilenameFilter(){
-			public boolean accept(File dir, String name) {
-				if(name.equals(childname)) return true;
-				else return false;
-			}
-		})[0];
+		return new File(dir,childname); //TODO: sanity check childname
 	}
 }
