@@ -3,7 +3,6 @@
  */
 package edu.berkeley.gamesman.util;
 
-import com.sun.tools.javac.util.FatalError;
 
 /**
  * Various utility functions accessible from any class
