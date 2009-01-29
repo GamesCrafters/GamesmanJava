@@ -46,6 +46,8 @@ public final class LocalMaster implements Master,TaskFactory {
 		solver.setDatabase(database);
 		game.setHasher(hasher);
 		
+		Util.debug("Done initializing LocalMaster");
+		
 		
 	}
 	

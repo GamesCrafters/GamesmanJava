@@ -38,6 +38,9 @@ public final class Gamesman {
 	 * @param args Command line arguments
 	 */
 	public static void main(String[] args) {
+		
+		Thread.currentThread().setName("Gamesman");
+		
 		OptionProcessor.initializeOptions(args);
 		OptionProcessor.acceptOption("h", "help", false,
 				"Display this help string and exit");

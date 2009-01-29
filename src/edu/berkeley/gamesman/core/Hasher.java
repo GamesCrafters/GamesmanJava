@@ -9,7 +9,7 @@ import java.math.BigInteger;
  */
 public abstract class Hasher<Board> {
 
-	protected Game<?, ?> game;
+	protected Game<Board, ?> game;
 	protected char[] pieces;
 	
 	/**
@@ -17,7 +17,7 @@ public abstract class Hasher<Board> {
 	 * @param g The game we're playing
 	 * @param p The valid pieces for this hasher
 	 */
-	public void setGame(Game<?, ?> g, char[] p){
+	public void setGame(Game<Board, ?> g, char[] p){
 		game = g;
 		pieces = p;
 	}

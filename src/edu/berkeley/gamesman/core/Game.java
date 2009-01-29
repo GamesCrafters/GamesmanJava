@@ -6,7 +6,9 @@ package edu.berkeley.gamesman.core;
 import java.math.BigInteger;
 import java.util.Collection;
 import edu.berkeley.gamesman.database.DBValue;
+import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.OptionProcessor;
+import edu.berkeley.gamesman.util.Util;
 
 /**
  * Public interface that all Games must implement to be solvable
@@ -18,7 +20,7 @@ import edu.berkeley.gamesman.util.OptionProcessor;
  */
 public abstract class Game<State,Value extends DBValue> {
 
-	protected Hasher hasher;
+	protected Hasher<State> hasher;
 	
 	protected int gameWidth = 0, gameHeight = 0;
 	
@@ -74,7 +76,12 @@ public abstract class Game<State,Value extends DBValue> {
 	 * Inform the Game of the hasher we're using
 	 * @param h The Hasher to use
 	 */
-	public void setHasher(Hasher h){
+	public void setHasher(Hasher<State> h){
+		
+		if(!DependencyResolver.isHasherAllowed(this.getClass(), h.getClass())){
+			Util.fatalError("Hasher class "+h.getClass()+" inappropriate for game "+this.getClass());
+		}
+		
 		hasher = h;
 	}
 	

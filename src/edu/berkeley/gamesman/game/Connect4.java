@@ -5,15 +5,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
+import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.core.Values;
 import edu.berkeley.gamesman.database.DBValue;
-import edu.berkeley.gamesman.hasher.AlternatingRearrangerHasher;
 import edu.berkeley.gamesman.hasher.NullHasher;
-import edu.berkeley.gamesman.hasher.C4UniformPieceHasher;
+import edu.berkeley.gamesman.hasher.PerfectConnect4Hash;
 import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.OptionProcessor;
-import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -27,9 +26,6 @@ import edu.berkeley.gamesman.util.Util;
  * @author Steven Schlansker
  */
 public class Connect4 extends TieredGame<char[][],Values> {
-
-	C4UniformPieceHasher uh = new C4UniformPieceHasher();
-	AlternatingRearrangerHasher ah = new AlternatingRearrangerHasher();
 	
 	final char[] pieces = {'X','O'};
 	
@@ -38,7 +34,7 @@ public class Connect4 extends TieredGame<char[][],Values> {
 	static {
 		OptionProcessor.acceptOption("p", "pieces", true, "The number of pieces in a row to win (default 4)", "4");
 		OptionProcessor.nextGroup();
-		DependencyResolver.allowHasher(Connect4.class, NullHasher.class);
+		DependencyResolver.allowHasher(Connect4.class, PerfectConnect4Hash.class);
 	}
 
 	/**
@@ -47,17 +43,14 @@ public class Connect4 extends TieredGame<char[][],Values> {
 	 */
 	public Connect4(){
 		super();
-
-		char[] arr = new char[getGameHeight()+1];
-		
-		for(char i = 0; i < arr.length; i++){
-			arr[i] = Character.forDigit(i, Character.MAX_RADIX);
-		}
-		
-		uh.setGame(this, arr);
-		ah.setGame(this, pieces);
 		
 		piecesToWin = Integer.parseInt(OptionProcessor.checkOption("pieces"));
+	}
+	
+	public void setHasher(Hasher<char[][]> h){
+		char[] pcs = {'X','O'};
+		super.setHasher(h);
+		h.setGame(this, pcs);
 	}
 
 	@Override
@@ -75,83 +68,6 @@ public class Connect4 extends TieredGame<char[][],Values> {
 	@Override
 	public int getDefaultBoardWidth() {
 		return 7;
-	}
-
-	@Override
-	public Pair<Integer, BigInteger> tierIndexForState(char[][] state) {
-		int index = 0;
-		final int w = getGameWidth(), h = getGameHeight();
-		char[] linear = new char[w*h];
-		char[] colheights = new char[w];
-		
-		//Util.debug("Connect4 has board "+Arrays.deepToString(state));
-		
-		for(int x = 0; x < w; x++){
-			int colheight = 0;
-			for(int y = 0; y < h; y++){
-				if(state[x][y] == 'O' || state[x][y] == 'X'){
-					colheight++;
-					linear[index++] = state[x][y];
-				}
-			}
-			colheights[x] = Character.forDigit(colheight, Character.MAX_RADIX);
-			//Util.debug("Height of col "+x+" is "+colheight);
-			colheight = 0;
-		}
-		
-		int uhh = uh.hash(colheights,colheights.length).intValue();
-		BigInteger arh = ah.hash(linear,index);
-		
-		//Util.debug("Connect4 shows UPH = "+Arrays.toString(colheights)+" ("+uhh+") ARH ("+arh+") = "+Arrays.toString(linear));
-		
-		return new Pair<Integer,BigInteger>(uhh,arh);
-	}
-
-	@Override
-	public BigInteger numHashesForTier(int tier) {
-		char[] colh;
-		colh = uh.unhash(BigInteger.valueOf(tier),gameWidth);
-		
-		int sum = 0;
-		for(char h : colh)
-			sum += Character.digit(h, Character.MAX_RADIX);
-		BigInteger mh = ah.maxHash(sum);
-		//Util.debug("UPH says "+Arrays.toString(colh)+" for tier "+tier+" mh = "+mh);
-		return mh;
-	}
-
-	@Override
-	public char[][] gameStateForTierIndex(int tier, BigInteger index) {
-		char[] colheights = uh.unhash(BigInteger.valueOf(tier),gameWidth);
-		
-		int sum = 0;
-		for(char h : colheights)
-			sum += Character.digit(h, Character.MAX_RADIX);
-		
-		//Util.debug("Tier = "+tier+" Unhash says "+sum+" pieces placed as UPH = "+Arrays.toString(colheights));
-		
-		char[] linpieces = ah.unhash(index,sum);
-		
-		//Util.debug("ARH("+index+") gives us "+Arrays.toString(linpieces));
-		
-		char[][] ret = new char[gameWidth][gameHeight];
-		
-		int lidx = 0;
-		
-		for(int x = 0; x < gameWidth; x++){
-			for(int y = 0; y < gameHeight; y++){
-				if(Character.digit(colheights[x],Character.MAX_RADIX) <= y)
-					ret[x][y] = ' ';
-				else
-					ret[x][y] = linpieces[lidx++];
-			}
-		}
-		return ret;
-	}
-	
-	@Override
-	public int numberOfTiers() {
-		return uh.maxHash(gameWidth).intValue()+1;
 	}
 
 	@Override

@@ -14,11 +14,9 @@ import edu.berkeley.gamesman.util.Util;
 public class AlternatingRearrangerHasher extends Hasher<char[]> {
 
 	@Override
-	public void setGame(Game<?,?> game, char[] p){
+	public void setGame(Game<char[],?> game, char[] p){
 		Util.assertTrue(p.length == 2);
 		super.setGame(game,p);
-		int pcs = game.getGameHeight()*game.getGameWidth();
-		Util.nCr_prefill(pcs, pcs);
 	}
 	
 	@Override

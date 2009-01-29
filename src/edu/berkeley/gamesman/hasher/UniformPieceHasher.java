@@ -27,7 +27,7 @@ public final class UniformPieceHasher extends Hasher<char[]> {
 	BigInteger plen;
 	
 	@Override
-	public void setGame(Game<?,?> game, char[] p){
+	public void setGame(Game<char[],?> game, char[] p){
 		super.setGame(game,p);
 		
 

@@ -22,78 +22,26 @@ import edu.berkeley.gamesman.util.Util;
  */
 public abstract class TieredGame<State,Value extends DBValue> extends Game<State,Value> {
 
-	protected BigInteger tierIndex[];  // For tier i, tierIndex[i] is the /last/ hash value for that tier.
+	TieredHasher<State> th;
 	
-	/**
-	 * Indicate the number of tiers that this game has
-	 * (Note how this is distinct from the /last/ tier)
-	 * @return Number of tiers.  Limited to java primitive int type for now
-	 */
-	public abstract int numberOfTiers();
-	private int cacheNumTiers = -1;
-	
-	/**
-	 * Return the first hashed value in a given tier
-	 * @param tier The tier we're interested in
-	 * @return The first hash value that will be in this tier
-	 * @see #tierIndexForState
-	 */
-	public BigInteger hashOffsetForTier(int tier){
-		if(tier == 0)
-			return BigInteger.ZERO;
-		if(tierIndex == null)
-			lastHashValueForTier(numberOfTiers()-1);
-		return tierIndex[tier-1].add(BigInteger.ONE);
+	@Override
+	public void setHasher(Hasher<State> h){
+		if(!(h instanceof TieredHasher)) Util.fatalError("Tiered game trying to work with non-tiered hasher: "+h.getClass());
+		super.setHasher(h);
+		th = (TieredHasher<State>)h;
 	}
-	
-	/**
-	 * Return the last hash value a tier represents
-	 * @param tier The tier we're interested in
-	 * @return The last hash that will be in the given tier
-	 */
-	public BigInteger lastHashValueForTier(int tier){
-		if(tierIndex == null){
-			tierIndex = new BigInteger[numberOfTiers()];
-			for(int i = 0; i < tierIndex.length; i++){
-				tierIndex[i] = hashOffsetForTier(i).add(numHashesForTier(i));
-			}
-			Util.debug("Created offset table: "+Arrays.toString(tierIndex));
-		}
-		return tierIndex[tier];
-	}
-	/**
-	 * Return the number of hashes in a tier
-	 * @param tier The tier we're interested in
-	 * @return Size of the tier
-	 */
-	public abstract BigInteger numHashesForTier(int tier);
-	/**
-	 * Convert a tier/index pair into a State
-	 * Analogous to unhash for a Tiered game
-	 * @param tier The tier we're in
-	 * @param index The hash offset into that tier (relative to the start - 0 is the first board in the tier)
-	 * @return The represented GameState
-	 */
-	public abstract State gameStateForTierIndex(int tier, BigInteger index);
-	/**
-	 * Convert a State into a tier/index pair
-	 * Analogous to hash for a Tiered game
-	 * @param state The game state we have
-	 * @return a Pair with tier/offset enclosed
-	 */
-	public abstract Pair<Integer,BigInteger> tierIndexForState(State state);
 	
 	@Override
 	public State hashToState(BigInteger hash) {
-		if(cacheNumTiers == -1) cacheNumTiers = numberOfTiers();
-		if(tierIndex == null) lastHashValueForTier(cacheNumTiers-1);
+		if(th.cacheNumTiers == -1) th.cacheNumTiers = th.numberOfTiers();
+		if(th.tierIndex == null) th.lastHashValueForTier(th.cacheNumTiers-1);
 		
-		for(int i = 0; i < cacheNumTiers; i++){
-			if(tierIndex[i].compareTo(hash) >= 0)
+		for(int i = 0; i < th.cacheNumTiers; i++){
+			if(th.tierIndex[i].compareTo(hash) >= 0)
 				if(i == 0)
-					return gameStateForTierIndex(i, hash);
+					return th.gameStateForTierIndex(i, hash);
 				else
-					return gameStateForTierIndex(i,hash.subtract(tierIndex[i-1]).subtract(BigInteger.ONE));
+					return th.gameStateForTierIndex(i,hash.subtract(th.tierIndex[i-1]).subtract(BigInteger.ONE));
 		}
 		Util.fatalError("Hash outside of tiered values: "+hash);
 		return null;
@@ -101,8 +49,20 @@ public abstract class TieredGame<State,Value extends DBValue> extends Game<State
 
 	@Override
 	public BigInteger stateToHash(State pos) {
-		Pair<Integer,BigInteger> p = tierIndexForState(pos);
-		return hashOffsetForTier(p.car).add(p.cdr);
+		Pair<Integer,BigInteger> p = th.tierIndexForState(pos);
+		return th.hashOffsetForTier(p.car).add(p.cdr);
+	}
+	
+	public final int numberOfTiers(){
+		return th.numberOfTiers();
+	}
+	
+	public final BigInteger hashOffsetForTier(int tier){
+		return th.hashOffsetForTier(tier);
+	}
+	
+	public final BigInteger lastHashValueForTier(int tier){
+		return th.lastHashValueForTier(tier);
 	}
 	
 }
