@@ -20,7 +20,6 @@ import edu.berkeley.gamesman.database.filer.DirectoryFilerClient;
 import edu.berkeley.gamesman.database.filer.DirectoryFilerServer;
 import edu.berkeley.gamesman.util.OptionProcessor;
 import edu.berkeley.gamesman.util.Util;
-import edu.berkeley.gamesman.util.test.RPCTest;
 
 /**
  * @author Steven Schlansker
@@ -335,8 +334,8 @@ public final class Gamesman {
 		}
 	}
 	
-	public void executetestRPC(){
-		new RPCTest();
-	}
+	//public void executetestRPC(){
+	//	new RPCTest();
+	//}
 
 }
