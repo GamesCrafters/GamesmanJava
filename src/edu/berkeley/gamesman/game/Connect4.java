@@ -11,7 +11,7 @@ import edu.berkeley.gamesman.core.SingletonIterator;
  * @author Steven Schlansker
  *
  */
-public final class Connect4 implements Game {
+public final class Connect4 extends Game {
 
 	class Connect4GameState implements GameState {
 

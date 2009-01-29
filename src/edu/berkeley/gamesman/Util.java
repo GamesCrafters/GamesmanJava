@@ -3,6 +3,8 @@
  */
 package edu.berkeley.gamesman;
 
+import com.sun.tools.javac.util.FatalError;
+
 /**
  * Various utility functions accessible from any class
  * 
@@ -10,9 +12,15 @@ package edu.berkeley.gamesman;
  *
  */
 public final class Util {
+	
+	private Util() {}
 
-	static class AssertionFailedError extends Error {
+	protected static class AssertionFailedError extends Error {
 		private static final long serialVersionUID = 2545784238123111405L;
+	}
+	
+	protected static class FatalError extends Error {
+		private static final long serialVersionUID = -5642903706572262719L;
 	}
 	
 	/**
@@ -24,6 +32,16 @@ public final class Util {
 			System.err.println("Assertion failed: backtrace forthcoming");
 			throw new AssertionFailedError();
 		}
+	}
+	
+	public static void fatalError(String s){
+		System.err.println("FATAL: "+s);
+		System.err.println("Stack trace follows:");
+		throw new FatalError();
+	}
+	
+	public static void debug(String s){
+		System.err.println("DEBUG: "+s);
 	}
 	
 }
