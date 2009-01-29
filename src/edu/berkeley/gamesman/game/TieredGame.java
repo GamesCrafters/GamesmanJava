@@ -1,12 +1,15 @@
 package edu.berkeley.gamesman.game;
 
+import java.math.BigInteger;
+
 import edu.berkeley.gamesman.Pair;
 
 public interface TieredGame<State,Value> {
 
-	public Number lastTier();
-	public Number lastHashValueForTier(Number tier);
-	public State gameStateForTierIndex(Number tier, Number index);
-	public Pair<Number,Number> tierIndexForState(State state);
+	public int lastTier();
+	public BigInteger hashOffestForTier(int tier);
+	public BigInteger lastHashValueForTier(int tier);
+	public State gameStateForTierIndex(int tier, BigInteger index);
+	public Pair<Integer,BigInteger> tierIndexForState(State state);
 	
 }

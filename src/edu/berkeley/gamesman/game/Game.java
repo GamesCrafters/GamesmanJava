@@ -21,7 +21,7 @@ public abstract class Game<State,Value> {
 
 	protected Hasher hasher;
 	
-	protected long gameWidth = 0, gameHeight = 0;
+	protected int gameWidth = 0, gameHeight = 0;
 	
 	static {
 		OptionProcessor.nextGroup();
