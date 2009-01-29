@@ -3,7 +3,10 @@ package edu.berkeley.gamesman.hasher;
 
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Hasher;
@@ -23,7 +26,7 @@ import edu.berkeley.gamesman.util.Util;
  */
 public final class C4UniformPieceHasher extends Hasher<char[]> {
 	
-	HashMap<String,BigInteger> lookup;
+	Map<String,BigInteger> lookup;
 	String[] table;
 	protected char[] pcs;
 	
@@ -59,7 +62,7 @@ public final class C4UniformPieceHasher extends Hasher<char[]> {
 	
 	protected void init(char[] board,int off, char[] mypcs, int sum){
 		if(lookup == null){
-			lookup = new HashMap<String,BigInteger>();
+			lookup = new ConcurrentHashMap<String,BigInteger>();
 			table = new String[Util.intpow(mypcs.length,board.length)];
 			idx = 0;
 			task = Task.beginTask("Initializing C4 Column Hash");

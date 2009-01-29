@@ -3,6 +3,8 @@ package edu.berkeley.gamesman.hasher;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Hasher;
@@ -22,8 +24,8 @@ public class AlternatingRearrangerHasher extends Hasher<char[]> {
 	}
 	
 	private int cacheLevel = 0;
-	private HashMap<String,BigInteger> rearrCache = new HashMap<String, BigInteger>();
-	private HashMap<BigInteger,String> unrearrCache = new HashMap<BigInteger, String>();
+	private Map<String,BigInteger> rearrCache = new ConcurrentHashMap<String, BigInteger>();
+	private Map<BigInteger,String> unrearrCache = new ConcurrentHashMap<BigInteger, String>();
 
 	@Override
 	public void setGame(Game<char[]> game, char[] p){

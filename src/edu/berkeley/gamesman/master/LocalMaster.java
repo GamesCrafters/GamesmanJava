@@ -78,7 +78,7 @@ public final class LocalMaster implements Master,TaskFactory {
 			}catch (InterruptedException e) {
 				Util.warn("Interrupted while joined on thread "+t);
 			}
-		System.out.println(myThreads);
+		//System.out.println(myThreads);
 		database.close();
 	}
 	

@@ -4,6 +4,8 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
@@ -14,13 +16,12 @@ import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Task;
 import edu.berkeley.gamesman.util.Util;
-import edu.berkeley.gamesman.util.threading.Barrier;
 
 /**
  * TierSolver documentation stub
  * 
  * @author Steven Schlansker
- *
+ * 
  */
 public final class TierSolver extends Solver {
 
@@ -39,34 +40,33 @@ public final class TierSolver extends Solver {
 		return new TierSolverWorkUnit();
 	}
 
-	protected void solvePartialTier(TieredGame<Object> game,
-			BigInteger start, BigInteger end, TierSolverUpdater t) {
+	protected void solvePartialTier(TieredGame<Object> game, BigInteger start,
+			BigInteger end, TierSolverUpdater t) {
 		BigInteger current = start.subtract(BigInteger.ONE);
-		
+
 		while (current.compareTo(end) < 0) {
 			current = current.add(BigInteger.ONE);
-			
+
 			if (current.mod(BigInteger.valueOf(10000)).compareTo(
 					BigInteger.ZERO) == 0)
 				t.calculated(10000);
-		
-			
+
 			Object state = game.hashToState(current);
-			
+
 			Collection<?> children = game.validMoves(state);
-			
-			if (children.size() == 0){
-				Record prim = new Record(conf,game.primitiveValue(state));
+
+			if (children.size() == 0) {
+				Record prim = new Record(conf, game.primitiveValue(state));
 
 				db.setValue(current, prim);
 			} else {
 				ArrayList<Record> vals = new ArrayList<Record>(children.size());
-				
+
 				for (Object child : children) {
 					vals.add(db.getValue(game.stateToHash(child)));
 				}
-				
-				Record newVal = Record.combine(conf,vals);
+
+				Record newVal = Record.combine(conf, vals);
 				db.setValue(current, newVal);
 			}
 		}
@@ -75,7 +75,7 @@ public final class TierSolver extends Solver {
 	protected int nextIndex = 0;
 	protected TierSolverUpdater updater;
 	protected BigInteger offset;
-	protected Barrier barr = new Barrier();
+	protected CyclicBarrier barr;
 	protected int tier;
 
 	private boolean needs2Sync;
@@ -83,11 +83,21 @@ public final class TierSolver extends Solver {
 	protected Pair<BigInteger, BigInteger> nextSlice() {
 		if (needs2Sync) {
 			Util.debug("Thread waiting to tier-sync");
-			barr.sync();
+			try {
+				if (barr != null)
+					barr.await();
+			} catch (InterruptedException e) {
+				Util.fatalError(
+						"TierSolver thread was interrupted while waiting!", e);
+			} catch (BrokenBarrierException e) {
+				Thread.yield();
+				return nextSlice(); // Retry
+			}
 		}
 
 		synchronized (this) {
-			if(tier < 0) return null;
+			if (tier < 0)
+				return null;
 			final BigInteger step = BigInteger.valueOf(1000);
 			BigInteger ret = offset, end;
 			offset = offset.add(step);
@@ -96,7 +106,7 @@ public final class TierSolver extends Solver {
 				Util.debug("Reached end of tier");
 				end = myGame.lastHashValueForTier(tier);
 				tier--;
-				if(tier >= 0)
+				if (tier >= 0)
 					offset = myGame.hashOffsetForTier(tier);
 				needs2Sync = true;
 			}
@@ -113,12 +123,13 @@ public final class TierSolver extends Solver {
 			// if(!(g instanceof TieredGame))
 			// Util.fatalError("Attempted to use tiered solver on non-tiered game");
 			this.index = nextIndex++;
+			barr = new CyclicBarrier(nextIndex);
 		}
 
 		public void conquer() {
-			barr.enter();
 			Util.debug("Started the solver... (" + index + ")");
-			Thread.currentThread().setName("Solver ("+index+"): "+myGame.toString());
+			Thread.currentThread().setName(
+					"Solver (" + index + "): " + myGame.toString());
 
 			Pair<BigInteger, BigInteger> slice;
 			while ((slice = nextSlice()) != null) {
@@ -128,8 +139,13 @@ public final class TierSolver extends Solver {
 				db.flush();
 			}
 
-			if(barr.exit())
-				updater.complete();
+			synchronized (TierSolver.this) {
+				if (barr != null) {
+					updater.complete();
+					barr.reset();
+					barr = null;
+				}
+			}
 		}
 
 		public List<WorkUnit> divide(int num) {
@@ -154,7 +170,7 @@ public final class TierSolver extends Solver {
 
 		synchronized void calculated(int howMuch) {
 			total = total.add(BigInteger.valueOf(howMuch));
-			if (t != null && System.currentTimeMillis() - lastUpdate > 1000){
+			if (t != null && System.currentTimeMillis() - lastUpdate > 1000) {
 				t.setProgress(total);
 				lastUpdate = System.currentTimeMillis();
 			}
