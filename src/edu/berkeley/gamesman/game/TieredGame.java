@@ -24,7 +24,7 @@ public abstract class TieredGame<State,Value> extends Game<State,Value> {
 			for(int i = 1; i < tierIndex.length; i++){
 				tierIndex[i] = tierIndex[i-1].add(numHashesForTier(i-1)).add(BigInteger.ONE);
 			}
-			Util.debug("Hash indices are "+Arrays.toString(tierIndex));
+			//Util.debug("Hash indices are "+Arrays.toString(tierIndex));
 		}
 		
 		if(tier == tierIndex.length-1)
@@ -41,8 +41,16 @@ public abstract class TieredGame<State,Value> extends Game<State,Value> {
 			if(lastHashValueForTier(i).compareTo(hash) >= 0)
 				return gameStateForTierIndex(i,hash.subtract(hashOffsetForTier(i)));
 		}
-		Util.fatalError("Hash outside of tiered values");
-		return null;
+		
+		BigInteger lastcheck = hash.subtract(tierIndex[tierIndex.length-1]);
+		
+		Util.debug("lastcheck = "+lastcheck);
+		
+		//if(lastcheck.compareTo(numHashesForTier(numberOfTiers()-1)) < 0)
+				return gameStateForTierIndex(numberOfTiers()-1, lastcheck);
+		
+		//Util.fatalError("Hash outside of tiered values");
+		//return null;
 	}
 
 	@Override

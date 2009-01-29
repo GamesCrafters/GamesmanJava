@@ -86,9 +86,12 @@ public class Connect4 extends TieredGame<char[][],Values> {
 			colheight = 0;
 		}
 		
-		Util.debug("Connect4 shows UPH = "+Arrays.toString(colheights)+" ARH = "+Arrays.toString(linear));
+		int uhh = uh.hash(colheights).intValue();
+		BigInteger arh = ah.hash(linear,index);
 		
-		return new Pair<Integer,BigInteger>(uh.hash(colheights).intValue(),ah.hash(linear,index));
+		Util.debug("Connect4 shows UPH = "+Arrays.toString(colheights)+" ("+uhh+") ARH ("+arh+") = "+Arrays.toString(linear));
+		
+		return new Pair<Integer,BigInteger>(uhh,arh);
 	}
 
 	@Override
@@ -116,7 +119,7 @@ public class Connect4 extends TieredGame<char[][],Values> {
 		
 		char[] linpieces = ah.unhash(index,sum);
 		
-		Util.debug("ARH gives us "+Arrays.toString(linpieces));
+		Util.debug("ARH("+index+") gives us "+Arrays.toString(linpieces));
 		
 		char[][] ret = new char[gameWidth][gameHeight];
 		
