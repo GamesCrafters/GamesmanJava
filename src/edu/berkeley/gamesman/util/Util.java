@@ -109,6 +109,7 @@ public final class Util {
 	 * @return n choose k
 	 */
 	public static long nCr(int n, int k){
+		if(n < 0 || k < 0) return _nCr(n,k);
 		if(n < 50 && k < 50){
 			if(nCr_cache[n][k] != 0)
 				return nCr_cache[n][k];
