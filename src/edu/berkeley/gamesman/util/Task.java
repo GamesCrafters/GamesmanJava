@@ -11,7 +11,13 @@ public abstract class Task {
 	protected Task(){}
 	
 	public static Task beginTask(String name){
-		return factory.createTask(name);
+		if(factory != null)
+			return factory.createTask(name);
+		return new Task(){
+			protected void begin() {}
+			public void complete() {}
+			public void update() {}
+		};
 	}
 	
 	public static void setTaskFactory(TaskFactory f){

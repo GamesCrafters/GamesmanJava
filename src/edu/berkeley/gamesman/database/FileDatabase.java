@@ -4,6 +4,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.util.Util;
 
@@ -52,7 +56,11 @@ public final class FileDatabase extends Database {
 	@Override
 	public synchronized void initialize(String loc, DBValue example) {
 
-		myFile = new File(loc);
+		try {
+			myFile = new File(new URI(loc));
+		} catch (URISyntaxException e1) {
+			Util.fatalError("Could not open URI "+loc+": "+e1);
+		}
 
 		try {
 			fd = new RandomAccessFile(myFile, "rw");

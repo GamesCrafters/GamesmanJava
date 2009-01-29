@@ -76,7 +76,7 @@ public final class OptionProcessor {
 	public static void acceptOption(String shortForm, String longForm, boolean takesParam, String helpString){
 		Option newopt = new Option(shortForm,longForm,takesParam,helpString,null);
 		
-		Util.assertTrue(!opts.containsKey(shortForm) && !opts.containsKey(longForm));
+		Util.assertTrue(!opts.containsKey(shortForm) && !opts.containsKey(longForm),"Duplicate key -"+shortForm+"/--"+longForm);
 		
 		opts.put(shortForm, newopt);
 		opts.put(longForm,newopt);
@@ -94,7 +94,7 @@ public final class OptionProcessor {
 	public static void acceptOption(String shortForm, String longForm, boolean takesParam, String helpString, String dfl){
 		Option newopt = new Option(shortForm,longForm,takesParam,helpString,dfl);
 		
-		Util.assertTrue(!opts.contains(shortForm) && !opts.contains(longForm));
+		Util.assertTrue(!opts.contains(shortForm) && !opts.contains(longForm),"Duplicate key -"+shortForm+"/--"+longForm);
 		
 		opts.put(shortForm, newopt);
 		opts.put(longForm,newopt);

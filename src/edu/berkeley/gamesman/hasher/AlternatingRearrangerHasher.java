@@ -15,7 +15,7 @@ public class AlternatingRearrangerHasher extends Hasher<char[]> {
 
 	@Override
 	public void setGame(Game<char[],?> game, char[] p){
-		Util.assertTrue(p.length == 2);
+		Util.assertTrue(p.length == 2,"Wrong number of pieces for AlternatingRearrangerHasher");
 		super.setGame(game,p);
 	}
 	

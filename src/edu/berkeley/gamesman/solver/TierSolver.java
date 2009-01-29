@@ -39,23 +39,30 @@ public final class TierSolver extends Solver {
 	protected void solvePartialTier(TieredGame<Object, DBValue> game,
 			BigInteger start, BigInteger end, TierSolverUpdater t) {
 		BigInteger current = start.subtract(BigInteger.ONE);
+		
 		while (current.compareTo(end) < 0) {
 			current = current.add(BigInteger.ONE);
+			
 			if (current.mod(BigInteger.valueOf(10000)).compareTo(
 					BigInteger.ZERO) == 0)
 				t.calculated(10000);
+		
+			
 			Object state = game.hashToState(current);
+			
 			Collection<?> children = game.validMoves(state);
+			
 			if (children.size() == 0){
 				DBValue prim = game.primitiveValue(state);
-				Util.debug("Set "+current+" to value "+prim);
+
 				db.setValue(current, prim);
 			} else {
-				ArrayList<DBValue> vals = new ArrayList<DBValue>(children
-						.size());
+				ArrayList<DBValue> vals = new ArrayList<DBValue>(children.size());
+				
 				for (Object child : children) {
 					vals.add(db.getValue(game.stateToHash(child)));
-					}
+				}
+				
 				DBValue newVal = vals.get(0).fold(vals);
 				db.setValue(current, newVal);
 			}

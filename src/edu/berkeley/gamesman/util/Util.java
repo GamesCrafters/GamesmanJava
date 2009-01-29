@@ -3,6 +3,9 @@
  */
 package edu.berkeley.gamesman.util;
 
+import java.io.File;
+import java.io.FilenameFilter;
+
 
 /**
  * Various utility functions accessible from any class
@@ -21,15 +24,17 @@ public final class Util {
 	protected static class FatalError extends Error {
 		private static final long serialVersionUID = -5642903706572262719L;
 	}
+	protected static class Warning extends Error {
+		private static final long serialVersionUID = -4160479272744795242L;
+	}
 	
 	/**
 	 * Throws a fatal Error if a required condition is not satisfied
 	 * @param b The boolean (expression) that must be true
 	 */
-	public static void assertTrue(boolean b){
+	public static void assertTrue(boolean b, String reason){
 		if(!b){
-			System.err.println("Assertion failed: backtrace forthcoming");
-			throw new AssertionFailedError();
+			Util.fatalError("Assertion failed: "+reason);
 		}
 	}
 	
@@ -48,8 +53,8 @@ public final class Util {
 		System.err.println("WARN: ("+Thread.currentThread().getName()+") "+s);
 		System.err.println("Stack trace follows:");
 		try {
-			throw new FatalError();
-		}catch(FatalError e){
+			throw new Warning();
+		}catch(Warning e){
 			e.printStackTrace(System.err);
 		}
 	}
@@ -145,5 +150,19 @@ public final class Util {
 	         accum = accum * (n-k+i) / i;
 
 	    return (long)(accum + 0.5); // avoid rounding error
+	}
+	
+	public static File getChild(File dir, final String childname){
+		if(!dir.isDirectory()){
+			Util.warn("Attempted to cd into a non-directory: "+dir);
+			return null;
+		}
+		
+		return dir.listFiles(new FilenameFilter(){
+			public boolean accept(File dir, String name) {
+				if(name.equals(childname)) return true;
+				else return false;
+			}
+		})[0];
 	}
 }

@@ -4,10 +4,16 @@ import java.math.BigInteger;
 import java.util.Collection;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.database.DBValue;
+import edu.berkeley.gamesman.hasher.NullHasher;
+import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.Util;
 
 public class NullGame extends Game<Object,DBValue> {
 
+	static {
+		DependencyResolver.allowHasher(NullGame.class, NullHasher.class);
+	}
+	
 	@Override
 	public Collection<Object> startingPositions() {
 		fail();
@@ -52,13 +58,11 @@ public class NullGame extends Game<Object,DBValue> {
 
 	@Override
 	public int getDefaultBoardHeight() {
-		fail();
 		return 0;
 	}
 
 	@Override
 	public int getDefaultBoardWidth() {
-		fail();
 		return 0;
 	}
 

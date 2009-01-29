@@ -3,6 +3,10 @@
  */
 package edu.berkeley.gamesman;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.LineNumberInputStream;
+import java.io.LineNumberReader;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import edu.berkeley.gamesman.core.Database;
@@ -10,7 +14,10 @@ import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.core.Master;
 import edu.berkeley.gamesman.core.Solver;
+import edu.berkeley.gamesman.core.Values;
 import edu.berkeley.gamesman.database.DBValue;
+import edu.berkeley.gamesman.database.filer.DirectoryFilerClient;
+import edu.berkeley.gamesman.database.filer.DirectoryFilerServer;
 import edu.berkeley.gamesman.util.OptionProcessor;
 import edu.berkeley.gamesman.util.Util;
 
@@ -20,27 +27,33 @@ import edu.berkeley.gamesman.util.Util;
  */
 public final class Gamesman {
 
-	private Game<Object,? extends DBValue> gm;
+	private Game<Object, ? extends DBValue> gm;
 	private Hasher ha;
 	private Solver so;
 	private Database db;
 	private boolean testrun;
 
-	private Gamesman(Game<Object, ? extends DBValue> g, Solver s, Hasher h, Database d, boolean er) {
+	private Gamesman(Game<Object, ? extends DBValue> g, Solver s, Hasher h,
+			Database d, boolean er) {
 		gm = g;
 		ha = h;
 		so = s;
 		db = d;
+		
+		so.setDatabase(db);
+		gm.setHasher(ha);
+		
 		testrun = er;
 	}
 
 	/**
-	 * @param args Command line arguments
+	 * @param args
+	 *            Command line arguments
 	 */
 	public static void main(String[] args) {
-		
+
 		Thread.currentThread().setName("Gamesman");
-		
+
 		OptionProcessor.initializeOptions(args);
 		OptionProcessor.acceptOption("h", "help", false,
 				"Display this help string and exit");
@@ -119,15 +132,17 @@ public final class Gamesman {
 			System.err.println("Fatal error in preloading: " + e);
 			return;
 		}
-		
+
 		boolean dohelp = (OptionProcessor.checkOption("h") != null);
 
 		String cmd = OptionProcessor.checkOption("command");
 		if (cmd != null) {
 			try {
 				boolean tr = (OptionProcessor.checkOption("help") != null);
-				Gamesman executor = new Gamesman((Game<Object,? extends DBValue>)g.newInstance(), s
-						.newInstance(), h.newInstance(), (Database)d.newInstance(),tr);
+				Gamesman executor = new Gamesman(
+						(Game<Object, ? extends DBValue>) g.newInstance(), s
+								.newInstance(), h.newInstance(), (Database) d
+								.newInstance(), tr);
 				executor.getClass().getMethod("execute" + cmd,
 						(Class<?>[]) null).invoke(executor);
 			} catch (NoSuchMethodException nsme) {
@@ -141,62 +156,156 @@ public final class Gamesman {
 				System.out.println("Exception while executing command: " + ite);
 				ite.getTargetException().printStackTrace();
 			}
-		} else if(!dohelp){
+		} else if (!dohelp) {
 			Util.debug("Defaulting to solve...");
 			m.initialize(g, s, h, d);
 			m.run();
 		}
 
-
 		if (dohelp) {
-			System.out.println("Gamesman help stub, please fill this out!"); // TODO: help text
+			System.out.println("Gamesman help stub, please fill this out!"); // TODO:
+																				// help
+																				// text
 			OptionProcessor.help();
 			return;
 		}
-		
+
 		Util.debug("Finished run, tearing down...");
 
 	}
-	
+
 	/**
 	 * Diagnostic call to unhash an arbitrary value to a game board
 	 */
-	public void executeunhash(){
-		OptionProcessor.acceptOption("v", "hash", true, "The hash value to be manipulated");
-		if(testrun) return;
-		Object state = gm.hashToState(new BigInteger(OptionProcessor.checkOption("hash")));
+	public void executeunhash() {
+		OptionProcessor.acceptOption("v", "hash", true,
+				"The hash value to be manipulated");
+		if (testrun)
+			return;
+		Object state = gm.hashToState(new BigInteger(OptionProcessor
+				.checkOption("hash")));
 		System.out.println(gm.stateToString(state));
 	}
-	
+
 	/**
 	 * Diagnostic call to view all child moves of a given hashed game state
 	 */
-	public void executegenmoves(){
-		OptionProcessor.acceptOption("v", "hash", true, "The hash value to be manipulated");
-		if(testrun) return;
-		Object state = gm.hashToState(new BigInteger(OptionProcessor.checkOption("hash")));
-		for(Object nextstate : gm.validMoves(state)){
+	public void executegenmoves() {
+		OptionProcessor.acceptOption("v", "hash", true,
+				"The hash value to be manipulated");
+		if (testrun)
+			return;
+		Object state = gm.hashToState(new BigInteger(OptionProcessor
+				.checkOption("hash")));
+		for (Object nextstate : gm.validMoves(state)) {
 			System.out.println(gm.stateToHash(nextstate));
 			System.out.println(gm.stateToString(nextstate));
 		}
 	}
-	
-	public void executehash(){
-		OptionProcessor.acceptOption("v", "board", true, "The board to be hashed");
-		if(testrun) return;
+
+	public void executehash() {
+		OptionProcessor.acceptOption("v", "board", true,
+				"The board to be hashed");
+		if (testrun)
+			return;
 		String str = OptionProcessor.checkOption("board");
-		if(str == null)
+		if (str == null)
 			Util.fatalError("Please specify a board to hash");
 		System.out.println(gm.stateToHash(gm.stringToState(str.toUpperCase())));
 	}
-	
-	public void executeevaluate(){
-		OptionProcessor.acceptOption("v", "board", true, "The board to be evaluated");
-		if(testrun) return;
+
+	public void executeevaluate() {
+		OptionProcessor.acceptOption("v", "board", true,
+				"The board to be evaluated");
+		if (testrun)
+			return;
 		BigInteger val = new BigInteger(OptionProcessor.checkOption("board"));
-		if(val == null)
+		if (val == null)
 			Util.fatalError("Please specify a hash to evaluate");
 		System.out.println(gm.primitiveValue(gm.hashToState(val)));
+	}
+
+	public void executelaunchDirectoryFiler() {
+		OptionProcessor.acceptOption("r", "rootDirectory", true,
+				"The root directory for the directory filer");
+		OptionProcessor.acceptOption("p", "port", true,
+				"The port to listen on", "4263");
+		OptionProcessor.acceptOption("s", "secret", true,
+				"The shared secret the server should require");
+		if (testrun)
+			return;
+		if (OptionProcessor.checkOption("rootDirectory") == null)
+			Util
+					.fatalError("You must provide a root directory for the filer with -r or --rootDirectory");
+		if (OptionProcessor.checkOption("secret") == null)
+			Util
+					.fatalError("You must provide a shared secret to protect the server with -s or --secret");
+		new DirectoryFilerServer(OptionProcessor.checkOption("rootDirectory"),
+				Integer.parseInt(OptionProcessor.checkOption("port")),
+				OptionProcessor.checkOption("secret")).launchServer();
+	}
+
+	private enum directoryConnectCommands {
+		quit, halt, ls, open, close, read, write
+	}
+
+	public void executedirectoryConnect() {
+		OptionProcessor.acceptOption("u", "url", true, "The URL to connect to",
+				"gdf://game@localhost:4263/");
+		if (testrun)
+			return;
+		DirectoryFilerClient dfc = new DirectoryFilerClient(OptionProcessor
+				.checkOption("url"));
+
+		LineNumberReader input = new LineNumberReader(new InputStreamReader(
+				System.in));
+
+		String dbname = "";
+		Database cdb = null;
+		
+		try {
+			while (true) {
+				String line = "quit";
+				System.out.print(dbname+"> ");
+				line = input.readLine();
+
+				switch (directoryConnectCommands.valueOf(line)) {
+				case quit:
+					dfc.close();
+					return;
+				case halt:
+					dfc.raw((byte) 1);
+					dfc.close();
+					return;
+				case ls:
+					dfc.ls();
+				case open:
+					System.out.print("open> ");
+					dbname = input.readLine();
+					cdb = dfc.openDatabase(dbname);
+					break;
+				case close:
+					if(cdb == null) break;
+					cdb.close();
+					cdb = null;
+					dbname = "";
+					break;
+				case read:
+					System.out.print(dbname+" read> ");
+					System.out.println("Result: "+cdb.getValue(Long.parseLong(input.readLine())));
+					break;
+				case write:
+					System.out.print(dbname+" write> ");
+					String loc = input.readLine();
+					System.out.print(dbname+" write "+loc+"> ");
+					line = input.readLine();
+		
+					cdb.setValue(Long.valueOf(loc), Values.valueOf(line));
+				}
+			}
+		} catch (IOException e) {
+			Util.fatalError("IO Error: " + e);
+		}
 	}
 
 }
