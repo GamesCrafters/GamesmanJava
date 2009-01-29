@@ -61,6 +61,10 @@ public final class OptionProcessor {
 		myArgs = args;
 	}
 	
+	public static String[] getAllOptions(){
+		return myArgs;
+	}
+	
 	/**
 	 * Informs the option processor about a new option that you would like to accept
 	 * The processor will now accept either -short or --long-opt
