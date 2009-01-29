@@ -26,8 +26,8 @@ public abstract class Game<State,Value> {
 	
 	static {
 		OptionProcessor.nextGroup();
-		OptionProcessor.acceptOption("gw", "width", true, "Width of the game board","7");
-		OptionProcessor.acceptOption("gh", "height", true, "Height of the game board","6");
+		OptionProcessor.acceptOption("gw", "width", true, "Width of the game board","<auto>");
+		OptionProcessor.acceptOption("gh", "height", true, "Height of the game board","<auto>");
 		OptionProcessor.nextGroup();
 	}
 	
@@ -35,20 +35,47 @@ public abstract class Game<State,Value> {
 	 * Initialize game width/height
 	 */
 	public Game(){
-		gameWidth = Integer.parseInt(OptionProcessor.checkOption("width"));
-		gameHeight = Integer.parseInt(OptionProcessor.checkOption("height"));
+		String w = OptionProcessor.checkOption("width");
+		String h = OptionProcessor.checkOption("height");
+		if(w.equals("<auto>"))
+			gameWidth = getDefaultBoardWidth();
+		else
+			gameWidth = Integer.parseInt(w);
+		
+		if(h.equals("<auto>"))
+			gameHeight = getDefaultBoardHeight();
+		else
+			gameHeight = Integer.parseInt(h);
 	}
 	
 	/**
-	 * Generates an iterator over all the valid starting positions
-	 * @return the iterator
+	 * Generates all the valid starting positions
+	 * @return a Collection of all valid starting positions
 	 */
 	public abstract Collection<State> startingPositions();
 	
+	/**
+	 * Given a board state, generates all valid board states one move away from the given state
+	 * @param The board state to start from
+	 * @return All valid board states one move forward
+	 */
 	public abstract Collection<State> validMoves(State pos);
 	
+	/**
+	 * Given a board state return its primitive "value".
+	 * Usually this value includes WIN, LOSE, and perhaps TIE -
+	 * the canonical representation is in the game.Values enum
+	 * Return UNDECIDED if this is not a primitive state (shouldn't usually be called)
+	 * @param pos The primitive State
+	 * @return the Value representing the state
+	 * @see edu.berkeley.gamesman.game.Values
+	 */
 	public abstract Value positionValue(State pos);
 	
+	/**
+	 * Inform the Game of the hasher we're using
+	 * @param h The Hasher to use
+	 */
 	public void setHasher(Hasher h){
 		hasher = h;
 	}
@@ -58,5 +85,8 @@ public abstract class Game<State,Value> {
 	
 	public abstract String stateToString(State pos);
 	public abstract BigInteger stringToState(String pos);
+	
+	public abstract int getDefaultBoardWidth();
+	public abstract int getDefaultBoardHeight();
 	
 }
