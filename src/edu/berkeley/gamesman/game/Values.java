@@ -1,5 +1,7 @@
 package edu.berkeley.gamesman.game;
 
+import edu.berkeley.gamesman.database.DBValue;
+
 
 /**
  * 
@@ -7,7 +9,7 @@ package edu.berkeley.gamesman.game;
  * @author Steven Schlansker
  *
  */
-public enum Values {
+public enum Values implements DBValue {
 
 	/**
 	 * Value hasn't been computed yet
@@ -35,10 +37,27 @@ public enum Values {
 	 */
 	Tie(3);
 
-	private int val;
-	private Values(int val) { this.val = val; }
-	public int value() { return val; }
+	private byte val;
+	private Values(int val) { this.val = (byte)val; }
+	//public int value() { return val; }
 	
-	public int maxValue() { int max = 0; for(Values v : this.values()) max = Math.max(v.value(),max); return max; }
+	public int maxValue() { int max = 0; for(Values v : this.values()) max = Math.max(v.byteValue(),max); return max; }
+	public byte byteValue() {
+		return val;
+	}
+	public DBValue wrapValue(byte b) {
+		switch(b){
+		case 0:
+			return Undecided;
+		case 1:
+			return Win;
+		case 2:
+			return Lose;
+		case 3:
+			return Tie;
+		}
+		
+		return Invalid;
+	}
 	
 }

@@ -7,6 +7,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 
+import edu.berkeley.gamesman.database.DBValue;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.hasher.Hasher;
@@ -21,13 +22,13 @@ import edu.berkeley.gamesman.util.Util;
  */
 public final class Gamesman {
 
-	private Game<Object,Object> gm;
+	private Game<Object,? extends DBValue> gm;
 	private Hasher ha;
 	private Solver so;
-	private Database<Object> db;
+	private Database db;
 	private boolean testrun;
 
-	private Gamesman(Game<Object, Object> g, Solver s, Hasher h, Database<Object> d, boolean er) {
+	private Gamesman(Game<Object, ? extends DBValue> g, Solver s, Hasher h, Database d, boolean er) {
 		gm = g;
 		ha = h;
 		so = s;
@@ -103,7 +104,7 @@ public final class Gamesman {
 		Class<? extends Game<?, ?>> g;
 		Class<? extends Solver> s;
 		Class<? extends Hasher> h;
-		Class<? extends Database<?>> d;
+		Class<? extends Database> d;
 
 		try {
 			g = (Class<? extends Game<?, ?>>) Class
@@ -112,7 +113,7 @@ public final class Gamesman {
 					.forName("edu.berkeley.gamesman.solver." + solverName);
 			h = (Class<? extends Hasher>) Class
 					.forName("edu.berkeley.gamesman.hasher." + hasherName);
-			d = (Class<? extends Database<?>>) Class
+			d = (Class<? extends Database>) Class
 					.forName("edu.berkeley.gamesman.database." + databaseName);
 		} catch (Exception e) {
 			System.err.println("Fatal error in preloading: " + e);
@@ -125,8 +126,8 @@ public final class Gamesman {
 		if (cmd != null) {
 			try {
 				boolean tr = (OptionProcessor.checkOption("help") != null);
-				Gamesman executor = new Gamesman((Game<Object,Object>)g.newInstance(), s
-						.newInstance(), h.newInstance(), (Database<Object>)d.newInstance(),tr);
+				Gamesman executor = new Gamesman((Game<Object,? extends DBValue>)g.newInstance(), s
+						.newInstance(), h.newInstance(), (Database)d.newInstance(),tr);
 				executor.getClass().getMethod("execute" + cmd,
 						(Class<?>[]) null).invoke(executor);
 			} catch (NoSuchMethodException nsme) {
@@ -174,8 +175,10 @@ public final class Gamesman {
 		OptionProcessor.acceptOption("v", "hash", true, "The hash value to be manipulated");
 		if(testrun) return;
 		Object state = gm.hashToState(new BigInteger(OptionProcessor.checkOption("hash")));
-		for(Object hash : gm.validMoves(state))
-			System.out.println(gm.stateToString(hash));
+		for(Object nextstate : gm.validMoves(state)){
+			System.out.println(gm.stateToHash(nextstate));
+			System.out.println(gm.stateToString(nextstate));
+		}
 	}
 	
 	public void executehash(){
@@ -185,6 +188,15 @@ public final class Gamesman {
 		if(str == null)
 			Util.fatalError("Please specify a board to hash");
 		System.out.println(gm.stateToHash(gm.stringToState(str.toUpperCase())));
+	}
+	
+	public void executeevaluate(){
+		OptionProcessor.acceptOption("v", "board", true, "The board to be evaluated");
+		if(testrun) return;
+		BigInteger val = new BigInteger(OptionProcessor.checkOption("board"));
+		if(val == null)
+			Util.fatalError("Please specify a hash to evaluate");
+		System.out.println(gm.positionValue(gm.hashToState(val)));
 	}
 
 }

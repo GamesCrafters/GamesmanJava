@@ -7,6 +7,7 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Iterator;
 
+import edu.berkeley.gamesman.database.DBValue;
 import edu.berkeley.gamesman.hasher.Hasher;
 import edu.berkeley.gamesman.util.OptionProcessor;
 
@@ -18,7 +19,7 @@ import edu.berkeley.gamesman.util.OptionProcessor;
  * @param <Value> The object used to represent the value of a state
  *
  */
-public abstract class Game<State,Value> {
+public abstract class Game<State,Value extends DBValue> {
 
 	protected Hasher hasher;
 	
@@ -96,5 +97,7 @@ public abstract class Game<State,Value> {
 	public int getGameHeight(){
 		return gameHeight;
 	}
+	
+	public abstract DBValue getDBValueExample();
 	
 }

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
+import edu.berkeley.gamesman.database.DBValue;
 import edu.berkeley.gamesman.hasher.AlternatingRearrangerHasher;
 import edu.berkeley.gamesman.hasher.NullHasher;
 import edu.berkeley.gamesman.hasher.C4UniformPieceHasher;
@@ -15,7 +16,7 @@ import edu.berkeley.gamesman.util.Util;
 
 /**
  * Connect 4!
- * Boards are stored in row-major format
+ * Boards are stored in row-major format, bottom row first
  * e.g
  * O
  * XX
@@ -153,8 +154,96 @@ public class Connect4 extends TieredGame<char[][],Values> {
 
 	@Override
 	public Values positionValue(char[][] pos) {
-		// TODO Auto-generated method stub
-		return null;
+		// Check horizontal wins
+		for(int y = 0; y < gameHeight; y++){
+			char test = pos[0][y];
+			byte numSeen = 1;
+			for(int x = 1; x < gameWidth; x++){
+				if(pos[x][y] == ' ')
+					numSeen = 0;
+				if(pos[x][y] == test)
+					numSeen++;
+				else{
+					numSeen = 1;
+					test = pos[x][y];
+				}
+				if(numSeen == piecesToWin)
+					return Values.Win;
+			}
+		}
+		
+		// Check vertical wins
+		for(int x = 0; x < gameWidth; x++){
+			char test = pos[x][0];
+			byte numSeen = 1;
+			for(int y = 1; y < gameHeight; y++){
+				if(pos[x][y] == ' ') break;
+				if(pos[x][y] == test)
+					numSeen++;
+				else{
+					numSeen = 1;
+					test = pos[x][y];
+				}
+				if(numSeen == piecesToWin)
+					return Values.Win;
+			}
+		}
+		
+		// Check diagonal-right wins
+		
+		for(int x = -gameHeight + piecesToWin; x < gameWidth - piecesToWin; x++){
+			char test = '?';
+			byte numSeen = 0;
+			for(int y = 0; y < gameHeight; y++){
+				int cx = x + y;
+				if(cx < 0)
+					continue;
+				if(cx >= gameWidth)
+					break;
+				if(pos[cx][y] == ' ')
+					numSeen = 0;
+				if(test == '?')
+					test = pos[cx][y];
+				
+				if(test == pos[cx][y])
+					numSeen++;
+				else{
+					test = pos[cx][y];
+					numSeen = 0;
+				}
+				if(numSeen == piecesToWin)
+					return Values.Win;
+			}
+		}
+		
+		// Check diagonal-left wins
+		
+		for(int x = piecesToWin-1; x < gameWidth + gameHeight; x++){
+			char test = '?';
+			byte numSeen = 0;
+			for(int y = 0; y < gameHeight; y++){
+				int cx = x - y;
+				if(cx < 0)
+					break;
+				if(cx >= gameWidth)
+					continue;
+				if(pos[cx][y] == ' ')
+					numSeen = 0;
+				if(test == '?')
+					test = pos[cx][y];
+				
+				if(test == pos[cx][y])
+					numSeen++;
+				else{
+					test = pos[cx][y];
+					numSeen = 0;
+				}
+				if(numSeen == piecesToWin)
+					return Values.Win;
+			}
+		}
+		
+		return Values.Undecided;
 	}
 
 	@Override
@@ -184,11 +273,50 @@ public class Connect4 extends TieredGame<char[][],Values> {
 
 	@Override
 	public Collection<char[][]> validMoves(char[][] pos) {
-		// TODO Auto-generated method stub
-		return null;
+		ArrayList<char[][]> nextBoards = new ArrayList<char[][]>();
+		
+		char[][] board;
+		
+		if(positionValue(pos) != Values.Undecided)
+			return nextBoards;
+		
+		char nextpiece = nextPiecePlaced(pos);
+		
+		for(int x = 0; x < gameWidth; x++){
+			for(int y = 0; y < gameHeight; y++){
+				char c = pos[x][y];
+				if(c != 'X' && c != 'O'){
+					board = pos.clone();
+					board[x] = pos[x].clone();
+					board[x][y] = nextpiece;
+					nextBoards.add(board);
+					break;
+				}
+			}
+		}
+		
+		return nextBoards;
+	}
+	
+	protected char nextPiecePlaced(char[][] pos){
+		int numx = 0,numo = 0;
+		for(char[] row : pos)
+			for(char piece : row){
+				if(piece == 'X') numx++;
+				if(piece == 'O') numo++;
+			}
+		if(numx == numo) return 'X';
+		if(numx == numo+1) return 'O';
+		Util.fatalError("Invalid board: "+Arrays.deepToString(pos));
+		return ' '; // Not reached
 	}
 	
 	public String toString(){
 		return "Connect 4 "+gameWidth+"x"+gameHeight+" ("+piecesToWin+" to win)";
+	}
+
+	@Override
+	public DBValue getDBValueExample() {
+		return Values.Win;
 	}
 }

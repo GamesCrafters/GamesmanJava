@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.game;
 import java.math.BigInteger;
 import java.util.Arrays;
 
+import edu.berkeley.gamesman.database.DBValue;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -19,7 +20,7 @@ import edu.berkeley.gamesman.util.Util;
  * @param <State> The type that you use to represent your States
  * @param <Value> The possible values that a primitive State can have
  */
-public abstract class TieredGame<State,Value> extends Game<State,Value> {
+public abstract class TieredGame<State,Value extends DBValue> extends Game<State,Value> {
 
 	protected BigInteger tierIndex[];  // For tier i, tierIndex[i] is the /last/ hash value for that tier.
 	

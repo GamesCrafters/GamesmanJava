@@ -55,8 +55,6 @@ public final class TierSolver extends Solver {
 			Object state = game.hashToState(current);
 			//System.out.println(game.stateToString(state));
 			Collection<?> children = game.validMoves(state);
-			if(children == null)
-				continue;
 			//System.out.println("State "+current+" has "+children.size()+" elts");
 			if(children.size() == 0)
 				db.setValue(current, game.positionValue(state));

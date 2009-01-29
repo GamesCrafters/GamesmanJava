@@ -4,9 +4,10 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Iterator;
 
+import edu.berkeley.gamesman.database.DBValue;
 import edu.berkeley.gamesman.util.Util;
 
-public class NullGame extends Game<Object,Object> {
+public class NullGame extends Game<Object,DBValue> {
 
 	@Override
 	public Collection<Object> startingPositions() {
@@ -15,7 +16,7 @@ public class NullGame extends Game<Object,Object> {
 	}
 
 	@Override
-	public Object positionValue(Object pos) {
+	public DBValue positionValue(Object pos) {
 		fail();
 		return null;
 	}
@@ -43,10 +44,6 @@ public class NullGame extends Game<Object,Object> {
 		fail();
 		return null;
 	}
-	
-	private void fail(){
-		Util.fatalError("Please specify a game with --game");
-	}
 
 	@Override
 	public BigInteger stringToState(String pos) {
@@ -64,6 +61,16 @@ public class NullGame extends Game<Object,Object> {
 	public int getDefaultBoardWidth() {
 		fail();
 		return 0;
+	}
+
+	@Override
+	public DBValue getDBValueExample() {
+		fail();
+		return null;
+	}
+	
+	private void fail(){
+		Util.fatalError("Please specify a game with --game");
 	}
 
 }

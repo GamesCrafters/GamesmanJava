@@ -4,12 +4,17 @@ import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.hasher.Hasher;
 import edu.berkeley.gamesman.solver.Solver;
+import edu.berkeley.gamesman.util.OptionProcessor;
 import edu.berkeley.gamesman.util.Task;
 import edu.berkeley.gamesman.util.TaskFactory;
 import edu.berkeley.gamesman.util.Util;
 
 public final class LocalMaster implements Master,TaskFactory {
 
+	
+	static{
+		OptionProcessor.acceptOption("u", "uri", true, "The URI or relative path of the databse", "out.db");
+	}
 	
 	public void initialize(Class<? extends Game<?, ?>> gamec, Class<? extends Solver> solverc, Class<? extends Hasher> hasherc, Class<? extends Database> databasec) {
 		Game<?,?> game = null;
@@ -30,7 +35,7 @@ public final class LocalMaster implements Master,TaskFactory {
 			Util.fatalError("Fatal error while initializing: "+e);
 		}
 		
-		database.initialize(null);
+		database.initialize(OptionProcessor.checkOption("uri"),game.getDBValueExample());
 		
 		solver.setDatabase(database);
 		game.setHasher(hasher);
