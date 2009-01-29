@@ -11,10 +11,8 @@
 </sealing>
 </manifest>
 <selectedElements exportClassFiles="true" exportJavaFiles="false" exportOutputFolder="false">
-<file path="/gamesman-java-trunk/out.db"/>
 <javaElement handleIdentifier="=gamesman-java-trunk/src"/>
 <file path="/gamesman-java-trunk/.classpath"/>
-<file path="/gamesman-java-trunk/.bzrignore"/>
 <folder path="/gamesman-java-trunk/doc"/>
 <file path="/gamesman-java-trunk/build.xml"/>
 <file path="/gamesman-java-trunk/.project"/>

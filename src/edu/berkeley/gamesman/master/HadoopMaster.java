@@ -7,7 +7,7 @@ import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.core.Master;
 import edu.berkeley.gamesman.core.Solver;
-import edu.berkeley.gamesman.hadoop.HadoopTool;
+import edu.berkeley.gamesman.hadoop.TieredHadoopTool;
 import edu.berkeley.gamesman.util.OptionProcessor;
 import edu.berkeley.gamesman.util.Util;
 
@@ -20,7 +20,7 @@ public class HadoopMaster implements Master {
 
 	public void run() {
 		try {
-			ToolRunner.run(new HadoopTool(), OptionProcessor.getAllOptions());
+			ToolRunner.run(new TieredHadoopTool(), OptionProcessor.getAllOptions());
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			Util.fatalError("Hadoop tool runner threw an exception: "+e);

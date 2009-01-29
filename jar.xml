@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse.ant.import?>
+
+<project basedir="." default="build" name="imported">
+<target description="Make a jar file" name="jar">
+  <jar destfile="gamesman.jar" basedir=".">
+    <include name="build"/>
+    <manifest>
+      <!-- Who is building this jar? -->
+      <attribute name="Built-By" value="${user.name}"/>
+      <!-- Information about the program itself -->
+      <attribute name="Implementation-Vendor" value="UC Berkeley Gamescrafters"/>
+      <attribute name="Implementation-Title" value="Gamesman Java"/>
+      <attribute name="Implementation-Version" value="0.1"/>
+    </manifest>
+  </jar>
+</target>
+</project>

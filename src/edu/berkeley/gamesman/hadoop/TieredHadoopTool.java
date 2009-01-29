@@ -19,7 +19,7 @@ import edu.berkeley.gamesman.master.LocalMaster;
 import edu.berkeley.gamesman.solver.TierSolver;
 import edu.berkeley.gamesman.util.OptionProcessor;
 
-public class HadoopTool extends Configured implements Tool {
+public class TieredHadoopTool extends Configured implements Tool {
 
 	public int run(String[] args) throws Exception {
 		Configuration conf = getConf();
@@ -37,8 +37,9 @@ public class HadoopTool extends Configured implements Tool {
 		TieredGame<?> game = (TieredGame<?>)m.getGame();
 		
 		
-		conf.set("firsthash",game.hashOffsetForTier(tier));
-		conf.set("lasthash", game.lastHashValueForTier(tier));
+		for(int tier = game.numberOfTiers()-1; tier >= 0; tier--){
+		conf.set("firsthash",game.hashOffsetForTier(tier).toString());
+		conf.set("lasthash", game.lastHashValueForTier(tier).toString());
 		
 		JobConf job = new JobConf(conf,TierMapReduce.class);
 		
@@ -53,7 +54,7 @@ public class HadoopTool extends Configured implements Tool {
 		job.setReducerClass(TierMapReduce.class);
 		
 		JobClient.runJob(job);
-		
+		}
 		return 0;
 	}
 

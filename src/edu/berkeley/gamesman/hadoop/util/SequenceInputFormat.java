@@ -28,9 +28,9 @@ public class SequenceInputFormat implements InputFormat<BigIntegerWritable, Null
 		
 		SequenceSplit[] splits = new SequenceSplit[numSplits];
 		
-		BigInteger step = lastHash.divide(BigInteger.valueOf(numSplits));
+		BigInteger cur = new BigInteger(conf.get("firsthash"));
 		
-		BigInteger cur = BigInteger.ZERO;
+		BigInteger step = lastHash.subtract(cur).divide(BigInteger.valueOf(numSplits));
 		
 		for(int i = 0; i < numSplits; i++){
 			if(i == numSplits-1)
