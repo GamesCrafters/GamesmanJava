@@ -11,7 +11,7 @@ import edu.berkeley.gamesman.game.Game;
  */
 public abstract class Hasher {
 
-	Game<char[][], ?> game;
+	protected Game<char[][], ?> game;
 	
 	/**
 	 * Give the hasher a reference to the game it's hashing for

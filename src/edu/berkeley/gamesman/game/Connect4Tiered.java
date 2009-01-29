@@ -8,9 +8,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
-import edu.berkeley.gamesman.OptionProcessor;
-import edu.berkeley.gamesman.Pair;
-import edu.berkeley.gamesman.Util;
+import edu.berkeley.gamesman.util.OptionProcessor;
+import edu.berkeley.gamesman.util.Pair;
+import edu.berkeley.gamesman.util.Util;
 
 /**
  * 
@@ -66,7 +66,7 @@ public final class Connect4Tiered extends TieredGame<BigInteger,Values> {
 
 	@Override
 	public Collection<BigInteger> validMoves(BigInteger pos) {		
-		Pair<Integer, BigInteger> ti = tierIndexForState(pos);
+/*		Pair<Integer, BigInteger> ti = tierIndexForState(pos);
 		
 		int oldTier = ti.car,newTier = ti.car+1;
 		BigInteger oldRearrange = ti.cdr;
@@ -98,7 +98,9 @@ public final class Connect4Tiered extends TieredGame<BigInteger,Values> {
 				validMoves.add(newBase.add(BigInteger.valueOf(column).multiply((BigInteger.valueOf(gameWidth).pow(oldTier)))));
 		}
 		
-		return validMoves;
+		return validMoves;*/
+		
+		return null;
 	}
 
 	public BigInteger gameStateForTierIndex(int tier, BigInteger index) {
@@ -182,6 +184,16 @@ public final class Connect4Tiered extends TieredGame<BigInteger,Values> {
 	@Override
 	public BigInteger stateToHash(BigInteger state) {
 		return state;
+	}
+
+	@Override
+	public int getDefaultBoardHeight() {
+		return 3;
+	}
+
+	@Override
+	public int getDefaultBoardWidth() {
+		return 3;
 	}
 	
 }

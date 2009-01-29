@@ -2,12 +2,12 @@ package edu.berkeley.gamesman.master;
 
 import java.math.BigInteger;
 
-import edu.berkeley.gamesman.ProgressMeter;
-import edu.berkeley.gamesman.Util;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.hasher.Hasher;
 import edu.berkeley.gamesman.solver.Solver;
+import edu.berkeley.gamesman.util.ProgressMeter;
+import edu.berkeley.gamesman.util.Util;
 
 public final class LocalMaster implements Master,ProgressMeter {
 

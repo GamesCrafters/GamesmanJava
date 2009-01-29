@@ -3,7 +3,7 @@ package edu.berkeley.gamesman.game;
 import java.math.BigInteger;
 import java.util.Collection;
 
-import edu.berkeley.gamesman.Util;
+import edu.berkeley.gamesman.util.Util;
 
 public abstract class HashedGame<Value> extends Game<char[][], Value> {
 

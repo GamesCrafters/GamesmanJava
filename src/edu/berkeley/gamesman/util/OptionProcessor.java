@@ -1,9 +1,11 @@
-package edu.berkeley.gamesman;
+package edu.berkeley.gamesman.util;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Hashtable;
+
+import edu.berkeley.gamesman.Gamesman;
 
 /**
  * Utility class for processing of command line arguments

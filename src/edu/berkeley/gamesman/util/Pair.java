@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman;
+package edu.berkeley.gamesman.util;
 
 /**
  * A pair is a simple datatype that stores two distinct pieces of information

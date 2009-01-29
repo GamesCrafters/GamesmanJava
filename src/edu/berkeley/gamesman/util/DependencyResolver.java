@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman;
+package edu.berkeley.gamesman.util;
 
 import java.util.ArrayList;
 import java.util.HashMap;

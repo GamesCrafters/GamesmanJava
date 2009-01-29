@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.core;
+package edu.berkeley.gamesman.util;
 
 import java.util.Iterator;
 

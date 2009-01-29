@@ -2,7 +2,7 @@ package edu.berkeley.gamesman.game;
 
 import java.math.BigInteger;
 
-import edu.berkeley.gamesman.Pair;
+import edu.berkeley.gamesman.util.Pair;
 
 public abstract class TieredGame<State,Value> extends Game<State,Value> {
 

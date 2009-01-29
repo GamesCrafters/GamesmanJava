@@ -1,8 +1,8 @@
 package edu.berkeley.gamesman.solver;
 
-import edu.berkeley.gamesman.ProgressMeter;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.game.Game;
+import edu.berkeley.gamesman.util.ProgressMeter;
 
 public abstract class Solver {
 

@@ -4,7 +4,7 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Iterator;
 
-import edu.berkeley.gamesman.Util;
+import edu.berkeley.gamesman.util.Util;
 
 public class NullGame extends Game<Object,Object> {
 
@@ -52,6 +52,18 @@ public class NullGame extends Game<Object,Object> {
 	public BigInteger stringToState(String pos) {
 		fail();
 		return null;
+	}
+
+	@Override
+	public int getDefaultBoardHeight() {
+		fail();
+		return 0;
+	}
+
+	@Override
+	public int getDefaultBoardWidth() {
+		fail();
+		return 0;
 	}
 
 }

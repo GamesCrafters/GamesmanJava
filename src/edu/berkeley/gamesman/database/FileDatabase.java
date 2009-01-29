@@ -1,6 +1,6 @@
 package edu.berkeley.gamesman.database;
 
-import edu.berkeley.gamesman.Util;
+import edu.berkeley.gamesman.util.Util;
 
 public final class FileDatabase<Value> extends Database<Value> {
 

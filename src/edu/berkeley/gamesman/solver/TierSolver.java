@@ -4,10 +4,10 @@ package edu.berkeley.gamesman.solver;
 import java.math.BigInteger;
 import java.util.Collection;
 
-import edu.berkeley.gamesman.ProgressMeter;
-import edu.berkeley.gamesman.Util;
 import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.game.TieredGame;
+import edu.berkeley.gamesman.util.ProgressMeter;
+import edu.berkeley.gamesman.util.Util;
 
 /**
  * A generic solver that works top-down in the matter most games are played

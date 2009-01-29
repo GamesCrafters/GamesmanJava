@@ -1,7 +1,7 @@
 /**
  * 
  */
-package edu.berkeley.gamesman;
+package edu.berkeley.gamesman.util;
 
 import com.sun.tools.javac.util.FatalError;
 
