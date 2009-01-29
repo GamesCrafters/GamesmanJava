@@ -16,14 +16,13 @@ public class HadoopMaster implements Master {
 	public void initialize(Class<? extends Game<?>> game,
 			Class<? extends Solver> solver, Class<? extends Hasher<?>> hasher,
 			Class<? extends Database> database) {
-		// TODO Auto-generated method stub
-
 	}
 
 	public void run() {
 		try {
 			ToolRunner.run(new HadoopTool(), OptionProcessor.getAllOptions());
 		} catch (Exception e) {
+			e.printStackTrace(System.err);
 			Util.fatalError("Hadoop tool runner threw an exception: "+e);
 		}
 	}

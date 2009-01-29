@@ -243,4 +243,5 @@ public class Connect4 extends TieredGame<char[][]> {
 	public String describe() {
 		return "Connect4|"+gameWidth+"|"+gameHeight+"|"+piecesToWin;
 	}
+
 }

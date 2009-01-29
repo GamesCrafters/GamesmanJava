@@ -3,6 +3,7 @@
  */
 package edu.berkeley.gamesman.core;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Collection;
 import edu.berkeley.gamesman.util.DependencyResolver;
@@ -16,7 +17,7 @@ import edu.berkeley.gamesman.util.Util;
  * @param <State> The object used to represent a Game State
  *
  */
-public abstract class Game<State> {
+public abstract class Game<State> implements Serializable {
 
 	protected Hasher<State> hasher;
 	
@@ -96,6 +97,11 @@ public abstract class Game<State> {
 	 * @return The hash that represents that State
 	 */
 	public abstract BigInteger stateToHash(State pos);
+	
+	/**
+	 * @return the last valid hash possible in the current configuration
+	 */
+	public abstract BigInteger lastHash();
 	
 	/**
 	 * Produce a human-readable String representing the state

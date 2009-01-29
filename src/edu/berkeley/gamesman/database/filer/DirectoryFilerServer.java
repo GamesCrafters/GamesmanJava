@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.util.Util;
@@ -72,10 +73,9 @@ public final class DirectoryFilerServer {
 			}
 		} catch (IOException e) {
 			if (!shuttingdown)
-				Util
-						.warn("Server socket unexpectedly could not accept new connections, exiting after current connections close: "
-								+ e);
+				Util.warn("Server socket unexpectedly could not accept new connections, exiting after current connections close: "+ e);
 		}
+		df.close();
 	}
 
 	private class DirectoryFilerServerThread implements Runnable {
@@ -167,7 +167,8 @@ public final class DirectoryFilerServer {
 						break;
 					case 3:
 						//db = new FileDatabase();
-						String file, config;
+						String file;
+						Configuration config;
 						int len = din.readInt();
 						byte[] fb = new byte[len];
 						din.readFully(fb);
@@ -175,10 +176,11 @@ public final class DirectoryFilerServer {
 						len = din.readInt();
 						fb = new byte[len];
 						din.readFully(fb);
-						config = new String(fb);
+						System.out.println(Arrays.toString(fb));
+						config = Configuration.deserialize(fb);
 						//db.initialize(Util.getChild(root, file).toURL()
 						//		.toExternalForm(), new Configuration(config)); //TODO: don't reference Values
-						db = df.openDatabase(file);
+						db = df.openDatabase(file,config);
 						fds.add(db);
 						locs.add(BigInteger.ZERO);
 						dout.writeInt(fds.indexOf(db));
@@ -225,6 +227,7 @@ public final class DirectoryFilerServer {
 				}
 
 			} catch (IOException e) {
+				e.printStackTrace(System.err);
 				Util.warn("Dropping connection " + sock
 						+ " because it caused an IOException: " + e);
 			}

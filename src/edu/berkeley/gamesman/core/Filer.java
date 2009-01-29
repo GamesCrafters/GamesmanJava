@@ -19,9 +19,10 @@ public abstract class Filer<DB extends Database> {
 	/**
 	 * Open a database by name
 	 * @param name The name of the requested database
+	 * @param conf The configuration it should match
 	 * @return a Database if it exists, null otherwise
 	 */
-	public abstract DB openDatabase(String name);
+	public abstract DB openDatabase(String name, Configuration conf);
 	/**
 	 * Open a database by configuration
 	 * @param conf The configuration that the database should match

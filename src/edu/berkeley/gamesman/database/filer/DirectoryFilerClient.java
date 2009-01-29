@@ -11,6 +11,7 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Random;
 
 import edu.berkeley.gamesman.core.Record;
@@ -68,6 +69,7 @@ public final class DirectoryFilerClient {
 				Util.fatalError("Can't SHA?");
 			}
 
+			Util.debug("Connected!");
 		} catch (IOException e) {
 			Util.fatalError("IO error while communicating with server: " + e);
 		}
@@ -77,6 +79,7 @@ public final class DirectoryFilerClient {
 		try {
 			dout.write(0);
 			sock.close();
+			Util.debug("Closed database");
 		} catch (IOException e) {
 			Util.fatalError("IO error while communicating with server: " + e);
 		}
@@ -84,6 +87,7 @@ public final class DirectoryFilerClient {
 
 	public void halt() {
 		try {
+			Util.debug("Asking server to halt...");
 			dout.write(1);
 		} catch (IOException e) {
 			Util.fatalError("IO error while communicating with server: " + e);
@@ -113,9 +117,11 @@ public final class DirectoryFilerClient {
 			dout.write(3);
 			dout.writeInt(name.length());
 			dout.write(name.getBytes());
-			dout.writeInt(config.getConfigString().length());
-			dout.write(config.getConfigString().getBytes());
+			byte[] confb = config.serialize();
+			dout.writeInt(confb.length);
+			dout.write(confb);
 			int fd = din.readInt();
+			System.out.println(Arrays.toString(confb));
 			Util.debug("Client opened " + name + " for fd " + fd);
 			return new RemoteDatabase(fd,config);
 		} catch (IOException e) {
@@ -125,9 +131,9 @@ public final class DirectoryFilerClient {
 	}
 
 	private class RemoteDatabase extends Database {
-		int fd;
+		final int fd;
 		BigInteger pos = BigInteger.ZERO;
-		Configuration conf;
+		final Configuration conf;
 
 		protected RemoteDatabase(int fd, Configuration config) {
 			this.fd = fd;

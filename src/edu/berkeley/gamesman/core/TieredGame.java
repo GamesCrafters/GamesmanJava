@@ -71,4 +71,10 @@ public abstract class TieredGame<State> extends Game<State> {
 		return myHasher.lastHashValueForTier(tier);
 	}
 	
+
+	@Override
+	public final BigInteger lastHash() {
+		return lastHashValueForTier(numberOfTiers()-1);
+	}
+	
 }

@@ -23,6 +23,7 @@ import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.hadoop.util.BigIntegerWritable;
 import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.util.IteratorWrapper;
+import edu.berkeley.gamesman.util.OptionProcessor;
 import edu.berkeley.gamesman.util.Util;
 
 public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, BigIntegerWritable, BigIntegerWritable>,Reducer<BigIntegerWritable, BigIntegerWritable, BigIntegerWritable, TierMapReduce.RecordWritable>{
@@ -38,12 +39,14 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 		Class<TieredGame<Object>> gc = null;
 		Class<Database> gd = null;
 		Class<Hasher> gh = null;
+		final String base = "edu.berkeley.gamesman.";
+		OptionProcessor.initializeOptions(conf.getStrings("args"));
 		try {
-			gc = (Class<TieredGame<Object>>) Class.forName(conf.get("gameclass","NullGame"));
-			gd = (Class<Database>) Class.forName(conf.get("databaseclass", "NullDatabase"));
-			gh = (Class<Hasher>) Class.forName(conf.get("hasherclass","NullHasher"));
+			gc = (Class<TieredGame<Object>>) Class.forName(base+"game."+conf.get("gameclass","NullGame"));
+			gd = (Class<Database>) Class.forName(base+"database."+conf.get("databaseclass", "NullDatabase"));
+			gh = (Class<Hasher>) Class.forName(base+"hasher."+conf.get("hasherclass","NullHasher"));
 		} catch (ClassNotFoundException e) {
-			Util.fatalError("Could not find class :( "+e);
+			Util.fatalError("Could not find class "+e);
 		}
 		
 		try {
@@ -59,13 +62,15 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 		config = new Configuration(game,hasher,EnumSet.of(RecordFields.Value));
 		
 		game.initialize(config);
-		db.initialize(conf.get("dburl"),config);
+		db.initialize(conf.get("dburi"),config);
 		
 		Util.debug("Hadoop is ready to work!");
 		
 	}
 
-	public void close() throws IOException {}
+	public void close() throws IOException {
+		db.close();
+	}
 
 	public void map(BigIntegerWritable position, NullWritable nullVal,
 			OutputCollector<BigIntegerWritable, BigIntegerWritable> validMoves,

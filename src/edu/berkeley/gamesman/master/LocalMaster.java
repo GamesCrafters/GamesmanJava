@@ -19,7 +19,7 @@ import edu.berkeley.gamesman.util.Util;
 
 public final class LocalMaster implements Master,TaskFactory {
 
-	Game<?> game;
+	private Game<?> game;
 	Solver solver;
 	Hasher<?> hasher;
 	Database database;
@@ -27,7 +27,6 @@ public final class LocalMaster implements Master,TaskFactory {
 	Configuration conf;
 	
 	static{
-		OptionProcessor.acceptOption("u", "uri", true, "The URI or relative path of the databse", "file:///tmp/out.db");
 		OptionProcessor.acceptOption("j", "threads", true, "The number of threads to launch", "1");
 	}
 	
@@ -41,9 +40,9 @@ public final class LocalMaster implements Master,TaskFactory {
 			hasher = hasherc.newInstance();
 			database = databasec.newInstance();
 		}catch(IllegalAccessException e){
-			Util.fatalError("Fatal error while initializing: "+e);
+			Util.fatalError("Fatal error while initializing",e);
 		}catch (InstantiationException e) {
-			Util.fatalError("Fatal error while initializing: "+e);
+			Util.fatalError("Fatal error while initializing",e);
 		}
 		
 		conf = new Configuration(game,hasher,EnumSet.of(RecordFields.Value)); //TODO: have more than Value here
@@ -120,6 +119,13 @@ public final class LocalMaster implements Master,TaskFactory {
 	
 	public Task createTask(String name) {
 		return new LocalMasterTextTask(name);
+	}
+
+	/**
+	 * @return the game
+	 */
+	public Game<?> getGame() {
+		return game;
 	}
 
 }

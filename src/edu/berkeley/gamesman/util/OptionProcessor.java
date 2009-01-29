@@ -117,6 +117,8 @@ public final class OptionProcessor {
 	 * @see #acceptOption
 	 */
 	public static String checkOption(String opt){
+		if(!opts.containsKey(opt))
+			Util.fatalError("Option not defined: "+opt);
 		return opts.get(opt).checkOpt(myArgs);
 	}
 

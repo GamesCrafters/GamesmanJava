@@ -84,6 +84,8 @@ public final class Gamesman {
 		OptionProcessor
 				.acceptOption("C", "command", true, "Command to execute");
 		OptionProcessor.nextGroup();
+		OptionProcessor.acceptOption("u", "uri", true, "The URI or relative path of the databse", "file:///tmp/out.db");
+		OptionProcessor.nextGroup();
 
 		String masterName = OptionProcessor.checkOption("master");
 
@@ -284,7 +286,7 @@ public final class Gamesman {
 		if (testrun)
 			return;
 		DirectoryFilerClient dfc = new DirectoryFilerClient(new URI(OptionProcessor
-				.checkOption("url")));
+				.checkOption("uri")));
 
 		LineNumberReader input = new LineNumberReader(new InputStreamReader(
 				System.in));

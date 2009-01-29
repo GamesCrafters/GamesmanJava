@@ -1,5 +1,6 @@
 package edu.berkeley.gamesman.core;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -15,7 +16,7 @@ import edu.berkeley.gamesman.util.Util;
  * will derive useful information from it.
  * @author Steven Schlansker
  */
-public class Configuration {
+public class Configuration implements Serializable {
 	private String config;
 	final private Game<?> g;
 	final private Hasher<?> h;
@@ -87,6 +88,18 @@ public class Configuration {
 
 	public Hasher<?> getHasher() {
 		return h;
+	}
+
+	public static Configuration deserialize(byte[] bytes) {
+		return Util.deserialize(bytes);
+	}
+
+	public byte[] serialize() {
+		return Util.serialize(this);
+	}
+	
+	public String toString(){
+		return config;
 	}
 	
 

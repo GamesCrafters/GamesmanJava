@@ -1,5 +1,7 @@
 package edu.berkeley.gamesman.util;
 
+import java.io.Serializable;
+
 /**
  * A pair is a simple datatype that stores two distinct pieces of information
  * 
@@ -8,7 +10,7 @@ package edu.berkeley.gamesman.util;
  * @param <A> The type of the first part
  * @param <B> The type of the second part
  */
-public class Pair<A,B> {
+public class Pair<A,B> implements Serializable {
 
 	/**
 	 * The first datum
@@ -31,7 +33,7 @@ public class Pair<A,B> {
 	
 	@Override
 	public String toString(){
-		return "( "+car+" . "+cdr+" )";
+		return "("+car+"."+cdr+")";
 	}
 	
 }

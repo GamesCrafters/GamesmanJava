@@ -75,12 +75,16 @@ public class NullGame extends Game<Object> {
 
 	@Override
 	public String describe() {
-		fail();
-		return null;
+		return "NullGame";
 	}
 
 	@Override
 	public void initialize(Configuration conf) {
+	}
+
+	@Override
+	public BigInteger lastHash() {
+		return BigInteger.ZERO;
 	}
 
 }

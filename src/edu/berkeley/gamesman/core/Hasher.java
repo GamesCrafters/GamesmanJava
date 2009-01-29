@@ -1,5 +1,6 @@
 package edu.berkeley.gamesman.core;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 
 
@@ -8,7 +9,7 @@ import java.math.BigInteger;
  * @author Steven Schlansker
  * @param <Board> The type of Board that this hasher can hash
  */
-public abstract class Hasher<Board> {
+public abstract class Hasher<Board> implements Serializable {
 
 	protected Game<Board> game;
 	protected char[] pieces;
