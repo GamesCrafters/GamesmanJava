@@ -176,7 +176,6 @@ public final class DirectoryFilerServer {
 						len = din.readInt();
 						fb = new byte[len];
 						din.readFully(fb);
-						System.out.println(Arrays.toString(fb));
 						config = Configuration.deserialize(fb);
 						//db.initialize(Util.getChild(root, file).toURL()
 						//		.toExternalForm(), new Configuration(config)); //TODO: don't reference Values
@@ -184,7 +183,8 @@ public final class DirectoryFilerServer {
 						fds.add(db);
 						locs.add(BigInteger.ZERO);
 						dout.writeInt(fds.indexOf(db));
-						Util.debug("Client opened db " + file + " for fd " + fds.indexOf(db)+" with config "+config);
+						Util.debug("Client opened db " +
+								"" + file + " for fd " + fds.indexOf(db)+" with config "+config);
 						break;
 					case 4:
 						fd = din.readInt();

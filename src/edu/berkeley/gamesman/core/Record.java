@@ -59,7 +59,7 @@ public final class Record {
 				fields[i] = in.readByte();
 			}
 		} catch (IOException e) {
-			Util.fatalError("Error while writing record: " + e);
+			Util.fatalError("Error while reading record: " + e);
 		}
 	}
 

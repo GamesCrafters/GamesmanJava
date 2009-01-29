@@ -121,7 +121,6 @@ public final class DirectoryFilerClient {
 			dout.writeInt(confb.length);
 			dout.write(confb);
 			int fd = din.readInt();
-			System.out.println(Arrays.toString(confb));
 			Util.debug("Client opened " + name + " for fd " + fd);
 			return new RemoteDatabase(fd,config);
 		} catch (IOException e) {

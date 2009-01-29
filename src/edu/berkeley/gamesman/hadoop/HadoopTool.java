@@ -11,6 +11,7 @@ import org.apache.hadoop.util.Tool;
 
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Hasher;
+import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.database.NullDatabase;
 import edu.berkeley.gamesman.hadoop.util.BigIntegerWritable;
 import edu.berkeley.gamesman.hadoop.util.SequenceInputFormat;
@@ -32,7 +33,10 @@ public class HadoopTool extends Configured implements Tool {
 		//Determine last index
 		LocalMaster m = new LocalMaster();
 		m.initialize((Class<? extends Game<?>>)Class.forName("edu.berkeley.gamesman.game."+conf.get("gameclass")), TierSolver.class, (Class<? extends Hasher<?>>)Class.forName("edu.berkeley.gamesman.hasher."+conf.get("hasherclass")), NullDatabase.class);
-		conf.set("lasthash", m.getGame().lastHash().toString());
+		
+		TieredGame<?> game = (TieredGame<?>)m.getGame();
+		conf.set("firsthash",game.hashOffsetForTier(tier));
+		conf.set("lasthash", game.lastHashValueForTier(tier));
 		
 		JobConf job = new JobConf(conf,TierMapReduce.class);
 		
