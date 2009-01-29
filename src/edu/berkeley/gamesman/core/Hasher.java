@@ -7,7 +7,7 @@ import java.math.BigInteger;
  * A Hasher converts between a game board and a BigInteger hash in a space- and time-efficient manner.
  * @author Steven Schlansker
  */
-public abstract class Hasher {
+public abstract class Hasher<Board> {
 
 	protected Game<?, ?> game;
 	protected char[] pieces;
@@ -27,19 +27,16 @@ public abstract class Hasher {
 	 * @param hash The hashed representation of a board
 	 * @return The board
 	 */
-	public char[] unhash(BigInteger hash){
+	public Board unhash(BigInteger hash){
 		return unhash(hash,game.getGameWidth()*game.getGameHeight());
 	}
-	public abstract char[] unhash(BigInteger hash, int l);
+	public abstract Board unhash(BigInteger hash, int l);
 	/**
 	 * Convert a board into a compact hash representation
 	 * @param board The board to hash
 	 * @return Hash of the board
 	 */
-	public abstract BigInteger hash(char[] board, int l);
-	public BigInteger hash(char[] board){
-		return hash(board,board.length);
-	}
+	public abstract BigInteger hash(Board board, int l);
 	
 	public abstract BigInteger maxHash(int boardlen);
 	

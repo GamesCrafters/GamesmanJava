@@ -9,12 +9,7 @@ import edu.berkeley.gamesman.core.Hasher;
  * It does nothing interesting.
  * @author Steven Schlansker
  */
-public class NullHasher extends Hasher {
-
-	@Override
-	public BigInteger hash(char[] board) {
-		return null;
-	}
+public class NullHasher extends Hasher<char[]> {
 
 	@Override
 	public char[] unhash(BigInteger hash, int l) {

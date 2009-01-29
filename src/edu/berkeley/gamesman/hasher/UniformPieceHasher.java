@@ -20,7 +20,7 @@ import edu.berkeley.gamesman.util.Util;
  * @author Steven Schlansker
  * @see AlternatingRearrangerHasher
  */
-public final class UniformPieceHasher extends Hasher {
+public final class UniformPieceHasher extends Hasher<char[]> {
 	
 	private char[] parr;
 	HashMap<Character, BigInteger> lookup;

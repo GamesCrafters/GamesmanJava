@@ -11,7 +11,7 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author Steven Schlansker
  */
-public class AlternatingRearrangerHasher extends Hasher {
+public class AlternatingRearrangerHasher extends Hasher<char[]> {
 
 	@Override
 	public void setGame(Game<?,?> game, char[] p){

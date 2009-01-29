@@ -99,7 +99,7 @@ public class Connect4 extends TieredGame<char[][],Values> {
 			colheight = 0;
 		}
 		
-		int uhh = uh.hash(colheights).intValue();
+		int uhh = uh.hash(colheights,colheights.length).intValue();
 		BigInteger arh = ah.hash(linear,index);
 		
 		//Util.debug("Connect4 shows UPH = "+Arrays.toString(colheights)+" ("+uhh+") ARH ("+arh+") = "+Arrays.toString(linear));
