@@ -1,11 +1,14 @@
 package edu.berkeley.gamesman.hadoop;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Iterator;
 
 import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
@@ -18,12 +21,11 @@ import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.hadoop.util.BigIntegerWritable;
-import edu.berkeley.gamesman.hadoop.util.RecordWritable;
 import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.util.IteratorWrapper;
 import edu.berkeley.gamesman.util.Util;
 
-public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, BigIntegerWritable, BigIntegerWritable>,Reducer<BigIntegerWritable, BigIntegerWritable, BigIntegerWritable, RecordWritable>{
+public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, BigIntegerWritable, BigIntegerWritable>,Reducer<BigIntegerWritable, BigIntegerWritable, BigIntegerWritable, TierMapReduce.RecordWritable>{
 
 	protected TieredGame<Object> game;
 	protected Hasher hasher;
@@ -54,8 +56,9 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 			Util.fatalError("Could not access class "+e);
 		}
 		
-		game.setHasher(hasher);
 		config = new Configuration(game,hasher,EnumSet.of(RecordFields.Value));
+		
+		game.initialize(config);
 		db.initialize(conf.get("dburl"),config);
 		
 		Util.debug("Hadoop is ready to work!");
@@ -72,8 +75,9 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 			validMoves.collect(position, tempBI);
 		}
 	}
-	
-	public void reduce(BigIntegerWritable position,
+
+	public void reduce(
+			BigIntegerWritable position,
 			Iterator<BigIntegerWritable> children,
 			OutputCollector<BigIntegerWritable, RecordWritable> out,
 			Reporter rep) throws IOException {
@@ -82,5 +86,27 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 			vals.add(db.getValue(child.get()));
 		}
 		db.setValue(position.get(), Record.combine(config,vals));
+	}
+	
+	private class RecordWritable implements Writable {
+
+		private Record value;
+		
+		public void readFields(DataInput in) throws IOException {
+			value = Record.readStream(config,in);
+		}
+
+		public void write(DataOutput out) throws IOException {
+			value.writeStream(out);
+		}
+		
+		public Record get(){
+			return value;
+		}
+		
+		public void set(Record v){
+			value = v;
+		}
+
 	}
 }

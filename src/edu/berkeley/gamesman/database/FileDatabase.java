@@ -50,9 +50,7 @@ public final class FileDatabase extends Database {
 	public synchronized Record getValue(BigInteger loc) {
 		try {
 			fd.seek(loc.longValue() + offset);
-			// byte b = fd.readByte();
 			Record v = Record.readStream(conf, fd);
-			// Util.debug("Location "+loc+" = "+v+" ("+b+")");
 			return v;
 		} catch (IOException e) {
 			Util.fatalError("IO Error: " + e);
@@ -81,8 +79,7 @@ public final class FileDatabase extends Database {
 		}
 
 		Util.assertTrue(Record.length(conf) == 1,
-				"FileDatabase can only store 8 bits per record for now"); // TODO:
-		// FIXME
+				"FileDatabase can only store 8 bits per record for now"); // TODO: FIXME
 		try {
 			fd.seek(0);
 		} catch (IOException e) {
@@ -121,9 +118,7 @@ public final class FileDatabase extends Database {
 	public synchronized void setValue(BigInteger loc, Record value) {
 		try {
 			fd.seek(loc.longValue() + offset);
-			// fd.writeByte(value.byteValue());
 			value.writeStream(fd);
-			// Util.debug("Wrote "+value.byteValue()+" to "+loc);
 		} catch (IOException e) {
 			Util.fatalError("IO Error: " + e);
 		}

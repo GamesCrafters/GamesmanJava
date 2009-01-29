@@ -40,7 +40,7 @@ public final class Record {
 	public void writeStream(DataOutput out) {
 		try {
 			for (int i = 0; i < bits.length; i++) {
-				out.writeInt(fields[i]);
+				out.writeByte(fields[i]);
 			}
 		} catch (IOException e) {
 			Util.fatalError("Error while writing record: " + e);
@@ -56,9 +56,7 @@ public final class Record {
 	private void readStream(DataInput in) {
 		try {
 			for (int i = 0; i < bits.length; i++) {
-				fields[i] = in.readInt();
-				System.out.println("Read field "+i+" to "+fields[i]);
-				if(fields[1] == 131072) Util.fatalError("WTF");
+				fields[i] = in.readByte();
 			}
 		} catch (IOException e) {
 			Util.fatalError("Error while writing record: " + e);
@@ -80,7 +78,8 @@ public final class Record {
 	}
 
 	public final int length() {
-		return (maxbits + 7) / 8;
+		return bits.length;
+		//return (maxbits + 7) / 8;
 	}
 	
 	public static int length(final Configuration conf){
@@ -88,12 +87,10 @@ public final class Record {
 	}
 
 	public final void set(final RecordFields field, final int value) {
-		System.out.println("Set "+field+" to "+value);
 		fields[sf.get(field).car] = value;
 	}
 
 	public final int get(final RecordFields field) {
-		System.out.println("Get "+field+" is "+fields[sf.get(field).car]);
 		return fields[sf.get(field).car];
 	}
 

@@ -61,6 +61,9 @@ public final class OptionProcessor {
 		myArgs = args;
 	}
 	
+	/**
+	 * @return all arguments passed to the program
+	 */
 	public static String[] getAllOptions(){
 		return myArgs;
 	}
