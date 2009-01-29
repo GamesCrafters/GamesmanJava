@@ -10,7 +10,7 @@ import edu.berkeley.gamesman.util.Util;
  * Each game state falls into a logical tier.  As an example, you can represent TicTacToe as a tiered game
  * with the tier being the number of pieces placed.
  * 
- * The important invariant is that any board's value must depend only on (a) primitives or (b) boards in a higher tier.
+ * The important invariant is that any board's value must depend only on (a) primitives or (b) boards in a later tier.
  * This allows us to solve from the last tier up to the top at tier 0 (the starting state) in a very efficient manner
  * 
  * @author Steven Schlansker

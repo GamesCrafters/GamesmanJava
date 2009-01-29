@@ -5,6 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
+import edu.berkeley.gamesman.hadoop.util.BigIntegerWritable;
 
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapred.InputFormat;
