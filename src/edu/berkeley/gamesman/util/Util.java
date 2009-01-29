@@ -105,16 +105,29 @@ public final class Util {
 	 * @note You could memoize this if it turns out to be a big performance problem
 	 * 
 	 * @param n n
-	 * @param mk k
+	 * @param k k
 	 * @return n choose k
 	 */
-	public static long nCr(int n, int mk){
+	public static long nCr(int n, int k){
+		if(n < 50 && k < 50){
+			if(nCr_cache[n][k] != 0)
+				return nCr_cache[n][k];
+			nCr_cache[n][k] = _nCr(n,k);
+			return nCr_cache[n][k];
+		}
+		return _nCr(n,k);
+	}
+	
+	private static long[][] nCr_cache = new long[50][50]; // 50 is a made-up number, you're free to adjust as necessary...
+	
+	
+	private static long _nCr(int n, int mk){
 		int k = mk;
 	    if (k > n)
 	        return 0;
 
 	    if (k > n/2)
-	        k = n-k; // faster
+	        k = n-k; // go faster
 
 	    double accum = 1;
 	    for (long i = 1; i <= k; i++)
