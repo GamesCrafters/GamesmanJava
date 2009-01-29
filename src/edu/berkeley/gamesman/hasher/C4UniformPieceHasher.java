@@ -47,6 +47,7 @@ public final class C4UniformPieceHasher extends Hasher {
 
 	@Override
 	public BigInteger maxHash(int boardlen) {
+		if(lookup == null) init(new char[boardlen],0,pcs,boardlen*pcs.length);
 		return BigInteger.valueOf(table.length-1);
 	}
 	

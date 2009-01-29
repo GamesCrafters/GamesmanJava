@@ -43,13 +43,19 @@ public final class LocalMaster implements Master,ProgressMeter {
 	public void run() {
 		System.out.println("Launched!");
 	}
+	
+	private BigInteger total;
 
-	public void progress(BigInteger completed, BigInteger total) {
+	public void progress(BigInteger completed) {
 		long elapsedMillis = System.currentTimeMillis() - start;
-		BigInteger thousandpct = completed.divide(total.divide(BigInteger.valueOf(100000)));
-		double pct = thousandpct.doubleValue()/1000;
-		long totalMillis = (long)((double)elapsedMillis / pct);
-		System.out.print("Completed "+completed+" of "+total+", "+pct+"% estimate "+Util.millisToETA(totalMillis-elapsedMillis)+" remains\r");
+		double thousandpct = completed.doubleValue() / (total.doubleValue()/100000);
+		double pct = thousandpct/1000;
+		long totalMillis = (long)((double)elapsedMillis * 100 / pct);
+		System.out.print("Completed "+completed+" of "+total+", "+String.format("%4.02f",pct)+"% estimate "+Util.millisToETA(totalMillis-elapsedMillis)+" remains\r");
+	}
+
+	public void setProgressGoal(BigInteger total) {
+		this.total = total;
 	}
 
 }

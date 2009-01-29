@@ -135,7 +135,7 @@ public class Connect4 extends TieredGame<char[][],Values> {
 	
 	@Override
 	public int numberOfTiers() {
-		return Util.intpow(gameWidth,gameHeight+1);
+		return uh.maxHash(gameWidth).intValue()+1;
 	}
 
 	@Override

@@ -12,5 +12,6 @@ public interface ProgressMeter {
 	 * @param completed The number of work units completed
 	 * @param total The total number of work units expected
 	 */
-	public void progress(BigInteger completed, BigInteger total);
+	public void progress(BigInteger completed);
+	public void setProgressGoal(BigInteger total);
 }

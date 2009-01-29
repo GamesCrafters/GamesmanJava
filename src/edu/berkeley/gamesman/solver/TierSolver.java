@@ -17,6 +17,9 @@ import edu.berkeley.gamesman.util.Util;
  */
 public final class TierSolver extends Solver {
 
+
+	private BigInteger calculated;
+	
 	@Override
 	public void solve(Game<?, ?> igame, ProgressMeter p) {
 		Util.debug("Started the solver...");
@@ -25,15 +28,17 @@ public final class TierSolver extends Solver {
 		TieredGame game = (TieredGame) igame;
 		int numTier = game.numberOfTiers();
 
-		BigInteger calculated = BigInteger.ZERO;
+		calculated = BigInteger.ZERO;
+		
+		p.setProgressGoal(game.lastHashValueForTier(game.numberOfTiers()-1));
+		calculated = BigInteger.ZERO;
 		
 		for(int i = numTier-1; i >= 0; i--){
-			BigInteger t = solveTier(game,calculated,p,i);
-			calculated = calculated.add(t);
+			solveTier(game,p,i);
 		}
 	}
 	
-	private BigInteger solveTier(TieredGame game, BigInteger calculated, ProgressMeter p, int tier){
+	private void solveTier(TieredGame game, ProgressMeter p, int tier){
 		Util.debug("Beginning to solve tier "+tier);
 		BigInteger start = game.hashOffsetForTier(tier).subtract(BigInteger.ONE);
 		BigInteger current = start;
@@ -42,9 +47,9 @@ public final class TierSolver extends Solver {
 			current = current.add(BigInteger.ONE);
 			calculated = calculated.add(BigInteger.ONE);
 			if(calculated.mod(BigInteger.valueOf(10000)).compareTo(BigInteger.ZERO) == 0)		
-				p.progress(calculated, end);
+				p.progress(calculated);
 			Object state = game.hashToState(current);
-			System.out.println(game.stateToString(state));
+			//System.out.println(game.stateToString(state));
 			Collection<?> children = game.validMoves(state);
 			if(children == null)
 				continue;
@@ -52,7 +57,6 @@ public final class TierSolver extends Solver {
 			if(children.size() == 0)
 				db.setValue(current, game.positionValue(state));
 		}
-		return calculated;
 	}
 	
 }
