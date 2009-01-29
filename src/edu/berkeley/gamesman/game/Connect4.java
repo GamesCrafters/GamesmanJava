@@ -96,7 +96,7 @@ public class Connect4 extends TieredGame<char[][],Values> {
 		for(char h : colh)
 			sum += Character.digit(h, Character.MAX_RADIX);
 		BigInteger mh = ah.maxHash(sum);
-		Util.debug("UPH says "+Arrays.toString(colh)+" for tier "+tier+" mh = "+mh);
+		//Util.debug("UPH says "+Arrays.toString(colh)+" for tier "+tier+" mh = "+mh);
 		return mh;
 	}
 
@@ -131,7 +131,7 @@ public class Connect4 extends TieredGame<char[][],Values> {
 	
 	@Override
 	public int numberOfTiers() {
-		return Util.intpow(gameWidth,gameHeight+1)+1;
+		return Util.intpow(gameWidth,gameHeight+1);
 	}
 
 	@Override
