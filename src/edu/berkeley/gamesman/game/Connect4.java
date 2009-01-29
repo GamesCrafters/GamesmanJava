@@ -7,7 +7,7 @@ import java.util.Collection;
 
 import edu.berkeley.gamesman.hasher.AlternatingRearrangerHasher;
 import edu.berkeley.gamesman.hasher.NullHasher;
-import edu.berkeley.gamesman.hasher.UniformPieceHasher;
+import edu.berkeley.gamesman.hasher.MinUniformPieceHasher;
 import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.OptionProcessor;
 import edu.berkeley.gamesman.util.Pair;
@@ -19,10 +19,12 @@ import edu.berkeley.gamesman.util.Util;
  */
 public class Connect4 extends TieredGame<char[][],Values> {
 
-	UniformPieceHasher uh = new UniformPieceHasher();
+	MinUniformPieceHasher uh = new MinUniformPieceHasher();
 	AlternatingRearrangerHasher ah = new AlternatingRearrangerHasher();
 	
 	final char[] pieces = {'X','O'};
+	
+	int piecesToWin=4;
 	
 	static {
 		OptionProcessor.acceptOption("p", "pieces", true, "The number of pieces in a row to win (default 4)", "4");
@@ -41,6 +43,8 @@ public class Connect4 extends TieredGame<char[][],Values> {
 		
 		uh.setGame(null, arr);
 		ah.setGame(null, pieces);
+		
+		piecesToWin = Integer.parseInt(OptionProcessor.checkOption("pieces"));
 	}
 
 	@Override
@@ -131,7 +135,7 @@ public class Connect4 extends TieredGame<char[][],Values> {
 	
 	@Override
 	public int numberOfTiers() {
-		return Util.intpow(gameWidth,gameHeight+1);
+		return Util.intpow(gameWidth,gameHeight+1)+1;
 	}
 
 	@Override

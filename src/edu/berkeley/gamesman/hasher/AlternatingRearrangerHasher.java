@@ -59,11 +59,11 @@ public class AlternatingRearrangerHasher extends Hasher {
 		BigInteger rVal;
 		
 		if(board[src] == 'X'){
-			Util.debug("No offset with p="+pcs+" x="+x);
+			//Util.debug("No offset with p="+pcs+" x="+x);
 			rVal = pieceRearrange(board, src+1, pcs-1, x-1, o);
 		}else{
 			BigInteger off = BigInteger.valueOf(Util.nCr(pcs-1, x-1));
-			Util.debug("Adding offset "+off+" with p="+pcs+" x="+x);
+			//Util.debug("Adding offset "+off+" with p="+pcs+" x="+x);
 			rVal = pieceRearrange(board, src+1, pcs-1, x, o-1);
 			rVal = off.add(rVal);
 		}
