@@ -21,7 +21,7 @@ public class NullGame extends Game<Object,Object> {
 	}
 
 	@Override
-	public Iterator<Object> validMoves(Object pos) {
+	public Collection<Object> validMoves(Object pos) {
 		fail();
 		return null;
 	}
@@ -46,6 +46,12 @@ public class NullGame extends Game<Object,Object> {
 	
 	private void fail(){
 		Util.fatalError("Please specify a game with --game");
+	}
+
+	@Override
+	public BigInteger stringToState(String pos) {
+		fail();
+		return null;
 	}
 
 }

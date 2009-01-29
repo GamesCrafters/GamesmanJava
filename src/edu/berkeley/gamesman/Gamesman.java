@@ -5,6 +5,7 @@ package edu.berkeley.gamesman;
 
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
+import java.util.ArrayList;
 
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.game.Game;
@@ -18,13 +19,13 @@ import edu.berkeley.gamesman.solver.Solver;
  */
 public final class Gamesman {
 
-	private Game<?,?> gm;
+	private Game<Object,Object> gm;
 	private Hasher ha;
 	private Solver so;
-	private Database<?> db;
+	private Database<Object> db;
 	private boolean testrun;
 
-	private Gamesman(Game<?, ?> g, Solver s, Hasher h, Database<?> d, boolean er) {
+	private Gamesman(Game<Object, Object> g, Solver s, Hasher h, Database<Object> d, boolean er) {
 		gm = g;
 		ha = h;
 		so = s;
@@ -119,8 +120,8 @@ public final class Gamesman {
 		if (cmd != null) {
 			try {
 				boolean tr = (OptionProcessor.checkOption("help") != null);
-				Gamesman executor = new Gamesman(g.newInstance(), s
-						.newInstance(), h.newInstance(), d.newInstance(),tr);
+				Gamesman executor = new Gamesman((Game<Object,Object>)g.newInstance(), s
+						.newInstance(), h.newInstance(), (Database<Object>)d.newInstance(),tr);
 				executor.getClass().getMethod("execute" + cmd,
 						(Class<?>[]) null).invoke(executor);
 			} catch (NoSuchMethodException nsme) {
@@ -159,6 +160,26 @@ public final class Gamesman {
 		if(testrun) return;
 		Object state = gm.hashToState(new BigInteger(OptionProcessor.checkOption("hash")));
 		System.out.println(((Game<Object,Object>)gm).stateToString(state));
+	}
+	
+	/**
+	 * Diagnostic call to view all child moves of a given hashed game state
+	 */
+	public void executegenmoves(){
+		OptionProcessor.acceptOption("v", "hash", true, "The hash value to be manipulated");
+		if(testrun) return;
+		Object state = gm.hashToState(new BigInteger(OptionProcessor.checkOption("hash")));
+		for(Object hash : gm.validMoves(state))
+			System.out.println(gm.stateToString(hash));
+	}
+	
+	public void executehash(){
+		OptionProcessor.acceptOption("v", "board", true, "The board to be hashed");
+		if(testrun) return;
+		String str = OptionProcessor.checkOption("board");
+		if(str == null)
+			Util.fatalError("Please specify a board to hash");
+		System.out.println(gm.stringToState(str));
 	}
 
 }

@@ -45,7 +45,7 @@ public abstract class Game<State,Value> {
 	 */
 	public abstract Collection<State> startingPositions();
 	
-	public abstract Iterator<State> validMoves(State pos);
+	public abstract Collection<State> validMoves(State pos);
 	
 	public abstract Value positionValue(State pos);
 	
@@ -57,5 +57,6 @@ public abstract class Game<State,Value> {
 	public abstract BigInteger stateToHash(State pos);
 	
 	public abstract String stateToString(State pos);
+	public abstract BigInteger stringToState(String pos);
 	
 }

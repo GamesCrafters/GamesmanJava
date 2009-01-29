@@ -1,13 +1,13 @@
 package edu.berkeley.gamesman.database;
 
-public interface Database<V> {
+public abstract class Database<V> {
 
-	public void initialize(String url);
+	public abstract void initialize(String url);
 	
-	public V getValue(Number loc);
-	public void setValue(Number loc, V value);
+	public abstract V getValue(Number loc);
+	public abstract void setValue(Number loc, V value);
 	
-	public void flush();
-	public void close();
+	public abstract void flush();
+	public abstract void close();
 	
 }

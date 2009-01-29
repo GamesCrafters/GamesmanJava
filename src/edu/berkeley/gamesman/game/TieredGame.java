@@ -6,7 +6,7 @@ import edu.berkeley.gamesman.Pair;
 
 public abstract class TieredGame<State,Value> extends Game<State,Value> {
 
-	public abstract int lastTier();
+	public abstract int numberOfTiers();
 	public abstract BigInteger hashOffestForTier(int tier);
 	public abstract BigInteger lastHashValueForTier(int tier);
 	public abstract State gameStateForTierIndex(int tier, BigInteger index);

@@ -1,6 +1,8 @@
 package edu.berkeley.gamesman.database;
 
-public final class FileDatabase implements Database {
+import edu.berkeley.gamesman.Util;
+
+public final class FileDatabase<Value> extends Database<Value> {
 
 	public void close() {
 		// TODO Auto-generated method stub
@@ -12,7 +14,7 @@ public final class FileDatabase implements Database {
 		
 	}
 
-	public Object getValue(Number loc) {
+	public Value getValue(Number loc) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -22,9 +24,8 @@ public final class FileDatabase implements Database {
 		
 	}
 
-	public void setValue(Number loc, Object value) {
-		// TODO Auto-generated method stub
-		
+	public void setValue(Number loc, Value value) {
+		//Util.fatalError("BARF! " + value);
 	}
 
 }

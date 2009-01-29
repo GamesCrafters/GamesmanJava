@@ -44,4 +44,11 @@ public final class Util {
 		System.err.println("DEBUG: "+s);
 	}
 	
+	public static String millisToETA(long millis){
+		long sec = (millis/1000) % 60;
+		long min = (millis/1000/60) % 60;
+		long hr = (millis/1000/60/60);
+		return hr+":"+min+":"+sec;
+	}
+	
 }
