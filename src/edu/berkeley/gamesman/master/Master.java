@@ -4,6 +4,6 @@ public interface Master {
 
 	public void initialize(Class game, Class solver, Class hasher, Class database);
 	
-	public void launch();
+	public void run();
 	
 }

@@ -1,5 +1,16 @@
 package edu.berkeley.gamesman.solver;
 
-public interface Solver {
+import edu.berkeley.gamesman.database.Database;
+import edu.berkeley.gamesman.game.Game;
 
+public abstract class Solver {
+
+	Database db;
+	
+	public void setDatabase(Database db){
+		this.db = db;
+	}
+	
+	public abstract void solve(Game<?, ?> game);
+	
 }

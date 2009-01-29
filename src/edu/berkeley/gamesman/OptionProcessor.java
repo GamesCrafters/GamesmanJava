@@ -69,7 +69,7 @@ public final class OptionProcessor {
 	public static void acceptOption(String shortForm, String longForm, boolean takesParam, String helpString){
 		Option newopt = new Option(shortForm,longForm,takesParam,helpString,null);
 		
-		Util.assertTrue(!opts.contains(shortForm) && !opts.contains(longForm));
+		Util.assertTrue(!opts.containsKey(shortForm) && !opts.containsKey(longForm));
 		
 		opts.put(shortForm, newopt);
 		opts.put(longForm,newopt);
@@ -116,6 +116,7 @@ public final class OptionProcessor {
 	public static void help(){
 		ArrayList<Option> sortedOpts = new ArrayList<Option>(new HashSet<Option>(opts.values()));
 		Collections.sort(sortedOpts);
+		Collections.reverse(sortedOpts);
 		
 		int maxs = 0, maxl = 0;
 		

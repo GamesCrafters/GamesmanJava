@@ -3,7 +3,6 @@
  */
 package edu.berkeley.gamesman;
 
-import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.master.Master;
 
 /**
@@ -23,11 +22,12 @@ public final class Gamesman {
 		OptionProcessor.nextGroup();
 		OptionProcessor.acceptOption("x", "with-graphics", false, "Enables use of graphical displays");
 		OptionProcessor.nextGroup();
-		OptionProcessor.acceptOption("g", "game", true, "Specifies which game to play", "NullGame");
-		OptionProcessor.acceptOption("s", "solver", true, "Specifies which solver to use", "TreeSolver");
-		OptionProcessor.acceptOption("#", "hasher", true, "Specifies which hasher to use", "GenericHasher");
-		OptionProcessor.acceptOption("d", "database", true, "Specifies which database backend to use", "FileDatabase");
-		OptionProcessor.acceptOption("m", "master", true, "Specifies which master controller to use", "LocalMaster");
+		OptionProcessor.acceptOption("G", "game", true, "Specifies which game to play", "NullGame");
+		OptionProcessor.acceptOption("S", "solver", true, "Specifies which solver to use", "TierSolver");
+		OptionProcessor.acceptOption("H", "hasher", true, "Specifies which hasher to use", "GenericHasher");
+		OptionProcessor.acceptOption("D", "database", true, "Specifies which database backend to use", "FileDatabase");
+		OptionProcessor.acceptOption("M", "master", true, "Specifies which master controller to use", "LocalMaster");
+		OptionProcessor.acceptOption("C", "command", true, "Command to execute");
 		OptionProcessor.nextGroup();
 
 		
@@ -81,8 +81,11 @@ public final class Gamesman {
 			return;
 		}
 		
+		
 		m.initialize(g,s,h,d);
-		m.launch();
+		m.run();
+		
+		Util.debug("Finished run, tearing down...");
 		
 	}
 	
