@@ -35,8 +35,7 @@ public final class Gamesman {
 	}
 
 	/**
-	 * @param args
-	 *            Command line arguments
+	 * @param args Command line arguments
 	 */
 	public static void main(String[] args) {
 		OptionProcessor.initializeOptions(args);
