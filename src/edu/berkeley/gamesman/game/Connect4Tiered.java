@@ -20,7 +20,7 @@ import edu.berkeley.gamesman.Util;
  * @author Steven Schlansker
  *
  */
-public final class Connect4 extends TieredGame<BigInteger,Values> {
+public final class Connect4Tiered extends TieredGame<BigInteger,Values> {
 
 	static {
 		OptionProcessor.acceptOption("p", "pieces", true, "The number of pieces in a row to win (default 4)", "4");
@@ -33,7 +33,7 @@ public final class Connect4 extends TieredGame<BigInteger,Values> {
 	/**
 	 * New game of Connect4
 	 */
-	public Connect4(){
+	public Connect4Tiered(){
 		super();
 		tierOffsets = new BigInteger[lastTier()];
 		tierOffsets[0] = BigInteger.ZERO;
