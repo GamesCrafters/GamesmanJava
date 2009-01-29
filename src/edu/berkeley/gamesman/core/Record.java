@@ -4,14 +4,14 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.util.Collection;
 
-public interface DBRecord {
+public interface Record {
 
 	public byte byteValue();
-	public DBRecord wrapValue(byte b);
+	public Record wrapValue(byte b);
 	
 	public void write(DataOutput out);
-	public DBRecord wrap(DataInput in);
+	public Record wrap(DataInput in);
 	
-	public DBRecord fold(Collection<DBRecord> v);
+	public Record fold(Collection<Record> v);
 	
 }

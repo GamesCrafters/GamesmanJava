@@ -13,7 +13,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 
-import edu.berkeley.gamesman.core.DBRecord;
+import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Values;
 import edu.berkeley.gamesman.core.Configuration;
@@ -156,7 +156,7 @@ public final class DirectoryFilerClient {
 		}
 
 		@Override
-		public DBRecord getValue(BigInteger loc) {
+		public Record getValue(BigInteger loc) {
 			try {
 				// Util.debug("Trying to read "+loc);
 
@@ -190,12 +190,12 @@ public final class DirectoryFilerClient {
 
 		@Override
 		public void initialize(String url, Configuration config,
-				DBRecord exampleValue) {
+				Record exampleValue) {
 			Util.fatalError("Already initialized");
 		}
 
 		@Override
-		public void setValue(BigInteger loc, DBRecord value) {
+		public void setValue(BigInteger loc, Record value) {
 			try {
 				if(loc.compareTo(pos) != 0) seek(loc);
 				dout.write(6);

@@ -3,7 +3,7 @@ package edu.berkeley.gamesman.database;
 import java.math.BigInteger;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.DBRecord;
+import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Database;
 
 public class BlockDatabase extends Database {
@@ -21,19 +21,19 @@ public class BlockDatabase extends Database {
 	}
 
 	@Override
-	public DBRecord getValue(BigInteger loc) {
+	public Record getValue(BigInteger loc) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void initialize(String url, Configuration config, DBRecord exampleValue) {
+	public void initialize(String url, Configuration config, Record exampleValue) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void setValue(BigInteger loc, DBRecord value) {
+	public void setValue(BigInteger loc, Record value) {
 		// TODO Auto-generated method stub
 		
 	}

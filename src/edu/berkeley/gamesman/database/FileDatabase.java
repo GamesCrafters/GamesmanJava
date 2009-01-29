@@ -10,7 +10,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.DBRecord;
+import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.util.Util;
 
@@ -20,7 +20,7 @@ public final class FileDatabase extends Database {
 
 	protected RandomAccessFile fd;
 
-	DBRecord generator;
+	Record generator;
 
 	long offset;
 
@@ -44,11 +44,11 @@ public final class FileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized DBRecord getValue(BigInteger loc) {
+	public synchronized Record getValue(BigInteger loc) {
 		try {
 			fd.seek(loc.longValue()+offset);
 			byte b = fd.readByte();
-			DBRecord v = generator.wrapValue(b);
+			Record v = generator.wrapValue(b);
 			// Util.debug("Location "+loc+" = "+v+" ("+b+")");
 			return v;
 		} catch (IOException e) {
@@ -60,7 +60,7 @@ public final class FileDatabase extends Database {
 
 	@Override
 	public synchronized void initialize(String loc, Configuration config,
-			DBRecord example) {
+			Record example) {
 
 		boolean previouslyExisted;
 
@@ -98,7 +98,7 @@ public final class FileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void setValue(BigInteger loc, DBRecord value) {
+	public synchronized void setValue(BigInteger loc, Record value) {
 		try {
 			fd.seek(loc.longValue()+offset);
 			fd.writeByte(value.byteValue());

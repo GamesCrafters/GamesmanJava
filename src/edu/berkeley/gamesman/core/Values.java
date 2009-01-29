@@ -14,7 +14,7 @@ import edu.berkeley.gamesman.util.Util;
  * @author Steven Schlansker
  *
  */
-public enum Values implements DBRecord {
+public enum Values implements Record {
 
 	/**
 	 * Value hasn't been computed yet
@@ -53,7 +53,7 @@ public enum Values implements DBRecord {
 	public byte byteValue() {
 		return val;
 	}
-	public DBRecord wrapValue(byte b) {
+	public Record wrapValue(byte b) {
 		switch(b){
 		case 0:
 			return Undecided;
@@ -68,10 +68,10 @@ public enum Values implements DBRecord {
 		return Invalid;
 	}
 
-	public DBRecord fold(Collection<DBRecord> vals) {
+	public Record fold(Collection<Record> vals) {
 		boolean seentie = false;
 		
-		for(DBRecord v : vals){
+		for(Record v : vals){
 			Values va = (Values)v;
 			switch(va){
 			case Invalid:
@@ -96,7 +96,7 @@ public enum Values implements DBRecord {
 		return Lose;
 	}
 
-	public DBRecord wrap(DataInput in) {
+	public Record wrap(DataInput in) {
 		try {
 			return wrapValue(in.readByte());
 		} catch (IOException e) {

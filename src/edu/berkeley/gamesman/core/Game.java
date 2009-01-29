@@ -17,7 +17,7 @@ import edu.berkeley.gamesman.util.Util;
  * @param <Value> The object used to represent the value of a state
  *
  */
-public abstract class Game<State,Value extends DBRecord> {
+public abstract class Game<State,Value extends Record> {
 
 	protected Hasher<State> hasher;
 	
@@ -101,7 +101,7 @@ public abstract class Game<State,Value extends DBRecord> {
 		return gameHeight;
 	}
 	
-	public abstract DBRecord getDBValueExample();
+	public abstract Record getDBValueExample();
 	
 	public abstract String describe();
 	

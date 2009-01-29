@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
-import edu.berkeley.gamesman.core.DBRecord;
+import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.core.Values;
@@ -239,7 +239,7 @@ public class Connect4 extends TieredGame<char[][],Values> {
 	}
 
 	@Override
-	public DBRecord getDBValueExample() {
+	public Record getDBValueExample() {
 		return Values.Win;
 	}
 

@@ -6,11 +6,11 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.Writable;
 
-import edu.berkeley.gamesman.core.DBRecord;
+import edu.berkeley.gamesman.core.Record;
 
 public class DBValueWritable implements Writable {
 
-	private DBRecord value;
+	private Record value;
 	
 	public void readFields(DataInput in) throws IOException {
 		value = value.wrap(in);
@@ -20,11 +20,11 @@ public class DBValueWritable implements Writable {
 		value.write(out);
 	}
 	
-	public DBRecord get(){
+	public Record get(){
 		return value;
 	}
 	
-	public void set(DBRecord v){
+	public void set(Record v){
 		value = v;
 	}
 

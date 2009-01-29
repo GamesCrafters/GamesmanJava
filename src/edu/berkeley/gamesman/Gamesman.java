@@ -13,7 +13,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.DBRecord;
+import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Hasher;
@@ -31,13 +31,13 @@ import edu.berkeley.gamesman.util.Util;
  */
 public final class Gamesman {
 
-	private Game<Object, ? extends DBRecord> gm;
+	private Game<Object, ? extends Record> gm;
 	private Hasher ha;
 	private Solver so;
 	private Database db;
 	private boolean testrun;
 
-	private Gamesman(Game<Object, ? extends DBRecord> g, Solver s, Hasher h,
+	private Gamesman(Game<Object, ? extends Record> g, Solver s, Hasher h,
 			Database d, boolean er) {
 		gm = g;
 		ha = h;
@@ -144,7 +144,7 @@ public final class Gamesman {
 			try {
 				boolean tr = (OptionProcessor.checkOption("help") != null);
 				Gamesman executor = new Gamesman(
-						(Game<Object, ? extends DBRecord>) g.newInstance(), s
+						(Game<Object, ? extends Record>) g.newInstance(), s
 								.newInstance(), h.newInstance(), (Database) d
 								.newInstance(), tr);
 				executor.getClass().getMethod("execute" + cmd,

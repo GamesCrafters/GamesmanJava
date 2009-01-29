@@ -7,7 +7,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.DBRecord;
+import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.database.filer.DirectoryFilerClient;
 import edu.berkeley.gamesman.util.Util;
@@ -15,7 +15,7 @@ import edu.berkeley.gamesman.util.Util;
 public class RemoteDatabase extends Database {
 
 	DirectoryFilerClient dfc;
-	DBRecord ex;
+	Record ex;
 	Database real;
 	
 	@Override
@@ -30,12 +30,12 @@ public class RemoteDatabase extends Database {
 	}
 
 	@Override
-	public DBRecord getValue(BigInteger loc) {
+	public Record getValue(BigInteger loc) {
 		return real.getValue(loc);
 	}
 
 	@Override
-	public void initialize(String uri, Configuration config, DBRecord exampleValue) {
+	public void initialize(String uri, Configuration config, Record exampleValue) {
 		try {
 			dfc = new DirectoryFilerClient(new URI(uri));
 		} catch (URISyntaxException e1) {
@@ -50,7 +50,7 @@ public class RemoteDatabase extends Database {
 	}
 
 	@Override
-	public void setValue(BigInteger loc, DBRecord value) {
+	public void setValue(BigInteger loc, Record value) {
 		real.setValue(loc, value);
 	}
 

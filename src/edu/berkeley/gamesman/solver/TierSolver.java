@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import edu.berkeley.gamesman.core.DBRecord;
+import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Solver;
 import edu.berkeley.gamesman.core.TieredGame;
@@ -23,12 +23,12 @@ import edu.berkeley.gamesman.util.threading.Barrier;
  */
 public final class TierSolver extends Solver {
 
-	protected TieredGame<Object, DBRecord> myGame;
+	protected TieredGame<Object, Record> myGame;
 
 	@Override
 	public WorkUnit prepareSolve(Game<?, ?> game) {
 
-		myGame = (TieredGame<Object, DBRecord>) game;
+		myGame = (TieredGame<Object, Record>) game;
 		tier = myGame.numberOfTiers() - 1;
 		offset = myGame.hashOffsetForTier(tier);
 		updater = new TierSolverUpdater();
@@ -36,7 +36,7 @@ public final class TierSolver extends Solver {
 		return new TierSolverWorkUnit();
 	}
 
-	protected void solvePartialTier(TieredGame<Object, DBRecord> game,
+	protected void solvePartialTier(TieredGame<Object, Record> game,
 			BigInteger start, BigInteger end, TierSolverUpdater t) {
 		BigInteger current = start.subtract(BigInteger.ONE);
 		
@@ -53,17 +53,17 @@ public final class TierSolver extends Solver {
 			Collection<?> children = game.validMoves(state);
 			
 			if (children.size() == 0){
-				DBRecord prim = game.primitiveValue(state);
+				Record prim = game.primitiveValue(state);
 
 				db.setValue(current, prim);
 			} else {
-				ArrayList<DBRecord> vals = new ArrayList<DBRecord>(children.size());
+				ArrayList<Record> vals = new ArrayList<Record>(children.size());
 				
 				for (Object child : children) {
 					vals.add(db.getValue(game.stateToHash(child)));
 				}
 				
-				DBRecord newVal = vals.get(0).fold(vals);
+				Record newVal = vals.get(0).fold(vals);
 				db.setValue(current, newVal);
 			}
 		}
