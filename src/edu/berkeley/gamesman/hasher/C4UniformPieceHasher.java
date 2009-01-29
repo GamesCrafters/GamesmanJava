@@ -2,6 +2,7 @@ package edu.berkeley.gamesman.hasher;
 
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import edu.berkeley.gamesman.core.Game;
@@ -90,6 +91,11 @@ public final class C4UniformPieceHasher extends Hasher<char[]> {
 		
 		//if(off == 0)
 		//	Util.debug("CUPH finished building table: "+Arrays.toString(table));
+	}
+
+	@Override
+	public String describe() {
+		return "C4UPH"+Arrays.toString(pcs);
 	}
 	
 }

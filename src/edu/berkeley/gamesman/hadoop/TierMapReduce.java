@@ -11,6 +11,7 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.database.DBValue;
 import edu.berkeley.gamesman.core.Database;
@@ -52,7 +53,7 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 		
 		game.setHasher(hasher);
 		tempDB.set(game.getDBValueExample());
-		db.initialize(conf.get("dburl"), tempDB.get());
+		db.initialize(conf.get("dburl"),new Configuration(game,hasher), tempDB.get());
 		
 		Util.debug("Hadoop is ready to work!");
 		

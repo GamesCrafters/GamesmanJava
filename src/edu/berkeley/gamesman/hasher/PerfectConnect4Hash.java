@@ -113,4 +113,9 @@ public class PerfectConnect4Hash extends TieredHasher<char[][]> {
 		
 		return new Pair<Integer,BigInteger>(uhh,arh);
 	}
+
+	@Override
+	public String describe() {
+		return "PC4H";
+	}
 }

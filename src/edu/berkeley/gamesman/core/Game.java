@@ -104,4 +104,6 @@ public abstract class Game<State,Value extends DBValue> {
 	
 	public abstract DBValue getDBValueExample();
 	
+	public abstract String describe();
+	
 }

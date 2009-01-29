@@ -48,4 +48,9 @@ public class NullHasher extends TieredHasher<char[]> {
 		return null;
 	}
 
+	@Override
+	public String describe() {
+		return null;
+	}
+
 }

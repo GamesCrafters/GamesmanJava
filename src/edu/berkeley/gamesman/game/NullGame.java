@@ -76,4 +76,10 @@ public class NullGame extends Game<Object,DBValue> {
 		Util.fatalError("Please specify a game with --game");
 	}
 
+	@Override
+	public String describe() {
+		fail();
+		return null;
+	}
+
 }

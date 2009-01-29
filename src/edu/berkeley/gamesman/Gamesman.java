@@ -254,7 +254,7 @@ public final class Gamesman {
 
 	public void executedirectoryConnect() throws URISyntaxException {
 		OptionProcessor.acceptOption("u", "url", true, "The URL to connect to",
-				"gdf://game@localhost:4263/");
+				"gdfp://game@localhost:4263/");
 		if (testrun)
 			return;
 		DirectoryFilerClient dfc = new DirectoryFilerClient(new URI(OptionProcessor
@@ -282,6 +282,7 @@ public final class Gamesman {
 					return;
 				case ls:
 					dfc.ls();
+					break;
 				case open:
 					System.out.print("open> ");
 					dbname = input.readLine();

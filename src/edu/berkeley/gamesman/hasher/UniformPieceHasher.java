@@ -66,5 +66,10 @@ public final class UniformPieceHasher extends Hasher<char[]> {
 				hash = hash.multiply(plen).add(lookup.get(parr[parr.length-1]));
 		return hash;
 	}
+
+	@Override
+	public String describe() {
+		return "UPH"+Arrays.toString(parr);
+	}
 	
 }

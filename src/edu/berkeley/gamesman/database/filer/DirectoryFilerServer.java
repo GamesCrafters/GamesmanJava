@@ -121,6 +121,7 @@ public final class DirectoryFilerServer {
 
 				if (!Arrays.equals(response, hash)) {
 					Util.warn("Dropping connection because of wrong secret");
+					sock.close();
 					return;
 				}
 

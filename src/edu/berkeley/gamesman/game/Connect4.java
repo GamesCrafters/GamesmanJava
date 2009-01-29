@@ -242,4 +242,9 @@ public class Connect4 extends TieredGame<char[][],Values> {
 	public DBValue getDBValueExample() {
 		return Values.Win;
 	}
+
+	@Override
+	public String describe() {
+		return "Connect4|"+gameWidth+"|"+gameHeight+"|"+piecesToWin;
+	}
 }

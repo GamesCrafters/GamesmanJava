@@ -14,6 +14,7 @@ import java.util.Random;
 
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Values;
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.database.DBValue;
 import edu.berkeley.gamesman.util.Util;
 
@@ -163,7 +164,7 @@ public final class DirectoryFilerClient {
 		}
 
 		@Override
-		public void initialize(String url, DBValue exampleValue) {
+		public void initialize(String url, Configuration config, DBValue exampleValue) {
 			Util.fatalError("Already initialized");
 		}
 

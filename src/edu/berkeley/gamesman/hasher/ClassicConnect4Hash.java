@@ -31,4 +31,10 @@ public class ClassicConnect4Hash extends TieredHasher<char[][]> {
 		return null;
 	}
 
+	@Override
+	public String describe() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

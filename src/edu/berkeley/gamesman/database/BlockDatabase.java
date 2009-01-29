@@ -1,5 +1,6 @@
 package edu.berkeley.gamesman.database;
 
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 
 public class BlockDatabase extends Database {
@@ -23,7 +24,7 @@ public class BlockDatabase extends Database {
 	}
 
 	@Override
-	public void initialize(String url, DBValue exampleValue) {
+	public void initialize(String url, Configuration config, DBValue exampleValue) {
 		// TODO Auto-generated method stub
 		
 	}

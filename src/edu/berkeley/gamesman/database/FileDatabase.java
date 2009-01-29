@@ -8,6 +8,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.util.Util;
 
@@ -54,7 +55,7 @@ public final class FileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void initialize(String loc, DBValue example) {
+	public synchronized void initialize(String loc, Configuration config, DBValue example) {
 
 		try {
 			myFile = new File(new URI(loc));

@@ -40,4 +40,6 @@ public abstract class Hasher<Board> {
 	
 	public abstract BigInteger maxHash(int boardlen);
 	
+	public abstract String describe();
+	
 }

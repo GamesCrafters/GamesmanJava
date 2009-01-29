@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.master;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Hasher;
@@ -41,7 +42,7 @@ public final class LocalMaster implements Master,TaskFactory {
 			Util.fatalError("Fatal error while initializing: "+e);
 		}
 		
-		database.initialize(OptionProcessor.checkOption("uri"),game.getDBValueExample());
+		database.initialize(OptionProcessor.checkOption("uri"),new Configuration(game,hasher), game.getDBValueExample());
 		
 		solver.setDatabase(database);
 		game.setHasher(hasher);

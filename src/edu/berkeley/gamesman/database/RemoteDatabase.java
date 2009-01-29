@@ -5,6 +5,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.database.filer.DirectoryFilerClient;
 import edu.berkeley.gamesman.util.Util;
@@ -32,7 +33,7 @@ public class RemoteDatabase extends Database {
 	}
 
 	@Override
-	public void initialize(String uri, DBValue exampleValue) {
+	public void initialize(String uri, Configuration config, DBValue exampleValue) {
 		try {
 			dfc = new DirectoryFilerClient(new URI(uri));
 		} catch (URISyntaxException e1) {
