@@ -16,12 +16,10 @@ public final class SingletonIterator<E> implements Iterator<E> {
 		done = false;
 	}
 	
-	@Override
 	public boolean hasNext() {
 		return !done;
 	}
 
-	@Override
 	public E next() {
 		if(done)
 			return null;
@@ -29,7 +27,6 @@ public final class SingletonIterator<E> implements Iterator<E> {
 		return object;
 	}
 
-	@Override
 	public void remove() {
 		done = true;
 	}

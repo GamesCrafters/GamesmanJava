@@ -39,10 +39,11 @@ public final class OptionProcessor {
 			return d;
 		}
 
-		@Override
 		public int compareTo(Option o) {
 			return (o.g + o.l).compareTo(g + l);
 		}
+
+
 	}
 	
 	private static Hashtable<String,Option> opts = new Hashtable<String,Option>();

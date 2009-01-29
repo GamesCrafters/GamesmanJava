@@ -8,7 +8,6 @@ import edu.berkeley.gamesman.solver.Solver;
 
 public final class LocalMaster implements Master {
 
-	@Override
 	public void initialize(Class gamec, Class solverc, Class hasherc, Class databasec) {
 		Game game = null;
 		Solver solver = null;

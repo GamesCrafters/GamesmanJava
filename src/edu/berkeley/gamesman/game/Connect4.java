@@ -40,24 +40,20 @@ public final class Connect4 extends Game<String,Values> implements TieredGame<St
 		return null;
 	}
 
-	@Override
 	public String gameStateForTierIndex(Number tier, Number index) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public Number lastHashValueForTier(Number tier) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public Number lastTier() {
 		return gameWidth*gameHeight;
 	}
 
-	@Override
 	public Pair<Number, Number> tierIndexForState(String state) {
 		long pieces = 0;
 		BigInteger rearr = BigInteger.ZERO;

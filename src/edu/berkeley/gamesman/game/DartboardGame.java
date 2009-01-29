@@ -25,19 +25,16 @@ public abstract class DartboardGame extends Game<Number, Values> implements
 		return null;
 	}
 
-	@Override
 	public Integer gameStateForTierIndex(Number tier, Number index) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public Number lastHashValueForTier(Number tier) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public Number lastTier() {
 		// TODO Auto-generated method stub
 		return null;
