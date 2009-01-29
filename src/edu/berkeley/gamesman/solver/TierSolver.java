@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Solver;
@@ -24,14 +25,16 @@ import edu.berkeley.gamesman.util.threading.Barrier;
 public final class TierSolver extends Solver {
 
 	protected TieredGame<Object> myGame;
+	protected Configuration conf;
 
 	@Override
-	public WorkUnit prepareSolve(Game<?> game) {
+	public WorkUnit prepareSolve(Configuration conf, Game<?> game) {
 
 		myGame = (TieredGame<Object>) game;
 		tier = myGame.numberOfTiers() - 1;
 		offset = myGame.hashOffsetForTier(tier);
 		updater = new TierSolverUpdater();
+		this.conf = conf;
 
 		return new TierSolverWorkUnit();
 	}
@@ -53,7 +56,7 @@ public final class TierSolver extends Solver {
 			Collection<?> children = game.validMoves(state);
 			
 			if (children.size() == 0){
-				Record prim = game.primitiveValue(state);
+				Record prim = new Record(conf,game.primitiveValue(state));
 
 				db.setValue(current, prim);
 			} else {
@@ -63,7 +66,7 @@ public final class TierSolver extends Solver {
 					vals.add(db.getValue(game.stateToHash(child)));
 				}
 				
-				Record newVal = vals.get(0).fold(vals);
+				Record newVal = Record.combine(conf,vals);
 				db.setValue(current, newVal);
 			}
 		}

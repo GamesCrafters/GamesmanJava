@@ -20,7 +20,7 @@ public abstract class Game<State> {
 
 	protected Hasher<State> hasher;
 	
-	protected int gameWidth = 0, gameHeight = 0;
+	protected final int gameWidth, gameHeight;
 	
 	static {
 		OptionProcessor.nextGroup();
@@ -67,13 +67,13 @@ public abstract class Game<State> {
 	 * @return the Record representing the state
 	 * @see edu.berkeley.gamesman.core.Record
 	 */
-	public abstract Record primitiveValue(State pos);
+	public abstract PrimitiveValue primitiveValue(State pos);
 	
 	/**
 	 * Inform the Game of the hasher we're using
 	 * @param h The Hasher to use
 	 */
-	public void setHasher(Hasher<State> h){
+	private final void setHasher(Hasher<State> h){
 		
 		if(!DependencyResolver.isHasherAllowed(this.getClass(), h.getClass())){
 			Util.fatalError("Hasher class "+h.getClass()+" inappropriate for game "+this.getClass());
@@ -81,6 +81,8 @@ public abstract class Game<State> {
 		
 		hasher = h;
 	}
+	
+	public abstract void initialize(Configuration conf);
 	
 	/**
 	 * Unhash a given hashed value and return the corresponding Board

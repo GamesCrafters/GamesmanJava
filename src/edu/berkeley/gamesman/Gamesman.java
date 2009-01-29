@@ -10,12 +10,14 @@ import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.EnumSet;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.core.Master;
+import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.core.Solver;
 import edu.berkeley.gamesman.database.filer.DirectoryFilerClient;
 import edu.berkeley.gamesman.database.filer.DirectoryFilerServer;
@@ -33,6 +35,7 @@ public final class Gamesman {
 	private Solver so;
 	private Database db;
 	private boolean testrun;
+	private Configuration conf;
 
 	private Gamesman(Game<Object> g, Solver s, Hasher<Object> h,
 			Database d, boolean er) {
@@ -41,8 +44,10 @@ public final class Gamesman {
 		so = s;
 		db = d;
 		
+		conf = new Configuration(g,h,EnumSet.of(RecordFields.Value));
+		
 		so.setDatabase(db);
-		gm.setHasher(ha);
+		gm.initialize(conf);
 		
 		testrun = er;
 	}

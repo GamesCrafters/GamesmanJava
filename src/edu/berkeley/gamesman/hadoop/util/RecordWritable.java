@@ -13,7 +13,7 @@ public class RecordWritable implements Writable {
 	private Record value;
 	
 	public void readFields(DataInput in) throws IOException {
-		value = value.wrap(in);
+		value = value.readStream(conf,in);
 	}
 
 	public void write(DataOutput out) throws IOException {

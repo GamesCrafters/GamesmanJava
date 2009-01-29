@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.database;
 import java.math.BigInteger;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.util.Util;
@@ -17,7 +18,7 @@ public final class NullDatabase extends Database {
 
 	@Override
 	public Record getValue(BigInteger loc) {
-		return new Record();
+		return new Record(conf,PrimitiveValue.Undecided);
 	}
 
 	@Override

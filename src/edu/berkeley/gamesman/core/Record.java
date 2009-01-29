@@ -4,6 +4,8 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import edu.berkeley.gamesman.util.Pair;
@@ -21,6 +23,14 @@ public final class Record {
 
 	private int maxbits;
 
+	public Record(Configuration conf2, PrimitiveValue primitiveValue) {
+		conf = conf2;
+		setupBits();
+		set(RecordFields.Value,primitiveValue.value);
+	}
+	
+	private Record(){}
+
 	public void writeStream(DataOutput out) {
 		try {
 			for (int i = 0; i < bits.length; i++) {
@@ -32,7 +42,7 @@ public final class Record {
 	}
 
 	public static Record readStream(Configuration conf, DataInput in) {
-		Record r = null;
+		Record r = new Record();
 		r.conf = conf;
 		r.setupBits();
 		r.readStream(in);
@@ -54,7 +64,7 @@ public final class Record {
 	}
 
 	public static Record read(Configuration conf, ByteBuffer buf, long index) {
-		Record r = null;
+		Record r = new Record();
 		r.conf = conf;
 		r.setupBits();
 		r.read(buf,index);
@@ -70,8 +80,7 @@ public final class Record {
 	}
 	
 	public static int length(Configuration conf){
-		Util.fatalError("Not implemented");
-		return 0;
+		return new Record(conf,PrimitiveValue.Win).length();
 	}
 
 	public final void set(RecordFields field, int value) {
@@ -94,6 +103,11 @@ public final class Record {
 					+ info.cdr;
 		}
 		maxbits = bitOffset[bitOffset.length - 1] + bits[bits.length - 1];
+	}
+
+	public static Record combine(Configuration conf, List<Record> vals) {
+		Util.fatalError("TODO"); //TODO
+		return null;
 	}
 
 }

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Hasher;
@@ -47,10 +48,10 @@ public class Connect4 extends TieredGame<char[][]> {
 		piecesToWin = Integer.parseInt(OptionProcessor.checkOption("pieces"));
 	}
 	
-	public void setHasher(Hasher<char[][]> h){
+	public void initialize(Configuration conf){
 		char[] pcs = {'X','O'};
-		super.setHasher(h);
-		h.setGame(this, pcs);
+		super.initialize(conf);
+		myHasher.setGame(this, pcs);
 	}
 
 	@Override

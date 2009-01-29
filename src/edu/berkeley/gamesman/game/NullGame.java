@@ -3,6 +3,8 @@ package edu.berkeley.gamesman.game;
 import java.math.BigInteger;
 import java.util.Collection;
 
+import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.hasher.NullHasher;
@@ -22,7 +24,7 @@ public class NullGame extends Game<Object> {
 	}
 
 	@Override
-	public Record primitiveValue(Object pos) {
+	public PrimitiveValue primitiveValue(Object pos) {
 		fail();
 		return null;
 	}
@@ -75,6 +77,10 @@ public class NullGame extends Game<Object> {
 	public String describe() {
 		fail();
 		return null;
+	}
+
+	@Override
+	public void initialize(Configuration conf) {
 	}
 
 }

@@ -13,8 +13,10 @@ import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.util.Util;
 
 /**
- * The FileDatabase is a database designed to write directly to a local file.  
- * The file format is not well defined at the moment, perhaps this should be changed later.
+ * The FileDatabase is a database designed to write directly to a local file.
+ * The file format is not well defined at the moment, perhaps this should be
+ * changed later.
+ * 
  * @author Steven Schlansker
  */
 public final class FileDatabase extends Database {
@@ -24,8 +26,6 @@ public final class FileDatabase extends Database {
 	protected RandomAccessFile fd;
 
 	long offset;
-	
-	protected Configuration config;
 
 	@Override
 	public synchronized void close() {
@@ -49,9 +49,9 @@ public final class FileDatabase extends Database {
 	@Override
 	public synchronized Record getValue(BigInteger loc) {
 		try {
-			fd.seek(loc.longValue()+offset);
-			//byte b = fd.readByte();
-			Record v = Record.readStream(config, fd);
+			fd.seek(loc.longValue() + offset);
+			// byte b = fd.readByte();
+			Record v = Record.readStream(conf, fd);
 			// Util.debug("Location "+loc+" = "+v+" ("+b+")");
 			return v;
 		} catch (IOException e) {
@@ -79,31 +79,49 @@ public final class FileDatabase extends Database {
 		} catch (FileNotFoundException e) {
 			Util.fatalError("Could not create/open database: " + e);
 		}
-		
-		Util.assertTrue(Record.length(conf) == 1, "FileDatabase can only store 8 bits per record for now"); //TODO: FIXME
 
+		Util.assertTrue(Record.length(conf) == 1,
+				"FileDatabase can only store 8 bits per record for now"); // TODO:
+		// FIXME
 		try {
 			fd.seek(0);
-			if (previouslyExisted) {
+		} catch (IOException e) {
+			Util.fatalError("IO error while seeking header: " + e);
+		}
+		if (previouslyExisted) {
+			try {
 				int headerLen = fd.readInt();
 				byte[] header = new byte[headerLen];
 				fd.readFully(header);
-				Util.assertTrue(new String(header).equals(conf.getConfigString()), "File database has wrong header; expecting \""+conf.getConfigString()+"\" got \""+new String(header)+"\"");
-			}else{
+				Util.assertTrue(new String(header).equals(conf
+						.getConfigString()),
+						"File database has wrong header; expecting \""
+								+ conf.getConfigString() + "\" got \""
+								+ new String(header) + "\"");
+
+			} catch (IOException e) {
+				Util.fatalError("IO error while checking header: " + e);
+			}
+		} else {
+			try {
 				fd.writeInt(conf.getConfigString().length());
 				fd.write(conf.getConfigString().getBytes());
+			} catch (IOException e) {
+				Util.fatalError("IO error while creating header: " + e);
 			}
+		}
+		try {
 			offset = fd.getFilePointer();
 		} catch (IOException e) {
-			Util.fatalError("IO error while checking header: " + e);
+			Util.fatalError("IO error while getting file pointer: " + e);
 		}
 	}
 
 	@Override
 	public synchronized void setValue(BigInteger loc, Record value) {
 		try {
-			fd.seek(loc.longValue()+offset);
-			//fd.writeByte(value.byteValue());
+			fd.seek(loc.longValue() + offset);
+			// fd.writeByte(value.byteValue());
 			value.writeStream(fd);
 			// Util.debug("Wrote "+value.byteValue()+" to "+loc);
 		} catch (IOException e) {

@@ -1,6 +1,7 @@
 package edu.berkeley.gamesman.master;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 import edu.berkeley.gamesman.core.Configuration;
@@ -8,6 +9,7 @@ import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.core.Master;
+import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.core.Solver;
 import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.util.OptionProcessor;
@@ -19,15 +21,17 @@ public final class LocalMaster implements Master,TaskFactory {
 
 	Game<?> game;
 	Solver solver;
-	Hasher hasher;
+	Hasher<?> hasher;
 	Database database;
 	
+	Configuration conf;
+	
 	static{
-		OptionProcessor.acceptOption("u", "uri", true, "The URI or relative path of the databse", "out.db");
+		OptionProcessor.acceptOption("u", "uri", true, "The URI or relative path of the databse", "file:///tmp/out.db");
 		OptionProcessor.acceptOption("j", "threads", true, "The number of threads to launch", "1");
 	}
 	
-	public void initialize(Class<? extends Game<?>> gamec, Class<? extends Solver> solverc, Class<? extends Hasher> hasherc, Class<? extends Database> databasec) {
+	public void initialize(Class<? extends Game<?>> gamec, Class<? extends Solver> solverc, Class<? extends Hasher<?>> hasherc, Class<? extends Database> databasec) {
 		
 		Task.setTaskFactory(this);
 		
@@ -42,10 +46,12 @@ public final class LocalMaster implements Master,TaskFactory {
 			Util.fatalError("Fatal error while initializing: "+e);
 		}
 		
-		database.initialize(OptionProcessor.checkOption("uri"),new Configuration(game,hasher));
+		conf = new Configuration(game,hasher,EnumSet.of(RecordFields.Value)); //TODO: have more than Value here
+		
+		database.initialize(OptionProcessor.checkOption("uri"),conf);
 		
 		solver.setDatabase(database);
-		game.setHasher(hasher);
+		game.initialize(conf);
 		
 		Util.debug("Done initializing LocalMaster");
 		
@@ -56,7 +62,7 @@ public final class LocalMaster implements Master,TaskFactory {
 		System.out.println("Launched!");
 		int threads = Integer.parseInt(OptionProcessor.checkOption("threads"));
 		Util.debug("Launching "+threads+" threads...");
-		List<WorkUnit> list = solver.prepareSolve(game).divide(threads);
+		List<WorkUnit> list = solver.prepareSolve(conf,game).divide(threads);
 		
 		ArrayList<Thread> myThreads = new ArrayList<Thread>();
 		

@@ -50,7 +50,7 @@ public class NullHasher extends TieredHasher<char[]> {
 
 	@Override
 	public String describe() {
-		return null;
+		return "";
 	}
 
 }

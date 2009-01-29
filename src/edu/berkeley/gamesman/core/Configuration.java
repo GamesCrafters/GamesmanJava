@@ -2,8 +2,10 @@ package edu.berkeley.gamesman.core;
 
 import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.Map;
 
+import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -15,9 +17,9 @@ import edu.berkeley.gamesman.util.Util;
  */
 public class Configuration {
 	private String config;
-	private Game<?> g;
-	private Hasher<?> h;
-	private EnumMap<RecordFields,Pair<Integer,Integer>> storedFields;
+	final private Game<?> g;
+	final private Hasher<?> h;
+	final private EnumMap<RecordFields,Pair<Integer,Integer>> storedFields;
 	/**
 	 * Initialize a new Configuration.  Both parameters should be fully initialized.
 	 * @param g The game used
@@ -28,6 +30,29 @@ public class Configuration {
 		this.g = g;
 		this.h = h;
 		this.storedFields = storedFields;
+		buildConfig();
+		checkCompatibility();
+	}
+	
+	private void checkCompatibility() {
+		if(!DependencyResolver.isHasherAllowed(g.getClass(), h.getClass()))
+			Util.fatalError("Game and hasher are not compatible!");
+	}
+
+	public Configuration(Game<?> g, Hasher<?> h, EnumSet<RecordFields> set){
+		int i = 0;
+		EnumMap<RecordFields,Pair<Integer, Integer>> map = new EnumMap<RecordFields, Pair<Integer,Integer>>(RecordFields.class);
+		for(RecordFields rec : set){
+			map.put(rec, new Pair(i++,rec.defaultBitSize()));
+		}
+		this.g = g;
+		this.h = h;
+		this.storedFields = map;
+		buildConfig();
+		checkCompatibility();
+	}
+	
+	private void buildConfig(){
 		config = Util.pstr(g.describe()) + Util.pstr(h.describe()) + Util.pstr(storedFields.toString());
 	}
 	
@@ -37,6 +62,9 @@ public class Configuration {
 	 */
 	public Configuration(String config) {
 		this.config = config;
+		this.g = null;
+		this.h = null;
+		this.storedFields = null;
 	}
 
 	/**
@@ -55,6 +83,10 @@ public class Configuration {
 	
 	public EnumMap<RecordFields,Pair<Integer,Integer>> getStoredFields(){
 		return storedFields;
+	}
+
+	public Hasher<?> getHasher() {
+		return h;
 	}
 	
 

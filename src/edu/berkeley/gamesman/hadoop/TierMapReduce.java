@@ -2,6 +2,7 @@ package edu.berkeley.gamesman.hadoop;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Iterator;
 
 import org.apache.hadoop.io.NullWritable;
@@ -13,6 +14,7 @@ import org.apache.hadoop.mapred.Reporter;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
+import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.hadoop.util.BigIntegerWritable;
@@ -28,6 +30,7 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 	protected Database db;
 	private BigIntegerWritable tempBI = new BigIntegerWritable();;
 	private RecordWritable tempDB = new RecordWritable();
+	protected Configuration config;
 
 	public void configure(JobConf conf) {
 		Class<TieredGame<Object>> gc = null;
@@ -52,8 +55,8 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 		}
 		
 		game.setHasher(hasher);
-		tempDB.set(game.getDBValueExample());
-		db.initialize(conf.get("dburl"),new Configuration(game,hasher));
+		config = new Configuration(game,hasher,EnumSet.of(RecordFields.Value));
+		db.initialize(conf.get("dburl"),config);
 		
 		Util.debug("Hadoop is ready to work!");
 		
@@ -74,11 +77,10 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 			Iterator<BigIntegerWritable> children,
 			OutputCollector<BigIntegerWritable, RecordWritable> out,
 			Reporter rep) throws IOException {
-		Record v = game.getDBValueExample();
 		ArrayList<Record> vals = new ArrayList<Record>();
 		for(BigIntegerWritable child : new IteratorWrapper<BigIntegerWritable>(children)){
 			vals.add(db.getValue(child.get()));
 		}
-		db.setValue(position.get(), v.fold(vals));
+		db.setValue(position.get(), Record.combine(config,vals));
 	}
 }

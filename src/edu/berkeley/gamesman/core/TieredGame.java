@@ -19,26 +19,24 @@ import edu.berkeley.gamesman.util.Util;
  */
 public abstract class TieredGame<State> extends Game<State> {
 
-	TieredHasher<State> th;
+	protected TieredHasher<State> myHasher;
 	
 	@Override
-	public void setHasher(Hasher<State> h){
-		if(!(h instanceof TieredHasher)) Util.fatalError("Tiered game trying to work with non-tiered hasher: "+h.getClass());
-		super.setHasher(h);
-		th = (TieredHasher<State>)h;
+	public void initialize(Configuration conf){
+		myHasher = (TieredHasher<State>)conf.getHasher();
 	}
 	
 	@Override
 	public State hashToState(BigInteger hash) {
-		if(th.cacheNumTiers == -1) th.cacheNumTiers = th.numberOfTiers();
-		if(th.tierIndex == null) th.lastHashValueForTier(th.cacheNumTiers-1);
+		if(myHasher.cacheNumTiers == -1) myHasher.cacheNumTiers = myHasher.numberOfTiers();
+		if(myHasher.tierIndex == null) myHasher.lastHashValueForTier(myHasher.cacheNumTiers-1);
 		
-		for(int i = 0; i < th.cacheNumTiers; i++){
-			if(th.tierIndex[i].compareTo(hash) >= 0)
+		for(int i = 0; i < myHasher.cacheNumTiers; i++){
+			if(myHasher.tierIndex[i].compareTo(hash) >= 0)
 				if(i == 0)
-					return th.gameStateForTierIndex(i, hash);
+					return myHasher.gameStateForTierIndex(i, hash);
 				else
-					return th.gameStateForTierIndex(i,hash.subtract(th.tierIndex[i-1]).subtract(BigInteger.ONE));
+					return myHasher.gameStateForTierIndex(i,hash.subtract(myHasher.tierIndex[i-1]).subtract(BigInteger.ONE));
 		}
 		Util.fatalError("Hash outside of tiered values: "+hash);
 		return null;
@@ -46,15 +44,15 @@ public abstract class TieredGame<State> extends Game<State> {
 
 	@Override
 	public BigInteger stateToHash(State pos) {
-		Pair<Integer,BigInteger> p = th.tierIndexForState(pos);
-		return th.hashOffsetForTier(p.car).add(p.cdr);
+		Pair<Integer,BigInteger> p = myHasher.tierIndexForState(pos);
+		return myHasher.hashOffsetForTier(p.car).add(p.cdr);
 	}
 	
 	/**
 	 * @return the number of Tiers in this particular game
 	 */
 	public final int numberOfTiers(){
-		return th.numberOfTiers();
+		return myHasher.numberOfTiers();
 	}
 	
 	/**
@@ -62,7 +60,7 @@ public abstract class TieredGame<State> extends Game<State> {
 	 * @return the first hash value for that tier
 	 */
 	public final BigInteger hashOffsetForTier(int tier){
-		return th.hashOffsetForTier(tier);
+		return myHasher.hashOffsetForTier(tier);
 	}
 	
 	/**
@@ -70,7 +68,7 @@ public abstract class TieredGame<State> extends Game<State> {
 	 * @return the last hash value that is still within that tier
 	 */
 	public final BigInteger lastHashValueForTier(int tier){
-		return th.lastHashValueForTier(tier);
+		return myHasher.lastHashValueForTier(tier);
 	}
 	
 }
