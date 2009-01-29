@@ -1,16 +1,9 @@
 package edu.berkeley.gamesman.database;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.RandomAccessFile;
-import java.net.URI;
-import java.net.URISyntaxException;
-
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.util.Util;
 
@@ -22,6 +15,7 @@ public final class FileDatabase extends Database {
 
 	DBValue generator;
 
+	@Override
 	public synchronized void close() {
 		try {
 			fd.close();
@@ -30,6 +24,7 @@ public final class FileDatabase extends Database {
 		}
 	}
 
+	@Override
 	public synchronized void flush() {
 		try {
 			fd.getFD().sync();
@@ -39,6 +34,7 @@ public final class FileDatabase extends Database {
 		}
 	}
 
+	@Override
 	public synchronized DBValue getValue(Number loc) {
 		try {
 			fd.seek(loc.longValue());
@@ -53,6 +49,7 @@ public final class FileDatabase extends Database {
 		return null; // Not reached
 	}
 
+	@Override
 	public synchronized void initialize(String loc, DBValue example) {
 
 		myFile = new File(loc);
@@ -66,6 +63,7 @@ public final class FileDatabase extends Database {
 		generator = example;
 	}
 
+	@Override
 	public synchronized void setValue(Number loc, DBValue value) {
 		try {
 			fd.seek(loc.longValue());

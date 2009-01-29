@@ -2,8 +2,6 @@ package edu.berkeley.gamesman.game;
 
 import java.math.BigInteger;
 import java.util.Collection;
-import java.util.Iterator;
-
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.database.DBValue;
 import edu.berkeley.gamesman.util.Util;

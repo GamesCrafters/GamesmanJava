@@ -26,6 +26,7 @@ public final class C4UniformPieceHasher extends Hasher {
 	String[] table;
 	protected char[] pcs;
 	
+	@Override
 	public void setGame(Game<?,?> game, char[] p){
 		super.setGame(game,p);
 		pcs = p;

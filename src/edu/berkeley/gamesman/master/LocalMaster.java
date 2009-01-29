@@ -13,7 +13,6 @@ import edu.berkeley.gamesman.util.OptionProcessor;
 import edu.berkeley.gamesman.util.Task;
 import edu.berkeley.gamesman.util.TaskFactory;
 import edu.berkeley.gamesman.util.Util;
-import edu.berkeley.gamesman.util.threading.Barrier;
 
 public final class LocalMaster implements Master,TaskFactory {
 

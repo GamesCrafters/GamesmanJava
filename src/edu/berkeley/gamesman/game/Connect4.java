@@ -317,6 +317,7 @@ public class Connect4 extends TieredGame<char[][],Values> {
 		return ' '; // Not reached
 	}
 	
+	@Override
 	public String toString(){
 		return "Connect 4 "+gameWidth+"x"+gameHeight+" ("+piecesToWin+" to win)";
 	}
