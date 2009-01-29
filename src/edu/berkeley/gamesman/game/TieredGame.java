@@ -1,6 +1,7 @@
 package edu.berkeley.gamesman.game;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
@@ -21,8 +22,9 @@ public abstract class TieredGame<State,Value> extends Game<State,Value> {
 			tierIndex = new BigInteger[numberOfTiers()+1];
 			tierIndex[0] = BigInteger.ZERO;
 			for(int i = 1; i < tierIndex.length; i++){
-				tierIndex[i] = tierIndex[i-1].add(numHashesForTier(i-1));
+				tierIndex[i] = tierIndex[i-1].add(numHashesForTier(i-1)).add(BigInteger.ONE);
 			}
+			//Util.debug("Hash indices are "+Arrays.toString(tierIndex));
 		}
 		
 		return tierIndex[tier+1].subtract(BigInteger.ONE);

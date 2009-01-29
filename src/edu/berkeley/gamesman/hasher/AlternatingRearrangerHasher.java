@@ -32,12 +32,10 @@ public class AlternatingRearrangerHasher extends Hasher {
 	public char[] unhash(BigInteger hash, int l) {
 		int x = l/2 + l%2;
 		int o = l/2;
-		int s = l;
-		int i;
 
 		char[] result = new char[l];
 
-		
+		pieceUnrearrange(hash, result, 0, l, x, o);
 		
 		return result;
 	}
@@ -71,6 +69,19 @@ public class AlternatingRearrangerHasher extends Hasher {
 		}
 
 		return rVal;
+	}
+	
+	protected void pieceUnrearrange(BigInteger hash,char[] board, int src, int pcs, int x, int o){
+		if(pcs == 0) return;
+		
+		BigInteger off = BigInteger.valueOf(Util.nCr(pcs-1, x-1));
+		if((hash.compareTo(off) < 0 || o == 0) && x > 0){
+			board[src] = 'X';
+			pieceUnrearrange(hash, board, src+1, pcs-1, x-1, o);
+		}else{
+			board[src] = 'O';
+			pieceUnrearrange(hash.subtract(off), board, src+1, pcs-1, x, o-1);
+		}
 	}
 
 	@Override

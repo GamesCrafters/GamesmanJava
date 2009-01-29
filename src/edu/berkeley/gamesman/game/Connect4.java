@@ -95,7 +95,9 @@ public class Connect4 extends TieredGame<char[][],Values> {
 		int sum = 0;
 		for(char h : colh)
 			sum += Character.digit(h, Character.MAX_RADIX);
-		return ah.maxHash(sum);
+		BigInteger mh = ah.maxHash(sum);
+		//Util.debug("UPH says "+Arrays.toString(colh)+" for tier "+tier+" mh = "+mh);
+		return mh;
 	}
 
 	@Override
@@ -106,15 +108,19 @@ public class Connect4 extends TieredGame<char[][],Values> {
 		for(char h : colheights)
 			sum += Character.digit(h, Character.MAX_RADIX);
 		
+		Util.debug("Tier = "+tier+" Unhash says "+sum+" pieces placed as UPH = "+Arrays.toString(colheights));
+		
 		char[] linpieces = ah.unhash(index,sum);
+		
+		Util.debug("ARH gives us "+Arrays.toString(linpieces));
 		
 		char[][] ret = new char[gameWidth][gameHeight];
 		
 		int lidx = 0;
 		
-		for(int x = 0; x < gameWidth; x++){
-			for(int y = 0; y < gameHeight; y++){
-				if(Character.digit(colheights[x],Character.MAX_RADIX) < y)
+		for(int y = 0; y < gameHeight; y++){
+			for(int x = 0; x < gameWidth; x++){
+				if(Character.digit(colheights[x],Character.MAX_RADIX) <= y)
 					ret[x][y] = ' ';
 				else
 					ret[x][y] = linpieces[lidx++];
@@ -125,7 +131,7 @@ public class Connect4 extends TieredGame<char[][],Values> {
 	
 	@Override
 	public int numberOfTiers() {
-		return Util.intpow(gameWidth,gameHeight+1);
+		return Util.intpow(gameWidth,gameHeight+1)+1;
 	}
 
 	@Override
@@ -137,9 +143,9 @@ public class Connect4 extends TieredGame<char[][],Values> {
 	@Override
 	public final String stateToString(char[][] pos) {
 		StringBuilder str = new StringBuilder((pos.length+1)*(pos[0].length+1));
-		for(int y = 0; y < pos.length; y++){
+		for(int y = pos[0].length-1; y >= 0; y--){
 			str.append("|");
-			for(int x = 0; x < pos[0].length; x++){
+			for(int x = 0; x < pos.length; x++){
 				str.append(pos[x][y]);
 			}
 			str.append("|\n");
