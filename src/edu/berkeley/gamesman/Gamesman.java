@@ -12,13 +12,14 @@ import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.core.Master;
 import edu.berkeley.gamesman.core.Solver;
 import edu.berkeley.gamesman.core.Values;
-import edu.berkeley.gamesman.database.DBValue;
+import edu.berkeley.gamesman.database.DBRecord;
 import edu.berkeley.gamesman.database.filer.DirectoryFilerClient;
 import edu.berkeley.gamesman.database.filer.DirectoryFilerServer;
 import edu.berkeley.gamesman.util.OptionProcessor;
@@ -30,13 +31,13 @@ import edu.berkeley.gamesman.util.Util;
  */
 public final class Gamesman {
 
-	private Game<Object, ? extends DBValue> gm;
+	private Game<Object, ? extends DBRecord> gm;
 	private Hasher ha;
 	private Solver so;
 	private Database db;
 	private boolean testrun;
 
-	private Gamesman(Game<Object, ? extends DBValue> g, Solver s, Hasher h,
+	private Gamesman(Game<Object, ? extends DBRecord> g, Solver s, Hasher h,
 			Database d, boolean er) {
 		gm = g;
 		ha = h;
@@ -143,7 +144,7 @@ public final class Gamesman {
 			try {
 				boolean tr = (OptionProcessor.checkOption("help") != null);
 				Gamesman executor = new Gamesman(
-						(Game<Object, ? extends DBValue>) g.newInstance(), s
+						(Game<Object, ? extends DBRecord>) g.newInstance(), s
 								.newInstance(), h.newInstance(), (Database) d
 								.newInstance(), tr);
 				executor.getClass().getMethod("execute" + cmd,
@@ -286,7 +287,7 @@ public final class Gamesman {
 				case open:
 					System.out.print("open> ");
 					dbname = input.readLine();
-					cdb = dfc.openDatabase(dbname);
+					cdb = dfc.openDatabase(dbname, new Configuration(""));
 					break;
 				case close:
 					if(cdb == null) break;
@@ -296,7 +297,7 @@ public final class Gamesman {
 					break;
 				case read:
 					System.out.print(dbname+" read> ");
-					System.out.println("Result: "+cdb.getValue(Long.parseLong(input.readLine())));
+					System.out.println("Result: "+cdb.getValue(new BigInteger(input.readLine())));
 					break;
 				case write:
 					System.out.print(dbname+" write> ");
@@ -304,7 +305,7 @@ public final class Gamesman {
 					System.out.print(dbname+" write "+loc+"> ");
 					line = input.readLine();
 		
-					cdb.setValue(Long.valueOf(loc), Values.valueOf(line));
+					cdb.setValue(new BigInteger(loc), Values.valueOf(line));
 				}
 			}
 		} catch (IOException e) {

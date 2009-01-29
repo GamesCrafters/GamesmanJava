@@ -29,7 +29,7 @@ public abstract class Task {
 	}
 	
 	public void setProgress(BigInteger p){
-		completed = p;
+		completed = (p.compareTo(total) <= 0 ? p : total);
 		update();
 	}
 	

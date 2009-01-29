@@ -8,7 +8,7 @@ import java.util.Collection;
 import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.core.Values;
-import edu.berkeley.gamesman.database.DBValue;
+import edu.berkeley.gamesman.database.DBRecord;
 import edu.berkeley.gamesman.hasher.NullHasher;
 import edu.berkeley.gamesman.hasher.PerfectConnect4Hash;
 import edu.berkeley.gamesman.util.DependencyResolver;
@@ -239,7 +239,7 @@ public class Connect4 extends TieredGame<char[][],Values> {
 	}
 
 	@Override
-	public DBValue getDBValueExample() {
+	public DBRecord getDBValueExample() {
 		return Values.Win;
 	}
 

@@ -5,7 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Collection;
 
-import edu.berkeley.gamesman.database.DBValue;
+import edu.berkeley.gamesman.database.DBRecord;
 import edu.berkeley.gamesman.util.Util;
 
 
@@ -15,7 +15,7 @@ import edu.berkeley.gamesman.util.Util;
  * @author Steven Schlansker
  *
  */
-public enum Values implements DBValue {
+public enum Values implements DBRecord {
 
 	/**
 	 * Value hasn't been computed yet
@@ -54,7 +54,7 @@ public enum Values implements DBValue {
 	public byte byteValue() {
 		return val;
 	}
-	public DBValue wrapValue(byte b) {
+	public DBRecord wrapValue(byte b) {
 		switch(b){
 		case 0:
 			return Undecided;
@@ -69,10 +69,10 @@ public enum Values implements DBValue {
 		return Invalid;
 	}
 
-	public DBValue fold(Collection<DBValue> vals) {
+	public DBRecord fold(Collection<DBRecord> vals) {
 		boolean seentie = false;
 		
-		for(DBValue v : vals){
+		for(DBRecord v : vals){
 			Values va = (Values)v;
 			switch(va){
 			case Invalid:
@@ -97,7 +97,7 @@ public enum Values implements DBValue {
 		return Lose;
 	}
 
-	public DBValue wrap(DataInput in) {
+	public DBRecord wrap(DataInput in) {
 		try {
 			return wrapValue(in.readByte());
 		} catch (IOException e) {

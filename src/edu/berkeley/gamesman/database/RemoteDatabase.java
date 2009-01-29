@@ -1,5 +1,6 @@
 package edu.berkeley.gamesman.database;
 
+import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -13,7 +14,7 @@ import edu.berkeley.gamesman.util.Util;
 public class RemoteDatabase extends Database {
 
 	DirectoryFilerClient dfc;
-	DBValue ex;
+	DBRecord ex;
 	Database real;
 	
 	@Override
@@ -28,12 +29,12 @@ public class RemoteDatabase extends Database {
 	}
 
 	@Override
-	public DBValue getValue(Number loc) {
+	public DBRecord getValue(BigInteger loc) {
 		return real.getValue(loc);
 	}
 
 	@Override
-	public void initialize(String uri, Configuration config, DBValue exampleValue) {
+	public void initialize(String uri, Configuration config, DBRecord exampleValue) {
 		try {
 			dfc = new DirectoryFilerClient(new URI(uri));
 		} catch (URISyntaxException e1) {
@@ -41,14 +42,14 @@ public class RemoteDatabase extends Database {
 		}
 		ex = exampleValue;
 		try {
-			real = dfc.openDatabase(new URI(uri).getPath());
+			real = dfc.openDatabase(new URI(uri).getPath(), config);
 		} catch (URISyntaxException e) {
 			Util.fatalError("Bad URI \""+uri+"\": "+e);
 		}
 	}
 
 	@Override
-	public void setValue(Number loc, DBValue value) {
+	public void setValue(BigInteger loc, DBRecord value) {
 		real.setValue(loc, value);
 	}
 

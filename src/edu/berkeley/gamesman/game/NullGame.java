@@ -3,12 +3,12 @@ package edu.berkeley.gamesman.game;
 import java.math.BigInteger;
 import java.util.Collection;
 import edu.berkeley.gamesman.core.Game;
-import edu.berkeley.gamesman.database.DBValue;
+import edu.berkeley.gamesman.database.DBRecord;
 import edu.berkeley.gamesman.hasher.NullHasher;
 import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.Util;
 
-public class NullGame extends Game<Object,DBValue> {
+public class NullGame extends Game<Object,DBRecord> {
 
 	static {
 		DependencyResolver.allowHasher(NullGame.class, NullHasher.class);
@@ -21,7 +21,7 @@ public class NullGame extends Game<Object,DBValue> {
 	}
 
 	@Override
-	public DBValue primitiveValue(Object pos) {
+	public DBRecord primitiveValue(Object pos) {
 		fail();
 		return null;
 	}
@@ -67,7 +67,7 @@ public class NullGame extends Game<Object,DBValue> {
 	}
 
 	@Override
-	public DBValue getDBValueExample() {
+	public DBRecord getDBValueExample() {
 		fail();
 		return null;
 	}

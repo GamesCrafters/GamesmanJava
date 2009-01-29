@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.MessageDigest;
@@ -15,10 +16,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Values;
 import edu.berkeley.gamesman.database.BlockDatabase;
-import edu.berkeley.gamesman.database.DBValue;
+import edu.berkeley.gamesman.database.DBRecord;
 import edu.berkeley.gamesman.database.FileDatabase;
 import edu.berkeley.gamesman.util.Util;
 
@@ -34,6 +36,7 @@ public final class DirectoryFilerServer {
 
 	List<Database> fds = Collections
 			.synchronizedList(new ArrayList<Database>());
+	List<BigInteger> locs = Collections.synchronizedList(new ArrayList<BigInteger>());
 
 	public DirectoryFilerServer(String rootdir, int port, String secret) {
 		root = new File(rootdir);
@@ -131,7 +134,7 @@ public final class DirectoryFilerServer {
 					
 					int fd;
 					Database db;
-					long loc;
+					BigInteger loc;
 					
 					if (shuttingdown) {
 						Util.debug("Client shutting down");
@@ -161,16 +164,21 @@ public final class DirectoryFilerServer {
 						break;
 					case 3:
 						db = new FileDatabase();
-						String file;
+						String file, config;
 						int len = din.readInt();
 						byte[] fb = new byte[len];
-						din.read(fb);
+						din.readFully(fb);
 						file = new String(fb);
+						len = din.readInt();
+						fb = new byte[len];
+						din.readFully(fb);
+						config = new String(fb);
 						db.initialize(Util.getChild(root, file).toURL()
-								.toExternalForm(), Values.Invalid);
+								.toExternalForm(), new Configuration(config), Values.Invalid); //TODO: don't reference Values
 						fds.add(db);
+						locs.add(BigInteger.ZERO);
 						dout.writeInt(fds.indexOf(db));
-						Util.debug("Client opened db " + file + " for fd " + fds.indexOf(db));
+						Util.debug("Client opened db " + file + " for fd " + fds.indexOf(db)+" with config "+config);
 						break;
 					case 4:
 						fd = din.readInt();
@@ -181,20 +189,29 @@ public final class DirectoryFilerServer {
 						break;
 					case 5:
 						fd = din.readInt();
-						loc = din.readLong();
 						db = fds.get(fd);
+						loc = locs.get(fd);
 						dout.writeByte(db.getValue(loc).byteValue());
+						locs.set(fd, loc.add(BigInteger.ONE));
 						break;
 					case 6:
 						fd = din.readInt();
-						loc = din.readLong();
 						db = fds.get(fd);
 						byte val = din.readByte();
+						loc = locs.get(fd);
 						db.setValue(loc, Values.Win.wrapValue(val));
+						locs.set(fd, loc.add(BigInteger.ONE));
 						break;
 					case 7:
 						fd = din.readInt();
 						fds.get(fd).flush();
+						break;
+					case 8:
+						fd = din.readInt();
+						len = din.readInt();
+						byte[] bloc = new byte[len];
+						din.readFully(bloc);
+						locs.set(fd, new BigInteger(bloc));
 						break;
 					default:
 						Util.warn("Bad IO from client");

@@ -13,7 +13,7 @@ import org.apache.hadoop.mapred.Reporter;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.TieredGame;
-import edu.berkeley.gamesman.database.DBValue;
+import edu.berkeley.gamesman.database.DBRecord;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.hadoop.util.BigIntegerWritable;
 import edu.berkeley.gamesman.hadoop.util.DBValueWritable;
@@ -23,18 +23,18 @@ import edu.berkeley.gamesman.util.Util;
 
 public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, BigIntegerWritable, BigIntegerWritable>,Reducer<BigIntegerWritable, BigIntegerWritable, BigIntegerWritable, DBValueWritable>{
 
-	protected TieredGame<Object,DBValue> game;
+	protected TieredGame<Object,DBRecord> game;
 	protected Hasher hasher;
 	protected Database db;
 	private BigIntegerWritable tempBI = new BigIntegerWritable();;
 	private DBValueWritable tempDB = new DBValueWritable();
 
 	public void configure(JobConf conf) {
-		Class<TieredGame<Object,DBValue>> gc = null;
+		Class<TieredGame<Object,DBRecord>> gc = null;
 		Class<Database> gd = null;
 		Class<Hasher> gh = null;
 		try {
-			gc = (Class<TieredGame<Object, DBValue>>) Class.forName(conf.get("gameclass","NullGame"));
+			gc = (Class<TieredGame<Object, DBRecord>>) Class.forName(conf.get("gameclass","NullGame"));
 			gd = (Class<Database>) Class.forName(conf.get("databaseclass", "NullDatabase"));
 			gh = (Class<Hasher>) Class.forName(conf.get("hasherclass","NullHasher"));
 		} catch (ClassNotFoundException e) {
@@ -74,8 +74,8 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 			Iterator<BigIntegerWritable> children,
 			OutputCollector<BigIntegerWritable, DBValueWritable> out,
 			Reporter rep) throws IOException {
-		DBValue v = game.getDBValueExample();
-		ArrayList<DBValue> vals = new ArrayList<DBValue>();
+		DBRecord v = game.getDBValueExample();
+		ArrayList<DBRecord> vals = new ArrayList<DBRecord>();
 		for(BigIntegerWritable child : new IteratorWrapper<BigIntegerWritable>(children)){
 			vals.add(db.getValue(child.get()));
 		}

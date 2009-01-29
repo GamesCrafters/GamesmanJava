@@ -1,5 +1,7 @@
 package edu.berkeley.gamesman.database;
 
+import java.math.BigInteger;
+
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 
@@ -18,19 +20,19 @@ public class BlockDatabase extends Database {
 	}
 
 	@Override
-	public DBValue getValue(Number loc) {
+	public DBRecord getValue(BigInteger loc) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void initialize(String url, Configuration config, DBValue exampleValue) {
+	public void initialize(String url, Configuration config, DBRecord exampleValue) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void setValue(Number loc, DBValue value) {
+	public void setValue(BigInteger loc, DBRecord value) {
 		// TODO Auto-generated method stub
 		
 	}

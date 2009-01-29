@@ -9,7 +9,7 @@ import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Solver;
 import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.core.WorkUnit;
-import edu.berkeley.gamesman.database.DBValue;
+import edu.berkeley.gamesman.database.DBRecord;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Task;
 import edu.berkeley.gamesman.util.Util;
@@ -23,12 +23,12 @@ import edu.berkeley.gamesman.util.threading.Barrier;
  */
 public final class TierSolver extends Solver {
 
-	protected TieredGame<Object, DBValue> myGame;
+	protected TieredGame<Object, DBRecord> myGame;
 
 	@Override
 	public WorkUnit prepareSolve(Game<?, ?> game) {
 
-		myGame = (TieredGame<Object, DBValue>) game;
+		myGame = (TieredGame<Object, DBRecord>) game;
 		tier = myGame.numberOfTiers() - 1;
 		offset = myGame.hashOffsetForTier(tier);
 		updater = new TierSolverUpdater();
@@ -36,7 +36,7 @@ public final class TierSolver extends Solver {
 		return new TierSolverWorkUnit();
 	}
 
-	protected void solvePartialTier(TieredGame<Object, DBValue> game,
+	protected void solvePartialTier(TieredGame<Object, DBRecord> game,
 			BigInteger start, BigInteger end, TierSolverUpdater t) {
 		BigInteger current = start.subtract(BigInteger.ONE);
 		
@@ -53,17 +53,17 @@ public final class TierSolver extends Solver {
 			Collection<?> children = game.validMoves(state);
 			
 			if (children.size() == 0){
-				DBValue prim = game.primitiveValue(state);
+				DBRecord prim = game.primitiveValue(state);
 
 				db.setValue(current, prim);
 			} else {
-				ArrayList<DBValue> vals = new ArrayList<DBValue>(children.size());
+				ArrayList<DBRecord> vals = new ArrayList<DBRecord>(children.size());
 				
 				for (Object child : children) {
 					vals.add(db.getValue(game.stateToHash(child)));
 				}
 				
-				DBValue newVal = vals.get(0).fold(vals);
+				DBRecord newVal = vals.get(0).fold(vals);
 				db.setValue(current, newVal);
 			}
 		}

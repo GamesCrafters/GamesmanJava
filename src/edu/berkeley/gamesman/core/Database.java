@@ -1,13 +1,15 @@
 package edu.berkeley.gamesman.core;
 
-import edu.berkeley.gamesman.database.DBValue;
+import java.math.BigInteger;
+
+import edu.berkeley.gamesman.database.DBRecord;
 
 public abstract class Database {
 
-	public abstract void initialize(String url, Configuration config, DBValue exampleValue);
+	public abstract void initialize(String url, Configuration config, DBRecord exampleValue);
 	
-	public abstract DBValue getValue(Number loc);
-	public abstract void setValue(Number loc, DBValue value);
+	public abstract DBRecord getValue(BigInteger loc);
+	public abstract void setValue(BigInteger loc, DBRecord value);
 	
 	public abstract void flush();
 	public abstract void close();
