@@ -1,21 +1,34 @@
 package edu.berkeley.gamesman.core;
 
+import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.Map;
+
+import edu.berkeley.gamesman.util.Pair;
+import edu.berkeley.gamesman.util.Util;
+
 /**
  * A Configuration object stores information related to a specific configuration of Game, Hasher, and Records.  
  * The information should be specific enough that a database will only match Configuration if the given Game and Hasher 
  * will derive useful information from it.
  * @author Steven Schlansker
  */
-public class Configuration implements Comparable<Configuration> {
+public class Configuration {
 	private String config;
+	private Game<?> g;
+	private Hasher<?> h;
+	private EnumMap<RecordFields,Pair<Integer,Integer>> storedFields;
 	/**
 	 * Initialize a new Configuration.  Both parameters should be fully initialized.
 	 * @param g The game used
 	 * @param h The hasher used
+	 * @param storedFields Which fields should be stored in the database
 	 */
-	public Configuration(Game<?> g, Hasher<?> h) {
-		config = g.describe();
-		config = config.length()+config+";"+h.describe();
+	public Configuration(Game<?> g, Hasher<?> h, EnumMap<RecordFields,Pair<Integer,Integer>> storedFields) {
+		this.g = g;
+		this.h = h;
+		this.storedFields = storedFields;
+		config = Util.pstr(g.describe()) + Util.pstr(h.describe()) + Util.pstr(storedFields.toString());
 	}
 	
 	/**
@@ -34,8 +47,14 @@ public class Configuration implements Comparable<Configuration> {
 		return config;
 	}
 
-	public int compareTo(Configuration o) {
-		return config.compareTo(o.config);
+	@Override
+	public boolean equals(Object o) {
+		if(!(o instanceof Configuration)) return false;
+		return ((Configuration)o).config.equals(config);
+	}
+	
+	public EnumMap<RecordFields,Pair<Integer,Integer>> getStoredFields(){
+		return storedFields;
 	}
 	
 

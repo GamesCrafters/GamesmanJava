@@ -27,7 +27,7 @@ public class BlockDatabase extends Database {
 	}
 
 	@Override
-	public void initialize(String url, Configuration config) {
+	protected void initialize(String url) {
 		// TODO Auto-generated method stub
 		
 	}

@@ -118,7 +118,7 @@ public final class Gamesman {
 
 		Class<? extends Game<?>> g;
 		Class<? extends Solver> s;
-		Class<? extends Hasher> h;
+		Class<? extends Hasher<?>> h;
 		Class<? extends Database> d;
 
 		try {
@@ -126,7 +126,7 @@ public final class Gamesman {
 					.forName("edu.berkeley.gamesman.game." + gameName);
 			s = (Class<? extends Solver>) Class
 					.forName("edu.berkeley.gamesman.solver." + solverName);
-			h = (Class<? extends Hasher>) Class
+			h = (Class<? extends Hasher<?>>) Class
 					.forName("edu.berkeley.gamesman.hasher." + hasherName);
 			d = (Class<? extends Database>) Class
 					.forName("edu.berkeley.gamesman.database." + databaseName);
@@ -143,7 +143,7 @@ public final class Gamesman {
 				boolean tr = (OptionProcessor.checkOption("help") != null);
 				Gamesman executor = new Gamesman(
 						(Game<Object>) g.newInstance(), s
-								.newInstance(), h.newInstance(), (Database) d
+								.newInstance(), (Hasher<Object>)h.newInstance(), (Database) d
 								.newInstance(), tr);
 				executor.getClass().getMethod("execute" + cmd,
 						(Class<?>[]) null).invoke(executor);

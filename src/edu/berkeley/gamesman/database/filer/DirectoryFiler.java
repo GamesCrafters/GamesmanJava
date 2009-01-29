@@ -47,10 +47,15 @@ public class DirectoryFiler extends Filer<BlockDatabase>{
 
 	@Override
 	public BlockDatabase openDatabase(String name) {
+		BlockDatabase db = new BlockDatabase();
+		db.initialize(Util.getChild(rootdir, name).toURI().toString(), null);
+		return db;
 	}
 
 	@Override
 	public BlockDatabase openDatabase(Configuration conf) {
+		Util.fatalError("Not implemented");
+		return null;
 	}
 
 	@Override

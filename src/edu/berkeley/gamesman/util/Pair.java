@@ -13,11 +13,11 @@ public class Pair<A,B> {
 	/**
 	 * The first datum
 	 */
-	public A car;
+	final public A car;
 	/**
 	 * The second datum
 	 */
-	public B cdr;
+	final public B cdr;
 	
 	/**
 	 * Initialize a new Pair

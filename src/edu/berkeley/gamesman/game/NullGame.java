@@ -66,12 +66,6 @@ public class NullGame extends Game<Object> {
 	public int getDefaultBoardWidth() {
 		return 0;
 	}
-
-	@Override
-	public Record getDBValueExample() {
-		fail();
-		return null;
-	}
 	
 	private void fail(){
 		Util.fatalError("Please specify a game with --game");

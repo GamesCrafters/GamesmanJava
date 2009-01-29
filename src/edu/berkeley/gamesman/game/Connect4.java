@@ -5,10 +5,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
+import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.core.TieredGame;
-import edu.berkeley.gamesman.core.Values;
 import edu.berkeley.gamesman.hasher.NullHasher;
 import edu.berkeley.gamesman.hasher.PerfectConnect4Hash;
 import edu.berkeley.gamesman.util.DependencyResolver;
@@ -71,7 +71,7 @@ public class Connect4 extends TieredGame<char[][]> {
 	}
 
 	@Override
-	public Record primitiveValue(char[][] pos) {
+	public PrimitiveValue primitiveValue(char[][] pos) {
 		// Check horizontal wins
 		for(int y = 0; y < gameHeight; y++){
 			char test = pos[0][y];
@@ -86,7 +86,7 @@ public class Connect4 extends TieredGame<char[][]> {
 					test = pos[x][y];
 				}
 				if(numSeen == piecesToWin)
-					return Values.Lose;
+					return PrimitiveValue.Lose;
 			}
 		}
 		
@@ -103,7 +103,7 @@ public class Connect4 extends TieredGame<char[][]> {
 					test = pos[x][y];
 				}
 				if(numSeen == piecesToWin)
-					return Values.Lose;
+					return PrimitiveValue.Lose;
 			}
 		}
 		
@@ -130,7 +130,7 @@ public class Connect4 extends TieredGame<char[][]> {
 					numSeen = 0;
 				}
 				if(numSeen == piecesToWin)
-					return Values.Lose;
+					return PrimitiveValue.Lose;
 			}
 		}
 		
@@ -157,15 +157,15 @@ public class Connect4 extends TieredGame<char[][]> {
 					numSeen = 0;
 				}
 				if(numSeen == piecesToWin)
-					return Values.Lose;
+					return PrimitiveValue.Lose;
 			}
 		}
 		
 		for(char[] row : pos)
 			for(char piece : row)
-				if(piece == ' ') return Values.Undecided;
+				if(piece == ' ') return PrimitiveValue.Undecided;
 		
-		return Values.Tie;
+		return PrimitiveValue.Tie;
 	}
 
 	@Override
@@ -199,7 +199,7 @@ public class Connect4 extends TieredGame<char[][]> {
 		
 		char[][] board;
 		
-		if(primitiveValue(pos) != Values.Undecided)
+		if(primitiveValue(pos) != PrimitiveValue.Undecided)
 			return nextBoards;
 		
 		char nextpiece = nextPiecePlaced(pos);
@@ -236,11 +236,6 @@ public class Connect4 extends TieredGame<char[][]> {
 	@Override
 	public String toString(){
 		return "Connect 4 "+gameWidth+"x"+gameHeight+" ("+piecesToWin+" to win)";
-	}
-
-	@Override
-	public Record getDBValueExample() {
-		return Values.Win;
 	}
 
 	@Override

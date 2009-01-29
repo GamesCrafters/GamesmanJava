@@ -195,7 +195,7 @@ public final class DirectoryFilerServer {
 						fd = din.readInt();
 						db = fds.get(fd);
 						loc = locs.get(fd);
-						db.getValue(loc).write(dout);
+						db.getValue(loc).writeStream(dout);
 						locs.set(fd, loc.add(BigInteger.ONE));
 						break;
 					case 6:
@@ -203,7 +203,7 @@ public final class DirectoryFilerServer {
 						db = fds.get(fd);
 						//byte val = din.readByte();
 						loc = locs.get(fd);
-						db.setValue(loc, Record.wrap(db.getConfiguration(), din));
+						db.setValue(loc, Record.readStream(db.getConfiguration(), din));
 						locs.set(fd, loc.add(BigInteger.ONE));
 						break;
 					case 7:

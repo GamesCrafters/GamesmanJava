@@ -155,4 +155,8 @@ public final class Util {
 	public static File getChild(File dir, final String childname){
 		return new File(dir,childname); //TODO: sanity check childname
 	}
+	
+	public static String pstr(String s){
+		return s.length() + s;
+	}
 }

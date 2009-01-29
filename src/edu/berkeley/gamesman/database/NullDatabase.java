@@ -5,7 +5,6 @@ import java.math.BigInteger;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Database;
-import edu.berkeley.gamesman.core.Values;
 import edu.berkeley.gamesman.util.Util;
 
 public final class NullDatabase extends Database {
@@ -22,7 +21,7 @@ public final class NullDatabase extends Database {
 	}
 
 	@Override
-	public void initialize(String url, Configuration config) {
+	public void initialize(String url) {
 		Util.warn("Using NullDatabase, answers will be incorrect and nothing will be saved.");
 	}
 

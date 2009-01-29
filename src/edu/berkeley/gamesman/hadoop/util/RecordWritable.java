@@ -17,7 +17,7 @@ public class RecordWritable implements Writable {
 	}
 
 	public void write(DataOutput out) throws IOException {
-		value.write(out);
+		value.writeStream(out);
 	}
 	
 	public Record get(){

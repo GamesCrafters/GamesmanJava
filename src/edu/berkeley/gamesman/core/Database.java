@@ -11,6 +11,8 @@ import java.math.BigInteger;
  */
 public abstract class Database {
 
+	protected Configuration conf;
+	
 	/**
 	 * Initialize a Database given a URI and a Configuration.  This method may either open an existing database or 
 	 * create a new one.  If a new one is created, the Configuration should be stored.  If one is opened, the Configuration 
@@ -18,7 +20,12 @@ public abstract class Database {
 	 * @param uri The URI that the Database is associated with
 	 * @param config The Configuration that is relevant
 	 */
-	public abstract void initialize(String uri, Configuration config);
+	public final void initialize(String uri, Configuration config){
+		conf = config;
+		initialize(uri);
+	}
+	
+	protected abstract void initialize(String uri);
 	
 	/**
 	 * Return the Nth Record in the Database
@@ -46,6 +53,8 @@ public abstract class Database {
 	 * Retrieve the Configuration associated with this Database.
 	 * @return the Configuration stored in the database
 	 */
-	public abstract Configuration getConfiguration();
+	public final Configuration getConfiguration(){
+		return conf;
+	}
 	
 }

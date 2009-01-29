@@ -167,7 +167,7 @@ public final class DirectoryFilerClient {
 				dout.write(5);
 				dout.writeInt(fd);
 				pos = pos.add(BigInteger.ONE);
-				return Record.wrap(conf, din);
+				return Record.readStream(conf, din);
 			} catch (IOException e) {
 				Util.fatalError("IO error while communicating with server: "
 						+ e);
@@ -190,7 +190,7 @@ public final class DirectoryFilerClient {
 		}
 
 		@Override
-		public void initialize(String url, Configuration config) {
+		public void initialize(String url) {
 			Util.fatalError("Already initialized");
 		}
 
@@ -200,17 +200,12 @@ public final class DirectoryFilerClient {
 				if(loc.compareTo(pos) != 0) seek(loc);
 				dout.write(6);
 				dout.writeInt(fd);
-				value.write(dout);
+				value.writeStream(dout);
 				pos = pos.add(BigInteger.ONE);
 			} catch (IOException e) {
 				Util.fatalError("IO error while communicating with server: "
 						+ e);
 			}
-		}
-
-		@Override
-		public Configuration getConfiguration() {
-			return conf;
 		}
 
 	}

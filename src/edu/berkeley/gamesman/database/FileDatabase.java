@@ -51,7 +51,7 @@ public final class FileDatabase extends Database {
 		try {
 			fd.seek(loc.longValue()+offset);
 			//byte b = fd.readByte();
-			Record v = Record.wrap(config, fd);
+			Record v = Record.readStream(config, fd);
 			// Util.debug("Location "+loc+" = "+v+" ("+b+")");
 			return v;
 		} catch (IOException e) {
@@ -62,7 +62,7 @@ public final class FileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void initialize(String loc, Configuration config1) {
+	public synchronized void initialize(String loc) {
 
 		boolean previouslyExisted;
 
@@ -79,10 +79,8 @@ public final class FileDatabase extends Database {
 		} catch (FileNotFoundException e) {
 			Util.fatalError("Could not create/open database: " + e);
 		}
-
-		config = config1;
 		
-		Util.assertTrue(Record.length(config1) == 1, "FileDatabase can only store 8 bits per record for now"); //TODO: FIXME
+		Util.assertTrue(Record.length(conf) == 1, "FileDatabase can only store 8 bits per record for now"); //TODO: FIXME
 
 		try {
 			fd.seek(0);
@@ -90,10 +88,10 @@ public final class FileDatabase extends Database {
 				int headerLen = fd.readInt();
 				byte[] header = new byte[headerLen];
 				fd.readFully(header);
-				Util.assertTrue(new String(header).equals(config1.getConfigString()), "File database has wrong header; expecting \""+config1.getConfigString()+"\" got \""+new String(header)+"\"");
+				Util.assertTrue(new String(header).equals(conf.getConfigString()), "File database has wrong header; expecting \""+conf.getConfigString()+"\" got \""+new String(header)+"\"");
 			}else{
-				fd.writeInt(config1.getConfigString().length());
-				fd.write(config1.getConfigString().getBytes());
+				fd.writeInt(conf.getConfigString().length());
+				fd.write(conf.getConfigString().getBytes());
 			}
 			offset = fd.getFilePointer();
 		} catch (IOException e) {
@@ -106,7 +104,7 @@ public final class FileDatabase extends Database {
 		try {
 			fd.seek(loc.longValue()+offset);
 			//fd.writeByte(value.byteValue());
-			value.write(fd);
+			value.writeStream(fd);
 			// Util.debug("Wrote "+value.byteValue()+" to "+loc);
 		} catch (IOException e) {
 			Util.fatalError("IO Error: " + e);

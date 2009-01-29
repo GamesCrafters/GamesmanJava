@@ -34,14 +34,14 @@ public class RemoteDatabase extends Database {
 	}
 
 	@Override
-	public void initialize(String uri, Configuration config) {
+	public void initialize(String uri) {
 		try {
 			dfc = new DirectoryFilerClient(new URI(uri));
 		} catch (URISyntaxException e1) {
 			Util.fatalError("Bad URI \""+uri+"\": "+e1);
 		}
 		try {
-			real = dfc.openDatabase(new URI(uri).getPath(), config);
+			real = dfc.openDatabase(new URI(uri).getPath(), conf);
 		} catch (URISyntaxException e) {
 			Util.fatalError("Bad URI \""+uri+"\": "+e);
 		}
