@@ -16,12 +16,10 @@ import edu.berkeley.gamesman.util.Util;
 import edu.berkeley.gamesman.util.threading.Barrier;
 
 /**
- * A generic solver that works top-down in the matter most games are played
- * Describes the game tree entirely. Slow but reliable, also intuitive to
- * understand
+ * TierSolver documentation stub
  * 
  * @author Steven Schlansker
- * 
+ *
  */
 public final class TierSolver extends Solver {
 
@@ -38,7 +36,7 @@ public final class TierSolver extends Solver {
 		return new TierSolverWorkUnit();
 	}
 
-	private void solvePartialTier(TieredGame<Object, DBValue> game,
+	protected void solvePartialTier(TieredGame<Object, DBValue> game,
 			BigInteger start, BigInteger end, TierSolverUpdater t) {
 		BigInteger current = start.subtract(BigInteger.ONE);
 		while (current.compareTo(end) < 0) {
