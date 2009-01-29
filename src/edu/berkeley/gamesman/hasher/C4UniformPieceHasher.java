@@ -58,7 +58,7 @@ public final class C4UniformPieceHasher extends Hasher<char[]> {
 	}
 	
 	private int idx;
-	private Task task;
+	transient private Task task;
 	
 	protected void init(char[] board,int off, char[] mypcs, int sum){
 		if(lookup == null){

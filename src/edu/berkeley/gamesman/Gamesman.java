@@ -1,6 +1,3 @@
-/**
- * 
- */
 package edu.berkeley.gamesman;
 
 import java.io.IOException;
@@ -23,10 +20,10 @@ import edu.berkeley.gamesman.database.filer.DirectoryFilerClient;
 import edu.berkeley.gamesman.database.filer.DirectoryFilerServer;
 import edu.berkeley.gamesman.util.OptionProcessor;
 import edu.berkeley.gamesman.util.Util;
+import edu.berkeley.gamesman.util.test.RPCTest;
 
 /**
- * @author Gamescrafters Project
- * 
+ * @author Steven Schlansker
  */
 public final class Gamesman {
 
@@ -172,9 +169,7 @@ public final class Gamesman {
 		}
 
 		if (dohelp) {
-			System.out.println("Gamesman help stub, please fill this out!"); // TODO:
-																				// help
-																				// text
+			System.out.println("Gamesman help stub, please fill this out!"); // TODO: help text
 			OptionProcessor.help();
 			return;
 		}
@@ -338,6 +333,10 @@ public final class Gamesman {
 		} catch (IOException e) {
 			Util.fatalError("IO Error: " + e);
 		}
+	}
+	
+	public void executetestRPC(){
+		new RPCTest();
 	}
 
 }

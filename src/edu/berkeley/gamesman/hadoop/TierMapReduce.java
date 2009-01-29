@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.hadoop;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Iterator;
@@ -22,29 +23,28 @@ import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.hadoop.util.BigIntegerWritable;
 import edu.berkeley.gamesman.core.Hasher;
-import edu.berkeley.gamesman.util.IteratorWrapper;
 import edu.berkeley.gamesman.util.OptionProcessor;
 import edu.berkeley.gamesman.util.Util;
 
 public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, BigIntegerWritable, BigIntegerWritable>,Reducer<BigIntegerWritable, BigIntegerWritable, BigIntegerWritable, TierMapReduce.RecordWritable>{
 
 	protected TieredGame<Object> game;
-	protected Hasher hasher;
+	protected Hasher<?> hasher;
 	protected Database db;
-	private BigIntegerWritable tempBI = new BigIntegerWritable();;
-	private RecordWritable tempDB = new RecordWritable();
+	//private BigIntegerWritable tempBI = new BigIntegerWritable();;
+	//private RecordWritable tempDB = new RecordWritable();
 	protected Configuration config;
 
 	public void configure(JobConf conf) {
 		Class<TieredGame<Object>> gc = null;
 		Class<Database> gd = null;
-		Class<Hasher> gh = null;
+		Class<Hasher<?>> gh = null;
 		final String base = "edu.berkeley.gamesman.";
 		OptionProcessor.initializeOptions(conf.getStrings("args"));
 		try {
 			gc = (Class<TieredGame<Object>>) Class.forName(base+"game."+conf.get("gameclass","NullGame"));
 			gd = (Class<Database>) Class.forName(base+"database."+conf.get("databaseclass", "NullDatabase"));
-			gh = (Class<Hasher>) Class.forName(base+"hasher."+conf.get("hasherclass","NullHasher"));
+			gh = (Class<Hasher<?>>) Class.forName(base+"hasher."+conf.get("hasherclass","NullHasher"));
 		} catch (ClassNotFoundException e) {
 			Util.fatalError("Could not find class "+e);
 		}
@@ -71,14 +71,31 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 	public void close() throws IOException {
 		db.close();
 	}
+	
+	final BigInteger minusone = BigInteger.ZERO.subtract(BigInteger.ONE);
 
 	public void map(BigIntegerWritable position, NullWritable nullVal,
 			OutputCollector<BigIntegerWritable, BigIntegerWritable> validMoves,
 			Reporter reporter) throws IOException {
-		for(Object move : game.validMoves(game.hashToState(position.get()))){
-			tempBI.set(game.stateToHash(move));
-			validMoves.collect(position, tempBI);
+		boolean seenOne = false;
+		
+		Record record;
+
+		ArrayList<Record> vals = new ArrayList<Record>();
+		
+		Object myHash = game.hashToState(position.get());
+		
+		for(Object move : game.validMoves(myHash)){
+			seenOne = true;
+			vals.add(db.getValue(game.stateToHash(move)));
 		}
+		if(seenOne){
+			record = Record.combine(config,vals);
+		}else{
+			record = new Record(config,game.primitiveValue(myHash));
+		}
+		
+		db.setValue(position.get(),record);
 	}
 
 	public void reduce(
@@ -86,11 +103,6 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 			Iterator<BigIntegerWritable> children,
 			OutputCollector<BigIntegerWritable, RecordWritable> out,
 			Reporter rep) throws IOException {
-		ArrayList<Record> vals = new ArrayList<Record>();
-		for(BigIntegerWritable child : new IteratorWrapper<BigIntegerWritable>(children)){
-			vals.add(db.getValue(child.get()));
-		}
-		db.setValue(position.get(), Record.combine(config,vals));
 	}
 	
 	private class RecordWritable implements Writable {
@@ -111,6 +123,10 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 		
 		public void set(Record v){
 			value = v;
+		}
+		
+		public String toString(){
+			return value.toString();
 		}
 
 	}

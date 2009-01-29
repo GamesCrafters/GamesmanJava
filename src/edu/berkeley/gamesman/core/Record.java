@@ -159,5 +159,17 @@ public final class Record {
 		if(seentie) return PrimitiveValue.Tie;
 		return PrimitiveValue.Lose;
 	}
+	
+	public String toString(){
+		StringBuilder b = new StringBuilder();
+		for(int fieldnum = 0; fieldnum < fields.length; fieldnum++){
+			if(sf.get(RecordFields.Value).car == fieldnum)
+				b.append(PrimitiveValue.values()[fields[fieldnum]]);
+			else
+				b.append(fields[fieldnum]);
+			b.append(" ");
+		}
+		return b.toString();
+	}
 
 }

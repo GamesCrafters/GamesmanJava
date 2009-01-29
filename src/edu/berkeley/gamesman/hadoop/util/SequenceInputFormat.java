@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import edu.berkeley.gamesman.hadoop.util.BigIntegerWritable;
+import edu.berkeley.gamesman.util.Util;
 
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapred.InputFormat;
@@ -106,7 +107,11 @@ class SequenceReader implements RecordReader<BigIntegerWritable, NullWritable>{
 	
 	SequenceReader(SequenceSplit split){
 		this.split = split;
-		pos = 0;
+		try {
+			pos = split.getLength();
+		} catch (IOException e) {
+			Util.fatalError("?");
+		}
 	}
 	
 	public void close() throws IOException {
@@ -131,9 +136,10 @@ class SequenceReader implements RecordReader<BigIntegerWritable, NullWritable>{
 
 	public boolean next(BigIntegerWritable key, NullWritable value)
 			throws IOException {
-		if(pos < split.getLength()){
+		if(pos >= 0){
 			key.set(split.s.add(BigInteger.valueOf(pos)));
-			pos++;
+			//Util.debug("split: "+key.get()+" ("+split.s+")");
+			pos--;
 			return true;
 		}
 		return false;

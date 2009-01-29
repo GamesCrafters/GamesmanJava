@@ -34,5 +34,9 @@ public class BigIntegerWritable implements WritableComparable<BigIntegerWritable
 	public BigInteger get(){
 		return value;
 	}
+	
+	public String toString(){
+		return value.toString();
+	}
 
 }

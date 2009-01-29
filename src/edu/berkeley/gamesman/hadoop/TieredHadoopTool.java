@@ -18,6 +18,7 @@ import edu.berkeley.gamesman.hadoop.util.SequenceInputFormat;
 import edu.berkeley.gamesman.master.LocalMaster;
 import edu.berkeley.gamesman.solver.TierSolver;
 import edu.berkeley.gamesman.util.OptionProcessor;
+import edu.berkeley.gamesman.util.Util;
 
 public class TieredHadoopTool extends Configured implements Tool {
 
@@ -41,10 +42,10 @@ public class TieredHadoopTool extends Configured implements Tool {
 								+ conf.get("hasherclass")), NullDatabase.class);
 
 		TieredGame<?> game = (TieredGame<?>) m.getGame();
-
-		for (int tier = game.numberOfTiers() - 1; tier >= 0; tier--) {
-			conf.set("firsthash", game.hashOffsetForTier(tier).toString());
-			conf.set("lasthash", game.lastHashValueForTier(tier).toString());
+		
+			conf.set("firsthash", "0");
+			conf.set("lasthash", game.lastHashValueForTier(game.numberOfTiers()-1).toString());
+			//Util.debug("Tier goes from "+conf.get("firsthash")+"-"+conf.get("lasthash"));
 
 			JobConf job = new JobConf(conf, TierMapReduce.class);
 
@@ -54,12 +55,11 @@ public class TieredHadoopTool extends Configured implements Tool {
 			job.setJobName("Tier Map-Reduce");
 			FileInputFormat.setInputPaths(job, new Path("in"));
 			job.setInputFormat(SequenceInputFormat.class);
-			FileOutputFormat.setOutputPath(job, new Path("out"));
+			FileOutputFormat.setOutputPath(job, new Path("out_0"));
 			job.setMapperClass(TierMapReduce.class);
 			job.setReducerClass(TierMapReduce.class);
 
 			JobClient.runJob(job);
-		}
 		return 0;
 	}
 

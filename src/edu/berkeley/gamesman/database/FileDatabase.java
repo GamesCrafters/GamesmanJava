@@ -119,6 +119,7 @@ public final class FileDatabase extends Database {
 		try {
 			fd.seek(loc.longValue() + offset);
 			value.writeStream(fd);
+			//Util.debug("write "+loc);
 		} catch (IOException e) {
 			Util.fatalError("IO Error: " + e);
 		}

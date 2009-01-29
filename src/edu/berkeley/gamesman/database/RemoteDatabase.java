@@ -14,42 +14,53 @@ import edu.berkeley.gamesman.util.Util;
 
 public class RemoteDatabase extends Database {
 
-	DirectoryFilerClient dfc;
-	Database real;
-	
+	static ThreadLocal<DirectoryFilerClient> dfc;
+	static ThreadLocal<Database> real;
+
 	@Override
 	public void close() {
-		real.close();
-		dfc.close();
+		real.get().close();
+		dfc.get().close();
 	}
 
 	@Override
 	public void flush() {
-		real.flush();
+		real.get().flush();
 	}
 
 	@Override
 	public Record getValue(BigInteger loc) {
-		return real.getValue(loc);
+		return real.get().getValue(loc);
 	}
 
 	@Override
-	public void initialize(String uri) {
-		try {
-			dfc = new DirectoryFilerClient(new URI(uri));
-		} catch (URISyntaxException e1) {
-			Util.fatalError("Bad URI \""+uri+"\": "+e1);
-		}
-		try {
-			real = dfc.openDatabase(new URI(uri).getPath(), conf);
-		} catch (URISyntaxException e) {
-			Util.fatalError("Bad URI \""+uri+"\": "+e);
-		}
+	public void initialize(final String uri) {
+		dfc = new ThreadLocal<DirectoryFilerClient>() {
+			@Override
+			protected DirectoryFilerClient initialValue() {
+				try {
+					return new DirectoryFilerClient(new URI(uri));
+				} catch (URISyntaxException e1) {
+					Util.fatalError("Bad URI \"" + uri + "\": " + e1);
+				}
+				return null;
+			}
+		};
+		real = new ThreadLocal<Database>() {
+			protected Database initialValue() {
+				try {
+					return dfc.get().openDatabase(new URI(uri).getPath(), conf);
+				} catch (URISyntaxException e) {
+					Util.fatalError("Bad URI \"" + uri + "\": " + e);
+				}
+				return null;
+			}
+		};
 	}
 
 	@Override
 	public void setValue(BigInteger loc, Record value) {
-		real.setValue(loc, value);
+		real.get().setValue(loc, value);
 	}
 
 }
