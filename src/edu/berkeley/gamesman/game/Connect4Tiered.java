@@ -195,5 +195,10 @@ public final class Connect4Tiered extends TieredGame<BigInteger,Values> {
 	public int getDefaultBoardWidth() {
 		return 3;
 	}
+
+	@Override
+	public Enum possiblePositionValues() {
+		return Values.Invalid;
+	}
 	
 }

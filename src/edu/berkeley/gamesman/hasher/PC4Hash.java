@@ -21,7 +21,7 @@ public class PC4Hash extends Hasher {
 	@Override
 	public void setGame(Game<char[][],?> game){
 		super.setGame(game);
-		gh.setGame(game);
+		gh.setEnum(game);
 	}
 	
 	@Override

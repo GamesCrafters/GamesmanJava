@@ -99,6 +99,6 @@ public abstract class Game<State,Value> {
 	 * @return an instance of an Enum class with all representable states
 	 * @see Values
 	 */
-	public abstract DBEnum possiblePositionValues();
+	public abstract Enum possiblePositionValues();
 	
 }

@@ -52,19 +52,8 @@ public class Connect4 extends HashedGame<Values> {
 	}
 
 	@Override
-	public DBEnum possiblePositionValues() {
-		return Connect4Values.Uncomputed;
-	}
-	
-	private enum Connect4Values implements DBEnum {
-		Uncomputed(0),
-		Win(1),
-		Lose(2),
-		Tie(3);
-		
-		private int val;
-		Connect4Values(int val){this.val = val;}
-		public int value() {return val;}
+	public Enum possiblePositionValues() {
+		return Values.Invalid;
 	}
 	
 }

@@ -40,6 +40,16 @@ public final class Util {
 		throw new FatalError();
 	}
 	
+	public static void warn(String s){
+		System.err.println("WARN: "+s);
+		System.err.println("Stack trace follows:");
+		try {
+			throw new FatalError();
+		}catch(FatalError e){
+			e.printStackTrace(System.err);
+		}
+	}
+	
 	public static void debug(String s){
 		System.err.println("DEBUG: "+s);
 	}
@@ -48,7 +58,7 @@ public final class Util {
 		long sec = (millis/1000) % 60;
 		long min = (millis/1000/60) % 60;
 		long hr = (millis/1000/60/60);
-		return hr+":"+min+":"+sec;
+		return String.format("%02d:%02d:%02d",hr,min,sec);
 	}
 	
 }
