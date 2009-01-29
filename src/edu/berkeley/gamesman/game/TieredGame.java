@@ -1,6 +1,7 @@
 package edu.berkeley.gamesman.game;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
@@ -20,7 +21,7 @@ import edu.berkeley.gamesman.util.Util;
  */
 public abstract class TieredGame<State,Value> extends Game<State,Value> {
 
-	protected BigInteger tierIndex[];
+	protected BigInteger tierIndex[];  // For tier i, tierIndex[i] is the /last/ hash value for that tier.
 	
 	/**
 	 * Indicate the number of tiers that this game has
@@ -28,6 +29,7 @@ public abstract class TieredGame<State,Value> extends Game<State,Value> {
 	 * @return Number of tiers.  Limited to java primitive int type for now
 	 */
 	public abstract int numberOfTiers();
+	private int cacheNumTiers = -1;
 	
 	/**
 	 * Return the first hashed value in a given tier
@@ -36,8 +38,11 @@ public abstract class TieredGame<State,Value> extends Game<State,Value> {
 	 * @see #tierIndexForState
 	 */
 	public BigInteger hashOffsetForTier(int tier){
-		if(tierIndex == null) lastHashValueForTier(numberOfTiers()-1);
-		return tierIndex[tier];
+		if(tier == 0)
+			return BigInteger.ZERO;
+		if(tierIndex == null)
+			lastHashValueForTier(numberOfTiers()-1);
+		return tierIndex[tier-1].add(BigInteger.ONE);
 	}
 	
 	/**
@@ -48,16 +53,12 @@ public abstract class TieredGame<State,Value> extends Game<State,Value> {
 	public BigInteger lastHashValueForTier(int tier){
 		if(tierIndex == null){
 			tierIndex = new BigInteger[numberOfTiers()];
-			tierIndex[0] = BigInteger.ZERO;
-			for(int i = 1; i < tierIndex.length; i++){
-				tierIndex[i] = tierIndex[i-1].add(numHashesForTier(i-1)).add(BigInteger.ONE);
+			for(int i = 0; i < tierIndex.length; i++){
+				tierIndex[i] = hashOffsetForTier(i).add(numHashesForTier(i));
 			}
-			//Util.debug("Hash indices are "+Arrays.toString(tierIndex));
+			Util.debug("Created offset table: "+Arrays.toString(tierIndex));
 		}
-		
-		if(tier == tierIndex.length-1)
-			return tierIndex[tier].add(numHashesForTier(tier-1));
-		return tierIndex[tier+1].subtract(BigInteger.ONE);
+		return tierIndex[tier];
 	}
 	/**
 	 * Return the number of hashes in a tier
@@ -83,20 +84,18 @@ public abstract class TieredGame<State,Value> extends Game<State,Value> {
 	
 	@Override
 	public State hashToState(BigInteger hash) {
-		for(int i = 0; i < numberOfTiers(); i++){
-			if(lastHashValueForTier(i).compareTo(hash) >= 0)
-				return gameStateForTierIndex(i,hash.subtract(hashOffsetForTier(i)));
+		if(cacheNumTiers == -1) cacheNumTiers = numberOfTiers();
+		if(tierIndex == null) lastHashValueForTier(cacheNumTiers-1);
+		
+		for(int i = 0; i < cacheNumTiers; i++){
+			if(tierIndex[i].compareTo(hash) >= 0)
+				if(i == 0)
+					return gameStateForTierIndex(i, hash);
+				else
+					return gameStateForTierIndex(i,hash.subtract(tierIndex[i-1]).subtract(BigInteger.ONE));
 		}
-		
-		BigInteger lastcheck = hash.subtract(tierIndex[tierIndex.length-1]);
-		
-		Util.debug("lastcheck = "+lastcheck);
-		
-		//if(lastcheck.compareTo(numHashesForTier(numberOfTiers()-1)) < 0)
-				return gameStateForTierIndex(numberOfTiers()-1, lastcheck);
-		
-		//Util.fatalError("Hash outside of tiered values");
-		//return null;
+		Util.fatalError("Hash outside of tiered values");
+		return null;
 	}
 
 	@Override

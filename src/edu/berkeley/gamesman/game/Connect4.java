@@ -15,6 +15,12 @@ import edu.berkeley.gamesman.util.Util;
 
 /**
  * Connect 4!
+ * Boards are stored in row-major format
+ * e.g
+ * O
+ * XX
+ * 
+ * is [[xo][x ]]
  * @author Steven Schlansker
  */
 public class Connect4 extends TieredGame<char[][],Values> {
@@ -129,8 +135,8 @@ public class Connect4 extends TieredGame<char[][],Values> {
 		
 		int lidx = 0;
 		
-		for(int y = 0; y < gameHeight; y++){
-			for(int x = 0; x < gameWidth; x++){
+		for(int x = 0; x < gameWidth; x++){
+			for(int y = 0; y < gameHeight; y++){
 				if(Character.digit(colheights[x],Character.MAX_RADIX) <= y)
 					ret[x][y] = ' ';
 				else
@@ -167,11 +173,12 @@ public class Connect4 extends TieredGame<char[][],Values> {
 	@Override
 	public char[][] stringToState(String pos) {
 		char[][] board = new char[gameWidth][gameHeight];
-		for(int y = 0 ; y < gameHeight; y++){
-			for(int x = 0 ; x < gameWidth; x++){
-				board[x][y] = pos.charAt(Util.index(y, x, gameHeight));
+		for(int x = 0 ; x < gameWidth; x++){
+			for(int y = 0 ; y < gameHeight; y++){
+				board[x][y] = pos.charAt(Util.index(x, y, gameWidth));
 			}
 		}
+		Util.debug("stringToState yields "+Arrays.deepToString(board));
 		return board;
 	}
 
