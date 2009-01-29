@@ -2,7 +2,6 @@ package edu.berkeley.gamesman.solver;
 
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.game.Game;
-import edu.berkeley.gamesman.util.ProgressMeter;
 
 public abstract class Solver {
 
@@ -12,6 +11,6 @@ public abstract class Solver {
 		this.db = db;
 	}
 	
-	public abstract void solve(Game<?, ?> game,ProgressMeter p);
+	public abstract void solve(Game<?, ?> game);
 	
 }

@@ -187,4 +187,8 @@ public class Connect4 extends TieredGame<char[][],Values> {
 		// TODO Auto-generated method stub
 		return null;
 	}
+	
+	public String toString(){
+		return "Connect 4 "+gameWidth+"x"+gameHeight+" ("+piecesToWin+" to win)";
+	}
 }
