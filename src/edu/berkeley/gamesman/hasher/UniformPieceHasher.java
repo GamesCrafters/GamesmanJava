@@ -12,7 +12,7 @@ import edu.berkeley.gamesman.util.Util;
  * The UniformPieceHasher is a perfect hash given a 1-dimensional board with a fixed list of possible pieces
  * Note that this is only a perfect hash if every location can contain any piece
  * As an example, tic-tac-toe is /not/ a UniformPieceHasher-style game as (|X|-|O|) E {0,1}
- * but this hasher could represent the board XXX-XXX-XXX
+ * but this hasher could represent the board XXO-XXO-XXO
  * Use AlternatingRearrangerHasher instead
  * 
  * Few games are like this, so it is mostly a utility hasher used by other hashers piecewise.
