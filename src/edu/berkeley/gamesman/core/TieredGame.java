@@ -19,7 +19,7 @@ import edu.berkeley.gamesman.util.Util;
  * @param <State> The type that you use to represent your States
  * @param <Value> The possible values that a primitive State can have
  */
-public abstract class TieredGame<State,Value extends Record> extends Game<State,Value> {
+public abstract class TieredGame<State> extends Game<State> {
 
 	TieredHasher<State> th;
 	

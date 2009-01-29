@@ -15,14 +15,14 @@ public final class DependencyResolver {
 
 	private DependencyResolver(){}
 	
-	static HashMap<Class<? extends Game<?,?>>,ArrayList<Class <? extends Hasher>>> allowable = new HashMap<Class<? extends Game<?,?>>,ArrayList<Class <? extends Hasher>>>();
+	static HashMap<Class<? extends Game<?>>,ArrayList<Class <? extends Hasher>>> allowable = new HashMap<Class<? extends Game<?>>,ArrayList<Class <? extends Hasher>>>();
 	
 	/**
 	 * Declare that a game allows the use of a certain hasher
 	 * @param game The game
 	 * @param hasher The hasher
 	 */
-	public static void allowHasher(Class<? extends Game<?,?>> game, Class<? extends Hasher> hasher){
+	public static void allowHasher(Class<? extends Game<?>> game, Class<? extends Hasher> hasher){
 		if(allowable.containsKey(game))
 			allowable.get(game).add(hasher);
 		else{

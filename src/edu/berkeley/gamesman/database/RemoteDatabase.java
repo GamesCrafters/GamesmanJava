@@ -15,7 +15,6 @@ import edu.berkeley.gamesman.util.Util;
 public class RemoteDatabase extends Database {
 
 	DirectoryFilerClient dfc;
-	Record ex;
 	Database real;
 	
 	@Override
@@ -35,13 +34,12 @@ public class RemoteDatabase extends Database {
 	}
 
 	@Override
-	public void initialize(String uri, Configuration config, Record exampleValue) {
+	public void initialize(String uri, Configuration config) {
 		try {
 			dfc = new DirectoryFilerClient(new URI(uri));
 		} catch (URISyntaxException e1) {
 			Util.fatalError("Bad URI \""+uri+"\": "+e1);
 		}
-		ex = exampleValue;
 		try {
 			real = dfc.openDatabase(new URI(uri).getPath(), config);
 		} catch (URISyntaxException e) {

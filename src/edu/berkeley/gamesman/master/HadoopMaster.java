@@ -13,7 +13,7 @@ import edu.berkeley.gamesman.util.Util;
 
 public class HadoopMaster implements Master {
 
-	public void initialize(Class<? extends Game<?, ?>> game,
+	public void initialize(Class<? extends Game<?>> game,
 			Class<? extends Solver> solver, Class<? extends Hasher> hasher,
 			Class<? extends Database> database) {
 		// TODO Auto-generated method stub

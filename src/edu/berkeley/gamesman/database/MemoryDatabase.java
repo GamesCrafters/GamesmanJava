@@ -21,7 +21,7 @@ public class MemoryDatabase extends Database {
 	}
 
 	@Override
-	public void initialize(String url, Configuration config, Record exampleValue) {
+	public void initialize(String url, Configuration config) {
 		// TODO Auto-generated method stub
 	}
 

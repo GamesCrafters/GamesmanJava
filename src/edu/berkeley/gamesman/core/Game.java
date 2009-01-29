@@ -17,7 +17,7 @@ import edu.berkeley.gamesman.util.Util;
  * @param <Value> The object used to represent the value of a state
  *
  */
-public abstract class Game<State,Value extends Record> {
+public abstract class Game<State> {
 
 	protected Hasher<State> hasher;
 	
@@ -69,7 +69,7 @@ public abstract class Game<State,Value extends Record> {
 	 * @return the Value representing the state
 	 * @see edu.berkeley.gamesman.core.Values
 	 */
-	public abstract Value primitiveValue(State pos);
+	public abstract Record primitiveValue(State pos);
 	
 	/**
 	 * Inform the Game of the hasher we're using

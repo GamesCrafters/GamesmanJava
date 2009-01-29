@@ -18,7 +18,7 @@ public class PerfectConnect4Hash extends TieredHasher<char[][]> {
 	AlternatingRearrangerHasher ah = new AlternatingRearrangerHasher();
 	
 	@Override
-	public void setGame(Game<char[][], ?> g, char[] p){
+	public void setGame(Game<char[][]> g, char[] p){
 		
 		super.setGame(g, p);
 		

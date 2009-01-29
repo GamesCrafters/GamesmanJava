@@ -25,7 +25,7 @@ import edu.berkeley.gamesman.util.Util;
  * is [[xo][x ]]
  * @author Steven Schlansker
  */
-public class Connect4 extends TieredGame<char[][],Values> {
+public class Connect4 extends TieredGame<char[][]> {
 	
 	final char[] pieces = {'X','O'};
 	
@@ -71,7 +71,7 @@ public class Connect4 extends TieredGame<char[][],Values> {
 	}
 
 	@Override
-	public Values primitiveValue(char[][] pos) {
+	public Record primitiveValue(char[][] pos) {
 		// Check horizontal wins
 		for(int y = 0; y < gameHeight; y++){
 			char test = pos[0][y];

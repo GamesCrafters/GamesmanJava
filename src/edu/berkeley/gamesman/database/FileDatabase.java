@@ -20,9 +20,9 @@ public final class FileDatabase extends Database {
 
 	protected RandomAccessFile fd;
 
-	Record generator;
-
 	long offset;
+	
+	protected Configuration config;
 
 	@Override
 	public synchronized void close() {
@@ -47,8 +47,8 @@ public final class FileDatabase extends Database {
 	public synchronized Record getValue(BigInteger loc) {
 		try {
 			fd.seek(loc.longValue()+offset);
-			byte b = fd.readByte();
-			Record v = generator.wrapValue(b);
+			//byte b = fd.readByte();
+			Record v = Record.wrap(config, fd);
 			// Util.debug("Location "+loc+" = "+v+" ("+b+")");
 			return v;
 		} catch (IOException e) {
@@ -59,8 +59,7 @@ public final class FileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void initialize(String loc, Configuration config,
-			Record example) {
+	public synchronized void initialize(String loc, Configuration config) {
 
 		boolean previouslyExisted;
 
@@ -78,7 +77,9 @@ public final class FileDatabase extends Database {
 			Util.fatalError("Could not create/open database: " + e);
 		}
 
-		generator = example;
+		this.config = config;
+		
+		Util.assertTrue(Record.length(config) == 1, "FileDatabase can only store 8 bits per record for now"); //TODO: fixme
 
 		try {
 			fd.seek(0);
@@ -101,7 +102,8 @@ public final class FileDatabase extends Database {
 	public synchronized void setValue(BigInteger loc, Record value) {
 		try {
 			fd.seek(loc.longValue()+offset);
-			fd.writeByte(value.byteValue());
+			//fd.writeByte(value.byteValue());
+			value.write(fd);
 			// Util.debug("Wrote "+value.byteValue()+" to "+loc);
 		} catch (IOException e) {
 			Util.fatalError("IO Error: " + e);

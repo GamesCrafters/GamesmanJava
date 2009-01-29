@@ -28,7 +28,7 @@ public final class C4UniformPieceHasher extends Hasher<char[]> {
 	protected char[] pcs;
 	
 	@Override
-	public void setGame(Game<char[],?> game, char[] p){
+	public void setGame(Game<char[]> game, char[] p){
 		super.setGame(game,p);
 		pcs = p;
 		lookup = null;

@@ -174,7 +174,7 @@ public final class DirectoryFilerServer {
 						din.readFully(fb);
 						config = new String(fb);
 						db.initialize(Util.getChild(root, file).toURL()
-								.toExternalForm(), new Configuration(config), Values.Invalid); //TODO: don't reference Values
+								.toExternalForm(), new Configuration(config)); //TODO: don't reference Values
 						fds.add(db);
 						locs.add(BigInteger.ZERO);
 						dout.writeInt(fds.indexOf(db));
@@ -191,7 +191,7 @@ public final class DirectoryFilerServer {
 						fd = din.readInt();
 						db = fds.get(fd);
 						loc = locs.get(fd);
-						dout.writeByte(db.getValue(loc).byteValue());
+						db.getValue(loc).write(dout);
 						locs.set(fd, loc.add(BigInteger.ONE));
 						break;
 					case 6:

@@ -17,7 +17,7 @@ import edu.berkeley.gamesman.util.Util;
 
 public final class LocalMaster implements Master,TaskFactory {
 
-	Game<?,?> game;
+	Game<?> game;
 	Solver solver;
 	Hasher hasher;
 	Database database;
@@ -27,7 +27,7 @@ public final class LocalMaster implements Master,TaskFactory {
 		OptionProcessor.acceptOption("j", "threads", true, "The number of threads to launch", "1");
 	}
 	
-	public void initialize(Class<? extends Game<?, ?>> gamec, Class<? extends Solver> solverc, Class<? extends Hasher> hasherc, Class<? extends Database> databasec) {
+	public void initialize(Class<? extends Game<?>> gamec, Class<? extends Solver> solverc, Class<? extends Hasher> hasherc, Class<? extends Database> databasec) {
 		
 		Task.setTaskFactory(this);
 		
@@ -42,7 +42,7 @@ public final class LocalMaster implements Master,TaskFactory {
 			Util.fatalError("Fatal error while initializing: "+e);
 		}
 		
-		database.initialize(OptionProcessor.checkOption("uri"),new Configuration(game,hasher), game.getDBValueExample());
+		database.initialize(OptionProcessor.checkOption("uri"),new Configuration(game,hasher));
 		
 		solver.setDatabase(database);
 		game.setHasher(hasher);

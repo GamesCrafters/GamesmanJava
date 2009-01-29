@@ -26,7 +26,7 @@ public class AlternatingRearrangerHasher extends Hasher<char[]> {
 	private HashMap<BigInteger,String> unrearrCache = new HashMap<BigInteger, String>();
 
 	@Override
-	public void setGame(Game<char[],?> game, char[] p){
+	public void setGame(Game<char[]> game, char[] p){
 		Util.assertTrue(p.length == 2,"Wrong number of pieces for AlternatingRearrangerHasher");
 		super.setGame(game,p);
 		cacheLevel = Integer.parseInt(OptionProcessor.checkOption("cachedepth"));

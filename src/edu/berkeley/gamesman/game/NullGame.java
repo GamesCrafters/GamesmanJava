@@ -9,7 +9,7 @@ import edu.berkeley.gamesman.hasher.NullHasher;
 import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.Util;
 
-public class NullGame extends Game<Object,Record> {
+public class NullGame extends Game<Object> {
 
 	static {
 		DependencyResolver.allowHasher(NullGame.class, NullHasher.class);

@@ -18,11 +18,11 @@ public final class NullDatabase extends Database {
 
 	@Override
 	public Record getValue(BigInteger loc) {
-		return Values.Win;
+		return new Record();
 	}
 
 	@Override
-	public void initialize(String url, Configuration config, Record exampleValue) {
+	public void initialize(String url, Configuration config) {
 		Util.warn("Using NullDatabase, answers will be incorrect and nothing will be saved.");
 	}
 

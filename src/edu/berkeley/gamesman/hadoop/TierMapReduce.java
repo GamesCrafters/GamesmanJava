@@ -53,7 +53,7 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 		
 		game.setHasher(hasher);
 		tempDB.set(game.getDBValueExample());
-		db.initialize(conf.get("dburl"),new Configuration(game,hasher), tempDB.get());
+		db.initialize(conf.get("dburl"),new Configuration(game,hasher));
 		
 		Util.debug("Hadoop is ready to work!");
 		

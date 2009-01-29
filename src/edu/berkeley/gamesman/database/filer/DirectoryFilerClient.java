@@ -189,8 +189,7 @@ public final class DirectoryFilerClient {
 		}
 
 		@Override
-		public void initialize(String url, Configuration config,
-				Record exampleValue) {
+		public void initialize(String url, Configuration config) {
 			Util.fatalError("Already initialized");
 		}
 
@@ -200,7 +199,7 @@ public final class DirectoryFilerClient {
 				if(loc.compareTo(pos) != 0) seek(loc);
 				dout.write(6);
 				dout.writeInt(fd);
-				dout.writeByte(value.byteValue());
+				value.write(dout);
 				pos = pos.add(BigInteger.ONE);
 			} catch (IOException e) {
 				Util.fatalError("IO error while communicating with server: "
