@@ -1,14 +1,13 @@
 /**
  * 
  */
-package edu.berkeley.gamesman.game;
+package edu.berkeley.gamesman.core;
 
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Iterator;
 
 import edu.berkeley.gamesman.database.DBValue;
-import edu.berkeley.gamesman.hasher.Hasher;
 import edu.berkeley.gamesman.util.OptionProcessor;
 
 /**
@@ -69,9 +68,9 @@ public abstract class Game<State,Value extends DBValue> {
 	 * Return UNDECIDED if this is not a primitive state (shouldn't usually be called)
 	 * @param pos The primitive State
 	 * @return the Value representing the state
-	 * @see edu.berkeley.gamesman.game.Values
+	 * @see edu.berkeley.gamesman.core.Values
 	 */
-	public abstract Value positionValue(State pos);
+	public abstract Value primitiveValue(State pos);
 	
 	/**
 	 * Inform the Game of the hasher we're using

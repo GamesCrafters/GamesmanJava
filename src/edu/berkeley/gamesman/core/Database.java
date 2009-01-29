@@ -1,4 +1,6 @@
-package edu.berkeley.gamesman.database;
+package edu.berkeley.gamesman.core;
+
+import edu.berkeley.gamesman.database.DBValue;
 
 public abstract class Database {
 

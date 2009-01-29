@@ -1,8 +1,7 @@
-package edu.berkeley.gamesman.hasher;
+package edu.berkeley.gamesman.core;
 
 import java.math.BigInteger;
 
-import edu.berkeley.gamesman.game.Game;
 
 /**
  * A Hasher converts between a game board and a BigInteger hash in a space- and time-efficient manner.

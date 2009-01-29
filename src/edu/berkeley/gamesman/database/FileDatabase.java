@@ -11,6 +11,7 @@ import java.io.RandomAccessFile;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.util.Util;
 
 public final class FileDatabase extends Database {

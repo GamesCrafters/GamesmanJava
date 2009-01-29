@@ -7,12 +7,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 
+import edu.berkeley.gamesman.core.Database;
+import edu.berkeley.gamesman.core.Game;
+import edu.berkeley.gamesman.core.Hasher;
+import edu.berkeley.gamesman.core.Master;
+import edu.berkeley.gamesman.core.Solver;
 import edu.berkeley.gamesman.database.DBValue;
-import edu.berkeley.gamesman.database.Database;
-import edu.berkeley.gamesman.game.Game;
-import edu.berkeley.gamesman.hasher.Hasher;
-import edu.berkeley.gamesman.master.Master;
-import edu.berkeley.gamesman.solver.Solver;
 import edu.berkeley.gamesman.util.OptionProcessor;
 import edu.berkeley.gamesman.util.Util;
 
@@ -196,7 +196,7 @@ public final class Gamesman {
 		BigInteger val = new BigInteger(OptionProcessor.checkOption("board"));
 		if(val == null)
 			Util.fatalError("Please specify a hash to evaluate");
-		System.out.println(gm.positionValue(gm.hashToState(val)));
+		System.out.println(gm.primitiveValue(gm.hashToState(val)));
 	}
 
 }

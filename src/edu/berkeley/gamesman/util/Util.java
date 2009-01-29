@@ -100,6 +100,7 @@ public final class Util {
 	
 	/**
 	 * Calculate binomial coefficient (n k)
+	 * 
 	 * Shamelessly stolen from http://en.wikipedia.org/w/index.php?title=Binomial_coefficient&oldid=250717842
 	 * 
 	 * @param n n

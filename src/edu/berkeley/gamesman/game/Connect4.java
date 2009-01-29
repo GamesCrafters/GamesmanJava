@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
+import edu.berkeley.gamesman.core.TieredGame;
+import edu.berkeley.gamesman.core.Values;
 import edu.berkeley.gamesman.database.DBValue;
 import edu.berkeley.gamesman.hasher.AlternatingRearrangerHasher;
 import edu.berkeley.gamesman.hasher.NullHasher;
@@ -153,7 +155,7 @@ public class Connect4 extends TieredGame<char[][],Values> {
 	}
 
 	@Override
-	public Values positionValue(char[][] pos) {
+	public Values primitiveValue(char[][] pos) {
 		// Check horizontal wins
 		for(int y = 0; y < gameHeight; y++){
 			char test = pos[0][y];
@@ -168,7 +170,7 @@ public class Connect4 extends TieredGame<char[][],Values> {
 					test = pos[x][y];
 				}
 				if(numSeen == piecesToWin)
-					return Values.Win;
+					return Values.Lose;
 			}
 		}
 		
@@ -185,7 +187,7 @@ public class Connect4 extends TieredGame<char[][],Values> {
 					test = pos[x][y];
 				}
 				if(numSeen == piecesToWin)
-					return Values.Win;
+					return Values.Lose;
 			}
 		}
 		
@@ -212,7 +214,7 @@ public class Connect4 extends TieredGame<char[][],Values> {
 					numSeen = 0;
 				}
 				if(numSeen == piecesToWin)
-					return Values.Win;
+					return Values.Lose;
 			}
 		}
 		
@@ -239,11 +241,15 @@ public class Connect4 extends TieredGame<char[][],Values> {
 					numSeen = 0;
 				}
 				if(numSeen == piecesToWin)
-					return Values.Win;
+					return Values.Lose;
 			}
 		}
 		
-		return Values.Undecided;
+		for(char[] row : pos)
+			for(char piece : row)
+				if(piece == ' ') return Values.Undecided;
+		
+		return Values.Tie;
 	}
 
 	@Override
@@ -277,7 +283,7 @@ public class Connect4 extends TieredGame<char[][],Values> {
 		
 		char[][] board;
 		
-		if(positionValue(pos) != Values.Undecided)
+		if(primitiveValue(pos) != Values.Undecided)
 			return nextBoards;
 		
 		char nextpiece = nextPiecePlaced(pos);

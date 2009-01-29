@@ -3,7 +3,8 @@ package edu.berkeley.gamesman.hasher;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-import edu.berkeley.gamesman.game.Game;
+import edu.berkeley.gamesman.core.Game;
+import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.util.Util;
 
 /**

@@ -1,9 +1,5 @@
-package edu.berkeley.gamesman.master;
+package edu.berkeley.gamesman.core;
 
-import edu.berkeley.gamesman.database.Database;
-import edu.berkeley.gamesman.game.Game;
-import edu.berkeley.gamesman.hasher.Hasher;
-import edu.berkeley.gamesman.solver.Solver;
 
 public interface Master {
 

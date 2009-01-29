@@ -5,7 +5,8 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import edu.berkeley.gamesman.game.Game;
+import edu.berkeley.gamesman.core.Game;
+import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.util.Util;
 
 /**

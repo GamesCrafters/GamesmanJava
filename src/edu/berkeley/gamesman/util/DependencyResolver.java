@@ -3,8 +3,8 @@ package edu.berkeley.gamesman.util;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import edu.berkeley.gamesman.game.Game;
-import edu.berkeley.gamesman.hasher.Hasher;
+import edu.berkeley.gamesman.core.Game;
+import edu.berkeley.gamesman.core.Hasher;
 
 /**
  * The DependencyResolver is used to automatically choose hashers and databases for selected Games

@@ -1,9 +1,10 @@
 package edu.berkeley.gamesman.master;
 
-import edu.berkeley.gamesman.database.Database;
-import edu.berkeley.gamesman.game.Game;
-import edu.berkeley.gamesman.hasher.Hasher;
-import edu.berkeley.gamesman.solver.Solver;
+import edu.berkeley.gamesman.core.Database;
+import edu.berkeley.gamesman.core.Game;
+import edu.berkeley.gamesman.core.Hasher;
+import edu.berkeley.gamesman.core.Master;
+import edu.berkeley.gamesman.core.Solver;
 import edu.berkeley.gamesman.util.OptionProcessor;
 import edu.berkeley.gamesman.util.Task;
 import edu.berkeley.gamesman.util.TaskFactory;
@@ -11,16 +12,16 @@ import edu.berkeley.gamesman.util.Util;
 
 public final class LocalMaster implements Master,TaskFactory {
 
+	Game<?,?> game;
+	Solver solver;
+	Hasher hasher;
+	Database database;
 	
 	static{
 		OptionProcessor.acceptOption("u", "uri", true, "The URI or relative path of the databse", "out.db");
 	}
 	
 	public void initialize(Class<? extends Game<?, ?>> gamec, Class<? extends Solver> solverc, Class<? extends Hasher> hasherc, Class<? extends Database> databasec) {
-		Game<?,?> game = null;
-		Solver solver = null;
-		Hasher hasher = null;
-		Database database = null;
 		
 		Task.setTaskFactory(this);
 		
@@ -41,12 +42,11 @@ public final class LocalMaster implements Master,TaskFactory {
 		game.setHasher(hasher);
 		
 		
-		solver.solve(game);
-		
 	}
 	
 	public void run() {
 		System.out.println("Launched!");
+		solver.solve(game);
 	}
 
 	private class LocalMasterTextTask extends Task {

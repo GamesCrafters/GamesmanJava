@@ -1,11 +1,9 @@
-package edu.berkeley.gamesman.solver;
+package edu.berkeley.gamesman.core;
 
-import edu.berkeley.gamesman.database.Database;
-import edu.berkeley.gamesman.game.Game;
 
 public abstract class Solver {
 
-	Database db;
+	protected Database db;
 	
 	public void setDatabase(Database db){
 		this.db = db;

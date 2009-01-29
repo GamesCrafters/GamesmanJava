@@ -2,10 +2,13 @@ package edu.berkeley.gamesman.solver;
 
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collection;
 
-import edu.berkeley.gamesman.game.Game;
-import edu.berkeley.gamesman.game.TieredGame;
+import edu.berkeley.gamesman.core.Game;
+import edu.berkeley.gamesman.core.Solver;
+import edu.berkeley.gamesman.core.TieredGame;
+import edu.berkeley.gamesman.database.DBValue;
 import edu.berkeley.gamesman.util.Task;
 import edu.berkeley.gamesman.util.Util;
 
@@ -57,7 +60,14 @@ public final class TierSolver extends Solver {
 			Collection<?> children = game.validMoves(state);
 			//System.out.println("State "+current+" has "+children.size()+" elts");
 			if(children.size() == 0)
-				db.setValue(current, game.positionValue(state));
+				db.setValue(current, game.primitiveValue(state));
+			else{
+				ArrayList<DBValue> vals = new ArrayList<DBValue>(children.size());
+				for(Object child : children){
+					vals.add(db.getValue(game.stateToHash(child)));
+				}
+				db.setValue(current,vals.get(0).fold(vals));
+			}
 		}
 	}
 	
