@@ -2,9 +2,9 @@ package edu.berkeley.gamesman.hasher;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Hasher;
+import edu.berkeley.gamesman.util.OptionProcessor;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -14,11 +14,20 @@ import edu.berkeley.gamesman.util.Util;
  * @author Steven Schlansker
  */
 public class AlternatingRearrangerHasher extends Hasher<char[]> {
+	
+	static {
+		OptionProcessor.acceptOption("cd", "cachedepth", true, "The depth of level that the AlternatingRearrangerHash should cache","12");
+	}
+	
+	private int cacheLevel = 0;
+	private HashMap<String,BigInteger> rearrCache = new HashMap<String, BigInteger>();
+	private HashMap<BigInteger,String> unrearrCache = new HashMap<BigInteger, String>();
 
 	@Override
 	public void setGame(Game<char[],?> game, char[] p){
 		Util.assertTrue(p.length == 2,"Wrong number of pieces for AlternatingRearrangerHasher");
 		super.setGame(game,p);
+		cacheLevel = Integer.parseInt(OptionProcessor.checkOption("cachedepth"));
 	}
 	
 	@Override
@@ -56,8 +65,17 @@ public class AlternatingRearrangerHasher extends Hasher<char[]> {
 	
 	protected BigInteger pieceRearrange(char[] board, int src, int pcs, int x, int o){
 		if(pcs == 1 || x == 0) return BigInteger.ZERO;
+		boolean cache = false;
+		String cachestr = null;
 		
 		BigInteger rVal;
+		
+		if(board.length - src <= cacheLevel){
+			cachestr = new String(board).substring(src)+pcs+""+x+""+o;
+			if((rVal = rearrCache.get(cachestr)) != null)
+				return rVal;
+			cache = true;
+		}
 		
 		if(board[src] == 'X'){
 			rVal = pieceRearrange(board, src+1, pcs-1, x-1, o);
@@ -65,6 +83,10 @@ public class AlternatingRearrangerHasher extends Hasher<char[]> {
 			BigInteger off = BigInteger.valueOf(Util.nCr_arr[pcs-1][x-1]);
 			rVal = pieceRearrange(board, src+1, pcs-1, x, o-1);
 			rVal = off.add(rVal);
+		}
+		
+		if(cache){
+			rearrCache.put(cachestr, rVal);
 		}
 
 		return rVal;
@@ -74,6 +96,16 @@ public class AlternatingRearrangerHasher extends Hasher<char[]> {
 		if(pcs == 0) return;
 
 		BigInteger off;
+		boolean cache = false;
+		
+		if(board.length - src == cacheLevel){
+			String str;
+			if((str = unrearrCache.get(hash)) != null){
+				str.getChars(0, str.length()-1, board, src);
+				return;
+			}
+			cache = true;
+		}
 		
 		if(x == 0)
 			off = BigInteger.ZERO;
@@ -86,6 +118,10 @@ public class AlternatingRearrangerHasher extends Hasher<char[]> {
 			board[src] = 'O';
 			pieceUnrearrange(hash.subtract(off), board, src+1, pcs-1, x, o-1);
 		}
+		
+		//if(cache){
+		//	unrearrCache.put(hash, new String(board,src,board.length-src));
+		//}
 	}
 
 	@Override
