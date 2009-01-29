@@ -3,6 +3,7 @@
  */
 package edu.berkeley.gamesman.game;
 
+import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -51,5 +52,10 @@ public abstract class Game<State,Value> {
 	public void setHasher(Hasher h){
 		hasher = h;
 	}
+	
+	public abstract State hashToState(BigInteger hash);
+	public abstract BigInteger stateToHash(State pos);
+	
+	public abstract String stateToString(State pos);
 	
 }

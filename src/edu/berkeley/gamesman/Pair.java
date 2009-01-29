@@ -29,4 +29,8 @@ public class Pair<A,B> {
 		cdr = dr;
 	}
 	
+	public String toString(){
+		return "( "+car+" . "+cdr+" )";
+	}
+	
 }

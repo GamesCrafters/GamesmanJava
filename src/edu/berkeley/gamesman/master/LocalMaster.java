@@ -8,16 +8,16 @@ import edu.berkeley.gamesman.solver.Solver;
 
 public final class LocalMaster implements Master {
 
-	public void initialize(Class gamec, Class solverc, Class hasherc, Class databasec) {
+	public void initialize(Class<? extends Game<?, ?>> gamec, Class<? extends Solver> solverc, Class<? extends Hasher> hasherc, Class<? extends Database<?>> databasec) {
 		Game game = null;
 		Solver solver = null;
 		Hasher hasher = null;
 		Database database = null;
 		try{
-			game = (Game)gamec.newInstance();
-			solver = (Solver)solverc.newInstance();
-			hasher = (Hasher)hasherc.newInstance();
-			database = (Database)databasec.newInstance();
+			game = gamec.newInstance();
+			solver = solverc.newInstance();
+			hasher = hasherc.newInstance();
+			database = databasec.newInstance();
 		}catch(IllegalAccessException e){
 			Util.fatalError("Fatal error while initializing: "+e);
 		}catch (InstantiationException e) {
