@@ -1,5 +1,8 @@
 package edu.berkeley.gamesman.core;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.database.DBValue;
@@ -92,6 +95,24 @@ public enum Values implements DBValue {
 		}
 		if(seentie) return Tie;
 		return Lose;
+	}
+
+	public DBValue wrap(DataInput in) {
+		try {
+			return wrapValue(in.readByte());
+		} catch (IOException e) {
+			Util.fatalError("Could not wrap Value: "+e);
+		}
+		Util.fatalError("Not reached");
+		return null;
+	}
+
+	public void write(DataOutput out) {
+		try {
+			out.writeByte(byteValue());
+		} catch (IOException e) {
+			Util.fatalError("Could not write Value "+this+" because of: "+e);
+		}
 	}
 	
 }
