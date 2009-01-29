@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.Writable;
 
-import edu.berkeley.gamesman.database.DBRecord;
+import edu.berkeley.gamesman.core.DBRecord;
 
 public class DBValueWritable implements Writable {
 

@@ -3,7 +3,6 @@ package edu.berkeley.gamesman.core;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-import edu.berkeley.gamesman.database.DBRecord;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 

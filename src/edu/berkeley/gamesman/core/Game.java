@@ -5,7 +5,6 @@ package edu.berkeley.gamesman.core;
 
 import java.math.BigInteger;
 import java.util.Collection;
-import edu.berkeley.gamesman.database.DBRecord;
 import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.OptionProcessor;
 import edu.berkeley.gamesman.util.Util;

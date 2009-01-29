@@ -12,8 +12,8 @@ import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.DBRecord;
 import edu.berkeley.gamesman.core.TieredGame;
-import edu.berkeley.gamesman.database.DBRecord;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.hadoop.util.BigIntegerWritable;
 import edu.berkeley.gamesman.hadoop.util.DBValueWritable;

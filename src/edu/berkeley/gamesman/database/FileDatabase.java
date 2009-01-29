@@ -10,6 +10,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.DBRecord;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.util.Util;
 

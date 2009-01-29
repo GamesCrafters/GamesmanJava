@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.database;
 import java.math.BigInteger;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.DBRecord;
 import edu.berkeley.gamesman.core.Database;
 
 public class BlockDatabase extends Database {

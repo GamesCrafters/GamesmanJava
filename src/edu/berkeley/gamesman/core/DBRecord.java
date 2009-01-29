@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.database;
+package edu.berkeley.gamesman.core;
 
 import java.io.DataInput;
 import java.io.DataOutput;

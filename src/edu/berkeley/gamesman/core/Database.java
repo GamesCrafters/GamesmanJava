@@ -2,7 +2,6 @@ package edu.berkeley.gamesman.core;
 
 import java.math.BigInteger;
 
-import edu.berkeley.gamesman.database.DBRecord;
 
 public abstract class Database {
 

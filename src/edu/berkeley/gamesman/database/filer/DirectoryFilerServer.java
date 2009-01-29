@@ -17,10 +17,10 @@ import java.util.List;
 import java.util.Random;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.DBRecord;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Values;
 import edu.berkeley.gamesman.database.BlockDatabase;
-import edu.berkeley.gamesman.database.DBRecord;
 import edu.berkeley.gamesman.database.FileDatabase;
 import edu.berkeley.gamesman.util.Util;
 

@@ -2,8 +2,9 @@ package edu.berkeley.gamesman.game;
 
 import java.math.BigInteger;
 import java.util.Collection;
+
+import edu.berkeley.gamesman.core.DBRecord;
 import edu.berkeley.gamesman.core.Game;
-import edu.berkeley.gamesman.database.DBRecord;
 import edu.berkeley.gamesman.hasher.NullHasher;
 import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.Util;

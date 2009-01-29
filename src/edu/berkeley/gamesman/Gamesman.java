@@ -13,13 +13,13 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.DBRecord;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.core.Master;
 import edu.berkeley.gamesman.core.Solver;
 import edu.berkeley.gamesman.core.Values;
-import edu.berkeley.gamesman.database.DBRecord;
 import edu.berkeley.gamesman.database.filer.DirectoryFilerClient;
 import edu.berkeley.gamesman.database.filer.DirectoryFilerServer;
 import edu.berkeley.gamesman.util.OptionProcessor;

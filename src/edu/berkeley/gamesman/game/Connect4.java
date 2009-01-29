@@ -5,10 +5,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
+import edu.berkeley.gamesman.core.DBRecord;
 import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.core.Values;
-import edu.berkeley.gamesman.database.DBRecord;
 import edu.berkeley.gamesman.hasher.NullHasher;
 import edu.berkeley.gamesman.hasher.PerfectConnect4Hash;
 import edu.berkeley.gamesman.util.DependencyResolver;
