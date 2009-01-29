@@ -113,16 +113,23 @@ public final class Util {
 	 */
 	public static long nCr(int n, int k){
 		if(n < 0 || k < 0) return _nCr(n,k);
-		if(n < 50 && k < 50){
-			if(nCr_cache[n][k] != 0)
-				return nCr_cache[n][k];
-			nCr_cache[n][k] = _nCr(n,k);
-			return nCr_cache[n][k];
+		if(n < nCr_arr.length && k < nCr_arr[0].length){
+			if(nCr_arr[n][k] != 0)
+				return nCr_arr[n][k];
+			nCr_arr[n][k] = _nCr(n,k);
+			return nCr_arr[n][k];
 		}
 		return _nCr(n,k);
 	}
 	
-	private static long[][] nCr_cache = new long[50][50]; // 50 is a made-up number, you're free to adjust as necessary...
+	public static void nCr_prefill(int maxn, int maxk){
+		nCr_arr = new long[maxn+1][maxk+1];
+		for(int n = 0; n <= maxn; n++)
+			for(int k = 0; k <= maxk; k++)
+				nCr_arr[n][k] = _nCr(n,k);
+	}
+	
+	public static long[][] nCr_arr = new long[0][0]; // 50 is a made-up number, you're free to adjust as necessary...
 	
 	
 	private static long _nCr(int n, int mk){

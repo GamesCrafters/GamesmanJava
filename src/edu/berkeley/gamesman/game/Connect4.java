@@ -54,8 +54,8 @@ public class Connect4 extends TieredGame<char[][],Values> {
 			arr[i] = Character.forDigit(i, Character.MAX_RADIX);
 		}
 		
-		uh.setGame(null, arr);
-		ah.setGame(null, pieces);
+		uh.setGame(this, arr);
+		ah.setGame(this, pieces);
 		
 		piecesToWin = Integer.parseInt(OptionProcessor.checkOption("pieces"));
 	}

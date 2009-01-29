@@ -45,9 +45,7 @@ public final class TierSolver extends Solver {
 					BigInteger.ZERO) == 0)
 				t.calculated(10000);
 			Object state = game.hashToState(current);
-			// System.out.println(game.stateToString(state));
 			Collection<?> children = game.validMoves(state);
-			// System.out.println("State "+current+" has "+children.size()+" elts");
 			if (children.size() == 0){
 				DBValue prim = game.primitiveValue(state);
 				Util.debug("Set "+current+" to value "+prim);
@@ -55,14 +53,10 @@ public final class TierSolver extends Solver {
 			} else {
 				ArrayList<DBValue> vals = new ArrayList<DBValue>(children
 						.size());
-				//ArrayList<BigInteger> hashes = new ArrayList<BigInteger>(children.size()); // TODO: kill this, debugging only :(
 				for (Object child : children) {
 					vals.add(db.getValue(game.stateToHash(child)));
-					//hashes.add(game.stateToHash(child));
-				}
-				//Util.debug("About to inspect "+current+": "+hashes+" "+vals);
+					}
 				DBValue newVal = vals.get(0).fold(vals);
-				//Util.debug("Set "+current+" to value "+newVal+" from "+hashes+"; "+vals);
 				db.setValue(current, newVal);
 			}
 		}
@@ -104,7 +98,7 @@ public final class TierSolver extends Solver {
 
 		private int index;
 
-		private TierSolverWorkUnit() {
+		TierSolverWorkUnit() {
 
 			// if(!(g instanceof TieredGame))
 			// Util.fatalError("Attempted to use tiered solver on non-tiered game");

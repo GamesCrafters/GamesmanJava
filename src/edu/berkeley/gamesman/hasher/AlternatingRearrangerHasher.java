@@ -17,6 +17,8 @@ public class AlternatingRearrangerHasher extends Hasher {
 	public void setGame(Game<?,?> game, char[] p){
 		Util.assertTrue(p.length == 2);
 		super.setGame(game,p);
+		int pcs = game.getGameHeight()*game.getGameWidth();
+		Util.nCr_prefill(pcs, pcs);
 	}
 	
 	@Override
@@ -60,7 +62,7 @@ public class AlternatingRearrangerHasher extends Hasher {
 		if(board[src] == 'X'){
 			rVal = pieceRearrange(board, src+1, pcs-1, x-1, o);
 		}else{
-			BigInteger off = BigInteger.valueOf(Util.nCr(pcs-1, x-1));
+			BigInteger off = BigInteger.valueOf(Util.nCr_arr[pcs-1][x-1]);
 			rVal = pieceRearrange(board, src+1, pcs-1, x, o-1);
 			rVal = off.add(rVal);
 		}
@@ -70,8 +72,13 @@ public class AlternatingRearrangerHasher extends Hasher {
 	
 	protected void pieceUnrearrange(BigInteger hash,char[] board, int src, int pcs, int x, int o){
 		if(pcs == 0) return;
+
+		BigInteger off;
 		
-		BigInteger off = BigInteger.valueOf(Util.nCr(pcs-1, x-1));
+		if(x == 0)
+			off = BigInteger.ZERO;
+		else
+			off = BigInteger.valueOf(Util.nCr_arr[pcs-1][x-1]);
 		if((hash.compareTo(off) < 0 || o == 0) && x > 0){
 			board[src] = 'X';
 			pieceUnrearrange(hash, board, src+1, pcs-1, x-1, o);
