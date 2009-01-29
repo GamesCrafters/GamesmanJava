@@ -6,6 +6,13 @@ import java.util.Arrays;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
+/**
+ * A TieredHasher is a specialized Hasher that can optimize knowing that a Game can be broken up into
+ * discrete Tiers.  See TieredGame for a more complete overview of Tiered games.
+ * @author Steven Schlansker
+ * @see TieredGame
+ * @param <State> The class that represents a State
+ */
 public abstract class TieredHasher<State> extends Hasher<State> {
 
 	@Override

@@ -23,18 +23,18 @@ import edu.berkeley.gamesman.util.Util;
 
 public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, BigIntegerWritable, BigIntegerWritable>,Reducer<BigIntegerWritable, BigIntegerWritable, BigIntegerWritable, RecordWritable>{
 
-	protected TieredGame<Object,Record> game;
+	protected TieredGame<Object> game;
 	protected Hasher hasher;
 	protected Database db;
 	private BigIntegerWritable tempBI = new BigIntegerWritable();;
 	private RecordWritable tempDB = new RecordWritable();
 
 	public void configure(JobConf conf) {
-		Class<TieredGame<Object,Record>> gc = null;
+		Class<TieredGame<Object>> gc = null;
 		Class<Database> gd = null;
 		Class<Hasher> gh = null;
 		try {
-			gc = (Class<TieredGame<Object, Record>>) Class.forName(conf.get("gameclass","NullGame"));
+			gc = (Class<TieredGame<Object>>) Class.forName(conf.get("gameclass","NullGame"));
 			gd = (Class<Database>) Class.forName(conf.get("databaseclass", "NullDatabase"));
 			gh = (Class<Hasher>) Class.forName(conf.get("hasherclass","NullHasher"));
 		} catch (ClassNotFoundException e) {

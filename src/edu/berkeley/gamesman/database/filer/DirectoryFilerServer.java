@@ -11,17 +11,12 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Database;
-import edu.berkeley.gamesman.core.Values;
-import edu.berkeley.gamesman.database.BlockDatabase;
-import edu.berkeley.gamesman.database.FileDatabase;
 import edu.berkeley.gamesman.util.Util;
 
 public final class DirectoryFilerServer {
@@ -206,9 +201,9 @@ public final class DirectoryFilerServer {
 					case 6:
 						fd = din.readInt();
 						db = fds.get(fd);
-						byte val = din.readByte();
+						//byte val = din.readByte();
 						loc = locs.get(fd);
-						db.setValue(loc, Values.Win.wrapValue(val));
+						db.setValue(loc, Record.wrap(db.getConfiguration(), din));
 						locs.set(fd, loc.add(BigInteger.ONE));
 						break;
 					case 7:

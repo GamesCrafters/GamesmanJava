@@ -15,7 +15,6 @@ import java.util.Random;
 
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Database;
-import edu.berkeley.gamesman.core.Values;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.util.Util;
 
@@ -118,7 +117,7 @@ public final class DirectoryFilerClient {
 			dout.write(config.getConfigString().getBytes());
 			int fd = din.readInt();
 			Util.debug("Client opened " + name + " for fd " + fd);
-			return new RemoteDatabase(fd);
+			return new RemoteDatabase(fd,config);
 		} catch (IOException e) {
 			Util.fatalError("IO error while communicating with server: " + e);
 		}
@@ -128,9 +127,11 @@ public final class DirectoryFilerClient {
 	private class RemoteDatabase extends Database {
 		int fd;
 		BigInteger pos = BigInteger.ZERO;
+		Configuration conf;
 
-		protected RemoteDatabase(int fd) {
+		protected RemoteDatabase(int fd, Configuration config) {
 			this.fd = fd;
+			conf = config;
 		}
 
 		@Override
@@ -166,7 +167,7 @@ public final class DirectoryFilerClient {
 				dout.write(5);
 				dout.writeInt(fd);
 				pos = pos.add(BigInteger.ONE);
-				return Values.Invalid.wrapValue(din.readByte()); // TODO: hacky
+				return Record.wrap(conf, din);
 			} catch (IOException e) {
 				Util.fatalError("IO error while communicating with server: "
 						+ e);
@@ -205,6 +206,11 @@ public final class DirectoryFilerClient {
 				Util.fatalError("IO error while communicating with server: "
 						+ e);
 			}
+		}
+
+		@Override
+		public Configuration getConfiguration() {
+			return conf;
 		}
 
 	}

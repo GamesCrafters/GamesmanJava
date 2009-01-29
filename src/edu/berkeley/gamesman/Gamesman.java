@@ -5,7 +5,6 @@ package edu.berkeley.gamesman;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.LineNumberInputStream;
 import java.io.LineNumberReader;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
@@ -13,13 +12,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.core.Master;
 import edu.berkeley.gamesman.core.Solver;
-import edu.berkeley.gamesman.core.Values;
 import edu.berkeley.gamesman.database.filer.DirectoryFilerClient;
 import edu.berkeley.gamesman.database.filer.DirectoryFilerServer;
 import edu.berkeley.gamesman.util.OptionProcessor;
@@ -32,12 +29,12 @@ import edu.berkeley.gamesman.util.Util;
 public final class Gamesman {
 
 	private Game<Object> gm;
-	private Hasher ha;
+	private Hasher<Object> ha;
 	private Solver so;
 	private Database db;
 	private boolean testrun;
 
-	private Gamesman(Game<Object> g, Solver s, Hasher h,
+	private Gamesman(Game<Object> g, Solver s, Hasher<Object> h,
 			Database d, boolean er) {
 		gm = g;
 		ha = h;
@@ -51,9 +48,10 @@ public final class Gamesman {
 	}
 
 	/**
-	 * @param args
-	 *            Command line arguments
+	 * The main entry point for any Java program
+	 * @param args Command line arguments
 	 */
+	@SuppressWarnings("unchecked")
 	public static void main(String[] args) {
 
 		Thread.currentThread().setName("Gamesman");
@@ -207,6 +205,9 @@ public final class Gamesman {
 		}
 	}
 
+	/**
+	 * Hash a single board with the given hasher and print it.
+	 */
 	public void executehash() {
 		OptionProcessor.acceptOption("v", "board", true,
 				"The board to be hashed");
@@ -218,6 +219,9 @@ public final class Gamesman {
 		System.out.println(gm.stateToHash(gm.stringToState(str.toUpperCase())));
 	}
 
+	/**
+	 * Evaluate a single board and return its primitive value.
+	 */
 	public void executeevaluate() {
 		OptionProcessor.acceptOption("v", "board", true,
 				"The board to be evaluated");
@@ -229,6 +233,9 @@ public final class Gamesman {
 		System.out.println(gm.primitiveValue(gm.hashToState(val)));
 	}
 
+	/**
+	 * Launch a directory filer server
+	 */
 	public void executelaunchDirectoryFiler() {
 		OptionProcessor.acceptOption("r", "rootDirectory", true,
 				"The root directory for the directory filer");
@@ -262,8 +269,12 @@ public final class Gamesman {
 		quit, halt, ls, open, close, read, write
 	}
 
+	/**
+	 * Give a simple shell interface to a remote directory filer server
+	 * @throws URISyntaxException The given URI is malformed
+	 */
 	public void executedirectoryConnect() throws URISyntaxException {
-		OptionProcessor.acceptOption("u", "url", true, "The URL to connect to",
+		OptionProcessor.acceptOption("u", "uri", true, "The URI to connect to",
 				"gdfp://game@localhost:4263/");
 		if (testrun)
 			return;

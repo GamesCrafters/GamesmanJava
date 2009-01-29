@@ -23,12 +23,12 @@ import edu.berkeley.gamesman.util.threading.Barrier;
  */
 public final class TierSolver extends Solver {
 
-	protected TieredGame<Object, Record> myGame;
+	protected TieredGame<Object> myGame;
 
 	@Override
-	public WorkUnit prepareSolve(Game<?, ?> game) {
+	public WorkUnit prepareSolve(Game<?> game) {
 
-		myGame = (TieredGame<Object, Record>) game;
+		myGame = (TieredGame<Object>) game;
 		tier = myGame.numberOfTiers() - 1;
 		offset = myGame.hashOffsetForTier(tier);
 		updater = new TierSolverUpdater();
@@ -36,7 +36,7 @@ public final class TierSolver extends Solver {
 		return new TierSolverWorkUnit();
 	}
 
-	protected void solvePartialTier(TieredGame<Object, Record> game,
+	protected void solvePartialTier(TieredGame<Object> game,
 			BigInteger start, BigInteger end, TierSolverUpdater t) {
 		BigInteger current = start.subtract(BigInteger.ONE);
 		

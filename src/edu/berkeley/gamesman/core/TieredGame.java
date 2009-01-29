@@ -1,7 +1,6 @@
 package edu.berkeley.gamesman.core;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
@@ -17,7 +16,6 @@ import edu.berkeley.gamesman.util.Util;
  * @author Steven Schlansker
  *
  * @param <State> The type that you use to represent your States
- * @param <Value> The possible values that a primitive State can have
  */
 public abstract class TieredGame<State> extends Game<State> {
 
@@ -52,14 +50,25 @@ public abstract class TieredGame<State> extends Game<State> {
 		return th.hashOffsetForTier(p.car).add(p.cdr);
 	}
 	
+	/**
+	 * @return the number of Tiers in this particular game
+	 */
 	public final int numberOfTiers(){
 		return th.numberOfTiers();
 	}
 	
+	/**
+	 * @param tier the Tier we're interested in
+	 * @return the first hash value for that tier
+	 */
 	public final BigInteger hashOffsetForTier(int tier){
 		return th.hashOffsetForTier(tier);
 	}
 	
+	/**
+	 * @param tier the Tier we're interested in
+	 * @return the last hash value that is still within that tier
+	 */
 	public final BigInteger lastHashValueForTier(int tier){
 		return th.lastHashValueForTier(tier);
 	}
