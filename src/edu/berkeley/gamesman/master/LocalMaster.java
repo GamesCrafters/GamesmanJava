@@ -1,14 +1,19 @@
 package edu.berkeley.gamesman.master;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.core.Master;
 import edu.berkeley.gamesman.core.Solver;
+import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.util.OptionProcessor;
 import edu.berkeley.gamesman.util.Task;
 import edu.berkeley.gamesman.util.TaskFactory;
 import edu.berkeley.gamesman.util.Util;
+import edu.berkeley.gamesman.util.threading.Barrier;
 
 public final class LocalMaster implements Master,TaskFactory {
 
@@ -19,6 +24,7 @@ public final class LocalMaster implements Master,TaskFactory {
 	
 	static{
 		OptionProcessor.acceptOption("u", "uri", true, "The URI or relative path of the databse", "out.db");
+		OptionProcessor.acceptOption("j", "threads", true, "The number of threads to launch", "1");
 	}
 	
 	public void initialize(Class<? extends Game<?, ?>> gamec, Class<? extends Solver> solverc, Class<? extends Hasher> hasherc, Class<? extends Database> databasec) {
@@ -46,7 +52,37 @@ public final class LocalMaster implements Master,TaskFactory {
 	
 	public void run() {
 		System.out.println("Launched!");
-		solver.solve(game);
+		Barrier b = new Barrier();
+		int threads = Integer.parseInt(OptionProcessor.checkOption("threads"));
+		Util.debug("Launching "+threads+" threads...");
+		List<WorkUnit> list = solver.prepareSolve(game).divide(threads);
+		
+		ArrayList<Thread> myThreads = new ArrayList<Thread>();
+		for(WorkUnit w : list){
+			Thread t = new Thread(new LocalMasterRunnable(w));
+			t.start();
+			myThreads.add(t);
+		}
+		
+		for(Thread t : myThreads)
+			try{
+				t.join();
+			}catch (InterruptedException e) {
+				Util.warn("Interrupted while joined on thread "+t);
+			}
+	}
+	
+	private class LocalMasterRunnable implements Runnable {
+		WorkUnit w;
+		LocalMasterRunnable(WorkUnit u){
+			w = u;
+		}
+		
+		public void run(){
+			Util.debug("ploink");
+			w.conquer();
+			Util.debug("plink");
+		}
 	}
 
 	private class LocalMasterTextTask extends Task {
@@ -59,7 +95,7 @@ public final class LocalMaster implements Master,TaskFactory {
 		}
 		@Override
 		public void complete() {
-			System.out.println("\nCompleted task "+name+".");
+			System.out.println("\nCompleted task "+name+" in "+Util.millisToETA(System.currentTimeMillis()-start)+".");
 		}
 		@Override
 		public void update() {

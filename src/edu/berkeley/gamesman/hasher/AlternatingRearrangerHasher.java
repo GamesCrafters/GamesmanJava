@@ -25,7 +25,7 @@ public class AlternatingRearrangerHasher extends Hasher {
 	public BigInteger hash(char[] board, int l) {
 		int[] count = countxo(board,l);
 		BigInteger val = pieceRearrange(board,0,count[0],count[1],count[2]);
-		Util.debug("ARH hashes "+Arrays.toString(board)+" ("+l+") to "+val);
+		//Util.debug("ARH hashes "+Arrays.toString(board)+" ("+l+") to "+val);
 		return val;
 	}
 

@@ -6,6 +6,7 @@ import java.util.HashMap;
 
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Hasher;
+import edu.berkeley.gamesman.util.Task;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -52,15 +53,20 @@ public final class C4UniformPieceHasher extends Hasher {
 	}
 	
 	private int idx;
+	private Task task;
 	
 	protected void init(char[] board,int off, char[] mypcs, int sum){
 		if(lookup == null){
 			lookup = new HashMap<String,BigInteger>();
 			table = new String[Util.intpow(mypcs.length,board.length)];
 			idx = 0;
+			task = Task.beginTask("Initializing C4 Column Hash");
+			
+			task.setTotal(table.length-1);
 			
 			for(int s = 0; s < sum; s++)
 				init(board,off,mypcs,s);
+			task.complete();
 			return;
 		}
 		
@@ -73,6 +79,8 @@ public final class C4UniformPieceHasher extends Hasher {
 					table[idx] = str;
 					lookup.put(str, BigInteger.valueOf(idx));
 					idx++;
+					if(idx % 1000 == 0)
+						task.setProgress(idx);
 				}
 			}else{
 				init(board,off+1,mypcs,sum-cur);

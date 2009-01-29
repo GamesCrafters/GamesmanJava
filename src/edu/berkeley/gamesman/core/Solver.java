@@ -9,6 +9,6 @@ public abstract class Solver {
 		this.db = db;
 	}
 	
-	public abstract void solve(Game<?, ?> game);
+	public abstract WorkUnit prepareSolve(Game<?, ?> game);
 	
 }

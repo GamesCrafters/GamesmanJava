@@ -84,7 +84,7 @@ public class Connect4 extends TieredGame<char[][],Values> {
 		char[] linear = new char[w*h];
 		char[] colheights = new char[w];
 		
-		Util.debug("Connect4 has board "+Arrays.deepToString(state));
+		//Util.debug("Connect4 has board "+Arrays.deepToString(state));
 		
 		for(int x = 0; x < w; x++){
 			int colheight = 0;
@@ -95,14 +95,14 @@ public class Connect4 extends TieredGame<char[][],Values> {
 				}
 			}
 			colheights[x] = Character.forDigit(colheight, Character.MAX_RADIX);
-			Util.debug("Height of col "+x+" is "+colheight);
+			//Util.debug("Height of col "+x+" is "+colheight);
 			colheight = 0;
 		}
 		
 		int uhh = uh.hash(colheights).intValue();
 		BigInteger arh = ah.hash(linear,index);
 		
-		Util.debug("Connect4 shows UPH = "+Arrays.toString(colheights)+" ("+uhh+") ARH ("+arh+") = "+Arrays.toString(linear));
+		//Util.debug("Connect4 shows UPH = "+Arrays.toString(colheights)+" ("+uhh+") ARH ("+arh+") = "+Arrays.toString(linear));
 		
 		return new Pair<Integer,BigInteger>(uhh,arh);
 	}
@@ -128,11 +128,11 @@ public class Connect4 extends TieredGame<char[][],Values> {
 		for(char h : colheights)
 			sum += Character.digit(h, Character.MAX_RADIX);
 		
-		Util.debug("Tier = "+tier+" Unhash says "+sum+" pieces placed as UPH = "+Arrays.toString(colheights));
+		//Util.debug("Tier = "+tier+" Unhash says "+sum+" pieces placed as UPH = "+Arrays.toString(colheights));
 		
 		char[] linpieces = ah.unhash(index,sum);
 		
-		Util.debug("ARH("+index+") gives us "+Arrays.toString(linpieces));
+		//Util.debug("ARH("+index+") gives us "+Arrays.toString(linpieces));
 		
 		char[][] ret = new char[gameWidth][gameHeight];
 		
@@ -273,7 +273,7 @@ public class Connect4 extends TieredGame<char[][],Values> {
 				board[x][y] = pos.charAt(Util.index(x, y, gameWidth));
 			}
 		}
-		Util.debug("stringToState yields "+Arrays.deepToString(board));
+		//Util.debug("stringToState yields "+Arrays.deepToString(board));
 		return board;
 	}
 

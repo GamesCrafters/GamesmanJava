@@ -22,7 +22,7 @@ public final class FileDatabase extends Database {
 
 	DBValue generator;
 
-	public void close() {
+	public synchronized void close() {
 		try {
 			fd.close();
 		} catch (IOException e) {
@@ -30,25 +30,30 @@ public final class FileDatabase extends Database {
 		}
 	}
 
-	public void flush() {
+	public synchronized void flush() {
 		try {
 			fd.getFD().sync();
+			fd.getChannel().force(true);
 		} catch (IOException e) {
 			Util.fatalError("Error while writing to database: " + e);
 		}
 	}
 
-	public DBValue getValue(Number loc) {
+	public synchronized DBValue getValue(Number loc) {
 		try {
 			fd.seek(loc.longValue());
-			return generator.wrapValue(fd.readByte());
+			byte b = fd.readByte();
+			DBValue v = generator.wrapValue(b);
+			Util.debug("Location "+loc+" = "+v+" ("+b+")");
+			return v;
 		} catch (IOException e) {
 			Util.fatalError("IO Error: " + e);
 		}
+		Util.fatalError("WTF");
 		return null; // Not reached
 	}
 
-	public void initialize(String loc, DBValue example) {
+	public synchronized void initialize(String loc, DBValue example) {
 
 		myFile = new File(loc);
 
@@ -61,10 +66,11 @@ public final class FileDatabase extends Database {
 		generator = example;
 	}
 
-	public void setValue(Number loc, DBValue value) {
+	public synchronized void setValue(Number loc, DBValue value) {
 		try {
 			fd.seek(loc.longValue());
 			fd.writeByte(value.byteValue());
+			Util.debug("Wrote "+value.byteValue()+" to "+loc);
 		} catch (IOException e) {
 			Util.fatalError("IO Error: " + e);
 		}

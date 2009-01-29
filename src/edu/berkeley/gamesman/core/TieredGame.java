@@ -95,7 +95,7 @@ public abstract class TieredGame<State,Value extends DBValue> extends Game<State
 				else
 					return gameStateForTierIndex(i,hash.subtract(tierIndex[i-1]).subtract(BigInteger.ONE));
 		}
-		Util.fatalError("Hash outside of tiered values");
+		Util.fatalError("Hash outside of tiered values: "+hash);
 		return null;
 	}
 

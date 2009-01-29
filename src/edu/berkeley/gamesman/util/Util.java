@@ -35,13 +35,18 @@ public final class Util {
 	}
 	
 	public static void fatalError(String s){
-		System.err.println("FATAL: "+s);
+		System.err.println("FATAL: ("+Thread.currentThread().getName()+") "+s);
 		System.err.println("Stack trace follows:");
-		throw new FatalError();
+		try {
+			throw new FatalError();
+		}catch(FatalError e){
+			e.printStackTrace(System.err);
+		}
+		System.exit(1234);
 	}
 	
 	public static void warn(String s){
-		System.err.println("WARN: "+s);
+		System.err.println("WARN: ("+Thread.currentThread().getName()+") "+s);
 		System.err.println("Stack trace follows:");
 		try {
 			throw new FatalError();
@@ -58,7 +63,7 @@ public final class Util {
 			debugOn = OptionProcessor.checkOption("d") != null;
 			if(!debugOn) return;
 		}
-		System.err.println("DEBUG: "+s);
+		System.err.println("DEBUG: ("+Thread.currentThread().getName()+") "+s);
 	}
 	
 	public static String millisToETA(long millis){
