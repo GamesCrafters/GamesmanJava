@@ -35,6 +35,8 @@ public class HadoopTool extends Configured implements Tool {
 		m.initialize((Class<? extends Game<?>>)Class.forName("edu.berkeley.gamesman.game."+conf.get("gameclass")), TierSolver.class, (Class<? extends Hasher<?>>)Class.forName("edu.berkeley.gamesman.hasher."+conf.get("hasherclass")), NullDatabase.class);
 		
 		TieredGame<?> game = (TieredGame<?>)m.getGame();
+		
+		
 		conf.set("firsthash",game.hashOffsetForTier(tier));
 		conf.set("lasthash", game.lastHashValueForTier(tier));
 		
