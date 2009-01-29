@@ -79,8 +79,8 @@ public final class C4UniformPieceHasher extends Hasher {
 			}
 		}
 		
-		if(off == 0)
-			Util.debug("CUPH finished building table: "+Arrays.toString(table));
+		//if(off == 0)
+		//	Util.debug("CUPH finished building table: "+Arrays.toString(table));
 	}
 	
 }
