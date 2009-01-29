@@ -2,7 +2,6 @@ package edu.berkeley.gamesman.hasher;
 
 
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.HashMap;
 
 import edu.berkeley.gamesman.game.Game;
@@ -53,20 +52,20 @@ public final class C4UniformPieceHasher extends Hasher {
 	
 	private int idx;
 	
-	protected void init(char[] board,int off, char[] pcs, int sum){
+	protected void init(char[] board,int off, char[] mypcs, int sum){
 		if(lookup == null){
 			lookup = new HashMap<String,BigInteger>();
-			table = new String[Util.intpow(pcs.length,board.length)];
+			table = new String[Util.intpow(mypcs.length,board.length)];
 			idx = 0;
 			
 			for(int s = 0; s < sum; s++)
-				init(board,off,pcs,s);
+				init(board,off,mypcs,s);
 			return;
 		}
 		
 		
-		for(int cur = 0; cur < pcs.length; cur++){
-			board[off] = pcs[cur];
+		for(int cur = 0; cur < mypcs.length; cur++){
+			board[off] = mypcs[cur];
 			if(off == board.length-1){
 				if(sum == cur){
 					String str = new String(board);
@@ -75,7 +74,7 @@ public final class C4UniformPieceHasher extends Hasher {
 					idx++;
 				}
 			}else{
-				init(board,off+1,pcs,sum-cur);
+				init(board,off+1,mypcs,sum-cur);
 			}
 		}
 		

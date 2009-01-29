@@ -32,6 +32,10 @@ public class Connect4 extends TieredGame<char[][],Values> {
 		DependencyResolver.allowHasher(Connect4.class, NullHasher.class);
 	}
 
+	/**
+	 * Connect4 Constructor
+	 * Creates the hashers we use (does not use the command-line specified one, needs special hasher)
+	 */
 	public Connect4(){
 		super();
 

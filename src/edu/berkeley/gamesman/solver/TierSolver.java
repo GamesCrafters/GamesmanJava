@@ -21,11 +21,11 @@ public final class TierSolver extends Solver {
 	private BigInteger calculated;
 	
 	@Override
-	public void solve(Game<?, ?> igame, ProgressMeter p) {
+	public void solve(Game<? extends Object, ?> igame, ProgressMeter p) {
 		Util.debug("Started the solver...");
 		if(!(igame instanceof TieredGame))
 			Util.fatalError("Attempted to use tiered solver on non-tiered game");
-		TieredGame game = (TieredGame) igame;
+		TieredGame<Object,?> game = (TieredGame<Object,?>) igame;
 		int numTier = game.numberOfTiers();
 
 		calculated = BigInteger.ZERO;
@@ -38,7 +38,7 @@ public final class TierSolver extends Solver {
 		}
 	}
 	
-	private void solveTier(TieredGame game, ProgressMeter p, int tier){
+	private void solveTier(TieredGame<Object,?> game, ProgressMeter p, int tier){
 		Util.debug("Beginning to solve tier "+tier);
 		BigInteger start = game.hashOffsetForTier(tier).subtract(BigInteger.ONE);
 		BigInteger current = start;

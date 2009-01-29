@@ -81,9 +81,9 @@ public final class Util {
 	}
 	
 	/**
-	 * Calculate b^e for integers
-	 * Relatively fast - O(log e)
-	 * Not well defined for e < 0 or b^e > MAX_INT
+	 * Calculate b^e for integers.
+	 * Relatively fast - O(log e).
+	 * Not well defined for e < 0 or b^e > MAX_INT.
 	 * 
 	 * @param b Base
 	 * @param e Exponent
