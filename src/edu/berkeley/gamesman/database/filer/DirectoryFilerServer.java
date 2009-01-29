@@ -26,7 +26,7 @@ import edu.berkeley.gamesman.util.Util;
 
 public final class DirectoryFilerServer {
 
-	File root;
+	//File root;
 	ServerSocket ss;
 	int port;
 	String secret;
@@ -39,7 +39,7 @@ public final class DirectoryFilerServer {
 	List<BigInteger> locs = Collections.synchronizedList(new ArrayList<BigInteger>());
 
 	public DirectoryFilerServer(String rootdir, int port, String secret) {
-		root = new File(rootdir);
+		File root = new File(rootdir);
 		if (!root.isDirectory()) {
 			Util.fatalError("Root directory \"" + rootdir
 					+ "\" is not a directory or could not be opened");
@@ -48,6 +48,14 @@ public final class DirectoryFilerServer {
 		this.port = port;
 		this.secret = secret;
 		df = new DirectoryFiler(root);
+	}
+	
+	public void close(){
+		try {
+			ss.close();
+		} catch (IOException e) {
+		}
+		df.close();
 	}
 
 	public void launchServer() {
@@ -163,7 +171,7 @@ public final class DirectoryFilerServer {
 						}
 						break;
 					case 3:
-						db = new FileDatabase();
+						//db = new FileDatabase();
 						String file, config;
 						int len = din.readInt();
 						byte[] fb = new byte[len];
@@ -173,8 +181,9 @@ public final class DirectoryFilerServer {
 						fb = new byte[len];
 						din.readFully(fb);
 						config = new String(fb);
-						db.initialize(Util.getChild(root, file).toURL()
-								.toExternalForm(), new Configuration(config)); //TODO: don't reference Values
+						//db.initialize(Util.getChild(root, file).toURL()
+						//		.toExternalForm(), new Configuration(config)); //TODO: don't reference Values
+						db = df.openDatabase(file);
 						fds.add(db);
 						locs.add(BigInteger.ZERO);
 						dout.writeInt(fds.indexOf(db));

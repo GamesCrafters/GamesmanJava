@@ -31,13 +31,13 @@ import edu.berkeley.gamesman.util.Util;
  */
 public final class Gamesman {
 
-	private Game<Object, ? extends Record> gm;
+	private Game<Object> gm;
 	private Hasher ha;
 	private Solver so;
 	private Database db;
 	private boolean testrun;
 
-	private Gamesman(Game<Object, ? extends Record> g, Solver s, Hasher h,
+	private Gamesman(Game<Object> g, Solver s, Hasher h,
 			Database d, boolean er) {
 		gm = g;
 		ha = h;
@@ -118,13 +118,13 @@ public final class Gamesman {
 		hasherName = OptionProcessor.checkOption("hasher");
 		databaseName = OptionProcessor.checkOption("database");
 
-		Class<? extends Game<?, ?>> g;
+		Class<? extends Game<?>> g;
 		Class<? extends Solver> s;
 		Class<? extends Hasher> h;
 		Class<? extends Database> d;
 
 		try {
-			g = (Class<? extends Game<?, ?>>) Class
+			g = (Class<? extends Game<?>>) Class
 					.forName("edu.berkeley.gamesman.game." + gameName);
 			s = (Class<? extends Solver>) Class
 					.forName("edu.berkeley.gamesman.solver." + solverName);
@@ -144,7 +144,7 @@ public final class Gamesman {
 			try {
 				boolean tr = (OptionProcessor.checkOption("help") != null);
 				Gamesman executor = new Gamesman(
-						(Game<Object, ? extends Record>) g.newInstance(), s
+						(Game<Object>) g.newInstance(), s
 								.newInstance(), h.newInstance(), (Database) d
 								.newInstance(), tr);
 				executor.getClass().getMethod("execute" + cmd,
@@ -244,9 +244,18 @@ public final class Gamesman {
 		if (OptionProcessor.checkOption("secret") == null)
 			Util
 					.fatalError("You must provide a shared secret to protect the server with -s or --secret");
-		new DirectoryFilerServer(OptionProcessor.checkOption("rootDirectory"),
+		
+		final DirectoryFilerServer serv = new DirectoryFilerServer(OptionProcessor.checkOption("rootDirectory"),
 				Integer.parseInt(OptionProcessor.checkOption("port")),
-				OptionProcessor.checkOption("secret")).launchServer();
+				OptionProcessor.checkOption("secret"));
+		
+		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable(){
+			public void run() {
+				serv.close();
+			}
+		}));
+		
+		serv.launchServer();
 	}
 
 	private enum directoryConnectCommands {
@@ -278,7 +287,7 @@ public final class Gamesman {
 					dfc.close();
 					return;
 				case halt:
-					dfc.raw((byte) 1);
+					dfc.halt();
 					dfc.close();
 					return;
 				case ls:
@@ -305,7 +314,7 @@ public final class Gamesman {
 					System.out.print(dbname+" write "+loc+"> ");
 					line = input.readLine();
 		
-					cdb.setValue(new BigInteger(loc), Values.valueOf(line));
+					//cdb.setValue(new BigInteger(loc), Record.parseRecord(conf,line)); TODO: fixme
 				}
 			}
 		} catch (IOException e) {

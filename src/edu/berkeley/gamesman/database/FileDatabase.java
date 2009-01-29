@@ -7,13 +7,16 @@ import java.io.RandomAccessFile;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
-
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.util.Util;
 
+/**
+ * The FileDatabase is a database designed to write directly to a local file.  
+ * The file format is not well defined at the moment, perhaps this should be changed later.
+ * @author Steven Schlansker
+ */
 public final class FileDatabase extends Database {
 
 	protected File myFile;
@@ -59,7 +62,7 @@ public final class FileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void initialize(String loc, Configuration config) {
+	public synchronized void initialize(String loc, Configuration config1) {
 
 		boolean previouslyExisted;
 
@@ -77,9 +80,9 @@ public final class FileDatabase extends Database {
 			Util.fatalError("Could not create/open database: " + e);
 		}
 
-		this.config = config;
+		config = config1;
 		
-		Util.assertTrue(Record.length(config) == 1, "FileDatabase can only store 8 bits per record for now"); //TODO: fixme
+		Util.assertTrue(Record.length(config1) == 1, "FileDatabase can only store 8 bits per record for now"); //TODO: FIXME
 
 		try {
 			fd.seek(0);
@@ -87,10 +90,10 @@ public final class FileDatabase extends Database {
 				int headerLen = fd.readInt();
 				byte[] header = new byte[headerLen];
 				fd.readFully(header);
-				Util.assertTrue(new String(header).equals(config.getConfigString()), "File database has wrong header; expecting \""+config.getConfigString()+"\" got \""+new String(header)+"\"");
+				Util.assertTrue(new String(header).equals(config1.getConfigString()), "File database has wrong header; expecting \""+config1.getConfigString()+"\" got \""+new String(header)+"\"");
 			}else{
-				fd.writeInt(config.getConfigString().length());
-				fd.write(config.getConfigString().getBytes());
+				fd.writeInt(config1.getConfigString().length());
+				fd.write(config1.getConfigString().getBytes());
 			}
 			offset = fd.getFilePointer();
 		} catch (IOException e) {

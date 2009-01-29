@@ -16,18 +16,18 @@ import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.hadoop.util.BigIntegerWritable;
-import edu.berkeley.gamesman.hadoop.util.DBValueWritable;
+import edu.berkeley.gamesman.hadoop.util.RecordWritable;
 import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.util.IteratorWrapper;
 import edu.berkeley.gamesman.util.Util;
 
-public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, BigIntegerWritable, BigIntegerWritable>,Reducer<BigIntegerWritable, BigIntegerWritable, BigIntegerWritable, DBValueWritable>{
+public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, BigIntegerWritable, BigIntegerWritable>,Reducer<BigIntegerWritable, BigIntegerWritable, BigIntegerWritable, RecordWritable>{
 
 	protected TieredGame<Object,Record> game;
 	protected Hasher hasher;
 	protected Database db;
 	private BigIntegerWritable tempBI = new BigIntegerWritable();;
-	private DBValueWritable tempDB = new DBValueWritable();
+	private RecordWritable tempDB = new RecordWritable();
 
 	public void configure(JobConf conf) {
 		Class<TieredGame<Object,Record>> gc = null;
@@ -72,7 +72,7 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 	
 	public void reduce(BigIntegerWritable position,
 			Iterator<BigIntegerWritable> children,
-			OutputCollector<BigIntegerWritable, DBValueWritable> out,
+			OutputCollector<BigIntegerWritable, RecordWritable> out,
 			Reporter rep) throws IOException {
 		Record v = game.getDBValueExample();
 		ArrayList<Record> vals = new ArrayList<Record>();

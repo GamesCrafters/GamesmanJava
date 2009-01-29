@@ -8,7 +8,7 @@ import org.apache.hadoop.io.Writable;
 
 import edu.berkeley.gamesman.core.Record;
 
-public class DBValueWritable implements Writable {
+public class RecordWritable implements Writable {
 
 	private Record value;
 	

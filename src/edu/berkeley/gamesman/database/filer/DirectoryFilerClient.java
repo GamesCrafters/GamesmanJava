@@ -83,9 +83,9 @@ public final class DirectoryFilerClient {
 		}
 	}
 
-	public void raw(byte b) {
+	public void halt() {
 		try {
-			dout.write(b);
+			dout.write(1);
 		} catch (IOException e) {
 			Util.fatalError("IO error while communicating with server: " + e);
 		}

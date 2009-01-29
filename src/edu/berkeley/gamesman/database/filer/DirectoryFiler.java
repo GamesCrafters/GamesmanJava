@@ -10,6 +10,8 @@ import java.io.LineNumberReader;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Filer;
 import edu.berkeley.gamesman.database.BlockDatabase;
 import edu.berkeley.gamesman.util.Util;
@@ -41,6 +43,20 @@ public class DirectoryFiler extends Filer<BlockDatabase>{
 	
 	public String[] ls(){
 		return dbs.keySet().toArray(new String[dbs.size()]);
+	}
+
+	@Override
+	public BlockDatabase openDatabase(String name) {
+	}
+
+	@Override
+	public BlockDatabase openDatabase(Configuration conf) {
+	}
+
+	@Override
+	public void close() {
+		// TODO Auto-generated method stub
+		
 	}
 	
 }
