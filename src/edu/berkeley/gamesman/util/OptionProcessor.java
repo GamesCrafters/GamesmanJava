@@ -62,7 +62,7 @@ public final class OptionProcessor {
 	}
 	
 	/**
-	 * Informs the option processor about a new option that you would like to acceptå
+	 * Informs the option processor about a new option that you would like to accept
 	 * The processor will now accept either -short or --long-opt
 	 * @param shortForm Short option (e.g. x)
 	 * @param longForm Long option (e.g. with-x)

@@ -83,9 +83,9 @@ public final class TierSolver extends Solver {
 			Util.debug("Thread waiting to tier-sync");
 			barr.sync();
 		}
-		
-		if(tier < 0) return null;
+
 		synchronized (this) {
+			if(tier < 0) return null;
 			final BigInteger step = BigInteger.valueOf(1000);
 			BigInteger ret = offset, end;
 			offset = offset.add(step);
@@ -116,6 +116,7 @@ public final class TierSolver extends Solver {
 		public void conquer() {
 			barr.enter();
 			Util.debug("Started the solver... (" + index + ")");
+			Thread.currentThread().setName("Solver ("+index+"): "+myGame.toString());
 
 			Pair<BigInteger, BigInteger> slice;
 			while ((slice = nextSlice()) != null) {
@@ -125,8 +126,8 @@ public final class TierSolver extends Solver {
 				db.flush();
 			}
 
-			updater.complete();
-			barr.exit();
+			if(barr.exit())
+				updater.complete();
 		}
 
 		public List<WorkUnit> divide(int num) {
@@ -142,6 +143,7 @@ public final class TierSolver extends Solver {
 
 		private BigInteger total = BigInteger.ZERO;
 		private Task t;
+		private long lastUpdate = 0;
 
 		TierSolverUpdater() {
 			t = Task.beginTask("Tier solving \"" + myGame.toString() + "\"");
@@ -150,8 +152,10 @@ public final class TierSolver extends Solver {
 
 		synchronized void calculated(int howMuch) {
 			total = total.add(BigInteger.valueOf(howMuch));
-			if (t != null)
+			if (t != null && System.currentTimeMillis() - lastUpdate > 1000){
 				t.setProgress(total);
+				lastUpdate = System.currentTimeMillis();
+			}
 		}
 
 		public synchronized void complete() {

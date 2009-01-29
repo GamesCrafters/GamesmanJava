@@ -15,8 +15,9 @@ public final class Barrier {
 		total++;
 	}
 	
-	public synchronized void exit(){
+	public synchronized boolean exit(){
 		total--;
+		return total == 0;
 	}
 	
 	public synchronized void sync(){
