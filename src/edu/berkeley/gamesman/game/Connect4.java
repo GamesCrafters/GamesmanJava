@@ -37,5 +37,17 @@ public class Connect4 extends HashedGame<Values> {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public int getDefaultBoardHeight() {
+		// TODO Auto-generated method stub
+		return 6;
+	}
+
+	@Override
+	public int getDefaultBoardWidth() {
+		// TODO Auto-generated method stub
+		return 7;
+	}
 	
 }
