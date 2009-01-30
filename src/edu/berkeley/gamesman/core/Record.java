@@ -122,7 +122,7 @@ public final class Record {
 		}
 		
 
-		loop: for(RecordFields rf : conf.getStoredFields().keySet()){
+		for(RecordFields rf : conf.getStoredFields().keySet()){
 			switch(rf){
 			case Value:
 				rec.set(rf,primitiveCombine(map.get(rf)).value);

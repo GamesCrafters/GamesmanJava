@@ -1,11 +1,8 @@
 package edu.berkeley.gamesman.core;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.EnumSet;
-import java.util.Map;
-
 import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
@@ -17,6 +14,7 @@ import edu.berkeley.gamesman.util.Util;
  * @author Steven Schlansker
  */
 public class Configuration implements Serializable {
+	private static final long serialVersionUID = -5331459097835638972L;
 	private String config;
 	final private Game<?> g;
 	final private Hasher<?> h;
@@ -40,11 +38,17 @@ public class Configuration implements Serializable {
 			Util.fatalError("Game and hasher are not compatible!");
 	}
 
+	/**
+	 * Create a new Configuration
+	 * @param g The game we're playing
+	 * @param h The hasher to use
+	 * @param set Which records to save
+	 */
 	public Configuration(Game<?> g, Hasher<?> h, EnumSet<RecordFields> set){
 		int i = 0;
 		EnumMap<RecordFields,Pair<Integer, Integer>> map = new EnumMap<RecordFields, Pair<Integer,Integer>>(RecordFields.class);
 		for(RecordFields rec : set){
-			map.put(rec, new Pair(i++,rec.defaultBitSize()));
+			map.put(rec, new Pair<Integer, Integer>(i++,rec.defaultBitSize()));
 		}
 		this.g = g;
 		this.h = h;
@@ -82,18 +86,31 @@ public class Configuration implements Serializable {
 		return ((Configuration)o).config.equals(config);
 	}
 	
+	/**
+	 * @return the records available from a database using this Configuration
+	 */
 	public EnumMap<RecordFields,Pair<Integer,Integer>> getStoredFields(){
 		return storedFields;
 	}
 
+	/**
+	 * @return the Hasher this Configuration is using
+	 */
 	public Hasher<?> getHasher() {
 		return h;
 	}
 
+	/**
+	 * @param bytes A bytestream
+	 * @return the Configuration represented by that bytestream
+	 */
 	public static Configuration deserialize(byte[] bytes) {
 		return Util.deserialize(bytes);
 	}
 
+	/**
+	 * @return a bytestream representing this Configuration
+	 */
 	public byte[] serialize() {
 		return Util.serialize(this);
 	}

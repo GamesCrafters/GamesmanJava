@@ -240,4 +240,20 @@ public final class Util {
 		}
 		return null;
 	}
+	
+	/**
+	 * Handy method for working with 'unchecked' casts -
+	 * send them here and it will throw a RuntimeException
+	 * instead of giving you a compiler warning.
+	 * DO NOT USE unless you are sure there's no other options!
+	 * Use generics instead if at all possible
+	 * @param <T> The type to cast to
+	 * @param <V> The type we're casting from
+	 * @param in The object to cast
+	 * @return A casted object
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T,V> T checkedCast(V in){
+		return (T)in;
+	}
 }

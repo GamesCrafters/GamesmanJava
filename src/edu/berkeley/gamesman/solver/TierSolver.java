@@ -31,7 +31,7 @@ public final class TierSolver extends Solver {
 	@Override
 	public WorkUnit prepareSolve(Configuration conf, Game<?> game) {
 
-		myGame = (TieredGame<Object>) game;
+		myGame = Util.checkedCast(game);
 		tier = myGame.numberOfTiers() - 1;
 		offset = myGame.hashOffsetForTier(tier);
 		updater = new TierSolverUpdater();

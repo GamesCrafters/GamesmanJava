@@ -18,6 +18,7 @@ import edu.berkeley.gamesman.util.Util;
  *
  */
 public abstract class Game<State> implements Serializable {
+	private static final long serialVersionUID = 6376065802238384739L;
 
 	protected Hasher<State> hasher;
 	
@@ -83,6 +84,9 @@ public abstract class Game<State> implements Serializable {
 		hasher = h;
 	}
 	
+	/**
+	 * @param conf the Configuration that this game is played with
+	 */
 	public abstract void initialize(Configuration conf);
 	
 	/**

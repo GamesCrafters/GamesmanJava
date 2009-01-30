@@ -10,7 +10,7 @@ import java.math.BigInteger;
  * @param <Board> The type of Board that this hasher can hash
  */
 public abstract class Hasher<Board> implements Serializable {
-
+	private static final long serialVersionUID = -6537920117712373326L;
 	protected Game<Board> game;
 	protected char[] pieces;
 	
