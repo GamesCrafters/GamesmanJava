@@ -229,4 +229,15 @@ public final class Util {
 		}
 		return baos.toByteArray();
 	}
+	
+	@SuppressWarnings("unchecked")
+	public static <T> Class<T> typedForName(String name){
+		try {
+			Class<T> cls = (Class<T>) Class.forName(name);
+			return cls;
+		} catch (ClassNotFoundException e) {
+			Util.fatalError("Could not find class \""+name+"\"");
+		}
+		return null;
+	}
 }

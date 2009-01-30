@@ -15,8 +15,18 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
 
+/**
+ * A SequenceInputFormat is a Hadoop input format
+ * Normally an InputFormat reads data from a file, however here we just want to split over
+ * a range of integers.  There's no reason to have that stored in the HDFS, so this input
+ * format just throws numbers into the system
+ * @author Steven Schlansker
+ */
 public class SequenceInputFormat implements InputFormat<BigIntegerWritable, NullWritable> {
 
+	/**
+	 * Empty constructor
+	 */
 	public SequenceInputFormat() {
 	}
 	

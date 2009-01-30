@@ -27,6 +27,7 @@ import edu.berkeley.gamesman.util.Util;
 public final class Gamesman {
 
 	private Game<Object> gm;
+	@SuppressWarnings("unused")
 	private Hasher<Object> ha;
 	private Solver so;
 	private Database db;
@@ -52,7 +53,6 @@ public final class Gamesman {
 	 * The main entry point for any Java program
 	 * @param args Command line arguments
 	 */
-	@SuppressWarnings("unchecked")
 	public static void main(String[] args) {
 
 		Thread.currentThread().setName("Gamesman");
@@ -119,20 +119,16 @@ public final class Gamesman {
 		hasherName = OptionProcessor.checkOption("hasher");
 		databaseName = OptionProcessor.checkOption("database");
 
-		Class<? extends Game<?>> g;
+		Class<? extends Game<Object>> g;
 		Class<? extends Solver> s;
-		Class<? extends Hasher<?>> h;
+		Class<? extends Hasher<Object>> h;
 		Class<? extends Database> d;
 
 		try {
-			g = (Class<? extends Game<?>>) Class
-					.forName("edu.berkeley.gamesman.game." + gameName);
-			s = (Class<? extends Solver>) Class
-					.forName("edu.berkeley.gamesman.solver." + solverName);
-			h = (Class<? extends Hasher<?>>) Class
-					.forName("edu.berkeley.gamesman.hasher." + hasherName);
-			d = (Class<? extends Database>) Class
-					.forName("edu.berkeley.gamesman.database." + databaseName);
+			g = Util.typedForName("edu.berkeley.gamesman.game." + gameName);
+			s = Util.typedForName("edu.berkeley.gamesman.solver." + solverName);
+			h = Util.typedForName("edu.berkeley.gamesman.hasher." + hasherName);
+			d = Util.typedForName("edu.berkeley.gamesman.database." + databaseName);
 		} catch (Exception e) {
 			System.err.println("Fatal error in preloading: " + e);
 			return;
@@ -144,10 +140,7 @@ public final class Gamesman {
 		if (cmd != null) {
 			try {
 				boolean tr = (OptionProcessor.checkOption("help") != null);
-				Gamesman executor = new Gamesman(
-						(Game<Object>) g.newInstance(), s
-								.newInstance(), (Hasher<Object>)h.newInstance(), (Database) d
-								.newInstance(), tr);
+				Gamesman executor = new Gamesman(g.newInstance(), s.newInstance(), h.newInstance(),d.newInstance(), tr);
 				executor.getClass().getMethod("execute" + cmd,
 						(Class<?>[]) null).invoke(executor);
 			} catch (NoSuchMethodException nsme) {
@@ -228,9 +221,10 @@ public final class Gamesman {
 				"The board to be evaluated");
 		if (testrun)
 			return;
-		BigInteger val = new BigInteger(OptionProcessor.checkOption("board"));
-		if (val == null)
+		String board = OptionProcessor.checkOption("board");
+		if (board == null)
 			Util.fatalError("Please specify a hash to evaluate");
+		BigInteger val = new BigInteger(board);
 		System.out.println(gm.primitiveValue(gm.hashToState(val)));
 	}
 
