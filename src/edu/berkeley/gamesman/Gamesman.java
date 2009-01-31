@@ -90,22 +90,17 @@ public final class Gamesman {
 			omaster = Class.forName(
 					"edu.berkeley.gamesman.master." + masterName).newInstance();
 		} catch (ClassNotFoundException cnfe) {
-			System.err.println("Could not load master controller '"
+			Util.fatalError("Could not load master controller '"
 					+ masterName + "': " + cnfe);
-			System.exit(1);
 		} catch (IllegalAccessException iae) {
-			System.err.println("Not allowed to access requested master '"
+			Util.fatalError("Not allowed to access requested master '"
 					+ masterName + "': " + iae);
-			System.exit(1);
 		} catch (InstantiationException ie) {
-			System.err.println("Master failed to instantiate: " + ie);
-			System.exit(1);
+			Util.fatalError("Master failed to instantiate: " + ie);
 		}
 
 		if (!(omaster instanceof Master)) {
-			System.err
-					.println("Master does not implement master.Master interface");
-			System.exit(1);
+			Util.fatalError("Master does not implement master.Master interface");
 		}
 
 		Master m = (Master) omaster;

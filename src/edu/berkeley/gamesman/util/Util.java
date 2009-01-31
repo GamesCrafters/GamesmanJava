@@ -1,16 +1,10 @@
-/**
- * 
- */
 package edu.berkeley.gamesman.util;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.ObjectInput;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 
 import edu.berkeley.gamesman.core.Configuration;
@@ -30,7 +24,16 @@ public final class Util {
 		private static final long serialVersionUID = 2545784238123111405L;
 	}
 
-	protected static class FatalError extends Error {
+	public static class FatalError extends Error {
+		
+		public FatalError(){
+			super();
+		}
+		
+		public FatalError(String s, Exception cause) {
+			super(s,cause);
+		}
+
 		private static final long serialVersionUID = -5642903706572262719L;
 	}
 
@@ -41,8 +44,7 @@ public final class Util {
 	/**
 	 * Throws a fatal Error if a required condition is not satisfied
 	 * 
-	 * @param b
-	 *            The boolean (expression) that must be true
+	 * @param b The boolean (expression) that must be true
 	 */
 	public static void assertTrue(boolean b, String reason) {
 		if (!b) {
@@ -58,8 +60,8 @@ public final class Util {
 			throw new FatalError();
 		} catch (FatalError e) {
 			e.printStackTrace(System.err);
+			throw e;
 		}
-		System.exit(1234);
 	}
 
 	public static void fatalError(String s, Exception cause) {
@@ -67,7 +69,7 @@ public final class Util {
 				+ s);
 		System.err.println(cause.getMessage());
 		cause.printStackTrace(System.err);
-		System.exit(1235);
+		throw new FatalError(s,cause);
 	}
 
 	public static void warn(String s) {
@@ -107,12 +109,9 @@ public final class Util {
 	 * Convenience function to calculate linear offset for two dimensional
 	 * coordinates
 	 * 
-	 * @param x
-	 *            X position
-	 * @param y
-	 *            Y position
-	 * @param w
-	 *            Board width
+	 * @param x X position
+	 * @param y Y position
+	 * @param w Board width
 	 * @return Linear offset into 1-d array
 	 */
 	public static int index(int x, int y, int w) {
@@ -123,10 +122,8 @@ public final class Util {
 	 * Calculate b^e for integers. Relatively fast - O(log e). Not well defined
 	 * for e < 0 or b^e > MAX_INT.
 	 * 
-	 * @param b
-	 *            Base
-	 * @param e
-	 *            Exponent
+	 * @param b Base
+	 * @param e Exponent
 	 * @return b^e
 	 */
 	public static int intpow(int b, int e) {
@@ -146,10 +143,8 @@ public final class Util {
 	 * http://en.wikipedia.org/w/index.php?title=Binomial_coefficient
 	 * &oldid=250717842
 	 * 
-	 * @param n
-	 *            n
-	 * @param k
-	 *            k
+	 * @param n n
+	 * @param k k
 	 * @return n choose k
 	 */
 	public static long nCr(int n, int k) {

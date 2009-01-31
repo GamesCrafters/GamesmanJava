@@ -2,6 +2,7 @@ package edu.berkeley.gamesman.util;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 
@@ -48,7 +49,7 @@ public final class OptionProcessor {
 
 	}
 	
-	private static Hashtable<String,Option> opts = new Hashtable<String,Option>();
+	private static HashMap<String,Option> opts = new HashMap<String,Option>();
 	private static String[] myArgs;
 	protected static int group = 0;
 	
@@ -77,12 +78,7 @@ public final class OptionProcessor {
 	 * @param helpString Descriptive string to output with --help
 	 */
 	public static void acceptOption(String shortForm, String longForm, boolean takesParam, String helpString){
-		Option newopt = new Option(shortForm,longForm,takesParam,helpString,null);
-		
-		Util.assertTrue(!opts.containsKey(shortForm) && !opts.containsKey(longForm),"Duplicate key -"+shortForm+"/--"+longForm);
-		
-		opts.put(shortForm, newopt);
-		opts.put(longForm,newopt);
+		acceptOption(shortForm,longForm,takesParam,helpString,null);
 	}
 	
 	/**
@@ -96,8 +92,22 @@ public final class OptionProcessor {
 	 */
 	public static void acceptOption(String shortForm, String longForm, boolean takesParam, String helpString, String dfl){
 		Option newopt = new Option(shortForm,longForm,takesParam,helpString,dfl);
+		//Util.assertTrue(!opts.containsKey(shortForm) && !opts.containsKey(longForm),"Duplicate key -"+shortForm+"/--"+longForm);
 		
-		Util.assertTrue(!opts.contains(shortForm) && !opts.contains(longForm),"Duplicate key -"+shortForm+"/--"+longForm);
+		Option oldopt = opts.get(shortForm);
+		
+		if(oldopt != null){
+			if(!newopt.h.equals(oldopt.h)){
+				Util.fatalError("Redefinition of "+oldopt+" as "+newopt);
+			}
+		}
+		
+		oldopt = opts.get(longForm);
+		if(oldopt != null){
+			if(!newopt.h.equals(oldopt.h)){
+				Util.fatalError("Redefinition of "+oldopt+" as "+newopt);
+			}
+		}
 		
 		opts.put(shortForm, newopt);
 		opts.put(longForm,newopt);
