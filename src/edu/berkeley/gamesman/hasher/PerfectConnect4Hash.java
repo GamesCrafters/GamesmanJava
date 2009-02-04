@@ -9,7 +9,20 @@ import edu.berkeley.gamesman.hasher.C4UniformPieceHasher;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
+/**
+ * A Hasher designed specifically for use with the Connect4 game.  It is "perfect"
+ * in that every hash [0..n] is a valid Connect4 game board.
+ * Valid here is defined as the proper number of pieces are on the board (up to 1
+ * more black than red) and that there are no "floating" pieces.
+ * We estimate that 6x7 Connect4 will use approx. 2^42 hash states for the complete
+ * solve is the current estimate.
+ * 
+ * @author Steven Schlansker
+ */
 public class PerfectConnect4Hash extends TieredHasher<char[][]> {
+
+	private static final long serialVersionUID = -5681133082461042797L;
+
 
 	private int gameWidth,gameHeight;
 	

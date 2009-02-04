@@ -23,8 +23,6 @@ public final class Record {
 	private int[] bits;
 	private int[] fields;
 
-	private int maxbits;
-
 	public Record(Configuration conf2, PrimitiveValue primitiveValue) {
 		conf = conf2;
 		setupBits();
@@ -104,7 +102,7 @@ public final class Record {
 			bitOffset[info.car] = (info.car > 0 ? bitOffset[info.car - 1] : 0)
 					+ info.cdr;
 		}
-		maxbits = bitOffset[bitOffset.length - 1] + bits[bits.length - 1];
+		//maxbits = bitOffset[bitOffset.length - 1] + bits[bits.length - 1]; TODO: delete?
 	}
 
 	public static Record combine(final Configuration conf, final List<Record> vals) {

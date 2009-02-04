@@ -18,12 +18,13 @@ import edu.berkeley.gamesman.util.Util;
  * @param <State> The type that you use to represent your States
  */
 public abstract class TieredGame<State> extends Game<State> {
-
+	
+	private static final long serialVersionUID = 2597954028407397959L;
 	protected TieredHasher<State> myHasher;
 	
 	@Override
 	public void initialize(Configuration conf){
-		myHasher = (TieredHasher<State>)conf.getHasher();
+		myHasher = Util.checkedCast(conf.getHasher());
 	}
 	
 	@Override
@@ -32,11 +33,11 @@ public abstract class TieredGame<State> extends Game<State> {
 		if(myHasher.tierEnds == null) myHasher.lastHashValueForTier(myHasher.cacheNumTiers-1);
 		
 		for(int i = 0; i < myHasher.cacheNumTiers; i++){
-			if(myHasher.tierEnds[i].compareTo(hash) >= 0)
+			if(myHasher.tierEnds[i].compareTo(hash) >= 0) {
 				if(i == 0)
 					return myHasher.gameStateForTierIndex(i, hash);
-				else
-					return myHasher.gameStateForTierIndex(i,hash.subtract(myHasher.tierEnds[i-1]).subtract(BigInteger.ONE));
+				return myHasher.gameStateForTierIndex(i,hash.subtract(myHasher.tierEnds[i-1]).subtract(BigInteger.ONE));
+			}
 		}
 		Util.fatalError("Hash outside of tiered values: "+hash);
 		return null;
