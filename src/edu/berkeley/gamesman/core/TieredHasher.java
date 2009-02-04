@@ -14,25 +14,24 @@ import edu.berkeley.gamesman.util.Util;
  * @param <State> The class that represents a State
  */
 public abstract class TieredHasher<State> extends Hasher<State> {
-
+	
 	@Override
 	public BigInteger hash(State board, int l) {
-		// TODO Auto-generated method stub
+		Util.fatalError("Not implemented"); // TODO
 		return null;
 	}
 
 	@Override
 	public BigInteger maxHash(int boardlen) {
-		// TODO Auto-generated method stub
+		Util.fatalError("Not implemented"); // TODO
 		return null;
 	}
 
 	@Override
 	public State unhash(BigInteger hash, int l) {
-		// TODO Auto-generated method stub
+		Util.fatalError("Not implemented"); // TODO
 		return null;
 	}
-	
 	
 	/**
 	 * Indicate the number of tiers that this game has
