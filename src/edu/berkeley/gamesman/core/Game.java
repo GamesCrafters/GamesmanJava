@@ -1,14 +1,9 @@
-/**
- * 
- */
 package edu.berkeley.gamesman.core;
 
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Collection;
-import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.OptionProcessor;
-import edu.berkeley.gamesman.util.Util;
 
 /**
  * Public interface that all Games must implement to be solvable
@@ -19,8 +14,6 @@ import edu.berkeley.gamesman.util.Util;
  */
 public abstract class Game<State> implements Serializable {
 	private static final long serialVersionUID = 6376065802238384739L;
-
-	protected Hasher<State> hasher;
 	
 	protected final int gameWidth, gameHeight;
 	
@@ -70,19 +63,6 @@ public abstract class Game<State> implements Serializable {
 	 * @see edu.berkeley.gamesman.core.Record
 	 */
 	public abstract PrimitiveValue primitiveValue(State pos);
-	
-	/**
-	 * Inform the Game of the hasher we're using
-	 * @param h The Hasher to use
-	 */
-	private final void setHasher(Hasher<State> h){
-		
-		if(!DependencyResolver.isHasherAllowed(this.getClass(), h.getClass())){
-			Util.fatalError("Hasher class "+h.getClass()+" inappropriate for game "+this.getClass());
-		}
-		
-		hasher = h;
-	}
 	
 	/**
 	 * @param conf the Configuration that this game is played with
