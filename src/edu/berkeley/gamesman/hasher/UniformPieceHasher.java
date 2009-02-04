@@ -22,6 +22,7 @@ import edu.berkeley.gamesman.util.Util;
  */
 public final class UniformPieceHasher extends Hasher<char[]> {
 	
+	private static final long serialVersionUID = 5625295202888543943L;
 	private char[] parr;
 	HashMap<Character, BigInteger> lookup;
 	BigInteger plen;
