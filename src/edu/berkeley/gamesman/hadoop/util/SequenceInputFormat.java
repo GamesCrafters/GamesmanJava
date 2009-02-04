@@ -57,6 +57,7 @@ public class SequenceInputFormat implements InputFormat<BigIntegerWritable, Null
 	}
 
 	public void validateInput(JobConf conf) throws IOException {
+		// Nothing to do here...for now :-p
 	}
 	
 }

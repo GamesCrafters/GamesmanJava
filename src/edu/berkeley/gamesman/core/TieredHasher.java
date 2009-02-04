@@ -41,7 +41,7 @@ public abstract class TieredHasher<State> extends Hasher<State> {
 	 */
 	public abstract int numberOfTiers();
 	
-	BigInteger tierIndex[];  // For tier i, tierIndex[i] is the /last/ hash value for that tier.
+	BigInteger tierEnds[];  // For tier i, tierEnds[i] is the /last/ hash value for that tier.
 
 	int cacheNumTiers = -1;
 	
@@ -54,9 +54,9 @@ public abstract class TieredHasher<State> extends Hasher<State> {
 	public BigInteger hashOffsetForTier(int tier){
 		if(tier == 0)
 			return BigInteger.ZERO;
-		if(tierIndex == null)
+		if(tierEnds == null)
 			lastHashValueForTier(numberOfTiers()-1);
-		return tierIndex[tier-1].add(BigInteger.ONE);
+		return tierEnds[tier-1].add(BigInteger.ONE);
 	}
 	
 	/**
@@ -65,14 +65,14 @@ public abstract class TieredHasher<State> extends Hasher<State> {
 	 * @return The last hash that will be in the given tier
 	 */
 	public BigInteger lastHashValueForTier(int tier){
-		if(tierIndex == null){
-			tierIndex = new BigInteger[numberOfTiers()];
-			for(int i = 0; i < tierIndex.length; i++){
-				tierIndex[i] = hashOffsetForTier(i).add(numHashesForTier(i));
+		if(tierEnds == null){
+			tierEnds = new BigInteger[numberOfTiers()];
+			for(int i = 0; i < tierEnds.length; i++){
+				tierEnds[i] = hashOffsetForTier(i).add(numHashesForTier(i));
 			}
-			Util.debug("Created offset table: "+Arrays.toString(tierIndex));
+			Util.debug("Created offset table: "+Arrays.toString(tierEnds));
 		}
-		return tierIndex[tier];
+		return tierEnds[tier];
 	}
 	/**
 	 * Return the number of hashes in a tier

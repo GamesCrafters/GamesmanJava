@@ -29,14 +29,14 @@ public abstract class TieredGame<State> extends Game<State> {
 	@Override
 	public State hashToState(BigInteger hash) {
 		if(myHasher.cacheNumTiers == -1) myHasher.cacheNumTiers = myHasher.numberOfTiers();
-		if(myHasher.tierIndex == null) myHasher.lastHashValueForTier(myHasher.cacheNumTiers-1);
+		if(myHasher.tierEnds == null) myHasher.lastHashValueForTier(myHasher.cacheNumTiers-1);
 		
 		for(int i = 0; i < myHasher.cacheNumTiers; i++){
-			if(myHasher.tierIndex[i].compareTo(hash) >= 0)
+			if(myHasher.tierEnds[i].compareTo(hash) >= 0)
 				if(i == 0)
 					return myHasher.gameStateForTierIndex(i, hash);
 				else
-					return myHasher.gameStateForTierIndex(i,hash.subtract(myHasher.tierIndex[i-1]).subtract(BigInteger.ONE));
+					return myHasher.gameStateForTierIndex(i,hash.subtract(myHasher.tierEnds[i-1]).subtract(BigInteger.ONE));
 		}
 		Util.fatalError("Hash outside of tiered values: "+hash);
 		return null;
