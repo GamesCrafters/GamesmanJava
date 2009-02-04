@@ -130,7 +130,7 @@ public class AlternatingRearrangerHasher extends Hasher<char[]> {
 
 	@Override
 	public BigInteger maxHash(int boardlen) {
-		return BigInteger.valueOf(Util.nCr(boardlen,(boardlen+1)/2)).subtract(BigInteger.ONE);
+		return BigInteger.valueOf(Util.nCr(boardlen,(boardlen+1)/2));//.subtract(BigInteger.ONE);
 	}
 
 	@Override

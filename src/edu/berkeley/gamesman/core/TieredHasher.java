@@ -68,7 +68,7 @@ public abstract class TieredHasher<State> extends Hasher<State> {
 		if(tierEnds == null){
 			tierEnds = new BigInteger[numberOfTiers()];
 			for(int i = 0; i < tierEnds.length; i++){
-				tierEnds[i] = hashOffsetForTier(i).add(numHashesForTier(i));//.subtract(BigInteger.ONE);
+				tierEnds[i] = hashOffsetForTier(i).add(numHashesForTier(i)).subtract(BigInteger.ONE);
 			}
 			Util.debug("Created offset table: "+Arrays.toString(tierEnds));
 		}
