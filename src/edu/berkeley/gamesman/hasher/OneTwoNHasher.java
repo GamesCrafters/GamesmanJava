@@ -21,21 +21,18 @@ public class OneTwoNHasher extends TieredHasher<Integer> {
 	
 	@Override
 	public BigInteger numHashesForTier(int tier) {
-		if (tier == numberOfTiers() - 1)
-			return new BigInteger(String.valueOf(
-					gameHeight % gameWidth == 0 ? gameWidth : gameHeight % gameWidth));
-		return new BigInteger(String.valueOf(gameWidth));
+		return BigInteger.ONE;
 	}
 
 	@Override
 	public Integer gameStateForTierIndex(int tier, BigInteger index) {
-		return tier + index.intValue();
+		return tier + 1;
 		
 	}
 
 	@Override
 	public int numberOfTiers() {
-		return gameHeight / gameWidth + (gameHeight % gameWidth == 0 ? 0 : 1);
+		return gameHeight;
 	}
 	
 	@Override
