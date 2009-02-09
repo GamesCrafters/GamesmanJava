@@ -60,7 +60,7 @@ public final class FileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void initialize(String loc) {
+	protected synchronized void initialize(String loc) {
 
 		boolean previouslyExisted;
 

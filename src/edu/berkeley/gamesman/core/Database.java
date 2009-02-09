@@ -17,6 +17,7 @@ public abstract class Database {
 	 * Initialize a Database given a URI and a Configuration.  This method may either open an existing database or 
 	 * create a new one.  If a new one is created, the Configuration should be stored.  If one is opened, the Configuration 
 	 * should be checked to ensure it matches that already stored.  This method must be called exactly once before any other methods are called.
+	 * The URI must be in the URI syntax, ex: file:///absolute/path/to/file.db or gdfp://server:port/dbname
 	 * @param uri The URI that the Database is associated with
 	 * @param config The Configuration that is relevant
 	 */
