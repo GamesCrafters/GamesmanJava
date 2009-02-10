@@ -346,7 +346,7 @@ public final class Gamesman {
 				case open:
 					System.out.print("open> ");
 					dbname = input.readLine();
-					cdb = dfc.openDatabase(dbname, new Configuration(""));
+					cdb = dfc.openDatabase(dbname, Configuration.configurationFromString(null)); //TODO: not null here!
 					break;
 				case close:
 					if(cdb == null) break;

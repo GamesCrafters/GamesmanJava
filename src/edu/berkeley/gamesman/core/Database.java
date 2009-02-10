@@ -18,6 +18,8 @@ public abstract class Database {
 	 * create a new one.  If a new one is created, the Configuration should be stored.  If one is opened, the Configuration 
 	 * should be checked to ensure it matches that already stored.  This method must be called exactly once before any other methods are called.
 	 * The URI must be in the URI syntax, ex: file:///absolute/path/to/file.db or gdfp://server:port/dbname
+	 * If config is null, it will use whatever is in the database.  It is recommended that you pass in the
+	 * configuration that you are expecting to ensure you don't load a db for a different game.
 	 * @param uri The URI that the Database is associated with
 	 * @param config The Configuration that is relevant
 	 */

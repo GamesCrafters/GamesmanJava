@@ -64,20 +64,31 @@ public class Configuration implements Serializable {
 	/**
 	 * Load a saved Configuration from a String.
 	 * @param config The serialized Configuration
+	 * @return the Configuration
 	 */
-	public Configuration(String config) {
-		this.config = config;
-		this.g = null;
-		this.h = null;
-		this.storedFields = null;
+	
+	public static Configuration configurationFromString(String config){
+		return configurationFromBytes(config.getBytes());
 	}
+	
+	public static Configuration configurationFromBytes(byte[] barr){
+		return deserialize(barr);
+	}
+	//public Configuration(String config) {
+	//	this.config = config;
+	//	this.g = null;
+	//	this.h = null;
+	//	this.storedFields = null;
+	//}
+	
 
 	/**
 	 * Return a serialized version of the Configuration suitable for storing persistently
 	 * @return a String with the Configuration information
 	 */
 	public String getConfigString(){
-		return config;
+		return new String(serialize());
+		//return config;
 	}
 
 	@Override
@@ -117,6 +128,7 @@ public class Configuration implements Serializable {
 	
 	public String toString(){
 		return config;
+		//return new String(serialize());
 	}
 	
 

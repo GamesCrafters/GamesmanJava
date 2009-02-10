@@ -17,7 +17,6 @@ public class BlockDatabase extends Database {
 	@Override
 	public void flush() {
 		// TODO Auto-generated method stub
-		
 	}
 
 	@Override

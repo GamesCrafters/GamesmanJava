@@ -78,8 +78,6 @@ public final class FileDatabase extends Database {
 			Util.fatalError("Could not create/open database: " + e);
 		}
 
-		Util.assertTrue(Record.length(conf) == 1,
-				"FileDatabase can only store 8 bits per record for now"); // TODO: FIXME
 		try {
 			fd.seek(0);
 		} catch (IOException e) {
@@ -90,6 +88,8 @@ public final class FileDatabase extends Database {
 				int headerLen = fd.readInt();
 				byte[] header = new byte[headerLen];
 				fd.readFully(header);
+				if(conf == null)
+					conf = Configuration.configurationFromBytes(header);
 				Util.assertTrue(new String(header).equals(conf
 						.getConfigString()),
 						"File database has wrong header; expecting \""
@@ -107,6 +107,10 @@ public final class FileDatabase extends Database {
 				Util.fatalError("IO error while creating header: " + e);
 			}
 		}
+		
+		Util.assertTrue(Record.length(conf) == 1,
+		"FileDatabase can only store 8 bits per record for now"); // TODO: FIXME
+		
 		try {
 			offset = fd.getFilePointer();
 		} catch (IOException e) {
