@@ -30,14 +30,14 @@ public final class LocalMaster implements Master,TaskFactory {
 		OptionProcessor.acceptOption("j", "threads", true, "The number of threads to launch", "1");
 	}
 	
-	public void initialize(Class<? extends Game<?>> gamec, Class<? extends Solver> solverc, Class<? extends Hasher<?>> hasherc, Class<? extends Database> databasec) {
+	public void initialize(Configuration conf, Class<? extends Solver> solverc, Class<? extends Database> databasec) {
 		
 		Task.setTaskFactory(this);
 		
 		try{
-			game = gamec.newInstance();
+			game = conf.getGame();
 			solver = solverc.newInstance();
-			hasher = hasherc.newInstance();
+			hasher = conf.getHasher();
 			database = databasec.newInstance();
 		}catch(IllegalAccessException e){
 			Util.fatalError("Fatal error while initializing",e);
@@ -89,9 +89,7 @@ public final class LocalMaster implements Master,TaskFactory {
 		}
 		
 		public void run(){
-			Util.debug("ploink");
 			w.conquer();
-			Util.debug("plink");
 		}
 	}
 

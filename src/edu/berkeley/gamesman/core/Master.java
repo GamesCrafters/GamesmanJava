@@ -9,12 +9,11 @@ public interface Master {
 
 	/**
 	 * Set up the Master and prepare to solve
-	 * @param game The Game to solve
+	 * @param conf The Game to solve
 	 * @param solver The Solver to use to solve it
-	 * @param hasher The Hasher to represent the game
 	 * @param database The Database to store information to
 	 */
-	public void initialize(Class<? extends Game<?>> game, Class<? extends Solver> solver, Class<? extends Hasher<?>> hasher, Class<? extends Database> database);
+	public void initialize(Configuration conf, Class<? extends Solver> solver, Class<? extends Database> database);
 	/**
 	 * Execute the solve
 	 */

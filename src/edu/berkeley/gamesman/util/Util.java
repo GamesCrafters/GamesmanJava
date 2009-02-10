@@ -236,6 +236,15 @@ public final class Util {
 		return null;
 	}
 	
+	public static <T> T typedInstantiate(String name){
+		try {
+			return checkedCast(typedForName(name).newInstance());
+		} catch (Exception e) {
+			Util.fatalError("Unchecked exception while instantiating",e);
+		}
+		return null;
+	}
+	
 	/**
 	 * Handy method for working with 'unchecked' casts -
 	 * send them here and it will throw a RuntimeException

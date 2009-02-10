@@ -11,7 +11,7 @@ import edu.berkeley.gamesman.Gamesman;
 /**
  * Utility class for processing of command line arguments
  * @author Steven Schlansker
- *
+ * @deprecated To be removed soon
  */
 public final class OptionProcessor {
 

@@ -33,6 +33,13 @@ public class Configuration implements Serializable {
 		checkCompatibility();
 	}
 	
+	/**
+	 * @return the Game this configuration plays
+	 */
+	public Game<?> getGame(){
+		return g;
+	}
+	
 	private void checkCompatibility() {
 		if(!DependencyResolver.isHasherAllowed(g.getClass(), h.getClass()))
 			Util.fatalError("Game and hasher are not compatible!");

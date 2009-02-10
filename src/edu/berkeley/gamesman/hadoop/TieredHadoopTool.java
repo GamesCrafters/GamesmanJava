@@ -1,5 +1,7 @@
 package edu.berkeley.gamesman.hadoop;
 
+import java.util.EnumSet;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
@@ -11,6 +13,7 @@ import org.apache.hadoop.util.Tool;
 
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Hasher;
+import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.database.NullDatabase;
 import edu.berkeley.gamesman.hadoop.util.BigIntegerWritable;
@@ -33,13 +36,10 @@ public class TieredHadoopTool extends Configured implements Tool {
 
 		// Determine last index
 		LocalMaster m = new LocalMaster();
-		m.initialize(
-				(Class<? extends Game<?>>) Class
-						.forName("edu.berkeley.gamesman.game."
-								+ conf.get("gameclass")), TierSolver.class,
-				(Class<? extends Hasher<?>>) Class
-						.forName("edu.berkeley.gamesman.hasher."
-								+ conf.get("hasherclass")), NullDatabase.class);
+		Game<?> g = Util.typedInstantiate("edu.berkeley.gamesman.game." + conf.get("gameclass"));
+		Hasher<?> h = Util.typedInstantiate("edu.berkeley.gamesman.hasher."+conf.get("hasherclass"));
+		m.initialize(new edu.berkeley.gamesman.core.Configuration(g,h,EnumSet.allOf(RecordFields.class)), TierSolver.class,
+				NullDatabase.class);
 
 		TieredGame<?> game = (TieredGame<?>) m.getGame();
 		

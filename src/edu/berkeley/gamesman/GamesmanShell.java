@@ -6,8 +6,15 @@ import java.io.InputStreamReader;
 
 import edu.berkeley.gamesman.util.Util;
 
+/**
+ * @author Steven Schlansker
+ */
 public class GamesmanShell {
 
+	/**
+	 * Main entry point
+	 * @param args Program arguments
+	 */
 	public static void main(String args[]){
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 		while(true){

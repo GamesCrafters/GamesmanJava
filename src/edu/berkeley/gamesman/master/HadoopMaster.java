@@ -2,9 +2,8 @@ package edu.berkeley.gamesman.master;
 
 import org.apache.hadoop.util.ToolRunner;
 
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
-import edu.berkeley.gamesman.core.Game;
-import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.core.Master;
 import edu.berkeley.gamesman.core.Solver;
 import edu.berkeley.gamesman.hadoop.TieredHadoopTool;
@@ -13,9 +12,8 @@ import edu.berkeley.gamesman.util.Util;
 
 public class HadoopMaster implements Master {
 
-	public void initialize(Class<? extends Game<?>> game,
-			Class<? extends Solver> solver, Class<? extends Hasher<?>> hasher,
-			Class<? extends Database> database) {
+	public void initialize(Configuration conf,
+			Class<? extends Solver> solver, Class<? extends Database> database) {
 	}
 
 	public void run() {

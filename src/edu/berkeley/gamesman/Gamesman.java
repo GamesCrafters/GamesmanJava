@@ -150,7 +150,13 @@ public final class Gamesman {
 			}
 		} else if (!dohelp) {
 			Util.debug("Defaulting to solve...");
-			m.initialize(g, s, h, d);
+			try {
+				m.initialize(new Configuration(g.newInstance(),h.newInstance(),EnumSet.of(RecordFields.Value)), s, d);
+			} catch (InstantiationException e) {
+				System.out.println("Could not instantiate: " + e);
+			} catch (IllegalAccessException e) {
+				System.out.println("Permission denied while executing command " + e);
+			}
 			m.run();
 		}
 
