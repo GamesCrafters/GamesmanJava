@@ -18,6 +18,7 @@ import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.core.Solver;
 import edu.berkeley.gamesman.database.filer.DirectoryFilerClient;
 import edu.berkeley.gamesman.database.filer.DirectoryFilerServer;
+import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.OptionProcessor;
 import edu.berkeley.gamesman.util.Util;
 
@@ -104,7 +105,7 @@ public final class Gamesman {
 
 		Master m = (Master) omaster;
 
-		Util.debug("Preloading classes...");
+		Util.debug(DebugFacility.Core,"Preloading classes...");
 
 		String gameName, solverName, hasherName, databaseName;
 
@@ -149,7 +150,7 @@ public final class Gamesman {
 				ite.getTargetException().printStackTrace();
 			}
 		} else if (!dohelp) {
-			Util.debug("Defaulting to solve...");
+			Util.debug(DebugFacility.Core,"Defaulting to solve...");
 			try {
 				m.initialize(new Configuration(g.newInstance(),h.newInstance(),EnumSet.of(RecordFields.Value)), s, d);
 			} catch (InstantiationException e) {
@@ -166,58 +167,8 @@ public final class Gamesman {
 			return;
 		}
 
-		Util.debug("Finished run, tearing down...");
+		Util.debug(DebugFacility.Core,"Finished run, tearing down...");
 
-	}
-	
-	public static Gamesman tempMakeGo() throws InstantiationException, IllegalAccessException{
-		String masterName = OptionProcessor.checkOption("master");
-
-		Object omaster = null;
-		try {
-			omaster = Class.forName(
-					"edu.berkeley.gamesman.master." + masterName).newInstance();
-		} catch (ClassNotFoundException cnfe) {
-			Util.fatalError("Could not load master controller '"
-					+ masterName + "': " + cnfe);
-		} catch (IllegalAccessException iae) {
-			Util.fatalError("Not allowed to access requested master '"
-					+ masterName + "': " + iae);
-		} catch (InstantiationException ie) {
-			Util.fatalError("Master failed to instantiate: " + ie);
-		}
-
-		if (!(omaster instanceof Master)) {
-			Util.fatalError("Master does not implement master.Master interface");
-		}
-
-		Master m = (Master) omaster;
-
-		Util.debug("Preloading classes...");
-
-		String gameName, solverName, hasherName, databaseName;
-
-		gameName = OptionProcessor.checkOption("game");
-		solverName = OptionProcessor.checkOption("solver");
-		hasherName = OptionProcessor.checkOption("hasher");
-		databaseName = OptionProcessor.checkOption("database");
-
-		Class<? extends Game<Object>> g;
-		Class<? extends Solver> s;
-		Class<? extends Hasher<Object>> h;
-		Class<? extends Database> d;
-
-		try {
-			g = Util.typedForName("edu.berkeley.gamesman.game." + gameName);
-			s = Util.typedForName("edu.berkeley.gamesman.solver." + solverName);
-			h = Util.typedForName("edu.berkeley.gamesman.hasher." + hasherName);
-			d = Util.typedForName("edu.berkeley.gamesman.database." + databaseName);
-		} catch (Exception e) {
-			System.err.println("Fatal error in preloading: " + e);
-			return null;
-		}
-		boolean tr = (OptionProcessor.checkOption("help") != null);
-		return new Gamesman(g.newInstance(), s.newInstance(), h.newInstance(),d.newInstance(), tr);
 	}
 
 	/**

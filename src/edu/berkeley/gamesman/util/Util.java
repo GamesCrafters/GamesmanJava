@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.EnumSet;
 
 import edu.berkeley.gamesman.core.Configuration;
 
@@ -85,17 +86,27 @@ public final class Util {
 
 	static boolean debugInit = true, debugOn = true;
 
-	public static void debug(String s) {
+	static final EnumSet<DebugFacility> debugOpts = EnumSet.noneOf(DebugFacility.class);
+	
+	public static void debug(DebugFacility fac, String s) {
 		if (!debugOn)
 			return;
 		if (debugInit) {
+			String env = System.getenv("GAMESMAN_DEBUG");
+			for(DebugFacility f: DebugFacility.values()){
+				OptionProcessor.acceptOption(f.toString(), f.toString(), false, "Debug facility");
+				if(OptionProcessor.checkOption(f.toString()) != null) debugOpts.add(f);
+				if(env != null && env.contains(f.toString())) debugOpts.add(f);
+			}
 			debugInit = false;
 			debugOn = OptionProcessor.checkOption("d") != null;
+			debugOpts.add(DebugFacility.Core);
+			Util.debug(DebugFacility.Core,"Debugging enabled for: "+debugOpts);
 			if (!debugOn)
 				return;
 		}
-		System.err.println("DEBUG: (" + Thread.currentThread().getName() + ") "
-				+ s);
+		if(debugOpts.contains(fac) || debugOpts.contains(DebugFacility.All))
+			System.err.println("DEBUG "+fac+": (" + Thread.currentThread().getName() + ") " + s);
 	}
 
 	public static String millisToETA(long millis) {
@@ -119,21 +130,21 @@ public final class Util {
 	}
 
 	/**
-	 * Calculate b^e for integers. Relatively fast - O(log e). Not well defined
+	 * Calculate b^e for longs. Relatively fast - O(log e). Not well defined
 	 * for e < 0 or b^e > MAX_INT.
 	 * 
 	 * @param b Base
 	 * @param e Exponent
 	 * @return b^e
 	 */
-	public static int intpow(int b, int e) {
+	public static int longpow(int b, int e) {
 		if (e <= 0)
 			return 1;
 		if (e % 2 == 0) {
-			int s = intpow(b, e / 2);
+			int s = longpow(b, e / 2);
 			return s * s;
 		}
-		return b * intpow(b, e - 1);
+		return b * longpow(b, e - 1);
 	}
 
 	/**

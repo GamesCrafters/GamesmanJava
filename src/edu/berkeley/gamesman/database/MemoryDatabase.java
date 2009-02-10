@@ -4,6 +4,7 @@ import java.math.BigInteger;
 
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Database;
+import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -27,7 +28,7 @@ public class MemoryDatabase extends Database {
 
 	@Override
 	public void initialize(String url) {
-		Util.debug("Using MemoryDatabase, if you don't explicitly copy its contents somewhere they will be lost on close.");
+		Util.debug(DebugFacility.Database,"Using MemoryDatabase, if you don't explicitly copy its contents somewhere they will be lost on close.");
 	}
 
 	@Override

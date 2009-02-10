@@ -63,7 +63,7 @@ public final class C4UniformPieceHasher extends Hasher<char[]> {
 	protected void init(char[] board,int off, char[] mypcs, int sum){
 		if(lookup == null){
 			lookup = new ConcurrentHashMap<String,BigInteger>();
-			table = new String[Util.intpow(mypcs.length,board.length)];
+			table = new String[(int)Util.longpow(mypcs.length,board.length)];
 			idx = 0;
 			task = Task.beginTask("Initializing C4 Column Hash");
 			

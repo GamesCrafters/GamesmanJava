@@ -23,6 +23,7 @@ import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.hadoop.util.BigIntegerWritable;
 import edu.berkeley.gamesman.core.Hasher;
+import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.OptionProcessor;
 import edu.berkeley.gamesman.util.Util;
 
@@ -64,7 +65,7 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 		game.initialize(config);
 		db.initialize(conf.get("dburi"),config);
 		
-		Util.debug("Hadoop is ready to work!");
+		Util.debug(DebugFacility.Hadoop,"Hadoop is ready to work!");
 		
 	}
 

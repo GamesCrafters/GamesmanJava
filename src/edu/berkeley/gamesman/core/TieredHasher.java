@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.core;
 import java.math.BigInteger;
 import java.util.Arrays;
 
+import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -70,7 +71,7 @@ public abstract class TieredHasher<State> extends Hasher<State> {
 			for(int i = 0; i < tierEnds.length; i++){
 				tierEnds[i] = hashOffsetForTier(i).add(numHashesForTier(i)).subtract(BigInteger.ONE);
 			}
-			Util.debug("Created offset table: "+Arrays.toString(tierEnds));
+			Util.debug(DebugFacility.Hasher,"Created offset table: "+Arrays.toString(tierEnds));
 		}
 		return tierEnds[tier];
 	}

@@ -13,6 +13,7 @@ import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Solver;
 import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.core.WorkUnit;
+import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Task;
 import edu.berkeley.gamesman.util.Util;
@@ -82,7 +83,7 @@ public final class TierSolver extends Solver {
 
 	protected Pair<BigInteger, BigInteger> nextSlice() {
 		if (needs2Sync) {
-			Util.debug("Thread waiting to tier-sync");
+			Util.debug(DebugFacility.Threading,"Thread waiting to tier-sync");
 			try {
 				if (barr != null)
 					barr.await();
@@ -103,7 +104,7 @@ public final class TierSolver extends Solver {
 			offset = offset.add(step);
 			end = ret.add(step);
 			if (end.compareTo(myGame.lastHashValueForTier(tier)) >= 0) {
-				Util.debug("Reached end of tier");
+				Util.debug(DebugFacility.Threading,"Reached end of tier");
 				end = myGame.lastHashValueForTier(tier);
 				tier--;
 				if (tier >= 0)
@@ -127,13 +128,13 @@ public final class TierSolver extends Solver {
 		}
 
 		public void conquer() {
-			Util.debug("Started the solver... (" + index + ")");
+			Util.debug(DebugFacility.Solver,"Started the solver... (" + index + ")");
 			Thread.currentThread().setName(
 					"Solver (" + index + "): " + myGame.toString());
 
 			Pair<BigInteger, BigInteger> slice;
 			while ((slice = nextSlice()) != null) {
-				Util.debug("Beginning to solve slice " + slice + " in thread "
+				Util.debug(DebugFacility.Threading,"Beginning to solve slice " + slice + " in thread "
 						+ index);
 				solvePartialTier(myGame, slice.car, slice.cdr, updater);
 				db.flush();

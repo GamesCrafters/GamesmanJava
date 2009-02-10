@@ -18,6 +18,7 @@ import java.util.Random;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Database;
+import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
 public final class DirectoryFilerServer {
@@ -64,7 +65,7 @@ public final class DirectoryFilerServer {
 
 		ThreadGroup grp = new ThreadGroup("DirectoryFilerServerThreads");
 
-		Util.debug("Directory filer server launched on port " + port);
+		Util.debug(DebugFacility.Filer,"Directory filer server launched on port " + port);
 
 		try {
 			while ((s = ss.accept()) != null) {
@@ -98,7 +99,7 @@ public final class DirectoryFilerServer {
 
 		public void run() {
 			try {
-				Util.debug("Accepted filer connection");
+				Util.debug(DebugFacility.Filer,"Accepted filer connection");
 				dout.writeInt(0x00FABFAB);
 				if (din.readInt() != 0xBAFBAF00) {
 					Util.warn("Dropping connection because of wrong magic");
@@ -131,7 +132,7 @@ public final class DirectoryFilerServer {
 					return;
 				}
 
-				Util.debug("Client passed authentication");
+				Util.debug(DebugFacility.Filer,"Client passed authentication");
 
 				while (true) {
 					
@@ -140,28 +141,28 @@ public final class DirectoryFilerServer {
 					BigInteger loc;
 					
 					if (shuttingdown) {
-						Util.debug("Client shutting down");
+						Util.debug(DebugFacility.Filer,"Client shutting down");
 						sock.close();
 						return;
 					}
 					byte what = din.readByte();
 					switch (what) {
 					case 0:
-						Util.debug("Client shutting down");
+						Util.debug(DebugFacility.Filer,"Client shutting down by request");
 						sock.close();
 						return;
 					case 1:
-						Util.debug("Server shutting down");
+						Util.debug(DebugFacility.Filer,"Server shutting down");
 						shuttingdown = true;
 						ss.close();
 						break;
 					case 2:
 						String[] files = df.ls();
 						dout.writeInt(files.length);
-						Util.debug("Sending " + files.length + " files");
+						Util.debug(DebugFacility.Filer,"Sending " + files.length + " files");
 						for (String file : files) {
 							dout.writeInt(file.length());
-							Util.debug("Filename len is " + file.length());
+							Util.debug(DebugFacility.Filer,"Filename len is " + file.length());
 							dout.write(file.getBytes());
 						}
 						break;
@@ -183,7 +184,7 @@ public final class DirectoryFilerServer {
 						fds.add(db);
 						locs.add(BigInteger.ZERO);
 						dout.writeInt(fds.indexOf(db));
-						Util.debug("Client opened db " +
+						Util.debug(DebugFacility.Filer,"Client opened db " +
 								"" + file + " for fd " + fds.indexOf(db)+" with config "+config);
 						break;
 					case 4:
@@ -191,7 +192,7 @@ public final class DirectoryFilerServer {
 						db = fds.get(fd);
 						db.close();
 						fds.set(fd, null);
-						Util.debug("Closed " + fd + ": " + db);
+						Util.debug(DebugFacility.Filer,"Closed " + fd + ": " + db);
 						break;
 					case 5:
 						fd = din.readInt();

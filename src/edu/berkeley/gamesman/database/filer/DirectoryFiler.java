@@ -18,6 +18,7 @@ import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Filer;
 import edu.berkeley.gamesman.database.BlockDatabase;
 import edu.berkeley.gamesman.database.FileDatabase;
+import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -52,7 +53,7 @@ public class DirectoryFiler extends Filer<Database>{
 
 	@Override
 	public Database openDatabase(String name, Configuration conf) {
-		Database db = new FileDatabase();
+		Database db = new BlockDatabase();
 		File f = Util.getChild(rootdir, name);
 		if(dbs.containsKey(name))
 			db.initialize(f.toURI().toString(), dbs.get(name).car);
@@ -73,7 +74,7 @@ public class DirectoryFiler extends Filer<Database>{
 	public void close() {
 		File f = Util.getChild(rootdir, "MANIFEST");
 		PrintWriter fw = null;
-		Util.debug("Cleanly closing directory filer "+this);
+		Util.debug(DebugFacility.Filer,"Cleanly closing directory filer "+this);
 		try {
 			fw = new PrintWriter(new FileWriter(f,false));
 		} catch (IOException e1) {

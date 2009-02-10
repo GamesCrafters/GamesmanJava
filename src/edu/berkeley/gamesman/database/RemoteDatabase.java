@@ -1,12 +1,12 @@
 package edu.berkeley.gamesman.database;
 
 import java.math.BigInteger;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.database.filer.DirectoryFilerClient;
@@ -14,13 +14,27 @@ import edu.berkeley.gamesman.util.Util;
 
 public class RemoteDatabase extends Database {
 
-	static ThreadLocal<DirectoryFilerClient> dfc;
-	static ThreadLocal<Database> real;
+	private static ThreadLocal<DirectoryFilerClient> dfc;
+	private static ThreadLocal<Database> real;
+	
+	private static final List<DirectoryFilerClient> alldfc = Collections.synchronizedList(new ArrayList<DirectoryFilerClient>());
+	private static final List<Database> alldbs = Collections.synchronizedList(new ArrayList<Database>());
+	
 
 	@Override
 	public void close() {
-		real.get().close();
-		dfc.get().close();
+		for(Database db : alldbs){
+			db.close();
+		}
+		for(DirectoryFilerClient d : alldfc){
+			d.close();
+		}
+		alldfc.clear();
+		alldbs.clear();
+	}
+	
+	public void finalize(){
+		close();
 	}
 
 	@Override
@@ -39,7 +53,9 @@ public class RemoteDatabase extends Database {
 			@Override
 			protected DirectoryFilerClient initialValue() {
 				try {
-					return new DirectoryFilerClient(new URI(uri));
+					DirectoryFilerClient d = new DirectoryFilerClient(new URI(uri));
+					alldfc.add(d);
+					return d;
 				} catch (URISyntaxException e1) {
 					Util.fatalError("Bad URI \"" + uri + "\": " + e1);
 				}
@@ -49,7 +65,9 @@ public class RemoteDatabase extends Database {
 		real = new ThreadLocal<Database>() {
 			protected Database initialValue() {
 				try {
-					return dfc.get().openDatabase(new URI(uri).getPath(), conf);
+					Database db = dfc.get().openDatabase(new URI(uri).getPath(), conf);
+					alldbs.add(db);
+					return db;
 				} catch (URISyntaxException e) {
 					Util.fatalError("Bad URI \"" + uri + "\": " + e);
 				}

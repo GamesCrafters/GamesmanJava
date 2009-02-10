@@ -7,9 +7,11 @@ import java.io.RandomAccessFile;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
+
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Database;
+import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -19,7 +21,7 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author Steven Schlansker
  */
-public final class FileDatabase extends Database {
+public class FileDatabase extends Database {
 
 	protected File myFile;
 
@@ -66,6 +68,7 @@ public final class FileDatabase extends Database {
 
 		try {
 			myFile = new File(new URI(loc));
+			Util.debug(DebugFacility.Database, "Opened DB: "+myFile);
 		} catch (URISyntaxException e1) {
 			Util.fatalError("Could not open URI " + loc + ": " + e1);
 		}
@@ -108,7 +111,7 @@ public final class FileDatabase extends Database {
 			}
 		}
 		
-		Util.assertTrue(Record.length(conf) == 1,
+		Util.assertTrue(Record.bitlength(conf) <= 8,
 		"FileDatabase can only store 8 bits per record for now"); // TODO: FIXME
 		
 		try {

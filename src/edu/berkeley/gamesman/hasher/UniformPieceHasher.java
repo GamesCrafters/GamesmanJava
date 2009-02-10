@@ -7,6 +7,7 @@ import java.util.HashMap;
 
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Hasher;
+import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -44,7 +45,7 @@ public final class UniformPieceHasher extends Hasher<char[]> {
 		BigInteger hash = BigInteger.ZERO;
 		for(int i = 0; i < l; i++)
 				hash = hash.multiply(plen).add(lookup.get(board[i]));
-		Util.debug("UPH hashes "+Arrays.toString(board)+" to "+hash);
+		Util.debug(DebugFacility.Hasher,"UPH hashes "+Arrays.toString(board)+" to "+hash);
 		return hash;
 	}
 

@@ -1,45 +1,72 @@
 package edu.berkeley.gamesman.database;
 
+import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel.MapMode;
 
 import edu.berkeley.gamesman.core.Record;
-import edu.berkeley.gamesman.core.Database;
+import edu.berkeley.gamesman.util.DebugFacility;
+import edu.berkeley.gamesman.util.Util;
 
-/**
- * A simple BlockDatabase that stores records in a local file
- * It should pack records better than FileDatabase but otherwise be very simple.
- * May be removed for a better DB later.
- * @author Steven Schlansker
- */
-public class BlockDatabase extends Database {
+public class BlockDatabase extends FileDatabase {
+
+	private final int headerSize = 8;
+
+	MappedByteBuffer buf;
+
+	long lastRecord;
 
 	@Override
 	public void close() {
-		// TODO Auto-generated method stub
-		
+		flush();
+		try {
+			fd.seek(offset);
+			fd.writeLong(lastRecord);
+			long dblen = offset + headerSize + (Record.bitlength(conf)*lastRecord+7)/8;
+			Util.debug(DebugFacility.Database,"Attempting to truncate to "+dblen);
+			fd.getChannel().truncate(dblen);
+		} catch (IOException e) {
+			Util.warn("Could not cleanly close BlockDB: " + e);
+		}
+		buf = null;
+		super.close();
 	}
 
 	@Override
 	public void flush() {
-		// TODO Auto-generated method stub
+		try {
+			fd.seek(offset);
+			fd.writeLong(lastRecord);
+		} catch (IOException e) {
+			Util.warn("Could not flush BlockDB: " + e);
+		}
+		buf.force();
+		super.flush();
 	}
 
 	@Override
 	public Record getValue(BigInteger loc) {
-		// TODO Auto-generated method stub
-		return null;
+		lastRecord = Math.max(lastRecord,loc.longValue());
+		return Record.read(conf, buf, loc.longValue());
 	}
 
 	@Override
-	protected void initialize(String url) {
-		// TODO Auto-generated method stub
-		
+	public void initialize(String loc) {
+		super.initialize(loc);
+		try {
+			buf = fd.getChannel().map(MapMode.READ_WRITE, offset + headerSize, Integer.MAX_VALUE/4);
+			fd.seek(offset);
+			lastRecord = fd.readLong();
+		} catch (IOException e) {
+			Util.fatalError("Could not map ByteBuffer from blockdb", e);
+		}
 	}
 
 	@Override
 	public void setValue(BigInteger loc, Record value) {
-		// TODO Auto-generated method stub
-		
+		lastRecord = Math.max(lastRecord,loc.longValue());
+		value.write(buf, loc.longValue());
 	}
 
 }

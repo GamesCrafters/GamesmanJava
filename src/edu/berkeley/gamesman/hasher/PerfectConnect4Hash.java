@@ -7,6 +7,7 @@ import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.TieredHasher;
 import edu.berkeley.gamesman.hasher.AlternatingRearrangerHasher;
 import edu.berkeley.gamesman.hasher.C4UniformPieceHasher;
+import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -60,7 +61,7 @@ public class PerfectConnect4Hash extends TieredHasher<char[][]> {
 		for(char h : colh)
 			sum += Character.digit(h, Character.MAX_RADIX);
 		BigInteger mh = ah.maxHash(sum);
-		Util.debug("UPH says "+Arrays.toString(colh)+" for tier "+tier+" sum = "+sum+" maxhash = "+mh);
+		Util.debug(DebugFacility.Hasher,"UPH says "+Arrays.toString(colh)+" for tier "+tier+" sum = "+sum+" maxhash = "+mh);
 		return mh;
 	}
 

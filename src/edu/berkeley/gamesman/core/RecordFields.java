@@ -16,7 +16,7 @@ public enum RecordFields {
 	/**
 	 * How many moves to the closest ending state
 	 */
-	Remoteness(-1);
+	Remoteness(6);
 	
 	
 	private int bs;

@@ -12,6 +12,7 @@ import edu.berkeley.gamesman.core.Master;
 import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.core.Solver;
 import edu.berkeley.gamesman.core.WorkUnit;
+import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.OptionProcessor;
 import edu.berkeley.gamesman.util.Task;
 import edu.berkeley.gamesman.util.TaskFactory;
@@ -52,7 +53,7 @@ public final class LocalMaster implements Master,TaskFactory {
 		solver.setDatabase(database);
 		game.initialize(conf);
 		
-		Util.debug("Done initializing LocalMaster");
+		Util.debug(DebugFacility.Master,"Done initializing LocalMaster");
 		
 		
 	}
@@ -60,7 +61,7 @@ public final class LocalMaster implements Master,TaskFactory {
 	public void run() {
 		System.out.println("Launched!");
 		int threads = Integer.parseInt(OptionProcessor.checkOption("threads"));
-		Util.debug("Launching "+threads+" threads...");
+		Util.debug(DebugFacility.Master,"Launching "+threads+" threads...");
 		List<WorkUnit> list = solver.prepareSolve(conf,game).divide(threads);
 		
 		ArrayList<Thread> myThreads = new ArrayList<Thread>();
@@ -80,6 +81,7 @@ public final class LocalMaster implements Master,TaskFactory {
 			}
 		//System.out.println(myThreads);
 		database.close();
+		Util.debug(DebugFacility.Master, "Finished master run");
 	}
 	
 	private class LocalMasterRunnable implements Runnable {
@@ -89,7 +91,9 @@ public final class LocalMaster implements Master,TaskFactory {
 		}
 		
 		public void run(){
+			Util.debug(DebugFacility.Master,"LocalMasterRunnable begin");
 			w.conquer();
+			Util.debug(DebugFacility.Master,"LocalMasterRunnable end");
 		}
 	}
 
