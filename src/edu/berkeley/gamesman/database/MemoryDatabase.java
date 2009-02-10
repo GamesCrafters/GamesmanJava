@@ -2,10 +2,15 @@ package edu.berkeley.gamesman.database;
 
 import java.math.BigInteger;
 
-import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Database;
+import edu.berkeley.gamesman.util.Util;
 
+/**
+ * A database that operates on memory and loses all changes made if not copied to 
+ * a different database before being closed.
+ * @author Steven Schlansker
+ */
 public class MemoryDatabase extends Database {
 
 	@Override
@@ -22,7 +27,7 @@ public class MemoryDatabase extends Database {
 
 	@Override
 	public void initialize(String url) {
-		// TODO Auto-generated method stub
+		Util.debug("Using MemoryDatabase, if you don't explicitly copy its contents somewhere they will be lost on close.");
 	}
 
 	@Override
