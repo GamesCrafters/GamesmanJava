@@ -31,6 +31,7 @@ public final class OptionProcessor {
 		
 		String checkOpt(String[] args){
 			boolean needParam = false;
+			if(args == null) return d;
 			for(String opt : args){
 				if(needParam) return opt;
 				if(s.equals(opt) || l.equals(opt)){
