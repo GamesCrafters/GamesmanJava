@@ -10,6 +10,10 @@ import edu.berkeley.gamesman.hadoop.TieredHadoopTool;
 import edu.berkeley.gamesman.util.OptionProcessor;
 import edu.berkeley.gamesman.util.Util;
 
+/**
+ * HadoopMaster loads a game into the Hadoop Map-Reduce core for solving
+ * @author Steven Schlansker
+ */
 public class HadoopMaster implements Master {
 
 	public void initialize(Configuration conf,

@@ -5,7 +5,13 @@ import java.math.BigInteger;
 import edu.berkeley.gamesman.core.TieredHasher;
 import edu.berkeley.gamesman.util.Pair;
 
+/**
+ * The Connect 4 hasher from GamesmanClassic
+ * @author Steven Schlansker
+ */
 public class ClassicConnect4Hash extends TieredHasher<char[][]> {
+
+	private static final long serialVersionUID = -5178988467392378350L;
 
 	@Override
 	public char[][] gameStateForTierIndex(int tier, BigInteger index) {

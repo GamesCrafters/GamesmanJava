@@ -16,6 +16,10 @@ import edu.berkeley.gamesman.util.Task;
 import edu.berkeley.gamesman.util.TaskFactory;
 import edu.berkeley.gamesman.util.Util;
 
+/**
+ * LocalMaster runs one or more threads on the local machine to solve a game
+ * @author Steven Schlansker
+ */
 public final class LocalMaster implements Master,TaskFactory {
 
 	private Game<?> game;
