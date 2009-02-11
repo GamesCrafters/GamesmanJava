@@ -36,7 +36,7 @@ public class TopDownSolver extends Solver {
 	class TopDownSolverWorkUnit implements WorkUnit {
 
 		public void conquer() {
-			HashMap<Object, BigInteger> seen = new HashMap<Object, BigInteger>();
+			HashMap<Object, BigInteger> cache = new HashMap<Object, BigInteger>();
 			
 			List<Object> workList = new ArrayList<Object>();
 			ArrayList<Record> recs = new ArrayList<Record>();
@@ -45,31 +45,36 @@ public class TopDownSolver extends Solver {
 				recs.clear();
 				Object state = workList.remove(workList.size()-1);
 				Collection<Object> children = g.validMoves(state);
+				Util.debug(DebugFacility.Solver,"Looking at state"+state);
+				Util.debug(DebugFacility.Solver,"Worklist is now "+workList);
 				for(Object child : children){
-					BigInteger loc = seen.get(child);
+					BigInteger loc = cache.get(child);
 					Record r;
 					if(loc == null){
 						loc = g.stateToHash(child);
+						cache.put(child,loc);
 						workList.add(state);
 						workList.add(child);
 						continue next;
-					}else{
-						r = db.getValue(loc);
-						if(r.get(RecordFields.Value) == PrimitiveValue.Undecided.value()){
-							workList.add(state);
-							workList.add(child);
-							continue next;
-						}
+					}
+					r = db.getValue(loc);
+					if(r.get(RecordFields.Value) == PrimitiveValue.Undecided.value()){
+						workList.add(state);
+						workList.add(child);
+						continue next;
 					}
 					if(r == null) r = db.getValue(loc);
 					recs.add(r);
 				}
 				BigInteger loc = g.stateToHash(state);
 				Record next;
-				if(children.isEmpty())
-					next = new Record(conf,g.primitiveValue(state));
-				else
+				if(children.isEmpty()){
+					PrimitiveValue prim = g.primitiveValue(state);
+					Util.debug(DebugFacility.Solver,"Getting primitive value for state "+state+": "+prim);
+					next = new Record(conf,prim);
+				}else{
 					next = Record.combine(conf, recs);
+				}
 				db.setValue(loc, next);
 				Util.debug(DebugFacility.Solver,"Solved state "+g.stateToString(state)+" to "+next);
 			}

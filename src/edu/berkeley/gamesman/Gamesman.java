@@ -83,6 +83,8 @@ public final class Gamesman {
 				Util.fatalError("Could not read from property file",e);
 			}
 		}
+		
+		Util.debugInit(props);
 
 
 		String masterName = props.getProperty("gamesman.master","LocalMaster");
