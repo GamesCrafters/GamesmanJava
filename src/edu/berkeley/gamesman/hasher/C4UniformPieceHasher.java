@@ -3,8 +3,6 @@ package edu.berkeley.gamesman.hasher;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,7 +23,8 @@ import edu.berkeley.gamesman.util.Util;
  * @see AlternatingRearrangerHasher
  */
 public final class C4UniformPieceHasher extends Hasher<char[]> {
-	
+
+	private static final long serialVersionUID = -9024431731925402905L;
 	Map<String,BigInteger> lookup;
 	String[] table;
 	protected char[] pcs;

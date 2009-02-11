@@ -1,15 +1,11 @@
 package edu.berkeley.gamesman.database.filer;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.PrintWriter;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -17,15 +13,26 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Filer;
 import edu.berkeley.gamesman.database.BlockDatabase;
-import edu.berkeley.gamesman.database.FileDatabase;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
+/**
+ * A DirectoryFiler is a collection of Databases.
+ * The Filer keeps track of all databases stored and can
+ * open them on request by name.
+ * 
+ * You must be sure to close the DirectoryFiler before exiting for it to save changes
+ * @author Steven Schlansker
+ */
 public class DirectoryFiler extends Filer<Database>{
 	File rootdir;
 	HashMap<String,Pair<Configuration,File>> dbs = new HashMap<String,Pair<Configuration,File>>();
 
+	/**
+	 * Open a preexisting DirectoryFiler datastore
+	 * @param rootdir The directory of the datastore
+	 */
 	public DirectoryFiler(File rootdir){
 		this.rootdir = rootdir;
 		LineNumberReader mf = null;

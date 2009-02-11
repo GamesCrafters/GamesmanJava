@@ -12,6 +12,12 @@ import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.database.filer.DirectoryFilerClient;
 import edu.berkeley.gamesman.util.Util;
 
+/**
+ * A RemoteDatabase is a 'stub' database that uses a DirectoryFilerClient to connect
+ * to a server and open remote databases.  It then passes on all requests to that
+ * remote database and returns the result locally.  (all synchronously)
+ * @author Steven Schlansker
+ */
 public class RemoteDatabase extends Database {
 
 	private static ThreadLocal<DirectoryFilerClient> dfc;
@@ -48,6 +54,7 @@ public class RemoteDatabase extends Database {
 	}
 
 	@Override
+	@SuppressWarnings("synthetic-access")
 	public void initialize(final String uri) {
 		dfc = new ThreadLocal<DirectoryFilerClient>() {
 			@Override

@@ -15,13 +15,17 @@ import edu.berkeley.gamesman.util.DependencyResolver;
  * @author Wesley Hart
  */
 public class OneTwoN extends TieredGame<Integer> {
-	
+
+	private static final long serialVersionUID = -6034946489055318659L;
 	final char piece = 'X';
 	
 	static {
 		DependencyResolver.allowHasher(OneTwoN.class, OneTwoNHasher.class);
 	}
 	
+	/**
+	 * Default constructor
+	 */
 	public OneTwoN() {
 		super();
 	}

@@ -78,6 +78,11 @@ public class Configuration implements Serializable {
 		return configurationFromBytes(config.getBytes());
 	}
 	
+	/**
+	 * Unserialize a configuration from a bytestream
+	 * @param barr Bytes to deserialize
+	 * @return a Configuration
+	 */
 	public static Configuration configurationFromBytes(byte[] barr){
 		return deserialize(barr);
 	}

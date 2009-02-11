@@ -27,12 +27,13 @@ import edu.berkeley.gamesman.util.Util;
  */
 public final class Gamesman {
 
-	public Game<Object> gm;
-	public Hasher<Object> ha;
-	public Solver so;
-	public Database db;
+	private Game<Object> gm;
+	@SuppressWarnings("unused")
+	private Hasher<Object> ha;
+	private Solver so;
+	private Database db;
 	private boolean testrun;
-	public Configuration conf;
+	private Configuration conf;
 
 	private Gamesman(Game<Object> g, Solver s, Hasher<Object> h,
 			Database d, boolean er) {

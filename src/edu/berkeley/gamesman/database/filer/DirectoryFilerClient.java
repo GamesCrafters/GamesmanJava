@@ -17,6 +17,13 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
+/**
+ * A DirectoryFilerClient connects to a DirectoryFilerServer and allows
+ * the use of the remote DirectoryFiler resources as if they were local.
+ * @see DirectoryFilerServer
+ * @see DirectoryFiler
+ * @author Steven Schlansker
+ */
 public final class DirectoryFilerClient {
 
 	protected Socket sock;
@@ -24,6 +31,11 @@ public final class DirectoryFilerClient {
 	protected DataInputStream din;
 	protected Random r = new Random();
 
+	/**
+	 * Connect to a remote DirectoryFilerServer with its
+	 * gdfp:// URI
+	 * @param u the URI to connect to
+	 */
 	public DirectoryFilerClient(URI u) {
 
 		if (!u.getScheme().equals("gdfp"))
@@ -73,6 +85,9 @@ public final class DirectoryFilerClient {
 		}
 	}
 
+	/**
+	 * Close the DirectoryFiler connection
+	 */
 	public void close() {
 		try {
 			dout.write(0);
@@ -83,6 +98,9 @@ public final class DirectoryFilerClient {
 		}
 	}
 
+	/**
+	 * Request that the remote server shut down.
+	 */
 	public void halt() {
 		try {
 			Util.debug(DebugFacility.Filer,"Asking server to halt...");
@@ -92,6 +110,10 @@ public final class DirectoryFilerClient {
 		}
 	}
 
+	/**
+	 * List remote databases available to you
+	 * @return a list of all databases available
+	 */
 	public String[] ls() {
 		try {
 			dout.write(2);
@@ -110,6 +132,12 @@ public final class DirectoryFilerClient {
 		return null;
 	}
 
+	/**
+	 * Request a handle to a remote database by name and configuration
+	 * @param name The name of the database to request
+	 * @param config The configuration to request
+	 * @return a reference to that Database
+	 */
 	public Database openDatabase(String name, Configuration config) {
 		try {
 			dout.write(3);

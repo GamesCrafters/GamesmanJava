@@ -4,14 +4,20 @@ import java.math.BigInteger;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.PrimitiveValue;
-import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Game;
+import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.hasher.NullHasher;
 import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.Util;
 
+/**
+ * A NullGame does nothing interesting.  It just returns null.
+ * You may ignore this class.
+ * @author Steven Schlansker
+ */
 public class NullGame extends Game<Object> {
+
+	private static final long serialVersionUID = 2554568250821803152L;
 
 	static {
 		DependencyResolver.allowHasher(NullGame.class, NullHasher.class);

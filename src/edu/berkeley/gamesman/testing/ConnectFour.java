@@ -10,7 +10,6 @@ import java.util.Collection;
 import javax.swing.JFrame;
 
 import edu.berkeley.gamesman.Gamesman;
-import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.database.FileDatabase;
 import edu.berkeley.gamesman.game.Connect4;
 

@@ -61,6 +61,7 @@ public final class Record {
 	 * byte-aligned as it's not possible to easily seek/combine
 	 * adjacent records.
 	 * @param out The output to write to
+	 * @throws IOException Could not read from database
 	 * @see Record#readStream(Configuration,DataInput)
 	 */
 	public void writeStream(DataOutput out) throws IOException {
@@ -77,6 +78,7 @@ public final class Record {
 	 * @param conf The configuration of the database
 	 * @param in The DataInput to read from
 	 * @return a new Record that was earlier stored with writeStream
+	 * @throws IOException Could not read from database
 	 * @see Record#writeStream(DataOutput)
 	 */
 	public static Record readStream(Configuration conf, DataInput in) throws IOException {
@@ -132,16 +134,24 @@ public final class Record {
  		}
  		}
  		
+ 		/**
+ 		 * @return the length of a single record in bits
+ 		 */
  		public final int bitlength() {
  		return maxbits;
  		}
  		
- 		private final int bits2bytes(int bits){
- 		return (bits+7)/8;
+ 		private final int bits2bytes(int numbits){
+ 		return (numbits+7)/8;
  		}
  			
+ 		/**
+ 		 * Returns the length of a single record in bits
+ 		 * @param conf the Configuration to use for the record
+ 		 * @return length in bits
+ 		 */
  		public static int bitlength(final Configuration conf){
- 		return new Record(conf,PrimitiveValue.Win).bitlength();
+ 		return new Record(conf).bitlength();
  		}
 
 	/**

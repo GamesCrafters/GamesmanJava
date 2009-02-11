@@ -1,7 +1,6 @@
 package edu.berkeley.gamesman.master;
 
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 
 import edu.berkeley.gamesman.core.Configuration;
@@ -9,7 +8,6 @@ import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.core.Master;
-import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.core.Solver;
 import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.util.DebugFacility;
@@ -31,14 +29,14 @@ public final class LocalMaster implements Master,TaskFactory {
 		OptionProcessor.acceptOption("j", "threads", true, "The number of threads to launch", "1");
 	}
 	
-	public void initialize(Configuration conf, Class<? extends Solver> solverc, Class<? extends Database> databasec) {
+	public void initialize(Configuration inconf, Class<? extends Solver> solverc, Class<? extends Database> databasec) {
 		
 		Task.setTaskFactory(this);
 		
 		try{
-			game = conf.getGame();
+			game = inconf.getGame();
 			solver = solverc.newInstance();
-			hasher = conf.getHasher();
+			hasher = inconf.getHasher();
 			database = databasec.newInstance();
 		}catch(IllegalAccessException e){
 			Util.fatalError("Fatal error while initializing",e);
@@ -46,9 +44,10 @@ public final class LocalMaster implements Master,TaskFactory {
 			Util.fatalError("Fatal error while initializing",e);
 		}
 		
-		conf = new Configuration(game,hasher,EnumSet.of(RecordFields.Value)); //TODO: have more than Value here
+		conf = inconf;
+		//conf = new Configuration(game,hasher,EnumSet.of(RecordFields.Value)); //TODO: have more than Value here
 		
-		database.initialize(OptionProcessor.checkOption("uri"),conf);
+		database.initialize(OptionProcessor.checkOption("uri"),inconf);
 		
 		solver.setDatabase(database);
 		game.initialize(conf);

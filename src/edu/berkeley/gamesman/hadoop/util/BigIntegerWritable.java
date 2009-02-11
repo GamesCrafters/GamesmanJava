@@ -7,6 +7,13 @@ import java.math.BigInteger;
 
 import org.apache.hadoop.io.WritableComparable;
 
+/**
+ * A BigIntegerWritable is a Hadoop WritableComparable much in the
+ * same idea as an IntWritable or TextWritable
+ * 
+ * @see org.apache.hadoop.io.WritableComparable
+ * @author Steven Schlansker
+ */
 public class BigIntegerWritable implements WritableComparable<BigIntegerWritable> {
 
 	protected BigInteger value;
@@ -27,10 +34,17 @@ public class BigIntegerWritable implements WritableComparable<BigIntegerWritable
 		return value.compareTo(other.value);
 	}
 	
+	/**
+	 * Set this Writable
+	 * @param v the BigInteger to store
+	 */
 	public void set(BigInteger v){
 		value = v;
 	}
 	
+	/**
+	 * @return the stored BigInteger
+	 */
 	public BigInteger get(){
 		return value;
 	}

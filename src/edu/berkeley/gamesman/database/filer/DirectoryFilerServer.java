@@ -21,6 +21,13 @@ import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
+/**
+ * A DirectoryFilerServer opens a local DirectoryFiler and makes its
+ * services available to remove clients connecting with a DirectoryFilerClient
+ * @see DirectoryFiler
+ * @see DirectoryFilerClient
+ * @author Steven Schlansker
+ */
 public final class DirectoryFilerServer {
 
 	//File root;
@@ -35,6 +42,13 @@ public final class DirectoryFilerServer {
 			.synchronizedList(new ArrayList<Database>());
 	List<BigInteger> locs = Collections.synchronizedList(new ArrayList<BigInteger>());
 
+	/**
+	 * Launch a DirectoryFilerServer and begin listening
+	 * to the outside world
+	 * @param rootdir The root of a DirectoryFiler datastore
+	 * @param port the port to listen on
+	 * @param secret a shared secret remote clients must present to connect
+	 */
 	public DirectoryFilerServer(String rootdir, int port, String secret) {
 		File root = new File(rootdir);
 		if (!root.isDirectory()) {
@@ -47,6 +61,9 @@ public final class DirectoryFilerServer {
 		df = new DirectoryFiler(root);
 	}
 	
+	/**
+	 * Close down this server
+	 */
 	public void close(){
 		try {
 			ss.close();
@@ -55,6 +72,9 @@ public final class DirectoryFilerServer {
 		df.close();
 	}
 
+	/**
+	 * Begin listening for remote connections
+	 */
 	public void launchServer() {
 		Socket s;
 		try {

@@ -9,6 +9,12 @@ import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
+/**
+ * The BlockDatabase is a slightly more packed version of the FileDatabase.
+ * It also operates on local files, and utilizes the Byte-oriented interface of
+ * the Record instead of stream.
+ * @author Steven Schlansker
+ */
 public class BlockDatabase extends FileDatabase {
 
 	private final int headerSize = 8;

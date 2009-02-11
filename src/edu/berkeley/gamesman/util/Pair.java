@@ -3,7 +3,7 @@ package edu.berkeley.gamesman.util;
 import java.io.Serializable;
 
 /**
- * A pair is a simple datatype that stores two distinct pieces of information
+ * A pair is a simple data type that stores two distinct pieces of information
  * 
  * @author Steven Schlansker
  *
@@ -12,6 +12,7 @@ import java.io.Serializable;
  */
 public class Pair<A,B> implements Serializable {
 
+	private static final long serialVersionUID = 3664218983748432874L;
 	/**
 	 * The first datum
 	 */

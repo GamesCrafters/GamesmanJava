@@ -30,13 +30,13 @@ public final class TierSolver extends Solver {
 	protected Configuration conf;
 
 	@Override
-	public WorkUnit prepareSolve(Configuration conf, Game<?> game) {
+	public WorkUnit prepareSolve(Configuration inconf, Game<?> game) {
 
 		myGame = Util.checkedCast(game);
 		tier = myGame.numberOfTiers() - 1;
 		offset = myGame.hashOffsetForTier(tier);
 		updater = new TierSolverUpdater();
-		this.conf = conf;
+		conf = inconf;
 
 		return new TierSolverWorkUnit();
 	}
@@ -127,6 +127,7 @@ public final class TierSolver extends Solver {
 			barr = new CyclicBarrier(nextIndex);
 		}
 
+		@SuppressWarnings("synthetic-access")
 		public void conquer() {
 			Util.debug(DebugFacility.Solver,"Started the solver... (" + index + ")");
 			Thread.currentThread().setName(

@@ -27,6 +27,10 @@ import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.OptionProcessor;
 import edu.berkeley.gamesman.util.Util;
 
+/**
+ * 
+ * @author Steven Schlansker
+ */
 public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, BigIntegerWritable, BigIntegerWritable>,Reducer<BigIntegerWritable, BigIntegerWritable, BigIntegerWritable, TierMapReduce.RecordWritable>{
 
 	protected TieredGame<Object> game;
@@ -42,13 +46,10 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 		Class<Hasher<?>> gh = null;
 		final String base = "edu.berkeley.gamesman.";
 		OptionProcessor.initializeOptions(conf.getStrings("args"));
-		try {
-			gc = (Class<TieredGame<Object>>) Class.forName(base+"game."+conf.get("gameclass","NullGame"));
-			gd = (Class<Database>) Class.forName(base+"database."+conf.get("databaseclass", "NullDatabase"));
-			gh = (Class<Hasher<?>>) Class.forName(base+"hasher."+conf.get("hasherclass","NullHasher"));
-		} catch (ClassNotFoundException e) {
-			Util.fatalError("Could not find class "+e);
-		}
+		
+		gc = Util.typedForName(base+"game."+conf.get("gameclass","NullGame"));
+		gd = Util.typedForName(base+"database."+conf.get("databaseclass", "NullDatabase"));
+		gh = Util.typedForName(base+"hasher."+conf.get("hasherclass","NullHasher"));
 		
 		try {
 			game = gc.newInstance();

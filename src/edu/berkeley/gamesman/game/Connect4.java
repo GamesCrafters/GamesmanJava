@@ -1,16 +1,12 @@
 package edu.berkeley.gamesman.game;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;
-import edu.berkeley.gamesman.core.Record;
-import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.core.TieredGame;
-import edu.berkeley.gamesman.hasher.NullHasher;
 import edu.berkeley.gamesman.hasher.PerfectConnect4Hash;
 import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.OptionProcessor;
@@ -27,7 +23,9 @@ import edu.berkeley.gamesman.util.Util;
  * @author Steven Schlansker
  */
 public class Connect4 extends TieredGame<char[][]> {
-	
+
+	private static final long serialVersionUID = -59232910281344449L;
+
 	final char[] pieces = {'X','O'};
 	
 	int piecesToWin=4;

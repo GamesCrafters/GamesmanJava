@@ -17,7 +17,7 @@ public final class DependencyResolver {
 	
 	static HashMap<Class<? extends Game<?>>,ArrayList<Class <? extends Hasher<?>>>> allowable = new HashMap<Class<? extends Game<?>>,ArrayList<Class <? extends Hasher<?>>>>();
 	
-	/**ú
+	/**
 	 * Declare that a game allows the use of a certain hasher
 	 * @param game The game
 	 * @param hasher The hasher
