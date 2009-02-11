@@ -38,10 +38,6 @@ public final class Util {
 	 */
 	public static class FatalError extends Error {
 
-		private FatalError(){
-			super();
-		}
-		
 		FatalError(String s, Exception cause) {
 			super(s,cause);
 		}
