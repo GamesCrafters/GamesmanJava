@@ -3,6 +3,8 @@ package edu.berkeley.gamesman.core;
 import java.io.Serializable;
 import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.Properties;
+
 import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
@@ -16,16 +18,20 @@ import edu.berkeley.gamesman.util.Util;
 public class Configuration implements Serializable {
 	private static final long serialVersionUID = -5331459097835638972L;
 	private String config;
-	final private Game<?> g;
-	final private Hasher<?> h;
-	final private EnumMap<RecordFields,Pair<Integer,Integer>> storedFields;
+	private Game<?> g;
+	private Hasher<?> h;
+	private EnumMap<RecordFields,Pair<Integer,Integer>> storedFields;
+	
+	private Properties props;
 	/**
 	 * Initialize a new Configuration.  Both parameters should be fully initialized.
+	 * @param props The properties used to configure options
 	 * @param g The game used
 	 * @param h The hasher used
 	 * @param storedFields Which fields should be stored in the database
 	 */
-	public Configuration(Game<?> g, Hasher<?> h, EnumMap<RecordFields,Pair<Integer,Integer>> storedFields) {
+	public Configuration(Properties props,Game<?> g, Hasher<?> h, EnumMap<RecordFields,Pair<Integer,Integer>> storedFields) {
+		this.props = props;
 		this.g = g;
 		this.h = h;
 		this.storedFields = storedFields;
@@ -40,6 +46,27 @@ public class Configuration implements Serializable {
 		return g;
 	}
 	
+	public void setGame(Game<?> g){
+		this.g = g;
+	}
+	
+	public void setHasher(Hasher<?> h){
+		this.h = h;
+	}
+	
+	public void setStoredFields(EnumMap<RecordFields,Pair<Integer,Integer>> sf){
+		storedFields = sf;
+	}
+	
+	public void setStoredFields(EnumSet<RecordFields> set){
+		int i = 0;
+		EnumMap<RecordFields,Pair<Integer, Integer>> map = new EnumMap<RecordFields, Pair<Integer,Integer>>(RecordFields.class);
+		for(RecordFields rec : set){
+			map.put(rec, new Pair<Integer, Integer>(i++,rec.defaultBitSize()));
+		}
+		storedFields = map;
+	}
+	
 	private void checkCompatibility() {
 		if(!DependencyResolver.isHasherAllowed(g.getClass(), h.getClass()))
 			Util.fatalError("Game and hasher are not compatible!");
@@ -47,11 +74,13 @@ public class Configuration implements Serializable {
 
 	/**
 	 * Create a new Configuration
+	 * @param props The properties used to configure options
 	 * @param g The game we're playing
 	 * @param h The hasher to use
 	 * @param set Which records to save
 	 */
-	public Configuration(Game<?> g, Hasher<?> h, EnumSet<RecordFields> set){
+	public Configuration(Properties props,Game<?> g, Hasher<?> h, EnumSet<RecordFields> set){
+		this.props = props;
 		int i = 0;
 		EnumMap<RecordFields,Pair<Integer, Integer>> map = new EnumMap<RecordFields, Pair<Integer,Integer>>(RecordFields.class);
 		for(RecordFields rec : set){
@@ -64,6 +93,10 @@ public class Configuration implements Serializable {
 		checkCompatibility();
 	}
 	
+	public Configuration(Properties props2) {
+		props = props2;
+	}
+
 	private void buildConfig(){
 		config = Util.pstr(g.describe()) + Util.pstr(h.describe()) + Util.pstr(storedFields.toString());
 	}
@@ -141,6 +174,39 @@ public class Configuration implements Serializable {
 	public String toString(){
 		return config;
 		//return new String(serialize());
+	}
+	
+	/**
+	 * Get a property by its name
+	 * @param key the name of the configuration property
+	 * @return its value
+	 */
+	public String getProperty(String key){
+		String s = props.getProperty(key);
+		if(s == null)
+			Util.fatalError("Property "+key+" is unset and has no default!");
+		return s;
+	}
+	
+	/**
+	 * Get a property by its name.  If the property is not set,
+	 * return dfl
+	 * @param key the name of the configuration property
+	 * @param dfl default value
+	 * @return its value
+	 */
+	public String getProperty(String key,String dfl){
+		return props.getProperty(key,dfl);
+	}
+	
+	/**
+	 * Set a property by its name
+	 * @param key the name of the configuration property to set
+	 * @param value the new value
+	 * @return the old value
+	 */
+	public Object setProperty(String key, String value){
+		return props.setProperty(key, value);
 	}
 	
 

@@ -13,7 +13,7 @@ public abstract class Solver {
 	 * Set the Database to use for this solver
 	 * @param db the Database
 	 */
-	public void setDatabase(Database db){
+	public void initialize(Database db){
 		this.db = db;
 	}
 	

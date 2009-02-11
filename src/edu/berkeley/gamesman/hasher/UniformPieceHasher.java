@@ -5,7 +5,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import edu.berkeley.gamesman.core.Game;
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
@@ -23,22 +23,34 @@ import edu.berkeley.gamesman.util.Util;
  */
 public final class UniformPieceHasher extends Hasher<char[]> {
 	
-	private static final long serialVersionUID = 5625295202888543943L;
-	private char[] parr;
-	HashMap<Character, BigInteger> lookup;
-	BigInteger plen;
+	/**
+	 * Default constructor
+	 * @param conf the configuration
+	 */
+	public UniformPieceHasher(Configuration conf) {
+		super(conf);
+		lookup = new HashMap<Character,BigInteger>();
+		for(int i = 0; i < pieces.length; i++)
+			lookup.put(pieces[i], BigInteger.valueOf(i));
+		plen = BigInteger.valueOf(pieces.length);
+	}
 	
-	@Override
-	public void setGame(Game<char[]> game, char[] p){
-		super.setGame(game,p);
-		
-
-		parr = p;
+	/**
+	 * Default constructor
+	 * @param conf the configuration
+	 * @param p the piece array
+	 */
+	public UniformPieceHasher(Configuration conf,char[] p){
+		super(conf,p);
 		lookup = new HashMap<Character,BigInteger>();
 		for(int i = 0; i < p.length; i++)
 			lookup.put(p[i], BigInteger.valueOf(i));
-		plen = BigInteger.valueOf(parr.length);
+		plen = BigInteger.valueOf(p.length);
 	}
+
+	private static final long serialVersionUID = 5625295202888543943L;
+	HashMap<Character, BigInteger> lookup;
+	BigInteger plen;
 	
 	@Override
 	public BigInteger hash(char[] board, int l) {
@@ -55,7 +67,7 @@ public final class UniformPieceHasher extends Hasher<char[]> {
 		char[] ret = new char[l];
 		
 		for(int i = l-1; i >= 0;i--){
-				ret[i] = parr[hash.mod(plen).intValue()];
+				ret[i] = pieces[hash.mod(plen).intValue()];
 				hash = hash.divide(plen);
 		}
 		return ret;
@@ -65,13 +77,13 @@ public final class UniformPieceHasher extends Hasher<char[]> {
 	public BigInteger maxHash(int boardlen) {
 		BigInteger hash = BigInteger.ZERO;
 		for(int i = 0; i < boardlen; i++)
-				hash = hash.multiply(plen).add(lookup.get(parr[parr.length-1]));
+				hash = hash.multiply(plen).add(lookup.get(pieces[pieces.length-1]));
 		return hash;
 	}
 
 	@Override
 	public String describe() {
-		return "UPH"+Arrays.toString(parr);
+		return "UPH"+Arrays.toString(pieces);
 	}
 	
 }

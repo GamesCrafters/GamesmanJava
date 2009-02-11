@@ -7,6 +7,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Iterator;
+import java.util.Properties;
 
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Writable;
@@ -24,7 +25,6 @@ import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.hadoop.util.BigIntegerWritable;
 import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.util.DebugFacility;
-import edu.berkeley.gamesman.util.OptionProcessor;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -46,6 +46,7 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 		Class<Hasher<?>> gh = null;
 		final String base = "edu.berkeley.gamesman.";
 		OptionProcessor.initializeOptions(conf.getStrings("args"));
+		Properties props = new Properties(System.getProperties());
 		
 		gc = Util.typedForName(base+"game."+conf.get("gameclass","NullGame"));
 		gd = Util.typedForName(base+"database."+conf.get("databaseclass", "NullDatabase"));
@@ -61,7 +62,7 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 			Util.fatalError("Could not access class "+e);
 		}
 		
-		config = new Configuration(game,hasher,EnumSet.of(RecordFields.Value));
+		config = new Configuration(props,game,hasher,EnumSet.of(RecordFields.Value));
 		
 		game.initialize(config);
 		db.initialize(conf.get("dburi"),config);

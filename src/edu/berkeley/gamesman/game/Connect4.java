@@ -9,7 +9,6 @@ import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.hasher.PerfectConnect4Hash;
 import edu.berkeley.gamesman.util.DependencyResolver;
-import edu.berkeley.gamesman.util.OptionProcessor;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -31,27 +30,19 @@ public class Connect4 extends TieredGame<char[][]> {
 	int piecesToWin=4;
 	
 	static {
-		OptionProcessor.acceptOption("p", "pieces", true, "The number of pieces in a row to win (default 4)", "4");
-		OptionProcessor.nextGroup();
 		DependencyResolver.allowHasher(Connect4.class, PerfectConnect4Hash.class);
 	}
 
 	/**
 	 * Connect4 Constructor
 	 * Creates the hashers we use (does not use the command-line specified one, needs special hasher)
+	 * @param conf the configuration
 	 */
-	public Connect4(){
-		super();
-		
-		piecesToWin = Integer.parseInt(OptionProcessor.checkOption("pieces"));
+	public Connect4(Configuration conf){
+		super(conf);
+		piecesToWin = Integer.parseInt(conf.getProperty("pieces","4"));
 	}
 	
-	public void initialize(Configuration conf){
-		char[] pcs = {'X','O'};
-		super.initialize(conf);
-		myHasher.setGame(this, pcs);
-	}
-
 	@Override
 	public Collection<char[][]> startingPositions() {
 		ArrayList<char[][]> boards = new ArrayList<char[][]>();
@@ -240,6 +231,11 @@ public class Connect4 extends TieredGame<char[][]> {
 	@Override
 	public String describe() {
 		return "Connect4|"+gameWidth+"|"+gameHeight+"|"+piecesToWin;
+	}
+
+	@Override
+	public char[] pieces() {
+		return pieces;
 	}
 
 }

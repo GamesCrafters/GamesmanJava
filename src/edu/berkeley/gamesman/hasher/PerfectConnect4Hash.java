@@ -3,7 +3,7 @@ package edu.berkeley.gamesman.hasher;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-import edu.berkeley.gamesman.core.Game;
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.TieredHasher;
 import edu.berkeley.gamesman.hasher.AlternatingRearrangerHasher;
 import edu.berkeley.gamesman.hasher.C4UniformPieceHasher;
@@ -23,22 +23,19 @@ import edu.berkeley.gamesman.util.Util;
  */
 public class PerfectConnect4Hash extends TieredHasher<char[][]> {
 
-	private static final long serialVersionUID = -5681133082461042797L;
-
-
-	private int gameWidth,gameHeight;
+	C4UniformPieceHasher uh;
+	AlternatingRearrangerHasher ah;
 	
-
-	C4UniformPieceHasher uh = new C4UniformPieceHasher();
-	AlternatingRearrangerHasher ah = new AlternatingRearrangerHasher();
 	
-	@Override
-	public void setGame(Game<char[][]> g, char[] p){
+	/**
+	 * Default constructor
+	 * @param conf the configuration
+	 */
+	public PerfectConnect4Hash(Configuration conf) {
+		super(conf);
 		
-		super.setGame(g, p);
-		
-		gameWidth = g.getGameWidth();
-		gameHeight = g.getGameHeight();
+		gameWidth = conf.getGame().getGameWidth();
+		gameHeight = conf.getGame().getGameHeight();
 		
 		Util.nCr_prefill(gameWidth*gameHeight, gameWidth*gameHeight);
 
@@ -47,10 +44,17 @@ public class PerfectConnect4Hash extends TieredHasher<char[][]> {
 		for(char i = 0; i < arr.length; i++){
 			arr[i] = Character.forDigit(i, Character.MAX_RADIX);
 		}
-		
-		uh.setGame(null, arr);
-		ah.setGame(null, pieces);
+
+		uh = new C4UniformPieceHasher(conf,arr);
+		ah = new AlternatingRearrangerHasher(conf,pieces);
+		//uh.initialize(arr);
+		//ah.initialize(pieces);
 	}
+
+	private static final long serialVersionUID = -5681133082461042797L;
+
+
+	private int gameWidth,gameHeight;
 	
 	@Override
 	public BigInteger numHashesForTier(int tier) {

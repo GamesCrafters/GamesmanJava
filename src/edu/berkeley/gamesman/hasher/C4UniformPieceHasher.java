@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import edu.berkeley.gamesman.core.Game;
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.util.Task;
 import edu.berkeley.gamesman.util.Util;
@@ -24,35 +24,45 @@ import edu.berkeley.gamesman.util.Util;
  */
 public final class C4UniformPieceHasher extends Hasher<char[]> {
 
-	private static final long serialVersionUID = -9024431731925402905L;
-	Map<String,BigInteger> lookup;
-	String[] table;
-	protected char[] pcs;
-	
-	@Override
-	public void setGame(Game<char[]> game, char[] p){
-		super.setGame(game,p);
-		pcs = p;
+	/**
+	 * Default constructor
+	 * @param conf the configuration
+	 */
+	public C4UniformPieceHasher(Configuration conf) {
+		super(conf);
 		lookup = null;
 		table = null;
 		idx = 0;
 	}
 	
+	/**
+	 * Default constructor
+	 * @param conf the configuration
+	 * @param arr the piece array
+	 */
+	public C4UniformPieceHasher(Configuration conf, char[] arr) {
+		super(conf,arr);
+	}
+
+	private static final long serialVersionUID = -9024431731925402905L;
+	Map<String,BigInteger> lookup;
+	String[] table;
+	
 	@Override
 	public BigInteger hash(char[] board, int l) {
-		if(lookup == null) init(new char[l],0,pcs,l*pcs.length);
+		if(lookup == null) init(new char[l],0,pieces,l*pieces.length);
 		return lookup.get(new String(board));
 	}
 
 	@Override
 	public char[] unhash(BigInteger hash, int l) {
-		if(lookup == null) init(new char[l],0,pcs,l*pcs.length);
+		if(lookup == null) init(new char[l],0,pieces,l*pieces.length);
 		return table[hash.intValue()].toCharArray();
 	}
 
 	@Override
 	public BigInteger maxHash(int boardlen) {
-		if(lookup == null) init(new char[boardlen],0,pcs,boardlen*pcs.length);
+		if(lookup == null) init(new char[boardlen],0,pieces,boardlen*pieces.length);
 		return BigInteger.valueOf(table.length-1);
 	}
 	
@@ -97,7 +107,7 @@ public final class C4UniformPieceHasher extends Hasher<char[]> {
 
 	@Override
 	public String describe() {
-		return "C4UPH"+Arrays.toString(pcs);
+		return "C4UPH"+Arrays.toString(pieces);
 	}
 	
 }

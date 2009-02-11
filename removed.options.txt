@@ -1,0 +1,63 @@
+		OptionProcessor.acceptOption("h", "help", false,
+				"Display this help string and exit");
+		OptionProcessor.acceptOption("d", "debug", false,
+				"Turn on debugging output");
+		OptionProcessor.nextGroup();
+		OptionProcessor.acceptOption("x", "with-graphics", false,
+				"Enables use of graphical displays");
+		OptionProcessor.nextGroup();
+		OptionProcessor.acceptOption("G", "game", true,
+				"Specifies which game to play", "NullGame");
+		OptionProcessor.acceptOption("S", "solver", true,
+				"Specifies which solver to use", "TierSolver");
+		OptionProcessor.acceptOption("H", "hasher", true,
+				"Specifies which hasher to use", "NullHasher");
+		OptionProcessor.acceptOption("D", "database", true,
+				"Specifies which database backend to use", "FileDatabase");
+		OptionProcessor.acceptOption("M", "master", true,
+				"Specifies which master controller to use", "LocalMaster");
+		OptionProcessor.nextGroup();
+		OptionProcessor
+				.acceptOption("C", "command", true, "Command to execute");
+		OptionProcessor.nextGroup();
+		OptionProcessor.acceptOption("u", "uri", true, "The URI or relative path of the databse", "file:///tmp/out.db");
+		OptionProcessor.nextGroup();
+		
+	static {
+		OptionProcessor.nextGroup();
+		OptionProcessor.acceptOption("gw", "width", true, "Width of the game board","<auto>");
+		OptionProcessor.acceptOption("gh", "height", true, "Height of the game board","<auto>");
+		OptionProcessor.nextGroup();
+	}
+	
+
+		OptionProcessor.acceptOption("v", "hash", true,
+				"The hash value to be manipulated");
+
+
+		OptionProcessor.acceptOption("r", "rootDirectory", true,
+				"The root directory for the directory filer");
+		OptionProcessor.acceptOption("p", "port", true,
+				"The port to listen on", "4263");
+		OptionProcessor.acceptOption("s", "secret", true,
+				"The shared secret the server should require");
+	
+
+
+		OptionProcessor.acceptOption("u", "uri", true, "The URI to connect to",
+				"gdfp://game@localhost:4263/");
+			
+
+		OptionProcessor.acceptOption("p", "pieces", true, "The number of pieces in a row to win (default 4)", "4");
+		OptionProcessor.nextGroup();
+
+	
+	static {
+		OptionProcessor.acceptOption("cd", "cachedepth", true, "The depth of level that the AlternatingRearrangerHash should cache","12");
+	}
+
+	
+	static{
+		OptionProcessor.acceptOption("j", "threads", true, "The number of threads to launch", "1");
+	}
+

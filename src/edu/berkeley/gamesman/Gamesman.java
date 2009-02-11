@@ -1,5 +1,7 @@
 package edu.berkeley.gamesman;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
@@ -8,6 +10,7 @@ import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.EnumSet;
+import java.util.Properties;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
@@ -19,7 +22,6 @@ import edu.berkeley.gamesman.core.Solver;
 import edu.berkeley.gamesman.database.filer.DirectoryFilerClient;
 import edu.berkeley.gamesman.database.filer.DirectoryFilerServer;
 import edu.berkeley.gamesman.util.DebugFacility;
-import edu.berkeley.gamesman.util.OptionProcessor;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -34,18 +36,19 @@ public final class Gamesman {
 	private Database db;
 	private boolean testrun;
 	private Configuration conf;
+	private Properties props;
 
-	private Gamesman(Game<Object> g, Solver s, Hasher<Object> h,
+	private Gamesman(Properties p,Game<Object> g, Solver s, Hasher<Object> h,
 			Database d, boolean er) {
+		props = p;
 		gm = g;
 		ha = h;
 		so = s;
 		db = d;
 		
-		conf = new Configuration(g,h,EnumSet.of(RecordFields.Value));
+		conf = new Configuration(p,g,h,EnumSet.of(RecordFields.Value));
 		
-		so.setDatabase(db);
-		gm.initialize(conf);
+		so.initialize(db);
 		
 		testrun = er;
 	}
@@ -55,36 +58,34 @@ public final class Gamesman {
 	 * @param args Command line arguments
 	 */
 	public static void main(String[] args) {
+		
+		Properties props = new Properties(System.getProperties());
 
 		Thread.currentThread().setName("Gamesman");
 
-		OptionProcessor.initializeOptions(args);
-		OptionProcessor.acceptOption("h", "help", false,
-				"Display this help string and exit");
-		OptionProcessor.acceptOption("d", "debug", false,
-				"Turn on debugging output");
-		OptionProcessor.nextGroup();
-		OptionProcessor.acceptOption("x", "with-graphics", false,
-				"Enables use of graphical displays");
-		OptionProcessor.nextGroup();
-		OptionProcessor.acceptOption("G", "game", true,
-				"Specifies which game to play", "NullGame");
-		OptionProcessor.acceptOption("S", "solver", true,
-				"Specifies which solver to use", "TierSolver");
-		OptionProcessor.acceptOption("H", "hasher", true,
-				"Specifies which hasher to use", "NullHasher");
-		OptionProcessor.acceptOption("D", "database", true,
-				"Specifies which database backend to use", "FileDatabase");
-		OptionProcessor.acceptOption("M", "master", true,
-				"Specifies which master controller to use", "LocalMaster");
-		OptionProcessor.nextGroup();
-		OptionProcessor
-				.acceptOption("C", "command", true, "Command to execute");
-		OptionProcessor.nextGroup();
-		OptionProcessor.acceptOption("u", "uri", true, "The URI or relative path of the databse", "file:///tmp/out.db");
-		OptionProcessor.nextGroup();
+		//OptionProcessor.initializeOptions(args);
+		if(args.length == 1){
+			LineNumberReader r = null;
+			try {
+				r = new LineNumberReader(new FileReader(args[0]));
+			} catch (FileNotFoundException e) {
+				Util.fatalError("Could not open property file",e);
+			}
+			String line;
+			try {
+				while((line = r.readLine()) != null){
+					if(line.equals("")) continue;
+					String[] arr = line.split("\\s+=\\s+");
+					Util.assertTrue(arr.length == 2, "Malformed property file at line \""+line+"\"");
+					props.setProperty(arr[0], arr[1]);
+				}
+			} catch (IOException e) {
+				Util.fatalError("Could not read from property file",e);
+			}
+		}
 
-		String masterName = OptionProcessor.checkOption("master");
+
+		String masterName = props.getProperty("gamesman.master","LocalMaster");
 
 		Object omaster = null;
 		try {
@@ -110,10 +111,16 @@ public final class Gamesman {
 
 		String gameName, solverName, hasherName, databaseName;
 
-		gameName = OptionProcessor.checkOption("game");
-		solverName = OptionProcessor.checkOption("solver");
-		hasherName = OptionProcessor.checkOption("hasher");
-		databaseName = OptionProcessor.checkOption("database");
+		gameName = props.getProperty("gamesman.game");
+		if(gameName == null)
+			Util.fatalError("You must specify a game with the property gamesman.game");
+		solverName = props.getProperty("gamesman.solver");
+		if(solverName == null)
+			Util.fatalError("You must specify a solver with the property gamesman.solver");
+		hasherName = props.getProperty("gamesman.hasher");
+		if(hasherName == null)
+			Util.fatalError("You must specify a hasher with the property gamesman.hasher");
+		databaseName = props.getProperty("gamesman.database","FileDatabase");
 
 		Class<? extends Game<Object>> g;
 		Class<? extends Solver> s;
@@ -130,13 +137,16 @@ public final class Gamesman {
 			return;
 		}
 
-		boolean dohelp = (OptionProcessor.checkOption("h") != null);
+		//boolean dohelp = (OptionProcessor.checkOption("h") != null);
 
-		String cmd = OptionProcessor.checkOption("command");
+		boolean dohelp = false;
+		
+		String cmd = props.getProperty("gamesman.command");
 		if (cmd != null) {
 			try {
-				boolean tr = (OptionProcessor.checkOption("help") != null);
-				Gamesman executor = new Gamesman(g.newInstance(), s.newInstance(), h.newInstance(),d.newInstance(), tr);
+				//boolean tr = (OptionProcessor.checkOption("help") != null);
+				boolean tr = false;
+				Gamesman executor = new Gamesman(props,g.newInstance(), s.newInstance(), h.newInstance(),d.newInstance(), tr);
 				executor.getClass().getMethod("execute" + cmd,
 						(Class<?>[]) null).invoke(executor);
 			} catch (NoSuchMethodException nsme) {
@@ -153,18 +163,23 @@ public final class Gamesman {
 		} else if (!dohelp) {
 			Util.debug(DebugFacility.Core,"Defaulting to solve...");
 			try {
-				m.initialize(new Configuration(g.newInstance(),h.newInstance(),EnumSet.of(RecordFields.Value)), s, d);
-			} catch (InstantiationException e) {
-				System.out.println("Could not instantiate: " + e);
-			} catch (IllegalAccessException e) {
-				System.out.println("Permission denied while executing command " + e);
+				Configuration conf = new Configuration(props);
+				Game gm = Util.checkedCast(g.getConstructors()[0].newInstance(conf));
+				conf.setGame(gm);
+				Hasher ha = Util.checkedCast(h.getConstructors()[0].newInstance(conf));
+				conf.setHasher(ha);
+				conf.setStoredFields(EnumSet.of(RecordFields.Value));
+				gm.prepare();
+				m.initialize(conf, s, d);
+			} catch (Exception e){
+				Util.fatalError("Exception while instantiating and initializing",e);
 			}
 			m.run();
 		}
 
 		if (dohelp) {
 			System.out.println("Gamesman help stub, please fill this out!"); // TODO: help text
-			OptionProcessor.help();
+			//OptionProcessor.help();
 			return;
 		}
 
@@ -176,12 +191,9 @@ public final class Gamesman {
 	 * Diagnostic call to unhash an arbitrary value to a game board
 	 */
 	public void executeunhash() {
-		OptionProcessor.acceptOption("v", "hash", true,
-				"The hash value to be manipulated");
 		if (testrun)
 			return;
-		Object state = gm.hashToState(new BigInteger(OptionProcessor
-				.checkOption("hash")));
+		Object state = gm.hashToState(new BigInteger(props.getProperty("gamesman.hash")));
 		System.out.println(gm.stateToString(state));
 	}
 
@@ -189,12 +201,9 @@ public final class Gamesman {
 	 * Diagnostic call to view all child moves of a given hashed game state
 	 */
 	public void executegenmoves() {
-		OptionProcessor.acceptOption("v", "hash", true,
-				"The hash value to be manipulated");
 		if (testrun)
 			return;
-		Object state = gm.hashToState(new BigInteger(OptionProcessor
-				.checkOption("hash")));
+		Object state = gm.hashToState(new BigInteger(props.getProperty("gamesman.hash")));
 		for (Object nextstate : gm.validMoves(state)) {
 			System.out.println(gm.stateToHash(nextstate));
 			System.out.println(gm.stateToString(nextstate));
@@ -205,11 +214,9 @@ public final class Gamesman {
 	 * Hash a single board with the given hasher and print it.
 	 */
 	public void executehash() {
-		OptionProcessor.acceptOption("v", "board", true,
-				"The board to be hashed");
 		if (testrun)
 			return;
-		String str = OptionProcessor.checkOption("board");
+		String str = props.getProperty("board");
 		if (str == null)
 			Util.fatalError("Please specify a board to hash");
 		System.out.println(gm.stateToHash(gm.stringToState(str.toUpperCase())));
@@ -219,11 +226,9 @@ public final class Gamesman {
 	 * Evaluate a single board and return its primitive value.
 	 */
 	public void executeevaluate() {
-		OptionProcessor.acceptOption("v", "board", true,
-				"The board to be evaluated");
 		if (testrun)
 			return;
-		String board = OptionProcessor.checkOption("board");
+		String board = props.getProperty("gamesman.board");
 		if (board == null)
 			Util.fatalError("Please specify a hash to evaluate");
 		BigInteger val = new BigInteger(board);
@@ -234,24 +239,16 @@ public final class Gamesman {
 	 * Launch a directory filer server
 	 */
 	public void executelaunchDirectoryFiler() {
-		OptionProcessor.acceptOption("r", "rootDirectory", true,
-				"The root directory for the directory filer");
-		OptionProcessor.acceptOption("p", "port", true,
-				"The port to listen on", "4263");
-		OptionProcessor.acceptOption("s", "secret", true,
-				"The shared secret the server should require");
 		if (testrun)
 			return;
-		if (OptionProcessor.checkOption("rootDirectory") == null)
-			Util
-					.fatalError("You must provide a root directory for the filer with -r or --rootDirectory");
-		if (OptionProcessor.checkOption("secret") == null)
-			Util
-					.fatalError("You must provide a shared secret to protect the server with -s or --secret");
+		if (props.getProperty("rootDirectory") == null)
+			Util.fatalError("You must provide a root directory for the filer with -r or --rootDirectory");
+		if (props.getProperty("secret") == null)
+			Util.fatalError("You must provide a shared secret to protect the server with -s or --secret");
 		
-		final DirectoryFilerServer serv = new DirectoryFilerServer(OptionProcessor.checkOption("rootDirectory"),
-				Integer.parseInt(OptionProcessor.checkOption("port")),
-				OptionProcessor.checkOption("secret"));
+		final DirectoryFilerServer serv = new DirectoryFilerServer(props.getProperty("rootDirectory"),
+				Integer.parseInt(props.getProperty("port","4263")),
+				props.getProperty("secret"));
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable(){
 			public void run() {
@@ -271,12 +268,9 @@ public final class Gamesman {
 	 * @throws URISyntaxException The given URI is malformed
 	 */
 	public void executedirectoryConnect() throws URISyntaxException {
-		OptionProcessor.acceptOption("u", "uri", true, "The URI to connect to",
-				"gdfp://game@localhost:4263/");
 		if (testrun)
 			return;
-		DirectoryFilerClient dfc = new DirectoryFilerClient(new URI(OptionProcessor
-				.checkOption("uri")));
+		DirectoryFilerClient dfc = new DirectoryFilerClient(new URI(props.getProperty("uri","gdfp://game@localhost:4263/")));
 
 		LineNumberReader input = new LineNumberReader(new InputStreamReader(
 				System.in));

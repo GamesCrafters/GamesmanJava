@@ -17,6 +17,14 @@ import edu.berkeley.gamesman.util.Util;
  */
 public class NullGame extends Game<Object> {
 
+	/**
+	 * Default constructor
+	 * @param conf the configuration
+	 */
+	public NullGame(Configuration conf) {
+		super(conf);
+	}
+
 	private static final long serialVersionUID = 2554568250821803152L;
 
 	static {
@@ -83,14 +91,15 @@ public class NullGame extends Game<Object> {
 	public String describe() {
 		return "NullGame";
 	}
-
-	@Override
-	public void initialize(Configuration conf) {
-	}
-
+	
 	@Override
 	public BigInteger lastHash() {
 		return BigInteger.ZERO;
+	}
+
+	@Override
+	public char[] pieces() {
+		return new char[] {};
 	}
 
 }

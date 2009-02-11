@@ -11,7 +11,6 @@ import edu.berkeley.gamesman.core.Master;
 import edu.berkeley.gamesman.core.Solver;
 import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.util.DebugFacility;
-import edu.berkeley.gamesman.util.OptionProcessor;
 import edu.berkeley.gamesman.util.Task;
 import edu.berkeley.gamesman.util.TaskFactory;
 import edu.berkeley.gamesman.util.Util;
@@ -28,10 +27,6 @@ public final class LocalMaster implements Master,TaskFactory {
 	Database database;
 	
 	Configuration conf;
-	
-	static{
-		OptionProcessor.acceptOption("j", "threads", true, "The number of threads to launch", "1");
-	}
 	
 	public void initialize(Configuration inconf, Class<? extends Solver> solverc, Class<? extends Database> databasec) {
 		
@@ -51,10 +46,9 @@ public final class LocalMaster implements Master,TaskFactory {
 		conf = inconf;
 		//conf = new Configuration(game,hasher,EnumSet.of(RecordFields.Value)); //TODO: have more than Value here
 		
-		database.initialize(OptionProcessor.checkOption("uri"),inconf);
+		database.initialize(conf.getProperty("gamesman.db.uri"),inconf);
 		
-		solver.setDatabase(database);
-		game.initialize(conf);
+		solver.initialize(database);
 		
 		Util.debug(DebugFacility.Master,"Done initializing LocalMaster");
 		
@@ -63,7 +57,7 @@ public final class LocalMaster implements Master,TaskFactory {
 	
 	public void run() {
 		System.out.println("Launched!");
-		int threads = Integer.parseInt(OptionProcessor.checkOption("threads"));
+		int threads = Integer.parseInt(conf.getProperty("gamesman.threads","1"));
 		Util.debug(DebugFacility.Master,"Launching "+threads+" threads...");
 		List<WorkUnit> list = solver.prepareSolve(conf,game).divide(threads);
 		

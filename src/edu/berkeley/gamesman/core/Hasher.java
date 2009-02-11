@@ -3,6 +3,8 @@ package edu.berkeley.gamesman.core;
 import java.io.Serializable;
 import java.math.BigInteger;
 
+import edu.berkeley.gamesman.util.Util;
+
 
 /**
  * A Hasher converts between a game board and a BigInteger hash in a space- and time-efficient manner.
@@ -12,16 +14,28 @@ import java.math.BigInteger;
 public abstract class Hasher<Board> implements Serializable {
 	private static final long serialVersionUID = -6537920117712373326L;
 	protected Game<Board> game;
-	protected char[] pieces;
+	protected Configuration conf;
+	protected final char[] pieces;
 	
 	/**
-	 * Give the hasher a reference to the game it's hashing for
-	 * @param g The game we're playing
-	 * @param p The valid pieces for this hasher
+	 * Default constructor
+	 * @param conf the configuration object
 	 */
-	public void setGame(Game<Board> g, char[] p){
-		game = g;
-		pieces = p;
+	public Hasher(Configuration conf){
+		game = Util.checkedCast(conf.getGame());
+		this.conf = conf;
+		pieces = game.pieces();
+	}
+	
+	/**
+	 * Create a Hasher with a specified piece set
+	 * @param conf the configuration
+	 * @param pieces the pieces
+	 */
+	public Hasher(final Configuration conf,final char[] pieces){
+		this.pieces = pieces;
+		this.conf = conf;
+		game = Util.checkedCast(conf.getGame());
 	}
 	
 	/**

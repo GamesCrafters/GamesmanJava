@@ -120,12 +120,12 @@ public final class Util {
 		if (debugInit) {
 			String env = System.getenv("GAMESMAN_DEBUG");
 			for(DebugFacility f: DebugFacility.values()){
-				OptionProcessor.acceptOption(f.toString(), f.toString(), false, "Debug facility");
-				if(OptionProcessor.checkOption(f.toString()) != null) debugOpts.add(f);
+				//OptionProcessor.acceptOption(f.toString(), f.toString(), false, "Debug facility");
+				//if(OptionProcessor.checkOption(f.toString()) != null) debugOpts.add(f);
 				if(env != null && env.contains(f.toString())) debugOpts.add(f);
 			}
 			debugInit = false;
-			debugOn = OptionProcessor.checkOption("d") != null;
+			debugOn = true;//OptionProcessor.checkOption("d") != null; TODO:Change
 			debugOpts.add(DebugFacility.Core);
 			Util.debug(DebugFacility.Core,"Debugging enabled for: "+debugOpts);
 			if (!debugOn)

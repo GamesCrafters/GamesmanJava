@@ -2,7 +2,7 @@ package edu.berkeley.gamesman.hasher;
 
 import java.math.BigInteger;
 
-import edu.berkeley.gamesman.core.Hasher;
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.TieredHasher;
 import edu.berkeley.gamesman.util.Pair;
 
@@ -12,6 +12,16 @@ import edu.berkeley.gamesman.util.Pair;
  * @author Steven Schlansker
  */
 public class NullHasher extends TieredHasher<char[]> {
+
+	/**
+	 * Default constructor
+	 * @param conf the configuration
+	 */
+	public NullHasher(Configuration conf) {
+		super(conf);
+	}
+
+	private static final long serialVersionUID = -5302283345311520545L;
 
 	@Override
 	public char[] unhash(BigInteger hash, int l) {

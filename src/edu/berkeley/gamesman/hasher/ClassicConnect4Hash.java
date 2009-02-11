@@ -2,6 +2,7 @@ package edu.berkeley.gamesman.hasher;
 
 import java.math.BigInteger;
 
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.TieredHasher;
 import edu.berkeley.gamesman.util.Pair;
 
@@ -10,6 +11,14 @@ import edu.berkeley.gamesman.util.Pair;
  * @author Steven Schlansker
  */
 public class ClassicConnect4Hash extends TieredHasher<char[][]> {
+
+	/**
+	 * Default constructor
+	 * @param conf the configuration
+	 */
+	public ClassicConnect4Hash(Configuration conf) {
+		super(conf);
+	}
 
 	private static final long serialVersionUID = -5178988467392378350L;
 

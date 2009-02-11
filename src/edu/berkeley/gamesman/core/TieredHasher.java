@@ -15,6 +15,14 @@ import edu.berkeley.gamesman.util.Util;
  * @param <State> The class that represents a State
  */
 public abstract class TieredHasher<State> extends Hasher<State> {
+	/**
+	 * Default constructor
+	 * @param conf the configuration
+	 */
+	public TieredHasher(Configuration conf) {
+		super(conf);
+	}
+
 	private static final long serialVersionUID = 2558546570288531867L;
 
 	@Override

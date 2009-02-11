@@ -22,8 +22,15 @@ public enum PrimitiveValue {
 	 */
 	Tie(3);
 	
-	int value;
+	private int value;
 	PrimitiveValue(int v){
 		value = v;
+	}
+	
+	/**
+	 * @return the numeric value of this primitive
+	 */
+	public int value(){
+		return value;
 	}
 }

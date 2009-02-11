@@ -22,8 +22,16 @@ public abstract class TieredGame<State> extends Game<State> {
 	private static final long serialVersionUID = 2597954028407397959L;
 	protected TieredHasher<State> myHasher;
 	
+	/**
+	 * Default constructor
+	 * @param conf the configuration
+	 */
+	public TieredGame(Configuration conf){
+		super(conf);
+	}
+	
 	@Override
-	public void initialize(Configuration conf){
+	public void prepare(){
 		myHasher = Util.checkedCast(conf.getHasher());
 	}
 	

@@ -25,15 +25,11 @@ public class OneTwoN extends TieredGame<Integer> {
 	
 	/**
 	 * Default constructor
+	 * @param conf the configuration
 	 */
-	public OneTwoN() {
-		super();
-	}
-	
-	@Override
-	public void initialize(Configuration conf){
-		super.initialize(conf);
-		myHasher.setGame(this, null);
+	public OneTwoN(Configuration conf) {
+		super(conf);
+		//myHasher.initialize(null);
 	}
 	
 	@Override
@@ -100,5 +96,10 @@ public class OneTwoN extends TieredGame<Integer> {
 	@Override
 	public String describe() {
 		return "OneTwoN|"+gameWidth+"|"+gameHeight;
+	}
+
+	@Override
+	public char[] pieces() {
+		return new char[] {};
 	}
 }

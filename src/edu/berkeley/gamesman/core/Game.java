@@ -3,7 +3,8 @@ package edu.berkeley.gamesman.core;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Collection;
-import edu.berkeley.gamesman.util.OptionProcessor;
+
+import edu.berkeley.gamesman.util.Util;
 
 /**
  * Public interface that all Games must implement to be solvable
@@ -16,20 +17,25 @@ public abstract class Game<State> implements Serializable {
 	private static final long serialVersionUID = 6376065802238384739L;
 	
 	protected final int gameWidth, gameHeight;
+	protected final Configuration conf;
 	
-	static {
-		OptionProcessor.nextGroup();
-		OptionProcessor.acceptOption("gw", "width", true, "Width of the game board","<auto>");
-		OptionProcessor.acceptOption("gh", "height", true, "Height of the game board","<auto>");
-		OptionProcessor.nextGroup();
+	@SuppressWarnings("unused")
+	private Game(){
+		Util.fatalError("Do not call this constructor!");
+		gameWidth = 0;
+		gameHeight = 0;
+		conf = null;
 	}
 	
 	/**
 	 * Initialize game width/height
+	 * NB: when this constructor is called, the Configuration
+	 * is not required to have initialized the Hasher yet!
+	 * @param conf configuration
 	 */
-	public Game(){
-		String w = OptionProcessor.checkOption("width");
-		String h = OptionProcessor.checkOption("height");
+	public Game(Configuration conf){
+		String w = conf.getProperty("gamesman.game.width","<auto>");
+		String h = conf.getProperty("gamesman.game.height","<auto>");
 		if(w.equals("<auto>"))
 			gameWidth = getDefaultBoardWidth();
 		else
@@ -39,6 +45,7 @@ public abstract class Game<State> implements Serializable {
 			gameHeight = getDefaultBoardHeight();
 		else
 			gameHeight = Integer.parseInt(h);
+		this.conf = conf;
 	}
 	
 	/**
@@ -67,7 +74,7 @@ public abstract class Game<State> implements Serializable {
 	/**
 	 * @param conf the Configuration that this game is played with
 	 */
-	public abstract void initialize(Configuration conf);
+	//public abstract void initialize(Configuration conf);
 	
 	/**
 	 * Unhash a given hashed value and return the corresponding Board
@@ -128,5 +135,17 @@ public abstract class Game<State> implements Serializable {
 	 * @return a String that uniquely describes the setup of this Game (including any variant information, game size, etc)
 	 */
 	public abstract String describe();
+	
+	/**
+	 * Called to notify the Game that the Configuration now has
+	 * a specified and initialized Hasher.
+	 * Make sure to call your superclass's method!
+	 */
+	public void prepare(){}
+	
+	/**
+	 * @return the pieces that a Hasher will have to deal with
+	 */
+	public abstract char[] pieces();
 	
 }

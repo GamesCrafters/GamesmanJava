@@ -2,22 +2,24 @@ package edu.berkeley.gamesman.hasher;
 
 import java.math.BigInteger;
 
-import edu.berkeley.gamesman.core.Game;
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.TieredHasher;
 import edu.berkeley.gamesman.util.Pair;
-import edu.berkeley.gamesman.util.Util;
 
 public class OneTwoNHasher extends TieredHasher<Integer> {
 	
-	private int gameWidth, gameHeight;
-	
-	@Override
-	public void setGame(Game<Integer> g, char[] p){		
-		super.setGame(g, p);
+	/**
+	 * Default constructor
+	 * @param conf the configuration
+	 */
+	public OneTwoNHasher(Configuration conf) {
+		super(conf);
 		
-		gameWidth = g.getGameWidth();
-		gameHeight = g.getGameHeight();
+		gameWidth = conf.getGame().getGameWidth();
+		gameHeight = conf.getGame().getGameHeight();
 	}
+
+	private int gameWidth, gameHeight;
 	
 	@Override
 	public BigInteger numHashesForTier(int tier) {
