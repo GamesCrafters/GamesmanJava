@@ -8,6 +8,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.EnumSet;
+import java.util.Properties;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -105,9 +106,17 @@ public final class Util {
 		}
 	}
 
-	static boolean debugInit = true, debugOn = true;
-
 	static final EnumSet<DebugFacility> debugOpts = EnumSet.noneOf(DebugFacility.class);
+	
+	public static void debugInit(Properties props){
+		String env = System.getenv("GAMESMAN_DEBUG");
+		for(DebugFacility f: DebugFacility.values()){
+			if(props.getProperty("gamesman.debug."+f.toString()) != null) debugOpts.add(f);
+			if(env != null && env.contains(f.toString())) debugOpts.add(f);
+		}
+		debugOpts.add(DebugFacility.Core);
+		Util.debug(DebugFacility.Core,"Debugging enabled for: "+debugOpts);
+	}
 	
 	/**
 	 * (Possibly) print a debugging message
@@ -115,22 +124,6 @@ public final class Util {
 	 * @param s The message to print
 	 */
 	public static void debug(DebugFacility fac, String s) {
-		if (!debugOn)
-			return;
-		if (debugInit) {
-			String env = System.getenv("GAMESMAN_DEBUG");
-			for(DebugFacility f: DebugFacility.values()){
-				//OptionProcessor.acceptOption(f.toString(), f.toString(), false, "Debug facility");
-				//if(OptionProcessor.checkOption(f.toString()) != null) debugOpts.add(f);
-				if(env != null && env.contains(f.toString())) debugOpts.add(f);
-			}
-			debugInit = false;
-			debugOn = true;//OptionProcessor.checkOption("d") != null; TODO:Change
-			debugOpts.add(DebugFacility.Core);
-			Util.debug(DebugFacility.Core,"Debugging enabled for: "+debugOpts);
-			if (!debugOn)
-				return;
-		}
 		if(debugOpts.contains(fac) || debugOpts.contains(DebugFacility.All))
 			System.err.println("DEBUG "+fac+": (" + Thread.currentThread().getName() + ") " + s);
 	}
