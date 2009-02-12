@@ -46,18 +46,41 @@ public class Configuration implements Serializable {
 		return g;
 	}
 	
+	/**
+	 * Specify the Game.
+	 * Must be called before using this Configuration.
+	 * @param g the game to play
+	 */
 	public void setGame(Game<?> g){
 		this.g = g;
 	}
 	
+	/**
+	 * Specify the Hasher.
+	 * Must be called before using this Configuration
+	 * @param h the hasher to use
+	 */
 	public void setHasher(Hasher<?> h){
 		this.h = h;
 	}
 	
+	/**
+	 * Specify which fields are to be saved by the database
+	 * Each Field maps to a Pair.  The first element is the integer index it is to be
+	 * stored in the database.
+	 * The second element is the width in bits of that field.
+	 * @param sf EnumMap as described above
+	 */
 	public void setStoredFields(EnumMap<RecordFields,Pair<Integer,Integer>> sf){
 		storedFields = sf;
 	}
 	
+	/**
+	 * Specify which fields are to be saved.  The widths and positions are automatically
+	 * determined and you have no control over them.
+	 * @see #setStoredFields(EnumMap)
+	 * @param set which fields to save
+	 */
 	public void setStoredFields(EnumSet<RecordFields> set){
 		int i = 0;
 		EnumMap<RecordFields,Pair<Integer, Integer>> map = new EnumMap<RecordFields, Pair<Integer,Integer>>(RecordFields.class);
@@ -93,6 +116,14 @@ public class Configuration implements Serializable {
 		checkCompatibility();
 	}
 	
+	/**
+	 * A Configuration that is specified only by properties.
+	 * You <i>must</i> set the game and hasher before using this Configuration
+	 * @see #setGame(Game)
+	 * @see #setHasher(Hasher)
+	 * @see #setStoredFields
+	 * @param props2 The properties to inherit
+	 */
 	public Configuration(Properties props2) {
 		props = props2;
 	}
@@ -139,7 +170,8 @@ public class Configuration implements Serializable {
 	@Override
 	public boolean equals(Object o) {
 		if(!(o instanceof Configuration)) return false;
-		return ((Configuration)o).config.equals(config);
+		Configuration c = (Configuration) o;
+		return c.props.equals(props) && c.g.equals(g) && c.h.equals(h);
 	}
 	
 	/**
