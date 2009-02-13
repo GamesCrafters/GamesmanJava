@@ -180,15 +180,9 @@ public class ConnectFour implements MouseListener {
 
 	public static void main(String[] args) throws InstantiationException,
 			IllegalAccessException {
-		Gamesman.main(new String[] { "-G", "Connect4", "-H",
-				"PerfectConnect4Hash", "-D", "FileDatabase", "-u",
-				"file:///tmp/test.db", "-gw", "4", "-gh", "4" });
-		// Gamesman g = Gamesman.tempMakeGo();
-		// FileDatabase fd = new FileDatabase();
-		// fd.initialize("file:///tmp/test.db",new
-		// Configuration("14Connect4|4|4|44PC4H13{Value=(0.2)}"));
+		Gamesman.main(new String[] {"c4.gprop"});
 		FileDatabase fd = new FileDatabase();
-		fd.initialize("file:///tmp/test.db", null);
+		fd.initialize("file:///tmp/database.db", null);
 		System.out.println(fd.getValue(BigInteger.ZERO));
 		DisplayFour df = new DisplayFour();
 		/* ConnectFour cf= */new ConnectFour(df, fd);
