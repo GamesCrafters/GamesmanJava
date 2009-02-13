@@ -243,7 +243,7 @@ public class Configuration implements Serializable {
 	public boolean equals(Object o) {
 		if(!(o instanceof Configuration)) return false;
 		Configuration c = (Configuration) o;
-		return c.props.equals(props) && c.g.equals(g) && c.h.equals(h);
+		return c.props.equals(props) && c.g.getClass().equals(g.getClass()) && c.h.getClass().equals(h.getClass());
 	}
 	
 	/**
@@ -276,7 +276,7 @@ public class Configuration implements Serializable {
 	}
 	
 	public String toString(){
-		return config;
+		return "Config["+props+","+g+","+h+","+storedFields+"]";
 		//return new String(serialize());
 	}
 	

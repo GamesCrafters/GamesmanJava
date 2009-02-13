@@ -93,13 +93,13 @@ public class FileDatabase extends Database {
 				fd.readFully(header);
 				if(conf == null)
 					conf = Configuration.configurationFromBytes(header);
-				//Util.assertTrue(new String(header).equals(conf
-				//		.getConfigString()),
-				//		"File database has wrong header; expecting \""
-				//				+ conf.getConfigString() + "\" got \""
-				//				+ new String(header) + "\"");
-				if(!new String(header).equals(conf.getConfigString()))
-					Util.warn("File database headers do not match, proceed at your own risk!");
+				Configuration newconf = Configuration.configurationFromBytes(header);
+				Util.assertTrue(newconf.equals(conf),
+						"File database has wrong header; expecting \""
+						+ conf.toString() + "\" got \""
+								+ newconf.toString() + "\"");
+				//if(!new String(header).equals(conf.getConfigString()))
+				//	Util.warn("File database headers do not match, proceed at your own risk!");
 
 			} catch (IOException e) {
 				Util.fatalError("IO error while checking header: " + e);
