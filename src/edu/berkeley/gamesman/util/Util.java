@@ -346,6 +346,23 @@ public final class Util {
 	}
 	
 	/**
+	 * Like Class.forName(name).newInstance() but with type checking
+	 * and an argument
+	 * @param <T> The type requested
+	 * @param name The name of the class to instantiate
+	 * @return A new instance (created with the default constructor)
+	 */
+	public static <T> T typedInstantiateArg(String name, Object arg){
+		try {
+			return checkedCast(Class.forName(name).getConstructors()[0].newInstance(arg));
+		} catch (Exception e) {
+			Util.fatalError("Unchecked exception while instantiating",e);
+		}
+		return null;
+	}
+	
+	
+	/**
 	 * Handy method for working with 'unchecked' casts -
 	 * send them here and it will throw a RuntimeException
 	 * instead of giving you a compiler warning.

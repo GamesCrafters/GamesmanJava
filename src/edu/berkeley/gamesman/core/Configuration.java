@@ -1,5 +1,11 @@
 package edu.berkeley.gamesman.core;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -152,7 +158,28 @@ public class Configuration implements Serializable {
 	 * @return a Configuration
 	 */
 	public static Configuration configurationFromBytes(byte[] barr){
-		return deserialize(barr);
+		try{
+		DataInput in = new DataInputStream(new ByteArrayInputStream(barr));
+		byte[] t = new byte[in.readInt()];
+		in.readFully(t);
+		Properties props = Util.deserialize(t); // TODO dont serialize
+		Configuration conf = new Configuration(props);
+		conf.setGame((Game<?>) Util.typedInstantiateArg(in.readUTF(),conf));
+		conf.setHasher((Hasher<?>) Util.typedInstantiateArg(in.readUTF(),conf));
+		
+		t = new byte[in.readInt()];
+		in.readFully(t);
+		
+		EnumMap<RecordFields, Pair<Integer, Integer>> sf = Util.deserialize(t);
+		conf.setStoredFields(sf);
+		conf.getGame().prepare();
+		
+		return conf;
+		}catch (IOException e) {
+			Util.fatalError("Could not resuscitate Configuration from bytes :(",e);
+		}
+		return null;
+		//return deserialize(barr);
 	}
 	//public Configuration(String config) {
 	//	this.config = config;
@@ -167,7 +194,27 @@ public class Configuration implements Serializable {
 	 * @return a String with the Configuration information
 	 */
 	public String getConfigString(){
-		return new String(serialize());
+		
+		try {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		DataOutput out = new DataOutputStream(baos);
+		
+		byte[] barr = Util.serialize(props);
+		out.writeInt(barr.length);
+		out.write(barr);
+		out.writeUTF(g.getClass().getCanonicalName());
+		out.writeUTF(h.getClass().getCanonicalName());
+		barr = Util.serialize(storedFields);
+		out.writeInt(barr.length);
+		out.write(barr);
+		
+		return baos.toString();
+		}catch (IOException e) {
+			Util.fatalError("IO Exception shouldn't have happened here",e);
+			return null;
+		}
+		
+		//return new String(serialize());
 		//return config;
 	}
 
@@ -196,9 +243,9 @@ public class Configuration implements Serializable {
 	 * @param bytes A bytestream
 	 * @return the Configuration represented by that bytestream
 	 */
-	public static Configuration deserialize(byte[] bytes) {
-		return Util.deserialize(bytes);
-	}
+	//public static Configuration deserialize(byte[] bytes) {
+	//	return Util.deserialize(bytes);
+	//}
 
 	/**
 	 * @return a bytestream representing this Configuration
