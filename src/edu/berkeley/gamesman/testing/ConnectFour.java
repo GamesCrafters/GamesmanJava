@@ -1,29 +1,29 @@
 package edu.berkeley.gamesman.testing;
 
-
 import java.awt.Container;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.math.BigInteger;
 import java.util.Collection;
+import java.util.Iterator;
 
 import javax.swing.JFrame;
 
 import edu.berkeley.gamesman.Gamesman;
+import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.database.FileDatabase;
 import edu.berkeley.gamesman.game.Connect4;
 
 public class ConnectFour implements MouseListener {
-	char[][] board = new char[7][6];
+	char[][] board = new char[WIDTH][HEIGHT];
 	private int[] columnHeight = new int[7];
 	private char turn = 'O';
 	private boolean compO = false;
-	private boolean compX = false;
+	private boolean compX = true;
 	private boolean win = false;
 	private Thread paintThread;
 	private DisplayFour df;
 	private Connect4 cgame = new Connect4();
-	private BigInteger state;
 	private FileDatabase fd;
 	static int WIDTH = 4;
 	static int HEIGHT = 4;
@@ -64,7 +64,6 @@ public class ConnectFour implements MouseListener {
 		df.setBoard(copy(board));
 		paintThread.start();
 		paintThread = new Thread(df);
-		state = cgame.stateToHash(board);
 		if (!win())
 			startCompMove();
 	}
@@ -72,8 +71,35 @@ public class ConnectFour implements MouseListener {
 	private void startCompMove() {
 		if (compTurn() && !win()) {
 			Collection<char[][]> moves = cgame.validMoves(board);
-			fd.getValue(state);
+			Iterator<char[][]> nextStates = moves.iterator();
+			char[][] s;
+			char[][] best = null;
+			int bestOutcome = 0;
+			int thisOutcome;
+			while (nextStates.hasNext()) {
+				s = nextStates.next();
+				thisOutcome = fd.getValue(cgame.stateToHash(s)).get(
+						RecordFields.Value);
+				if (best == null || thisOutcome > bestOutcome) {
+					bestOutcome = thisOutcome;
+					best = s;
+				}
+			}
+			moveBySet(best);
 		}
+	}
+
+	private void moveBySet(char[][] pos) {
+		int row, col;
+		for (col = 0; col < WIDTH; col++) {
+			for (row = 0; row < HEIGHT; row++) {
+				if (pos[row][col] != board[row][col])
+					break;
+			}
+			if (pos[row][col] != board[row][col])
+				break;
+		}
+		makeMove(col);
 	}
 
 	char getTurn() {
@@ -140,16 +166,10 @@ public class ConnectFour implements MouseListener {
 	}
 
 	public void mouseReleased(MouseEvent me) {
-		if (me.getButton() == MouseEvent.BUTTON3) {
-			df.toggleBlind();
-			paintThread.start();
-			paintThread = new Thread(df);
-		} else {
-			Slot o = (Slot) me.getSource();
-			if (compTurn())
-				return;
-			makeMove(o.getCol());
-		}
+		Slot o = (Slot) me.getSource();
+		if (compTurn())
+			return;
+		makeMove(o.getCol());
 	}
 
 	public void mouseEntered(MouseEvent me) {
@@ -158,15 +178,17 @@ public class ConnectFour implements MouseListener {
 	public void mouseExited(MouseEvent me) {
 	}
 
-	public static void main(String[] args) throws InstantiationException, IllegalAccessException {
+	public static void main(String[] args) throws InstantiationException,
+			IllegalAccessException {
 		Gamesman.main(new String[] { "-G", "Connect4", "-H",
-			"PerfectConnect4Hash", "-D", "FileDatabase", "-u",
+				"PerfectConnect4Hash", "-D", "FileDatabase", "-u",
 				"file:///tmp/test.db", "-gw", "4", "-gh", "4" });
-		//Gamesman g = Gamesman.tempMakeGo();
-		//FileDatabase fd = new FileDatabase();
-		//fd.initialize("file:///tmp/test.db",new Configuration("14Connect4|4|4|44PC4H13{Value=(0.2)}"));
+		// Gamesman g = Gamesman.tempMakeGo();
+		// FileDatabase fd = new FileDatabase();
+		// fd.initialize("file:///tmp/test.db",new
+		// Configuration("14Connect4|4|4|44PC4H13{Value=(0.2)}"));
 		FileDatabase fd = new FileDatabase();
-		fd.initialize("file:///tmp/test.db",null);
+		fd.initialize("file:///tmp/test.db", null);
 		System.out.println(fd.getValue(BigInteger.ZERO));
 		DisplayFour df = new DisplayFour();
 		/* ConnectFour cf= */new ConnectFour(df, fd);
