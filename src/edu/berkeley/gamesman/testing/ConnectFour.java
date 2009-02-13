@@ -23,7 +23,7 @@ public class ConnectFour implements MouseListener {
 	private boolean win = false;
 	private Thread paintThread;
 	private DisplayFour df;
-	private Connect4 cgame = new Connect4();
+	private Connect4 cgame;
 	private FileDatabase fd;
 	static int WIDTH = 4;
 	static int HEIGHT = 4;
@@ -32,6 +32,7 @@ public class ConnectFour implements MouseListener {
 		int c, r;
 		fd = db;
 		df = disfour;
+		cgame = new Connect4(db.getConfiguration());
 		for (c = 0; c < WIDTH; c++) {
 			for (r = 0; r < HEIGHT; r++) {
 				df.slots[c][r].addMouseListener(this);
@@ -73,8 +74,8 @@ public class ConnectFour implements MouseListener {
 			Iterator<char[][]> nextStates = moves.iterator();
 			char[][] s;
 			char[][] best = null;
-			int bestOutcome = 0;
-			int thisOutcome;
+			long bestOutcome = 0;
+			long thisOutcome;
 			while (nextStates.hasNext()) {
 				s = nextStates.next();
 				thisOutcome = fd.getValue(cgame.stateToHash(s)).get(
