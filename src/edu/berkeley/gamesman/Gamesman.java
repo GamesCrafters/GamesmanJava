@@ -170,7 +170,7 @@ public final class Gamesman {
 		if (testrun)
 			return;
 		Object state = gm.hashToState(new BigInteger(conf.getProperty("gamesman.hash")));
-		System.out.println(gm.stateToString(state));
+		System.out.println(gm.displayState(state));
 	}
 
 	/**
@@ -182,7 +182,7 @@ public final class Gamesman {
 		Object state = gm.hashToState(new BigInteger(conf.getProperty("gamesman.hash")));
 		for (Object nextstate : gm.validMoves(state)) {
 			System.out.println(gm.stateToHash(nextstate));
-			System.out.println(gm.stateToString(nextstate));
+			System.out.println(gm.displayState(nextstate));
 		}
 	}
 

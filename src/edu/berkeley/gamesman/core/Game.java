@@ -95,16 +95,27 @@ public abstract class Game<State> implements Serializable {
 	public abstract BigInteger lastHash();
 	
 	/**
-	 * Produce a human-readable String representing the state
+	 * Produce a machine-parsable String representing the state.  This
+	 * function must be the exact opposite of stringToState
 	 * @param pos the State given
 	 * @return a String
+	 * @see Game#stringToState(String)
 	 */
 	public abstract String stateToString(State pos);
+	
 	/**
-	 * Given a String construct a State
-	 * This is not necessarily compatible with stateToString
+	 * "Pretty-print" a State for display to the user
+	 * @param pos The state to display
+	 * @return a pretty-printed string
+	 */
+	public abstract String displayState(State pos);
+	/**
+	 * Given a String construct a State.
+	 * This <i>must</i> be compatible with stateToString as it is
+	 * used to send states over the network.
 	 * @param pos The String given
 	 * @return a State
+	 * @see Game#stateToString(Object)
 	 */
 	public abstract State stringToState(String pos);
 	

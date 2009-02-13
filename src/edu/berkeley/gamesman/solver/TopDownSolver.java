@@ -76,7 +76,7 @@ public class TopDownSolver extends Solver {
 					next = Record.combine(conf, recs);
 				}
 				db.setValue(loc, next);
-				Util.debug(DebugFacility.Solver,"Solved state "+g.stateToString(state)+" to "+next);
+				Util.debug(DebugFacility.Solver,"Solved state "+g.displayState(state)+" to "+next);
 			}
 		}
 

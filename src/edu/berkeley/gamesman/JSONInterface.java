@@ -40,7 +40,7 @@ public class JSONInterface {
 		if(args.length != 1){
 			Util.fatalError("You must specify a configuration file as the only command line argument");
 		}
-		Configuration conf = new Configuration(System.getProperties());
+		conf = new Configuration(System.getProperties());
 		conf.addProperties(args[0]);
 		
 		Util.debugInit(conf);
@@ -125,6 +125,7 @@ public class JSONInterface {
 						Record rec = db.getValue(g.stateToHash(next));
 						for(RecordFields f : conf.getStoredFields().keySet()){
 							entry.put(f.name(),rec.get(f));
+							entry.put("board", g.stateToString(next));
 						}
 						response.accumulate("response", entry);
 					}

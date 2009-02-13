@@ -159,7 +159,7 @@ public class Connect4 extends TieredGame<char[][]> {
 	}
 
 	@Override
-	public final String stateToString(char[][] pos) {
+	public String displayState(char[][] pos) {
 		StringBuilder str = new StringBuilder((pos.length+1)*(pos[0].length+1));
 		for(int y = pos[0].length-1; y >= 0; y--){
 			str.append("|");
@@ -183,6 +183,19 @@ public class Connect4 extends TieredGame<char[][]> {
 		return board;
 	}
 
+	@Override
+	public String stateToString(char[][] pos) {
+		char[] state = new char[gameWidth*gameHeight];
+		for(int x = 0 ; x < gameWidth; x++){
+			for(int y = 0 ; y < gameHeight; y++){
+				//board[x][y] = pos.charAt(Util.index(x, y, gameWidth));
+				state[Util.index(x, y, gameWidth)] = pos[x][y];
+			}
+		}
+		//Util.debug("stringToState yields "+Arrays.deepToString(board));
+		return new String(state);
+	}
+	
 	@Override
 	public Collection<char[][]> validMoves(char[][] pos) {
 		ArrayList<char[][]> nextBoards = new ArrayList<char[][]>();

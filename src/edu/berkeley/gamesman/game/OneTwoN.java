@@ -57,7 +57,7 @@ public class OneTwoN extends TieredGame<Integer> {
 	}
 	
 	@Override
-	public String stateToString(Integer pos) {
+	public String displayState(Integer pos) {
 		StringBuilder str = new StringBuilder();
 		int i;
 		for (i = 1; i < gameHeight; i++)

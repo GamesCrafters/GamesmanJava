@@ -50,7 +50,7 @@ public class NullGame extends Game<Object> {
 	}
 
 	@Override
-	public String stateToString(Object pos) {
+	public String displayState(Object pos) {
 		fail();
 		return null;
 	}
@@ -84,7 +84,7 @@ public class NullGame extends Game<Object> {
 	}
 	
 	private void fail(){
-		Util.fatalError("Please specify a game with --game");
+		Util.fatalError("Please specify a game.");
 	}
 
 	@Override
@@ -100,6 +100,11 @@ public class NullGame extends Game<Object> {
 	@Override
 	public char[] pieces() {
 		return new char[] {};
+	}
+
+	@Override
+	public String stateToString(Object pos) {
+		return null;
 	}
 
 }
