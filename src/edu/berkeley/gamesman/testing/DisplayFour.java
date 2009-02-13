@@ -6,17 +6,17 @@ import java.awt.*;
 public class DisplayFour extends JPanel implements Runnable {
 	private final static long serialVersionUID = 2;
 	private char[][] board;
-	Slot[][] slots = new Slot[ConnectFour.WIDTH][ConnectFour.HEIGHT];
+	Slot[][] slots = new Slot[ConnectFour.HEIGHT][ConnectFour.WIDTH];
 
 	public DisplayFour() {
-		int columns, rows;
+		int col, row;
 		setBackground(Color.YELLOW);
 		setForeground(Color.YELLOW);
 		setLayout(new GridLayout(ConnectFour.WIDTH, ConnectFour.HEIGHT));
-		for (rows = ConnectFour.HEIGHT - 1; rows >= 0; rows--) {
-			for (columns = 0; columns < ConnectFour.WIDTH; columns++) {
-				slots[columns][rows] = new Slot(columns, rows);
-				add(slots[columns][rows]);
+		for (row = ConnectFour.HEIGHT - 1; row >= 0; row--) {
+			for (col = 0; col < ConnectFour.WIDTH; col++) {
+				slots[row][col] = new Slot(row,col);
+				add(slots[row][col]);
 			}
 		}
 	}
@@ -29,8 +29,8 @@ public class DisplayFour extends JPanel implements Runnable {
 		int c, r;
 		for (c = 0; c < ConnectFour.WIDTH; c++) {
 			for (r = 0; r < ConnectFour.HEIGHT; r++) {
-				slots[c][r].setChar(board[c][r]);
-				slots[c][r].repaint();
+				slots[r][c].setChar(board[r][c]);
+				slots[r][c].repaint();
 			}
 		}
 	}

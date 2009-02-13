@@ -8,7 +8,7 @@ class Slot extends JComponent {
 	private char myChar = ' ';
 	private int myCol, myRow;
 
-	Slot(int c, int r) {
+	Slot(int r, int c) {
 		myCol = c;
 		myRow = r;
 	}
