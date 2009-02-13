@@ -11,9 +11,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.Properties;
+import java.util.Map.Entry;
 
 import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.Pair;
@@ -159,18 +161,26 @@ public class Configuration implements Serializable {
 	 */
 	public static Configuration configurationFromBytes(byte[] barr){
 		try{
-		DataInput in = new DataInputStream(new ByteArrayInputStream(barr));
+		DataInputStream in = new DataInputStream(new ByteArrayInputStream(barr));
+		Properties props = new Properties();
+		
 		byte[] t = new byte[in.readInt()];
 		in.readFully(t);
-		Properties props = Util.deserialize(t); // TODO dont serialize
+		ByteArrayInputStream bin = new ByteArrayInputStream(t);
+		props.load(bin);
 		Configuration conf = new Configuration(props);
 		conf.setGame((Game<?>) Util.typedInstantiateArg(in.readUTF(),conf));
 		conf.setHasher((Hasher<?>) Util.typedInstantiateArg(in.readUTF(),conf));
 		
-		t = new byte[in.readInt()];
-		in.readFully(t);
+		EnumMap<RecordFields, Pair<Integer, Integer>> sf = new EnumMap<RecordFields,Pair<Integer,Integer>>(RecordFields.class);
 		
-		EnumMap<RecordFields, Pair<Integer, Integer>> sf = Util.deserialize(t);
+		int num = in.readInt();
+		
+		for(int i = 0; i < num; i++){
+			String name = in.readUTF();
+			sf.put(RecordFields.valueOf(name),
+					new Pair<Integer,Integer>(in.readInt(),in.readInt()));
+		}
 		conf.setStoredFields(sf);
 		conf.getGame().prepare();
 		
@@ -197,16 +207,27 @@ public class Configuration implements Serializable {
 		
 		try {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		DataOutput out = new DataOutputStream(baos);
+		DataOutputStream out = new DataOutputStream(baos);
 		
-		byte[] barr = Util.serialize(props);
-		out.writeInt(barr.length);
-		out.write(barr);
+		ByteArrayOutputStream baos2 = new ByteArrayOutputStream();
+		
+		props.store(baos2,null);
+		
+		out.writeInt(baos2.size());
+		out.write(baos2.toByteArray());
+		
 		out.writeUTF(g.getClass().getCanonicalName());
 		out.writeUTF(h.getClass().getCanonicalName());
-		barr = Util.serialize(storedFields);
-		out.writeInt(barr.length);
-		out.write(barr);
+		
+		out.writeInt(storedFields.size());
+		
+		for(Entry<RecordFields,Pair<Integer, Integer>> e : storedFields.entrySet()){
+			out.writeUTF(e.getKey().name());
+			out.writeInt(e.getValue().car);
+			out.writeInt(e.getValue().cdr);
+		}
+		
+		out.close();
 		
 		return baos.toString();
 		}catch (IOException e) {
