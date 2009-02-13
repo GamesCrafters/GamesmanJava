@@ -55,7 +55,6 @@ public class ConnectFour implements MouseListener {
 		if (columnHeight[move] >= 6 || win())
 			return;
 		board[move][columnHeight[move]] = turn;
-		df.setLast(move, columnHeight[move]);
 		if (turn == 'O')
 			turn = 'X';
 		else
