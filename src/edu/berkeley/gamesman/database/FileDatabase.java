@@ -92,8 +92,8 @@ public class FileDatabase extends Database {
 				byte[] header = new byte[headerLen];
 				fd.readFully(header);
 				if(conf == null)
-					conf = Configuration.configurationFromBytes(header);
-				Configuration newconf = Configuration.configurationFromBytes(header);
+					conf = Configuration.load(header);
+				Configuration newconf = Configuration.load(header);
 				Util.assertTrue(newconf.equals(conf),
 						"File database has wrong header; expecting \""
 						+ conf.toString() + "\" got \""
@@ -108,8 +108,9 @@ public class FileDatabase extends Database {
 			if(conf == null)
 				Util.fatalError("You must specify a configuration if the database is to be created");
 			try {
-				fd.writeInt(conf.getConfigString().length());
-				fd.write(conf.getConfigString().getBytes());
+				byte[] b = conf.store();
+				fd.writeInt(b.length);
+				fd.write(b);
 			} catch (IOException e) {
 				Util.fatalError("IO error while creating header: " + e);
 			}

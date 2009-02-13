@@ -150,16 +150,16 @@ public class Configuration implements Serializable {
 	 * @return the Configuration
 	 */
 	
-	public static Configuration configurationFromString(String config){
-		return configurationFromBytes(config.getBytes());
-	}
+	//public static Configuration configurationFromString(String config){
+	//	return load(config.getBytes());
+	//}
 	
 	/**
 	 * Unserialize a configuration from a bytestream
 	 * @param barr Bytes to deserialize
 	 * @return a Configuration
 	 */
-	public static Configuration configurationFromBytes(byte[] barr){
+	public static Configuration load(byte[] barr){
 		try{
 		DataInputStream in = new DataInputStream(new ByteArrayInputStream(barr));
 		Properties props = new Properties();
@@ -203,7 +203,7 @@ public class Configuration implements Serializable {
 	 * Return a serialized version of the Configuration suitable for storing persistently
 	 * @return a String with the Configuration information
 	 */
-	public String getConfigString(){
+	public byte[] store(){
 		
 		try {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -229,7 +229,7 @@ public class Configuration implements Serializable {
 		
 		out.close();
 		
-		return baos.toString();
+		return baos.toByteArray();
 		}catch (IOException e) {
 			Util.fatalError("IO Exception shouldn't have happened here",e);
 			return null;
@@ -271,9 +271,9 @@ public class Configuration implements Serializable {
 	/**
 	 * @return a bytestream representing this Configuration
 	 */
-	public byte[] serialize() {
-		return Util.serialize(this);
-	}
+	//public byte[] serialize() {
+	//	return Util.serialize(this);
+	//}
 	
 	public String toString(){
 		return "Config["+props+","+g+","+h+","+storedFields+"]";

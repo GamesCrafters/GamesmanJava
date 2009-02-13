@@ -197,7 +197,7 @@ public final class DirectoryFilerServer {
 						len = din.readInt();
 						fb = new byte[len];
 						din.readFully(fb);
-						config = Configuration.deserialize(fb);
+						config = Configuration.load(fb);
 						//db.initialize(Util.getChild(root, file).toURL()
 						//		.toExternalForm(), new Configuration(config)); //TODO: don't reference Values
 						db = df.openDatabase(file,config);

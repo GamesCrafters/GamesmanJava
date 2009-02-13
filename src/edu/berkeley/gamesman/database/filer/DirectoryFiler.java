@@ -46,7 +46,7 @@ public class DirectoryFiler extends Filer<Database>{
 		try {
 			while((line = mf.readLine()) != null){
 				String[] bits = line.split("[ \t]+");
-				dbs.put(bits[0],new Pair<Configuration, File>(Configuration.deserialize(Util.decodeBase64(bits[2])),Util.getChild(rootdir, bits[1])));
+				dbs.put(bits[0],new Pair<Configuration, File>(Configuration.load(Util.decodeBase64(bits[2])),Util.getChild(rootdir, bits[1])));
 			}
 		} catch (IOException e) {
 			Util.fatalError("IO error while reading from manifest: "+e);
@@ -88,7 +88,7 @@ public class DirectoryFiler extends Filer<Database>{
 			Util.fatalError("Could not write manifest",e1);
 		}
 		for(Entry<String, Pair<Configuration, File>> e : dbs.entrySet()){
-			fw.println(e.getKey() + "\t"+e.getValue().cdr.getName()+"\t"+Util.encodeBase64(e.getValue().car.serialize()));
+			fw.println(e.getKey() + "\t"+e.getValue().cdr.getName()+"\t"+Util.encodeBase64(e.getValue().car.store()));
 		}
 		
 		fw.flush();

@@ -143,7 +143,7 @@ public final class DirectoryFilerClient {
 			dout.write(3);
 			dout.writeInt(name.length());
 			dout.write(name.getBytes());
-			byte[] confb = config.serialize();
+			byte[] confb = config.store();
 			dout.writeInt(confb.length);
 			dout.write(confb);
 			int fd = din.readInt();
