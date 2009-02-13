@@ -1,5 +1,9 @@
 package edu.berkeley.gamesman.core;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.LineNumberReader;
 import java.io.Serializable;
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -239,6 +243,33 @@ public class Configuration implements Serializable {
 	 */
 	public Object setProperty(String key, String value){
 		return props.setProperty(key, value);
+	}
+	
+	/**
+	 * Read a list of properties from a file
+	 * The properties should be specified as
+	 * key = value
+	 * pairs.  Blank lines are ignored.
+	 * @param path The file path to open
+	 */
+	public void addProperties(String path){
+		LineNumberReader r = null;
+		try {
+			r = new LineNumberReader(new FileReader(path));
+		} catch (FileNotFoundException e) {
+			Util.fatalError("Could not open property file",e);
+		}
+		String line;
+		try {
+			while((line = r.readLine()) != null){
+				if(line.equals("")) continue;
+				String[] arr = line.split("\\s+=\\s+");
+				Util.assertTrue(arr.length == 2, "Malformed property file at line \""+line+"\"");
+				setProperty(arr[0], arr[1]);
+			}
+		} catch (IOException e) {
+			Util.fatalError("Could not read from property file",e);
+		}
 	}
 	
 

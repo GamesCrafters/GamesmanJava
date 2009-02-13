@@ -12,6 +12,8 @@ import java.util.Properties;
 
 import org.apache.commons.codec.binary.Base64;
 
+import edu.berkeley.gamesman.core.Configuration;
+
 /**
  * Various utility functions accessible from any class
  * 
@@ -108,13 +110,14 @@ public final class Util {
 
 	static final EnumSet<DebugFacility> debugOpts = EnumSet.noneOf(DebugFacility.class);
 	
-	public static void debugInit(Properties props){
+	public static void debugInit(Configuration props){
 		String env = System.getenv("GAMESMAN_DEBUG");
 		for(DebugFacility f: DebugFacility.values()){
-			if(props.getProperty("gamesman.debug."+f.toString()) != null) debugOpts.add(f);
+			if(props.getProperty("gamesman.debug."+f.toString(),null) != null) debugOpts.add(f);
 			if(env != null && env.contains(f.toString())) debugOpts.add(f);
 		}
-		debugOpts.add(DebugFacility.Core);
+		if(!debugOpts.isEmpty())
+			debugOpts.add(DebugFacility.Core);
 		Util.debug(DebugFacility.Core,"Debugging enabled for: "+debugOpts);
 	}
 	

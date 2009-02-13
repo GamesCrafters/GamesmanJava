@@ -53,5 +53,9 @@ public enum DebugFacility {
 	/**
 	 * Debug facility for the Filer classes
 	 */
-	Filer
+	Filer,
+	/**
+	 * Debug facility for the JSON interface
+	 */
+	JSON
 }
