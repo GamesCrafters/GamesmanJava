@@ -105,6 +105,8 @@ public class FileDatabase extends Database {
 				Util.fatalError("IO error while checking header: " + e);
 			}
 		} else {
+			if(conf == null)
+				Util.fatalError("You must specify a configuration if the database is to be created");
 			try {
 				fd.writeInt(conf.getConfigString().length());
 				fd.write(conf.getConfigString().getBytes());
