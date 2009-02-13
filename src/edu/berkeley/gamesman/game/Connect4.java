@@ -23,7 +23,7 @@ import edu.berkeley.gamesman.util.Util;
  */
 public class Connect4 extends TieredGame<char[][]> {
 
-	private static final long serialVersionUID = -59232910281344449L;
+	private static final long serialVersionUID = -1234567890123456L;
 
 	final char[] pieces = {'X','O'};
 	
