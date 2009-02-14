@@ -37,6 +37,8 @@ public abstract class TieredGame<State> extends Game<State> {
 	
 	@Override
 	public State hashToState(BigInteger hash) {
+		if(myHasher == null)
+			Util.fatalError("You must call prepare() before hashing!");
 		if(myHasher.cacheNumTiers == -1) myHasher.cacheNumTiers = myHasher.numberOfTiers();
 		if(myHasher.tierEnds == null) myHasher.lastHashValueForTier(myHasher.cacheNumTiers-1);
 		
@@ -53,6 +55,8 @@ public abstract class TieredGame<State> extends Game<State> {
 
 	@Override
 	public BigInteger stateToHash(State pos) {
+		if(myHasher == null)
+			Util.fatalError("You must call prepare() before hashing!");
 		Pair<Integer,BigInteger> p = myHasher.tierIndexForState(pos);
 		return myHasher.hashOffsetForTier(p.car).add(p.cdr);
 	}
@@ -61,6 +65,8 @@ public abstract class TieredGame<State> extends Game<State> {
 	 * @return the number of Tiers in this particular game
 	 */
 	public final int numberOfTiers(){
+		if(myHasher == null)
+			Util.fatalError("You must call prepare() before hashing!");
 		return myHasher.numberOfTiers();
 	}
 	
@@ -69,6 +75,8 @@ public abstract class TieredGame<State> extends Game<State> {
 	 * @return the first hash value for that tier
 	 */
 	public final BigInteger hashOffsetForTier(int tier){
+		if(myHasher == null)
+			Util.fatalError("You must call prepare() before hashing!");
 		return myHasher.hashOffsetForTier(tier);
 	}
 	
@@ -77,6 +85,8 @@ public abstract class TieredGame<State> extends Game<State> {
 	 * @return the last hash value that is still within that tier
 	 */
 	public final BigInteger lastHashValueForTier(int tier){
+		if(myHasher == null)
+			Util.fatalError("You must call prepare() before hashing!");
 		return myHasher.lastHashValueForTier(tier);
 	}
 	
@@ -85,5 +95,4 @@ public abstract class TieredGame<State> extends Game<State> {
 	public final BigInteger lastHash() {
 		return lastHashValueForTier(numberOfTiers()-1);
 	}
-	
 }

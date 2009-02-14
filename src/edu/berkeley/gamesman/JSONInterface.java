@@ -14,29 +14,40 @@ import org.json.JSONObject;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Game;
+import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
-public class JSONInterface {
+public class JSONInterface implements Runnable {
 	
 	private Database db;
 	private Configuration conf;
+	final String [] args;
+	boolean done;
+	ServerSocket ssock;
+	
+	public JSONInterface(String[] args){
+		this.args = args;
+	}
 	
 	/**
 	 * Launch a JSON server for use by GamesmanWeb
 	 * @param args arguments
 	 */
 	public static void main(String[] args){
-		new JSONInterface().run(args);
+		JSONInterface j = new JSONInterface(args);
+		Thread t = new Thread(j);
+		t.setName("JSON Master Server");
+		t.start();
 	}
 
 	/**
 	 * @param args arguments
 	 */
-	public void run(String[] args) {
-		ServerSocket ssock = null;
+	public void run() {
+		ssock = null;
 		if(args.length != 1){
 			Util.fatalError("You must specify a configuration file as the only command line argument");
 		}
@@ -60,18 +71,22 @@ public class JSONInterface {
 		conf = db.getConfiguration();
 		
 		Util.debug(DebugFacility.JSON, "Server ready!");
-		while(true){
+		while(!done){
 			Socket s;
 			try {
 				s = ssock.accept();
 			} catch (IOException e) {
-				Util.warn("IO Exception while accepting: "+e);
+				if(!done)
+					Util.warn("IO Exception while accepting: "+e);
 				break;
 			}
 			JSONThread<?> t = new JSONThread<Object>(s);
 			t.setName("JSONThread "+s);
 			t.start();
 		}
+		
+		Util.debug(DebugFacility.JSON,"Shutting down JSON server cleanly");
+		db.close();
 		
 	}
 	
@@ -105,6 +120,15 @@ public class JSONInterface {
 					Util.warn("Unable to read line from socket, dropping");
 					break;
 				}
+				if(line.equals("###quit")){
+					done = true;
+					try {
+						ssock.close();
+					} catch (IOException e) {
+						Util.fatalError("Could not shut down server",e);
+					}
+					return;
+				}
 				JSONObject j;
 				try {
 					j = new JSONObject("{"+line+"}");
@@ -124,7 +148,10 @@ public class JSONInterface {
 						JSONObject entry = new JSONObject();
 						Record rec = db.getValue(g.stateToHash(next));
 						for(RecordFields f : conf.getStoredFields().keySet()){
-							entry.put(f.name(),rec.get(f));
+							if(f == RecordFields.Value)
+								entry.put(f.name(), PrimitiveValue.values()[(int) rec.get(f)]);
+							else
+								entry.put(f.name(),rec.get(f));
 							entry.put("board", g.stateToString(next));
 						}
 						response.accumulate("response", entry);

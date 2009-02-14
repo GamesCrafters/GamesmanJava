@@ -33,4 +33,8 @@ public enum PrimitiveValue {
 	public int value(){
 		return value;
 	}
+	
+	public String toString(){
+		return this.name();
+	}
 }
