@@ -33,6 +33,7 @@ public class ConnectFour implements MouseListener {
 		fd = db;
 		df = disfour;
 		cgame = new Connect4(db.getConfiguration());
+		cgame.prepare();
 		for (c = 0; c < WIDTH; c++) {
 			for (r = 0; r < HEIGHT; r++) {
 				df.slots[r][c].addMouseListener(this);
@@ -96,7 +97,7 @@ public class ConnectFour implements MouseListener {
 				if (pos[row][col] != board[row][col])
 					break;
 			}
-			if (pos[row][col] != board[row][col])
+			if (row<HEIGHT)
 				break;
 		}
 		makeMove(col);
@@ -115,8 +116,8 @@ public class ConnectFour implements MouseListener {
 			for (row = 0; row < HEIGHT; row++) {
 				if (board[row][col] == ' ')
 					break;
-				up = row <= 2;
-				right = col <= 3;
+				up = row <= HEIGHT-4;
+				right = col <= WIDTH-4;
 				upright = up && right;
 				downright = row >= 3 && right;
 				for (i = 0; i < 4; i++) {
