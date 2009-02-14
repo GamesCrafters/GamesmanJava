@@ -21,11 +21,9 @@ import edu.berkeley.gamesman.util.Util;
  */
 public class Connect4 extends TieredGame<char[][]> {
 
-	private static final long serialVersionUID = -1234567890123456L;
-
 	final char[] pieces = { 'X', 'O' };
 
-	int piecesToWin = 4;
+	final int piecesToWin;
 
 	static {
 		DependencyResolver.allowHasher(Connect4.class,
@@ -36,8 +34,7 @@ public class Connect4 extends TieredGame<char[][]> {
 	 * Connect4 Constructor Creates the hashers we use (does not use the
 	 * command-line specified one, needs special hasher)
 	 * 
-	 * @param conf
-	 *            the configuration
+	 * @param conf the configuration
 	 */
 	public Connect4(Configuration conf) {
 		super(conf);
@@ -103,13 +100,13 @@ public class Connect4 extends TieredGame<char[][]> {
 		// Check horizontal win
 		ext = 1;
 		stopPos = Math.min(x, piecesToWin - ext);
-		for (int i = 0; i < stopPos; i++)
+		for (int i = 1; i < stopPos; i++)
 			if (state[y][x - i] == turn)
 				ext++;
 			else
 				break;
 		stopPos = Math.min(gameWidth - x, piecesToWin - ext);
-		for (int i = 0; i < stopPos; i++)
+		for (int i = 1; i < stopPos; i++)
 			if (state[y][x + i] == turn)
 				ext++;
 			else
@@ -120,14 +117,14 @@ public class Connect4 extends TieredGame<char[][]> {
 		// Check UpRight Win
 		ext = 1;
 		stopPos = Math.min(Math.min(x, y), piecesToWin - ext);
-		for (int i = 0; i < stopPos; i++)
+		for (int i = 1; i < stopPos; i++)
 			if (state[y - i][x - i] == turn)
 				ext++;
 			else
 				break;
 		stopPos = Math.min(Math.min(gameWidth - x, gameHeight - y), piecesToWin
 				- ext);
-		for (int i = 0; i < stopPos; i++)
+		for (int i = 1; i < stopPos; i++)
 			if (state[y + i][x + i] == turn)
 				ext++;
 			else
@@ -138,13 +135,13 @@ public class Connect4 extends TieredGame<char[][]> {
 		// Check DownRight Win
 		ext = 1;
 		stopPos = Math.min(Math.min(x, gameHeight - y), piecesToWin - ext);
-		for (int i = 0; i < stopPos; i++)
+		for (int i = 1; i < stopPos; i++)
 			if (state[y + i][x - i] == turn)
 				ext++;
 			else
 				break;
 		stopPos = Math.min(Math.min(gameWidth - x, y), piecesToWin - ext);
-		for (int i = 0; i < stopPos; i++)
+		for (int i = 1; i < stopPos; i++)
 			if (state[y - i][x + i] == turn)
 				ext++;
 			else

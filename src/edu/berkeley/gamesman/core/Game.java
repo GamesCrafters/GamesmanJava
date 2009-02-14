@@ -1,6 +1,5 @@
 package edu.berkeley.gamesman.core;
 
-import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Collection;
 
@@ -14,8 +13,7 @@ import edu.berkeley.gamesman.util.Util;
  * @param <State> The object used to represent a Game State
  *
  */
-public abstract class Game<State> implements Serializable {
-	private static final long serialVersionUID = 6376065802238384739L;
+public abstract class Game<State> {
 	
 	protected final int gameWidth, gameHeight;
 	protected final Configuration conf;

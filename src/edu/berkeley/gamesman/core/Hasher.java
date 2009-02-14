@@ -1,6 +1,5 @@
 package edu.berkeley.gamesman.core;
 
-import java.io.Serializable;
 import java.math.BigInteger;
 
 import edu.berkeley.gamesman.util.Util;
@@ -11,8 +10,7 @@ import edu.berkeley.gamesman.util.Util;
  * @author Steven Schlansker
  * @param <Board> The type of Board that this hasher can hash
  */
-public abstract class Hasher<Board> implements Serializable {
-	private static final long serialVersionUID = -6537920117712373326L;
+public abstract class Hasher<Board> {
 	protected Game<Board> game;
 	protected Configuration conf;
 	protected final char[] pieces;

@@ -80,6 +80,7 @@ public class ConnectFour implements MouseListener {
 			char[][] best = null;
 			PrimitiveValue bestOutcome = PrimitiveValue.Undecided;
 			PrimitiveValue thisOutcome;
+			
 			while (nextStates.hasNext()) {
 				Pair<String,char[][]> move = nextStates.next();
 				s = move.cdr;
@@ -91,11 +92,14 @@ public class ConnectFour implements MouseListener {
 				}
 			}
 			moveBySet(best);
+			System.out.println("Done with startCompMove");
 		}
 	}
 
 	private void moveBySet(char[][] pos) {
 		int row, col;
+		if(pos == null)
+			System.out.println("pos is null");
 		System.out.println(Arrays.deepToString(pos));
 		for (col = 0; col < WIDTH; col++) {
 			for (row = 0; row < HEIGHT; row++) {
