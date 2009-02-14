@@ -37,4 +37,10 @@ public enum PrimitiveValue {
 	public String toString(){
 		return this.name();
 	}
+	
+	public boolean isPreferableTo(PrimitiveValue v){
+		if(this == PrimitiveValue.Lose && v == PrimitiveValue.Win)
+			return true;
+		return false;
+	}
 }
