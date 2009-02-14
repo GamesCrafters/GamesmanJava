@@ -197,6 +197,13 @@ public final class Record {
 	public final long get(final RecordFields field) {
 		return fields[sf.get(field).car];
 	}
+	
+	/**
+	 * @return the value of this position
+	 */
+	public final PrimitiveValue get(){
+		return PrimitiveValue.values()[(int)get(RecordFields.Value)];
+	}
 
 	private final void setupBits() {
 		sf = conf.getStoredFields();
