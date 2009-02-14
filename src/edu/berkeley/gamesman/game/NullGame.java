@@ -8,6 +8,7 @@ import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.hasher.NullHasher;
 import edu.berkeley.gamesman.util.DependencyResolver;
+import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -44,7 +45,7 @@ public class NullGame extends Game<Object> {
 	}
 
 	@Override
-	public Collection<Object> validMoves(Object pos) {
+	public Collection<Pair<String,Object>> validMoves(Object pos) {
 		fail();
 		return null;
 	}

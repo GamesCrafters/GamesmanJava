@@ -8,6 +8,7 @@ import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.hasher.OneTwoNHasher;
 import edu.berkeley.gamesman.util.DependencyResolver;
+import edu.berkeley.gamesman.util.Pair;
 
 /**
  * OneTwoTen
@@ -76,14 +77,14 @@ public class OneTwoN extends TieredGame<Integer> {
 	}	
 
 	@Override
-	public Collection<Integer> validMoves(Integer pos) {
-		ArrayList<Integer> nextBoards = new ArrayList<Integer>();		
+	public Collection<Pair<String,Integer>> validMoves(Integer pos) {
+		ArrayList<Pair<String,Integer>> nextBoards = new ArrayList<Pair<String,Integer>>();		
 	
 		if (primitiveValue(pos) != PrimitiveValue.Undecided)
 			return nextBoards;
 		
 		for (int move = 1; move <= gameWidth; move++)
-			nextBoards.add(pos + move);
+			nextBoards.add(new Pair<String,Integer>("+"+move,pos + move));
 		
 		return nextBoards;
 	}

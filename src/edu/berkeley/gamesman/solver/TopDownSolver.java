@@ -14,6 +14,7 @@ import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.core.Solver;
 import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.util.DebugFacility;
+import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -24,59 +25,64 @@ import edu.berkeley.gamesman.util.Util;
 public class TopDownSolver extends Solver {
 
 	Configuration conf;
-	Game<Object> g;
+	//Game<Object> g;
 	
 	@Override
 	public WorkUnit prepareSolve(Configuration config, Game<?> game) {
 		conf = config;
-		g = Util.checkedCast(game);
-		return new TopDownSolverWorkUnit();
+		return new TopDownSolverWorkUnit(game);
 	}
 	
-	class TopDownSolverWorkUnit implements WorkUnit {
+	class TopDownSolverWorkUnit<T> implements WorkUnit {
+		
+		Game<T> game;
+
+		public TopDownSolverWorkUnit(Game<T> g) {
+			game = g;
+		}
 
 		public void conquer() {
-			HashMap<Object, BigInteger> cache = new HashMap<Object, BigInteger>();
+			HashMap<T, BigInteger> cache = new HashMap<T, BigInteger>();
 			
-			List<Object> workList = new ArrayList<Object>();
+			List<T> workList = new ArrayList<T>();
 			ArrayList<Record> recs = new ArrayList<Record>();
-			for (Object s : g.startingPositions()) workList.add(s);
+			for (T s : game.startingPositions()) workList.add(s);
 			next: while(!workList.isEmpty()){
 				recs.clear();
-				Object state = workList.remove(workList.size()-1);
-				Collection<Object> children = g.validMoves(state);
+				T state = workList.remove(workList.size()-1);
+				Collection<Pair<String,T>> children = game.validMoves(state);
 				Util.debug(DebugFacility.Solver,"Looking at state"+state);
 				Util.debug(DebugFacility.Solver,"Worklist is now "+workList);
-				for(Object child : children){
+				for(Pair<String,T> child : children){
 					BigInteger loc = cache.get(child);
 					Record r;
 					if(loc == null){
-						loc = g.stateToHash(child);
-						cache.put(child,loc);
+						loc = game.stateToHash(child.cdr);
+						cache.put(child.cdr,loc);
 						workList.add(state);
-						workList.add(child);
+						workList.add(child.cdr);
 						continue next;
 					}
 					r = db.getRecord(loc);
 					if(r.get(RecordFields.Value) == PrimitiveValue.Undecided.value()){
 						workList.add(state);
-						workList.add(child);
+						workList.add(child.cdr);
 						continue next;
 					}
 					if(r == null) r = db.getRecord(loc);
 					recs.add(r);
 				}
-				BigInteger loc = g.stateToHash(state);
+				BigInteger loc = game.stateToHash(state);
 				Record next;
 				if(children.isEmpty()){
-					PrimitiveValue prim = g.primitiveValue(state);
+					PrimitiveValue prim = game.primitiveValue(state);
 					Util.debug(DebugFacility.Solver,"Getting primitive value for state "+state+": "+prim);
 					next = new Record(conf,prim);
 				}else{
 					next = Record.combine(conf, recs);
 				}
 				db.getRecord(loc, next);
-				Util.debug(DebugFacility.Solver,"Solved state "+g.displayState(state)+" to "+next);
+				Util.debug(DebugFacility.Solver,"Solved state "+game.displayState(state)+" to "+next);
 			}
 		}
 

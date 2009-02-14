@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Collection;
 
+import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -57,9 +58,9 @@ public abstract class Game<State> implements Serializable {
 	/**
 	 * Given a board state, generates all valid board states one move away from the given state
 	 * @param pos The board state to start from
-	 * @return All valid board states one move forward
+	 * @return A <move,state> pair for all valid board states one move forward
 	 */
-	public abstract Collection<State> validMoves(State pos);
+	public abstract Collection<Pair<String,State>> validMoves(State pos);
 	
 	/**
 	 * Given a board state return its primitive "value".

@@ -4,6 +4,7 @@ import java.awt.Container;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -14,6 +15,7 @@ import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.database.FileDatabase;
 import edu.berkeley.gamesman.game.Connect4;
+import edu.berkeley.gamesman.util.Pair;
 
 public class ConnectFour implements MouseListener {
 	char[][] board = new char[HEIGHT][WIDTH];
@@ -72,15 +74,17 @@ public class ConnectFour implements MouseListener {
 
 	private void startCompMove() {
 		if (compTurn() && !win()) {
-			Collection<char[][]> moves = cgame.validMoves(board);
-			Iterator<char[][]> nextStates = moves.iterator();
+			Collection<Pair<String,char[][]>> moves = cgame.validMoves(board);
+			Iterator<Pair<String,char[][]>> nextStates = moves.iterator();
 			char[][] s;
 			char[][] best = null;
 			PrimitiveValue bestOutcome = PrimitiveValue.Undecided;
 			PrimitiveValue thisOutcome;
 			while (nextStates.hasNext()) {
-				s = nextStates.next();
+				Pair<String,char[][]> move = nextStates.next();
+				s = move.cdr;
 				thisOutcome = fd.getRecord(cgame.stateToHash(s)).get();
+				System.out.println("Next possible move "+move.car+" for state "+cgame.stateToHash(s)+" has value "+thisOutcome);
 				if (best == null || thisOutcome.isPreferableTo(bestOutcome)) {
 					bestOutcome = thisOutcome;
 					best = s;
@@ -92,6 +96,7 @@ public class ConnectFour implements MouseListener {
 
 	private void moveBySet(char[][] pos) {
 		int row, col;
+		System.out.println(Arrays.deepToString(pos));
 		for (col = 0; col < WIDTH; col++) {
 			for (row = 0; row < HEIGHT; row++) {
 				if (pos[row][col] != board[row][col])

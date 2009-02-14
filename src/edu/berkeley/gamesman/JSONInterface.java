@@ -18,6 +18,7 @@ import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.util.DebugFacility;
+import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
 public class JSONInterface implements Runnable {
@@ -144,15 +145,16 @@ public class JSONInterface implements Runnable {
 					
 					S state = g.stringToState(board);
 					
-					for(S next : g.validMoves(state)){
+					for(Pair<String,S> next : g.validMoves(state)){
 						JSONObject entry = new JSONObject();
-						Record rec = db.getRecord(g.stateToHash(next));
+						Record rec = db.getRecord(g.stateToHash(next.cdr));
 						for(RecordFields f : conf.getStoredFields().keySet()){
 							if(f == RecordFields.Value)
 								entry.put(f.name(), PrimitiveValue.values()[(int) rec.get(f)]);
 							else
 								entry.put(f.name(),rec.get(f));
-							entry.put("board", g.stateToString(next));
+							entry.put("move",next.car);
+							entry.put("board", g.stateToString(next.cdr));
 						}
 						response.accumulate("response", entry);
 					}

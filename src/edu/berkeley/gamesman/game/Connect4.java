@@ -9,6 +9,7 @@ import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.hasher.PerfectConnect4Hash;
 import edu.berkeley.gamesman.util.DependencyResolver;
+import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -203,8 +204,8 @@ public class Connect4 extends TieredGame<char[][]> {
 	}
 
 	@Override
-	public Collection<char[][]> validMoves(char[][] pos) {
-		ArrayList<char[][]> nextBoards = new ArrayList<char[][]>();
+	public Collection<Pair<String,char[][]>> validMoves(char[][] pos) {
+		ArrayList<Pair<String,char[][]>> nextBoards = new ArrayList<Pair<String,char[][]>>();
 
 		char[][] board;
 
@@ -220,7 +221,7 @@ public class Connect4 extends TieredGame<char[][]> {
 					board = pos.clone();
 					board[x] = pos[x].clone();
 					board[x][y] = nextpiece;
-					nextBoards.add(board);
+					nextBoards.add(new Pair<String,char[][]>("c"+x,board));
 					break;
 				}
 			}

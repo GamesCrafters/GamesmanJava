@@ -24,9 +24,9 @@ import edu.berkeley.gamesman.util.Util;
  * @author Steven Schlansker
  * 
  */
-public final class TierSolver extends Solver {
+public final class TierSolver<T> extends Solver {
 
-	protected TieredGame<Object> myGame;
+	protected TieredGame<T> myGame;
 	protected Configuration conf;
 
 	@Override
@@ -41,7 +41,7 @@ public final class TierSolver extends Solver {
 		return new TierSolverWorkUnit();
 	}
 
-	protected void solvePartialTier(TieredGame<Object> game, BigInteger start,
+	protected void solvePartialTier(TieredGame<T> game, BigInteger start,
 			BigInteger end, TierSolverUpdater t) {
 		BigInteger current = start.subtract(BigInteger.ONE);
 
@@ -52,9 +52,9 @@ public final class TierSolver extends Solver {
 					BigInteger.ZERO) == 0)
 				t.calculated(10000);
 
-			Object state = game.hashToState(current);
+			T state = game.hashToState(current);
 
-			Collection<?> children = game.validMoves(state);
+			Collection<Pair<String,T>> children = game.validMoves(state);
 
 			if (children.size() == 0) {
 				Record prim = new Record(conf, game.primitiveValue(state));
@@ -63,8 +63,8 @@ public final class TierSolver extends Solver {
 			} else {
 				ArrayList<Record> vals = new ArrayList<Record>(children.size());
 
-				for (Object child : children) {
-					vals.add(db.getRecord(game.stateToHash(child)));
+				for (Pair<String,T> child : children) {
+					vals.add(db.getRecord(game.stateToHash(child.cdr)));
 				}
 
 				Record newVal = Record.combine(conf, vals);
