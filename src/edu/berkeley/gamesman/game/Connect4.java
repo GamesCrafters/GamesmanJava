@@ -84,10 +84,13 @@ public class Connect4 extends TieredGame<char[][]> {
 		else
 			lastTurn = 'O';
 		for (int x = 0; x < gameWidth; x++) {
-			if (pos[columnHeight[x]][x] == lastTurn)
-				if (checkLastWin(pos, x, columnHeight[x]))
-					return PrimitiveValue.Lose;
+			if (columnHeight[x] > 0 && pos[columnHeight[x] - 1][x] == lastTurn
+					&& checkLastWin(pos, x, columnHeight[x] - 1))
+				return PrimitiveValue.Lose;
 		}
+		for (int i = 0; i < gameWidth; i++)
+			if (columnHeight[i] < gameHeight)
+				return PrimitiveValue.Undecided;
 		return PrimitiveValue.Tie;
 	}
 
