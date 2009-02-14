@@ -8,19 +8,19 @@ public enum PrimitiveValue {
 	/**
 	 * This value hasn't been computed yet
 	 */
-	Undecided(0),
+	Undecided(3),
 	/**
 	 * The next player to move will win in perfect play
 	 */
-	Win(1),
+	Win(2),
 	/**
 	 * The next player to move will lose even playing perfectly
 	 */
-	Lose(2),
+	Lose(0),
 	/**
 	 * The game will eventually end in a tie
 	 */
-	Tie(3);
+	Tie(1);
 	
 	private int value;
 	PrimitiveValue(int v){
@@ -39,8 +39,6 @@ public enum PrimitiveValue {
 	}
 	
 	public boolean isPreferableTo(PrimitiveValue v){
-		if(this == PrimitiveValue.Lose && v == PrimitiveValue.Win)
-			return true;
-		return false;
+		return (value > v.value);
 	}
 }
