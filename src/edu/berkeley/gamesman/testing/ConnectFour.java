@@ -80,7 +80,7 @@ public class ConnectFour implements MouseListener {
 			PrimitiveValue thisOutcome;
 			while (nextStates.hasNext()) {
 				s = nextStates.next();
-				thisOutcome = fd.getValue(cgame.stateToHash(s)).get();
+				thisOutcome = fd.getRecord(cgame.stateToHash(s)).get();
 				if (best == null || thisOutcome.isPreferableTo(bestOutcome)) {
 					bestOutcome = thisOutcome;
 					best = s;
@@ -183,7 +183,7 @@ public class ConnectFour implements MouseListener {
 		Gamesman.main(new String[] { "c4.gprop" });
 		FileDatabase fd = new FileDatabase();
 		fd.initialize("file:///tmp/database.db", null);
-		System.out.println(fd.getValue(BigInteger.ZERO));
+		System.out.println(fd.getRecord(BigInteger.ZERO));
 		DisplayFour df = new DisplayFour();
 		/* ConnectFour cf= */new ConnectFour(df, fd);
 		JFrame jf = new JFrame();
