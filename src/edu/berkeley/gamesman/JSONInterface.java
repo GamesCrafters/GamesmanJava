@@ -146,7 +146,7 @@ public class JSONInterface implements Runnable {
 					
 					for(S next : g.validMoves(state)){
 						JSONObject entry = new JSONObject();
-						Record rec = db.getValue(g.stateToHash(next));
+						Record rec = db.getRecord(g.stateToHash(next));
 						for(RecordFields f : conf.getStoredFields().keySet()){
 							if(f == RecordFields.Value)
 								entry.put(f.name(), PrimitiveValue.values()[(int) rec.get(f)]);

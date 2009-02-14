@@ -49,7 +49,7 @@ public class FileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized Record getValue(BigInteger loc) {
+	public synchronized Record getRecord(BigInteger loc) {
 		try {
 			fd.seek(loc.longValue() + offset);
 			Record v = Record.readStream(conf, fd);
@@ -127,7 +127,7 @@ public class FileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void setValue(BigInteger loc, Record value) {
+	public synchronized void getRecord(BigInteger loc, Record value) {
 		try {
 			fd.seek(loc.longValue() + offset);
 			value.writeStream(fd);

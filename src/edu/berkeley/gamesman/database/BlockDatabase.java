@@ -52,7 +52,7 @@ public class BlockDatabase extends FileDatabase {
 	}
 
 	@Override
-	public Record getValue(BigInteger loc) {
+	public Record getRecord(BigInteger loc) {
 		lastRecord = Math.max(lastRecord,loc.longValue());
 		return Record.read(conf, buf, loc.longValue());
 	}
@@ -70,7 +70,7 @@ public class BlockDatabase extends FileDatabase {
 	}
 
 	@Override
-	public void setValue(BigInteger loc, Record value) {
+	public void getRecord(BigInteger loc, Record value) {
 		lastRecord = Math.max(lastRecord,loc.longValue());
 		value.write(buf, loc.longValue());
 	}

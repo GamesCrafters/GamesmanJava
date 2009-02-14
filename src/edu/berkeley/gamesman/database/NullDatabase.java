@@ -21,7 +21,7 @@ public final class NullDatabase extends Database {
 	public void flush() {}
 
 	@Override
-	public Record getValue(BigInteger loc) {
+	public Record getRecord(BigInteger loc) {
 		return new Record(conf,PrimitiveValue.Undecided);
 	}
 
@@ -31,6 +31,6 @@ public final class NullDatabase extends Database {
 	}
 
 	@Override
-	public void setValue(BigInteger loc, Record value) {}
+	public void getRecord(BigInteger loc, Record value) {}
 
 }

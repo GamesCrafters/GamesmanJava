@@ -49,8 +49,8 @@ public class RemoteDatabase extends Database {
 	}
 
 	@Override
-	public Record getValue(BigInteger loc) {
-		return real.get().getValue(loc);
+	public Record getRecord(BigInteger loc) {
+		return real.get().getRecord(loc);
 	}
 
 	@Override
@@ -84,8 +84,8 @@ public class RemoteDatabase extends Database {
 	}
 
 	@Override
-	public void setValue(BigInteger loc, Record value) {
-		real.get().setValue(loc, value);
+	public void getRecord(BigInteger loc, Record value) {
+		real.get().getRecord(loc, value);
 	}
 
 }

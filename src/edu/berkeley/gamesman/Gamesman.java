@@ -284,7 +284,7 @@ public final class Gamesman {
 					break;
 				case read:
 					System.out.print(dbname+" read> ");
-					System.out.println("Result: "+cdb.getValue(new BigInteger(input.readLine())));
+					System.out.println("Result: "+cdb.getRecord(new BigInteger(input.readLine())));
 					break;
 				case write:
 					System.out.print(dbname+" write> ");

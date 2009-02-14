@@ -188,7 +188,7 @@ public final class DirectoryFilerClient {
 		}
 
 		@Override
-		public Record getValue(BigInteger loc) {
+		public Record getRecord(BigInteger loc) {
 			try {
 				// Util.debug("Trying to read "+loc);
 
@@ -226,7 +226,7 @@ public final class DirectoryFilerClient {
 		}
 
 		@Override
-		public void setValue(BigInteger loc, Record value) {
+		public void getRecord(BigInteger loc, Record value) {
 			try {
 				if(loc.compareTo(pos) != 0) seek(loc);
 				dout.write(6);

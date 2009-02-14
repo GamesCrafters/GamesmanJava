@@ -90,7 +90,7 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 		
 		for(Object move : game.validMoves(myHash)){
 			seenOne = true;
-			vals.add(db.getValue(game.stateToHash(move)));
+			vals.add(db.getRecord(game.stateToHash(move)));
 		}
 		if(seenOne){
 			record = Record.combine(config,vals);
@@ -98,7 +98,7 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 			record = new Record(config,game.primitiveValue(myHash));
 		}
 		
-		db.setValue(position.get(),record);
+		db.getRecord(position.get(),record);
 	}
 
 	public void reduce(

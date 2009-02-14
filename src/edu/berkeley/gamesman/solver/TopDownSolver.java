@@ -57,13 +57,13 @@ public class TopDownSolver extends Solver {
 						workList.add(child);
 						continue next;
 					}
-					r = db.getValue(loc);
+					r = db.getRecord(loc);
 					if(r.get(RecordFields.Value) == PrimitiveValue.Undecided.value()){
 						workList.add(state);
 						workList.add(child);
 						continue next;
 					}
-					if(r == null) r = db.getValue(loc);
+					if(r == null) r = db.getRecord(loc);
 					recs.add(r);
 				}
 				BigInteger loc = g.stateToHash(state);
@@ -75,7 +75,7 @@ public class TopDownSolver extends Solver {
 				}else{
 					next = Record.combine(conf, recs);
 				}
-				db.setValue(loc, next);
+				db.getRecord(loc, next);
 				Util.debug(DebugFacility.Solver,"Solved state "+g.displayState(state)+" to "+next);
 			}
 		}

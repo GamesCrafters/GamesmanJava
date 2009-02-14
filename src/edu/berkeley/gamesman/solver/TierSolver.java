@@ -59,16 +59,16 @@ public final class TierSolver extends Solver {
 			if (children.size() == 0) {
 				Record prim = new Record(conf, game.primitiveValue(state));
 
-				db.setValue(current, prim);
+				db.getRecord(current, prim);
 			} else {
 				ArrayList<Record> vals = new ArrayList<Record>(children.size());
 
 				for (Object child : children) {
-					vals.add(db.getValue(game.stateToHash(child)));
+					vals.add(db.getRecord(game.stateToHash(child)));
 				}
 
 				Record newVal = Record.combine(conf, vals);
-				db.setValue(current, newVal);
+				db.getRecord(current, newVal);
 			}
 		}
 	}

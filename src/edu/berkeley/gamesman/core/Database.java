@@ -35,13 +35,13 @@ public abstract class Database {
 	 * @param loc The record number
 	 * @return The stored Record
 	 */
-	public abstract Record getValue(BigInteger loc);
+	public abstract Record getRecord(BigInteger loc);
 	/**
 	 * Store a record in the Database
 	 * @param loc The record number
 	 * @param value The Record to store
 	 */
-	public abstract void setValue(BigInteger loc, Record value);
+	public abstract void getRecord(BigInteger loc, Record value);
 	
 	/**
 	 * Ensure all buffers are flushed to disk.  The on-disk state should be consistent after this call returns.
