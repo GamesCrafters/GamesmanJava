@@ -38,7 +38,12 @@ public enum PrimitiveValue {
 		return this.name();
 	}
 	
-	public boolean isPreferableTo(PrimitiveValue v){
-		return (value > v.value);
+	/**
+	 * @param otherValue The value to compare this one with
+	 * @return Is true only if this PrimitiveValue is better than otherValue.
+	 * Order of values from worst to best: Lose, Tie, Win, Undecided 
+	 */
+	public boolean isPreferableTo(PrimitiveValue otherValue){
+		return (value > otherValue.value);
 	}
 }
