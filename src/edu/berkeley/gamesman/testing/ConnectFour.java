@@ -10,6 +10,7 @@ import java.util.Iterator;
 import javax.swing.JFrame;
 
 import edu.berkeley.gamesman.Gamesman;
+import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.database.FileDatabase;
 import edu.berkeley.gamesman.game.Connect4;
@@ -75,13 +76,12 @@ public class ConnectFour implements MouseListener {
 			Iterator<char[][]> nextStates = moves.iterator();
 			char[][] s;
 			char[][] best = null;
-			long bestOutcome = 0;
-			long thisOutcome;
+			PrimitiveValue bestOutcome = PrimitiveValue.Undecided;
+			PrimitiveValue thisOutcome;
 			while (nextStates.hasNext()) {
 				s = nextStates.next();
-				thisOutcome = fd.getRecord(cgame.stateToHash(s)).get(
-						RecordFields.Value);
-				if (best == null || thisOutcome > bestOutcome) {
+				thisOutcome = fd.getValue(cgame.stateToHash(s)).get();
+				if (best == null || thisOutcome.isPreferableTo(bestOutcome)) {
 					bestOutcome = thisOutcome;
 					best = s;
 				}
@@ -97,7 +97,7 @@ public class ConnectFour implements MouseListener {
 				if (pos[row][col] != board[row][col])
 					break;
 			}
-			if (row<HEIGHT)
+			if (row < HEIGHT)
 				break;
 		}
 		makeMove(col);
@@ -116,18 +116,17 @@ public class ConnectFour implements MouseListener {
 			for (row = 0; row < HEIGHT; row++) {
 				if (board[row][col] == ' ')
 					break;
-				up = row <= HEIGHT-4;
-				right = col <= WIDTH-4;
+				up = row <= HEIGHT - 4;
+				right = col <= WIDTH - 4;
 				upright = up && right;
 				downright = row >= 3 && right;
 				for (i = 0; i < 4; i++) {
 					up = up && board[row + i][col] == board[row][col];
-					right = right
-							&& board[row][col + i] == board[row][col];
+					right = right && board[row][col + i] == board[row][col];
 					upright = upright
-							&& board[row+i][col+i] == board[row][col];
+							&& board[row + i][col + i] == board[row][col];
 					downright = downright
-							&& board[row-i][col+i] == board[row][col];
+							&& board[row - i][col + i] == board[row][col];
 				}
 				if (up || right || upright || downright) {
 					if (board[row][col] == 'O')
@@ -181,10 +180,10 @@ public class ConnectFour implements MouseListener {
 
 	public static void main(String[] args) throws InstantiationException,
 			IllegalAccessException {
-//		Gamesman.main(new String[] {"c4.gprop"});
+		Gamesman.main(new String[] { "c4.gprop" });
 		FileDatabase fd = new FileDatabase();
 		fd.initialize("file:///tmp/database.db", null);
-		System.out.println(fd.getRecord(BigInteger.ZERO));
+		System.out.println(fd.getValue(BigInteger.ZERO));
 		DisplayFour df = new DisplayFour();
 		/* ConnectFour cf= */new ConnectFour(df, fd);
 		JFrame jf = new JFrame();
