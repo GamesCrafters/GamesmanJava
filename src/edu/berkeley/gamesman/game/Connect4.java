@@ -98,15 +98,15 @@ public class Connect4 extends TieredGame<char[][]> {
 
 		// Check horizontal win
 		ext = 1;
-		stopPos = Math.min(y, piecesToWin - ext);
+		stopPos = Math.min(x, piecesToWin - ext);
 		for (int i = 0; i < stopPos; i++)
-			if (state[y - i][x] == turn)
+			if (state[y][x - i] == turn)
 				ext++;
 			else
 				break;
-		stopPos = Math.min(gameWidth - y, piecesToWin - ext);
+		stopPos = Math.min(gameWidth - x, piecesToWin - ext);
 		for (int i = 0; i < stopPos; i++)
-			if (state[y + i][x] == turn)
+			if (state[y][x + i] == turn)
 				ext++;
 			else
 				break;
