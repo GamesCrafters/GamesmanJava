@@ -27,6 +27,10 @@ public enum DebugFacility {
 	 */
 	Threading,
 	/**
+	 * Debug facility for games
+	 */
+	Game,
+	/**
 	 * Debug facility for all Hashers
 	 */
 	Hasher,

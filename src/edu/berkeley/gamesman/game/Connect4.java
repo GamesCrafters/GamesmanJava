@@ -7,6 +7,7 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.hasher.PerfectConnect4Hash;
+import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
@@ -59,7 +60,9 @@ public class Connect4 extends TieredGame<C4Board> {
 
 	@Override
 	public PrimitiveValue primitiveValue(C4Board pos) {
-		return pos.primitiveValue(piecesToWin);
+		PrimitiveValue v = pos.primitiveValue(piecesToWin);
+		Util.debug(DebugFacility.Game,"Primitive value of "+pos+" is "+v);
+		return v;
 	}
 
 	@Override
@@ -110,6 +113,7 @@ public class Connect4 extends TieredGame<C4Board> {
 			if (b != null)
 				nextBoards.add(new Pair<String, C4Board>("c" + col, b));
 		}
+		Util.debug(DebugFacility.Game, "Connect4 board "+pos+" yields children "+nextBoards);
 		return nextBoards;
 	}
 

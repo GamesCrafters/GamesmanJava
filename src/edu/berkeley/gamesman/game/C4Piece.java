@@ -1,21 +1,29 @@
 package edu.berkeley.gamesman.game;
 
+import edu.berkeley.gamesman.util.Util;
+
 /**
  * @author DNSpies Represents a piece in Connect4
  */
-public enum C4Piece{
+public enum C4Piece {
 	/**
 	 * Unfilled board slot
 	 */
-	EMPTY,
+	EMPTY (' '),
 	/**
 	 * Black Piece
 	 */
-	BLACK,
+	BLACK ('O'),
 	/**
 	 * Red Piece
 	 */
-	RED;
+	RED ('X');
+	
+	final char pchar;
+	
+	private C4Piece(char p){
+		pchar = p;
+	}
 
 	/**
 	 * @return The opposite color piece (or Empty for Empty)
@@ -38,17 +46,7 @@ public enum C4Piece{
 	 *         and ' ' for Empty
 	 */
 	public char toChar() {
-		switch (this) {
-		case RED:
-			return 'X';
-		case BLACK:
-			return 'O';
-		case EMPTY:
-			return ' ';
-		default:
-			new Exception("Bad piece").printStackTrace();
-			return 0;
-		}
+		return pchar;
 	}
 	
 	/**
@@ -64,7 +62,7 @@ public enum C4Piece{
 		case ' ':
 			return EMPTY;
 		default:
-			new Exception("Bad piece").printStackTrace();
+			Util.fatalError("Bad piece");
 			return null;
 		}
 	}

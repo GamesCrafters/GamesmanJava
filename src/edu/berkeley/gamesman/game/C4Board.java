@@ -1,11 +1,15 @@
 package edu.berkeley.gamesman.game;
 
+import java.util.Arrays;
+
 import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.util.DebugFacility;
+import edu.berkeley.gamesman.util.Util;
 
 /**
  * @author DNSpies Represents a board of pieces
  */
-public class C4Board {
+public final class C4Board {
 	private C4Piece[][] state;
 	private C4Piece turn;
 	private Integer[] columnHeights; // Integer, not int so that it's
@@ -99,7 +103,7 @@ public class C4Board {
 			for (col = 0; col < width(); col++) {
 				numPieces += getHeight(col);
 			}
-			turn = numPieces % 2 == 1 ? C4Piece.RED : C4Piece.BLACK;
+			turn = numPieces % 2 == 0 ? C4Piece.RED : C4Piece.BLACK;
 		}
 		return turn;
 	}
@@ -182,21 +186,20 @@ public class C4Board {
 
 	private boolean checkLastWin(int row, int col, int piecesToWin) {
 		C4Piece turn = get(row, col);
+		Util.debug(DebugFacility.Game,turn+" last played in column "+col+", checking for win");
 		int ext;
 		int stopPos;
 		int height = height(), width = width();
 
 		// Check horizontal win
 		ext = 1;
-		stopPos = Math.min(col, piecesToWin - ext);
-		for (int i = 1; i < stopPos; i++)
-			if (get(row, col - i) == turn)
+		for (int i = col-1; i >= 0; i--)
+			if (get(row, i) == turn)
 				ext++;
 			else
 				break;
-		stopPos = Math.min(width - col, piecesToWin - ext);
-		for (int i = 1; i < stopPos; i++)
-			if (get(row, col + i) == turn)
+		for (int i = col+1; i < width; i++)
+			if (get(row, i) == turn)
 				ext++;
 			else
 				break;
@@ -205,15 +208,12 @@ public class C4Board {
 
 		// Check DownLeft/UpRight Win
 		ext = 1;
-		stopPos = Math.min(Math.min(row, col), piecesToWin - ext);
-		for (int i = 1; i < stopPos; i++)
+		for (int i = 1; row-i >= 0 && col-i >= 0; i++)
 			if (get(row - i, col - i) == turn)
 				ext++;
 			else
 				break;
-		stopPos = Math.min(Math.min(height - row, width - col), piecesToWin
-				- ext);
-		for (int i = 1; i < stopPos; i++)
+		for (int i = 1; row+i < height && col+i < width; i++)
 			if (get(row + i, col + i) == turn)
 				ext++;
 			else
@@ -223,14 +223,12 @@ public class C4Board {
 
 		// Check UpLeft/DownRight Win
 		ext = 1;
-		stopPos = Math.min(Math.min(height - row, col), piecesToWin - ext);
-		for (int i = 1; i < stopPos; i++)
+		for (int i = 1; row+i < height && col-i >= 0; i++)
 			if (get(row + i, col - i) == turn)
 				ext++;
 			else
 				break;
-		stopPos = Math.min(Math.min(row, width - col), piecesToWin - ext);
-		for (int i = 1; i < stopPos; i++)
+		for (int i = 1; row-i >= 0 && col+i < width; i++)
 			if (get(row - i, col + i) == turn)
 				ext++;
 			else
@@ -241,7 +239,7 @@ public class C4Board {
 		// Check Vertical Win: Since it's assumed x,y is on top, it's only
 		// necessary to look down, not up
 		if (row >= piecesToWin - 1)
-			for (ext = 1; ext < piecesToWin; ext++)
+			for (ext = 1; ext < piecesToWin && row-ext >= 0; ext++)
 				if (get(row - ext, col) != turn)
 					break;
 		if (ext >= piecesToWin)
@@ -282,4 +280,10 @@ public class C4Board {
 				resBoard[row][col] = get(row, col).toChar();
 		return resBoard;
 	}
+	
+	@Override
+	public String toString(){
+		return Arrays.deepToString(getCharBoard())+" ("+lastPlayed()+")";
+	}
+	
 }

@@ -9,6 +9,7 @@ import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.hasher.OneTwoNHasher;
 import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.Pair;
+import edu.berkeley.gamesman.util.Util;
 
 /**
  * OneTwoTen
@@ -102,5 +103,11 @@ public class OneTwoN extends TieredGame<Integer> {
 	@Override
 	public char[] pieces() {
 		return new char[] {};
+	}
+
+	@Override
+	public String stateToString(Integer pos) {
+		Util.fatalError("Not written yet");
+		return null;
 	}
 }

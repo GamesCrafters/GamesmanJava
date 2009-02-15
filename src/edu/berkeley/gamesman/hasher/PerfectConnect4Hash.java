@@ -5,6 +5,7 @@ import java.util.Arrays;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.TieredHasher;
+import edu.berkeley.gamesman.game.C4Board;
 import edu.berkeley.gamesman.hasher.AlternatingRearrangerHasher;
 import edu.berkeley.gamesman.hasher.C4UniformPieceHasher;
 import edu.berkeley.gamesman.util.DebugFacility;
@@ -21,7 +22,7 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author Steven Schlansker
  */
-public class PerfectConnect4Hash extends TieredHasher<char[][]> {
+public class PerfectConnect4Hash extends TieredHasher<C4Board> {
 
 	C4UniformPieceHasher uh;
 	AlternatingRearrangerHasher ah;
@@ -70,7 +71,7 @@ public class PerfectConnect4Hash extends TieredHasher<char[][]> {
 	}
 
 	@Override
-	public char[][] gameStateForTierIndex(int tier, BigInteger index) {
+	public C4Board gameStateForTierIndex(int tier, BigInteger index) {
 		char[] colheights = uh.unhash(BigInteger.valueOf(tier),gameWidth);
 		
 		int sum = 0;
@@ -95,7 +96,7 @@ public class PerfectConnect4Hash extends TieredHasher<char[][]> {
 					ret[x][y] = linpieces[lidx++];
 			}
 		}
-		return ret;
+		return new C4Board(ret);
 	}
 	
 	@Override
@@ -104,11 +105,12 @@ public class PerfectConnect4Hash extends TieredHasher<char[][]> {
 	}
 
 	@Override
-	public Pair<Integer, BigInteger> tierIndexForState(char[][] state) {
+	public Pair<Integer, BigInteger> tierIndexForState(C4Board st) {
 		int index = 0;
 		final int w = game.getGameWidth(), h = game.getGameHeight();
 		char[] linear = new char[w*h];
 		char[] colheights = new char[w];
+		char[][] state = st.getCharBoard();
 		
 		//Util.debug("Connect4 has board "+Arrays.deepToString(state));
 		
