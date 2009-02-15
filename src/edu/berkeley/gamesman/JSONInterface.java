@@ -14,45 +14,33 @@ import org.json.JSONObject;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Game;
-import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.util.DebugFacility;
-import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
-public class JSONInterface implements Runnable {
+public class JSONInterface {
 	
 	private Database db;
 	private Configuration conf;
-	final String [] args;
-	boolean done;
-	ServerSocket ssock;
-	
-	public JSONInterface(String[] args){
-		this.args = args;
-	}
 	
 	/**
 	 * Launch a JSON server for use by GamesmanWeb
 	 * @param args arguments
 	 */
 	public static void main(String[] args){
-		JSONInterface j = new JSONInterface(args);
-		Thread t = new Thread(j);
-		t.setName("JSON Master Server");
-		t.start();
+		new JSONInterface().run(args);
 	}
 
 	/**
 	 * @param args arguments
 	 */
-	public void run() {
-		ssock = null;
+	public void run(String[] args) {
+		ServerSocket ssock = null;
 		if(args.length != 1){
 			Util.fatalError("You must specify a configuration file as the only command line argument");
 		}
-		conf = new Configuration(System.getProperties());
+		Configuration conf = new Configuration(System.getProperties());
 		conf.addProperties(args[0]);
 		
 		Util.debugInit(conf);
@@ -72,22 +60,18 @@ public class JSONInterface implements Runnable {
 		conf = db.getConfiguration();
 		
 		Util.debug(DebugFacility.JSON, "Server ready!");
-		while(!done){
+		while(true){
 			Socket s;
 			try {
 				s = ssock.accept();
 			} catch (IOException e) {
-				if(!done)
-					Util.warn("IO Exception while accepting: "+e);
+				Util.warn("IO Exception while accepting: "+e);
 				break;
 			}
 			JSONThread<?> t = new JSONThread<Object>(s);
 			t.setName("JSONThread "+s);
 			t.start();
 		}
-		
-		Util.debug(DebugFacility.JSON,"Shutting down JSON server cleanly");
-		db.close();
 		
 	}
 	
@@ -121,15 +105,6 @@ public class JSONInterface implements Runnable {
 					Util.warn("Unable to read line from socket, dropping");
 					break;
 				}
-				if(line.equals("###quit")){
-					done = true;
-					try {
-						ssock.close();
-					} catch (IOException e) {
-						Util.fatalError("Could not shut down server",e);
-					}
-					return;
-				}
 				JSONObject j;
 				try {
 					j = new JSONObject("{"+line+"}");
@@ -145,16 +120,11 @@ public class JSONInterface implements Runnable {
 					
 					S state = g.stringToState(board);
 					
-					for(Pair<String,S> next : g.validMoves(state)){
+					for(S next : g.validMoves(state)){
 						JSONObject entry = new JSONObject();
-						Record rec = db.getRecord(g.stateToHash(next.cdr));
+						Record rec = db.getValue(g.stateToHash(next));
 						for(RecordFields f : conf.getStoredFields().keySet()){
-							if(f == RecordFields.Value)
-								entry.put(f.name(), PrimitiveValue.values()[(int) rec.get(f)]);
-							else
-								entry.put(f.name(),rec.get(f));
-							entry.put("move",next.car);
-							entry.put("board", g.stateToString(next.cdr));
+							entry.put(f.name(),rec.get(f));
 						}
 						response.accumulate("response", entry);
 					}

@@ -169,6 +169,7 @@ public final class Gamesman {
 	public void executeunhash() {
 		if (testrun)
 			return;
+
 		Object state = gm.hashToState(new BigInteger(conf.getProperty("gamesman.hash")));
 		System.out.println(gm.displayState(state));
 	}
