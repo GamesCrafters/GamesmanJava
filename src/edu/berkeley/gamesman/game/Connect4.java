@@ -1,7 +1,6 @@
 package edu.berkeley.gamesman.game;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.Configuration;
@@ -19,9 +18,7 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author Steven Schlansker
  */
-public class Connect4 extends TieredGame<char[][]> {
-
-	final char[] pieces = { 'X', 'O' };
+public class Connect4 extends TieredGame<C4Board> {
 
 	final int piecesToWin;
 
@@ -43,14 +40,9 @@ public class Connect4 extends TieredGame<char[][]> {
 	}
 
 	@Override
-	public Collection<char[][]> startingPositions() {
-		ArrayList<char[][]> boards = new ArrayList<char[][]>();
-		char[][] startBoard = new char[gameWidth][gameHeight];
-		for (int y = 0; y < gameHeight; y++) {
-			for (int x = 0; x < gameWidth; x++) {
-				startBoard[y][x] = ' ';
-			}
-		}
+	public Collection<C4Board> startingPositions() {
+		ArrayList<C4Board> boards = new ArrayList<C4Board>();
+		C4Board startBoard = new C4Board(gameWidth, gameHeight);
 		boards.add(startBoard);
 		return boards;
 	}
@@ -66,134 +58,43 @@ public class Connect4 extends TieredGame<char[][]> {
 	}
 
 	@Override
-	public PrimitiveValue primitiveValue(char[][] pos) {
-		boolean turnCount = false;
-		char lastTurn;
-		int[] columnHeight = new int[gameWidth];
-		for (int x = 0; x < gameWidth; x++)
-			for (int y = 0; y < gameWidth; y++)
-				if (pos[y][x] == ' ') {
-					columnHeight[x] = y;
-					break;
-				} else
-					turnCount = !turnCount;
-		if (turnCount)
-			lastTurn = 'X';
-		else
-			lastTurn = 'O';
-		for (int x = 0; x < gameWidth; x++) {
-			if (columnHeight[x] > 0 && pos[columnHeight[x] - 1][x] == lastTurn
-					&& checkLastWin(pos, x, columnHeight[x] - 1))
-				return PrimitiveValue.Lose;
-		}
-		for (int i = 0; i < gameWidth; i++)
-			if (columnHeight[i] < gameHeight)
-				return PrimitiveValue.Undecided;
-		return PrimitiveValue.Tie;
-	}
-
-	private boolean checkLastWin(char[][] state, int x, int y) {
-		char turn = state[y][x];
-		int ext;
-		int stopPos;
-
-		// Check horizontal win
-		ext = 1;
-		stopPos = Math.min(x, piecesToWin - ext);
-		for (int i = 1; i < stopPos; i++)
-			if (state[y][x - i] == turn)
-				ext++;
-			else
-				break;
-		stopPos = Math.min(gameWidth - x, piecesToWin - ext);
-		for (int i = 1; i < stopPos; i++)
-			if (state[y][x + i] == turn)
-				ext++;
-			else
-				break;
-		if (ext >= piecesToWin)
-			return true;
-
-		// Check UpRight Win
-		ext = 1;
-		stopPos = Math.min(Math.min(x, y), piecesToWin - ext);
-		for (int i = 1; i < stopPos; i++)
-			if (state[y - i][x - i] == turn)
-				ext++;
-			else
-				break;
-		stopPos = Math.min(Math.min(gameWidth - x, gameHeight - y), piecesToWin
-				- ext);
-		for (int i = 1; i < stopPos; i++)
-			if (state[y + i][x + i] == turn)
-				ext++;
-			else
-				break;
-		if (ext >= piecesToWin)
-			return true;
-
-		// Check DownRight Win
-		ext = 1;
-		stopPos = Math.min(Math.min(x, gameHeight - y), piecesToWin - ext);
-		for (int i = 1; i < stopPos; i++)
-			if (state[y + i][x - i] == turn)
-				ext++;
-			else
-				break;
-		stopPos = Math.min(Math.min(gameWidth - x, y), piecesToWin - ext);
-		for (int i = 1; i < stopPos; i++)
-			if (state[y - i][x + i] == turn)
-				ext++;
-			else
-				break;
-		if (ext >= piecesToWin)
-			return true;
-
-		// Check Vertical Win: Since it's assumed x,y is on top, it's only
-		// necessary to look down, not up
-		if (y >= piecesToWin - 1)
-			for (ext = 1; ext < piecesToWin; ext++)
-				if (state[y - ext][x] != turn)
-					break;
-		if (ext >= piecesToWin)
-			return true;
-
-		return false;
+	public PrimitiveValue primitiveValue(C4Board pos) {
+		return pos.primitiveValue(piecesToWin);
 	}
 
 	@Override
-	public String displayState(char[][] pos) {
-		StringBuilder str = new StringBuilder((pos.length + 1)
-				* (pos[0].length + 1));
-		for (int y = pos[0].length - 1; y >= 0; y--) {
-			str.append("|");
-			for (int x = 0; x < pos.length; x++) {
-				str.append(pos[x][y]);
-			}
+	public String displayState(C4Board pos) {
+		String s = stateToString(pos);
+		StringBuilder str = new StringBuilder(s.length() + 3 * pos.height());
+		for (int row = pos.height() - 1; row >= 0; row--) {
+			str.append('|');
+			str.append(s.substring(row * pos.width(), (row + 1) * pos.width()
+					- 1));
 			str.append("|\n");
 		}
 		return str.toString();
 	}
 
 	@Override
-	public char[][] stringToState(String pos) {
-		char[][] board = new char[gameWidth][gameHeight];
-		for (int x = 0; x < gameWidth; x++) {
-			for (int y = 0; y < gameHeight; y++) {
-				board[x][y] = pos.charAt(Util.index(x, y, gameWidth));
+	public C4Board stringToState(String pos) {
+		C4Piece[][] board = new C4Piece[gameHeight][gameWidth];
+		for (int row = 0; row < gameHeight; row++) {
+			for (int col = 0; col < gameWidth; col++) {
+				board[row][col] = C4Piece.toPiece(pos.charAt(Util.index(row,
+						col, gameWidth)));
 			}
 		}
 		// Util.debug("stringToState yields "+Arrays.deepToString(board));
-		return board;
+		return new C4Board(board);
 	}
 
 	@Override
-	public String stateToString(char[][] pos) {
+	public String stateToString(C4Board pos) {
 		char[] state = new char[gameWidth * gameHeight];
-		for (int x = 0; x < gameWidth; x++) {
-			for (int y = 0; y < gameHeight; y++) {
-				// board[x][y] = pos.charAt(Util.index(x, y, gameWidth));
-				state[Util.index(x, y, gameWidth)] = pos[x][y];
+		for (int row = 0; row < gameHeight; row++) {
+			for (int col = 0; col < gameHeight; col++) {
+				state[Util.index(row, col, gameWidth)] = pos.get(row, col)
+						.toChar();
 			}
 		}
 		// Util.debug("stringToState yields "+Arrays.deepToString(board));
@@ -201,47 +102,15 @@ public class Connect4 extends TieredGame<char[][]> {
 	}
 
 	@Override
-	public Collection<Pair<String,char[][]>> validMoves(char[][] pos) {
-		ArrayList<Pair<String,char[][]>> nextBoards = new ArrayList<Pair<String,char[][]>>();
-
-		char[][] board;
-
-		if (primitiveValue(pos) != PrimitiveValue.Undecided)
-			return nextBoards;
-
-		char nextpiece = nextPiecePlaced(pos);
-
-		for (int x = 0; x < gameWidth; x++) {
-			for (int y = 0; y < gameHeight; y++) {
-				char c = pos[x][y];
-				if (c != 'X' && c != 'O') {
-					board = pos.clone();
-					board[x] = pos[x].clone();
-					board[x][y] = nextpiece;
-					nextBoards.add(new Pair<String,char[][]>("c"+x,board));
-					break;
-				}
-			}
+	public Collection<Pair<String, C4Board>> validMoves(C4Board pos) {
+		ArrayList<Pair<String, C4Board>> nextBoards = new ArrayList<Pair<String, C4Board>>();
+		C4Board b;
+		for (int col = 0; col < gameWidth; col++) {
+			b = pos.makeMove(col);
+			if (b != null)
+				nextBoards.add(new Pair<String, C4Board>("c" + col, b));
 		}
-
 		return nextBoards;
-	}
-
-	protected char nextPiecePlaced(char[][] pos) {
-		int numx = 0, numo = 0;
-		for (char[] row : pos)
-			for (char piece : row) {
-				if (piece == 'X')
-					numx++;
-				if (piece == 'O')
-					numo++;
-			}
-		if (numx == numo)
-			return 'X';
-		if (numx == numo + 1)
-			return 'O';
-		Util.fatalError("Invalid board: " + Arrays.deepToString(pos));
-		return ' '; // Not reached
 	}
 
 	@Override
@@ -257,7 +126,6 @@ public class Connect4 extends TieredGame<char[][]> {
 
 	@Override
 	public char[] pieces() {
-		return pieces;
+		return new char[]{'X','O'};
 	}
-
 }

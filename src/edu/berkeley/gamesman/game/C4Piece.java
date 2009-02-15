@@ -3,7 +3,7 @@ package edu.berkeley.gamesman.game;
 /**
  * @author DNSpies Represents a piece in Connect4
  */
-public enum C4Piece {
+public enum C4Piece{
 	/**
 	 * Unfilled board slot
 	 */
@@ -30,13 +30,40 @@ public enum C4Piece {
 	}
 
 	public String toString() {
-		if (this == RED)
-			return "X";
-		else if (this == BLACK)
-			return "O";
-		else if (this == EMPTY)
-			return " ";
-		else{
+		return String.valueOf(toChar());
+	}
+
+	/**
+	 * @return The char representation of this piece 'X' for Red, 'O' for Black,
+	 *         and ' ' for Empty
+	 */
+	public char toChar() {
+		switch (this) {
+		case RED:
+			return 'X';
+		case BLACK:
+			return 'O';
+		case EMPTY:
+			return ' ';
+		default:
+			new Exception("Bad piece").printStackTrace();
+			return 0;
+		}
+	}
+	
+	/**
+	 * @param c The character to be converted
+	 * @return The piece represented by that character
+	 */
+	public static C4Piece toPiece(char c){
+		switch(c){
+		case 'X':
+			return RED;
+		case 'O':
+			return BLACK;
+		case ' ':
+			return EMPTY;
+		default:
 			new Exception("Bad piece").printStackTrace();
 			return null;
 		}

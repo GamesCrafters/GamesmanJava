@@ -14,6 +14,7 @@ import edu.berkeley.gamesman.Gamesman;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.database.FileDatabase;
+import edu.berkeley.gamesman.game.C4Board;
 import edu.berkeley.gamesman.game.Connect4;
 import edu.berkeley.gamesman.util.Pair;
 
@@ -74,31 +75,34 @@ public class ConnectFour implements MouseListener {
 
 	private void startCompMove() {
 		if (compTurn() && !win()) {
-			Collection<Pair<String,char[][]>> moves = cgame.validMoves(board);
-			Iterator<Pair<String,char[][]>> nextStates = moves.iterator();
-			char[][] s;
-			char[][] best = null;
+			Collection<Pair<String, C4Board>> moves = cgame
+					.validMoves(new C4Board(board));
+			Iterator<Pair<String, C4Board>> nextStates = moves.iterator();
+			C4Board s;
+			C4Board best = null;
 			PrimitiveValue bestOutcome = PrimitiveValue.Undecided;
 			PrimitiveValue thisOutcome;
-			
+
 			while (nextStates.hasNext()) {
-				Pair<String,char[][]> move = nextStates.next();
+				Pair<String, C4Board> move = nextStates.next();
 				s = move.cdr;
 				thisOutcome = fd.getRecord(cgame.stateToHash(s)).get();
-				System.out.println("Next possible move "+move.car+" for state "+cgame.stateToHash(s)+" has value "+thisOutcome);
+				System.out.println("Next possible move " + move.car
+						+ " for state " + cgame.stateToHash(s) + " has value "
+						+ thisOutcome);
 				if (best == null || thisOutcome.isPreferableTo(bestOutcome)) {
 					bestOutcome = thisOutcome;
 					best = s;
 				}
 			}
-			moveBySet(best);
+			moveBySet(best.getCharBoard());
 			System.out.println("Done with startCompMove");
 		}
 	}
 
 	private void moveBySet(char[][] pos) {
 		int row, col;
-		if(pos == null)
+		if (pos == null)
 			System.out.println("pos is null");
 		System.out.println(Arrays.deepToString(pos));
 		for (col = 0; col < WIDTH; col++) {

@@ -76,6 +76,21 @@ public class C4Board {
 	}
 
 	/**
+	 * @param board The board pieces stored as chars
+	 */
+	public C4Board(char[][] board) {
+		this(convertCharBoard(board));
+	}
+	
+	private static C4Piece[][] convertCharBoard(char[][] charBoard){
+		C4Piece[][] board=new C4Piece[charBoard.length][charBoard[0].length];
+		for(int row=0;row<charBoard.length;row++)
+			for(int col=0;col<charBoard[0].length;col++)
+				board[row][col]=C4Piece.toPiece(charBoard[row][col]);
+		return board;
+	}
+
+	/**
 	 * @return Who's turn it is currently
 	 */
 	public C4Piece getTurn() {
@@ -232,5 +247,39 @@ public class C4Board {
 		if (ext >= piecesToWin)
 			return true;
 		return false;
+	}
+
+	/**
+	 * @param moveCol The column in which to move
+	 * @return A new Board representing the state after this move has been made
+	 *         or null if the column is full
+	 */
+	public C4Board makeMove(int moveCol) {
+		if (getHeight(moveCol) == height())
+			return null;
+		C4Piece[][] newState = new C4Piece[height()][width()];
+		Integer[] newHeight = new Integer[width()];
+		for (int row = 0; row < height(); row++)
+			for (int col = 0; col < width(); col++)
+				newState[row][col] = state[row][col];
+		newState[getHeight(moveCol)][moveCol] = getTurn(); // This also ensures
+															// moveCol's height
+															// is already
+															// initialized
+		for (int col = 0; col < width(); col++)
+			newHeight[col] = columnHeights[col];
+		newHeight[moveCol]++;
+		return new C4Board(newState, getTurn().opposite(), newHeight);
+	}
+
+	/**
+	 * @return A char-array representation of the board
+	 */
+	public char[][] getCharBoard() {
+		char[][] resBoard = new char[height()][width()];
+		for (int row = 0; row < height(); row++)
+			for (int col = 0; col < width(); col++)
+				resBoard[row][col] = get(row, col).toChar();
+		return resBoard;
 	}
 }
