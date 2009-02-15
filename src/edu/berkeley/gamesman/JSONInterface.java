@@ -17,6 +17,7 @@ import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.util.DebugFacility;
+import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
 public class JSONInterface {
@@ -120,12 +121,13 @@ public class JSONInterface {
 					
 					S state = g.stringToState(board);
 					
-					for(S next : g.validMoves(state)){
+					for(Pair<String,S> next : g.validMoves(state)){
 						JSONObject entry = new JSONObject();
-						Record rec = db.getValue(g.stateToHash(next));
+						Record rec = db.getRecord(g.stateToHash(next.cdr));
 						for(RecordFields f : conf.getStoredFields().keySet()){
 							entry.put(f.name(),rec.get(f));
 						}
+						entry.put("move", next.car);
 						response.accumulate("response", entry);
 					}
 					
