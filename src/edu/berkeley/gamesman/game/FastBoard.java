@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.game;
 import java.math.BigInteger;
 import java.util.ArrayList;
 
+import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.util.Pair;
 
 /**
@@ -21,6 +22,16 @@ import edu.berkeley.gamesman.util.Pair;
 public final class FastBoard {
 	private static enum Color {
 		BLACK, RED;
+		Color opposite() {
+			switch (this) {
+			case BLACK:
+				return RED;
+			case RED:
+				return BLACK;
+			default:
+				return null;
+			}
+		}
 	}
 
 	private static final class Column {
@@ -253,8 +264,7 @@ public final class FastBoard {
 						col++;
 						row = 0;
 					}
-				} while (col < width
-						&& columns[col].get(row).getColor() == Color.BLACK);
+				} while (col < width && get(row, col).getColor() == Color.BLACK);
 			} else
 				firstAll = firstBlacks = lastBlack;
 		} else {
@@ -337,7 +347,7 @@ public final class FastBoard {
 		for (int row = height - 1; row >= 0; row--) {
 			str.append('|');
 			for (int col = 0; col < width; col++) {
-				p = columns[col].get(row);
+				p = get(row, col);
 				if (p == null)
 					str.append(' ');
 				else {
@@ -361,12 +371,119 @@ public final class FastBoard {
 	}
 
 	/**
+	 * @param row The board row
+	 * @param col The board column
+	 * @return The piece on the board
+	 */
+	public Piece get(int row, int col) {
+		return columns[col].get(row);
+	}
+
+	/**
+	 * Return primitive "value". Usually this value includes WIN, LOSE, and
+	 * perhaps TIE Return UNDECIDED if this is not a primitive state (shouldn't
+	 * usually be called)
+	 * 
+	 * @param piecesToWin The number of pieces in a row necessary to win
+	 * @return the Record representing the state
+	 * @see edu.berkeley.gamesman.core.Record
+	 */
+	public PrimitiveValue primitiveValue(int piecesToWin) {
+		int colHeight;
+		boolean moreMoves = false;
+		for (int col = 0; col < width; col++) {
+			colHeight = columns[col].height();
+			if (!moreMoves && colHeight < height)
+				moreMoves = true;
+			if (colHeight > 0
+					&& get(colHeight - 1, col).getColor() == turn.opposite()
+					&& checkLastWin(colHeight - 1, col, piecesToWin))
+				return PrimitiveValue.Lose;
+		}
+		if (moreMoves)
+			return PrimitiveValue.Undecided;
+		else
+			return PrimitiveValue.Tie;
+	}
+
+	private boolean checkLastWin(int row, int col, int piecesToWin) {
+		Color turn = get(row, col).getColor();
+		int ext;
+		int stopPos;
+
+		// Check horizontal win
+		ext = 1;
+		stopPos = Math.min(col, piecesToWin - ext);
+		for (int i = 1; i < stopPos; i++)
+			if (get(row, col - i).getColor() == turn)
+				ext++;
+			else
+				break;
+		stopPos = Math.min(width - col, piecesToWin - ext);
+		for (int i = 1; i < stopPos; i++)
+			if (get(row, col + i).getColor() == turn)
+				ext++;
+			else
+				break;
+		if (ext >= piecesToWin)
+			return true;
+
+		// Check DownLeft/UpRight Win
+		ext = 1;
+		stopPos = Math.min(Math.min(row, col), piecesToWin - ext);
+		for (int i = 1; i < stopPos; i++)
+			if (get(row - i, col - i).getColor() == turn)
+				ext++;
+			else
+				break;
+		stopPos = Math.min(Math.min(height - row, width - col), piecesToWin
+				- ext);
+		for (int i = 1; i < stopPos; i++)
+			if (get(row + i, col + i).getColor() == turn)
+				ext++;
+			else
+				break;
+		if (ext >= piecesToWin)
+			return true;
+
+		// Check UpLeft/DownRight Win
+		ext = 1;
+		stopPos = Math.min(Math.min(height - row, col), piecesToWin - ext);
+		for (int i = 1; i < stopPos; i++)
+			if (get(row + i, col - i).getColor() == turn)
+				ext++;
+			else
+				break;
+		stopPos = Math.min(Math.min(row, width - col), piecesToWin - ext);
+		for (int i = 1; i < stopPos; i++)
+			if (get(row - i, col + i).getColor() == turn)
+				ext++;
+			else
+				break;
+		if (ext >= piecesToWin)
+			return true;
+
+		// Check Vertical Win: Since it's assumed x,y is on top, it's only
+		// necessary to look down, not up
+		if (row >= piecesToWin - 1)
+			for (ext = 1; ext < piecesToWin; ext++)
+				if (get(row - ext, col).getColor() != turn)
+					break;
+		if (ext >= piecesToWin)
+			return true;
+		return false;
+	}
+
+	/**
 	 * @return Has this board reached its maximum hash?
 	 */
 	public boolean hasNext() {
 		return arHash.add(BigInteger.ONE).compareTo(maxPHash) < 0;
 	}
 
+	/**
+	 * @param args Empty
+	 */
 	public static void main(String[] args) {
 		FastBoard fb = new FastBoard(6, 7, BigInteger.valueOf(2801));
 		System.out.println(fb);
