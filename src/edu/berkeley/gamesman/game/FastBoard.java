@@ -144,15 +144,18 @@ public final class FastBoard {
 	public FastBoard(int height, int width, BigInteger tier) {
 		this.width = width;
 		this.tier = tier;
-		this.columns = new Column[width];
+		columns = new Column[width];
 		int[] colHeight = new int[width];
 		int pInt = 0;
 		int col;
 		BigInteger[] divmod;
 		int oc = width;
 		BigInteger hBig = BigInteger.valueOf(height + 1);
+		BigInteger colTier = BigInteger.ONE;
 		for (col = 0; col < width; col++) {
+			columns[col] = new Column(height, colTier);
 			divmod = tier.divideAndRemainder(hBig);
+			colTier = colTier.multiply(hBig);
 			colHeight[col] = divmod[1].intValue();
 			if (colHeight[col] == height)
 				oc--;
