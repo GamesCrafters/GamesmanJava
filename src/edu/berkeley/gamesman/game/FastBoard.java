@@ -433,7 +433,7 @@ public final class FastBoard {
 		for (int col = 0; col < width; col++) {
 			colHeight = columns[col].height();
 			if (colHeight > 0
-					&& get(colHeight - 1, col).getColor() == turn.opposite()
+					&& columns[col].topPiece().getColor() == turn.opposite()
 					&& checkLastWin(colHeight - 1, col, piecesToWin))
 				return PrimitiveValue.Lose;
 		}
@@ -444,71 +444,85 @@ public final class FastBoard {
 	}
 
 	/*
-	 * Looks for a win making use of the given piece.
+	 * Looks for a win that uses the given piece.
 	 */
 	private boolean checkLastWin(int row, int col, int piecesToWin) {
 		Color turn = get(row, col).getColor();
 		int ext;
 		int stopPos;
+		Piece p;
 
 		// Check horizontal win
 		ext = 1;
 		stopPos = Math.min(col, piecesToWin - ext);
-		for (int i = 1; i <= stopPos; i++)
-			if (get(row, col - i).getColor() == turn)
+		for (int i = 1; i <= stopPos; i++) {
+			p = get(row, col - i);
+			if (p != null && p.getColor() == turn)
 				ext++;
 			else
 				break;
+		}
 		stopPos = Math.min(width - 1 - col, piecesToWin - ext);
-		for (int i = 1; i <= stopPos; i++)
-			if (get(row, col + i).getColor() == turn)
+		for (int i = 1; i <= stopPos; i++) {
+			p = get(row, col + i);
+			if (p != null && p.getColor() == turn)
 				ext++;
 			else
 				break;
+		}
 		if (ext >= piecesToWin)
 			return true;
 
 		// Check DownLeft/UpRight Win
 		ext = 1;
 		stopPos = Math.min(Math.min(row, col), piecesToWin - ext);
-		for (int i = 1; i <= stopPos; i++)
-			if (get(row - i, col - i).getColor() == turn)
+		for (int i = 1; i <= stopPos; i++) {
+			p = get(row - i, col - i);
+			if (p != null && p.getColor() == turn)
 				ext++;
 			else
 				break;
-		stopPos = Math.min(Math.min(height - 1 - row, width - 1 - col), piecesToWin
-				- ext);
-		for (int i = 1; i <= stopPos; i++)
-			if (get(row + i, col + i).getColor() == turn)
+		}
+		stopPos = Math.min(Math.min(height - 1 - row, width - 1 - col),
+				piecesToWin - ext);
+		for (int i = 1; i <= stopPos; i++) {
+			p = get(row + i, col + i);
+			if (p != null && p.getColor() == turn)
 				ext++;
 			else
 				break;
+		}
 		if (ext >= piecesToWin)
 			return true;
 
 		// Check UpLeft/DownRight Win
 		ext = 1;
 		stopPos = Math.min(Math.min(height - 1 - row, col), piecesToWin - ext);
-		for (int i = 1; i <= stopPos; i++)
-			if (get(row + i, col - i).getColor() == turn)
+		for (int i = 1; i <= stopPos; i++) {
+			p = get(row + i, col - i);
+			if (p != null && p.getColor() == turn)
 				ext++;
 			else
 				break;
+		}
 		stopPos = Math.min(Math.min(row, width - 1 - col), piecesToWin - ext);
-		for (int i = 1; i <= stopPos; i++)
-			if (get(row - i, col + i).getColor() == turn)
+		for (int i = 1; i <= stopPos; i++) {
+			p = get(row - i, col + i);
+			if (p != null && p.getColor() == turn)
 				ext++;
 			else
 				break;
+		}
 		if (ext >= piecesToWin)
 			return true;
 
 		// Check Vertical Win: Since it's assumed x,y is on top, it's only
 		// necessary to look down, not up
 		if (row >= piecesToWin - 1)
-			for (ext = 1; ext < piecesToWin; ext++)
+			for (ext = 1; ext < piecesToWin; ext++) {
 				if (get(row - ext, col).getColor() != turn)
 					break;
+			}
 		if (ext >= piecesToWin)
 			return true;
 		return false;
@@ -525,12 +539,13 @@ public final class FastBoard {
 	 * @param args Empty
 	 */
 	public static void main(String[] args) {
-		FastBoard fb = new FastBoard(6, 7, BigInteger.valueOf(2801));
+		FastBoard fb = new FastBoard(6, 7, BigInteger.valueOf(1600));
 		System.out.println(fb);
 		System.out.println(fb.moveHashes());
 		while (fb.hasNext()) {
 			fb.next();
 			System.out.println(fb);
+			System.out.println(fb.primitiveValue(4));
 			System.out.println(fb.moveHashes());
 		}
 	}
