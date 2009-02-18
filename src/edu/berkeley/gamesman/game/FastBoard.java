@@ -217,11 +217,12 @@ public final class FastBoard {
 			col++;
 			row = 0;
 		}
-		BigInteger i;
+		BigInteger count;
 		if (firstAll.compareTo(firstBlacks) == 0
 				|| firstBlacks.compareTo(BigInteger.ONE) == 0) {
-			for (i = BigInteger.ZERO; i.compareTo(lastBlack) < 0; i = i
-					.add(BigInteger.ONE)) {
+			int i;
+			int lbInt = lastBlack.intValue();
+			for (i = 0; i < lbInt; i++) {
 				row++;
 				while (row >= columns[col].height()) {
 					col++;
@@ -260,10 +261,10 @@ public final class FastBoard {
 			Piece p = null;
 			firstBlacks = firstBlacks.subtract(BigInteger.ONE);
 			firstAll = firstBlacks;
-			for (i = BigInteger.ZERO; i.compareTo(firstBlacks) < 0; i = i
+			for (count = BigInteger.ZERO; count.compareTo(firstBlacks) < 0; count = count
 					.add(BigInteger.ONE)) {
-				p = new Piece(i, i.add(BigInteger.ONE), BigInteger.ZERO,
-						Color.BLACK);
+				p = new Piece(count, count.add(BigInteger.ONE),
+						BigInteger.ZERO, Color.BLACK);
 				columns[col].setPiece(row, p);
 				row++;
 				while (row == columns[col].height()) {
@@ -271,8 +272,9 @@ public final class FastBoard {
 					row = 0;
 				}
 			}
-			for (; i.compareTo(lastBlack) < 0; i = i.add(BigInteger.ONE)) {
-				p = new Piece(i, firstBlacks, p.nextRed(), Color.RED);
+			for (; count.compareTo(lastBlack) < 0; count = count
+					.add(BigInteger.ONE)) {
+				p = new Piece(count, firstBlacks, p.nextRed(), Color.RED);
 				columns[col].setPiece(row, p);
 				row++;
 				while (row == columns[col].height()) {
@@ -357,7 +359,7 @@ public final class FastBoard {
 		str.append("\n");
 		return str.toString();
 	}
-	
+
 	/**
 	 * @return Has this board reached its maximum hash?
 	 */
@@ -365,14 +367,11 @@ public final class FastBoard {
 		return arHash.add(BigInteger.ONE).compareTo(maxPHash) < 0;
 	}
 
-	/**
-	 * @param args Nothing Test method
-	 */
 	public static void main(String[] args) {
 		FastBoard fb = new FastBoard(6, 7, BigInteger.valueOf(2801));
 		System.out.println(fb);
 		System.out.println(fb.moveHashes());
-		 while (fb.hasNext()) {
+		while (fb.hasNext()) {
 			fb.next();
 			System.out.println(fb);
 			System.out.println(fb.moveHashes());
