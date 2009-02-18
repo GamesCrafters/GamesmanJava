@@ -3,6 +3,8 @@ package edu.berkeley.gamesman.game;
 import java.math.BigInteger;
 import java.util.ArrayList;
 
+import edu.berkeley.gamesman.util.Pair;
+
 /**
  * @author DNSpies Implements super-fast move-hashing and cycling. Use next() to
  *         cycle to the next board hash. Use getMoves() to get the hashes of all
@@ -23,13 +25,15 @@ public final class FastBoard {
 
 	private static final class Column {
 		private final Piece[] piece;
+		private final BigInteger tier;
 		private int colHeight = 0;
 		private BigInteger hash = BigInteger.ZERO;
 		private BigInteger addRed = BigInteger.ZERO;
 		private BigInteger addBlack = BigInteger.ZERO;
 
-		Column(int height) {
+		Column(int height, BigInteger tier) {
 			piece = new Piece[height];
+			this.tier = tier;
 		}
 
 		void addPiece(Piece p) {
@@ -62,12 +66,16 @@ public final class FastBoard {
 			return colHeight != piece.length;
 		}
 
-		public BigInteger addRed() {
+		BigInteger addRed() {
 			return addRed;
 		}
 
-		public BigInteger addBlack() {
+		BigInteger addBlack() {
 			return addBlack;
+		}
+
+		BigInteger getTier() {
+			return tier;
 		}
 	}
 
@@ -123,7 +131,7 @@ public final class FastBoard {
 	private final int width;
 	private final int openColumns;
 	private final BigInteger pieces, blackPieces;
-	private final BigInteger maxPHash;
+	private final BigInteger tier, maxPHash;
 	private final Color turn;
 	private BigInteger firstAll, firstBlacks;
 	private BigInteger arHash = BigInteger.ZERO;
@@ -135,6 +143,7 @@ public final class FastBoard {
 	 */
 	public FastBoard(int height, int width, BigInteger tier) {
 		this.width = width;
+		this.tier = tier;
 		this.columns = new Column[width];
 		int[] colHeight = new int[width];
 		int pInt = 0;
@@ -260,21 +269,26 @@ public final class FastBoard {
 	}
 
 	/**
-	 * @return The hashes of all possible moves from this position
+	 * @return The corresponding tiers and hashes of all possible moves from
+	 *         this position.
 	 */
-	public ArrayList<BigInteger> moveHashes() {
-		ArrayList<BigInteger> al = new ArrayList<BigInteger>(openColumns);
+	public ArrayList<Pair<BigInteger, BigInteger>> moveHashes() {
+		ArrayList<Pair<BigInteger, BigInteger>> al = new ArrayList<Pair<BigInteger, BigInteger>>(
+				openColumns);
 		BigInteger newHash = arHash;
 		if (turn == Color.BLACK) {
 			for (int col = width - 1; col >= 0; col--) {
 				if (columns[col].isOpen())
-					al.add(newHash.add(columns[col].topPiece().nextBlack()));
+					al.add(new Pair<BigInteger, BigInteger>(tier
+							.add(columns[col].getTier()), newHash
+							.add(columns[col].topPiece().nextBlack())));
 				newHash = newHash.add(columns[col].addBlack());
 			}
 		} else {
 			for (int col = width - 1; col >= 0; col--) {
 				if (columns[col].isOpen())
-					al.add(newHash);
+					al.add(new Pair<BigInteger, BigInteger>(tier
+							.add(columns[col].getTier()), newHash));
 				newHash = newHash.add(columns[col].addRed());
 			}
 		}
