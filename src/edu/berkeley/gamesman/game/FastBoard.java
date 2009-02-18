@@ -38,9 +38,9 @@ public final class FastBoard {
 
 		void addPiece(Piece p) {
 			piece[colHeight] = p;
-			hash.add(p.getHash());
-			addRed.add(p.addRed());
-			addBlack.add(p.addBlack());
+			hash = hash.add(p.getHash());
+			addRed = addRed.add(p.addRed());
+			addBlack = addBlack.add(p.addBlack());
 			colHeight++;
 		}
 
@@ -53,8 +53,9 @@ public final class FastBoard {
 
 		void setPiece(int row, Piece p) {
 			hash = hash.subtract(piece[row].getHash()).add(p.getHash());
-			addRed = hash.subtract(piece[row].addRed()).add(p.addRed());
-			addBlack = hash.subtract(piece[row].addBlack()).add(p.addBlack());
+			addRed = addRed.subtract(piece[row].addRed()).add(p.addRed());
+			addBlack = addBlack.subtract(piece[row].addBlack()).add(
+					p.addBlack());
 			piece[row] = p;
 		}
 
@@ -76,6 +77,10 @@ public final class FastBoard {
 
 		BigInteger getTier() {
 			return tier;
+		}
+
+		Piece get(int row) {
+			return piece[row];
 		}
 	}
 
@@ -125,10 +130,14 @@ public final class FastBoard {
 		BigInteger getHash() {
 			return hash;
 		}
+
+		Color getColor() {
+			return color;
+		}
 	}
 
 	private final Column[] columns;
-	private final int width;
+	private final int height, width;
 	private final int openColumns;
 	private final BigInteger pieces, blackPieces;
 	private final BigInteger tier, maxPHash;
@@ -142,6 +151,7 @@ public final class FastBoard {
 	 * @param tier Each digit in base(height+1) is the height of a column
 	 */
 	public FastBoard(int height, int width, BigInteger tier) {
+		this.height = height;
 		this.width = width;
 		this.tier = tier;
 		columns = new Column[width];
@@ -168,20 +178,22 @@ public final class FastBoard {
 		firstAll = firstBlacks = blackPieces = BigInteger.valueOf(pInt / 2);
 		col = 0;
 		BigInteger i;
+		Piece p = null;
 		for (i = BigInteger.ZERO; i.compareTo(blackPieces) < 0; i = i
 				.add(BigInteger.ONE)) {
 			while (colHeight[col] == 0)
 				col++;
-			columns[col].addPiece(new Piece(i, i.add(BigInteger.ONE),
-					BigInteger.ZERO, Color.BLACK));
+			p = new Piece(i, i.add(BigInteger.ONE), BigInteger.ZERO,
+					Color.BLACK);
+			columns[col].addPiece(p);
 			colHeight[col]--;
 		}
-		Piece p = columns[col].topPiece();
 		for (; i.compareTo(pieces) < 0; i = i.add(BigInteger.ONE)) {
 			while (colHeight[col] == 0)
 				col++;
 			p = new Piece(i, blackPieces, p.nextRed(), Color.RED);
 			columns[col].addPiece(p);
+			colHeight[col]--;
 		}
 		maxPHash = p.nextRed();
 	}
@@ -201,7 +213,7 @@ public final class FastBoard {
 	public void next() {
 		int col = 0, row = 0;
 		BigInteger lastBlack = firstAll.subtract(BigInteger.ONE);
-		while (row == columns[col].height()) {
+		while (row >= columns[col].height()) {
 			col++;
 			row = 0;
 		}
@@ -211,7 +223,7 @@ public final class FastBoard {
 			for (i = BigInteger.ZERO; i.compareTo(lastBlack) < 0; i = i
 					.add(BigInteger.ONE)) {
 				row++;
-				while (row == columns[col].height()) {
+				while (row >= columns[col].height()) {
 					col++;
 					row = 0;
 				}
@@ -224,19 +236,30 @@ public final class FastBoard {
 			columns[col].setPiece(row, new Piece(lastBlack, blacks,
 					BigInteger.ONE, Color.RED));
 			row++;
-			while (row == columns[col].height()) {
+			while (row >= columns[col].height()) {
 				col++;
 				row = 0;
 			}
 			columns[col].setPiece(row, new Piece(firstAll, blacks
-					.add(BigInteger.ONE), BigInteger.ONE, Color.RED));
-			if (firstBlacks.compareTo(BigInteger.ONE) == 0)
-				firstAll = firstAll.add(BigInteger.ONE);
-			else
+					.add(BigInteger.ONE), BigInteger.ONE, Color.BLACK));
+			if (firstBlacks.compareTo(BigInteger.ONE) == 0) {
+				firstBlacks = BigInteger.ZERO;
+				do {
+					firstBlacks = firstBlacks.add(BigInteger.ONE);
+					firstAll = firstAll.add(BigInteger.ONE);
+					row++;
+					while (col < width && row == columns[col].height()) {
+						col++;
+						row = 0;
+					}
+				} while (col < width
+						&& columns[col].get(row).getColor() == Color.BLACK);
+			} else
 				firstAll = firstBlacks = lastBlack;
 		} else {
 			Piece p = null;
-			firstAll = firstBlacks = firstBlacks.subtract(BigInteger.ONE);
+			firstBlacks = firstBlacks.subtract(BigInteger.ONE);
+			firstAll = firstBlacks;
 			for (i = BigInteger.ZERO; i.compareTo(firstBlacks) < 0; i = i
 					.add(BigInteger.ONE)) {
 				p = new Piece(i, i.add(BigInteger.ONE), BigInteger.ZERO,
@@ -249,7 +272,7 @@ public final class FastBoard {
 				}
 			}
 			for (; i.compareTo(lastBlack) < 0; i = i.add(BigInteger.ONE)) {
-				p = new Piece(i, blackPieces, p.nextRed(), Color.RED);
+				p = new Piece(i, firstBlacks, p.nextRed(), Color.RED);
 				columns[col].setPiece(row, p);
 				row++;
 				while (row == columns[col].height()) {
@@ -281,10 +304,18 @@ public final class FastBoard {
 		BigInteger newHash = arHash;
 		if (turn == Color.BLACK) {
 			for (int col = width - 1; col >= 0; col--) {
-				if (columns[col].isOpen())
+				if (columns[col].isOpen()) {
+					int c = col;
+					BigInteger contr;
+					while (c >= 0 && columns[c].height() == 0)
+						c--;
+					if (c >= 0)
+						contr = columns[c].topPiece().nextBlack();
+					else
+						contr = BigInteger.ZERO;
 					al.add(new Pair<BigInteger, BigInteger>(tier
-							.add(columns[col].getTier()), newHash
-							.add(columns[col].topPiece().nextBlack())));
+							.add(columns[col].getTier()), newHash.add(contr)));
+				}
 				newHash = newHash.add(columns[col].addBlack());
 			}
 		} else {
@@ -296,5 +327,55 @@ public final class FastBoard {
 			}
 		}
 		return al;
+	}
+
+	public String toString() {
+		StringBuilder str = new StringBuilder(height * (width + 3) + 1);
+		Piece p;
+		for (int row = height - 1; row >= 0; row--) {
+			str.append('|');
+			for (int col = 0; col < width; col++) {
+				p = columns[col].get(row);
+				if (p == null)
+					str.append(' ');
+				else {
+					switch (p.getColor()) {
+					case RED:
+						str.append('X');
+						break;
+					case BLACK:
+						str.append('O');
+						break;
+					default:
+						str.append('?');
+						break;
+					}
+				}
+			}
+			str.append("|\n");
+		}
+		str.append("\n");
+		return str.toString();
+	}
+	
+	/**
+	 * @return Has this board reached its maximum hash?
+	 */
+	public boolean hasNext() {
+		return arHash.add(BigInteger.ONE).compareTo(maxPHash) < 0;
+	}
+
+	/**
+	 * @param args Nothing Test method
+	 */
+	public static void main(String[] args) {
+		FastBoard fb = new FastBoard(6, 7, BigInteger.valueOf(2801));
+		System.out.println(fb);
+		System.out.println(fb.moveHashes());
+		 while (fb.hasNext()) {
+			fb.next();
+			System.out.println(fb);
+			System.out.println(fb.moveHashes());
+		}
 	}
 }
