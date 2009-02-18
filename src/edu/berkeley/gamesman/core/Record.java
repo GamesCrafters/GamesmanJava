@@ -310,7 +310,8 @@ public final class Record {
 		}
 
 		static private long mask(int firstbit, int lastbit) {
-			return (Util.longpow(2, lastbit - firstbit) - 1) << (64 - (lastbit));
+			return (long) -1l << (64 - lastbit + firstbit) >>> firstbit; // QuickFix by Alex
+			// return (Util.longpow(2, lastbit - firstbit) - 1) << (64 - (lastbit));
 			// return (Util.longpow(2, 64-firstbit)-1) ^
 			// (Util.longpow(2,64-lastbit)-1);
 		}
