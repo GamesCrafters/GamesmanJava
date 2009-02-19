@@ -2,8 +2,14 @@ package edu.berkeley.gamesman.game;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Properties;
 
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.core.Record;
+import edu.berkeley.gamesman.core.TieredGame;
+import edu.berkeley.gamesman.database.FileDatabase;
 import edu.berkeley.gamesman.util.Pair;
 
 /**
@@ -42,13 +48,13 @@ public final class FastBoard {
 	 */
 	private static final class Column {
 		private final Piece[] piece;
-		private final BigInteger tier;					//When a piece is added to this column, the tier always increases by this amount.
+		private final int tier;					//When a piece is added to this column, the tier always increases by this amount.
 		private int colHeight = 0;
 		private BigInteger hash = BigInteger.ZERO;		//The sum of each of the hash contributions of the pieces in the column
 		private BigInteger addRed = BigInteger.ZERO;	//The sum of each of the addRed's of the pieces in the columns
 		private BigInteger addBlack = BigInteger.ZERO;	//Take a guess
 
-		Column(int height, BigInteger tier) {
+		Column(int height, int tier) {
 			piece = new Piece[height];
 			this.tier = tier;
 		}
@@ -89,7 +95,7 @@ public final class FastBoard {
 			return addBlack;
 		}
 
-		BigInteger getTier() {
+		int getTier() {
 			return tier;
 		}
 
@@ -154,7 +160,8 @@ public final class FastBoard {
 	private final int height, width;
 	private final int openColumns;					// = number of possible moves... now I know what size array to return.
 	private final BigInteger pieces, blackPieces;	// Pieces on the board, black pieces on the board (in case you didn't guess)
-	private final BigInteger tier, maxPHash;		// maxPHash = number of positions in this tier
+	private final int tier;
+	private final BigInteger maxPHash;	// maxPHash = number of positions in this tier
 	private final Color turn;
 	private BigInteger firstAll, firstBlacks; 	// firstAll = the index at which the first uninterupted
 												// (possibly empty) chain of red pieces followed by the first
@@ -169,7 +176,7 @@ public final class FastBoard {
 	 * @param width The width of the board
 	 * @param tier Each digit in base(height+1) is the height of a column
 	 */
-	public FastBoard(int height, int width, BigInteger tier) {
+	public FastBoard(int height, int width, int tier) {
 		this.height = height;
 		this.width = width;
 		this.tier = tier;
@@ -177,19 +184,16 @@ public final class FastBoard {
 		int[] colHeight = new int[width];	//For temporary use
 		int pInt = 0;		//--> Makes things easier and faster to
 		int col;			//    use ints instead of BigIntegers
-		BigInteger[] divmod;
-		int oc = width;		//Open columns, not Orange County
-		BigInteger hBig = BigInteger.valueOf(height + 1);
-		BigInteger colTier = BigInteger.ONE;
-		for (col = 0; col < width; col++) {				//
-			columns[col] = new Column(height, colTier);	// a) Determines column heights by unhashing tier number
-			divmod = tier.divideAndRemainder(hBig);		//   (If cycling through tiers, this can be done in constant time
-			colTier = colTier.multiply(hBig);			//    but since there are so many more hashes than tiers, it hardly
-			colHeight[col] = divmod[1].intValue();		//    seems worthwhile)
+		int oc = width;	// Open columns, not Orange County
+		int colTier=1;
+		for (col = 0; col < width; col++) {				// a) Determines column heights by unhashing tier number
+			columns[col] = new Column(height, colTier);	//   (If cycling through tiers, this can be done in constant time
+			colTier *= (height + 1);					//    but since there are so many more hashes than tiers, it hardly
+			colHeight[col] = tier%(height+1);			//    seems worthwhile)
 			if (colHeight[col] == height)				// 
 				oc--;									// b) Initializes columns along with their tier values
 			pInt += colHeight[col];						//
-			tier = divmod[0];							// c) Determines the number of pieces on the board
+			tier /= height + 1;							// c) Determines the number of pieces on the board
 		}												//
 		pieces = BigInteger.valueOf(pInt);				//
 		turn = (pInt % 2 == 1) ? Color.BLACK : Color.RED;	// Red always goes first: Smoke before... my ass
@@ -214,7 +218,10 @@ public final class FastBoard {
 			columns[col].addPiece(p);									// from the truth
 			colHeight[col]--;											//
 		}
-		maxPHash = p.nextRed();
+		if (tier==0)
+			maxPHash = BigInteger.ONE;
+		else
+			maxPHash = p.nextRed();
 	}
 
 	/**
@@ -332,6 +339,13 @@ public final class FastBoard {
 	}
 
 	/**
+	 * @return The hash of the current board
+	 */
+	public BigInteger getHash() {
+		return arHash;
+	}
+	
+	/**
 	 * @return The respective tiers and hashes of all possible moves from
 	 *         this position.  Should I include column number as well?
 	 */
@@ -343,9 +357,8 @@ public final class FastBoard {
 	 * Who would have thought you could simultaneously hash all the moves of a
 	 * full-size connect four board by adding eight or nine numbers together?
 	 */
-	public ArrayList<Pair<BigInteger, BigInteger>> moveHashes() {
-		ArrayList<Pair<BigInteger, BigInteger>> al = new ArrayList<Pair<BigInteger, BigInteger>>(
-				openColumns);
+	public ArrayList<BigInteger> moveHashes() {
+		ArrayList<BigInteger> al = new ArrayList<BigInteger>(openColumns);
 		BigInteger newHash = arHash;
 		if (turn == Color.BLACK) {
 			for (int col = width - 1; col >= 0; col--) {
@@ -358,18 +371,34 @@ public final class FastBoard {
 						contr = columns[c].topPiece().nextBlack();
 					else
 						contr = BigInteger.ZERO;
-					al.add(new Pair<BigInteger, BigInteger>(tier
-							.add(columns[col].getTier()), newHash.add(contr)));
+					al.add(newHash.add(contr));
 				}
 				newHash = newHash.add(columns[col].addBlack());
 			}
 		} else {
 			for (int col = width - 1; col >= 0; col--) {
 				if (columns[col].isOpen())
-					al.add(new Pair<BigInteger, BigInteger>(tier
-							.add(columns[col].getTier()), newHash));
+					al.add(newHash);
 				newHash = newHash.add(columns[col].addRed());
 			}
+		}
+		return al;
+	}
+	
+	/**
+	 * @return The tier of this board
+	 */
+	public int getTier() {
+		return tier;
+	}
+	
+	/**
+	 * @return the tiers of each of the possible moves on this board
+	 */
+	public ArrayList<Integer> moveTiers() {
+		ArrayList<Integer> al = new ArrayList<Integer>();
+		for (int col = width - 1; col >= 0; col--) {
+			al.add(tier + columns[col].getTier());
 		}
 		return al;
 	}
@@ -539,14 +568,43 @@ public final class FastBoard {
 	 * @param args Empty
 	 */
 	public static void main(String[] args) {
-		FastBoard fb = new FastBoard(6, 7, BigInteger.valueOf(1600));
-		System.out.println(fb);
-		System.out.println(fb.moveHashes());
-		while (fb.hasNext()) {
-			fb.next();
-			System.out.println(fb);
-			System.out.println(fb.primitiveValue(4));
-			System.out.println(fb.moveHashes());
+		Configuration conf = new Configuration(new Properties(System
+				.getProperties()));
+		conf.addProperties(args[0]);
+		int height = 4, width = 4, piecesToWin = 4;
+		FileDatabase fd = new FileDatabase("file:///tmp/database.db");
+		BigInteger tierOffset = BigInteger.ZERO;
+		for (int tier = (int) (Math.pow(height + 1, width) - 1); tier >= 0; tier--) {
+			FastBoard fb = new FastBoard(height, width, tier);
+			fd.setOffset(fb.getTier(), tierOffset);
+			ArrayList<Integer> moveTiers = fb.moveTiers();
+			ArrayList<BigInteger> moveOffsets = new ArrayList<BigInteger>(
+					moveTiers.size());
+			for (int i = 0; i < moveTiers.size(); i++) {
+				moveOffsets.add(fd.getOffset(moveTiers.get(i)));
+			}
+			fb.addHash(fd, tierOffset, moveOffsets, piecesToWin);
+			while (fb.hasNext()) {
+				fb.next();
+				fb.addHash(fd, tierOffset, moveOffsets, piecesToWin);
+			}
+			tierOffset = tierOffset.add(fb.maxHash());
 		}
 	}
+
+	private void addHash(FileDatabase fd, BigInteger tierOffset,
+			ArrayList<BigInteger> moveOffsets, int piecesToWin) {
+		Record r = primitiveValue(piecesToWin);
+		if (primitiveValue(piecesToWin) == PrimitiveValue.Undecided) {
+			Record bestMove = null;
+			ArrayList<BigInteger> m = moveHashes();
+			for (int i = 0; i < m.size(); i++) {
+				r = fd.getRecord(m.get(i).add(moveOffsets.get(i)));
+				if (bestMove == null || r.isPreferableTo(bestMove))
+					bestMove = r;
+			}
+		}
+		fd.putRecord(getHash().add(tierOffset), r);
+	}
+	//TODO: Add whatever code is necessary to make the above two methods work.
 }
