@@ -31,6 +31,6 @@ public final class NullDatabase extends Database {
 	}
 
 	@Override
-	public void getRecord(BigInteger loc, Record value) {}
+	public void putRecord(BigInteger loc, Record value) {}
 
 }

@@ -98,7 +98,7 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 			record = new Record(config,game.primitiveValue(myHash));
 		}
 		
-		db.getRecord(position.get(),record);
+		db.putRecord(position.get(),record);
 	}
 
 	public void reduce(

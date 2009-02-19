@@ -127,7 +127,7 @@ public class FileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void getRecord(BigInteger loc, Record value) {
+	public synchronized void putRecord(BigInteger loc, Record value) {
 		try {
 			fd.seek(loc.longValue() + offset);
 			value.writeStream(fd);

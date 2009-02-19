@@ -81,7 +81,7 @@ public class TopDownSolver extends Solver {
 				}else{
 					next = Record.combine(conf, recs);
 				}
-				db.getRecord(loc, next);
+				db.putRecord(loc, next);
 				Util.debug(DebugFacility.Solver,"Solved state "+game.displayState(state)+" to "+next);
 			}
 		}

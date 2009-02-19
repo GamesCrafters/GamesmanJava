@@ -226,7 +226,7 @@ public final class DirectoryFilerClient {
 		}
 
 		@Override
-		public void getRecord(BigInteger loc, Record value) {
+		public void putRecord(BigInteger loc, Record value) {
 			try {
 				if(loc.compareTo(pos) != 0) seek(loc);
 				dout.write(6);

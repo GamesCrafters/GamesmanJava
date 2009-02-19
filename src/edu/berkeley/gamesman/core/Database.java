@@ -41,7 +41,7 @@ public abstract class Database {
 	 * @param loc The record number
 	 * @param value The Record to store
 	 */
-	public abstract void getRecord(BigInteger loc, Record value);
+	public abstract void putRecord(BigInteger loc, Record value);
 	
 	/**
 	 * Ensure all buffers are flushed to disk.  The on-disk state should be consistent after this call returns.
