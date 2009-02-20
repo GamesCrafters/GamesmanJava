@@ -25,9 +25,8 @@ import edu.berkeley.gamesman.util.Util;
  * will derive useful information from it.
  * @author Steven Schlansker
  */
-public class Configuration implements Serializable {
+public class Configuration {
 	private static final long serialVersionUID = -5331459097835638972L;
-	private String config;
 	private Game<?> g;
 	private Hasher<?> h;
 	private EnumMap<RecordFields,Pair<Integer,Integer>> storedFields;
@@ -136,10 +135,6 @@ public class Configuration implements Serializable {
 	 */
 	public Configuration(Properties props2) {
 		props = props2;
-	}
-
-	private void buildConfig(){
-		config = Util.pstr(g.describe()) + Util.pstr(h.describe()) + Util.pstr(storedFields.toString());
 	}
 	
 	/**
