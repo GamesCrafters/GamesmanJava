@@ -343,7 +343,7 @@ public final class Record {
 			Util.assertTrue(len <= 58,
 					"Don't support more than 58-bit fields yet :(");
 			int off = (int) (offa % 8);
-			long val = vala & Util.longpow(2, len) - 1;
+			long val = vala & (1 << len) - 1;
 			if (off + len < 64) {
 				long l1 = b.getLong((int) (offa / 8));
 				l1 &= ~(mask(off, off + len));
