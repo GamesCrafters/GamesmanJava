@@ -33,18 +33,20 @@ public class TieredHadoopTool extends Configured implements Tool {
 	
 	public int run(String[] args) throws Exception {
 		Configuration conf = getConf();
+		myConf = edu.berkeley.gamesman.core.Configuration.load(args[0].getBytes());
 
-		conf.set("gameclass", OptionProcessor.checkOption("game"));
-		conf.set("databaseclass", OptionProcessor.checkOption("database"));
-		conf.set("hasherclass", OptionProcessor.checkOption("hasher"));
-		conf.set("dburi", OptionProcessor.checkOption("uri"));
+		conf.set("gameclass", myConf.getProperty("gamesman.game"));
+		conf.set("databaseclass", myConf.getProperty("gamesman.database"));
+		conf.set("hasherclass", myConf.getProperty("gamesman.hasher"));
+		conf.set("dburi", myConf.getProperty("gamesman.db.uri"));
+		conf.set("configuration_data",args[0]);
 		conf.setStrings("args", args);
 
 		// Determine last index
 		LocalMaster m = new LocalMaster();
-		Game<?> g = Util.typedInstantiate("edu.berkeley.gamesman.game." + conf.get("gameclass"));
-		Hasher<?> h = Util.typedInstantiate("edu.berkeley.gamesman.hasher."+conf.get("hasherclass"));
-		m.initialize(new edu.berkeley.gamesman.core.Configuration(g,h,EnumSet.allOf(RecordFields.class)), TierSolver.class,
+		//Game<?> g = Util.typedInstantiate("edu.berkeley.gamesman.game." + conf.get("gameclass"));
+		//Hasher<?> h = Util.typedInstantiate("edu.berkeley.gamesman.hasher."+conf.get("hasherclass"));
+		m.initialize(myConf, TierSolver.class,
 				NullDatabase.class);
 
 		TieredGame<?> game = (TieredGame<?>) m.getGame();

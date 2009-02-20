@@ -26,9 +26,10 @@ import edu.berkeley.gamesman.util.Util;
  * @author Steven Schlansker
  */
 public class Configuration {
-	private static final long serialVersionUID = -5331459097835638972L;
 	private Game<?> g;
 	private Hasher<?> h;
+	// storedFields stores a mapping of RecordFields to a pair of integers.
+	// The first integer is the bit offset, the second is the bit length
 	private EnumMap<RecordFields,Pair<Integer,Integer>> storedFields;
 	
 	private Properties props;
@@ -136,16 +137,6 @@ public class Configuration {
 	}
 	
 	/**
-	 * Load a saved Configuration from a String.
-	 * @param config The serialized Configuration
-	 * @return the Configuration
-	 */
-	
-	//public static Configuration configurationFromString(String config){
-	//	return load(config.getBytes());
-	//}
-	
-	/**
 	 * Unserialize a configuration from a bytestream
 	 * @param barr Bytes to deserialize
 	 * @return a Configuration
@@ -180,14 +171,7 @@ public class Configuration {
 			Util.fatalError("Could not resuscitate Configuration from bytes :(",e);
 		}
 		return null;
-		//return deserialize(barr);
 	}
-	//public Configuration(String config) {
-	//	this.config = config;
-	//	this.g = null;
-	//	this.h = null;
-	//	this.storedFields = null;
-	//}
 	
 
 	/**
@@ -225,9 +209,6 @@ public class Configuration {
 			Util.fatalError("IO Exception shouldn't have happened here",e);
 			return null;
 		}
-		
-		//return new String(serialize());
-		//return config;
 	}
 
 	@Override
@@ -250,25 +231,9 @@ public class Configuration {
 	public Hasher<?> getHasher() {
 		return h;
 	}
-
-	/**
-	 * @param bytes A bytestream
-	 * @return the Configuration represented by that bytestream
-	 */
-	//public static Configuration deserialize(byte[] bytes) {
-	//	return Util.deserialize(bytes);
-	//}
-
-	/**
-	 * @return a bytestream representing this Configuration
-	 */
-	//public byte[] serialize() {
-	//	return Util.serialize(this);
-	//}
 	
 	public String toString(){
 		return "Config["+props+","+g+","+h+","+storedFields+"]";
-		//return new String(serialize());
 	}
 	
 	/**

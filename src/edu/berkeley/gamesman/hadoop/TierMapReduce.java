@@ -41,20 +41,19 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 	protected Configuration config;
 
 	public void configure(JobConf conf) {
-		Class<TieredGame<Object>> gc = null;
+		//Class<TieredGame<Object>> gc = null;
 		Class<Database> gd = null;
-		Class<Hasher<?>> gh = null;
+		//Class<Hasher<?>> gh = null;
 		final String base = "edu.berkeley.gamesman.";
-		OptionProcessor.initializeOptions(conf.getStrings("args"));
 		Properties props = new Properties(System.getProperties());
 		
-		gc = Util.typedForName(base+"game."+conf.get("gameclass","NullGame"));
+		//gc = Util.typedForName(base+"game."+conf.get("gameclass","NullGame"));
 		gd = Util.typedForName(base+"database."+conf.get("databaseclass", "NullDatabase"));
-		gh = Util.typedForName(base+"hasher."+conf.get("hasherclass","NullHasher"));
+		//gh = Util.typedForName(base+"hasher."+conf.get("hasherclass","NullHasher"));
 		
 		try {
-			game = gc.newInstance();
-			hasher = gh.newInstance();
+			//game = gc.newInstance();
+			//hasher = gh.newInstance();
 			db = gd.newInstance();
 		} catch (InstantiationException e) {
 			Util.fatalError("Could not create class "+e);
@@ -62,9 +61,7 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 			Util.fatalError("Could not access class "+e);
 		}
 		
-		config = new Configuration(props,game,hasher,EnumSet.of(RecordFields.Value));
-		
-		game.initialize(config);
+		config = Configuration.load(conf.get("configuration_data").getBytes());
 		db.initialize(conf.get("dburi"),config);
 		
 		Util.debug(DebugFacility.Hadoop,"Hadoop is ready to work!");
