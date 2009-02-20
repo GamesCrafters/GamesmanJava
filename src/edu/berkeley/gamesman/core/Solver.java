@@ -11,10 +11,10 @@ public abstract class Solver {
 	
 	/**
 	 * Set the Database to use for this solver
-	 * @param db the Database
+	 * @param db1 the Database
 	 */
-	public void initialize(Database db){
-		this.db = db;
+	public void initialize(Database db1){
+		this.db = db1;
 	}
 	
 	/**

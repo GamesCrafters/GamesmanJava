@@ -8,7 +8,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.EnumSet;
-import java.util.Properties;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -110,10 +109,17 @@ public final class Util {
 
 	static final EnumSet<DebugFacility> debugOpts = EnumSet.noneOf(DebugFacility.class);
 	
-	public static void debugInit(Configuration props){
+	/**
+	 * Initialize the debugging facilities based on a Configuration object.
+	 * Each facility is set by setting the property gamesman.debug.Facility
+	 * (e.g. gamesman.debug.core) to some non-null value.
+	 * @see DebugFacility
+	 * @param conf the configuration
+	 */
+	public static void debugInit(Configuration conf){
 		String env = System.getenv("GAMESMAN_DEBUG");
 		for(DebugFacility f: DebugFacility.values()){
-			if(props.getProperty("gamesman.debug."+f.toString(),null) != null) debugOpts.add(f);
+			if(conf.getProperty("gamesman.debug."+f.toString(),null) != null) debugOpts.add(f);
 			if(env != null && env.contains(f.toString())) debugOpts.add(f);
 		}
 		if(!debugOpts.isEmpty())
