@@ -2,8 +2,11 @@ package edu.berkeley.gamesman.game;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Properties;
 
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.database.FileDatabase;
 
 /**
  * @author DNSpies Implements super-fast move-hashing and cycling. Use next() to
@@ -578,51 +581,5 @@ public final class FastBoard {
 	 */
 	public boolean hasNext() {
 		return arHash.compareTo(maxPHash.subtract(BigInteger.ONE)) < 0;
-	}
-
-	/**
-	 * @param args Empty
-	 */
-	public static void main(String[] args) {
-		int height = 4, width = 4, piecesToWin = 4;
-		FileDatabase fd = new FileDatabase("file:///tmp/database.db");
-		BigInteger tierOffset = BigInteger.ZERO;
-		for (int tier = (int) (Math.pow(height + 1, width) - 1); tier >= 0; tier--) {
-			FastBoard fb = new FastBoard(height, width, tier);
-			fd.setOffset(fb.getTier(), tierOffset);
-			ArrayList<Integer> moveTiers = fb.moveTiers();
-			ArrayList<BigInteger> moveOffsets = new ArrayList<BigInteger>(
-					moveTiers.size());
-			for (int i = 0; i < moveTiers.size(); i++) {
-				moveOffsets.add(fd.getOffset(moveTiers.get(i)));
-			}
-			fb.addHash(/*fd, tierOffset, moveOffsets,*/ piecesToWin);
-			System.out.println(fb.getHash());
-			System.out.println(fb);
-			while (fb.hasNext()) {
-				fb.next();
-				fb.addHash(fd, tierOffset, moveOffsets, piecesToWin);
-				System.out.println(fb.getHash());
-				System.out.println(fb);
-			}
-			tierOffset = tierOffset.add(fb.maxHash());
-		}
-	}
-
-	private void addHash(FileDatabase fd, BigInteger tierOffset,
-			ArrayList<BigInteger> moveOffsets, int piecesToWin) {
-		Record r = primitiveValue(piecesToWin);
-		if (r == PrimitiveValue.Undecided) {
-			Record bestMove = null;
-			ArrayList<BigInteger> m = moveHashes();
-			for (int i = 0; i < m.size(); i++) {
-				r = fd.getRecord(m.get(i).add(moveOffsets.get(i)));
-				if (bestMove == null || r.isPreferableTo(bestMove))
-					bestMove = r;
-			}
-			System.out.println(m);
-		}else
-			System.out.println(pv);
-		fd.putRecord(getHash().add(tierOffset), r);
 	}
 }
