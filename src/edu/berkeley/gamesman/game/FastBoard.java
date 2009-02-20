@@ -2,15 +2,8 @@ package edu.berkeley.gamesman.game;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Properties;
 
-import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;
-import edu.berkeley.gamesman.core.Record;
-import edu.berkeley.gamesman.core.TieredGame;
-import edu.berkeley.gamesman.database.FileDatabase;
-import edu.berkeley.gamesman.util.Pair;
 
 /**
  * @author DNSpies Implements super-fast move-hashing and cycling. Use next() to
@@ -23,10 +16,10 @@ import edu.berkeley.gamesman.util.Pair;
  *         reasonable amount of time. Hashing is a strictly one-way function.
  */
 /*
- *         Please do not make any changes to this class. I think I've removed all
- *         the bugs, but I'd like to fix it myself if there's an issue.
- *         If you auto-format (ctrl-shift-f in eclipse) you die.  It took me a long
- *         time to comment this and I'm not gonna have some brainless IDE messing it up
+ * Please do not make any changes to this class. There are still bugs but I'd
+ * like to fix them myself. If you auto-format (ctrl-shift-f in eclipse) you
+ * die. It took me a long time to comment this and I'm not gonna have some
+ * brainless IDE messing it up
  */
 public final class FastBoard {
 	private static enum Color {
@@ -54,12 +47,12 @@ public final class FastBoard {
 		private BigInteger addRed = BigInteger.ZERO;	//The sum of each of the addRed's of the pieces in the columns
 		private BigInteger addBlack = BigInteger.ZERO;	//Take a guess
 
-		Column(int height, int tier) {
+		Column(final int height, final int tier) {
 			piece = new Piece[height];
 			this.tier = tier;
 		}
 
-		void addPiece(Piece p) {
+		void addPiece(final Piece p) {
 			piece[colHeight] = p;
 			hash = hash.add(p.getHash());
 			addRed = addRed.add(p.addRed());
@@ -71,12 +64,16 @@ public final class FastBoard {
 			return piece[colHeight - 1];
 		}
 
-		void setPiece(int row, Piece p) {
-			hash = hash.subtract(piece[row].getHash()).add(p.getHash());
-			addRed = addRed.subtract(piece[row].addRed()).add(p.addRed());
-			addBlack = addBlack.subtract(piece[row].addBlack()).add(
-					p.addBlack());
-			piece[row] = p;
+		void setPiece(final int row, final BigInteger index,
+				final BigInteger black, final BigInteger hashNum,
+				final Color color) {
+			hash = hash.subtract(piece[row].getHash());
+			addRed = addRed.subtract(piece[row].addRed());
+			addBlack = addBlack.subtract(piece[row].addBlack());
+			piece[row].reset(index,black,hashNum,color);
+			hash = hash.add(piece[row].getHash());
+			addRed = addRed.add(piece[row].addRed());
+			addBlack = addBlack.add(piece[row].addBlack());
 		}
 
 		int height() {
@@ -99,20 +96,20 @@ public final class FastBoard {
 			return tier;
 		}
 
-		Piece get(int row) {
+		Piece get(final int row) {
 			return piece[row];
 		}
 	}
 
 	private static final class Piece {
-		private final BigInteger hash;		//This piece's contribution to the board hash (if this piece is black, if it's red the contribution is always zero)
-		private final BigInteger addRed;	//This piece's contribution to the board hash after a red piece is added somewhere to the left of it (if this piece is black)
-		private final BigInteger addBlack;	//This piece's contribution after a black piece is added...
-		private final Color color;
+		private BigInteger hash;	//This piece's contribution to the board hash (if this piece is black, if it's red the contribution is always zero)
+		private BigInteger addRed;	//This piece's contribution to the board hash after a red piece is added somewhere to the left of it (if this piece is black)
+		private BigInteger addBlack;	//This piece's contribution after a black piece is added...
+		private Color color;
 
-		Piece(BigInteger index, BigInteger black, BigInteger hashNum,
-				Color color) {
-			this.hash = hashNum;
+		Piece(final BigInteger index, final BigInteger black, final BigInteger hashNum,
+				final Color color) {
+			hash = hashNum;
 			if (hashNum.compareTo(BigInteger.ZERO) > 0) {							//
 				BigInteger addVal = hashNum.multiply(index.add(BigInteger.ONE));	// Yay for combinatorics
 				addRed = addVal.divide(index.add(BigInteger.ONE)					// Most of the combinatorial
@@ -122,6 +119,25 @@ public final class FastBoard {
 				addRed = BigInteger.ONE;											// piece's hash, all chooses are
 				addBlack = BigInteger.ZERO;											// calculated in constant time
 			}																		// (One multiplication and one division)
+			this.color = color;
+		}
+		
+		/*
+		 * This method is exactly the same as the contructor. It's to avoid
+		 * having to constantly be creating and destroying pieces
+		 */
+		void reset(final BigInteger index, final BigInteger black, final BigInteger hashNum,
+				final Color color) {
+			hash = hashNum;
+			if (hashNum.compareTo(BigInteger.ZERO) > 0) {
+				BigInteger addVal = hashNum.multiply(index.add(BigInteger.ONE));
+				addRed = addVal.divide(index.add(BigInteger.ONE)
+						.subtract(black));
+				addBlack = addVal.divide(black.add(BigInteger.ONE));
+			} else {
+				addRed = BigInteger.ONE;
+				addBlack = BigInteger.ZERO;
+			}
 			this.color = color;
 		}
 
@@ -176,7 +192,7 @@ public final class FastBoard {
 	 * @param width The width of the board
 	 * @param tier Each digit in base(height+1) is the height of a column
 	 */
-	public FastBoard(int height, int width, int tier) {
+	public FastBoard(final int height, final int width, int tier) {
 		this.height = height;
 		this.width = width;
 		this.tier = tier;
@@ -211,14 +227,17 @@ public final class FastBoard {
 			columns[col].addPiece(p);
 			colHeight[col]--;	//Told you it was temporary.  Column objects keep track of their own heights
 		}
-		for (; i.compareTo(pieces) < 0; i = i.add(BigInteger.ONE)) {	// If it's not black, it's red
-			while (colHeight[col] == 0)									//
-				col++;													// All other colors are illusions
-			p = new Piece(i, blackPieces, p.nextRed(), Color.RED);		// created by the media to blind us
-			columns[col].addPiece(p);									// from the truth
-			colHeight[col]--;											//
+		for (; i.compareTo(pieces) < 0; i = i.add(BigInteger.ONE)) {			// If it's not black, it's red
+			while (colHeight[col] == 0)											//
+				col++;															// All other colors are illusions
+			if(p==null)															// created by the media to blind us
+				p = new Piece(i, BigInteger.ZERO, BigInteger.ONE, Color.RED);	// from the truth...
+			else																//
+			p = new Piece(i, blackPieces, p.nextRed(), Color.RED);				// That Keanu Reeves can't act
+			columns[col].addPiece(p);											//
+			colHeight[col]--;													//
 		}
-		if (tier==0)
+		if (this.tier==0)
 			maxPHash = BigInteger.ONE;
 		else
 			maxPHash = p.nextRed();
@@ -252,36 +271,30 @@ public final class FastBoard {
 		BigInteger lastBlack = firstAll.subtract(BigInteger.ONE);	// The index of the last black piece
 																	// in the first line of black pieces
 																	// This one's special
-		while (row >= columns[col].height()) {	// The only place
-			col++;								// where this block of code
-			row = 0;							// isn't preceded by row++;
-		}										// If it doesn't make sense now, it will.
+		while (columns[col].height() == 0)
+			col++;
 		BigInteger count;
 		if (firstAll.compareTo(firstBlacks) == 0			// A little strange that these two seemingly
 				|| firstBlacks.equals(BigInteger.ONE)) {	// unrelated conditions have almost the same result:
-			int i;											// Ignore the initial mass switch and only do the small switch
-			int lbInt = lastBlack.intValue();	// BigIntegers are evil
-			for (i = 0; i < lbInt; i++) {
-				row++;									// And now we see that
-				while (row >= columns[col].height()) {	// this code block is
-					col++;								// for moving to
-					row = 0;							// the next piece on the board
-				}										// In col-major order
+															// Ignore the initial mass switch and only do the small switch
+			row = lastBlack.intValue();				//
+			while (row >= columns[col].height()) {	//Find piece at index of lastBlack
+				row -= columns[col].height();		//
+				col++;								//
 			}
 			BigInteger blacks;
 			if (firstBlacks.equals(BigInteger.ONE)) //
 				blacks = BigInteger.ZERO;			// The conditions are on opposite sides
 			else									// (n choose 0) = (n choose n) equals (one)
 				blacks = lastBlack;					//
-			set(row, col, new Piece(lastBlack, blacks, BigInteger.ONE,	// Change black to red
-					Color.RED));										//
-			row++;										//
-			while (row >= columns[col].height()) {		//
-				col++;									// Next piece
-				row = 0;								//
-			}											//
-			set(row, col, new Piece(firstAll, blacks.add(BigInteger.ONE),	// Change red to black
-					BigInteger.ONE, Color.BLACK));							//
+			set(row, col, lastBlack, blacks, BigInteger.ONE, Color.RED); // Change black to red
+			row++;										// And now we see that
+			while (row >= columns[col].height()) {		// this code block is
+				col++;									// for moving to
+				row = 0;								// the next piece on the board
+			}											// In col-major order
+			set(row, col, firstAll, blacks.add(BigInteger.ONE), BigInteger.ONE,	//Change red to black
+					Color.BLACK);
 			if (firstBlacks.equals(BigInteger.ONE)) {				// The actual operations may be
 				firstBlacks = BigInteger.ZERO;						// the same, but the new board
 				do {												// looks different depending on
@@ -301,9 +314,9 @@ public final class FastBoard {
 			firstAll = firstBlacks;
 			for (count = BigInteger.ZERO; count.compareTo(firstBlacks) < 0; count = count
 					.add(BigInteger.ONE)) {						//
-				p = new Piece(count, count.add(BigInteger.ONE),	//
+				set(row, col, count, count.add(BigInteger.ONE),	//
 						BigInteger.ZERO, Color.BLACK);			//
-				set(row,col,p);									//
+				p = get(row, col);								//
 				row++;											// Put the black ones in front
 				while (row >= columns[col].height()) {			//
 					col++;										//
@@ -312,30 +325,30 @@ public final class FastBoard {
 			}
 			for (; count.compareTo(lastBlack) < 0; count = count			//
 					.add(BigInteger.ONE)) {									//
-				p = new Piece(count, firstBlacks, p.nextRed(), Color.RED);	//
-				set(row,col,p);												// Followed by the red ones
+				set(row,col,count, firstBlacks, p.nextRed(), Color.RED);	// Followed by the red ones
+				p=get(row,col);												//
 				row++;														//
 				while (row >= columns[col].height()) {						//
 					col++;													//
 					row = 0;												//
 				}															//
 			}																//
-			p = new Piece(lastBlack, firstBlacks, p.nextRed(), Color.RED);		// Black to red
-			set(row,col,p);														//
+			set(row, col, lastBlack, firstBlacks, p.nextRed(), Color.RED);		// Black to red
+			p = get(row, col);
 			row++;
 			while (row >= columns[col].height()) {
 				col++;
 				row = 0;
 			}
-			p = new Piece(lastBlack.add(BigInteger.ONE), firstBlacks
-					.add(BigInteger.ONE), p.nextBlack(), Color.BLACK);			// Red to black
-			set(row,col,p);														//
+			set(row, col, lastBlack.add(BigInteger.ONE), firstBlacks			// Red to black
+					.add(BigInteger.ONE), p.nextBlack(), Color.BLACK);			//
 		}
-		arHash = arHash.add(BigInteger.ONE);	// The hash equivalent of the last 63 lines of code
+		arHash = arHash.add(BigInteger.ONE);	// The hash equivalent of the last 75 lines of code
 	}
 
-	private void set(int row, int col, Piece p) {
-		columns[col].setPiece(row, p);
+	private void set(final int row, final int col, final BigInteger index,
+			final BigInteger black, final BigInteger hashNum, final Color color) {
+		columns[col].setPiece(row, index, black, hashNum, color);
 	}
 
 	/**
@@ -367,8 +380,10 @@ public final class FastBoard {
 					BigInteger contr;
 					while (c >= 0 && columns[c].height() == 0)
 						c--;
-					if (c >= 0)
+					if (c >= 0){
 						contr = columns[c].topPiece().nextBlack();
+						System.out.println(contr);
+					}
 					else
 						contr = BigInteger.ZERO;
 					al.add(newHash.add(contr));
@@ -438,7 +453,7 @@ public final class FastBoard {
 	 * @param col The board column
 	 * @return The piece on the board
 	 */
-	public Piece get(int row, int col) {
+	public Piece get(final int row, final int col) {
 		return columns[col].get(row);
 	}
 
@@ -457,7 +472,7 @@ public final class FastBoard {
 	 * is part of a four-in-a-row.  Otherwise return Tie or Undecided depending
 	 * on whether the board is full or not.
 	 */
-	public PrimitiveValue primitiveValue(int piecesToWin) {
+	public PrimitiveValue primitiveValue(final int piecesToWin) {
 		int colHeight;
 		for (int col = 0; col < width; col++) {
 			colHeight = columns[col].height();
@@ -475,7 +490,7 @@ public final class FastBoard {
 	/*
 	 * Looks for a win that uses the given piece.
 	 */
-	private boolean checkLastWin(int row, int col, int piecesToWin) {
+	private boolean checkLastWin(final int row, final int col, final int piecesToWin) {
 		Color turn = get(row, col).getColor();
 		int ext;
 		int stopPos;
@@ -568,43 +583,47 @@ public final class FastBoard {
 	 * @param args Empty
 	 */
 	public static void main(String[] args) {
-		Configuration conf = new Configuration(new Properties(System
-				.getProperties()));
-		conf.addProperties(args[0]);
 		int height = 4, width = 4, piecesToWin = 4;
-		FileDatabase fd = new FileDatabase("file:///tmp/database.db");
-		BigInteger tierOffset = BigInteger.ZERO;
+//		FileDatabase fd = new FileDatabase("file:///tmp/database.db");
+//		BigInteger tierOffset = BigInteger.ZERO;
 		for (int tier = (int) (Math.pow(height + 1, width) - 1); tier >= 0; tier--) {
 			FastBoard fb = new FastBoard(height, width, tier);
-			fd.setOffset(fb.getTier(), tierOffset);
-			ArrayList<Integer> moveTiers = fb.moveTiers();
-			ArrayList<BigInteger> moveOffsets = new ArrayList<BigInteger>(
-					moveTiers.size());
-			for (int i = 0; i < moveTiers.size(); i++) {
-				moveOffsets.add(fd.getOffset(moveTiers.get(i)));
-			}
-			fb.addHash(fd, tierOffset, moveOffsets, piecesToWin);
+//			fd.setOffset(fb.getTier(), tierOffset);
+//			ArrayList<Integer> moveTiers = fb.moveTiers();
+//			ArrayList<BigInteger> moveOffsets = new ArrayList<BigInteger>(
+//					moveTiers.size());
+//			for (int i = 0; i < moveTiers.size(); i++) {
+//				moveOffsets.add(fd.getOffset(moveTiers.get(i)));
+//			}
+			fb.addHash(/*fd, tierOffset, moveOffsets,*/ piecesToWin);
+			System.out.println(fb.getHash());
+			System.out.println(fb);
 			while (fb.hasNext()) {
 				fb.next();
-				fb.addHash(fd, tierOffset, moveOffsets, piecesToWin);
+				fb.addHash(/*fd, tierOffset, moveOffsets,*/ piecesToWin);
+				System.out.println(fb.getHash());
+				System.out.println(fb);
 			}
-			tierOffset = tierOffset.add(fb.maxHash());
+//			tierOffset = tierOffset.add(fb.maxHash());
 		}
 	}
 
-	private void addHash(FileDatabase fd, BigInteger tierOffset,
-			ArrayList<BigInteger> moveOffsets, int piecesToWin) {
-		Record r = primitiveValue(piecesToWin);
-		if (primitiveValue(piecesToWin) == PrimitiveValue.Undecided) {
-			Record bestMove = null;
+	private void addHash(/*FileDatabase fd, BigInteger tierOffset,
+			ArrayList<BigInteger> moveOffsets,*/ int piecesToWin) {
+//		Record r = primitiveValue(piecesToWin);
+		PrimitiveValue pv=primitiveValue(piecesToWin);
+		if (pv == PrimitiveValue.Undecided) {
+//			Record bestMove = null;
 			ArrayList<BigInteger> m = moveHashes();
-			for (int i = 0; i < m.size(); i++) {
-				r = fd.getRecord(m.get(i).add(moveOffsets.get(i)));
-				if (bestMove == null || r.isPreferableTo(bestMove))
-					bestMove = r;
-			}
-		}
-		fd.putRecord(getHash().add(tierOffset), r);
+//			for (int i = 0; i < m.size(); i++) {
+//				r = fd.getRecord(m.get(i).add(moveOffsets.get(i)));
+//				if (bestMove == null || r.isPreferableTo(bestMove))
+//					bestMove = r;
+//			}
+			System.out.println(m);
+		}else
+			System.out.println(pv);
+//		fd.putRecord(getHash().add(tierOffset), r);
 	}
-	//TODO: Add whatever code is necessary to make the above two methods work.
+	//TODO: Add whatever code is necessary to make the above two methods work without commenting out all that code.
 }
