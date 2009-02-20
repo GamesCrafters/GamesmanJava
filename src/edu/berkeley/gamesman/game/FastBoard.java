@@ -585,46 +585,44 @@ public final class FastBoard {
 	 */
 	public static void main(String[] args) {
 		int height = 4, width = 4, piecesToWin = 4;
-//		FileDatabase fd = new FileDatabase("file:///tmp/database.db");
-//		BigInteger tierOffset = BigInteger.ZERO;
+		FileDatabase fd = new FileDatabase("file:///tmp/database.db");
+		BigInteger tierOffset = BigInteger.ZERO;
 		for (int tier = (int) (Math.pow(height + 1, width) - 1); tier >= 0; tier--) {
 			FastBoard fb = new FastBoard(height, width, tier);
-//			fd.setOffset(fb.getTier(), tierOffset);
-//			ArrayList<Integer> moveTiers = fb.moveTiers();
-//			ArrayList<BigInteger> moveOffsets = new ArrayList<BigInteger>(
-//					moveTiers.size());
-//			for (int i = 0; i < moveTiers.size(); i++) {
-//				moveOffsets.add(fd.getOffset(moveTiers.get(i)));
-//			}
+			fd.setOffset(fb.getTier(), tierOffset);
+			ArrayList<Integer> moveTiers = fb.moveTiers();
+			ArrayList<BigInteger> moveOffsets = new ArrayList<BigInteger>(
+					moveTiers.size());
+			for (int i = 0; i < moveTiers.size(); i++) {
+				moveOffsets.add(fd.getOffset(moveTiers.get(i)));
+			}
 			fb.addHash(/*fd, tierOffset, moveOffsets,*/ piecesToWin);
 			System.out.println(fb.getHash());
 			System.out.println(fb);
 			while (fb.hasNext()) {
 				fb.next();
-				fb.addHash(/*fd, tierOffset, moveOffsets,*/ piecesToWin);
+				fb.addHash(fd, tierOffset, moveOffsets, piecesToWin);
 				System.out.println(fb.getHash());
 				System.out.println(fb);
 			}
-//			tierOffset = tierOffset.add(fb.maxHash());
+			tierOffset = tierOffset.add(fb.maxHash());
 		}
 	}
 
-	private void addHash(/*FileDatabase fd, BigInteger tierOffset,
-			ArrayList<BigInteger> moveOffsets,*/ int piecesToWin) {
-//		Record r = primitiveValue(piecesToWin);
-		PrimitiveValue pv=primitiveValue(piecesToWin);
-		if (pv == PrimitiveValue.Undecided) {
-//			Record bestMove = null;
+	private void addHash(FileDatabase fd, BigInteger tierOffset,
+			ArrayList<BigInteger> moveOffsets, int piecesToWin) {
+		Record r = primitiveValue(piecesToWin);
+		if (r == PrimitiveValue.Undecided) {
+			Record bestMove = null;
 			ArrayList<BigInteger> m = moveHashes();
-//			for (int i = 0; i < m.size(); i++) {
-//				r = fd.getRecord(m.get(i).add(moveOffsets.get(i)));
-//				if (bestMove == null || r.isPreferableTo(bestMove))
-//					bestMove = r;
-//			}
+			for (int i = 0; i < m.size(); i++) {
+				r = fd.getRecord(m.get(i).add(moveOffsets.get(i)));
+				if (bestMove == null || r.isPreferableTo(bestMove))
+					bestMove = r;
+			}
 			System.out.println(m);
 		}else
 			System.out.println(pv);
-//		fd.putRecord(getHash().add(tierOffset), r);
+		fd.putRecord(getHash().add(tierOffset), r);
 	}
-	//TODO: Add whatever code is necessary to make the above two methods work without commenting out all that code.
 }
