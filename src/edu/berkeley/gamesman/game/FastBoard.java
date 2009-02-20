@@ -2,11 +2,8 @@ package edu.berkeley.gamesman.game;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Properties;
 
-import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;
-import edu.berkeley.gamesman.database.FileDatabase;
 
 /**
  * @author DNSpies Implements super-fast move-hashing and cycling. Use next() to
