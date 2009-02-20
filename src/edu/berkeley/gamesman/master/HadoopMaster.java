@@ -14,14 +14,17 @@ import edu.berkeley.gamesman.util.Util;
  * @author Steven Schlansker
  */
 public class HadoopMaster implements Master {
+	
+	private Configuration conf;
 
-	public void initialize(Configuration conf,
+	public void initialize(Configuration conf1,
 			Class<? extends Solver> solver, Class<? extends Database> database) {
+		this.conf = conf1;
 	}
 
 	public void run() {
 		try {
-			ToolRunner.run(new TieredHadoopTool(), OptionProcessor.getAllOptions());
+			ToolRunner.run(new TieredHadoopTool(), new String[]{new String(conf.store())});
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			Util.fatalError("Hadoop tool runner threw an exception: "+e);

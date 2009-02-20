@@ -29,6 +29,8 @@ import edu.berkeley.gamesman.util.Util;
  */
 public class TieredHadoopTool extends Configured implements Tool {
 
+	edu.berkeley.gamesman.core.Configuration myConf;
+	
 	public int run(String[] args) throws Exception {
 		Configuration conf = getConf();
 

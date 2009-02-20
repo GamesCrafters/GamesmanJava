@@ -27,10 +27,12 @@ public class BlockDatabase extends FileDatabase {
 	public void close() {
 		flush();
 		try {
+			buf.force();
 			fd.seek(offset);
 			fd.writeLong(lastRecord);
 			long dblen = offset + headerSize + (Record.bitlength(conf)*lastRecord+7)/8;
 			Util.debug(DebugFacility.Database,"Attempting to truncate to "+dblen);
+			fd.getChannel().close();
 			fd.getChannel().truncate(dblen);
 		} catch (IOException e) {
 			Util.warn("Could not cleanly close BlockDB: " + e);
