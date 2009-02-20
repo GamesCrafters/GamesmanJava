@@ -64,13 +64,12 @@ public final class FastBoard {
 			return piece[colHeight - 1];
 		}
 
-		void setPiece(final int row, final BigInteger index,
-				final BigInteger black, final BigInteger hashNum,
-				final Color color) {
+		void setPiece(final int row, final BigInteger black,
+				final BigInteger hashNum, final Color color) {
 			hash = hash.subtract(piece[row].getHash());
 			addRed = addRed.subtract(piece[row].addRed());
 			addBlack = addBlack.subtract(piece[row].addBlack());
-			piece[row].reset(index,black,hashNum,color);
+			piece[row].reset(black, hashNum, color);
 			hash = hash.add(piece[row].getHash());
 			addRed = addRed.add(piece[row].addRed());
 			addBlack = addBlack.add(piece[row].addBlack());
@@ -102,6 +101,7 @@ public final class FastBoard {
 	}
 
 	private static final class Piece {
+		private final BigInteger index;	//This piece's index
 		private BigInteger hash;	//This piece's contribution to the board hash (if this piece is black, if it's red the contribution is always zero)
 		private BigInteger addRed;	//This piece's contribution to the board hash after a red piece is added somewhere to the left of it (if this piece is black)
 		private BigInteger addBlack;	//This piece's contribution after a black piece is added...
@@ -110,6 +110,7 @@ public final class FastBoard {
 		Piece(final BigInteger index, final BigInteger black, final BigInteger hashNum,
 				final Color color) {
 			hash = hashNum;
+			this.index=index;
 			if (hashNum.compareTo(BigInteger.ZERO) > 0) {							//
 				BigInteger addVal = hashNum.multiply(index.add(BigInteger.ONE));	// Yay for combinatorics
 				addRed = addVal.divide(index.add(BigInteger.ONE)					// Most of the combinatorial
@@ -126,7 +127,7 @@ public final class FastBoard {
 		 * This method is exactly the same as the contructor. It's to avoid
 		 * having to constantly be creating and destroying pieces
 		 */
-		void reset(final BigInteger index, final BigInteger black, final BigInteger hashNum,
+		void reset(final BigInteger black, final BigInteger hashNum,
 				final Color color) {
 			hash = hashNum;
 			if (hashNum.compareTo(BigInteger.ZERO) > 0) {
@@ -230,14 +231,14 @@ public final class FastBoard {
 		for (; i.compareTo(pieces) < 0; i = i.add(BigInteger.ONE)) {			// If it's not black, it's red
 			while (colHeight[col] == 0)											//
 				col++;															// All other colors are illusions
-			if(p==null)															// created by the media to blind us
+			if (p == null)														// created by the media to blind us
 				p = new Piece(i, BigInteger.ZERO, BigInteger.ONE, Color.RED);	// from the truth...
 			else																//
 			p = new Piece(i, blackPieces, p.nextRed(), Color.RED);				// That Keanu Reeves can't act
 			columns[col].addPiece(p);											//
 			colHeight[col]--;													//
 		}
-		if (this.tier==0)
+		if (this.tier == 0)
 			maxPHash = BigInteger.ONE;
 		else
 			maxPHash = p.nextRed();
@@ -287,19 +288,21 @@ public final class FastBoard {
 				blacks = BigInteger.ZERO;			// The conditions are on opposite sides
 			else									// (n choose 0) = (n choose n) equals (one)
 				blacks = lastBlack;					//
-			set(row, col, lastBlack, blacks, BigInteger.ONE, Color.RED); // Change black to red
+			set(row, col, blacks, BigInteger.ONE, Color.RED); // Change black to red
+			Piece p=get(row,col);
 			row++;										// And now we see that
 			while (row >= columns[col].height()) {		// this code block is
 				col++;									// for moving to
 				row = 0;								// the next piece on the board
 			}											// In col-major order
-			set(row, col, firstAll, blacks.add(BigInteger.ONE), BigInteger.ONE,	//Change red to black
+			set(row, col, blacks.add(BigInteger.ONE), p.nextBlack(),	//Change red to black
 					Color.BLACK);
 			if (firstBlacks.equals(BigInteger.ONE)) {				// The actual operations may be
 				firstBlacks = BigInteger.ZERO;						// the same, but the new board
 				do {												// looks different depending on
 					firstBlacks = firstBlacks.add(BigInteger.ONE);	// why you ignored the switch
 					firstAll = firstAll.add(BigInteger.ONE);		// Memoization can be a hastle sometimes
+					p=get(row,col);
 					row++;
 					while (col < width && row >= columns[col].height()) {	// The extra condition
 						col++;												// eliminates exceptions
@@ -314,7 +317,7 @@ public final class FastBoard {
 			firstAll = firstBlacks;
 			for (count = BigInteger.ZERO; count.compareTo(firstBlacks) < 0; count = count
 					.add(BigInteger.ONE)) {						//
-				set(row, col, count, count.add(BigInteger.ONE),	//
+				set(row, col, count.add(BigInteger.ONE),		//
 						BigInteger.ZERO, Color.BLACK);			//
 				p = get(row, col);								//
 				row++;											// Put the black ones in front
@@ -325,7 +328,7 @@ public final class FastBoard {
 			}
 			for (; count.compareTo(lastBlack) < 0; count = count			//
 					.add(BigInteger.ONE)) {									//
-				set(row,col,count, firstBlacks, p.nextRed(), Color.RED);	// Followed by the red ones
+				set(row, col, firstBlacks, p.nextRed(), Color.RED);	// Followed by the red ones
 				p=get(row,col);												//
 				row++;														//
 				while (row >= columns[col].height()) {						//
@@ -333,22 +336,22 @@ public final class FastBoard {
 					row = 0;												//
 				}															//
 			}																//
-			set(row, col, lastBlack, firstBlacks, p.nextRed(), Color.RED);		// Black to red
+			set(row, col, firstBlacks, p.nextRed(), Color.RED);		// Black to red
 			p = get(row, col);
 			row++;
 			while (row >= columns[col].height()) {
 				col++;
 				row = 0;
 			}
-			set(row, col, lastBlack.add(BigInteger.ONE), firstBlacks			// Red to black
-					.add(BigInteger.ONE), p.nextBlack(), Color.BLACK);			//
+			set(row, col, firstBlacks.add(BigInteger.ONE), p.nextBlack(),	//Red to black
+					Color.BLACK);
 		}
 		arHash = arHash.add(BigInteger.ONE);	// The hash equivalent of the last 75 lines of code
 	}
 
-	private void set(final int row, final int col, final BigInteger index,
-			final BigInteger black, final BigInteger hashNum, final Color color) {
-		columns[col].setPiece(row, index, black, hashNum, color);
+	private void set(final int row, final int col, final BigInteger black,
+			final BigInteger hashNum, final Color color) {
+		columns[col].setPiece(row, black, hashNum, color);
 	}
 
 	/**
@@ -380,10 +383,8 @@ public final class FastBoard {
 					BigInteger contr;
 					while (c >= 0 && columns[c].height() == 0)
 						c--;
-					if (c >= 0){
+					if (c >= 0)
 						contr = columns[c].topPiece().nextBlack();
-						System.out.println(contr);
-					}
 					else
 						contr = BigInteger.ZERO;
 					al.add(newHash.add(contr));
