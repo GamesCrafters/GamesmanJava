@@ -58,7 +58,7 @@ public abstract class TieredHasher<State> extends Hasher<State> {
 	 * @return The first hash value that will be in this tier
 	 * @see #tierIndexForState
 	 */
-	public BigInteger hashOffsetForTier(int tier){
+	public final BigInteger hashOffsetForTier(int tier){
 		if(tier == 0)
 			return BigInteger.ZERO;
 		if(tierEnds == null)
@@ -71,7 +71,7 @@ public abstract class TieredHasher<State> extends Hasher<State> {
 	 * @param tier The tier we're interested in
 	 * @return The last hash that will be in the given tier
 	 */
-	public BigInteger lastHashValueForTier(int tier){
+	public final BigInteger lastHashValueForTier(int tier){
 		if(tierEnds == null){
 			tierEnds = new BigInteger[numberOfTiers()];
 			for(int i = 0; i < tierEnds.length; i++){
@@ -94,14 +94,14 @@ public abstract class TieredHasher<State> extends Hasher<State> {
 	 * @param index The hash offset into that tier (relative to the start - 0 is the first board in the tier)
 	 * @return The represented GameState
 	 */
-	public abstract State gameStateForTierIndex(int tier, BigInteger index);
+	public abstract State gameStateForTierAndOffset(int tier, BigInteger index);
 	/**
 	 * Convert a State into a tier/index pair
 	 * Analogous to hash for a Tiered game
 	 * @param state The game state we have
 	 * @return a Pair with tier/offset enclosed
 	 */
-	public abstract Pair<Integer,BigInteger> tierIndexForState(State state);
+	public abstract Pair<Integer,BigInteger> tierAndOffsetFromGameState(State state);
 	
 
 }

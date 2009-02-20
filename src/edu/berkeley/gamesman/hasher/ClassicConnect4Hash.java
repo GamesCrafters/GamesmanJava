@@ -23,7 +23,7 @@ public class ClassicConnect4Hash extends TieredHasher<char[][]> {
 	private static final long serialVersionUID = -5178988467392378350L;
 
 	@Override
-	public char[][] gameStateForTierIndex(int tier, BigInteger index) {
+	public char[][] gameStateForTierAndOffset(int tier, BigInteger index) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -41,7 +41,7 @@ public class ClassicConnect4Hash extends TieredHasher<char[][]> {
 	}
 
 	@Override
-	public Pair<Integer, BigInteger> tierIndexForState(char[][] state) {
+	public Pair<Integer, BigInteger> tierAndOffsetFromGameState(char[][] state) {
 		// TODO Auto-generated method stub
 		return null;
 	}

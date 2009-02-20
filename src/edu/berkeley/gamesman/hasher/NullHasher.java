@@ -39,7 +39,7 @@ public class NullHasher extends TieredHasher<char[]> {
 	}
 
 	@Override
-	public char[] gameStateForTierIndex(int tier, BigInteger index) {
+	public char[] gameStateForTierAndOffset(int tier, BigInteger index) {
 		return null;
 	}
 
@@ -54,7 +54,7 @@ public class NullHasher extends TieredHasher<char[]> {
 	}
 
 	@Override
-	public Pair<Integer, BigInteger> tierIndexForState(char[] state) {
+	public Pair<Integer, BigInteger> tierAndOffsetFromGameState(char[] state) {
 		return null;
 	}
 

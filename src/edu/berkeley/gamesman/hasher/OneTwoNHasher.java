@@ -27,7 +27,7 @@ public class OneTwoNHasher extends TieredHasher<Integer> {
 	}
 
 	@Override
-	public Integer gameStateForTierIndex(int tier, BigInteger index) {
+	public Integer gameStateForTierAndOffset(int tier, BigInteger index) {
 		return tier + 1;
 		
 	}
@@ -38,7 +38,7 @@ public class OneTwoNHasher extends TieredHasher<Integer> {
 	}
 	
 	@Override
-	public Pair<Integer, BigInteger> tierIndexForState(Integer state) {
+	public Pair<Integer, BigInteger> tierAndOffsetFromGameState(Integer state) {
 		return new Pair<Integer, BigInteger>(state / gameWidth, 
 				new BigInteger(String.valueOf(state % gameWidth)));
 	}

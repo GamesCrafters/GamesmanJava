@@ -45,8 +45,8 @@ public abstract class TieredGame<State> extends Game<State> {
 		for(int i = 0; i < myHasher.cacheNumTiers; i++){
 			if(myHasher.tierEnds[i].compareTo(hash) >= 0) {
 				if(i == 0)
-					return myHasher.gameStateForTierIndex(i, hash);
-				return myHasher.gameStateForTierIndex(i,hash.subtract(myHasher.tierEnds[i-1]).subtract(BigInteger.ONE));
+					return myHasher.gameStateForTierAndOffset(i, hash);
+				return myHasher.gameStateForTierAndOffset(i,hash.subtract(myHasher.tierEnds[i-1]).subtract(BigInteger.ONE));
 			}
 		}
 		Util.fatalError("Hash outside of tiered values: "+hash);
@@ -57,7 +57,7 @@ public abstract class TieredGame<State> extends Game<State> {
 	public BigInteger stateToHash(State pos) {
 		if(myHasher == null)
 			Util.fatalError("You must call prepare() before hashing!");
-		Pair<Integer,BigInteger> p = myHasher.tierIndexForState(pos);
+		Pair<Integer,BigInteger> p = myHasher.tierAndOffsetFromGameState(pos);
 		return myHasher.hashOffsetForTier(p.car).add(p.cdr);
 	}
 	
