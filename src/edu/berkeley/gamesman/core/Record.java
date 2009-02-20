@@ -33,12 +33,20 @@ public final class Record {
 
 	private Map<RecordFields, Pair<Integer, Integer>> sf;
 
-	// private int[] bitOffset;
-	private int[] bits;
-	private long[] fields;
-	private RecordFields[] fieldtypes;
 
-	private int maxbits;
+	/*
+	 *  These three arrays are indexed by the physical on-disk
+	 *  ordering of the Record.  They store the type of the field
+	 *  (e.g. [Primitive value,Remoteness]), followed by the length
+	 *  of the field in bits (e.g. [2,6]), and finally the values
+	 *  (e.g. [Win,3] is Win in 3 moves)
+	 */
+
+	private RecordFields[] fieldNames;
+	private int[] fieldBitLength;
+	private long[] fieldValues;
+
+	private int recordBitLength; // Cached total length
 
 	/**
 	 * Convenience constructor for a Record with only a PrimitiveValue
@@ -110,12 +118,12 @@ public final class Record {
 	 */
 	public void write(ByteBuffer buf, long index) {
 		long bitoff = index * bitlength();
-		for (int i = 0; i < bits.length; i++) {
-			Util.debug(DebugFacility.Record, "Putting field " + fieldtypes[i]
-					+ " (" + fields[i] + ") to [" + bitoff + ":" + bits[i]
+		for (int i = 0; i < fieldBitLength.length; i++) {
+			Util.debug(DebugFacility.Record, "Putting field " + fieldNames[i]
+					+ " (" + fieldValues[i] + ") to [" + bitoff + ":" + fieldBitLength[i]
 					+ "]");
-			BitBuffer.put(buf, bitoff, bits[i], fields[i]);
-			bitoff += bits[i];
+			BitBuffer.put(buf, bitoff, fieldBitLength[i], fieldValues[i]);
+			bitoff += fieldBitLength[i];
 		}
 	}
 
@@ -136,9 +144,9 @@ public final class Record {
 
 	private void read(ByteBuffer buf, long index) {
 		long bitoff = index * bitlength();
-		for (int i = 0; i < fields.length; i++) {
-			fields[i] = BitBuffer.get(buf, bitoff, bits[i]);
-			bitoff += bits[i];
+		for (int i = 0; i < fieldValues.length; i++) {
+			fieldValues[i] = BitBuffer.get(buf, bitoff, fieldBitLength[i]);
+			bitoff += fieldBitLength[i];
 		}
 	}
 
@@ -146,7 +154,7 @@ public final class Record {
 	 * @return the length of a single record in bits
 	 */
 	public final int bitlength() {
-		return maxbits;
+		return recordBitLength;
 	}
 
 	private final int bits2bytes(int numbits) {
@@ -185,7 +193,7 @@ public final class Record {
 	 * @param value the value to store
 	 */
 	public final void set(final RecordFields field, final long value) {
-		fields[sf.get(field).car] = value;
+		fieldValues[sf.get(field).car] = value;
 	}
 
 	/**
@@ -195,7 +203,7 @@ public final class Record {
 	 * @return the value of that field
 	 */
 	public final long get(final RecordFields field) {
-		return fields[sf.get(field).car];
+		return fieldValues[sf.get(field).car];
 	}
 	
 	/**
@@ -209,18 +217,18 @@ public final class Record {
 		sf = conf.getStoredFields();
 
 		int[] bitOffset = new int[sf.size()];
-		bits = new int[sf.size()];
-		fields = new long[sf.size()];
-		fieldtypes = new RecordFields[sf.size()];
+		fieldBitLength = new int[sf.size()];
+		fieldValues = new long[sf.size()];
+		fieldNames = new RecordFields[sf.size()];
 
 		for (RecordFields key : sf.keySet()) {
 			final Pair<Integer, Integer> info = sf.get(key);
-			bits[info.car] = info.cdr;
+			fieldBitLength[info.car] = info.cdr;
 			bitOffset[info.car] = (info.car > 0 ? bitOffset[info.car - 1]
-					+ bits[info.car - 1] : 0);
-			fieldtypes[info.car] = key;
+					+ fieldBitLength[info.car - 1] : 0);
+			fieldNames[info.car] = key;
 		}
-		maxbits = bitOffset[bitOffset.length - 1] + bits[bits.length - 1];
+		recordBitLength = bitOffset[bitOffset.length - 1] + fieldBitLength[fieldBitLength.length - 1];
 
 		// for(int i = 0; i < sf.size(); i++){
 		// System.out.println(RecordFields.values()[i]+" ("+bitOffset[i]+") = "+bits[i]);
@@ -295,11 +303,11 @@ public final class Record {
 
 	public String toString() {
 		StringBuilder b = new StringBuilder();
-		for (int fieldnum = 0; fieldnum < fields.length; fieldnum++) {
+		for (int fieldnum = 0; fieldnum < fieldValues.length; fieldnum++) {
 			if (sf.get(RecordFields.Value).car == fieldnum)
-				b.append(PrimitiveValue.values()[(int) fields[fieldnum]]);
+				b.append(PrimitiveValue.values()[(int) fieldValues[fieldnum]]);
 			else
-				b.append(fields[fieldnum]);
+				b.append(fieldValues[fieldnum]);
 			b.append(" ");
 		}
 		return b.toString();

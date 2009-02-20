@@ -23,8 +23,6 @@ public abstract class TieredHasher<State> extends Hasher<State> {
 		super(conf);
 	}
 
-	private static final long serialVersionUID = 2558546570288531867L;
-
 	@Override
 	public BigInteger hash(State board, int l) {
 		Util.fatalError("Not implemented"); // TODO
