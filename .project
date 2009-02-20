@@ -3,6 +3,7 @@
 	<name>gamesman-java</name>
 	<comment></comment>
 	<projects>
+		<project>org-json-jar</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
