@@ -20,10 +20,14 @@ import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
+/**
+ * Basic JSON interface for web app usage
+ * @author Steven Schlansker
+ */
 public class JSONInterface {
 	
-	private Database db;
-	private Configuration conf;
+	Database db;
+	Configuration conf;
 	
 	/**
 	 * Launch a JSON server for use by GamesmanWeb

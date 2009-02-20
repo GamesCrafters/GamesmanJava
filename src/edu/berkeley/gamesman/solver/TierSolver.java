@@ -22,6 +22,7 @@ import edu.berkeley.gamesman.util.Util;
  * TierSolver documentation stub
  * 
  * @author Steven Schlansker
+ * @param <T> The state type for the game
  * 
  */
 public final class TierSolver<T> extends Solver {
@@ -30,7 +31,7 @@ public final class TierSolver<T> extends Solver {
 	protected Configuration conf;
 
 	@Override
-	public WorkUnit prepareSolve(Configuration inconf, Game<?> game) {
+	public WorkUnit prepareSolve(Configuration inconf, Game<Object> game) {
 
 		myGame = Util.checkedCast(game);
 		tier = myGame.numberOfTiers() - 1;

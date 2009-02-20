@@ -1,6 +1,5 @@
 package edu.berkeley.gamesman.hadoop;
 
-import java.util.EnumSet;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -11,16 +10,12 @@ import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.util.Tool;
 
-import edu.berkeley.gamesman.core.Game;
-import edu.berkeley.gamesman.core.Hasher;
-import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.database.NullDatabase;
 import edu.berkeley.gamesman.hadoop.util.BigIntegerWritable;
 import edu.berkeley.gamesman.hadoop.util.SequenceInputFormat;
 import edu.berkeley.gamesman.master.LocalMaster;
 import edu.berkeley.gamesman.solver.TierSolver;
-import edu.berkeley.gamesman.util.Util;
 
 /**
  * This is a simple Hadoop tool that is used to launch a HadoopSolver

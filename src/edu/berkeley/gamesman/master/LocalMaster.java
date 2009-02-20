@@ -21,7 +21,7 @@ import edu.berkeley.gamesman.util.Util;
  */
 public final class LocalMaster implements Master,TaskFactory {
 
-	private Game<?> game;
+	private Game<Object> game;
 	Solver solver;
 	Hasher<?> hasher;
 	Database database;
@@ -33,7 +33,7 @@ public final class LocalMaster implements Master,TaskFactory {
 		Task.setTaskFactory(this);
 		
 		try{
-			game = inconf.getGame();
+			game = Util.checkedCast(inconf.getGame());
 			solver = solverc.newInstance();
 			hasher = inconf.getHasher();
 			database = databasec.newInstance();

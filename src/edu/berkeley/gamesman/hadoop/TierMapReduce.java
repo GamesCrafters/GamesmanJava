@@ -5,9 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.Iterator;
-import java.util.Properties;
 
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Writable;
@@ -19,7 +17,6 @@ import org.apache.hadoop.mapred.Reporter;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
-import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.hadoop.util.BigIntegerWritable;
@@ -45,7 +42,7 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 		Class<Database> gd = null;
 		//Class<Hasher<?>> gh = null;
 		final String base = "edu.berkeley.gamesman.";
-		Properties props = new Properties(System.getProperties());
+		//Properties props = new Properties(System.getProperties());
 		
 		//gc = Util.typedForName(base+"game."+conf.get("gameclass","NullGame"));
 		gd = Util.typedForName(base+"database."+conf.get("databaseclass", "NullDatabase"));

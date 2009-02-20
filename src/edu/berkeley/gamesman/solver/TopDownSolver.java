@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
@@ -28,17 +29,20 @@ public class TopDownSolver extends Solver {
 	//Game<Object> g;
 	
 	@Override
-	public WorkUnit prepareSolve(Configuration config, Game<?> game) {
+	public WorkUnit prepareSolve(Configuration config, Game<Object> game) {
 		conf = config;
-		return new TopDownSolverWorkUnit(game);
+		TopDownSolverWorkUnit<Object> wu = new TopDownSolverWorkUnit<Object>(game,db);
+		return wu;
 	}
 	
 	class TopDownSolverWorkUnit<T> implements WorkUnit {
 		
-		Game<T> game;
+		final private Game<T> game;
+		final private Database database;
 
-		public TopDownSolverWorkUnit(Game<T> g) {
+		public TopDownSolverWorkUnit(Game<T> g, Database db) {
 			game = g;
+			this.database = db;
 		}
 
 		public void conquer() {
@@ -63,13 +67,12 @@ public class TopDownSolver extends Solver {
 						workList.add(child.cdr);
 						continue next;
 					}
-					r = db.getRecord(loc);
+					r = database.getRecord(loc);
 					if(r.get(RecordFields.Value) == PrimitiveValue.Undecided.value()){
 						workList.add(state);
 						workList.add(child.cdr);
 						continue next;
 					}
-					if(r == null) r = db.getRecord(loc);
 					recs.add(r);
 				}
 				BigInteger loc = game.stateToHash(state);
@@ -81,7 +84,7 @@ public class TopDownSolver extends Solver {
 				}else{
 					next = Record.combine(conf, recs);
 				}
-				db.putRecord(loc, next);
+				database.putRecord(loc, next);
 				Util.debug(DebugFacility.Solver,"Solved state "+game.displayState(state)+" to "+next);
 			}
 		}

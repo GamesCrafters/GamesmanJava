@@ -130,9 +130,9 @@ public class AlternatingRearrangerHasher extends Hasher<char[]> {
 			pieceUnrearrange(hash.subtract(off), board, src+1, pcs-1, x, o-1);
 		}
 		
-		//if(cache){
+		if(cache){
 		//	unrearrCache.put(hash, new String(board,src,board.length-src));
-		//}
+		}
 	}
 
 	@Override
