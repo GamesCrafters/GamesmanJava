@@ -29,7 +29,7 @@ import edu.berkeley.gamesman.util.Util;
  */
 public final class Record {
 
-	private Configuration conf;
+	private final Configuration conf;
 
 	private Map<RecordFields, Pair<Integer, Integer>> sf;
 
@@ -61,11 +61,15 @@ public final class Record {
 		set(RecordFields.Value, primitiveValue.value());
 	}
 
-	private Record(Configuration conf2) {
+	/**
+	 * Create a new Record
+	 * @param conf2 Configuration used to create the database
+	 */
+	public Record(Configuration conf2) {
 		conf = conf2;
 		setupBits();
 	}
-
+	
 	/**
 	 * Write this record to a DataOutput. Using this stream-based method causes
 	 * all output to be byte-aligned as it's not possible to easily seek/combine

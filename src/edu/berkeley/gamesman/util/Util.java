@@ -350,6 +350,7 @@ public final class Util {
 	 * and an argument
 	 * @param <T> The type requested
 	 * @param name The name of the class to instantiate
+	 * @param arg The argument to provide to the constructor
 	 * @return A new instance (created with the default constructor)
 	 */
 	public static <T> T typedInstantiateArg(String name, Object arg){

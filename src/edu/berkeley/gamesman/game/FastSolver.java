@@ -97,7 +97,7 @@ public final class FastSolver extends TieredHasher<FastBoard> {
 	}
 
 	@Override
-	public Pair<Integer, BigInteger> tierAndOffsetFromGameState(FastBoard state) {
+	public Pair<Integer, BigInteger> tierIndexForState(FastBoard state) {
 		return new Pair<Integer, BigInteger>(state.getTier(), state.getHash());
 	}
 

@@ -101,7 +101,7 @@ public abstract class TieredHasher<State> extends Hasher<State> {
 	 * @param state The game state we have
 	 * @return a Pair with tier/offset enclosed
 	 */
-	public abstract Pair<Integer,BigInteger> tierAndOffsetFromGameState(State state);
+	public abstract Pair<Integer,BigInteger> tierIndexForState(State state);
 	
 
 }

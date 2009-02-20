@@ -105,7 +105,7 @@ public class PerfectConnect4Hash extends TieredHasher<C4Board> {
 	}
 
 	@Override
-	public Pair<Integer, BigInteger> tierAndOffsetFromGameState(C4Board st) {
+	public Pair<Integer, BigInteger> tierIndexForState(C4Board st) {
 		int index = 0;
 		final int w = game.getGameWidth(), h = game.getGameHeight();
 		char[] linear = new char[w*h];

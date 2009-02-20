@@ -41,7 +41,7 @@ public class ClassicConnect4Hash extends TieredHasher<char[][]> {
 	}
 
 	@Override
-	public Pair<Integer, BigInteger> tierAndOffsetFromGameState(char[][] state) {
+	public Pair<Integer, BigInteger> tierIndexForState(char[][] state) {
 		// TODO Auto-generated method stub
 		return null;
 	}

@@ -38,7 +38,7 @@ public class OneTwoNHasher extends TieredHasher<Integer> {
 	}
 	
 	@Override
-	public Pair<Integer, BigInteger> tierAndOffsetFromGameState(Integer state) {
+	public Pair<Integer, BigInteger> tierIndexForState(Integer state) {
 		return new Pair<Integer, BigInteger>(state / gameWidth, 
 				new BigInteger(String.valueOf(state % gameWidth)));
 	}

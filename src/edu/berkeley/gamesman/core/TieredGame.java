@@ -57,7 +57,7 @@ public abstract class TieredGame<State> extends Game<State> {
 	public BigInteger stateToHash(State pos) {
 		if(myHasher == null)
 			Util.fatalError("You must call prepare() before hashing!");
-		Pair<Integer,BigInteger> p = myHasher.tierAndOffsetFromGameState(pos);
+		Pair<Integer,BigInteger> p = myHasher.tierIndexForState(pos);
 		return myHasher.hashOffsetForTier(p.car).add(p.cdr);
 	}
 	
