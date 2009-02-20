@@ -44,7 +44,6 @@ public class Configuration {
 		this.g = g;
 		this.h = h;
 		this.storedFields = storedFields;
-		buildConfig();
 		checkCompatibility();
 	}
 	
@@ -121,7 +120,6 @@ public class Configuration {
 		this.g = g;
 		this.h = h;
 		this.storedFields = map;
-		buildConfig();
 		checkCompatibility();
 	}
 	
