@@ -265,7 +265,7 @@ public class MemoryDatabase extends Database{
 		int testSize = 5000;
 		int bitSize = 901; // Should be an odd number > 64 to test longs.
 		BigInteger[] BigInts = new BigInteger[testSize];
-		TestDataBase DB = new TestDataBase();
+		MemoryDatabase DB = new MemoryDatabase();
 		
 		/* Generating Random Numbers */
 		int bc;
