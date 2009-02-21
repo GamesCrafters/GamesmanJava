@@ -344,11 +344,9 @@ public final class Record {
 	 * @author Alex Trofimov
 	 * @param data - BigInteger with fieldValues bits contcatenated together as one number.
 	 */
-	public void LoadBigInteger(BigInteger data) {
-		long temp;
+	public void loadBigInteger(BigInteger data) {
 		for (int i = this.fieldBitLength.length - 1; i >= 0; i --) {
-			temp = data.longValue();
-			this.fieldValues[i] = temp & ((1 << this.fieldBitLength[i]) - 1);
+			this.fieldValues[i] = data.longValue() & ((1 << this.fieldBitLength[i]) - 1);
 			data = data.shiftRight(this.fieldBitLength[i]);
 		}
 	}
