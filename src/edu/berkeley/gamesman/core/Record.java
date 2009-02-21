@@ -5,6 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -317,6 +318,41 @@ public final class Record {
 		return b.toString();
 	}
 
+	/**
+	 * Take all the field values and put them next to each other (bitwise) into a BigInteger.
+	 * 
+	 * @author Alex Trofimov
+	 * @return BigInteger of fieldValues packed together. Leading zeros truncated.
+	 */
+	public BigInteger toBigInteger() {
+		BigInteger r = BigInteger.ZERO;
+		int bitoff = 0;
+		long value;
+		for (int i = 0; i < fieldBitLength.length; i ++) {
+			r = r.shiftLeft(bitoff);
+			value = fieldValues[i] &((1 << fieldBitLength[i]) - 1);
+			r = r.add(BigInteger.valueOf(value));
+			System.out.println(r.toString(2));
+			bitoff = fieldBitLength[i];
+		}		
+		return r;
+	}
+	
+	/**
+	 * Take a BigInteger with bits correponding to fieldValues and load the bits from it.
+	 * 
+	 * @author Alex Trofimov
+	 * @param data - BigInteger with fieldValues bits contcatenated together as one number.
+	 */
+	public void LoadBigInteger(BigInteger data) {
+		long temp;
+		for (int i = this.fieldBitLength.length - 1; i >= 0; i --) {
+			temp = data.longValue();
+			this.fieldValues[i] = temp & ((1 << this.fieldBitLength[i]) - 1);
+			data = data.shiftRight(this.fieldBitLength[i]);
+		}
+	}
+	
 	/**
 	 * A class that behaves almost entirely like a ByteBuffer but with bit-indexed positions
 	 * instead.
