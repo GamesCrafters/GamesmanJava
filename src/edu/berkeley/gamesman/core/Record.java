@@ -332,7 +332,6 @@ public final class Record {
 			r = r.shiftLeft(bitoff);
 			value = fieldValues[i] &((1 << fieldBitLength[i]) - 1);
 			r = r.add(BigInteger.valueOf(value));
-			System.out.println(r.toString(2));
 			bitoff = fieldBitLength[i];
 		}		
 		return r;
