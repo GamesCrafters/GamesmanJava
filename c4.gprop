@@ -1,6 +1,5 @@
-gamesman.game = Connect4
+gamesman.game = MixGHC4
 gamesman.game.width = 4
 gamesman.game.height = 4
-gamesman.solver = TierSolver
-gamesman.hasher = PerfectConnect4Hash
+gamesman.solver = TieredMixGameHashSolver
 gamesman.db.uri = file:///tmp/database.db
