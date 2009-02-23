@@ -424,4 +424,32 @@ public final class Record {
 			}
 		}
 	}
+
+	/**
+	 * @param other Another Record
+	 * @return Checks based on primitive value and then remoteness if this
+	 *         record is "preferable to another"
+	 */
+	public boolean isPreferableTo(Record other) {
+		if (get().isPreferableTo(other.get()))
+			return true;
+		else if (other.get().isPreferableTo(get()))
+			return false;
+		else {
+			if (get().equals(PrimitiveValue.Win))
+				if (get(RecordFields.Remoteness) < other
+						.get(RecordFields.Remoteness))
+					return true;
+				else
+					return false;
+			else if (get().equals(PrimitiveValue.Lose))
+				if (get(RecordFields.Remoteness) > other
+						.get(RecordFields.Remoteness))
+					return true;
+				else
+					return false;
+			else
+				return false;
+		}
+	}
 }
