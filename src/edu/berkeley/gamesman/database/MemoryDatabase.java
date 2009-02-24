@@ -218,7 +218,7 @@ public class MemoryDatabase extends Database{
 	 * @param index - sequential number of byte in DB.
 	 * @param data - byte that needs to be written.
 	 */
-	private void put(long index, byte data) {
+	private synchronized void put(long index, byte data) {
 		if (!this.open) 
 			Util.fatalError("Attempt to write to closed database.");
 		try {			
