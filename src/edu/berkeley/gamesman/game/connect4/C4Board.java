@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.testing.refactor;
+package edu.berkeley.gamesman.game.connect4;
 
 import java.util.Arrays;
 

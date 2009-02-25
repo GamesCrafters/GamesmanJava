@@ -5,9 +5,9 @@ import java.util.Arrays;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.TieredHasher;
+import edu.berkeley.gamesman.game.connect4.C4Board;
 import edu.berkeley.gamesman.hasher.AlternatingRearrangerHasher;
 import edu.berkeley.gamesman.hasher.C4UniformPieceHasher;
-import edu.berkeley.gamesman.testing.refactor.C4Board;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
