@@ -1,6 +1,9 @@
 package edu.berkeley.gamesman.util;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * A pair is a simple data type that stores two distinct pieces of information
@@ -35,6 +38,16 @@ public class Pair<A,B> implements Serializable {
 	@Override
 	public String toString(){
 		return "("+car+"."+cdr+")";
+	}
+	
+	public static <A,B> Collection<Pair<A,B>> zip(Collection<A> a, Collection<B> b){
+		ArrayList<Pair<A,B>> al = new ArrayList<Pair<A,B>>();
+		Iterator<A> ai = a.iterator();
+		Iterator<B> bi = b.iterator();
+		while(ai.hasNext() && bi.hasNext()){
+			al.add(new Pair<A,B>(ai.next(),bi.next()));
+		}
+		return al;
 	}
 	
 }

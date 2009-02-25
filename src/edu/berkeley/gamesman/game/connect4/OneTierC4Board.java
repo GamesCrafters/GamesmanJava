@@ -176,7 +176,7 @@ public final class OneTierC4Board {
 	private BigInteger firstAll, firstBlacks;
 	private BigInteger arHash = BigInteger.ZERO;
 
-	OneTierC4Board(int width, int height, int piecesToWin, int tier) {
+	public OneTierC4Board(int width, int height, int piecesToWin, int tier) {
 		this.width = width;
 		this.height = height;
 		this.piecesToWin = piecesToWin;
