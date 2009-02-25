@@ -4,6 +4,8 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 
 import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.util.Pair;
+import edu.berkeley.gamesman.util.Util;
 
 /**
  * @author DNSpies
@@ -340,8 +342,9 @@ public final class OneTierC4Board {
 	 * simultaneously hash all the moves of a full-size connect four board by
 	 * adding eight or nine numbers together?
 	 */
-	public ArrayList<BigInteger> moveHashes() {
-		ArrayList<BigInteger> al = new ArrayList<BigInteger>(openColumns);
+	public ArrayList<Pair<Integer, BigInteger>> moveHashes() {
+		ArrayList<Pair<Integer, BigInteger>> al = new ArrayList<Pair<Integer, BigInteger>>(
+				openColumns);
 		BigInteger newHash = arHash;
 		if (turn == Color.BLACK) {
 			for (int col = width - 1; col >= 0; col--) {
@@ -354,14 +357,15 @@ public final class OneTierC4Board {
 						contr = columns[c].topPiece().nextBlack();
 					else
 						contr = BigInteger.ZERO;
-					al.add(newHash.add(contr));
+					al.add(new Pair<Integer, BigInteger>(col, newHash
+							.add(contr)));
 				}
 				newHash = newHash.add(columns[col].addBlack());
 			}
 		} else {
 			for (int col = width - 1; col >= 0; col--) {
 				if (columns[col].isOpen())
-					al.add(newHash);
+					al.add(new Pair<Integer, BigInteger>(col, newHash));
 				newHash = newHash.add(columns[col].addRed());
 			}
 		}
@@ -432,8 +436,27 @@ public final class OneTierC4Board {
 			return PrimitiveValue.Tie;
 	}
 
-	public void unhash(BigInteger hash){
-		//TODO: Write method
+	public void unhash(BigInteger hash) {
+		BigInteger thisHash = numHashesForTier();
+		BigInteger pieces;
+		BigInteger blackPieces = this.blackPieces;
+		int col = width - 1;
+		int row = columns[col].colHeight;
+		for (pieces = this.pieces; pieces.compareTo(BigInteger.ZERO) > 0; pieces = pieces
+				.subtract(BigInteger.ONE)) {
+			thisHash = thisHash.multiply(pieces.subtract(blackPieces)).divide(
+					pieces);
+			row--;
+			while (row < 0) {
+				col--;
+				row = columns[col].colHeight - 1;
+			}
+			if (hash.compareTo(thisHash) >= 0) {
+				get(row, col).reset(blackPieces, thisHash, Color.BLACK);
+				blackPieces = blackPieces.subtract(BigInteger.ONE);
+			}else
+				get(row, col).reset(blackPieces, thisHash, Color.RED);
+		}
 	}
 	
 	/*
