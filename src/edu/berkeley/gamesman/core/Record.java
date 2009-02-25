@@ -273,7 +273,7 @@ public final class Record {
 				rec.set(rf, primitiveCombine(map.get(rf)).value());
 				break;
 			case Remoteness:
-				rec.set(rf, Collections.min(map.get(rf)) + 1);
+				rec.set(rf, Collections.min(map.get(rf)) + 1); // TODO: this is wrong
 				break;
 			default:
 				Util.fatalError("Default case shouldn't have been reached");

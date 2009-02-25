@@ -7,6 +7,8 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.hasher.PerfectConnect4Hash;
+import edu.berkeley.gamesman.testing.refactor.C4Board;
+import edu.berkeley.gamesman.testing.refactor.C4Piece;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.Pair;

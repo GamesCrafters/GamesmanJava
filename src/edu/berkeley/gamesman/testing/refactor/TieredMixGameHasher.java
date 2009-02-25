@@ -1,9 +1,11 @@
-package edu.berkeley.gamesman.core;
+package edu.berkeley.gamesman.testing.refactor;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+
+import edu.berkeley.gamesman.core.Configuration;
 
 /**
  * @author DNSpies

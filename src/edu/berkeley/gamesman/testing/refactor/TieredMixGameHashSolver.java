@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.solver;
+package edu.berkeley.gamesman.testing.refactor;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -9,11 +9,9 @@ import java.util.Iterator;
 import java.util.List;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.MixGameHashSolver;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.RecordFields;
-import edu.berkeley.gamesman.core.TieredMixGameHasher;
 import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.util.Util;
 

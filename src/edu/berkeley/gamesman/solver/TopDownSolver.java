@@ -58,7 +58,7 @@ public class TopDownSolver extends Solver {
 				Util.debug(DebugFacility.Solver,"Looking at state"+state);
 				Util.debug(DebugFacility.Solver,"Worklist is now "+workList);
 				for(Pair<String,T> child : children){
-					BigInteger loc = cache.get(child);
+					BigInteger loc = cache.get(child.cdr);
 					Record r;
 					if(loc == null){
 						loc = game.stateToHash(child.cdr);

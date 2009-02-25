@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.game;
+package edu.berkeley.gamesman.testing.refactor;
 
 import java.math.BigInteger;
 import java.util.ArrayList;

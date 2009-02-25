@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.game;
+package edu.berkeley.gamesman.testing.refactor;
 
 import java.math.BigInteger;
 import java.util.Collection;
@@ -6,13 +6,12 @@ import java.util.Collection;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.PrimitiveValue;
-import edu.berkeley.gamesman.core.TieredMixGameHasher;
 import edu.berkeley.gamesman.core.WorkUnit;
-import edu.berkeley.gamesman.solver.TieredMixGameHashSolver;
 import edu.berkeley.gamesman.util.Util;
 
 /**
- * @author DNSpies Fast Connect four
+ * Fast Connect four
+ * @author DNSpies
  */
 public final class MixGHC4 extends TieredMixGameHasher {
 	private OneTierC4Board otc4b;
