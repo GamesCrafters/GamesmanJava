@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.testing.refactor;
+package edu.berkeley.gamesman.game.connect4;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -9,7 +9,7 @@ import edu.berkeley.gamesman.core.PrimitiveValue;
  * @author DNSpies
  * 
  */
-final class OneTierC4Board {
+public final class OneTierC4Board {
 	private static enum Color {
 		BLACK, RED;
 		Color opposite() {
@@ -231,7 +231,7 @@ final class OneTierC4Board {
 		}
 	}
 
-	BigInteger numHashesForTier() {
+	public BigInteger numHashesForTier() {
 		return maxPHash;
 	}
 
@@ -244,7 +244,7 @@ final class OneTierC4Board {
 	 * complicated to do this while keeping track of hash contributions. But
 	 * still possible (in the same order of time)
 	 */
-	void next() {
+	public void next() {
 		int col = 0, row = 0;
 		BigInteger lastBlack = firstAll.subtract(BigInteger.ONE);
 		while (columns[col].height() == 0)
@@ -328,7 +328,7 @@ final class OneTierC4Board {
 		columns[col].setPiece(row, black, hashNum, color);
 	}
 
-	BigInteger getHash() {
+	public BigInteger getHash() {
 		return arHash;
 	}
 
@@ -340,7 +340,7 @@ final class OneTierC4Board {
 	 * simultaneously hash all the moves of a full-size connect four board by
 	 * adding eight or nine numbers together?
 	 */
-	ArrayList<BigInteger> moveHashes() {
+	public ArrayList<BigInteger> moveHashes() {
 		ArrayList<BigInteger> al = new ArrayList<BigInteger>(openColumns);
 		BigInteger newHash = arHash;
 		if (turn == Color.BLACK) {
@@ -368,11 +368,11 @@ final class OneTierC4Board {
 		return al;
 	}
 
-	int getTier() {
+	public int getTier() {
 		return tier;
 	}
 
-	ArrayList<Integer> moveTiers() {
+	public ArrayList<Integer> moveTiers() {
 		return moveTiers;
 	}
 
@@ -417,7 +417,7 @@ final class OneTierC4Board {
 	 * part of a four-in-a-row. Otherwise return Tie or Undecided depending on
 	 * whether the board is full or not.
 	 */
-	PrimitiveValue primitiveValue() {
+	public PrimitiveValue primitiveValue() {
 		int colHeight;
 		for (int col = 0; col < width; col++) {
 			colHeight = columns[col].height();

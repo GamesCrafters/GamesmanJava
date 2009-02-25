@@ -7,6 +7,7 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.WorkUnit;
+import edu.berkeley.gamesman.game.connect4.OneTierC4Board;
 import edu.berkeley.gamesman.util.Util;
 
 /**
