@@ -432,6 +432,10 @@ public final class OneTierC4Board {
 			return PrimitiveValue.Tie;
 	}
 
+	public void unhash(BigInteger hash){
+		//TODO: Write method
+	}
+	
 	/*
 	 * Looks for a win that uses the given piece.
 	 */
