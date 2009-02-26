@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.game;
+package edu.berkeley.gamesman.game.connect4;
 
 import java.math.BigInteger;
 

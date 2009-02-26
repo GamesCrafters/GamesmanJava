@@ -4,8 +4,8 @@ import java.math.BigInteger;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.TieredHasher;
-import edu.berkeley.gamesman.game.C4State;
-import edu.berkeley.gamesman.game.FastConnect4;
+import edu.berkeley.gamesman.game.connect4.C4State;
+import edu.berkeley.gamesman.game.connect4.FastConnect4;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 

@@ -4,14 +4,9 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 
 import edu.berkeley.gamesman.core.PrimitiveValue;
-import edu.berkeley.gamesman.game.C4State;
 import edu.berkeley.gamesman.util.Pair;
 
-/**
- * @author DNSpies
- * 
- */
-public final class OneTierC4Board implements Cloneable{
+final class OneTierC4Board implements Cloneable{
 	private static enum Color {
 		BLACK, RED;
 		Color opposite() {
@@ -190,13 +185,7 @@ public final class OneTierC4Board implements Cloneable{
 	private BigInteger firstAll, firstBlacks;
 	private BigInteger arHash = BigInteger.ZERO;
 
-	/**
-	 * @param width The width of the board
-	 * @param height The height of the board
-	 * @param piecesToWin The number of pieces required to win
-	 * @param tier The tier of the board
-	 */
-	public OneTierC4Board(int width, int height, int piecesToWin, int tier) {
+	OneTierC4Board(int width, int height, int piecesToWin, int tier) {
 		this.width = width;
 		this.height = height;
 		this.piecesToWin = piecesToWin;
@@ -253,10 +242,7 @@ public final class OneTierC4Board implements Cloneable{
 		}
 	}
 
-	/**
-	 * @return The number of hashes in this tier
-	 */
-	public BigInteger numHashesForTier() {
+	BigInteger numHashesForTier() {
 		return maxPHash;
 	}
 
@@ -269,10 +255,7 @@ public final class OneTierC4Board implements Cloneable{
 	 * complicated to do this while keeping track of hash contributions. But
 	 * still possible (in the same order of time)
 	 */
-	/**
-	 * Cycles the board to the position containing the next hash
-	 */
-	public void next() {
+	void next() {
 		int col = 0, row = 0;
 		BigInteger lastBlack = firstAll.subtract(BigInteger.ONE);
 		while (columns[col].height() == 0)
@@ -356,10 +339,7 @@ public final class OneTierC4Board implements Cloneable{
 		columns[col].setPiece(row, black, hashNum, color);
 	}
 
-	/**
-	 * @return The hash of the current position
-	 */
-	public BigInteger getHash() {
+	BigInteger getHash() {
 		return arHash;
 	}
 
@@ -371,10 +351,7 @@ public final class OneTierC4Board implements Cloneable{
 	 * simultaneously hash all the moves of a full-size connect four board by
 	 * adding eight or nine numbers together?
 	 */
-	/**
-	 * @return A list of pairs containing a column number followed by the resulting state of moving into that column.
-	 */
-	public ArrayList<Pair<Integer, C4State>> validMoves() {
+	ArrayList<Pair<Integer, C4State>> validMoves() {
 		ArrayList<Pair<Integer, C4State>> al = new ArrayList<Pair<Integer, C4State>>(
 				openColumns);
 		BigInteger newHash = arHash;
@@ -408,10 +385,7 @@ public final class OneTierC4Board implements Cloneable{
 		return new C4State(tier, newHash);
 	}
 
-	/**
-	 * @return The tier of this board
-	 */
-	public int getTier() {
+	int getTier() {
 		return tier;
 	}
 
@@ -456,10 +430,7 @@ public final class OneTierC4Board implements Cloneable{
 	 * part of a four-in-a-row. Otherwise return Tie or Undecided depending on
 	 * whether the board is full or not.
 	 */
-	/**
-	 * @return The primitive value of this board (Lose, Tie, or Undecided)
-	 */
-	public PrimitiveValue primitiveValue() {
+	PrimitiveValue primitiveValue() {
 		int colHeight;
 		for (int col = 0; col < width; col++) {
 			colHeight = columns[col].height();
@@ -474,12 +445,7 @@ public final class OneTierC4Board implements Cloneable{
 			return PrimitiveValue.Tie;
 	}
 
-	/**
-	 * Sets this board's position to the given hash.
-	 * This method is slow and shouldn't be necessary.
-	 * @param hash The hash
-	 */
-	public void unhash(BigInteger hash) {
+	void unhash(BigInteger hash) {
 		BigInteger thisHash = numHashesForTier();
 		BigInteger pieces;
 		BigInteger blackPieces = this.blackPieces;
@@ -587,10 +553,7 @@ public final class OneTierC4Board implements Cloneable{
 		return false;
 	}
 
-	/**
-	 * @return A state for this position.
-	 */
-	public C4State getState() {
+	C4State getState() {
 		return makePosPair(getTier(),getHash());
 	}
 	
@@ -601,11 +564,7 @@ public final class OneTierC4Board implements Cloneable{
 		return other;
 	}
 
-	/**
-	 * Set the game to this position.
-	 * @param pos The string representing the position
-	 */
-	public void setToString(String pos) {
+	void setToString(String pos) {
 		// TODO Auto-generated method stub
 		
 	}

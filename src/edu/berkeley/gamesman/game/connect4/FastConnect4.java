@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.game;
+package edu.berkeley.gamesman.game.connect4;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -7,7 +7,7 @@ import java.util.Iterator;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;
-import edu.berkeley.gamesman.game.connect4.OneTierC4Board;
+import edu.berkeley.gamesman.game.TieredCycleGame;
 import edu.berkeley.gamesman.hasher.FastConnect4Hasher;
 import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.Pair;

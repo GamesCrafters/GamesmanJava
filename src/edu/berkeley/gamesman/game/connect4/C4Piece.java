@@ -5,7 +5,7 @@ import edu.berkeley.gamesman.util.Util;
 /**
  * @author DNSpies Represents a piece in Connect4
  */
-public enum C4Piece {
+enum C4Piece {
 	/**
 	 * Unfilled board slot
 	 */
@@ -28,7 +28,7 @@ public enum C4Piece {
 	/**
 	 * @return The opposite color piece (or Empty for Empty)
 	 */
-	public C4Piece opposite() {
+	C4Piece opposite() {
 		if (this == BLACK)
 			return RED;
 		else if (this == RED)
@@ -45,7 +45,7 @@ public enum C4Piece {
 	 * @return The char representation of this piece 'X' for Red, 'O' for Black,
 	 *         and ' ' for Empty
 	 */
-	public char toChar() {
+	char toChar() {
 		return pchar;
 	}
 	
@@ -53,7 +53,7 @@ public enum C4Piece {
 	 * @param c The character to be converted
 	 * @return The piece represented by that character
 	 */
-	public static C4Piece toPiece(char c){
+	static C4Piece toPiece(char c){
 		switch(c){
 		case 'X':
 			return RED;
