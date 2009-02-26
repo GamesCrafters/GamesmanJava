@@ -4,13 +4,14 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 
 import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.game.C4State;
 import edu.berkeley.gamesman.util.Pair;
 
 /**
  * @author DNSpies
  * 
  */
-public final class OneTierC4Board {
+public final class OneTierC4Board implements Cloneable{
 	private static enum Color {
 		BLACK, RED;
 		Color opposite() {
@@ -30,7 +31,7 @@ public final class OneTierC4Board {
 	 * an array? Because there's so many beneficial ways a column can speed up
 	 * hashing!
 	 */
-	private static final class Column {
+	private static final class Column implements Cloneable{
 		private final Piece[] piece;
 		private final int tier;
 		private int colHeight = 0;
@@ -89,10 +90,18 @@ public final class OneTierC4Board {
 		Piece get(final int row) {
 			return piece[row];
 		}
+		
+		public Column clone(){
+			Column c=new Column(piece.length, tier);
+			for(int i=0;i<colHeight;i++)
+				c.addPiece(piece[i].clone());
+			return c;
+		}
 	}
 
-	private static final class Piece {
+	private static final class Piece implements Cloneable{
 		private final BigInteger index;
+		private BigInteger black;
 		private BigInteger hash;
 		private BigInteger addRed;
 		private BigInteger addBlack;
@@ -102,6 +111,7 @@ public final class OneTierC4Board {
 				final BigInteger hashNum, final Color color) {
 			hash = hashNum;
 			this.index = index;
+			this.black = black;
 			if (hashNum.compareTo(BigInteger.ZERO) > 0) {
 				BigInteger addVal = hashNum.multiply(index.add(BigInteger.ONE));
 				addRed = addVal.divide(index.add(BigInteger.ONE)
@@ -121,6 +131,7 @@ public final class OneTierC4Board {
 		void reset(final BigInteger black, final BigInteger hashNum,
 				final Color color) {
 			hash = hashNum;
+			this.black = black;
 			if (hashNum.compareTo(BigInteger.ZERO) > 0) {
 				BigInteger addVal = hashNum.multiply(index.add(BigInteger.ONE));
 				addRed = addVal.divide(index.add(BigInteger.ONE)
@@ -161,6 +172,10 @@ public final class OneTierC4Board {
 
 		Color getColor() {
 			return color;
+		}
+		
+		public Piece clone(){
+			return new Piece(index, black, hash, color);
 		}
 	}
 
@@ -374,7 +389,7 @@ public final class OneTierC4Board {
 						contr = columns[c].topPiece().nextBlack();
 					else
 						contr = BigInteger.ZERO;
-					al.add(new Pair<Integer, C4State>(col,makePosPair(col,newHash
+					al.add(new Pair<Integer, C4State>(col,makePosPair(moveTiers[col],newHash
 							.add(contr))));
 				}
 				newHash = newHash.add(columns[col].addBlack());
@@ -382,15 +397,15 @@ public final class OneTierC4Board {
 		} else {
 			for (int col = width - 1; col >= 0; col--) {
 				if (columns[col].isOpen())
-					al.add(new Pair<Integer, C4State>(col, makePosPair(col,newHash)));
+					al.add(new Pair<Integer, C4State>(col, makePosPair(moveTiers[col],newHash)));
 				newHash = newHash.add(columns[col].addRed());
 			}
 		}
 		return al;
 	}
 
-	private C4State makePosPair(int col, BigInteger newHash) {
-		return new C4State(width, height, piecesToWin, moveTiers[col],newHash);
+	private C4State makePosPair(int tier, BigInteger newHash) {
+		return new C4State(tier, newHash);
 	}
 
 	/**
@@ -570,5 +585,28 @@ public final class OneTierC4Board {
 		if (ext >= piecesToWin)
 			return true;
 		return false;
+	}
+
+	/**
+	 * @return A state for this position.
+	 */
+	public C4State getState() {
+		return makePosPair(getTier(),getHash());
+	}
+	
+	public OneTierC4Board clone(){
+		OneTierC4Board other = new OneTierC4Board(width,height,piecesToWin,tier);
+		for(int col=0;col<width;col++)
+			other.columns[col]=columns[col].clone();
+		return other;
+	}
+
+	/**
+	 * Set the game to this position.
+	 * @param pos The string representing the position
+	 */
+	public void setToString(String pos) {
+		// TODO Auto-generated method stub
+		
 	}
 }
