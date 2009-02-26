@@ -102,15 +102,14 @@ public class FastConnect4 extends TieredCycleGame<C4State> {
 	}
 
 	@Override
-	public boolean hasNext() {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean hasNextHashInTier() {
+		return otc4b.getHash().compareTo(
+				otc4b.numHashesForTier().subtract(BigInteger.ONE)) < 0;
 	}
 
 	@Override
-	public void next() {
-		// TODO Auto-generated method stub
-		
+	public void nextHashInTier() {
+		otc4b.next();
 	}
 
 	@Override
@@ -154,5 +153,10 @@ public class FastConnect4 extends TieredCycleGame<C4State> {
 	@Override
 	public void setTier(int tier) {
 		otc4b=new OneTierC4Board(gameWidth, gameHeight, piecesToWin, tier);
+	}
+
+	@Override
+	public int getTier() {
+		return otc4b.getTier();
 	}
 }

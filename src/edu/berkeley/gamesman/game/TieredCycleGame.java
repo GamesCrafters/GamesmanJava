@@ -59,12 +59,24 @@ public abstract class TieredCycleGame<State> extends TieredGame<State> implement
 	/**
 	 * @return Whether there is another position.
 	 */
-	public abstract boolean hasNext();
+	public boolean hasNext(){
+		return hasNextHashInTier()||getTier()<numberOfTiers();
+	}
 	
+	/**
+	 * @return The tier of this position
+	 */
+	public abstract int getTier();
+
 	/**
 	 * Cycle to the next position.
 	 */
-	public abstract void next();
+	public void next(){
+		if(hasNextHashInTier())
+			nextHashInTier();
+		else
+			setTier(getTier()+1);
+	}
 	
 	@Override
 	public String stateToString(State pos){
@@ -152,4 +164,14 @@ public abstract class TieredCycleGame<State> extends TieredGame<State> implement
 	 * @return The number of possible starting positions.
 	 */
 	public abstract int numStartingPositions();
+
+	/**
+	 * @return Is there another hash for this tier?
+	 */
+	public abstract boolean hasNextHashInTier();
+
+	/**
+	 * Cycles to the next hash in this tier
+	 */
+	public abstract void nextHashInTier();
 }
