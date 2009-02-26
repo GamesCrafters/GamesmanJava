@@ -40,6 +40,13 @@ public class Pair<A,B> implements Serializable {
 		return "("+car+"."+cdr+")";
 	}
 	
+	/**
+	 * @param <A> The type of the first collection
+	 * @param <B> The type of the second collection
+	 * @param a The first collection
+	 * @param b The second collection
+	 * @return A collection of pairs containing the respective elements of each collection.
+	 */
 	public static <A,B> Collection<Pair<A,B>> zip(Collection<A> a, Collection<B> b){
 		ArrayList<Pair<A,B>> al = new ArrayList<Pair<A,B>>();
 		Iterator<A> ai = a.iterator();

@@ -188,7 +188,6 @@ public final class C4Board {
 		C4Piece turn = get(row, col);
 		Util.debug(DebugFacility.Game,turn+" last played in column "+col+", checking for win");
 		int ext;
-		int stopPos;
 		int height = height(), width = width();
 
 		// Check horizontal win

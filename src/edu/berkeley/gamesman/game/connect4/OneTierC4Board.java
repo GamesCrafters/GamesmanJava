@@ -5,7 +5,6 @@ import java.util.ArrayList;
 
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.util.Pair;
-import edu.berkeley.gamesman.util.Util;
 
 /**
  * @author DNSpies
@@ -172,10 +171,16 @@ public final class OneTierC4Board {
 	private final int tier;
 	private final BigInteger maxPHash;
 	private final Color turn;
-	private final ArrayList<Integer> moveTiers;
+	private final int[] moveTiers;
 	private BigInteger firstAll, firstBlacks;
 	private BigInteger arHash = BigInteger.ZERO;
 
+	/**
+	 * @param width The width of the board
+	 * @param height The height of the board
+	 * @param piecesToWin The number of pieces required to win
+	 * @param tier The tier of the board
+	 */
 	public OneTierC4Board(int width, int height, int piecesToWin, int tier) {
 		this.width = width;
 		this.height = height;
@@ -226,13 +231,16 @@ public final class OneTierC4Board {
 			maxPHash = BigInteger.ONE;
 		else
 			maxPHash = p.nextRed();
-		moveTiers = new ArrayList<Integer>(openColumns);
-		for (col = width - 1; col >= 0; col--) {
+		moveTiers = new int[width];
+		for (col = 0; col < width; col++) {
 			if (columns[col].isOpen())
-				moveTiers.add(tier + columns[col].getTier());
+				moveTiers[col] = tier + columns[col].getTier();
 		}
 	}
 
+	/**
+	 * @return The number of hashes in this tier
+	 */
 	public BigInteger numHashesForTier() {
 		return maxPHash;
 	}
@@ -245,6 +253,9 @@ public final class OneTierC4Board {
 	 * with the next R BBRRRRBRBBRBB Unfortunately, it's slightly more
 	 * complicated to do this while keeping track of hash contributions. But
 	 * still possible (in the same order of time)
+	 */
+	/**
+	 * Cycles the board to the position containing the next hash
 	 */
 	public void next() {
 		int col = 0, row = 0;
@@ -330,6 +341,9 @@ public final class OneTierC4Board {
 		columns[col].setPiece(row, black, hashNum, color);
 	}
 
+	/**
+	 * @return The hash of the current position
+	 */
 	public BigInteger getHash() {
 		return arHash;
 	}
@@ -342,8 +356,11 @@ public final class OneTierC4Board {
 	 * simultaneously hash all the moves of a full-size connect four board by
 	 * adding eight or nine numbers together?
 	 */
-	public ArrayList<Pair<Integer, BigInteger>> moveHashes() {
-		ArrayList<Pair<Integer, BigInteger>> al = new ArrayList<Pair<Integer, BigInteger>>(
+	/**
+	 * @return A list of pairs containing a column number followed by the resulting state of moving into that column.
+	 */
+	public ArrayList<Pair<Integer, C4State>> validMoves() {
+		ArrayList<Pair<Integer, C4State>> al = new ArrayList<Pair<Integer, C4State>>(
 				openColumns);
 		BigInteger newHash = arHash;
 		if (turn == Color.BLACK) {
@@ -357,27 +374,30 @@ public final class OneTierC4Board {
 						contr = columns[c].topPiece().nextBlack();
 					else
 						contr = BigInteger.ZERO;
-					al.add(new Pair<Integer, BigInteger>(col, newHash
-							.add(contr)));
+					al.add(new Pair<Integer, C4State>(col,makePosPair(col,newHash
+							.add(contr))));
 				}
 				newHash = newHash.add(columns[col].addBlack());
 			}
 		} else {
 			for (int col = width - 1; col >= 0; col--) {
 				if (columns[col].isOpen())
-					al.add(new Pair<Integer, BigInteger>(col, newHash));
+					al.add(new Pair<Integer, C4State>(col, makePosPair(col,newHash)));
 				newHash = newHash.add(columns[col].addRed());
 			}
 		}
 		return al;
 	}
 
-	public int getTier() {
-		return tier;
+	private C4State makePosPair(int col, BigInteger newHash) {
+		return new C4State(width, height, piecesToWin, moveTiers[col],newHash);
 	}
 
-	public ArrayList<Integer> moveTiers() {
-		return moveTiers;
+	/**
+	 * @return The tier of this board
+	 */
+	public int getTier() {
+		return tier;
 	}
 
 	@Override
@@ -421,6 +441,9 @@ public final class OneTierC4Board {
 	 * part of a four-in-a-row. Otherwise return Tie or Undecided depending on
 	 * whether the board is full or not.
 	 */
+	/**
+	 * @return The primitive value of this board (Lose, Tie, or Undecided)
+	 */
 	public PrimitiveValue primitiveValue() {
 		int colHeight;
 		for (int col = 0; col < width; col++) {
@@ -436,6 +459,11 @@ public final class OneTierC4Board {
 			return PrimitiveValue.Tie;
 	}
 
+	/**
+	 * Sets this board's position to the given hash.
+	 * This method is slow and shouldn't be necessary.
+	 * @param hash The hash
+	 */
 	public void unhash(BigInteger hash) {
 		BigInteger thisHash = numHashesForTier();
 		BigInteger pieces;

@@ -1,6 +1,5 @@
 package edu.berkeley.gamesman.game;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -8,10 +7,9 @@ import java.util.Iterator;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.TieredGame;
+import edu.berkeley.gamesman.game.connect4.C4State;
 import edu.berkeley.gamesman.game.connect4.OneTierC4Board;
 import edu.berkeley.gamesman.hasher.FastConnect4Hasher;
-import edu.berkeley.gamesman.hasher.NullHasher;
-import edu.berkeley.gamesman.hasher.PerfectConnect4Hash;
 import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
@@ -85,12 +83,11 @@ public class FastConnect4 extends TieredGame<OneTierC4Board> {
 			OneTierC4Board pos) {
 		FastConnect4Hasher h = (FastConnect4Hasher) conf.getHasher();
 		ArrayList<Pair<String,OneTierC4Board>> al = new ArrayList<Pair<String,OneTierC4Board>>();
-		Iterator<Integer> tiers = pos.moveTiers().iterator();
-		Iterator<Pair<Integer,BigInteger>> moves = pos.moveHashes().iterator();
+		Iterator<Pair<Integer, C4State>> moves = pos.validMoves().iterator();
 		
-		while(tiers.hasNext() && moves.hasNext()){
-			Pair<Integer,BigInteger> m = moves.next();
-			OneTierC4Board ob = h.gameStateForTierAndOffset(tiers.next(), m.cdr);
+		while(moves.hasNext()){
+			Pair<Integer,C4State> m = moves.next();
+			OneTierC4Board ob = h.gameStateForTierAndOffset(m.cdr.tier(), m.cdr.hash());
 			al.add(new Pair<String,OneTierC4Board>("c"+m.car,ob));
 		}
 		
