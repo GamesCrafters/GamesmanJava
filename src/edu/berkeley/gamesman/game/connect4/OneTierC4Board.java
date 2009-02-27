@@ -333,6 +333,29 @@ public final class OneTierC4Board implements Cloneable{
 					Color.BLACK);
 		}
 		arHash = arHash.add(BigInteger.ONE);
+		
+		//For debugging
+
+		int rCount=0, bCount=0;
+		for(col=0;col<width;col++){
+			for(row=0;row<height;row++){
+				if(get(row,col)==null)
+					break;
+				else
+					switch(get(row,col).getColor()){
+					case RED:
+						rCount++;
+						break;
+					case BLACK:
+						bCount++;
+						break;
+					}
+			}
+		}
+		if(bCount!=this.blackPieces.intValue())
+			throw new ArrayIndexOutOfBoundsException();
+		else if(bCount+rCount!=this.pieces.intValue())
+			throw new ArrayIndexOutOfBoundsException();
 	}
 
 	private void set(final int row, final int col, final BigInteger black,
@@ -452,21 +475,68 @@ public final class OneTierC4Board implements Cloneable{
 		BigInteger blackPieces = this.blackPieces;
 		int col = width - 1;
 		int row = columns[col].colHeight;
-		for (pieces = this.pieces; pieces.compareTo(BigInteger.ZERO) > 0; pieces = pieces
+		boolean onBlacks=false;
+		thisHash = thisHash.multiply(this.pieces.subtract(blackPieces)).divide(
+				this.pieces);
+		int firstBlacks=0, firstAll=0;
+		for (pieces = this.pieces.subtract(BigInteger.ONE); pieces
+				.compareTo(BigInteger.ZERO) >= 0; pieces = pieces
 				.subtract(BigInteger.ONE)) {
-			thisHash = thisHash.multiply(pieces.subtract(blackPieces)).divide(
-					pieces);
+			System.out.println(hash + "," + thisHash);
 			row--;
 			while (row < 0) {
 				col--;
 				row = columns[col].colHeight - 1;
 			}
 			if (hash.compareTo(thisHash) >= 0) {
-				get(row, col).reset(blackPieces, thisHash, Color.BLACK);
+				if(onBlacks){
+					firstBlacks++;
+					firstAll++;
+				}else{
+					firstBlacks=1;
+					firstAll=1;
+					onBlacks=true;
+				}
+				set(row, col, blackPieces, thisHash, Color.BLACK);
+				hash = hash.subtract(thisHash);
+				if (!pieces.equals(BigInteger.ZERO))
+					thisHash = thisHash.multiply(blackPieces).divide(pieces);
 				blackPieces = blackPieces.subtract(BigInteger.ONE);
-			}else
-				get(row, col).reset(blackPieces, thisHash, Color.RED);
+			} else {
+				firstAll++;
+				onBlacks=false;
+				set(row, col, blackPieces, thisHash, Color.RED);
+				if (!pieces.equals(BigInteger.ZERO))
+					thisHash = thisHash.multiply(pieces.subtract(blackPieces))
+							.divide(pieces);
+			}
 		}
+		this.firstAll=BigInteger.valueOf(firstAll);
+		this.firstBlacks=BigInteger.valueOf(firstBlacks);
+		
+		//For debugging
+
+		System.out.println(this);
+		int rCount=0, bCount=0;
+		for(col=0;col<width;col++){
+			for(row=0;row<height;row++){
+				if(get(row,col)==null)
+					break;
+				else
+					switch(get(row,col).getColor()){
+					case RED:
+						rCount++;
+						break;
+					case BLACK:
+						bCount++;
+						break;
+					}
+			}
+		}
+		if(bCount!=this.blackPieces.intValue())
+			throw new ArrayIndexOutOfBoundsException();
+		else if(bCount+rCount!=this.pieces.intValue())
+			throw new ArrayIndexOutOfBoundsException();
 	}
 	
 	/*
