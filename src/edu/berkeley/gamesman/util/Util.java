@@ -293,7 +293,7 @@ public final class Util {
 		ObjectInputStream ois;
 		try {
 			ois = new ObjectInputStream(bais);
-			return checkedCast(ois.readObject());
+			return (T)checkedCast(ois.readObject());
 		} catch (Exception e) {
 			Util.fatalError("Could not deserialize object", e);
 		}

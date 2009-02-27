@@ -28,7 +28,7 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author Steven Schlansker
  */
-public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, BigIntegerWritable, BigIntegerWritable>,Reducer<BigIntegerWritable, BigIntegerWritable, BigIntegerWritable, TierMapReduce.RecordWritable>{
+public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, BigIntegerWritable, BigIntegerWritable>,Reducer<BigIntegerWritable, BigIntegerWritable, BigIntegerWritable, RecordWritable>{
 
 	protected TieredGame<Object> game;
 	protected Hasher<?> hasher;
@@ -101,30 +101,36 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 			OutputCollector<BigIntegerWritable, RecordWritable> out,
 			Reporter rep) throws IOException {
 	}
+}
+
+
+class RecordWritable implements Writable {
+
+	private Record value;
+	private final Configuration config;
 	
-	private class RecordWritable implements Writable {
-
-		private Record value;
-		
-		public void readFields(DataInput in) throws IOException {
-			value = Record.readStream(config,in);
-		}
-
-		public void write(DataOutput out) throws IOException {
-			value.writeStream(out);
-		}
-		
-		public Record get(){
-			return value;
-		}
-		
-		public void set(Record v){
-			value = v;
-		}
-		
-		public String toString(){
-			return value.toString();
-		}
-
+	RecordWritable(Configuration c){
+		config = c;
 	}
+	
+	public void readFields(DataInput in) throws IOException {
+		value = Record.readStream(config,in);
+	}
+
+	public void write(DataOutput out) throws IOException {
+		value.writeStream(out);
+	}
+	
+	public Record get(){
+		return value;
+	}
+	
+	public void set(Record v){
+		value = v;
+	}
+	
+	public String toString(){
+		return value.toString();
+	}
+
 }
