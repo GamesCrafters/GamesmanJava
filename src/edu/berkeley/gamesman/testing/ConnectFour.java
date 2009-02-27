@@ -193,7 +193,7 @@ public class ConnectFour implements MouseListener {
 
 	public static void main(String[] args) throws InstantiationException,
 			IllegalAccessException {
-		Gamesman.main(new String[] { "c4.gprop" });
+		Gamesman.main(new String[] { "jobs/fc4.gprop" });
 		FileDatabase fd = new FileDatabase();
 		fd.initialize("file:///tmp/database.db", null);
 		System.out.println(fd.getRecord(BigInteger.ZERO));

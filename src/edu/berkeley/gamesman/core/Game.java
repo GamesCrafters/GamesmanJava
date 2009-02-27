@@ -63,7 +63,7 @@ public abstract class Game<State> {
 	/**
 	 * Given a board state return its primitive "value".
 	 * Usually this value includes WIN, LOSE, and perhaps TIE
-	 * Return UNDECIDED if this is not a primitive state (shouldn't usually be called)
+	 * Return UNDECIDED if this is not a primitive state
 	 * @param pos The primitive State
 	 * @return the Record representing the state
 	 * @see edu.berkeley.gamesman.core.Record

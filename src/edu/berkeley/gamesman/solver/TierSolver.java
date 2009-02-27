@@ -8,6 +8,7 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Solver;
@@ -55,21 +56,20 @@ public final class TierSolver<T> extends Solver {
 
 			T state = game.hashToState(current);
 
-			Collection<Pair<String,T>> children = game.validMoves(state);
-
-			if (children.size() == 0) {
-				Record prim = new Record(conf, game.primitiveValue(state));
-
-				db.putRecord(current, prim);
-			} else {
+			PrimitiveValue pv = game.primitiveValue(state);
+			
+			if (pv==PrimitiveValue.Undecided) {
+				Collection<Pair<String,T>> children = game.validMoves(state);
 				ArrayList<Record> vals = new ArrayList<Record>(children.size());
-
 				for (Pair<String,T> child : children) {
 					vals.add(db.getRecord(game.stateToHash(child.cdr)));
 				}
 
 				Record newVal = Record.combine(conf, vals);
 				db.putRecord(current, newVal);
+			} else {				
+				Record prim = new Record(conf, game.primitiveValue(state));
+				db.putRecord(current, prim);
 			}
 		}
 	}
