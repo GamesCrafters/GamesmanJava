@@ -12,17 +12,17 @@ import edu.berkeley.gamesman.util.Pair;
 /**
  * @author DNSpies
  */
-public abstract class TieredCycleGame extends TieredGame<CycleState> implements Cloneable{
+public abstract class TieredIteratorGame extends TieredGame<IteratorState> implements Cloneable{
 
 	/**
 	 * @param conf The configuration object
 	 */
-	public TieredCycleGame(Configuration conf) {
+	public TieredIteratorGame(Configuration conf) {
 		super(conf);
 	}
 
 	@Override
-	public PrimitiveValue primitiveValue(CycleState pos){
+	public PrimitiveValue primitiveValue(IteratorState pos){
 		return unHashedClone(pos).primitiveValue();
 	}
 
@@ -31,10 +31,10 @@ public abstract class TieredCycleGame extends TieredGame<CycleState> implements 
 	 * 
 	 * @param pos The position to assume
 	 */
-	public abstract void setState(CycleState pos);
+	public abstract void setState(IteratorState pos);
 
-	private TieredCycleGame unHashedClone(CycleState pos) {
-		TieredCycleGame c = clone();
+	private TieredIteratorGame unHashedClone(IteratorState pos) {
+		TieredIteratorGame c = clone();
 		c.setState(pos);
 		return c;
 	}
@@ -45,14 +45,14 @@ public abstract class TieredCycleGame extends TieredGame<CycleState> implements 
 	public abstract PrimitiveValue primitiveValue();
 
 	@Override
-	public Collection<Pair<String, CycleState>> validMoves(CycleState pos) {
+	public Collection<Pair<String, IteratorState>> validMoves(IteratorState pos) {
 		return unHashedClone(pos).validMoves();
 	}
 
 	/**
 	 * @return The states of all the possible moves from this position.
 	 */
-	public abstract Collection<Pair<String, CycleState>> validMoves();
+	public abstract Collection<Pair<String, IteratorState>> validMoves();
 
 	/**
 	 * @return Whether there is another position.
@@ -77,7 +77,7 @@ public abstract class TieredCycleGame extends TieredGame<CycleState> implements 
 	}
 	
 	@Override
-	public String stateToString(CycleState pos){
+	public String stateToString(IteratorState pos){
 		return unHashedClone(pos).stateToString();
 	}
 	
@@ -87,8 +87,8 @@ public abstract class TieredCycleGame extends TieredGame<CycleState> implements 
 	public abstract String stateToString();
 	
 	@Override
-	public CycleState stringToState(String pos) {
-		TieredCycleGame c = clone();
+	public IteratorState stringToState(String pos) {
+		TieredIteratorGame c = clone();
 		c.setToString(pos);
 		return c.getState();
 	}
@@ -102,13 +102,13 @@ public abstract class TieredCycleGame extends TieredGame<CycleState> implements 
 	 * Returns a state object for this position
 	 * @return The state of this position
 	 */
-	public abstract CycleState getState();
+	public abstract IteratorState getState();
 
 	@Override
-	public abstract TieredCycleGame clone();
+	public abstract TieredIteratorGame clone();
 
 	@Override
-	public String displayState(CycleState pos){
+	public String displayState(IteratorState pos){
 		return unHashedClone(pos).displayState();
 	}
 	
@@ -117,7 +117,7 @@ public abstract class TieredCycleGame extends TieredGame<CycleState> implements 
 	 * @return The number of hashes in the tier
 	 */
 	public BigInteger numHashesForTier(int tier){
-		TieredCycleGame s = clone();
+		TieredIteratorGame s = clone();
 		s.setTier(tier);
 		return s.numHashesForTier();
 	}
@@ -140,10 +140,10 @@ public abstract class TieredCycleGame extends TieredGame<CycleState> implements 
 	public abstract BigInteger numHashesForTier();
 
 	@Override
-	public Collection<CycleState> startingPositions() {
-		ArrayList<CycleState> positions = new ArrayList<CycleState>(
+	public Collection<IteratorState> startingPositions() {
+		ArrayList<IteratorState> positions = new ArrayList<IteratorState>(
 				numStartingPositions());
-		TieredCycleGame pos;
+		TieredIteratorGame pos;
 		for (int i = 0; i < positions.size(); i++) {
 			pos = clone();
 			pos.setStartingPosition(i);

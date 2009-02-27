@@ -7,8 +7,8 @@ import java.util.Collection;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.TieredGame;
-import edu.berkeley.gamesman.game.CycleState;
-import edu.berkeley.gamesman.game.TieredCycleGame;
+import edu.berkeley.gamesman.game.IteratorState;
+import edu.berkeley.gamesman.game.TieredIteratorGame;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -18,14 +18,14 @@ import edu.berkeley.gamesman.util.Util;
  * @author DNSpies
  * 
  */
-public final class TierCycleSolver extends TierSolver<CycleState> {
+public final class TierIteratorSolver extends TierSolver<IteratorState> {
 
 	@Override
-	protected void solvePartialTier(TieredGame<CycleState> game2, BigInteger start,
+	protected void solvePartialTier(TieredGame<IteratorState> game2, BigInteger start,
 			BigInteger end, TierSolverUpdater t) {
 		BigInteger current = start;
-		TieredCycleGame game=Util.checkedCast(game2);
-		CycleState state = game.hashToState(current);
+		TieredIteratorGame game=Util.checkedCast(game2);
+		IteratorState state = game.hashToState(current);
 		game.setState(state);
 		while (current.compareTo(end) < 0) {
 			current = current.add(BigInteger.ONE);
@@ -37,11 +37,11 @@ public final class TierCycleSolver extends TierSolver<CycleState> {
 			PrimitiveValue pv = game.primitiveValue();
 
 			if (pv.equals(PrimitiveValue.Undecided)) {
-				Collection<Pair<String, CycleState>> children = game
+				Collection<Pair<String, IteratorState>> children = game
 						.validMoves();
 				ArrayList<Record> vals = new ArrayList<Record>(children.size());
 
-				for (Pair<String, CycleState> child : children) {
+				for (Pair<String, IteratorState> child : children) {
 					vals.add(db.getRecord(game.stateToHash(child.cdr)));
 				}
 

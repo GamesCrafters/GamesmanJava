@@ -12,7 +12,7 @@ import javax.swing.JFrame;
 import edu.berkeley.gamesman.Gamesman;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.database.FileDatabase;
-import edu.berkeley.gamesman.game.CycleState;
+import edu.berkeley.gamesman.game.IteratorState;
 import edu.berkeley.gamesman.game.FastConnect4;
 import edu.berkeley.gamesman.util.Pair;
 
@@ -74,15 +74,15 @@ public class ConnectFour implements MouseListener {
 	private void startCompMove() {
 		if (compTurn() && !win()) {
 			cgame.setToString(arrToString(board));
-			Collection<Pair<String, CycleState>> moves = cgame.validMoves();
-			Iterator<Pair<String, CycleState>> nextStates = moves.iterator();
-			CycleState s;
-			CycleState best = null;
+			Collection<Pair<String, IteratorState>> moves = cgame.validMoves();
+			Iterator<Pair<String, IteratorState>> nextStates = moves.iterator();
+			IteratorState s;
+			IteratorState best = null;
 			PrimitiveValue bestOutcome = PrimitiveValue.Undecided;
 			PrimitiveValue thisOutcome;
 
 			while (nextStates.hasNext()) {
-				Pair<String, CycleState> move = nextStates.next();
+				Pair<String, IteratorState> move = nextStates.next();
 				s = move.cdr;
 				thisOutcome = fd.getRecord(cgame.stateToHash(s)).get();
 				System.out.println("Next possible move " + move.car

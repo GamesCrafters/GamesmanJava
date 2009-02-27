@@ -8,13 +8,13 @@ import edu.berkeley.gamesman.util.Pair;
  * @author DNSpies
  * Convenience class for FastConnect4
  */
-public class CycleState extends Pair<Integer, BigInteger> {
+public class IteratorState extends Pair<Integer, BigInteger> {
 
 	/**
 	 * @param tier The tier
 	 * @param hash The hash
 	 */
-	public CycleState(Integer tier, BigInteger hash) {
+	public IteratorState(Integer tier, BigInteger hash) {
 		super(tier, hash);
 	}
 

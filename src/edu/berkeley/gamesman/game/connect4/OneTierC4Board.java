@@ -4,7 +4,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 
 import edu.berkeley.gamesman.core.PrimitiveValue;
-import edu.berkeley.gamesman.game.CycleState;
+import edu.berkeley.gamesman.game.IteratorState;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -375,8 +375,8 @@ public final class OneTierC4Board implements Cloneable {
 	/**
 	 * @return The columns and hashes of the different possible moves in this position
 	 */
-	public ArrayList<Pair<Integer, CycleState>> validMoves() {
-		ArrayList<Pair<Integer, CycleState>> al = new ArrayList<Pair<Integer, CycleState>>(
+	public ArrayList<Pair<Integer, IteratorState>> validMoves() {
+		ArrayList<Pair<Integer, IteratorState>> al = new ArrayList<Pair<Integer, IteratorState>>(
 				openColumns);
 		BigInteger newHash = arHash;
 		if (turn == Color.BLACK) {
@@ -390,7 +390,7 @@ public final class OneTierC4Board implements Cloneable {
 						contr = columns[c].topPiece().nextBlack();
 					else
 						contr = BigInteger.ZERO;
-					al.add(new Pair<Integer, CycleState>(col, makePosPair(
+					al.add(new Pair<Integer, IteratorState>(col, makePosPair(
 							moveTiers[col], newHash.add(contr))));
 				}
 				newHash = newHash.add(columns[col].addBlack());
@@ -398,7 +398,7 @@ public final class OneTierC4Board implements Cloneable {
 		} else {
 			for (int col = width - 1; col >= 0; col--) {
 				if (columns[col].isOpen())
-					al.add(new Pair<Integer, CycleState>(col, makePosPair(
+					al.add(new Pair<Integer, IteratorState>(col, makePosPair(
 							moveTiers[col], newHash)));
 				newHash = newHash.add(columns[col].addRed());
 			}
@@ -406,8 +406,8 @@ public final class OneTierC4Board implements Cloneable {
 		return al;
 	}
 
-	private CycleState makePosPair(int tier, BigInteger newHash) {
-		return new CycleState(tier, newHash);
+	private IteratorState makePosPair(int tier, BigInteger newHash) {
+		return new IteratorState(tier, newHash);
 	}
 
 	/**
@@ -611,7 +611,7 @@ public final class OneTierC4Board implements Cloneable {
 	/**
 	 * @return The tier and hash of this position
 	 */
-	public CycleState getState() {
+	public IteratorState getState() {
 		return makePosPair(getTier(), getHash());
 	}
 
