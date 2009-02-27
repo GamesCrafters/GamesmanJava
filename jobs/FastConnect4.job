@@ -1,6 +1,6 @@
 gamesman.game = FastConnect4
 gamesman.game.width = 4
 gamesman.game.height = 4
-gamesman.hasher = TieredIteratorHasher
-gamesman.solver = TierIteratorSolver
+gamesman.hasher = TieredItergameHasher
+gamesman.solver = TierItergameSolver
 gamesman.db.uri = file:///tmp/fastdatabase.db
