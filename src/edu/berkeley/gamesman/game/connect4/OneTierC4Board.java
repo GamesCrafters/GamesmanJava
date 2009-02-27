@@ -333,29 +333,6 @@ public final class OneTierC4Board implements Cloneable{
 					Color.BLACK);
 		}
 		arHash = arHash.add(BigInteger.ONE);
-		
-		//For debugging
-
-		int rCount=0, bCount=0;
-		for(col=0;col<width;col++){
-			for(row=0;row<height;row++){
-				if(get(row,col)==null)
-					break;
-				else
-					switch(get(row,col).getColor()){
-					case RED:
-						rCount++;
-						break;
-					case BLACK:
-						bCount++;
-						break;
-					}
-			}
-		}
-		if(bCount!=this.blackPieces.intValue())
-			throw new ArrayIndexOutOfBoundsException();
-		else if(bCount+rCount!=this.pieces.intValue())
-			throw new ArrayIndexOutOfBoundsException();
 	}
 
 	private void set(final int row, final int col, final BigInteger black,
@@ -482,7 +459,6 @@ public final class OneTierC4Board implements Cloneable{
 		for (pieces = this.pieces.subtract(BigInteger.ONE); pieces
 				.compareTo(BigInteger.ZERO) >= 0; pieces = pieces
 				.subtract(BigInteger.ONE)) {
-			System.out.println(hash + "," + thisHash);
 			row--;
 			while (row < 0) {
 				col--;
@@ -513,30 +489,6 @@ public final class OneTierC4Board implements Cloneable{
 		}
 		this.firstAll=BigInteger.valueOf(firstAll);
 		this.firstBlacks=BigInteger.valueOf(firstBlacks);
-		
-		//For debugging
-
-		System.out.println(this);
-		int rCount=0, bCount=0;
-		for(col=0;col<width;col++){
-			for(row=0;row<height;row++){
-				if(get(row,col)==null)
-					break;
-				else
-					switch(get(row,col).getColor()){
-					case RED:
-						rCount++;
-						break;
-					case BLACK:
-						bCount++;
-						break;
-					}
-			}
-		}
-		if(bCount!=this.blackPieces.intValue())
-			throw new ArrayIndexOutOfBoundsException();
-		else if(bCount+rCount!=this.pieces.intValue())
-			throw new ArrayIndexOutOfBoundsException();
 	}
 	
 	/*
