@@ -12,7 +12,6 @@ import javax.swing.JFrame;
 
 import edu.berkeley.gamesman.Gamesman;
 import edu.berkeley.gamesman.core.PrimitiveValue;
-import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.database.FileDatabase;
 import edu.berkeley.gamesman.game.Connect4;
 import edu.berkeley.gamesman.game.connect4.C4Board;
@@ -195,7 +194,7 @@ public class ConnectFour implements MouseListener {
 			IllegalAccessException {
 		Gamesman.main(new String[] { "jobs/fc4.gprop" });
 		FileDatabase fd = new FileDatabase();
-		fd.initialize("file:///tmp/database.db", null);
+		fd.initialize("file:///tmp/fastdatabase.db", null);
 		System.out.println(fd.getRecord(BigInteger.ZERO));
 		DisplayFour df = new DisplayFour();
 		/* ConnectFour cf= */new ConnectFour(df, fd);
