@@ -70,7 +70,6 @@ public final class TierCycleSolver extends Solver {
 				db.putRecord(current, newVal);
 			} else {
 				Record prim = new Record(conf, pv);
-
 				db.putRecord(current, prim);
 			}
 			

@@ -447,6 +447,8 @@ public final class OneTierC4Board implements Cloneable{
 	}
 
 	public void unhash(BigInteger hash) {
+		if(tier==0)
+			return;
 		BigInteger thisHash = numHashesForTier();
 		BigInteger pieces;
 		BigInteger blackPieces = this.blackPieces;
