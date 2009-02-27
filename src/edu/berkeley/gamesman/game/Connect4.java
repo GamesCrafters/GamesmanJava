@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.game.connect4;
+package edu.berkeley.gamesman.game;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -6,6 +6,8 @@ import java.util.Collection;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.TieredGame;
+import edu.berkeley.gamesman.game.connect4.C4Board;
+import edu.berkeley.gamesman.game.connect4.C4Piece;
 import edu.berkeley.gamesman.hasher.PerfectConnect4Hash;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.DependencyResolver;

@@ -51,9 +51,9 @@ public final class TierCycleSolver extends Solver {
 		while (current.compareTo(end) < 0) {
 			current = current.add(BigInteger.ONE);
 
-			if (current.mod(BigInteger.valueOf(10000)).compareTo(
-					BigInteger.ZERO) == 0)
-				t.calculated(10000);
+//			if (current.mod(BigInteger.valueOf(10000)).compareTo(
+//					BigInteger.ZERO) == 0)
+//				t.calculated(10000);
 
 			PrimitiveValue pv = game.primitiveValue();
 
@@ -69,7 +69,7 @@ public final class TierCycleSolver extends Solver {
 				Record newVal = Record.combine(conf, vals);
 				db.putRecord(current, newVal);
 			} else {
-				Record prim = new Record(conf, game.primitiveValue());
+				Record prim = new Record(conf, pv);
 
 				db.putRecord(current, prim);
 			}
@@ -105,7 +105,7 @@ public final class TierCycleSolver extends Solver {
 		synchronized (this) {
 			if (tier < 0)
 				return null;
-			final BigInteger step = BigInteger.valueOf(1000);
+			final BigInteger step = BigInteger.valueOf(10000);
 			BigInteger ret = offset, end;
 			offset = offset.add(step);
 			end = ret.add(step);

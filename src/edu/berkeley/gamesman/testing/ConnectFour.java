@@ -14,8 +14,8 @@ import edu.berkeley.gamesman.Gamesman;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.database.FileDatabase;
+import edu.berkeley.gamesman.game.Connect4;
 import edu.berkeley.gamesman.game.connect4.C4Board;
-import edu.berkeley.gamesman.game.connect4.Connect4;
 import edu.berkeley.gamesman.util.Pair;
 
 public class ConnectFour implements MouseListener {
