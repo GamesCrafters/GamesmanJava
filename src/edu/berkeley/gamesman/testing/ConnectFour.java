@@ -4,7 +4,6 @@ import java.awt.Container;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -13,10 +12,8 @@ import javax.swing.JFrame;
 import edu.berkeley.gamesman.Gamesman;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.database.FileDatabase;
-import edu.berkeley.gamesman.game.Connect4;
 import edu.berkeley.gamesman.game.CycleState;
 import edu.berkeley.gamesman.game.FastConnect4;
-import edu.berkeley.gamesman.game.connect4.C4Board;
 import edu.berkeley.gamesman.util.Pair;
 
 public class ConnectFour implements MouseListener {
@@ -91,7 +88,7 @@ public class ConnectFour implements MouseListener {
 				System.out.println("Next possible move " + move.car
 						+ " for state " + cgame.stateToHash(s) + " has value "
 						+ thisOutcome);
-				if (best == null || thisOutcome.isPreferableTo(bestOutcome)) {
+				if (best == null || bestOutcome.isPreferableTo(thisOutcome)) {
 					bestOutcome = thisOutcome;
 					best = s;
 				}
