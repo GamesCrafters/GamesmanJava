@@ -6,9 +6,11 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.ItergameState;
 import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.core.TieredIterGame;
 import edu.berkeley.gamesman.game.connect4.OneTierC4Board;
-import edu.berkeley.gamesman.hasher.TieredIteratorHasher;
+import edu.berkeley.gamesman.hasher.TieredItergameHasher;
 import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.Pair;
 
@@ -16,14 +18,14 @@ import edu.berkeley.gamesman.util.Pair;
  * @author DNSpies
  * For connect 4 hashing
  */
-public class FastConnect4 extends TieredIteratorGame {
+public class FastConnect4 extends TieredIterGame {
 
 	private final int piecesToWin;
 	private OneTierC4Board otc4b;
 
 	static {
 		DependencyResolver.allowHasher(FastConnect4.class,
-				TieredIteratorHasher.class);
+				TieredItergameHasher.class);
 	}
 
 	/**
@@ -75,15 +77,15 @@ public class FastConnect4 extends TieredIteratorGame {
 	}
 
 	@Override
-	public Collection<Pair<String, IteratorState>> validMoves() {
-		TieredIteratorHasher h = (TieredIteratorHasher) conf.getHasher();
-		ArrayList<Pair<String,IteratorState>> al = new ArrayList<Pair<String,IteratorState>>();
-		Iterator<Pair<Integer, IteratorState>> moves = otc4b.validMoves().iterator();
+	public Collection<Pair<String, ItergameState>> validMoves() {
+		TieredItergameHasher h = (TieredItergameHasher) conf.getHasher();
+		ArrayList<Pair<String,ItergameState>> al = new ArrayList<Pair<String,ItergameState>>();
+		Iterator<Pair<Integer, ItergameState>> moves = otc4b.validMoves().iterator();
 		
 		while(moves.hasNext()){
-			Pair<Integer,IteratorState> m = moves.next();
-			IteratorState ob = h.gameStateForTierAndOffset(m.cdr.tier(), m.cdr.hash());
-			al.add(new Pair<String,IteratorState>("c"+m.car,ob));
+			Pair<Integer,ItergameState> m = moves.next();
+			ItergameState ob = h.gameStateForTierAndOffset(m.cdr.tier(), m.cdr.hash());
+			al.add(new Pair<String,ItergameState>("c"+m.car,ob));
 		}
 		
 		return al;
@@ -98,7 +100,7 @@ public class FastConnect4 extends TieredIteratorGame {
 	}
 
 	@Override
-	public IteratorState getState() {
+	public ItergameState getState() {
 		return otc4b.getState();
 	}
 
@@ -114,7 +116,7 @@ public class FastConnect4 extends TieredIteratorGame {
 	}
 
 	@Override
-	public void setState(IteratorState pos) {
+	public void setState(ItergameState pos) {
 		setTier(pos.tier());
 		otc4b.unhash(pos.hash());
 	}

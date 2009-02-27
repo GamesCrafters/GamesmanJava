@@ -1,28 +1,25 @@
-package edu.berkeley.gamesman.game;
+package edu.berkeley.gamesman.core;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.PrimitiveValue;
-import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.util.Pair;
 
 /**
  * @author DNSpies
  */
-public abstract class TieredIteratorGame extends TieredGame<IteratorState> implements Cloneable{
+public abstract class TieredIterGame extends TieredGame<ItergameState> implements Cloneable{
 
 	/**
 	 * @param conf The configuration object
 	 */
-	public TieredIteratorGame(Configuration conf) {
+	public TieredIterGame(Configuration conf) {
 		super(conf);
 	}
 
 	@Override
-	public PrimitiveValue primitiveValue(IteratorState pos){
+	public PrimitiveValue primitiveValue(ItergameState pos){
 		return unHashedClone(pos).primitiveValue();
 	}
 
@@ -31,10 +28,10 @@ public abstract class TieredIteratorGame extends TieredGame<IteratorState> imple
 	 * 
 	 * @param pos The position to assume
 	 */
-	public abstract void setState(IteratorState pos);
+	public abstract void setState(ItergameState pos);
 
-	private TieredIteratorGame unHashedClone(IteratorState pos) {
-		TieredIteratorGame c = clone();
+	private TieredIterGame unHashedClone(ItergameState pos) {
+		TieredIterGame c = clone();
 		c.setState(pos);
 		return c;
 	}
@@ -45,14 +42,14 @@ public abstract class TieredIteratorGame extends TieredGame<IteratorState> imple
 	public abstract PrimitiveValue primitiveValue();
 
 	@Override
-	public Collection<Pair<String, IteratorState>> validMoves(IteratorState pos) {
+	public Collection<Pair<String, ItergameState>> validMoves(ItergameState pos) {
 		return unHashedClone(pos).validMoves();
 	}
 
 	/**
 	 * @return The states of all the possible moves from this position.
 	 */
-	public abstract Collection<Pair<String, IteratorState>> validMoves();
+	public abstract Collection<Pair<String, ItergameState>> validMoves();
 
 	/**
 	 * @return Whether there is another position.
@@ -77,7 +74,7 @@ public abstract class TieredIteratorGame extends TieredGame<IteratorState> imple
 	}
 	
 	@Override
-	public String stateToString(IteratorState pos){
+	public String stateToString(ItergameState pos){
 		return unHashedClone(pos).stateToString();
 	}
 	
@@ -87,8 +84,8 @@ public abstract class TieredIteratorGame extends TieredGame<IteratorState> imple
 	public abstract String stateToString();
 	
 	@Override
-	public IteratorState stringToState(String pos) {
-		TieredIteratorGame c = clone();
+	public ItergameState stringToState(String pos) {
+		TieredIterGame c = clone();
 		c.setToString(pos);
 		return c.getState();
 	}
@@ -102,13 +99,13 @@ public abstract class TieredIteratorGame extends TieredGame<IteratorState> imple
 	 * Returns a state object for this position
 	 * @return The state of this position
 	 */
-	public abstract IteratorState getState();
+	public abstract ItergameState getState();
 
 	@Override
-	public abstract TieredIteratorGame clone();
+	public abstract TieredIterGame clone();
 
 	@Override
-	public String displayState(IteratorState pos){
+	public String displayState(ItergameState pos){
 		return unHashedClone(pos).displayState();
 	}
 	
@@ -117,7 +114,7 @@ public abstract class TieredIteratorGame extends TieredGame<IteratorState> imple
 	 * @return The number of hashes in the tier
 	 */
 	public BigInteger numHashesForTier(int tier){
-		TieredIteratorGame s = clone();
+		TieredIterGame s = clone();
 		s.setTier(tier);
 		return s.numHashesForTier();
 	}
@@ -140,10 +137,10 @@ public abstract class TieredIteratorGame extends TieredGame<IteratorState> imple
 	public abstract BigInteger numHashesForTier();
 
 	@Override
-	public Collection<IteratorState> startingPositions() {
-		ArrayList<IteratorState> positions = new ArrayList<IteratorState>(
+	public Collection<ItergameState> startingPositions() {
+		ArrayList<ItergameState> positions = new ArrayList<ItergameState>(
 				numStartingPositions());
-		TieredIteratorGame pos;
+		TieredIterGame pos;
 		for (int i = 0; i < positions.size(); i++) {
 			pos = clone();
 			pos.setStartingPosition(i);

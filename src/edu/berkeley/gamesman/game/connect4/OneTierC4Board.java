@@ -3,8 +3,8 @@ package edu.berkeley.gamesman.game.connect4;
 import java.math.BigInteger;
 import java.util.ArrayList;
 
+import edu.berkeley.gamesman.core.ItergameState;
 import edu.berkeley.gamesman.core.PrimitiveValue;
-import edu.berkeley.gamesman.game.IteratorState;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -375,8 +375,8 @@ public final class OneTierC4Board implements Cloneable {
 	/**
 	 * @return The columns and hashes of the different possible moves in this position
 	 */
-	public ArrayList<Pair<Integer, IteratorState>> validMoves() {
-		ArrayList<Pair<Integer, IteratorState>> al = new ArrayList<Pair<Integer, IteratorState>>(
+	public ArrayList<Pair<Integer, ItergameState>> validMoves() {
+		ArrayList<Pair<Integer, ItergameState>> al = new ArrayList<Pair<Integer, ItergameState>>(
 				openColumns);
 		BigInteger newHash = arHash;
 		if (turn == Color.BLACK) {
@@ -390,7 +390,7 @@ public final class OneTierC4Board implements Cloneable {
 						contr = columns[c].topPiece().nextBlack();
 					else
 						contr = BigInteger.ZERO;
-					al.add(new Pair<Integer, IteratorState>(col, makePosPair(
+					al.add(new Pair<Integer, ItergameState>(col, makePosPair(
 							moveTiers[col], newHash.add(contr))));
 				}
 				newHash = newHash.add(columns[col].addBlack());
@@ -398,7 +398,7 @@ public final class OneTierC4Board implements Cloneable {
 		} else {
 			for (int col = width - 1; col >= 0; col--) {
 				if (columns[col].isOpen())
-					al.add(new Pair<Integer, IteratorState>(col, makePosPair(
+					al.add(new Pair<Integer, ItergameState>(col, makePosPair(
 							moveTiers[col], newHash)));
 				newHash = newHash.add(columns[col].addRed());
 			}
@@ -406,8 +406,8 @@ public final class OneTierC4Board implements Cloneable {
 		return al;
 	}
 
-	private IteratorState makePosPair(int tier, BigInteger newHash) {
-		return new IteratorState(tier, newHash);
+	private ItergameState makePosPair(int tier, BigInteger newHash) {
+		return new ItergameState(tier, newHash);
 	}
 
 	/**
@@ -611,7 +611,7 @@ public final class OneTierC4Board implements Cloneable {
 	/**
 	 * @return The tier and hash of this position
 	 */
-	public IteratorState getState() {
+	public ItergameState getState() {
 		return makePosPair(getTier(), getHash());
 	}
 

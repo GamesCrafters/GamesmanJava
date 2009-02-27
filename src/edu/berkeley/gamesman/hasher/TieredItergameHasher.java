@@ -3,9 +3,9 @@ package edu.berkeley.gamesman.hasher;
 import java.math.BigInteger;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.ItergameState;
 import edu.berkeley.gamesman.core.TieredHasher;
-import edu.berkeley.gamesman.game.IteratorState;
-import edu.berkeley.gamesman.game.TieredIteratorGame;
+import edu.berkeley.gamesman.core.TieredIterGame;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -13,23 +13,23 @@ import edu.berkeley.gamesman.util.Util;
  * @author DNSpies
  * Hasher for Tiered Cycle Games
  */
-public class TieredIteratorHasher extends TieredHasher<IteratorState> {
+public class TieredItergameHasher extends TieredHasher<ItergameState> {
 
 	/**
 	 * @param conf The configuration object
 	 */
-	public TieredIteratorHasher(Configuration conf) {
+	public TieredItergameHasher(Configuration conf) {
 		super(conf);
 	}
 
 	@Override
-	public IteratorState gameStateForTierAndOffset(int tier, BigInteger index) {
-		return new IteratorState(tier,index);
+	public ItergameState gameStateForTierAndOffset(int tier, BigInteger index) {
+		return new ItergameState(tier,index);
 	}
 
 	@Override
 	public BigInteger numHashesForTier(int tier) {
-		return ((TieredIteratorGame) conf.getGame()).numHashesForTier(tier);
+		return ((TieredIterGame) conf.getGame()).numHashesForTier(tier);
 	}
 
 	@Override
@@ -38,7 +38,7 @@ public class TieredIteratorHasher extends TieredHasher<IteratorState> {
 	}
 
 	@Override
-	public Pair<Integer, BigInteger> tierIndexForState(IteratorState state) {
+	public Pair<Integer, BigInteger> tierIndexForState(ItergameState state) {
 		return state;
 	}
 

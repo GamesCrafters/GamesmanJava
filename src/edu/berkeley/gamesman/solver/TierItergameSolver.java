@@ -4,11 +4,11 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import edu.berkeley.gamesman.core.ItergameState;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.TieredGame;
-import edu.berkeley.gamesman.game.IteratorState;
-import edu.berkeley.gamesman.game.TieredIteratorGame;
+import edu.berkeley.gamesman.core.TieredIterGame;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -18,14 +18,14 @@ import edu.berkeley.gamesman.util.Util;
  * @author DNSpies
  * 
  */
-public final class TierIteratorSolver extends TierSolver<IteratorState> {
+public final class TierItergameSolver extends TierSolver<ItergameState> {
 
 	@Override
-	protected void solvePartialTier(TieredGame<IteratorState> game2, BigInteger start,
+	protected void solvePartialTier(TieredGame<ItergameState> game2, BigInteger start,
 			BigInteger end, TierSolverUpdater t) {
 		BigInteger current = start;
-		TieredIteratorGame game=Util.checkedCast(game2);
-		IteratorState state = game.hashToState(current);
+		TieredIterGame game=Util.checkedCast(game2);
+		ItergameState state = game.hashToState(current);
 		game.setState(state);
 		while (current.compareTo(end) < 0) {
 			current = current.add(BigInteger.ONE);
@@ -37,11 +37,11 @@ public final class TierIteratorSolver extends TierSolver<IteratorState> {
 			PrimitiveValue pv = game.primitiveValue();
 
 			if (pv.equals(PrimitiveValue.Undecided)) {
-				Collection<Pair<String, IteratorState>> children = game
+				Collection<Pair<String, ItergameState>> children = game
 						.validMoves();
 				ArrayList<Record> vals = new ArrayList<Record>(children.size());
 
-				for (Pair<String, IteratorState> child : children) {
+				for (Pair<String, ItergameState> child : children) {
 					vals.add(db.getRecord(game.stateToHash(child.cdr)));
 				}
 
