@@ -105,22 +105,6 @@ public class ConnectFour implements MouseListener {
 		return s;
 	}
 
-	private void moveBySet(String pos) {
-		int row, col;
-		if (pos == null)
-			System.out.println("pos is null");
-		System.out.println(pos);
-		for (col = 0; col < WIDTH; col++) {
-			for (row = 0; row < HEIGHT; row++) {
-				if (pos.charAt(row * WIDTH + col) != board[row][col])
-					break;
-			}
-			if (row < HEIGHT)
-				break;
-		}
-		makeMove(col);
-	}
-
 	char getTurn() {
 		return turn;
 	}
