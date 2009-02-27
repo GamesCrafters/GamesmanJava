@@ -8,6 +8,10 @@ import edu.berkeley.gamesman.game.CycleState;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
+/**
+ * @author DNSpies
+ * The workhorse of the fast-hasher.  Does all the work of calculating hashes and iterating over a tier.
+ */
 public final class OneTierC4Board implements Cloneable {
 	private static enum Color {
 		BLACK, RED;
@@ -187,6 +191,12 @@ public final class OneTierC4Board implements Cloneable {
 	private BigInteger firstAll, firstBlacks;
 	private BigInteger arHash = BigInteger.ZERO;
 
+	/**
+	 * @param width The width of the board
+	 * @param height The height of the board
+	 * @param piecesToWin The number of pieces in a row required to win
+	 * @param tier The tier to iterate over
+	 */
 	public OneTierC4Board(int width, int height, int piecesToWin, int tier) {
 		this.width = width;
 		this.height = height;
@@ -244,6 +254,9 @@ public final class OneTierC4Board implements Cloneable {
 		}
 	}
 
+	/**
+	 * @return The number of hashes in this tier
+	 */
 	public BigInteger numHashesForTier() {
 		return maxPHash;
 	}
@@ -256,6 +269,9 @@ public final class OneTierC4Board implements Cloneable {
 	 * with the next R BBRRRRBRBBRBB Unfortunately, it's slightly more
 	 * complicated to do this while keeping track of hash contributions. But
 	 * still possible (in the same order of time)
+	 */
+	/**
+	 * Iterates to next position in tier
 	 */
 	public void next() {
 		int col = 0, row = 0;
@@ -341,6 +357,9 @@ public final class OneTierC4Board implements Cloneable {
 		columns[col].setPiece(row, black, hashNum, color);
 	}
 
+	/**
+	 * @return The hash of this position
+	 */
 	public BigInteger getHash() {
 		return arHash;
 	}
@@ -352,6 +371,9 @@ public final class OneTierC4Board implements Cloneable {
 	 * pieces maintain about themselves. Who would have thought you could
 	 * simultaneously hash all the moves of a full-size connect four board by
 	 * adding eight or nine numbers together?
+	 */
+	/**
+	 * @return The columns and hashes of the different possible moves in this position
 	 */
 	public ArrayList<Pair<Integer, CycleState>> validMoves() {
 		ArrayList<Pair<Integer, CycleState>> al = new ArrayList<Pair<Integer, CycleState>>(
@@ -388,6 +410,9 @@ public final class OneTierC4Board implements Cloneable {
 		return new CycleState(tier, newHash);
 	}
 
+	/**
+	 * @return The tier of this board
+	 */
 	public int getTier() {
 		return tier;
 	}
@@ -429,6 +454,9 @@ public final class OneTierC4Board implements Cloneable {
 	 * part of a four-in-a-row. Otherwise return Tie or Undecided depending on
 	 * whether the board is full or not.
 	 */
+	/**
+	 * @return The primitive value of this position
+	 */
 	public PrimitiveValue primitiveValue() {
 		int colHeight;
 		for (int col = 0; col < width; col++) {
@@ -444,6 +472,10 @@ public final class OneTierC4Board implements Cloneable {
 			return PrimitiveValue.Tie;
 	}
 
+	/**
+	 * Sets the board position to the given hash.
+	 * @param hash The hash of this position
+	 */
 	public void unhash(BigInteger hash) {
 		if (tier == 0)
 			return;
@@ -576,6 +608,9 @@ public final class OneTierC4Board implements Cloneable {
 		return false;
 	}
 
+	/**
+	 * @return The tier and hash of this position
+	 */
 	public CycleState getState() {
 		return makePosPair(getTier(), getHash());
 	}
@@ -588,6 +623,10 @@ public final class OneTierC4Board implements Cloneable {
 		return other;
 	}
 
+	/**
+	 * Sets the board to the position indicated by the given string.
+	 * @param pos The string representing this board
+	 */
 	public void setToString(String pos) {
 		BigInteger hash = BigInteger.ZERO;
 		BigInteger blacks = BigInteger.ZERO;

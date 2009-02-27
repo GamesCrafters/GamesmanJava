@@ -4,20 +4,18 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.game.CycleState;
 import edu.berkeley.gamesman.game.TieredCycleGame;
-import edu.berkeley.gamesman.solver.TierSolver.TierSolverUpdater;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
 /**
  * TierSolver documentation stub
  * 
- * @author Steven Schlansker
+ * @author DNSpies
  * 
  */
 public final class TierCycleSolver extends TierSolver<CycleState> {
