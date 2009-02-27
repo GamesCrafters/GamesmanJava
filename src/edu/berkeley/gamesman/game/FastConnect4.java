@@ -92,7 +92,8 @@ public class FastConnect4 extends TieredCycleGame {
 	@Override
 	public FastConnect4 clone() {
 		FastConnect4 fc4 = new FastConnect4(conf);
-		fc4.otc4b=otc4b.clone();
+		if(otc4b!=null)
+			fc4.otc4b=otc4b.clone();
 		return fc4;
 	}
 

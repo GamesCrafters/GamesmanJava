@@ -45,7 +45,7 @@ public final class TierCycleSolver extends Solver {
 
 	protected void solvePartialTier(TieredCycleGame game, BigInteger start,
 			BigInteger end, TierSolverUpdater t) {
-		BigInteger current = start.subtract(BigInteger.ONE);
+		BigInteger current = start;
 		game.setState(new CycleState(tier,start));
 		while (current.compareTo(end) < 0) {
 			current = current.add(BigInteger.ONE);
