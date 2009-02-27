@@ -329,7 +329,7 @@ public final class Util {
 	public static <T> Class<T> typedForName(String name){
 		try {
 			Class<T> cls = (Class<T>) Class.forName(name);
-			return cls;
+			return (Class<T>)cls;
 		} catch (ClassNotFoundException e) {
 			Util.fatalError("Could not find class \""+name+"\"");
 		}
@@ -344,7 +344,7 @@ public final class Util {
 	 */
 	public static <T> T typedInstantiate(String name){
 		try {
-			return checkedCast(typedForName(name).newInstance());
+			return (T)checkedCast(typedForName(name).newInstance());
 		} catch (Exception e) {
 			Util.fatalError("Unchecked exception while instantiating",e);
 		}
@@ -361,7 +361,7 @@ public final class Util {
 	 */
 	public static <T> T typedInstantiateArg(String name, Object arg){
 		try {
-			return checkedCast(Class.forName(name).getConstructors()[0].newInstance(arg));
+			return (T)checkedCast(Class.forName(name).getConstructors()[0].newInstance(arg));
 		} catch (Exception e) {
 			Util.fatalError("Unchecked exception while instantiating",e);
 		}
