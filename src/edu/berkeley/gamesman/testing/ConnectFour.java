@@ -76,24 +76,24 @@ public class ConnectFour implements MouseListener {
 			cgame.setToString(arrToString(board));
 			Collection<Pair<String, ItergameState>> moves = cgame.validMoves();
 			Iterator<Pair<String, ItergameState>> nextStates = moves.iterator();
-			ItergameState s;
-			ItergameState best = null;
+			Pair<String,ItergameState> s;
+			Pair<String,ItergameState> best = null;
 			PrimitiveValue bestOutcome = PrimitiveValue.Undecided;
 			PrimitiveValue thisOutcome;
 
 			while (nextStates.hasNext()) {
 				Pair<String, ItergameState> move = nextStates.next();
-				s = move.cdr;
-				thisOutcome = fd.getRecord(cgame.stateToHash(s)).get();
+				s = move;
+				thisOutcome = fd.getRecord(cgame.stateToHash(s.cdr)).get();
 				System.out.println("Next possible move " + move.car
-						+ " for state " + cgame.stateToHash(s) + " has value "
+						+ " for state " + cgame.stateToHash(s.cdr) + " has value "
 						+ thisOutcome);
-				if (best == null || bestOutcome.isPreferableTo(thisOutcome)) {
+				if (best == null || thisOutcome.isPreferableTo(bestOutcome)) {
 					bestOutcome = thisOutcome;
 					best = s;
 				}
 			}
-			moveBySet(cgame.stateToString(best));
+			makeMove(best.car.charAt(1)-'0');
 			System.out.println("Done with startCompMove");
 		}
 	}
@@ -198,7 +198,6 @@ public class ConnectFour implements MouseListener {
 
 	public static void main(String[] args) throws InstantiationException,
 			IllegalAccessException {
-		Gamesman.main(new String[] { "jobs/fc4.gprop" });
 		FileDatabase fd = new FileDatabase();
 		fd.initialize("file:///tmp/fastdatabase.db", null);
 		System.out.println(fd.getRecord(BigInteger.ZERO));

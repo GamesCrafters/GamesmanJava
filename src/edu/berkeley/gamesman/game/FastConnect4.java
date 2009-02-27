@@ -78,17 +78,7 @@ public class FastConnect4 extends TieredIterGame {
 
 	@Override
 	public Collection<Pair<String, ItergameState>> validMoves() {
-		TieredItergameHasher h = (TieredItergameHasher) conf.getHasher();
-		ArrayList<Pair<String,ItergameState>> al = new ArrayList<Pair<String,ItergameState>>();
-		Iterator<Pair<Integer, ItergameState>> moves = otc4b.validMoves().iterator();
-		
-		while(moves.hasNext()){
-			Pair<Integer,ItergameState> m = moves.next();
-			ItergameState ob = h.gameStateForTierAndOffset(m.cdr.tier(), m.cdr.hash());
-			al.add(new Pair<String,ItergameState>("c"+m.car,ob));
-		}
-		
-		return al;
+		return otc4b.validMoves();
 	}
 
 	@Override

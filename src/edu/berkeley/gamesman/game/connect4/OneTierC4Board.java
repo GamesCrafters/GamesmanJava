@@ -2,6 +2,7 @@ package edu.berkeley.gamesman.game.connect4;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collection;
 
 import edu.berkeley.gamesman.core.ItergameState;
 import edu.berkeley.gamesman.core.PrimitiveValue;
@@ -375,8 +376,8 @@ public final class OneTierC4Board implements Cloneable {
 	/**
 	 * @return The columns and hashes of the different possible moves in this position
 	 */
-	public ArrayList<Pair<Integer, ItergameState>> validMoves() {
-		ArrayList<Pair<Integer, ItergameState>> al = new ArrayList<Pair<Integer, ItergameState>>(
+	public Collection<Pair<String, ItergameState>> validMoves() {
+		ArrayList<Pair<String, ItergameState>> al = new ArrayList<Pair<String, ItergameState>>(
 				openColumns);
 		BigInteger newHash = arHash;
 		if (turn == Color.BLACK) {
@@ -390,7 +391,7 @@ public final class OneTierC4Board implements Cloneable {
 						contr = columns[c].topPiece().nextBlack();
 					else
 						contr = BigInteger.ZERO;
-					al.add(new Pair<Integer, ItergameState>(col, makePosPair(
+					al.add(new Pair<String, ItergameState>("c"+col, makePosPair(
 							moveTiers[col], newHash.add(contr))));
 				}
 				newHash = newHash.add(columns[col].addBlack());
@@ -398,7 +399,7 @@ public final class OneTierC4Board implements Cloneable {
 		} else {
 			for (int col = width - 1; col >= 0; col--) {
 				if (columns[col].isOpen())
-					al.add(new Pair<Integer, ItergameState>(col, makePosPair(
+					al.add(new Pair<String, ItergameState>("c"+col, makePosPair(
 							moveTiers[col], newHash)));
 				newHash = newHash.add(columns[col].addRed());
 			}
