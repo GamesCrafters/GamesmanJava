@@ -4,9 +4,10 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 
 import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.game.CycleState;
 import edu.berkeley.gamesman.util.Pair;
 
-final class OneTierC4Board implements Cloneable{
+public final class OneTierC4Board implements Cloneable{
 	private static enum Color {
 		BLACK, RED;
 		Color opposite() {
@@ -185,7 +186,7 @@ final class OneTierC4Board implements Cloneable{
 	private BigInteger firstAll, firstBlacks;
 	private BigInteger arHash = BigInteger.ZERO;
 
-	OneTierC4Board(int width, int height, int piecesToWin, int tier) {
+	public OneTierC4Board(int width, int height, int piecesToWin, int tier) {
 		this.width = width;
 		this.height = height;
 		this.piecesToWin = piecesToWin;
@@ -242,7 +243,7 @@ final class OneTierC4Board implements Cloneable{
 		}
 	}
 
-	BigInteger numHashesForTier() {
+	public BigInteger numHashesForTier() {
 		return maxPHash;
 	}
 
@@ -255,7 +256,7 @@ final class OneTierC4Board implements Cloneable{
 	 * complicated to do this while keeping track of hash contributions. But
 	 * still possible (in the same order of time)
 	 */
-	void next() {
+	public void next() {
 		int col = 0, row = 0;
 		BigInteger lastBlack = firstAll.subtract(BigInteger.ONE);
 		while (columns[col].height() == 0)
@@ -339,7 +340,7 @@ final class OneTierC4Board implements Cloneable{
 		columns[col].setPiece(row, black, hashNum, color);
 	}
 
-	BigInteger getHash() {
+	public BigInteger getHash() {
 		return arHash;
 	}
 
@@ -351,8 +352,8 @@ final class OneTierC4Board implements Cloneable{
 	 * simultaneously hash all the moves of a full-size connect four board by
 	 * adding eight or nine numbers together?
 	 */
-	ArrayList<Pair<Integer, C4State>> validMoves() {
-		ArrayList<Pair<Integer, C4State>> al = new ArrayList<Pair<Integer, C4State>>(
+	public ArrayList<Pair<Integer, CycleState>> validMoves() {
+		ArrayList<Pair<Integer, CycleState>> al = new ArrayList<Pair<Integer, CycleState>>(
 				openColumns);
 		BigInteger newHash = arHash;
 		if (turn == Color.BLACK) {
@@ -366,7 +367,7 @@ final class OneTierC4Board implements Cloneable{
 						contr = columns[c].topPiece().nextBlack();
 					else
 						contr = BigInteger.ZERO;
-					al.add(new Pair<Integer, C4State>(col,makePosPair(moveTiers[col],newHash
+					al.add(new Pair<Integer, CycleState>(col,makePosPair(moveTiers[col],newHash
 							.add(contr))));
 				}
 				newHash = newHash.add(columns[col].addBlack());
@@ -374,18 +375,18 @@ final class OneTierC4Board implements Cloneable{
 		} else {
 			for (int col = width - 1; col >= 0; col--) {
 				if (columns[col].isOpen())
-					al.add(new Pair<Integer, C4State>(col, makePosPair(moveTiers[col],newHash)));
+					al.add(new Pair<Integer, CycleState>(col, makePosPair(moveTiers[col],newHash)));
 				newHash = newHash.add(columns[col].addRed());
 			}
 		}
 		return al;
 	}
 
-	private C4State makePosPair(int tier, BigInteger newHash) {
-		return new C4State(tier, newHash);
+	private CycleState makePosPair(int tier, BigInteger newHash) {
+		return new CycleState(tier, newHash);
 	}
 
-	int getTier() {
+	public int getTier() {
 		return tier;
 	}
 
@@ -430,7 +431,7 @@ final class OneTierC4Board implements Cloneable{
 	 * part of a four-in-a-row. Otherwise return Tie or Undecided depending on
 	 * whether the board is full or not.
 	 */
-	PrimitiveValue primitiveValue() {
+	public PrimitiveValue primitiveValue() {
 		int colHeight;
 		for (int col = 0; col < width; col++) {
 			colHeight = columns[col].height();
@@ -445,7 +446,7 @@ final class OneTierC4Board implements Cloneable{
 			return PrimitiveValue.Tie;
 	}
 
-	void unhash(BigInteger hash) {
+	public void unhash(BigInteger hash) {
 		BigInteger thisHash = numHashesForTier();
 		BigInteger pieces;
 		BigInteger blackPieces = this.blackPieces;
@@ -553,7 +554,7 @@ final class OneTierC4Board implements Cloneable{
 		return false;
 	}
 
-	C4State getState() {
+	public CycleState getState() {
 		return makePosPair(getTier(),getHash());
 	}
 	
@@ -564,7 +565,7 @@ final class OneTierC4Board implements Cloneable{
 		return other;
 	}
 
-	void setToString(String pos) {
+	public void setToString(String pos) {
 		// TODO Auto-generated method stub
 		
 	}

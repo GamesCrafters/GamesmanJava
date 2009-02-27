@@ -1,5 +1,6 @@
-gamesman.game = MixGHC4
+gamesman.game = FastConnect4
 gamesman.game.width = 4
 gamesman.game.height = 4
-gamesman.solver = TieredMixGameHashSolver
+gamesman.solver = TierCycleSolver
+gamesman.hasher = TieredCycleHasher
 gamesman.db.uri = file:///tmp/database.db

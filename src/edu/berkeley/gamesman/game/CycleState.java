@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.game.connect4;
+package edu.berkeley.gamesman.game;
 
 import java.math.BigInteger;
 
@@ -8,13 +8,13 @@ import edu.berkeley.gamesman.util.Pair;
  * @author DNSpies
  * Convenience class for FastConnect4
  */
-public class C4State extends Pair<Integer, BigInteger> {
+public class CycleState extends Pair<Integer, BigInteger> {
 
 	/**
 	 * @param tier The tier
 	 * @param hash The hash
 	 */
-	public C4State(Integer tier, BigInteger hash) {
+	public CycleState(Integer tier, BigInteger hash) {
 		super(tier, hash);
 	}
 

@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.game.connect4;
+package edu.berkeley.gamesman.game;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -7,8 +7,8 @@ import java.util.Iterator;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;
-import edu.berkeley.gamesman.game.TieredCycleGame;
-import edu.berkeley.gamesman.hasher.FastConnect4Hasher;
+import edu.berkeley.gamesman.game.connect4.OneTierC4Board;
+import edu.berkeley.gamesman.hasher.TieredCycleHasher;
 import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.Pair;
 
@@ -16,14 +16,14 @@ import edu.berkeley.gamesman.util.Pair;
  * @author DNSpies
  * For connect 4 hashing
  */
-public class FastConnect4 extends TieredCycleGame<C4State> {
+public class FastConnect4 extends TieredCycleGame {
 
 	private final int piecesToWin;
 	private OneTierC4Board otc4b;
 
 	static {
 		DependencyResolver.allowHasher(FastConnect4.class,
-				FastConnect4Hasher.class);
+				TieredCycleHasher.class);
 	}
 
 	/**
@@ -75,15 +75,15 @@ public class FastConnect4 extends TieredCycleGame<C4State> {
 	}
 
 	@Override
-	public Collection<Pair<String, C4State>> validMoves() {
-		FastConnect4Hasher h = (FastConnect4Hasher) conf.getHasher();
-		ArrayList<Pair<String,C4State>> al = new ArrayList<Pair<String,C4State>>();
-		Iterator<Pair<Integer, C4State>> moves = otc4b.validMoves().iterator();
+	public Collection<Pair<String, CycleState>> validMoves() {
+		TieredCycleHasher h = (TieredCycleHasher) conf.getHasher();
+		ArrayList<Pair<String,CycleState>> al = new ArrayList<Pair<String,CycleState>>();
+		Iterator<Pair<Integer, CycleState>> moves = otc4b.validMoves().iterator();
 		
 		while(moves.hasNext()){
-			Pair<Integer,C4State> m = moves.next();
-			C4State ob = h.gameStateForTierAndOffset(m.cdr.tier(), m.cdr.hash());
-			al.add(new Pair<String,C4State>("c"+m.car,ob));
+			Pair<Integer,CycleState> m = moves.next();
+			CycleState ob = h.gameStateForTierAndOffset(m.cdr.tier(), m.cdr.hash());
+			al.add(new Pair<String,CycleState>("c"+m.car,ob));
 		}
 		
 		return al;
@@ -97,7 +97,7 @@ public class FastConnect4 extends TieredCycleGame<C4State> {
 	}
 
 	@Override
-	public C4State getState() {
+	public CycleState getState() {
 		return otc4b.getState();
 	}
 
@@ -113,7 +113,7 @@ public class FastConnect4 extends TieredCycleGame<C4State> {
 	}
 
 	@Override
-	public void setState(C4State pos) {
+	public void setState(CycleState pos) {
 		setTier(pos.tier());
 		otc4b.unhash(pos.hash());
 	}
