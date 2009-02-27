@@ -14,6 +14,8 @@ import edu.berkeley.gamesman.Gamesman;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.database.FileDatabase;
 import edu.berkeley.gamesman.game.Connect4;
+import edu.berkeley.gamesman.game.CycleState;
+import edu.berkeley.gamesman.game.FastConnect4;
 import edu.berkeley.gamesman.game.connect4.C4Board;
 import edu.berkeley.gamesman.util.Pair;
 
@@ -26,7 +28,7 @@ public class ConnectFour implements MouseListener {
 	private boolean win = false;
 	private Thread paintThread;
 	private DisplayFour df;
-	private Connect4 cgame;
+	private FastConnect4 cgame;
 	private FileDatabase fd;
 	static int WIDTH = 4;
 	static int HEIGHT = 4;
@@ -35,7 +37,7 @@ public class ConnectFour implements MouseListener {
 		int c, r;
 		fd = db;
 		df = disfour;
-		cgame = new Connect4(db.getConfiguration());
+		cgame = new FastConnect4(db.getConfiguration());
 		cgame.prepare();
 		for (c = 0; c < WIDTH; c++) {
 			for (r = 0; r < HEIGHT; r++) {
@@ -74,16 +76,16 @@ public class ConnectFour implements MouseListener {
 
 	private void startCompMove() {
 		if (compTurn() && !win()) {
-			Collection<Pair<String, C4Board>> moves = cgame
-					.validMoves(new C4Board(board));
-			Iterator<Pair<String, C4Board>> nextStates = moves.iterator();
-			C4Board s;
-			C4Board best = null;
+			cgame.setToString(arrToString(board));
+			Collection<Pair<String, CycleState>> moves = cgame.validMoves();
+			Iterator<Pair<String, CycleState>> nextStates = moves.iterator();
+			CycleState s;
+			CycleState best = null;
 			PrimitiveValue bestOutcome = PrimitiveValue.Undecided;
 			PrimitiveValue thisOutcome;
 
 			while (nextStates.hasNext()) {
-				Pair<String, C4Board> move = nextStates.next();
+				Pair<String, CycleState> move = nextStates.next();
 				s = move.cdr;
 				thisOutcome = fd.getRecord(cgame.stateToHash(s)).get();
 				System.out.println("Next possible move " + move.car
@@ -94,19 +96,26 @@ public class ConnectFour implements MouseListener {
 					best = s;
 				}
 			}
-			moveBySet(best.getCharBoard());
+			moveBySet(cgame.stateToString(best));
 			System.out.println("Done with startCompMove");
 		}
 	}
 
-	private void moveBySet(char[][] pos) {
+	private String arrToString(char[][] c) {
+		String s = "";
+		for (int i = 0; i < c.length; i++)
+			s += new String(c[i]);
+		return s;
+	}
+
+	private void moveBySet(String pos) {
 		int row, col;
 		if (pos == null)
 			System.out.println("pos is null");
-		System.out.println(Arrays.deepToString(pos));
+		System.out.println(pos);
 		for (col = 0; col < WIDTH; col++) {
 			for (row = 0; row < HEIGHT; row++) {
-				if (pos[row][col] != board[row][col])
+				if (pos.charAt(row * WIDTH + col) != board[row][col])
 					break;
 			}
 			if (row < HEIGHT)

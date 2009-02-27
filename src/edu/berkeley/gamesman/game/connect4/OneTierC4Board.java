@@ -6,8 +6,9 @@ import java.util.ArrayList;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.game.CycleState;
 import edu.berkeley.gamesman.util.Pair;
+import edu.berkeley.gamesman.util.Util;
 
-public final class OneTierC4Board implements Cloneable{
+public final class OneTierC4Board implements Cloneable {
 	private static enum Color {
 		BLACK, RED;
 		Color opposite() {
@@ -27,7 +28,7 @@ public final class OneTierC4Board implements Cloneable{
 	 * an array? Because there's so many beneficial ways a column can speed up
 	 * hashing!
 	 */
-	private static final class Column implements Cloneable{
+	private static final class Column implements Cloneable {
 		private final Piece[] piece;
 		private final int tier;
 		private int colHeight = 0;
@@ -86,16 +87,16 @@ public final class OneTierC4Board implements Cloneable{
 		Piece get(final int row) {
 			return piece[row];
 		}
-		
-		public Column clone(){
-			Column c=new Column(piece.length, tier);
-			for(int i=0;i<colHeight;i++)
+
+		public Column clone() {
+			Column c = new Column(piece.length, tier);
+			for (int i = 0; i < colHeight; i++)
 				c.addPiece(piece[i].clone());
 			return c;
 		}
 	}
 
-	private static final class Piece implements Cloneable{
+	private static final class Piece implements Cloneable {
 		private final BigInteger index;
 		private BigInteger black;
 		private BigInteger hash;
@@ -169,8 +170,8 @@ public final class OneTierC4Board implements Cloneable{
 		Color getColor() {
 			return color;
 		}
-		
-		public Piece clone(){
+
+		public Piece clone() {
 			return new Piece(index, black, hash, color);
 		}
 	}
@@ -367,15 +368,16 @@ public final class OneTierC4Board implements Cloneable{
 						contr = columns[c].topPiece().nextBlack();
 					else
 						contr = BigInteger.ZERO;
-					al.add(new Pair<Integer, CycleState>(col,makePosPair(moveTiers[col],newHash
-							.add(contr))));
+					al.add(new Pair<Integer, CycleState>(col, makePosPair(
+							moveTiers[col], newHash.add(contr))));
 				}
 				newHash = newHash.add(columns[col].addBlack());
 			}
 		} else {
 			for (int col = width - 1; col >= 0; col--) {
 				if (columns[col].isOpen())
-					al.add(new Pair<Integer, CycleState>(col, makePosPair(moveTiers[col],newHash)));
+					al.add(new Pair<Integer, CycleState>(col, makePosPair(
+							moveTiers[col], newHash)));
 				newHash = newHash.add(columns[col].addRed());
 			}
 		}
@@ -394,8 +396,7 @@ public final class OneTierC4Board implements Cloneable{
 	public String toString() {
 		StringBuilder str = new StringBuilder(height * (2 * width + 2) + 1);
 		Piece p;
-		for (int row = height - 1; row >= 0; row--) {
-			str.append('|');
+		for (int row = 0; row < height; row++) {
 			for (int col = 0; col < width; col++) {
 				p = get(row, col);
 				if (p == null)
@@ -413,11 +414,8 @@ public final class OneTierC4Board implements Cloneable{
 						break;
 					}
 				}
-				str.append('|');
 			}
-			str.append('\n');
 		}
-		str.append('\n');
 		return str.toString();
 	}
 
@@ -447,17 +445,17 @@ public final class OneTierC4Board implements Cloneable{
 	}
 
 	public void unhash(BigInteger hash) {
-		if(tier==0)
+		if (tier == 0)
 			return;
 		BigInteger thisHash = numHashesForTier();
 		BigInteger pieces;
 		BigInteger blackPieces = this.blackPieces;
 		int col = width - 1;
 		int row = columns[col].colHeight;
-		boolean onBlacks=false;
+		boolean onBlacks = false;
 		thisHash = thisHash.multiply(this.pieces.subtract(blackPieces)).divide(
 				this.pieces);
-		int firstBlacks=0, firstAll=0;
+		int firstBlacks = 0, firstAll = 0;
 		for (pieces = this.pieces.subtract(BigInteger.ONE); pieces
 				.compareTo(BigInteger.ZERO) >= 0; pieces = pieces
 				.subtract(BigInteger.ONE)) {
@@ -467,13 +465,13 @@ public final class OneTierC4Board implements Cloneable{
 				row = columns[col].colHeight - 1;
 			}
 			if (hash.compareTo(thisHash) >= 0) {
-				if(onBlacks){
+				if (onBlacks) {
 					firstBlacks++;
 					firstAll++;
-				}else{
-					firstBlacks=1;
-					firstAll=1;
-					onBlacks=true;
+				} else {
+					firstBlacks = 1;
+					firstAll = 1;
+					onBlacks = true;
 				}
 				set(row, col, blackPieces, thisHash, Color.BLACK);
 				hash = hash.subtract(thisHash);
@@ -482,17 +480,17 @@ public final class OneTierC4Board implements Cloneable{
 				blackPieces = blackPieces.subtract(BigInteger.ONE);
 			} else {
 				firstAll++;
-				onBlacks=false;
+				onBlacks = false;
 				set(row, col, blackPieces, thisHash, Color.RED);
 				if (!pieces.equals(BigInteger.ZERO))
 					thisHash = thisHash.multiply(pieces.subtract(blackPieces))
 							.divide(pieces);
 			}
 		}
-		this.firstAll=BigInteger.valueOf(firstAll);
-		this.firstBlacks=BigInteger.valueOf(firstBlacks);
+		this.firstAll = BigInteger.valueOf(firstAll);
+		this.firstBlacks = BigInteger.valueOf(firstBlacks);
 	}
-	
+
 	/*
 	 * Looks for a win that uses the given piece.
 	 */
@@ -579,18 +577,43 @@ public final class OneTierC4Board implements Cloneable{
 	}
 
 	public CycleState getState() {
-		return makePosPair(getTier(),getHash());
+		return makePosPair(getTier(), getHash());
 	}
-	
-	public OneTierC4Board clone(){
-		OneTierC4Board other = new OneTierC4Board(width,height,piecesToWin,tier);
-		for(int col=0;col<width;col++)
-			other.columns[col]=columns[col].clone();
+
+	public OneTierC4Board clone() {
+		OneTierC4Board other = new OneTierC4Board(width, height, piecesToWin,
+				tier);
+		for (int col = 0; col < width; col++)
+			other.columns[col] = columns[col].clone();
 		return other;
 	}
 
 	public void setToString(String pos) {
-		// TODO Auto-generated method stub
-		
+		BigInteger hash = BigInteger.ZERO;
+		BigInteger blacks = BigInteger.ZERO;
+		Piece lastPiece = null;
+		for (int row = 0; row < height; row++)
+			COLLOOP: for (int col = 0; col < width; col++) {
+				switch (pos.charAt(Util.index(col, row, width))) {
+				case 'O':
+					if (lastPiece == null)
+						hash = BigInteger.ZERO;
+					else
+						hash = lastPiece.nextBlack();
+					blacks = blacks.add(BigInteger.ONE);
+					set(row, col, blacks, hash, Color.BLACK);
+					break;
+				case 'X':
+					if (lastPiece == null)
+						hash = BigInteger.ONE;
+					else
+						hash = lastPiece.nextRed();
+					set(row, col, blacks, hash, Color.RED);
+					break;
+				case ' ':
+					break COLLOOP;
+				}
+				lastPiece = get(row, col);
+			}
 	}
 }

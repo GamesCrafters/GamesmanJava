@@ -160,4 +160,12 @@ public class FastConnect4 extends TieredCycleGame {
 	public int getTier() {
 		return otc4b.getTier();
 	}
+	
+	@Override
+	public String toString(){
+		if(otc4b==null)
+			return "";
+		else
+			return otc4b.toString();
+	}
 }
