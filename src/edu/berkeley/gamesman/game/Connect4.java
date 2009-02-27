@@ -72,8 +72,7 @@ public class Connect4 extends TieredGame<C4Board> {
 		StringBuilder str = new StringBuilder(s.length() + 3 * pos.height());
 		for (int row = pos.height() - 1; row >= 0; row--) {
 			str.append('|');
-			str.append(s.substring(row * pos.width(), (row + 1) * pos.width()
-					- 1));
+			str.append(s.substring(row * pos.width(), (row + 1) * pos.width()));
 			str.append("|\n");
 		}
 		return str.toString();

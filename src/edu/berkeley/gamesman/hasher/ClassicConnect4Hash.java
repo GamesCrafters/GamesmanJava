@@ -20,9 +20,7 @@ public class ClassicConnect4Hash extends TieredHasher<C4Board> {
 	public ClassicConnect4Hash(Configuration conf) {
 		super(conf);
 	}
-
-	private static final long serialVersionUID = -5178988467392378350L;
-
+	
 	@Override
 	public C4Board gameStateForTierAndOffset(int tier, BigInteger index) {
 		// TODO Auto-generated method stub

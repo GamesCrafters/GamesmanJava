@@ -7,7 +7,9 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.util.EnumSet;
+import java.util.Iterator;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -383,5 +385,33 @@ public final class Util {
 	@SuppressWarnings("unchecked")
 	public static <T,V> T checkedCast(V in){
 		return (T)in;
+	}
+
+	public static Iterable<BigInteger> bigIntIterator(final BigInteger lastValue) {
+		return new Iterable<BigInteger>(){
+
+			public Iterator<BigInteger> iterator() {
+				return new Iterator<BigInteger>(){
+
+					BigInteger cur = BigInteger.ZERO;
+					
+					public boolean hasNext() {
+						return cur.compareTo(lastValue) <= 0;
+					}
+
+					public BigInteger next() {
+						BigInteger old = cur;
+						cur = cur.add(BigInteger.ONE);
+						return old;
+					}
+
+					public void remove() {
+						throw new UnsupportedOperationException("Cannot remove from a bigIntIterator");
+					}
+					
+				};
+			}
+			
+		};
 	}
 }

@@ -1,6 +1,7 @@
 package edu.berkeley.gamesman.core;
 
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -8,6 +9,7 @@ import java.io.DataOutputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -293,6 +295,23 @@ public class Configuration {
 		} catch (IOException e) {
 			Util.fatalError("Could not read from property file",e);
 		}
+	}
+	
+	private static BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+
+	public String getPropertyWithPrompt(String key) {
+		String s = props.getProperty(key);
+		if(s == null){
+			System.out.print("Gamesman would like you to specify the value for '"+key+"'\n\t>");
+			System.out.flush();
+			try {
+				return in.readLine();
+			} catch (IOException e) {
+				Util.fatalError("Could not read a line from console",e);
+				return null;
+			}
+		}
+		return s;
 	}
 	
 
