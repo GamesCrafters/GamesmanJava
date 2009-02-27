@@ -26,7 +26,7 @@ import edu.berkeley.gamesman.util.Util;
  * @param <T> The state type for the game
  * 
  */
-public final class TierSolver<T> extends Solver {
+public class TierSolver<T> extends Solver {
 
 	protected TieredGame<T> myGame;
 	protected Configuration conf;
@@ -160,7 +160,7 @@ public final class TierSolver<T> extends Solver {
 		}
 	}
 
-	private final class TierSolverUpdater {
+	final class TierSolverUpdater {
 
 		private BigInteger total = BigInteger.ZERO;
 		private Task t;
