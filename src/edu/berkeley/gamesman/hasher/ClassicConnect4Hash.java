@@ -4,13 +4,14 @@ import java.math.BigInteger;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.TieredHasher;
+import edu.berkeley.gamesman.game.connect4.C4Board;
 import edu.berkeley.gamesman.util.Pair;
 
 /**
  * The Connect 4 hasher from GamesmanClassic
  * @author Steven Schlansker
  */
-public class ClassicConnect4Hash extends TieredHasher<char[][]> {
+public class ClassicConnect4Hash extends TieredHasher<C4Board> {
 
 	/**
 	 * Default constructor
@@ -23,7 +24,7 @@ public class ClassicConnect4Hash extends TieredHasher<char[][]> {
 	private static final long serialVersionUID = -5178988467392378350L;
 
 	@Override
-	public char[][] gameStateForTierAndOffset(int tier, BigInteger index) {
+	public C4Board gameStateForTierAndOffset(int tier, BigInteger index) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -41,7 +42,7 @@ public class ClassicConnect4Hash extends TieredHasher<char[][]> {
 	}
 
 	@Override
-	public Pair<Integer, BigInteger> tierIndexForState(char[][] state) {
+	public Pair<Integer, BigInteger> tierIndexForState(C4Board state) {
 		// TODO Auto-generated method stub
 		return null;
 	}

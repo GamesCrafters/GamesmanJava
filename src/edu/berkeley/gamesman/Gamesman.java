@@ -30,18 +30,15 @@ public final class Gamesman {
 	private Solver so;
 	private final Game<Object> gm;
 	private Database db;
-	private boolean testrun;
 	private Configuration conf;
 
-	private Gamesman(Configuration c,Solver s,Database d, boolean er) {
+	private Gamesman(Configuration c,Solver s,Database d) {
 		conf = c;
 		gm = Util.checkedCast(c.getGame());
 		so = s;
 		db = d;
 		
 		so.initialize(db);
-		
-		testrun = er;
 	}
 
 	/**
@@ -113,17 +110,11 @@ public final class Gamesman {
 			System.err.println("Fatal error in preloading: " + e);
 			return;
 		}
-
-		//boolean dohelp = (OptionProcessor.checkOption("h") != null);
-
-		boolean dohelp = false;
 		
 		String cmd = conf.getProperty("gamesman.command",null);
 		if (cmd != null) {
 			try {
-				//boolean tr = (OptionProcessor.checkOption("help") != null);
-				boolean tr = false;
-				Gamesman executor = new Gamesman(conf, s.newInstance(),d.newInstance(), tr);
+				Gamesman executor = new Gamesman(conf, s.newInstance(),d.newInstance());
 				executor.getClass().getMethod("execute" + cmd,
 						(Class<?>[]) null).invoke(executor);
 			} catch (NoSuchMethodException nsme) {
@@ -137,7 +128,7 @@ public final class Gamesman {
 				System.out.println("Exception while executing command: " + ite);
 				ite.getTargetException().printStackTrace();
 			}
-		} else if (!dohelp) {
+		} else {
 			Util.debug(DebugFacility.Core,"Defaulting to solve...");
 			try {
 				Game<?> gm = Util.checkedCast(g.getConstructors()[0].newInstance(conf));
@@ -153,11 +144,11 @@ public final class Gamesman {
 			m.run();
 		}
 
-		if (dohelp) {
-			System.out.println("Gamesman help stub, please fill this out!"); // TODO: help text
-			//OptionProcessor.help();
-			return;
-		}
+		//if (dohelp) {
+		//	System.out.println("Gamesman help stub, please fill this out!"); // TODO: help text
+		//	//OptionProcessor.help();
+		//	return;
+		//}
 
 		Util.debug(DebugFacility.Core,"Finished run, tearing down...");
 
@@ -167,8 +158,6 @@ public final class Gamesman {
 	 * Diagnostic call to unhash an arbitrary value to a game board
 	 */
 	public void executeunhash() {
-		if (testrun)
-			return;
 
 		Object state = gm.hashToState(new BigInteger(conf.getProperty("gamesman.hash")));
 		System.out.println(gm.displayState(state));
@@ -178,8 +167,6 @@ public final class Gamesman {
 	 * Diagnostic call to view all child moves of a given hashed game state
 	 */
 	public void executegenmoves() {
-		if (testrun)
-			return;
 		Object state = gm.hashToState(new BigInteger(conf.getProperty("gamesman.hash")));
 		for (Object nextstate : gm.validMoves(state)) {
 			System.out.println(gm.stateToHash(nextstate));
@@ -191,8 +178,6 @@ public final class Gamesman {
 	 * Hash a single board with the given hasher and print it.
 	 */
 	public void executehash() {
-		if (testrun)
-			return;
 		String str = conf.getProperty("board");
 		if (str == null)
 			Util.fatalError("Please specify a board to hash");
@@ -203,8 +188,6 @@ public final class Gamesman {
 	 * Evaluate a single board and return its primitive value.
 	 */
 	public void executeevaluate() {
-		if (testrun)
-			return;
 		String board = conf.getProperty("gamesman.board");
 		if (board == null)
 			Util.fatalError("Please specify a hash to evaluate");
@@ -216,8 +199,6 @@ public final class Gamesman {
 	 * Launch a directory filer server
 	 */
 	public void executelaunchDirectoryFiler() {
-		if (testrun)
-			return;
 		if (conf.getProperty("rootDirectory") == null)
 			Util.fatalError("You must provide a root directory for the filer with -r or --rootDirectory");
 		if (conf.getProperty("secret") == null)
@@ -245,8 +226,6 @@ public final class Gamesman {
 	 * @throws URISyntaxException The given URI is malformed
 	 */
 	public void executedirectoryConnect() throws URISyntaxException {
-		if (testrun)
-			return;
 		DirectoryFilerClient dfc = new DirectoryFilerClient(new URI(conf.getProperty("uri","gdfp://game@localhost:4263/")));
 
 		LineNumberReader input = new LineNumberReader(new InputStreamReader(
