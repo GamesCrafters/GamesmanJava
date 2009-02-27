@@ -70,12 +70,14 @@ public final class MixGHC4 extends TieredMixGameHasher {
 
 	@Override
 	public Collection<Integer> moveTiers() {
-		return otc4b.moveTiers();
+		//return otc4b.moveTiers();
+		return null; //BROKEN
 	}
 
 	@Override
 	public Collection<BigInteger> moveHashesWithoutTiers() {
-		return otc4b.moveHashes();
+		//return otc4b.moveHashes();
+		return null; //BROKEN
 	}
 
 	@Override
