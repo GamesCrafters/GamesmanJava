@@ -28,7 +28,6 @@ public final class TierItergameSolver extends TierSolver<ItergameState> {
 		ItergameState state = game.hashToState(current);
 		game.setState(state);
 		while (current.compareTo(end) < 0) {
-			current = current.add(BigInteger.ONE);
 
 			if (current.mod(BigInteger.valueOf(10000)).compareTo(
 					BigInteger.ZERO) == 0)
@@ -42,7 +41,8 @@ public final class TierItergameSolver extends TierSolver<ItergameState> {
 				ArrayList<Record> vals = new ArrayList<Record>(children.size());
 
 				for (Pair<String, ItergameState> child : children) {
-					vals.add(db.getRecord(game.stateToHash(child.cdr)));
+					Record r = db.getRecord(game.stateToHash(child.cdr));
+					vals.add(r);
 				}
 
 				Record newVal = Record.combine(conf, vals);
@@ -51,7 +51,7 @@ public final class TierItergameSolver extends TierSolver<ItergameState> {
 				Record prim = new Record(conf, pv);
 				db.putRecord(current, prim);
 			}
-			
+			current = current.add(BigInteger.ONE);
 			if(game.hasNextHashInTier())
 				game.nextHashInTier();
 		}

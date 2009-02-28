@@ -100,7 +100,7 @@ public class TierSolver<T> extends Solver {
 		synchronized (this) {
 			if (tier < 0)
 				return null;
-			final BigInteger step = BigInteger.valueOf(1000);
+			final BigInteger step = BigInteger.valueOf(10000);
 			BigInteger ret = offset, end;
 			offset = offset.add(step);
 			end = ret.add(step);

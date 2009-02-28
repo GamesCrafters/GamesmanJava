@@ -420,7 +420,7 @@ public final class OneTierC4Board implements Cloneable {
 
 	@Override
 	public String toString() {
-		StringBuilder str = new StringBuilder(height * (2 * width + 2) + 1);
+		StringBuilder str = new StringBuilder(height * width);
 		Piece p;
 		for (int row = 0; row < height; row++) {
 			for (int col = 0; col < width; col++) {

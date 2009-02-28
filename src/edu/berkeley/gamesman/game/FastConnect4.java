@@ -136,7 +136,7 @@ public class FastConnect4 extends TieredIterGame {
 		StringBuilder str = new StringBuilder(s.length()+gameHeight*2+1);
 		for(int row = gameHeight - 1;row>=0; row--){
 			str.append('|');
-			str.append(s.substring(row*gameWidth, (row+1*gameWidth-1)));
+			str.append(s.substring(row*gameWidth, (row+1)*gameWidth));
 			str.append("|\n");
 		}
 		return str.toString();

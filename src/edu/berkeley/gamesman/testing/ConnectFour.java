@@ -9,7 +9,6 @@ import java.util.Iterator;
 
 import javax.swing.JFrame;
 
-import edu.berkeley.gamesman.Gamesman;
 import edu.berkeley.gamesman.core.ItergameState;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.database.FileDatabase;
