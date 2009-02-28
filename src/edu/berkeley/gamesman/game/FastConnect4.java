@@ -1,9 +1,7 @@
 package edu.berkeley.gamesman.game;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.ItergameState;
@@ -134,8 +132,14 @@ public class FastConnect4 extends TieredIterGame {
 
 	@Override
 	public String displayState() {
-		// TODO Auto-generated method stub
-		return null;
+		String s = otc4b.toString();
+		StringBuilder str = new StringBuilder(s.length()+gameHeight*2+1);
+		for(int row = gameHeight - 1;row>=0; row--){
+			str.append('|');
+			str.append(s.substring(row*gameWidth, (row+1*gameWidth-1)));
+			str.append("|\n");
+		}
+		return str.toString();
 	}
 
 	@Override
