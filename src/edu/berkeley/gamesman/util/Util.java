@@ -386,7 +386,21 @@ public final class Util {
 	public static <T,V> T checkedCast(V in){
 		return (T)in;
 	}
-
+	
+	/**
+	 * Method to join the elements of arr, separated by separator.
+	 * @param separator What to separate the elements of arr by, usually something like , or ;
+	 * @param arr An array of the elements to join together.
+	 * @return The toString() of each element of arr, separated by separator 
+	 */
+	public static String join(String separator, Object[] arr) {
+		if(arr.length == 0) return "";
+		StringBuilder sb = new StringBuilder();
+		for(Object o : arr)
+			sb.append(separator).append(o.toString());
+		return sb.substring(separator.length());
+	}
+	
 	public static Iterable<BigInteger> bigIntIterator(final BigInteger lastValue) {
 		return new Iterable<BigInteger>(){
 

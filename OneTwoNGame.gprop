@@ -1,0 +1,7 @@
+gamesman.game = OneTwoNGame
+gamesman.game.maxNumber = 10
+gamesman.game.maxStep = 2
+gamesman.solver = TopDownSolver
+gamesman.hasher = NullHasher
+gamesman.db.uri = file:///database.db
+gamesman.debug.Solver = true
