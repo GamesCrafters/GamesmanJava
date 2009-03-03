@@ -53,6 +53,7 @@ public class FileDatabase extends Database {
 		try {
 			fd.seek(loc.longValue() + offset);
 			Record v = Record.readStream(conf, fd);
+			Util.debug(DebugFacility.Database,"read "+loc+": "+v);
 			return v;
 		} catch (IOException e) {
 			Util.fatalError("IO Error: " + e);
@@ -131,7 +132,7 @@ public class FileDatabase extends Database {
 		try {
 			fd.seek(loc.longValue() + offset);
 			value.writeStream(fd);
-			//Util.debug("write "+loc);
+			Util.debug(DebugFacility.Database,"write "+loc+": "+value);
 		} catch (IOException e) {
 			Util.fatalError("IO Error: " + e);
 		}

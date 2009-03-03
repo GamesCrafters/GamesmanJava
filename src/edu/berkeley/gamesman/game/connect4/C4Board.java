@@ -7,12 +7,16 @@ import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
 /**
- * @author DNSpies Represents a board of pieces
+ * Represents a board of pieces
+ * @author DNSpies
+ * @author Steven Schlansker
  */
 public final class C4Board {
-	private C4Piece[][] state;
+	private C4Piece[][] stateArr; // states are in state[row][col] order
 	private C4Piece turn;
-	private Integer[] columnHeights; // Integer, not int so that it's
+	private Integer[] columnHeightsArr; // Integer, not int so that it's
+	
+	private final int width,height;
 
 	// initialized to null, not zero
 
@@ -21,15 +25,19 @@ public final class C4Board {
 	 * @param gameHeight The height of the board
 	 */
 	public C4Board(int gameWidth, int gameHeight) {
-		state = new C4Piece[gameHeight][gameWidth];
-		for (int row = 0; row < gameHeight; row++) {
-			for (int col = 0; col < gameWidth; col++) {
-				state[row][col] = C4Piece.EMPTY;
+		
+		width = gameWidth;
+		height = gameHeight;
+		
+		stateArr = new C4Piece[width][height];
+		for (int row = 0; row < height; row++) {
+			for (int col = 0; col < width; col++) {
+				put(stateArr,row,col,C4Piece.EMPTY);
 			}
 		}
-		columnHeights = new Integer[gameWidth];
+		columnHeightsArr = new Integer[width];
 		for (int col = 0; col < gameWidth; col++)
-			columnHeights[col] = 0;
+			columnHeightsArr[col] = 0;
 		turn = C4Piece.RED;
 	}
 
@@ -37,8 +45,10 @@ public final class C4Board {
 	 * @param state A piece array representing the board
 	 */
 	public C4Board(C4Piece[][] state) {
-		this.state = state;
-		columnHeights = new Integer[state[0].length];
+		stateArr = state;
+		width = state.length;
+		height = state[0].length;
+		columnHeightsArr = new Integer[width];
 	}
 
 	/**
@@ -46,9 +56,11 @@ public final class C4Board {
 	 * @param turn Who's turn it is currently
 	 */
 	public C4Board(C4Piece[][] state, C4Piece turn) {
-		this.state = state;
+		stateArr = state;
 		this.turn = turn;
-		this.columnHeights = new Integer[state[0].length];
+		height = state.length;
+		width = state[0].length;
+		columnHeightsArr = new Integer[width];
 	}
 
 	/**
@@ -74,9 +86,12 @@ public final class C4Board {
 	 * @param columnHeights The respective heights of each column as Integers
 	 */
 	public C4Board(C4Piece[][] state, C4Piece turn, Integer[] columnHeights) {
-		this.state = state;
+		stateArr = state;
 		this.turn = turn;
-		this.columnHeights = columnHeights;
+		width = state.length;
+		height = state[0].length;
+		columnHeightsArr = columnHeights;
+		Util.assertTrue(columnHeights.length == width, "Column heights array wrong size");
 	}
 
 	/**
@@ -88,9 +103,9 @@ public final class C4Board {
 	
 	private static C4Piece[][] convertCharBoard(char[][] charBoard){
 		C4Piece[][] board=new C4Piece[charBoard.length][charBoard[0].length];
-		for(int row=0;row<charBoard.length;row++)
-			for(int col=0;col<charBoard[0].length;col++)
-				board[row][col]=C4Piece.toPiece(charBoard[row][col]);
+		for(int row=0;row<charBoard[0].length;row++)
+			for(int col=0;col<charBoard.length;col++)
+				put(board,row,col,C4Piece.toPiece(get(charBoard,row,col)));
 		return board;
 	}
 
@@ -100,7 +115,7 @@ public final class C4Board {
 	public C4Piece getTurn() {
 		int col, numPieces = 0;
 		if (turn == null) {
-			for (col = 0; col < width(); col++) {
+			for (col = 0; col < width; col++) {
 				numPieces += getHeight(col);
 			}
 			turn = numPieces % 2 == 0 ? C4Piece.RED : C4Piece.BLACK;
@@ -121,41 +136,20 @@ public final class C4Board {
 	 * @return The current number of pieces in that column
 	 */
 	public int getHeight(int col) {
-		int height = height();
-		if (columnHeights[col] == null) {
+		if (columnHeightsArr[col] == null) {
 			for (int i = 0; i < height; i++) {
-				if (state[i][col] == C4Piece.EMPTY) {
-					columnHeights[col] = i;
+				if (get(stateArr,i,col).equals(C4Piece.EMPTY)) {
+					columnHeightsArr[col] = i;
+					Util.assertTrue(columnHeightsArr[col] <= height,"Column too tall!");
 					return i;
 				}
 			}
-			columnHeights[col] = height;
+			columnHeightsArr[col] = height;
+			Util.assertTrue(columnHeightsArr[col] <=height,"Column too tall!");
 			return height;
-		} else
-			return columnHeights[col];
-	}
-
-	/**
-	 * @return The height of the board
-	 */
-	public int height() {
-		return state.length;
-	}
-
-	/**
-	 * @return The width of the board
-	 */
-	public int width() {
-		return columnHeights.length;
-	}
-	
-	/**
-	 * @param row The piece's row
-	 * @param col The piece's column
-	 * @return The piece
-	 */
-	public C4Piece get(int row, int col) {
-		return state[row][col];
+		}
+		Util.assertTrue(columnHeightsArr[col] <= height,"Column too tall!");
+		return columnHeightsArr[col];
 	}
 
 	/**
@@ -168,27 +162,24 @@ public final class C4Board {
 	 */
 	public PrimitiveValue primitiveValue(int piecesToWin) {
 		int colHeight;
-		int width = width();
 		boolean moreMoves = false;
 		for (int col = 0; col < width; col++) {
 			colHeight = getHeight(col);
-			if (!moreMoves && colHeight < height())
+			if (!moreMoves && colHeight < height)
 				moreMoves = true;
-			if (colHeight > 0 && get(colHeight - 1, col) == lastPlayed()
+			if (colHeight > 0 && get(stateArr, colHeight - 1, col) == lastPlayed()
 					&& checkLastWin(colHeight - 1,col, piecesToWin))
 				return PrimitiveValue.Lose;
 		}
 		if (moreMoves)
 			return PrimitiveValue.Undecided;
-		else
-			return PrimitiveValue.Tie;
+		return PrimitiveValue.Tie;
 	}
 
 	private boolean checkLastWin(int row, int col, int piecesToWin) {
 		C4Piece turn = get(row, col);
 		Util.debug(DebugFacility.Game,turn+" last played in column "+col+", checking for win");
 		int ext;
-		int height = height(), width = width();
 
 		// Check horizontal win
 		ext = 1;
@@ -239,7 +230,7 @@ public final class C4Board {
 		// necessary to look down, not up
 		if (row >= piecesToWin - 1)
 			for (ext = 1; ext < piecesToWin && row-ext >= 0; ext++)
-				if (get(row - ext, col) != turn)
+				if (get(row - ext,col) != turn)
 					break;
 		if (ext >= piecesToWin)
 			return true;
@@ -252,19 +243,19 @@ public final class C4Board {
 	 *         or null if the column is full
 	 */
 	public C4Board makeMove(int moveCol) {
-		if (getHeight(moveCol) == height())
+		if (getHeight(moveCol) == height)
 			return null;
-		C4Piece[][] newState = new C4Piece[height()][width()];
-		Integer[] newHeight = new Integer[width()];
-		for (int row = 0; row < height(); row++)
-			for (int col = 0; col < width(); col++)
-				newState[row][col] = state[row][col];
-		newState[getHeight(moveCol)][moveCol] = getTurn(); // This also ensures
+		C4Piece[][] newState = new C4Piece[width][height];
+		Integer[] newHeight = new Integer[width];
+		for (int row = 0; row < height; row++)
+			for (int col = 0; col < width; col++)
+				put(newState,row,col,get(stateArr,row,col));
+		put(newState,getHeight(moveCol),moveCol,getTurn()); // This also ensures
 															// moveCol's height
 															// is already
 															// initialized
-		for (int col = 0; col < width(); col++)
-			newHeight[col] = columnHeights[col];
+		for (int col = 0; col < width; col++)
+			newHeight[col] = columnHeightsArr[col];
 		newHeight[moveCol]++;
 		return new C4Board(newState, getTurn().opposite(), newHeight);
 	}
@@ -273,11 +264,22 @@ public final class C4Board {
 	 * @return A char-array representation of the board
 	 */
 	public char[][] getCharBoard() {
-		char[][] resBoard = new char[height()][width()];
-		for (int row = 0; row < height(); row++)
-			for (int col = 0; col < width(); col++)
-				resBoard[row][col] = get(row, col).toChar();
+		char[][] resBoard = new char[width][height];
+		for (int row = 0; row < height; row++)
+			for (int col = 0; col < width; col++)
+				put(resBoard,row,col,get(row,col).toChar());
 		return resBoard;
+	}
+
+	
+	
+	/**
+	 * @param row The piece's row
+	 * @param col The piece's column
+	 * @return The piece
+	 */
+	public C4Piece get(int row, int col) {
+		return get(stateArr,row,col);
 	}
 	
 	@Override
@@ -285,4 +287,19 @@ public final class C4Board {
 		return Arrays.deepToString(getCharBoard())+" ("+lastPlayed()+")";
 	}
 	
+	protected final static char get(char[][] b, int row, int col){
+		return b[col][row];
+	}
+	
+	protected final static void put(char[][] b, int row, int col, char c){
+		b[col][row] = c;
+	}
+	
+	protected final static C4Piece get(C4Piece[][] b, int row, int col){
+		return b[col][row];
+	}
+	
+	protected final static void put(C4Piece[][] b, int row, int col, C4Piece c){
+		b[col][row] = c;
+	}
 }

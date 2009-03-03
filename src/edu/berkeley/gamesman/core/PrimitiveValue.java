@@ -7,21 +7,21 @@ package edu.berkeley.gamesman.core;
  */
 public enum PrimitiveValue {
 	/**
-	 * This value hasn't been computed yet
-	 */
-	Undecided(3),
-	/**
-	 * The next player to move will win in perfect play
-	 */
-	Win(2),
-	/**
 	 * The next player to move will lose even playing perfectly
 	 */
 	Lose(0),
 	/**
 	 * The game will eventually end in a tie
 	 */
-	Tie(1);
+	Tie(1),
+	/**
+	 * The next player to move will win in perfect play
+	 */
+	Win(2),
+	/**
+	 * This value hasn't been computed yet
+	 */
+	Undecided(3);
 
 	private int value;
 

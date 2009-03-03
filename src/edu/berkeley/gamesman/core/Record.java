@@ -8,6 +8,7 @@ import java.io.LineNumberReader;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
@@ -184,8 +185,7 @@ public final class Record {
 	// //return (maxbits + 7) / 8;
 	// }
 	/**
-	 * @param conf
-	 *            a Configuration
+	 * @param conf a Configuration
 	 * @return the length of any record created with the specified Configuration
 	 */
 	// public static int length(final Configuration conf){
@@ -199,6 +199,7 @@ public final class Record {
 	 */
 	public final void set(final RecordFields field, final long value) {
 		fieldValues[sf.get(field).car] = value;
+		Util.debug(DebugFacility.Record,"Record sets "+field+" to "+value);
 	}
 
 	/**
@@ -208,6 +209,7 @@ public final class Record {
 	 * @return the value of that field
 	 */
 	public final long get(final RecordFields field) {
+		Util.debug(DebugFacility.Record,"Record gets "+field+" as "+fieldValues[sf.get(field).car]);
 		return fieldValues[sf.get(field).car];
 	}
 	
@@ -308,6 +310,7 @@ public final class Record {
 
 	public String toString() {
 		StringBuilder b = new StringBuilder();
+		//System.out.println(Arrays.toString(fieldValues));
 		for (int fieldnum = 0; fieldnum < fieldValues.length; fieldnum++) {
 			if (sf.get(RecordFields.Value).car == fieldnum)
 				b.append(PrimitiveValue.values()[(int) fieldValues[fieldnum]]);

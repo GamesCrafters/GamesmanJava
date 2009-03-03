@@ -15,9 +15,7 @@ import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
 /**
- * Connect 4! Boards are stored in row-major format, bottom row first e.g O XX
- * 
- * is [[xo][x ]]
+ * Connect 4!
  * 
  * @author Steven Schlansker
  */
@@ -69,10 +67,10 @@ public class Connect4 extends TieredGame<C4Board> {
 	@Override
 	public String displayState(C4Board pos) {
 		String s = stateToString(pos);
-		StringBuilder str = new StringBuilder(s.length() + 3 * pos.height());
-		for (int row = pos.height() - 1; row >= 0; row--) {
+		StringBuilder str = new StringBuilder(s.length() + 3 * gameHeight);
+		for (int row = gameHeight - 1; row >= 0; row--) {
 			str.append('|');
-			str.append(s.substring(row * pos.width(), (row + 1) * pos.width()));
+			str.append(s.substring(row * gameWidth, (row + 1) * gameWidth));
 			str.append("|\n");
 		}
 		return str.toString();
@@ -95,7 +93,7 @@ public class Connect4 extends TieredGame<C4Board> {
 	public String stateToString(C4Board pos) {
 		char[] state = new char[gameWidth * gameHeight];
 		for (int row = 0; row < gameHeight; row++) {
-			for (int col = 0; col < gameHeight; col++) {
+			for (int col = 0; col < gameWidth; col++) {
 				state[Util.index(row, col, gameWidth)] = pos.get(row, col)
 						.toChar();
 			}

@@ -1,0 +1,12 @@
+gamesman.game = Connect4
+gamesman.game.width = 2
+gamesman.game.height = 2
+gamesman.debug.Database = 1
+gamesman.debug.Game = 1
+gamesman.debug.Solver = 1
+gamesman.debug.Record = 1
+connect4.pieces = 2
+gamesman.hasher = PerfectConnect4Hash
+gamesman.solver = TierSolver
+gamesman.db.uri = file:///tmp/database2.db
+gamesman.database = FileDatabase

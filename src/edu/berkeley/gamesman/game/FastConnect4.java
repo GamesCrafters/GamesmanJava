@@ -46,8 +46,7 @@ public class FastConnect4 extends TieredIterGame {
 
 	@Override
 	public String describe() {
-		// TODO Auto-generated method stub
-		return null;
+		return "FastConnect4: "+getGameWidth()+"x"+getGameHeight()+" "+piecesToWin+" to win.";
 	}
 
 	@Override

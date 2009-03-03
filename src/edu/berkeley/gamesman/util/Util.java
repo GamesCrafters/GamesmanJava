@@ -155,13 +155,13 @@ public final class Util {
 	 * Convenience function to calculate linear offset for two dimensional
 	 * coordinates
 	 * 
-	 * @param x X position
-	 * @param y Y position
+	 * @param row row position
+	 * @param col col position
 	 * @param w Board width
 	 * @return Linear offset into 1-d array
 	 */
-	public static int index(int x, int y, int w) {
-		return x + y * w;
+	public static int index(int row, int col, int w) {
+		return col + row * w;
 	}
 
 	/**
