@@ -63,8 +63,11 @@ public class DatabaseDump {
 			attrs.put("color",color);
 			attrs.put("fontname","courier");
 			
-			if(!gm.primitiveValue(parent).equals(PrimitiveValue.Undecided))
+			PrimitiveValue pv = gm.primitiveValue(parent);
+			if(!pv.equals(PrimitiveValue.Undecided))
 				attrs.put("style","filled");
+			
+			Util.assertTrue(pv.equals(PrimitiveValue.Undecided) || pv.equals(v), "Primitive values don't match!");
 			
 			w.print("\th"+i+" [ ");
 			boolean didOne = false;

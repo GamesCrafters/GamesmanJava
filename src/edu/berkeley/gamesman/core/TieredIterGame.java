@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import edu.berkeley.gamesman.game.connect4.ItergameState;
 import edu.berkeley.gamesman.util.Pair;
 
 /**

@@ -3,9 +3,9 @@ package edu.berkeley.gamesman.hasher;
 import java.math.BigInteger;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.ItergameState;
 import edu.berkeley.gamesman.core.TieredHasher;
 import edu.berkeley.gamesman.core.TieredIterGame;
+import edu.berkeley.gamesman.game.connect4.ItergameState;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 

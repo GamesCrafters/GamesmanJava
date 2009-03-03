@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.core;
+package edu.berkeley.gamesman.game.connect4;
 
 import java.math.BigInteger;
 
@@ -31,10 +31,5 @@ public class ItergameState extends Pair<Integer, BigInteger> {
 	public BigInteger hash() {
 		return cdr;
 	}
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 5037120076970031108L;
 
 }
