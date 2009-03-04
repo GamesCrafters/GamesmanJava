@@ -135,7 +135,7 @@ public final class Gamesman {
 				conf.setGame(gm);
 				Hasher<?> ha = Util.checkedCast(h.getConstructors()[0].newInstance(conf));
 				conf.setHasher(ha);
-				conf.setStoredFields(EnumSet.of(RecordFields.Value));
+				conf.setStoredFields(EnumSet.of(RecordFields.Value,RecordFields.Remoteness));
 				gm.prepare();
 				m.initialize(conf, s, d);
 			} catch (Exception e){

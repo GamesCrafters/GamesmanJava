@@ -1,9 +1,11 @@
 package edu.berkeley.gamesman.solver;
 
+import java.io.EOFException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import edu.berkeley.gamesman.core.Configuration;
@@ -46,47 +48,67 @@ public class TopDownSolver extends Solver {
 		}
 
 		public void conquer() {
-			HashMap<T, BigInteger> cache = new HashMap<T, BigInteger>();
+			//HashMap<T, BigInteger> cache = new HashMap<T, BigInteger>();
+			HashSet<BigInteger> seen = new HashSet<BigInteger>();
 			
 			List<T> workList = new ArrayList<T>();
 			ArrayList<Record> recs = new ArrayList<Record>();
-			for (T s : game.startingPositions()) workList.add(s);
-			next: while(!workList.isEmpty()){
+			for (T s : game.startingPositions()) {
+				workList.add(s);
+				seen.add(game.stateToHash(s));
+			}
+			while(!workList.isEmpty()){
 				recs.clear();
 				T state = workList.remove(workList.size()-1);
 				Collection<Pair<String,T>> children = game.validMoves(state);
 				//TODO - shouldn't these lines use the displayState method in game? --Jeremy
-				Util.debug(DebugFacility.Solver,"Looking at state"+state);
-				Util.debug(DebugFacility.Solver,"Worklist is now "+workList);
+				Util.debug(DebugFacility.Solver,"Looking at state "+game.stateToString(state));
+				Util.debug(DebugFacility.Solver,"Worklist is now "+Util.mapStateToString(game,workList));
+				
+				long insertBefore = -1;
+				
 				for(Pair<String,T> child : children){
-					BigInteger loc = cache.get(child.cdr);
+					BigInteger loc = game.stateToHash(child.cdr);
 					Record r;
-					if(loc == null){
-						loc = game.stateToHash(child.cdr);
-						cache.put(child.cdr,loc);
-						workList.add(state);
+					if(!seen.contains(loc)){
+						seen.add(loc);
+						
+						insertBefore = seen.size();
+						Util.debug(DebugFacility.Solver,"Not seen child state "+game.stateToString(child.cdr)+" before, coming back later...");
+						
 						workList.add(child.cdr);
-						continue next;
+						continue;
 					}
+					try{ //TODO: make databases do something nicer than throw EOFExceptions
 					r = database.getRecord(loc);
 					if(r.get(RecordFields.Value) == PrimitiveValue.Undecided.value()){
-						workList.add(state);
+						insertBefore = seen.size();
 						workList.add(child.cdr);
-						continue next;
+						continue;
 					}
 					recs.add(r);
+					}catch(Util.FatalError e){ // Hope this is an EOFException!
+						continue;
+					}
 				}
+				
+				if(insertBefore != -1){
+					Util.debug(DebugFacility.Solver,"One of the children hasn't been solved yet, revisiting "+game.stateToString(state)+" later");
+					workList.add(0, state);
+					continue;
+				}
+				
 				BigInteger loc = game.stateToHash(state);
 				Record next;
-				if(children.isEmpty()){
-					PrimitiveValue prim = game.primitiveValue(state);
-					Util.debug(DebugFacility.Solver,"Getting primitive value for state "+state+": "+prim);
+				PrimitiveValue prim = game.primitiveValue(state);
+				if((!prim.equals(PrimitiveValue.Undecided)) || children.isEmpty()){
+					Util.debug(DebugFacility.Solver,"Getting primitive value for state "+game.stateToString(state)+": "+prim);
 					next = new Record(conf,prim);
 				}else{
 					next = Record.combine(conf, recs);
 				}
 				database.putRecord(loc, next);
-				Util.debug(DebugFacility.Solver,"Solved state "+game.displayState(state)+" to "+next);
+				Util.debug(DebugFacility.Solver,"Solved state \n"+game.displayState(state)+" to "+next);
 			}
 		}
 

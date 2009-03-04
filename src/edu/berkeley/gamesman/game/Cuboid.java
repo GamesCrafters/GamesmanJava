@@ -119,7 +119,8 @@ public class Cuboid extends Game<CubeState> {
 	}
 
 	@Override
-	public CubeState hashToState(BigInteger hash) {
+	public CubeState hashToState(final BigInteger inhash) {
+		BigInteger hash = inhash;
 		Integer[] orientations = new Integer[pieceCount];
 		int totalorient = 0;
 		for(int i = 0; i < 6; i++) {
@@ -128,7 +129,7 @@ public class Cuboid extends Game<CubeState> {
 			hash = div_rem[0];
 			totalorient += orientations[i];
 		}
-		orientations[6] = ((3-totalorient)%3);
+		orientations[6] = Util.positiveModulo((3-totalorient),3);
 		orientations[7] = 0;
 		ArrayList<Integer> pieces = new ArrayList<Integer>(pieceCount);
 		for(int i = 0; i < 7; i++) {
@@ -182,8 +183,8 @@ public class Cuboid extends Game<CubeState> {
 	@Override
 	public Collection<Pair<String, CubeState>> validMoves(CubeState pos) {
 		ArrayList<Pair<String, CubeState>> next = new ArrayList<Pair<String,CubeState>>();
-		for(int times : new int[] { 1, 3 } ) {
-			for(char face : "U".toCharArray()) {
+		for(int times : new int[] { 1 } ) {
+			for(char face : "UR".toCharArray()) {
 				Integer[] pieces = new Integer[pos.pieces.length];
 				System.arraycopy(pos.pieces, 0, pieces, 0, pieces.length);
 				Integer[] orientations = new Integer[pos.orientations.length];

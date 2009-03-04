@@ -8,12 +8,15 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.commons.codec.binary.Base64;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.Game;
 
 /**
  * Various utility functions accessible from any class
@@ -401,6 +404,14 @@ public final class Util {
 		return sb.substring(separator.length());
 	}
 	
+	public static <T> List<String> mapStateToString(Game<T> g, List<T> l){
+		ArrayList<String> out = new ArrayList<String>();
+		
+		for(T i : l)
+			out.add(g.stateToString(i));
+		return out;
+	}
+	
 	public static Iterable<BigInteger> bigIntIterator(final BigInteger lastValue) {
 		return new Iterable<BigInteger>(){
 
@@ -427,5 +438,17 @@ public final class Util {
 			}
 			
 		};
+	}
+	
+	public static long positiveModulo(long a, long b){
+		long y = a % b;
+		if(y >= 0) return y;
+		return y+b;
+	}
+	
+	public static int positiveModulo(int a, int b){
+		int y = a % b;
+		if(y >= 0) return y;
+		return y+b;
 	}
 }
