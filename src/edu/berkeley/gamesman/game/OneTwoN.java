@@ -17,8 +17,6 @@ import edu.berkeley.gamesman.util.Util;
  * @author Wesley Hart
  */
 public class OneTwoN extends TieredGame<Integer> {
-
-	private static final long serialVersionUID = -6034946489055318659L;
 	final char piece = 'X';
 	
 	static {
@@ -60,12 +58,13 @@ public class OneTwoN extends TieredGame<Integer> {
 	
 	@Override
 	public String displayState(Integer pos) {
-		StringBuilder str = new StringBuilder();
-		int i;
-		for (i = 1; i < gameHeight; i++)
-			str.append((i == pos ? piece : i) + ' ');
-		str.append((++i == pos ? piece : i) + '\n');		
-		return str.toString();
+		//StringBuilder str = new StringBuilder();
+		//int i;
+		//for (i = 1; i < gameHeight; i++)
+		//	str.append((i == pos ? piece : i) + ' ');
+		//str.append((++i == pos ? piece : i) + '\n');		
+		//return str.toString();
+		return pos.toString();
 	}
 	
 	@Override
@@ -84,7 +83,7 @@ public class OneTwoN extends TieredGame<Integer> {
 		if (primitiveValue(pos) != PrimitiveValue.Undecided)
 			return nextBoards;
 		
-		for (int move = 1; move <= gameWidth; move++)
+		for (int move = 1; move <= gameWidth && pos+move <= gameHeight; move++)
 			nextBoards.add(new Pair<String,Integer>("+"+move,pos + move));
 		
 		return nextBoards;

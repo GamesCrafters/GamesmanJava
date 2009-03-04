@@ -55,7 +55,7 @@ public class TopDownSolver extends Solver {
 				recs.clear();
 				T state = workList.remove(workList.size()-1);
 				Collection<Pair<String,T>> children = game.validMoves(state);
-				Util.debug(DebugFacility.Solver,"Looking at state"+state);
+				Util.debug(DebugFacility.Solver,"Looking at state "+state);
 				Util.debug(DebugFacility.Solver,"Worklist is now "+workList);
 				for(Pair<String,T> child : children){
 					BigInteger loc = cache.get(child.cdr);

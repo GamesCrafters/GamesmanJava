@@ -1,0 +1,8 @@
+gamesman.game = OneTwoN
+gamesman.hasher = OneTwoNHasher
+gamesman.solver = TopDownSolver
+gamesman.db.uri = file:///tmp/1210.db
+gamesman.database = FileDatabase
+#gamesman.debug.Solver = 1
+#gamesman.debug.Hasher = 1
+#gamesman.debug.Game = 1

@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.TieredHasher;
 import edu.berkeley.gamesman.util.Pair;
+import edu.berkeley.gamesman.util.Util;
 
 public class OneTwoNHasher extends TieredHasher<Integer> {
 	
@@ -28,19 +29,20 @@ public class OneTwoNHasher extends TieredHasher<Integer> {
 
 	@Override
 	public Integer gameStateForTierAndOffset(int tier, BigInteger index) {
-		return tier + 1;
-		
+		Util.assertTrue(index.equals(BigInteger.ZERO), "Index must always be 0");
+		return tier;
 	}
 
 	@Override
 	public int numberOfTiers() {
-		return gameHeight;
+		return gameHeight+1;
 	}
 	
 	@Override
 	public Pair<Integer, BigInteger> tierIndexForState(Integer state) {
-		return new Pair<Integer, BigInteger>(state / gameWidth, 
-				new BigInteger(String.valueOf(state % gameWidth)));
+		//return new Pair<Integer, BigInteger>(state / gameWidth, 
+		//		new BigInteger(String.valueOf(state % gameWidth)));
+		return new Pair<Integer, BigInteger>(state,BigInteger.ZERO);
 	}
 
 	@Override
