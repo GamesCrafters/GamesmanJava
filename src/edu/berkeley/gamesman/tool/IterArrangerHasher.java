@@ -27,7 +27,8 @@ import edu.berkeley.gamesman.util.Pair;
  * 6 possible moves at positions 2, 3, 4, 6, 7, and 8
  * 
  * While this is not ideally suited to Connect Four, it's not too difficult to
- * implement.  Reduce all space
+ * implement.  Reduce all space above an unfilled column to just one and then
+ * implement the necessary math in the caller
  * 
  * @author DNSpies
  */
