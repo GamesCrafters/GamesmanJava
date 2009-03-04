@@ -8,9 +8,28 @@ import java.util.LinkedList;
 import edu.berkeley.gamesman.util.Pair;
 
 /**
- * @author DNSpies Given a string of X's, O's, and spaces, iterates over all
- *         rearrangements of X's and O's and finds all hash values when X's/O's
- *         are inserted in the spaces.
+ * Given a string of X's, O's, and spaces, iterates over all rearrangements of
+ * X's and O's and finds all hash values when X's/O's are inserted in the
+ * spaces.
+ * This class is most ideally suited for tiered games such as Tic Tac Toe or
+ * hex, in which there are a set number of spaces; all of which are available
+ * until a player plays in them. For instance, a tic tac toe board might be
+ * passed as such: ("T   T   T",2,1). The board will be initialized to:
+ * |O  |
+ * | O |
+ * |  X|
+ * and iterate over
+ * |O  |	 |X  |
+ * | X | and | O |
+ * |  O|	 |  O|
+ * 
+ * In each scenario, getChildren('X') will return 6 pairs; one for each of x's
+ * 6 possible moves at positions 2, 3, 4, 6, 7, and 8
+ * 
+ * While this is not ideally suited to Connect Four, it's not too difficult to
+ * implement.  Reduce all space
+ * 
+ * @author DNSpies
  */
 public final class IterArrangerHasher {
 	private static final class HashPiece {
@@ -228,13 +247,13 @@ public final class IterArrangerHasher {
 		BigInteger move = hash;
 		if (player == 'O')
 			for (int i = groups.length - 2; i >= 0; i--) {
-				result.add(new Pair<Integer, BigInteger>(i, move
+				result.add(new Pair<Integer, BigInteger>(groups[i].empty, move
 						.add(groups[i].lastPiece.nextO)));
 				move = move.add(groups[i].addO);
 			}
 		else if (player == 'X')
 			for (int i = groups.length - 2; i >= 0; i--) {
-				result.add(new Pair<Integer, BigInteger>(i, move));
+				result.add(new Pair<Integer, BigInteger>(groups[i].empty, move));
 				move = move.add(groups[i].addX);
 			}
 		return result;
@@ -248,38 +267,52 @@ public final class IterArrangerHasher {
 	}
 
 	/**
-	 * Iterate to next arrangement.
+	 * Each time next() is called, the pieces assume their new positions in the
+	 * next hash and a list of all the pieces that were changed is returned.
+	 * It's expected that the calling program will use this list to speed up
+	 * win-checking (if possible).
+	 * 
+	 * @return The indices of all the pieces that were changed paired with the
+	 *         characters they were changed to
 	 */
-	public void next() {
+	public Collection<Pair<Integer, Character>> next() {
+		ArrayList<Pair<Integer, Character>> changedPieces = new ArrayList<Pair<Integer, Character>>(
+				2 * Math.min(openO - 1, openX) + 2);
 		int piece = -1;
 		piece = nextPiece(piece);
 		int i;
 		HashPiece lastPiece = null;
 		if (openX > 0 && openO > 1) {
 			for (i = 0; i < openO - 1; i++) {
+				if (get(piece) == 'X')
+					changedPieces.add(new Pair<Integer, Character>(piece, 'O'));
 				pieces[piece].set(i + 1, BigInteger.ZERO, 'O');
 				lastPiece = pieces[piece];
 				piece = nextPiece(piece);
 			}
 			for (i = 0; i < openX; i++) {
+				if (get(piece) == 'O')
+					changedPieces.add(new Pair<Integer, Character>(piece, 'X'));
 				pieces[piece].set(openO - 1, lastPiece.nextX, 'X');
 				lastPiece = pieces[piece];
 				piece = nextPiece(piece);
 			}
-		} else if(openX == 0 && openO ==1){
-			lastPiece=null;
-		}else{
-			for (i = 0; i < openX+openO-2; i++)
+		} else if (openX == 0 && openO == 1) {
+			lastPiece = null;
+		} else {
+			for (i = 0; i < openX + openO - 2; i++)
 				piece = nextPiece(piece);
 			lastPiece = pieces[piece];
 			piece = nextPiece(piece);
 		}
-		if(lastPiece==null)
-			pieces[piece].set(openO-1, BigInteger.ONE, 'X');
+		changedPieces.add(new Pair<Integer,Character>(piece, 'X'));
+		if (lastPiece == null)
+			pieces[piece].set(openO - 1, BigInteger.ONE, 'X');
 		else
 			pieces[piece].set(openO - 1, lastPiece.nextX, 'X');
 		lastPiece = pieces[piece];
 		piece = nextPiece(piece);
+		changedPieces.add(new Pair<Integer,Character>(piece, 'O'));
 		pieces[piece].set(openO, lastPiece.nextO, 'O');
 		if (openO > 1) {
 			openX = 0;
@@ -290,22 +323,23 @@ public final class IterArrangerHasher {
 			while (get(piece) == 'O') {
 				openO++;
 				piece = nextPiece(piece);
-				if (piece == -1){
+				if (piece == -1) {
 					hasNext = false;
 					break;
 				}
 			}
 		}
 		hash = hash.add(BigInteger.ONE);
+		return changedPieces;
 	}
-	
-	private int nextPiece(int piece){
+
+	private int nextPiece(int piece) {
 		piece++;
-		if(piece >= pieces.length)
+		if (piece >= pieces.length)
 			return -1;
-		while(pieces[piece]==null){
+		while (pieces[piece] == null) {
 			piece++;
-			if(piece >= pieces.length)
+			if (piece >= pieces.length)
 				return -1;
 		}
 		return piece;
@@ -319,19 +353,7 @@ public final class IterArrangerHasher {
 		return pieces[piece].player;
 	}
 
-	private HashPiece getPiece(int group, int piece) {
-		return groups[group].getPiece(piece);
-	}
-
-	/**
-	 * @param group The group the piece is in
-	 * @param piece The piece number within that group
-	 * @return 'X' or 'O' (depending on the piece)
-	 */
-	public char get(int group, int piece) {
-		return getPiece(group, piece).player;
-	}
-
+	@Override
 	public String toString() {
 		char[] p = new char[pieces.length];
 		for (int i = 0; i < pieces.length; i++) {
@@ -341,21 +363,5 @@ public final class IterArrangerHasher {
 				p[i] = pieces[i].player;
 		}
 		return String.valueOf(p);
-	}
-
-	public static void main(String[] args) {
-		try {
-			IterArrangerHasher iah = new IterArrangerHasher(new String(
-					"XOX XOO XX ").toCharArray());
-			System.out.println(iah + "," + iah.hash);
-			System.out.println(iah.getChildren('X'));
-			while (iah.hasNext()) {
-				iah.next();
-				System.out.println(iah + "," + iah.hash);
-				System.out.println(iah.getChildren('X'));
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 }
