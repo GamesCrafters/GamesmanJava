@@ -56,7 +56,7 @@ public final class LocalMaster implements Master,TaskFactory {
 	}
 	
 	public void run() {
-		System.out.println("Launched!");
+		System.err.println("Launched!");
 		int threads = Integer.parseInt(conf.getProperty("gamesman.threads","1"));
 		Util.debug(DebugFacility.Master,"Launching "+threads+" threads...");
 		List<WorkUnit> list = solver.prepareSolve(conf,game).divide(threads);
@@ -76,7 +76,7 @@ public final class LocalMaster implements Master,TaskFactory {
 			}catch (InterruptedException e) {
 				Util.warn("Interrupted while joined on thread "+t);
 			}
-		//System.out.println(myThreads);
+		//System.err.println(myThreads);
 		database.close();
 		Util.debug(DebugFacility.Master, "Finished master run");
 	}
@@ -104,7 +104,7 @@ public final class LocalMaster implements Master,TaskFactory {
 		}
 		@Override
 		public void complete() {
-			System.out.println("\nCompleted task "+name+" in "+Util.millisToETA(System.currentTimeMillis()-start)+".");
+			System.err.println("\nCompleted task "+name+" in "+Util.millisToETA(System.currentTimeMillis()-start)+".");
 		}
 		@Override
 		public void update() {
@@ -112,7 +112,7 @@ public final class LocalMaster implements Master,TaskFactory {
 			double thousandpct = completed.doubleValue() / (total.doubleValue()/100000);
 			double pct = thousandpct/1000;
 			long totalMillis = (long)((double)elapsedMillis * 100 / pct);
-			System.out.print("Task: "+name+", "+String.format("%4.02f",pct)+"% ETA "+Util.millisToETA(totalMillis-elapsedMillis)+" remains\r");
+			System.err.print("Task: "+name+", "+String.format("%4.02f",pct)+"% ETA "+Util.millisToETA(totalMillis-elapsedMillis)+" remains\r");
 		}
 	}
 	

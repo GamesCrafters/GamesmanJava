@@ -15,15 +15,22 @@ import edu.berkeley.gamesman.core.Solver;
 import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
+import edu.berkeley.gamesman.util.Task;
 import edu.berkeley.gamesman.util.Util;
 
+/**
+ * A solver designed with puzzles in mind that will do a breadth first
+ * search from all of the starting positions until every reachable position
+ * has been hit. It is assumed that every starting position is a WIN and that
+ * the puzzle is reversible.
+ * @author Patrick Horn (with Jeremy Fleischman watching)
+ */
 public class BreadthFirstSolver extends Solver {
 
 	Configuration conf;
 
 	@Override
 	public WorkUnit prepareSolve(Configuration config, Game<Object> game) {
-		// TODO Auto-generated method stub
 		conf = config;
 		int maxRemoteness = Integer.parseInt(conf.getProperty("gamesman.solver.maxRemoteness", "-1"));
 		if (maxRemoteness <= 0) {
@@ -56,11 +63,10 @@ public class BreadthFirstSolver extends Solver {
 				numPositionsInLevel = numPositionsInLevel.add(BigInteger.ONE);
 			}
 			int remoteness = 0;
-			System.out.println(maxRemoteness);
+			Task solveTask = Task.beginTask(String.format("BFS solving \"%s\"", game.describe()));
+			solveTask.setTotal(maxHash);
+			solveTask.setProgress(0);
 			while (!numPositionsInLevel.equals(BigInteger.ZERO) && remoteness < maxRemoteness) {
-				numPositionsSeen = numPositionsSeen.add(numPositionsInLevel); 
-				double percentage = numPositionsSeen.multiply(BigInteger.valueOf(10000)).divide(maxHash).doubleValue()/100.;
-				Util.debug(DebugFacility.Solver, "Solving remoteness "+remoteness+"; "+numPositionsSeen+"/"+maxHash+" ("+percentage+"%)");
 				numPositionsInLevel = BigInteger.ZERO;
 				for (BigInteger hash : Util.bigIntIterator(maxHash)) {
 					if (seen.contains(hash)) {
@@ -69,20 +75,24 @@ public class BreadthFirstSolver extends Solver {
 							for (Pair<String,T> child : game.validMoves(game.hashToState(hash))) {
 								BigInteger childhash = game.stateToHash(child.cdr);
 								if (!seen.contains(childhash)) {
-									//System.out.println(child.car+": "+game.displayState(child.cdr));
 									Record childrec = new Record(conf, PrimitiveValue.Win);
 									childrec.set(RecordFields.Remoteness, remoteness + 1);
 									database.putRecord(childhash, childrec);
 									seen.add(childhash);
 									numPositionsInLevel = numPositionsInLevel.add(BigInteger.ONE);
+									numPositionsSeen = numPositionsSeen.add(BigInteger.ONE);
+									if(numPositionsSeen.remainder(BigInteger.valueOf(100000)).equals(BigInteger.ZERO))
+										solveTask.setProgress(numPositionsSeen);
 								}
 							}
 						}
 					}
 				}
 				remoteness += 1;
+				Util.debug(DebugFacility.Solver, "Number of states at remoteness " + remoteness + ": " + numPositionsInLevel);
 			}
-			Util.debug(DebugFacility.Solver, "Solving finished!!! Max remoteness is "+(remoteness-1)+" total positions seen = "+numPositionsSeen);
+			solveTask.complete();
+			Util.debug(DebugFacility.Solver, "Solving finished!!! Max remoteness is "+(remoteness-1)+". Total positions seen = "+numPositionsSeen);
 		}
 
 		public List<WorkUnit> divide(int num) {
