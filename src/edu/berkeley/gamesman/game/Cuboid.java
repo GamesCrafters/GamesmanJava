@@ -184,7 +184,7 @@ public class Cuboid extends Game<CubeState> {
 	public Collection<Pair<String, CubeState>> validMoves(CubeState pos) {
 		ArrayList<Pair<String, CubeState>> next = new ArrayList<Pair<String,CubeState>>();
 		for(int times : new int[] { 1 } ) {
-			for(char face : "UR".toCharArray()) {
+			for(char face : "UFR".toCharArray()) {
 				Integer[] pieces = new Integer[pos.pieces.length];
 				System.arraycopy(pos.pieces, 0, pieces, 0, pieces.length);
 				Integer[] orientations = new Integer[pos.orientations.length];
