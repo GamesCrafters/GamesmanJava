@@ -61,6 +61,19 @@ public abstract class Game<State> {
 	public abstract Collection<Pair<String,State>> validMoves(State pos);
 	
 	/**
+	 * @param pos
+	 * @param move
+	 * @return
+	 */
+	public State doMove(State pos, String move) {
+		for(Pair<String, State> next : validMoves(pos)) {
+			if(next.car.equals(move))
+				return next.cdr;
+		}
+		return null;
+	}
+	
+	/**
 	 * Given a board state return its primitive "value".
 	 * Usually this value includes WIN, LOSE, and perhaps TIE
 	 * Return UNDECIDED if this is not a primitive state
