@@ -40,11 +40,28 @@ public class DatabaseDump<S> {
 	private final Database db;
 	private final Game<S> gm;
 	private final boolean pruneInvalid;
-	private DatabaseDump(boolean pruneInvalid, PrintWriter w, Database db, Game<S> gm) {
+	/**
+	 * @param conf
+	 */
+	public DatabaseDump(Configuration conf) {
+		Database db = new FileDatabase();
+		db.initialize(conf.getPropertyWithPrompt("gamesman.db.uri"), null);
+		
+		String dottyFile = conf.getPropertyWithPrompt("gamesman.dotty.uri");
+		PrintWriter w = null;
+		try {
+			w = new PrintWriter(new FileWriter(new File(new URI(dottyFile))));
+		} catch(URISyntaxException e) {
+			Util.fatalError("Invalid URI: " + dottyFile, e);
+		} catch(IOException e) {
+			Util.fatalError("Could not open URI: " + dottyFile, e);
+		}
+		
+		Game<S> gm = Util.checkedCast(db.getConfiguration().getGame());
+		pruneInvalid = conf.getProperty("gamesman.dotty.prune", null) != null;
 		this.w = w;
 		this.db = db;
 		this.gm = gm;
-		this.pruneInvalid = pruneInvalid;
 	}
 	
 	private void dump() {
@@ -117,23 +134,10 @@ public class DatabaseDump<S> {
 	 * @param args
 	 * @throws IOException 
 	 */
-	public static <S> void main(String[] args) throws IOException {
+	public static <S> void main(String[] args) {
 		Configuration conf = new Configuration(System.getProperties());
 		if(args.length > 0)
 			conf.addProperties(args[0]);
-		Database db = new FileDatabase();
-		db.initialize(conf.getPropertyWithPrompt("gamesman.db.uri"), null);
-		
-		String dottyFile = conf.getPropertyWithPrompt("gamesman.dotty.uri");
-		PrintWriter w = null;
-		try {
-			w = new PrintWriter(new FileWriter(new File(new URI(dottyFile))));
-		} catch (URISyntaxException e) {
-			Util.fatalError("Could not open URI: " + dottyFile, e);
-		}
-		
-		Game<S> gm = Util.checkedCast(db.getConfiguration().getGame());
-		boolean prune = conf.getProperty("gamesman.dotty.prune", null) != null;
-		new DatabaseDump<S>(prune, w, db, gm).dump();
+		new DatabaseDump<S>(conf).dump();
 	}
 }

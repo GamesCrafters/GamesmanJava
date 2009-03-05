@@ -172,7 +172,7 @@ public class Cuboid extends Game<CubeState> {
 	@Override
 	public Collection<Pair<String, CubeState>> validMoves(CubeState pos) {
 		ArrayList<Pair<String, CubeState>> next = new ArrayList<Pair<String,CubeState>>();
-		for(int times : new int[] { 1 } ) {
+		for(int times : new int[] { 1, 3 } ) {
 			for(char face : "FUR".toCharArray()) {
 				Integer[] pieces = pos.pieces.clone();
 				Integer[] orientations = pos.orientations.clone();

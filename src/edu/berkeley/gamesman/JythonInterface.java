@@ -11,9 +11,8 @@ public final class JythonInterface {
 	 */
 	public static void main(String[] args) {
 		PythonInterpreter pi = new PythonInterpreter();
-		pi.exec("from edu.berkeley.gamesman.util import Util");
-		pi.exec("Util.warn(\"testing!\")");
-		pi.exec("print \"hi!\"");
+		//this will let us put .py files in the junk directory, and things will just work =)
+		pi.exec(String.format("import sys; sys.path.append('%s/%s')", System.getProperty("user.dir"), "junk"));
 
 		InteractiveConsole rc = null;
 		try {
