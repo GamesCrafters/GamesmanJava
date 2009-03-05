@@ -4,7 +4,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Properties;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Game;
@@ -55,16 +54,6 @@ public class Cuboid extends Game<CubeState> {
 	@Override
 	public String displayState(CubeState pos) {
 		return pos.toString();
-	}
-
-	public static void main(String[] args) {
-		Cuboid cube = new Cuboid(new Configuration(new Properties()));
-		Collection<Pair<String, CubeState>> moves = cube.validMoves(new CubeState());
-		for(Pair<String, CubeState> move : moves) {
-			System.out.println(move.car + " " + cube.stateToHash(move.cdr));
-			System.out.println(cube.hashToState(cube.stateToHash(move.cdr)));
-			return;
-		}
 	}
 
 	@Override

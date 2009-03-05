@@ -45,7 +45,7 @@ public class BreadthFirstSolver extends Solver {
 		final private Database database;
 		final private int maxRemoteness;
 		
-		BreadthFirstWorkUnit (Game<T> g, Database db, int maxRemoteness) {
+		BreadthFirstWorkUnit(Game<T> g, Database db, int maxRemoteness) {
 			game = g;
 			database = db;
 			this.maxRemoteness = maxRemoteness;
