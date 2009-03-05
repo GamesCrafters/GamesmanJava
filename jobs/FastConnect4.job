@@ -1,9 +1,9 @@
-gamesman.game = FastConnect4
+gamesman.game = IAHConnect4
 gamesman.game.width = 4
 gamesman.game.height = 4
 gamesman.hasher = TieredItergameHasher
 gamesman.solver = TierItergameSolver
-gamesman.database = FileDatabase
+gamesman.database = MemoryDatabase
 gamesman.db.uri = file:///tmp/fastdatabase4.db
 gamesman.database = FileDatabase
 

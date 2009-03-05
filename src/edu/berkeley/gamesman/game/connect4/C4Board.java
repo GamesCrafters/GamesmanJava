@@ -69,10 +69,10 @@ public final class C4Board {
 	 * @param columnHeights The respective heights of each column as ints
 	 */
 	public C4Board(C4Piece[][] state, C4Piece turn, int[] columnHeights) {
-		this(state, turn, addWrappers(columnHeights));
+		this(state, turn, addIntWrappers(columnHeights));
 	}
 
-	private static Integer[] addWrappers(int[] columnHeights) {
+	private static Integer[] addIntWrappers(int[] columnHeights) {
 		Integer[] ch = new Integer[columnHeights.length];
 		for (int i = 0; i < columnHeights.length; i++) {
 			ch[i] = columnHeights[i];

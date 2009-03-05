@@ -4,11 +4,11 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import edu.berkeley.gamesman.core.ItergameState;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.core.TieredIterGame;
-import edu.berkeley.gamesman.game.connect4.ItergameState;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 

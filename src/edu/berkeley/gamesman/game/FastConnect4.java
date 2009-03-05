@@ -4,9 +4,9 @@ import java.math.BigInteger;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.ItergameState;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.TieredIterGame;
-import edu.berkeley.gamesman.game.connect4.ItergameState;
 import edu.berkeley.gamesman.game.connect4.OneTierC4Board;
 import edu.berkeley.gamesman.hasher.TieredItergameHasher;
 import edu.berkeley.gamesman.util.DependencyResolver;

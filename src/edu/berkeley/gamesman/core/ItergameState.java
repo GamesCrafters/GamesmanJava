@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.game.connect4;
+package edu.berkeley.gamesman.core;
 
 import java.math.BigInteger;
 
@@ -6,7 +6,6 @@ import edu.berkeley.gamesman.util.Pair;
 
 /**
  * @author DNSpies
- * Convenience class for FastConnect4
  */
 public class ItergameState extends Pair<Integer, BigInteger> {
 
