@@ -17,6 +17,8 @@ import edu.berkeley.gamesman.util.Util;
  */
 public class Cuboid extends Game<CubeState> {
 	final int WIDTH, HEIGHT, DEPTH;
+	final int[] VALID_DIRS;
+	final String[] VALID_FACES;
 	//as you look at the F face of the cuboid,
 	//     H  +-----+
 	//    T  /     /|
@@ -37,9 +39,11 @@ public class Cuboid extends Game<CubeState> {
 	 */
 	public Cuboid(Configuration conf) {
 		super(conf);
-		WIDTH = Integer.parseInt(conf.getProperty("width", "2"));
-		HEIGHT = Integer.parseInt(conf.getProperty("height", "2"));
-		DEPTH = Integer.parseInt(conf.getProperty("depth", "2"));
+		WIDTH = Integer.parseInt(conf.getProperty("gamesman.game.width", "2"));
+		HEIGHT = Integer.parseInt(conf.getProperty("gamesman.game.height", "2"));
+		DEPTH = Integer.parseInt(conf.getProperty("gamesman.game.depth", "2"));
+		VALID_FACES = conf.getProperty("gamesman.game.faces", "FUR").split(", *");
+		VALID_DIRS = Util.parseInts(conf.getProperty("gamesman.game.dirs", "1, 2").split(", *"));
 		// TODO - generalize to arbitrary cuboids!
 		// TODO should we treat a 2x2x3 as different from a 3x2x2
 		// we could require that WIDTH <= HEIGHT <= DEPTH,
@@ -48,7 +52,7 @@ public class Cuboid extends Game<CubeState> {
 
 	@Override
 	public String describe() {
-		return String.format("%dx%dx%d cuboid", WIDTH, HEIGHT, DEPTH);
+		return String.format("%dx%dx%d cuboid (legal faces: %s, legal dirs: %s)", WIDTH, HEIGHT, DEPTH, Arrays.toString(VALID_FACES), Arrays.toString(VALID_DIRS));
 	}
 
 	@Override
@@ -90,7 +94,7 @@ public class Cuboid extends Game<CubeState> {
 		BigInteger hash = BigInteger.ZERO;
 		ArrayList<Integer> pieces = new ArrayList<Integer>(Arrays.asList(state.pieces));
 		pieces.remove(pieces.size() - 1); //we don't care about the last piece because it will always be fixed
-		for(int i = 0; i < pieces.size(); i++) {
+		for(int i = 0; i < 6; i++) {
 			int pos = pieces.indexOf(i);
 			pieces.remove(pos);
 			hash = hash.add(FACTORIAL[pieces.size()].multiply(BigInteger.valueOf(pos)));
@@ -172,19 +176,19 @@ public class Cuboid extends Game<CubeState> {
 	@Override
 	public Collection<Pair<String, CubeState>> validMoves(CubeState pos) {
 		ArrayList<Pair<String, CubeState>> next = new ArrayList<Pair<String,CubeState>>();
-		for(int times : new int[] { 1, 3 } ) {
-			for(char face : "FUR".toCharArray()) {
+		for(int times : VALID_DIRS) {
+			for(String face : VALID_FACES) {
 				Integer[] pieces = pos.pieces.clone();
 				Integer[] orientations = pos.orientations.clone();
 				for(int i = 0; i < times; i++) {
-					if(face == 'F') {
+					if(face.equals("F")) {
 						cycle_pieces(0, 5, pieces);
 						cycle_pieces(0, 5, orientations);
 						orientations[0] = (orientations[0] + 2) % 3;
 						orientations[4] = (orientations[4] + 1) % 3;
 						orientations[5] = (orientations[5] + 2) % 3;
 						orientations[1] = (orientations[1] + 1) % 3;
-					} else if(face == 'U') {
+					} else if(face.equals("U")) {
 						Integer temp = pieces[0];
 						pieces[0] = pieces[2];
 						pieces[2] = pieces[3];
@@ -196,7 +200,7 @@ public class Cuboid extends Game<CubeState> {
 						orientations[2] = orientations[3];
 						orientations[3] = orientations[1];
 						orientations[1] = temp;
-					} else if(face == 'R') {
+					} else if(face.equals("R")) {
 						cycle_pieces(2, 4, pieces);
 						cycle_pieces(2, 4, orientations);
 						orientations[2] = (orientations[2] + 2) % 3;
@@ -250,7 +254,6 @@ class CubeState {
 	}
 
 	public String toString() {
-//		if(1==1) return "";
 		char[][] current_state = spit_out_colors();
 		String cube_string = "                                  __________\n";
 		cube_string += "                                 |     |    |\n";

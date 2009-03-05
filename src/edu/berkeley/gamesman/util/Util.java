@@ -451,4 +451,11 @@ public final class Util {
 		if(y >= 0) return y;
 		return y+b;
 	}
+	
+	public static int[] parseInts(String... arr) {
+		int[] ints = new int[arr.length];
+		for(int i=0; i<ints.length; i++)
+			ints[i] = Integer.parseInt(arr[i]);
+		return ints;
+	}
 }

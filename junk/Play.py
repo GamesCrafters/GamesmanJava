@@ -17,7 +17,13 @@ class GameState:
         self.state = state
         
     def __str__(self):
-        return self.game.displayState(self.state)
+        return self.game.stateToString(self.state) + " " + self.game.displayState(self.state)
+    
+    def hash(self):
+        return self.game.stateToHash(self.state)
+    
+    def unhash(self, hash):
+        return GameState(self.game, self.game.hashToState(hash))
     
     def __add__(self, move):
         nextState = self.game.doMove(self.state, move)

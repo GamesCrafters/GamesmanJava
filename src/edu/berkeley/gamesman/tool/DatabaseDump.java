@@ -7,7 +7,9 @@ import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -18,6 +20,7 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.database.FileDatabase;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
@@ -71,20 +74,32 @@ public class DatabaseDump<S> {
 		w.println("digraph gamesman_dump {");
 		w.println("\tfontname = \"Courier\";");
 		
+		//TODO - this is a nasty way of ensuring everything is on the same row
+		//there's almost definitely a better way of doing this
+		HashMap<Long, ArrayList<BigInteger>> levels = new HashMap<Long, ArrayList<BigInteger>>();
 		if(pruneInvalid) {
+			//TODO - make this work with BFS and maxRemoteness!
 			HashSet<BigInteger> seen = new HashSet<BigInteger>();
 			Queue<BigInteger> fringe = new LinkedList<BigInteger>();
 			for(S s : gm.startingPositions())
 				fringe.add(gm.stateToHash(s));
 			while(!fringe.isEmpty()) {
 				BigInteger parentHash = fringe.remove();
-				if(seen.contains(parentHash)) continue;
+				if(seen.contains(parentHash)) continue;				
 				seen.add(parentHash);
-				printNode(parentHash, seen, fringe);
+				printNode(parentHash, levels, seen, fringe);
 			}
 		} else {
 			for(BigInteger i : Util.bigIntIterator(gm.lastHash()))
-				printNode(i, null, null);
+				printNode(i, levels, null, null);
+		}
+		
+		for(Long level : levels.keySet()) {
+			w.print("{ rank=same; ");
+			for(BigInteger hash : levels.get(level)) {
+				w.print("h" + hash + "; ");
+			}
+			w.print(" };\n");
 		}
 		
 		w.println("}");
@@ -92,13 +107,22 @@ public class DatabaseDump<S> {
 		w.close();
 	}
 	
-	private void printNode(BigInteger parentHash, HashSet<BigInteger> seen, Queue<BigInteger> fringe) {
+	private void printNode(BigInteger parentHash, HashMap<Long, ArrayList<BigInteger>> levels, HashSet<BigInteger> seen, Queue<BigInteger> fringe) {
 		Util.assertTrue((seen == null) == (fringe == null), "seen and fringe must both be null or not null!");
+		
+		long remoteness = db.getRecord(parentHash).get(RecordFields.Remoteness);
+		ArrayList<BigInteger> arr = levels.get(remoteness);
+		if(arr == null) {
+			arr = new ArrayList<BigInteger>();
+			levels.put(remoteness, arr);
+		}
+		arr.add(parentHash);
+		
 		S parent = gm.hashToState(parentHash);
 		
 		TreeMap<String, String> attrs = new TreeMap<String, String>();
 		PrimitiveValue v = db.getRecord(parentHash).get();
-		attrs.put("label","<"+parentHash+"<br/>"+gm.displayState(parent).replaceAll("\n", "<br/>")+"<br/>"+v+" >");
+		attrs.put("label","<"+parentHash+"<br/>"+gm.displayState(parent).replaceAll("\n", "<br align=\"left\"/>")+"<br/>"+v+" >");
 		
 		String color = PRIMITIVE_COLORS.get(v);
 		Util.assertTrue(color != null, "No color specified for primitive value: " + v);
