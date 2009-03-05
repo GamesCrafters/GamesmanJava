@@ -1,4 +1,4 @@
-gamesman.game = IAHConnect4
+gamesman.game = RConnect4
 gamesman.game.width = 4
 gamesman.game.height = 4
 gamesman.hasher = TieredItergameHasher

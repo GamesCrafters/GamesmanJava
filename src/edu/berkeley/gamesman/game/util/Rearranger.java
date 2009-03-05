@@ -111,7 +111,7 @@ public final class Rearranger implements Cloneable{
 		final int index;
 		final int empty;
 		final HashPiece lastPiece;
-		BigInteger colHash = BigInteger.ZERO;
+		BigInteger groupHash = BigInteger.ZERO;
 		BigInteger addO = BigInteger.ZERO;
 		BigInteger addX = BigInteger.ZERO;
 
@@ -130,7 +130,7 @@ public final class Rearranger implements Cloneable{
 							lastPiece.os + 1, lastPiece.nextO, 'O', this);
 					addO = addO.add(pieces[i].nextO.subtract(pieces[i].hash));
 					addX = addX.add(pieces[i].nextX.subtract(pieces[i].hash));
-					colHash = colHash.add(pieces[i].hash);
+					groupHash = groupHash.add(pieces[i].hash);
 				} else if (s[i] == 'X')
 					pieces[i] = new HashPiece(lastPiece.index + 1, lastPiece.os,
 							lastPiece.nextX, 'X', this);
@@ -145,7 +145,7 @@ public final class Rearranger implements Cloneable{
 
 		private void setPiece(BigInteger hashChange, BigInteger addOChange,
 				BigInteger addXChange) {
-			colHash = colHash.add(hashChange);
+			groupHash = groupHash.add(hashChange);
 			addO = addO.add(addOChange);
 			addX = addX.add(addXChange);
 		}
@@ -190,7 +190,7 @@ public final class Rearranger implements Cloneable{
 				pg = new HashGroup(thisGroup.toCharArray(), lastGroup, pieces,
 						index);
 				index = pg.empty + 1;
-				hash = hash.add(pg.colHash);
+				hash = hash.add(pg.groupHash);
 				g.add(pg);
 				thisGroup = "";
 			} else {
@@ -212,7 +212,7 @@ public final class Rearranger implements Cloneable{
 		lastGroup = pg;
 		pg = new HashGroup(thisGroup.toCharArray(), lastGroup, pieces, index);
 		index = pg.empty + 1;
-		hash = hash.add(pg.colHash);
+		hash = hash.add(pg.groupHash);
 		g.add(pg);
 		thisGroup = "";
 		if (onFO)
@@ -233,6 +233,8 @@ public final class Rearranger implements Cloneable{
 		LinkedList<HashGroup> g = new LinkedList<HashGroup>();
 		numPieces = xs + os;
 		numOs = os;
+		openO = os;
+		openX = 0;
 		if(numPieces<=1)
 			hasNext=false;
 		HashGroup lastGroup;
@@ -246,7 +248,7 @@ public final class Rearranger implements Cloneable{
 				pg = new HashGroup(thisGroup.toCharArray(), lastGroup, pieces,
 						index);
 				index = pg.empty + 1;
-				hash = hash.add(pg.colHash);
+				hash = hash.add(pg.groupHash);
 				g.add(pg);
 				thisGroup = "";
 			} else {
@@ -259,11 +261,13 @@ public final class Rearranger implements Cloneable{
 				}
 			}
 		}
+		if(xs>0)
+			throw new Exception("os="+numOs+", and xs="+(numPieces-numOs)+", but frame=\n"+String.copyValueOf(s));
 		lastGroup = pg;
 		pg = new HashGroup(thisGroup.toCharArray(), lastGroup, pieces,
 				index);
 		index = pg.empty + 1;
-		hash = hash.add(pg.colHash);
+		hash = hash.add(pg.groupHash);
 		g.add(pg);
 		thisGroup = "";
 		arrangements = pg.lastPiece.nextX;
@@ -488,7 +492,11 @@ public final class Rearranger implements Cloneable{
 		try {
 			Rearranger iah = new Rearranger("TT TTT TTTT",4,5);
 			System.out.println(iah);
-			iah.unHash(BigInteger.valueOf(17));
+			while (iah.hasNext()) {
+				iah.next();
+				System.out.println(iah);
+			}
+			iah.unHash(BigInteger.valueOf(32));
 			System.out.println(iah);
 		} catch (Exception e) {
 			e.printStackTrace();

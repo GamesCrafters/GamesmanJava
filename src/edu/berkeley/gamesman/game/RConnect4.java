@@ -13,6 +13,7 @@ import edu.berkeley.gamesman.game.connect4.C4Board;
 import edu.berkeley.gamesman.game.connect4.C4Piece;
 import edu.berkeley.gamesman.game.util.Rearranger;
 import edu.berkeley.gamesman.util.Pair;
+import edu.berkeley.gamesman.util.Util;
 
 /**
  * @author DNSpies
@@ -114,9 +115,11 @@ public class RConnect4 extends TieredIterGame {
 		int colHash = 1;
 		this.tier = tier;
 		pieces.clear();
+		int numPieces = 0;
 		StringBuilder s = new StringBuilder(gameWidth * gameHeight);
 		for (int col = 0; col < gameWidth; col++) {
 			colHeights[col] = tier % (gameHeight + 1);
+			numPieces+=colHeights[col];
 			tier /= (gameHeight + 1);
 			int row;
 			for (row = 0; row < colHeights[col]; row++) {
@@ -134,14 +137,23 @@ public class RConnect4 extends TieredIterGame {
 			colHash *= gameHeight + 1;
 		}
 		try {
-			iah = new Rearranger(s.toString(), pieces.size() / 2,
-					(pieces.size() + 1) / 2);
+			iah = new Rearranger(s.toString(), numPieces / 2,
+					(numPieces + 1) / 2);
 			myBoard = new C4Board(makePieceBoard(),
-					pieces.size() % 2 == 1 ? C4Piece.BLACK : C4Piece.RED,
+					(numPieces % 2 == 1) ? C4Piece.BLACK : C4Piece.RED,
 					colHeights);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public BigInteger numHashesForTier(int tier){
+		int totPieces = 0;
+		for (int col = 0; col < gameWidth; col++) {
+			totPieces += tier % (gameHeight + 1);
+			tier /= (gameHeight + 1);
+		}
+		return BigInteger.valueOf(Util.nCr(totPieces, totPieces/2));
 	}
 
 	private C4Piece[][] makePieceBoard() {
