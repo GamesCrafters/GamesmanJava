@@ -27,7 +27,6 @@ public final class TierItergameSolver extends TierSolver<ItergameState> {
 		TieredIterGame game=Util.checkedCast(game2);
 		ItergameState state = game.hashToState(current);
 		game.setState(state);
-		System.out.println(game.stateToString());
 		while (current.compareTo(end) < 0) {
 
 			if (current.mod(BigInteger.valueOf(10000)).compareTo(

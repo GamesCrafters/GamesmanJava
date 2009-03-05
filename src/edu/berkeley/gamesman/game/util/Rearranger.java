@@ -376,14 +376,17 @@ public final class Rearranger implements Cloneable{
 		} else {
 			openX++;
 			piece = nextPiece(piece);
-			while (get(piece) == 'O') {
-				openO++;
-				piece = nextPiece(piece);
-				if (piece == -1) {
-					hasNext = false;
-					break;
+			if (piece == -1)
+				hasNext = false;
+			else
+				while (get(piece) == 'O') {
+					openO++;
+					piece = nextPiece(piece);
+					if (piece == -1) {
+						hasNext = false;
+						break;
+					}
 				}
-			}
 		}
 		hash = hash.add(BigInteger.ONE);
 		return changedPieces;
