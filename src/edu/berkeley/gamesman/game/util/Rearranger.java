@@ -491,18 +491,4 @@ public final class Rearranger implements Cloneable{
 		}
 		return toString();
 	}
-	public static void main(String[] args){
-		try {
-			Rearranger iah = new Rearranger("TT TTT TTTT",4,5);
-			System.out.println(iah);
-			while (iah.hasNext()) {
-				iah.next();
-				System.out.println(iah);
-			}
-			iah.unHash(BigInteger.valueOf(32));
-			System.out.println(iah);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
 }
