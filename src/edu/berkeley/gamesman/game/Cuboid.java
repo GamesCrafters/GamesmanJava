@@ -185,10 +185,8 @@ public class Cuboid extends Game<CubeState> {
 		ArrayList<Pair<String, CubeState>> next = new ArrayList<Pair<String,CubeState>>();
 		for(int times : new int[] { 1 } ) {
 			for(char face : "UFR".toCharArray()) {
-				Integer[] pieces = new Integer[pos.pieces.length];
-				System.arraycopy(pos.pieces, 0, pieces, 0, pieces.length);
-				Integer[] orientations = new Integer[pos.orientations.length];
-				System.arraycopy(pos.orientations, 0, orientations, 0, orientations.length);
+				Integer[] pieces = Util.copyOf(pos.pieces);
+				Integer[] orientations = Util.copyOf(pos.orientations);
 				for(int i = 0; i < times; i++) {
 					if(face == 'F') {
 						cycle_pieces(0, 5, pieces);

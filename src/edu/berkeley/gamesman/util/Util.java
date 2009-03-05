@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -438,6 +439,25 @@ public final class Util {
 			}
 			
 		};
+	}
+	
+	public static <H> H[] copyOf(H[] arr) {
+		return copyOf(arr, arr.length);
+	}
+	
+	public static <H> H[] copyOf(H[] arr, int len) {
+		int nonNullIndex = -1;
+		for(int i=0; i < arr.length; i++)
+			if(arr[i] != null) {
+				nonNullIndex = i;
+				break;
+			}
+		ArrayList<H> list = new ArrayList<H>();
+		for(int i=0; i<len; i++) list.add(null);
+		H[] copy = (H[]) list.toArray((H[]) Array.newInstance(arr[nonNullIndex].getClass(), 0));
+		for(int i=0; i<len; i++)
+			copy[i] = arr[i];
+		return copy;
 	}
 	
 	public static long positiveModulo(long a, long b){
