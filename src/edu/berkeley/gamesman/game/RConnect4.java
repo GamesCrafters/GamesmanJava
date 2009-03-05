@@ -11,26 +11,26 @@ import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.TieredIterGame;
 import edu.berkeley.gamesman.game.connect4.C4Board;
 import edu.berkeley.gamesman.game.connect4.C4Piece;
-import edu.berkeley.gamesman.tool.IterArrangerHasher;
+import edu.berkeley.gamesman.game.util.Rearranger;
 import edu.berkeley.gamesman.util.Pair;
 
 /**
  * @author DNSpies
  * Implementation of Connect 4 using the general IterArrangerHasher
  */
-public class IAHConnect4 extends TieredIterGame {
+public class RConnect4 extends TieredIterGame {
 	private final int[][] indices;
 	private final int piecesToWin;
 	private final ArrayList<Pair<Integer,Integer>> pieces;
 	private final int[] moveTiers;
 	private int tier;
 	private C4Board myBoard;
-	private IterArrangerHasher iah;
+	private Rearranger iah;
 
 	/**
 	 * @param conf The configuration object
 	 */
-	public IAHConnect4(Configuration conf){
+	public RConnect4(Configuration conf){
 		super(conf);
 		indices = new int[gameHeight][gameWidth];
 		pieces = new ArrayList<Pair<Integer, Integer>>(gameWidth * gameHeight);
@@ -39,8 +39,8 @@ public class IAHConnect4 extends TieredIterGame {
 	}
 	
 	@Override
-	public IAHConnect4 clone() {
-		IAHConnect4 other = new IAHConnect4(conf);
+	public RConnect4 clone() {
+		RConnect4 other = new RConnect4(conf);
 		if(myBoard!=null)
 			other.setToString(stateToString());
 		return other;
@@ -134,7 +134,7 @@ public class IAHConnect4 extends TieredIterGame {
 			colHash *= gameHeight + 1;
 		}
 		try {
-			iah = new IterArrangerHasher(s.toString(), pieces.size() / 2,
+			iah = new Rearranger(s.toString(), pieces.size() / 2,
 					(pieces.size() + 1) / 2);
 			myBoard = new C4Board(makePieceBoard(),
 					pieces.size() % 2 == 1 ? C4Piece.BLACK : C4Piece.RED,
@@ -188,7 +188,7 @@ public class IAHConnect4 extends TieredIterGame {
 			index++;
 		}
 		try {
-			iah = new IterArrangerHasher(iahPos.toString(), pieces.size() / 2,
+			iah = new Rearranger(iahPos.toString(), pieces.size() / 2,
 					(pieces.size() + 1) / 2);
 			myBoard = new C4Board(makePieceBoard(),
 					pieces.size() % 2 == 1 ? C4Piece.BLACK : C4Piece.RED,

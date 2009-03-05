@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.tool;
+package edu.berkeley.gamesman.game.util;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 
 import edu.berkeley.gamesman.util.Pair;
+
 
 /**
  * <p>
@@ -42,7 +43,7 @@ import edu.berkeley.gamesman.util.Pair;
  * 
  * @author DNSpies
  */
-public final class IterArrangerHasher implements Cloneable{
+public final class Rearranger implements Cloneable{
 	private static final class HashPiece {
 		final int index;
 		int os;
@@ -173,7 +174,7 @@ public final class IterArrangerHasher implements Cloneable{
 	 * @param s A character representation of the board (in 'X' 'O' and ' ')
 	 * @throws Exception If the char array contains other characters
 	 */
-	public IterArrangerHasher(final char[] s) throws Exception {
+	public Rearranger(final char[] s) throws Exception {
 		LinkedList<HashGroup> g = new LinkedList<HashGroup>();
 		HashGroup lastGroup;
 		HashGroup pg = null;
@@ -228,7 +229,7 @@ public final class IterArrangerHasher implements Cloneable{
 	 * @param xs The number of X's on the board
 	 * @throws Exception If the number of pieces in the outline is not os + xs
 	 */
-	public IterArrangerHasher(final char[] s, int os, int xs) throws Exception {
+	public Rearranger(final char[] s, int os, int xs) throws Exception {
 		LinkedList<HashGroup> g = new LinkedList<HashGroup>();
 		numPieces = xs + os;
 		numOs = os;
@@ -273,7 +274,7 @@ public final class IterArrangerHasher implements Cloneable{
 	 * @param s A character representation of the board (in 'X' 'O' and ' ')
 	 * @throws Exception If the char array contains other characters
 	 */
-	public IterArrangerHasher(String s) throws Exception {
+	public Rearranger(String s) throws Exception {
 		this(s.toCharArray());
 	}
 
@@ -284,7 +285,7 @@ public final class IterArrangerHasher implements Cloneable{
 	 * @param xs The number of X's on the board
 	 * @throws Exception If the number of pieces in the outline is not os + xs
 	 */
-	public IterArrangerHasher(String s, int os, int xs) throws Exception {
+	public Rearranger(String s, int os, int xs) throws Exception {
 		this(s.toCharArray(),os,xs);
 	}
 
@@ -432,9 +433,9 @@ public final class IterArrangerHasher implements Cloneable{
 	}
 	
 	@Override
-	public IterArrangerHasher clone(){
+	public Rearranger clone(){
 		try {
-			return new IterArrangerHasher(toString().toCharArray());
+			return new Rearranger(toString().toCharArray());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -485,7 +486,7 @@ public final class IterArrangerHasher implements Cloneable{
 	}
 	public static void main(String[] args){
 		try {
-			IterArrangerHasher iah = new IterArrangerHasher("TT TTT TTTT",4,5);
+			Rearranger iah = new Rearranger("TT TTT TTTT",4,5);
 			System.out.println(iah);
 			iah.unHash(BigInteger.valueOf(17));
 			System.out.println(iah);
