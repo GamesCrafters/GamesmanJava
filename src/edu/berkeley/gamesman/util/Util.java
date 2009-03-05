@@ -118,7 +118,7 @@ public final class Util {
 	/**
 	 * Initialize the debugging facilities based on a Configuration object.
 	 * Each facility is set by setting the property gamesman.debug.Facility
-	 * (e.g. gamesman.debug.core) to some non-null value.
+	 * (e.g. gamesman.debug.Core) to some non-null value.
 	 * @see DebugFacility
 	 * @param conf the configuration
 	 */
