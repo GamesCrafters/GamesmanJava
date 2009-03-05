@@ -55,18 +55,19 @@ public class BreadthFirstSolver extends Solver {
 			HashSet<BigInteger> seen = new HashSet<BigInteger>();
 			BigInteger maxHash = game.lastHash();
 			BigInteger numPositionsInLevel = BigInteger.ZERO;
-			BigInteger numPositionsSeen = BigInteger.ZERO;
 			for (T s : game.startingPositions()) {
 				BigInteger hash = game.stateToHash(s);
 				seen.add(hash);
 				database.putRecord(hash, new Record(conf,game.primitiveValue(s)));
 				numPositionsInLevel = numPositionsInLevel.add(BigInteger.ONE);
 			}
+			BigInteger numPositionsSeen = numPositionsInLevel;
 			int remoteness = 0;
 			Task solveTask = Task.beginTask(String.format("BFS solving \"%s\"", game.describe()));
 			solveTask.setTotal(maxHash);
 			solveTask.setProgress(0);
 			while (!numPositionsInLevel.equals(BigInteger.ZERO) && remoteness < maxRemoteness) {
+				Util.debug(DebugFacility.Solver, "Number of states at remoteness " + remoteness + ": " + numPositionsInLevel);
 				numPositionsInLevel = BigInteger.ZERO;
 				for (BigInteger hash : Util.bigIntIterator(maxHash)) {
 					if (seen.contains(hash)) {
@@ -89,7 +90,6 @@ public class BreadthFirstSolver extends Solver {
 					}
 				}
 				remoteness += 1;
-				Util.debug(DebugFacility.Solver, "Number of states at remoteness " + remoteness + ": " + numPositionsInLevel);
 			}
 			solveTask.complete();
 			Util.debug(DebugFacility.Solver, "Solving finished!!! Max remoteness is "+(remoteness-1)+". Total positions seen = "+numPositionsSeen);
