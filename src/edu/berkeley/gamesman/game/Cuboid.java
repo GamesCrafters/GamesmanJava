@@ -184,9 +184,9 @@ public class Cuboid extends Game<CubeState> {
 	public Collection<Pair<String, CubeState>> validMoves(CubeState pos) {
 		ArrayList<Pair<String, CubeState>> next = new ArrayList<Pair<String,CubeState>>();
 		for(int times : new int[] { 1 } ) {
-			for(char face : "UFR".toCharArray()) {
-				Integer[] pieces = Util.copyOf(pos.pieces);
-				Integer[] orientations = Util.copyOf(pos.orientations);
+			for(char face : "FUR".toCharArray()) {
+				Integer[] pieces = pos.pieces.clone();
+				Integer[] orientations = pos.orientations.clone();
 				for(int i = 0; i < times; i++) {
 					if(face == 'F') {
 						cycle_pieces(0, 5, pieces);
