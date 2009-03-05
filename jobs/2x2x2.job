@@ -5,4 +5,6 @@ gamesman.game.depth = 2
 gamesman.solver = BreadthFirstSolver
 gamesman.hasher = NullHasher
 gamesman.db.uri = file:///database.db
-gamesman.debug.Solver = true
+gamesman.dotty.uri = file:///database.dot
+gamesman.dotty.prune = true
+gamesman.debug.Solver = false
