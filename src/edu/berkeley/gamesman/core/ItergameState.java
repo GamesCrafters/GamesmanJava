@@ -10,6 +10,11 @@ import edu.berkeley.gamesman.util.Pair;
 public class ItergameState extends Pair<Integer, BigInteger> {
 
 	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2453498572553759443L;
+
+	/**
 	 * @param tier The tier
 	 * @param hash The hash
 	 */
