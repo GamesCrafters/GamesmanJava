@@ -43,15 +43,15 @@ import edu.berkeley.gamesman.util.Pair;
  * 
  * @author DNSpies
  */
-public final class Rearranger implements Cloneable{
+public final class PieceRearranger implements Cloneable{
 	private static final class HashPiece {
-		final int index;
-		int os;
-		char player;
-		BigInteger hash;
-		BigInteger nextO;
-		BigInteger nextX;
-		HashGroup group;
+		private final int index;
+		private int os;
+		private char player;
+		private BigInteger hash;
+		private BigInteger nextO;
+		private BigInteger nextX;
+		private HashGroup group;
 
 		protected HashPiece(int pieces, int os, BigInteger hash, char player,
 				HashGroup group) {
@@ -108,17 +108,15 @@ public final class Rearranger implements Cloneable{
 	private static final class HashGroup {
 
 		private final HashPiece[] pieces;
-		final int index;
-		final int empty;
-		final HashPiece lastPiece;
-		BigInteger groupHash = BigInteger.ZERO;
-		BigInteger addO = BigInteger.ZERO;
-		BigInteger addX = BigInteger.ZERO;
+		private final int empty;
+		private final HashPiece lastPiece;
+		private BigInteger groupHash = BigInteger.ZERO;
+		private BigInteger addO = BigInteger.ZERO;
+		private BigInteger addX = BigInteger.ZERO;
 
 		private HashGroup(char[] s, HashGroup lastGroup,
 				HashPiece[] pieceArray, int index) throws Exception {
 			pieces = new HashPiece[s.length];
-			this.index = index;
 			HashPiece lastPiece;
 			if (lastGroup == null)
 				lastPiece = new HashPiece(-1, 0, BigInteger.ZERO, 'X', this);
@@ -149,14 +147,6 @@ public final class Rearranger implements Cloneable{
 			addO = addO.add(addOChange);
 			addX = addX.add(addXChange);
 		}
-
-		protected HashPiece getPiece(int piece) {
-			return pieces[piece];
-		}
-
-		public int size() {
-			return pieces.length;
-		}
 	}
 
 	/**
@@ -174,7 +164,7 @@ public final class Rearranger implements Cloneable{
 	 * @param s A character representation of the board (in 'X' 'O' and ' ')
 	 * @throws Exception If the char array contains other characters
 	 */
-	public Rearranger(final char[] s) throws Exception {
+	public PieceRearranger(final char[] s) throws Exception {
 		LinkedList<HashGroup> g = new LinkedList<HashGroup>();
 		HashGroup lastGroup;
 		HashGroup pg = null;
@@ -229,7 +219,7 @@ public final class Rearranger implements Cloneable{
 	 * @param xs The number of X's on the board
 	 * @throws Exception If the number of pieces in the outline is not os + xs
 	 */
-	public Rearranger(final char[] s, int os, int xs) throws Exception {
+	public PieceRearranger(final char[] s, int os, int xs) throws Exception {
 		LinkedList<HashGroup> g = new LinkedList<HashGroup>();
 		numPieces = xs + os;
 		numOs = os;
@@ -278,7 +268,7 @@ public final class Rearranger implements Cloneable{
 	 * @param s A character representation of the board (in 'X' 'O' and ' ')
 	 * @throws Exception If the char array contains other characters
 	 */
-	public Rearranger(String s) throws Exception {
+	public PieceRearranger(String s) throws Exception {
 		this(s.toCharArray());
 	}
 
@@ -289,7 +279,7 @@ public final class Rearranger implements Cloneable{
 	 * @param xs The number of X's on the board
 	 * @throws Exception If the number of pieces in the outline is not os + xs
 	 */
-	public Rearranger(String s, int os, int xs) throws Exception {
+	public PieceRearranger(String s, int os, int xs) throws Exception {
 		this(s.toCharArray(),os,xs);
 	}
 
@@ -297,7 +287,7 @@ public final class Rearranger implements Cloneable{
 	 * @param player 'X' or 'O', the piece to be added to the board
 	 * @return A collection of all the hashes after each possible move is made.
 	 */
-	public Collection<Pair<Integer, BigInteger>> getChildren(char player) {
+	public ArrayList<Pair<Integer, BigInteger>> getChildren(char player) {
 		ArrayList<Pair<Integer, BigInteger>> result = new ArrayList<Pair<Integer, BigInteger>>(
 				groups.length);
 		BigInteger move = hash;
@@ -440,9 +430,9 @@ public final class Rearranger implements Cloneable{
 	}
 	
 	@Override
-	public Rearranger clone(){
+	public PieceRearranger clone(){
 		try {
-			return new Rearranger(toString().toCharArray());
+			return new PieceRearranger(toString().toCharArray());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

@@ -11,7 +11,7 @@ import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.TieredIterGame;
 import edu.berkeley.gamesman.game.connect4.C4Board;
 import edu.berkeley.gamesman.game.connect4.C4Piece;
-import edu.berkeley.gamesman.game.util.Rearranger;
+import edu.berkeley.gamesman.game.util.PieceRearranger;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -26,7 +26,7 @@ public class RConnect4 extends TieredIterGame {
 	private final int[] moveTiers;
 	private int tier;
 	private C4Board myBoard;
-	private Rearranger iah;
+	private PieceRearranger iah;
 
 	/**
 	 * @param conf The configuration object
@@ -137,7 +137,7 @@ public class RConnect4 extends TieredIterGame {
 			colHash *= gameHeight + 1;
 		}
 		try {
-			iah = new Rearranger(s.toString(), numPieces / 2,
+			iah = new PieceRearranger(s.toString(), numPieces / 2,
 					(numPieces + 1) / 2);
 			myBoard = new C4Board(makePieceBoard(),
 					(numPieces % 2 == 1) ? C4Piece.BLACK : C4Piece.RED,
@@ -200,8 +200,7 @@ public class RConnect4 extends TieredIterGame {
 			index++;
 		}
 		try {
-			iah = new Rearranger(iahPos.toString(), pieces.size() / 2,
-					(pieces.size() + 1) / 2);
+			iah = new PieceRearranger(iahPos.toString(), pieces.size() / 2, (pieces.size() + 1) / 2);
 			myBoard = new C4Board(makePieceBoard(),
 					pieces.size() % 2 == 1 ? C4Piece.BLACK : C4Piece.RED,
 					colHeights);
