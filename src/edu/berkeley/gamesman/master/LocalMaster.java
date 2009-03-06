@@ -104,7 +104,7 @@ public final class LocalMaster implements Master,TaskFactory {
 		}
 		@Override
 		public void complete() {
-			System.err.println("\nCompleted task "+name+" in "+Util.millisToETA(System.currentTimeMillis()-start)+".");
+			System.out.println("\nCompleted task "+name+" in "+Util.millisToETA(System.currentTimeMillis()-start)+".");
 		}
 		@Override
 		public void update() {
@@ -112,7 +112,7 @@ public final class LocalMaster implements Master,TaskFactory {
 			double thousandpct = completed.doubleValue() / (total.doubleValue()/100000);
 			double pct = thousandpct/1000;
 			long totalMillis = (long)((double)elapsedMillis * 100 / pct);
-			System.err.print("Task: "+name+", "+String.format("%4.02f",pct)+"% ETA "+Util.millisToETA(totalMillis-elapsedMillis)+" remains\r");
+			System.out.print("Task: "+name+", "+String.format("%4.02f",pct)+"% ETA "+Util.millisToETA(totalMillis-elapsedMillis)+" remains\r");
 		}
 	}
 	

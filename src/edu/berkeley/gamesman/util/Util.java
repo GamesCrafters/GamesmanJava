@@ -139,7 +139,7 @@ public final class Util {
 	 */
 	public static void debug(DebugFacility fac, String s) {
 		if(debugOpts.contains(fac) || debugOpts.contains(DebugFacility.All))
-			System.err.println("DEBUG "+fac+": (" + Thread.currentThread().getName() + ") " + s);
+			System.out.println("DEBUG "+fac+": (" + Thread.currentThread().getName() + ") " + s);
 	}
 
 	/**
