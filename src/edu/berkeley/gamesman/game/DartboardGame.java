@@ -175,4 +175,10 @@ public abstract class DartboardGame extends TieredIterGame {
 	public char[] pieces() {
 		return new char[] { 'X', 'O' };
 	}
+	
+	@Override
+	public int numberOfTiers() {
+		return gameHeight * gameWidth + 1;
+	}
+
 }

@@ -97,9 +97,14 @@ public final class SpaceRearranger implements Cloneable{
 				lastHash = places[i].hash;
 			}
 		}
+		if(onFPiece)
+			hasNext = false;
 		this.numPieces = numPieces;
-		arrangements = lastHash.multiply(BigInteger.valueOf(numPlaces)).divide(
-				BigInteger.valueOf(numPlaces - numPieces));
+		if (numPlaces == numPieces)
+			arrangements = BigInteger.ONE;
+		else
+			arrangements = lastHash.multiply(BigInteger.valueOf(numPlaces))
+					.divide(BigInteger.valueOf(numPlaces - numPieces));
 	}
 
 	/**
@@ -108,6 +113,8 @@ public final class SpaceRearranger implements Cloneable{
 	 */
 	public SpaceRearranger(int pieces, int spaces){
 		numPlaces = pieces + spaces;
+		if(pieces==0 || spaces == 0)
+			hasNext = false;
 		places = new HashPlace[numPlaces];
 		numPieces = pieces;
 		openPiece = pieces;
@@ -123,8 +130,11 @@ public final class SpaceRearranger implements Cloneable{
 				lastHash = places[i].hash;
 			}
 		}
-		arrangements = lastHash.multiply(BigInteger.valueOf(numPlaces)).divide(
-				BigInteger.valueOf(numPlaces - numPieces));
+		if(numPlaces == numPieces)
+			arrangements = BigInteger.ONE;
+		else
+			arrangements = lastHash.multiply(BigInteger.valueOf(numPlaces))
+					.divide(BigInteger.valueOf(numPlaces - numPieces));
 	}
 
 	/**
