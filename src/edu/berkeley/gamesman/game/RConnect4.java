@@ -8,8 +8,6 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.ItergameState;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.TieredIterGame;
-import edu.berkeley.gamesman.game.connect4.C4Board;
-import edu.berkeley.gamesman.game.connect4.C4Piece;
 import edu.berkeley.gamesman.game.util.PieceRearranger;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
@@ -21,11 +19,12 @@ import edu.berkeley.gamesman.util.Util;
  */
 public class RConnect4 extends TieredIterGame {
 	private final int[][] indices;
+	private final int[] colHeights;
 	private final int piecesToWin;
 	private final ArrayList<Pair<Integer, Integer>> pieces;
 	private final int[] moveTiers;
 	private int tier;
-	private C4Board myBoard;
+	private char turn;
 	private PieceRearranger iah;
 
 	/**
@@ -38,13 +37,13 @@ public class RConnect4 extends TieredIterGame {
 		piecesToWin = Integer
 				.parseInt(conf.getProperty("connect4.pieces", "4"));
 		moveTiers = new int[gameWidth];
+		colHeights = new int[gameWidth];
 	}
 
 	@Override
 	public RConnect4 clone() {
 		RConnect4 other = new RConnect4(conf);
-		if (myBoard != null)
-			other.setToString(stateToString());
+		other.setToString(stateToString());
 		return other;
 	}
 
@@ -89,9 +88,113 @@ public class RConnect4 extends TieredIterGame {
 		return 1;
 	}
 
+	/*
+	 * Look for pieces that might have been the last move made (at the top of
+	 * they're column and of the right color. Then return lose if the piece is
+	 * part of a four-in-a-row. Otherwise return Tie or Undecided depending on
+	 * whether the board is full or not.
+	 */
 	@Override
 	public PrimitiveValue primitiveValue() {
-		return myBoard.primitiveValue(piecesToWin);
+		char oppTurn = turn == 'O' ? 'X' : 'O';
+		boolean openColumns = false;
+		for (int col = 0; col < gameWidth; col++) {
+			if (colHeights[col] > 0
+					&& get(colHeights[col]-1,col) == oppTurn
+					&& checkLastWin(colHeights[col] - 1, col))
+				return PrimitiveValue.Lose;
+			else if(colHeights[col]<gameHeight)
+				openColumns = true;
+		}
+		if (openColumns)
+			return PrimitiveValue.Undecided;
+		else
+			return PrimitiveValue.Tie;
+	}
+
+	/*
+	 * Looks for a win that uses the given piece.
+	 */
+	private boolean checkLastWin(final int row, final int col) {
+		char turn = get(row, col);
+		int ext;
+		int stopPos;
+		char p;
+
+		// Check horizontal win
+		ext = 1;
+		stopPos = Math.min(col, piecesToWin - ext);
+		for (int i = 1; i <= stopPos; i++) {
+			p = get(row, col - i);
+			if (p == turn)
+				ext++;
+			else
+				break;
+		}
+		stopPos = Math.min(gameWidth - 1 - col, piecesToWin - ext);
+		for (int i = 1; i <= stopPos; i++) {
+			p = get(row, col + i);
+			if (p == turn)
+				ext++;
+			else
+				break;
+		}
+		if (ext >= piecesToWin)
+			return true;
+
+		// Check DownLeft/UpRight Win
+		ext = 1;
+		stopPos = Math.min(Math.min(row, col), piecesToWin - ext);
+		for (int i = 1; i <= stopPos; i++) {
+			p = get(row - i, col - i);
+			if (p == turn)
+				ext++;
+			else
+				break;
+		}
+		stopPos = Math.min(Math.min(gameHeight - 1 - row, gameWidth - 1 - col),
+				piecesToWin - ext);
+		for (int i = 1; i <= stopPos; i++) {
+			p = get(row + i, col + i);
+			if (p == turn)
+				ext++;
+			else
+				break;
+		}
+		if (ext >= piecesToWin)
+			return true;
+
+		// Check UpLeft/DownRight Win
+		ext = 1;
+		stopPos = Math.min(Math.min(gameHeight - 1 - row, col), piecesToWin - ext);
+		for (int i = 1; i <= stopPos; i++) {
+			p = get(row + i, col - i);
+			if (p == turn)
+				ext++;
+			else
+				break;
+		}
+		stopPos = Math.min(Math.min(row, gameWidth - 1 - col), piecesToWin - ext);
+		for (int i = 1; i <= stopPos; i++) {
+			p = get(row - i, col + i);
+			if (p == turn)
+				ext++;
+			else
+				break;
+		}
+		if (ext >= piecesToWin)
+			return true;
+
+		// Check Vertical Win: Since it's assumed x,y is on top, it's only
+		// necessary to look down, not up
+		if (row >= piecesToWin - 1)
+			for (ext = 1; ext < piecesToWin; ext++) {
+				if (get(row - ext, col) != turn)
+					break;
+			}
+		if (ext >= piecesToWin)
+			return true;
+		return false;
 	}
 
 	private char get(int row, int col) {
@@ -111,7 +214,6 @@ public class RConnect4 extends TieredIterGame {
 
 	@Override
 	public void setTier(int tier) {
-		int colHeights[] = new int[gameWidth];
 		int colHash = 1;
 		this.tier = tier;
 		pieces.clear();
@@ -139,9 +241,7 @@ public class RConnect4 extends TieredIterGame {
 		try {
 			iah = new PieceRearranger(s.toString(), numPieces / 2,
 					(numPieces + 1) / 2);
-			myBoard = new C4Board(makePieceBoard(),
-					(numPieces % 2 == 1) ? C4Piece.BLACK : C4Piece.RED,
-					colHeights);
+			turn = (numPieces % 2 == 1) ? 'O' : 'X';
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -156,23 +256,13 @@ public class RConnect4 extends TieredIterGame {
 		return BigInteger.valueOf(Util.nCr(totPieces, totPieces / 2));
 	}
 
-	private C4Piece[][] makePieceBoard() {
-		C4Piece[][] board = new C4Piece[gameHeight][gameWidth];
-		for (int row = 0; row < gameHeight; row++) {
-			for (int col = 0; col < gameWidth; col++) {
-				board[row][col] = C4Piece.toPiece(get(row, col));
-			}
-		}
-		return board;
-	}
-
 	@Override
 	public void setToString(String pos) {
-		int colHeights[] = new int[gameWidth];
 		pieces.clear();
 		StringBuilder iahPos = new StringBuilder(gameWidth * gameHeight);
 		int numPieces = 0;
 		int row = 0, col = 0;
+		colHeights[col] = 0;
 		int index = 0;
 		for (int i = 0; i < pos.length(); i++) {
 			switch (pos.charAt(i)) {
@@ -181,12 +271,14 @@ public class RConnect4 extends TieredIterGame {
 				iahPos.append('O');
 				pieces.add(new Pair<Integer, Integer>(row, col));
 				numPieces++;
+				colHeights[col]++;
 				break;
 			case 'X':
 				indices[row][col] = index;
 				iahPos.append('X');
 				pieces.add(new Pair<Integer, Integer>(row, col));
 				numPieces++;
+				colHeights[col]++;
 				break;
 			case ' ':
 				iahPos.append(' ');
@@ -201,15 +293,13 @@ public class RConnect4 extends TieredIterGame {
 			if (row >= gameHeight) {
 				row = 0;
 				col++;
+				colHeights[col] = 0;
 			}
 			index++;
 		}
 		try {
 			iah = new PieceRearranger(iahPos.toString(), numPieces / 2,
 					(numPieces + 1) / 2);
-			myBoard = new C4Board(makePieceBoard(),
-					numPieces % 2 == 1 ? C4Piece.BLACK : C4Piece.RED,
-					colHeights);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -229,7 +319,7 @@ public class RConnect4 extends TieredIterGame {
 	@Override
 	public Collection<Pair<String, ItergameState>> validMoves() {
 		Collection<Pair<Integer, BigInteger>> children = iah
-				.getChildren(myBoard.getTurn().toChar());
+				.getChildren(turn);
 		ArrayList<Pair<String, ItergameState>> moves = new ArrayList<Pair<String, ItergameState>>(
 				children.size());
 		for (Pair<Integer, BigInteger> p : children) {
