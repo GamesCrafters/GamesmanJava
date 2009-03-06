@@ -12,7 +12,6 @@ import javax.swing.JFrame;
 import edu.berkeley.gamesman.core.ItergameState;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.database.FileDatabase;
-import edu.berkeley.gamesman.game.FastConnect4;
 import edu.berkeley.gamesman.game.RConnect4;
 import edu.berkeley.gamesman.util.Pair;
 

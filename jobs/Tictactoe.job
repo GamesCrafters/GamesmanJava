@@ -5,5 +5,4 @@ tictactoe.pieces = 4
 gamesman.hasher = TieredItergameHasher
 gamesman.solver = TierItergameSolver
 gamesman.db.uri = file:///tmp/databasettt.db
-gamesman.database = FileDatabase
-gamesman.threads = 4
+gamesman.database = MemoryDatabase

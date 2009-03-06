@@ -48,6 +48,8 @@ public final class TierItergameSolver extends TierSolver<ItergameState> {
 				Record newVal = Record.combine(conf, vals);
 				db.putRecord(current, newVal);
 			} else {
+				System.out.println(game.displayState());
+				System.out.println(pv);
 				Record prim = new Record(conf, pv);
 				db.putRecord(current, prim);
 			}

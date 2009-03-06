@@ -51,13 +51,12 @@ public class RConnect4 extends TieredIterGame {
 	@Override
 	public String displayState() {
 		String s = stateToString();
-		StringBuilder news = new StringBuilder(gameHeight * (gameWidth + 3));
-		for (int row = gameHeight - 1; row >= 0; row--) {
-			news.append("|"
-					+ s.substring(row * gameWidth, (row + 1) * gameWidth - 1)
+		StringBuffer str = new StringBuffer((gameWidth + 3) * gameHeight);
+		for (int row = gameHeight - 1; row >= 0; row--)
+			str.append("|"
+					+ s.substring(row * gameWidth, (row + 1) * gameWidth)
 					+ "|\n");
-		}
-		return s;
+		return str.toString();
 	}
 
 	@Override
