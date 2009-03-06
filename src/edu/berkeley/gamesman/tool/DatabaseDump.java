@@ -26,7 +26,8 @@ import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
 /**
- * @author Steven Schlansker Jeremy Fleischman
+ * @author Steven Schlansker
+ * @author Jeremy Fleischman
  * @param <S> 
  *
  */

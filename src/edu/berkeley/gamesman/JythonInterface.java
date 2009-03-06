@@ -11,8 +11,6 @@ public final class JythonInterface {
 	 */
 	public static void main(String[] args) {
 		PythonInterpreter pi = new PythonInterpreter();
-		//this will let us put .py files in the junk directory, and things will just work =)
-		pi.exec(String.format("import sys; sys.path.append('%s/%s')", System.getProperty("user.dir"), "junk"));
 
 		InteractiveConsole rc = null;
 		try {
@@ -20,6 +18,8 @@ public final class JythonInterface {
 		} catch(NoClassDefFoundError e) { //if we don't have the ReadlineLibrary
 			rc = new InteractiveConsole();
 		}
+		//this will let us put .py files in the junk directory, and things will just work =)
+		rc.exec(String.format("import sys; sys.path.append('%s/%s')", System.getProperty("user.dir"), "junk"));
 		rc.interact();
 	}
 
