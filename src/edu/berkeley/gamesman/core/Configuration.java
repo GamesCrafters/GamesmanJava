@@ -216,7 +216,9 @@ public class Configuration {
 	public boolean equals(Object o) {
 		if(!(o instanceof Configuration)) return false;
 		Configuration c = (Configuration) o;
-		return c.props.equals(props) && c.g.getClass().equals(g.getClass()) && c.h.getClass().equals(h.getClass());
+		return c.props.equals(props) 
+		&& c.g.getClass().equals(g.getClass()) 
+		&& c.h.getClass().equals(h.getClass());
 	}
 	
 	/**

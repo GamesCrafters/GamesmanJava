@@ -10,7 +10,7 @@ public final class JythonInterface {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		PythonInterpreter pi = new PythonInterpreter();
+		//PythonInterpreter pi = new PythonInterpreter();
 
 		InteractiveConsole rc = null;
 		try {
@@ -19,7 +19,7 @@ public final class JythonInterface {
 			rc = new InteractiveConsole();
 		}
 		//this will let us put .py files in the junk directory, and things will just work =)
-		rc.exec(String.format("import sys; sys.path.append('%s/%s')", System.getProperty("user.dir"), "junk"));
+		rc.exec(String.format("import sys; sys.path.append('%s/%s'); sys.path.append('%s/../%s');", System.getProperty("user.dir"), "junk", System.getProperty("user.dir"), "junk"));
 		rc.interact();
 	}
 
