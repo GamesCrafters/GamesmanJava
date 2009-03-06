@@ -3,7 +3,6 @@ package edu.berkeley.gamesman.game;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Scanner;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.ItergameState;
@@ -16,13 +15,14 @@ import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
 /**
- * @author DNSpies
  * Implementation of Connect 4 using the general IterArrangerHasher
+ * 
+ * @author DNSpies
  */
 public class RConnect4 extends TieredIterGame {
 	private final int[][] indices;
 	private final int piecesToWin;
-	private final ArrayList<Pair<Integer,Integer>> pieces;
+	private final ArrayList<Pair<Integer, Integer>> pieces;
 	private final int[] moveTiers;
 	private int tier;
 	private C4Board myBoard;
@@ -31,18 +31,19 @@ public class RConnect4 extends TieredIterGame {
 	/**
 	 * @param conf The configuration object
 	 */
-	public RConnect4(Configuration conf){
+	public RConnect4(Configuration conf) {
 		super(conf);
 		indices = new int[gameHeight][gameWidth];
 		pieces = new ArrayList<Pair<Integer, Integer>>(gameWidth * gameHeight);
-		piecesToWin = Integer.parseInt(conf.getProperty("connect4.pieces", "4"));
+		piecesToWin = Integer
+				.parseInt(conf.getProperty("connect4.pieces", "4"));
 		moveTiers = new int[gameWidth];
 	}
-	
+
 	@Override
 	public RConnect4 clone() {
 		RConnect4 other = new RConnect4(conf);
-		if(myBoard!=null)
+		if (myBoard != null)
 			other.setToString(stateToString());
 		return other;
 	}
@@ -61,7 +62,7 @@ public class RConnect4 extends TieredIterGame {
 
 	@Override
 	public ItergameState getState() {
-		return new ItergameState(tier,iah.getHash());
+		return new ItergameState(tier, iah.getHash());
 	}
 
 	@Override
@@ -93,8 +94,8 @@ public class RConnect4 extends TieredIterGame {
 	public PrimitiveValue primitiveValue() {
 		return myBoard.primitiveValue(piecesToWin);
 	}
-	
-	private char get(int row,int col){
+
+	private char get(int row, int col) {
 		return iah.get(indices[row][col]);
 	}
 
@@ -119,7 +120,7 @@ public class RConnect4 extends TieredIterGame {
 		StringBuilder s = new StringBuilder(gameWidth * gameHeight);
 		for (int col = 0; col < gameWidth; col++) {
 			colHeights[col] = tier % (gameHeight + 1);
-			numPieces+=colHeights[col];
+			numPieces += colHeights[col];
 			tier /= (gameHeight + 1);
 			int row;
 			for (row = 0; row < colHeights[col]; row++) {
@@ -132,7 +133,7 @@ public class RConnect4 extends TieredIterGame {
 			if (colHeights[col] < gameHeight) {
 				s.append(' ');
 				pieces.add(new Pair<Integer, Integer>(row, col));
-				moveTiers[col]=this.tier + colHash;
+				moveTiers[col] = this.tier + colHash;
 			}
 			colHash *= gameHeight + 1;
 		}
@@ -146,14 +147,14 @@ public class RConnect4 extends TieredIterGame {
 			e.printStackTrace();
 		}
 	}
-	
-	public BigInteger numHashesForTier(int tier){
+
+	public BigInteger numHashesForTier(int tier) {
 		int totPieces = 0;
 		for (int col = 0; col < gameWidth; col++) {
 			totPieces += tier % (gameHeight + 1);
 			tier /= (gameHeight + 1);
 		}
-		return BigInteger.valueOf(Util.nCr(totPieces, totPieces/2));
+		return BigInteger.valueOf(Util.nCr(totPieces, totPieces / 2));
 	}
 
 	private C4Piece[][] makePieceBoard() {
@@ -170,27 +171,32 @@ public class RConnect4 extends TieredIterGame {
 	public void setToString(String pos) {
 		int colHeights[] = new int[gameWidth];
 		pieces.clear();
-		Scanner s = new Scanner(pos);
-		StringBuilder iahPos=new StringBuilder(gameWidth*gameHeight);
+		StringBuilder iahPos = new StringBuilder(gameWidth * gameHeight);
+		int numPieces = 0;
 		int row = 0, col = 0;
 		int index = 0;
-		while (s.hasNext()) {
-			switch (s.nextByte()) {
+		for (int i = 0; i < pos.length(); i++) {
+			switch (pos.charAt(i)) {
 			case 'O':
 				indices[row][col] = index;
 				iahPos.append('O');
-				pieces.add(new Pair<Integer,Integer>(row,col));
+				pieces.add(new Pair<Integer, Integer>(row, col));
+				numPieces++;
+				break;
 			case 'X':
 				indices[row][col] = index;
 				iahPos.append('X');
-				pieces.add(new Pair<Integer,Integer>(row,col));
+				pieces.add(new Pair<Integer, Integer>(row, col));
+				numPieces++;
+				break;
 			case ' ':
 				iahPos.append(' ');
-				pieces.add(new Pair<Integer,Integer>(row,col));
+				pieces.add(new Pair<Integer, Integer>(row, col));
 				for (; row < gameHeight; row++) {
-					s.next();
+					i++;
 					indices[row][col] = index;
 				}
+				break;
 			}
 			row++;
 			if (row >= gameHeight) {
@@ -200,9 +206,10 @@ public class RConnect4 extends TieredIterGame {
 			index++;
 		}
 		try {
-			iah = new PieceRearranger(iahPos.toString(), pieces.size() / 2, (pieces.size() + 1) / 2);
+			iah = new PieceRearranger(iahPos.toString(), numPieces / 2,
+					(numPieces + 1) / 2);
 			myBoard = new C4Board(makePieceBoard(),
-					pieces.size() % 2 == 1 ? C4Piece.BLACK : C4Piece.RED,
+					numPieces % 2 == 1 ? C4Piece.BLACK : C4Piece.RED,
 					colHeights);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -211,7 +218,7 @@ public class RConnect4 extends TieredIterGame {
 
 	@Override
 	public String stateToString() {
-		StringBuilder board = new StringBuilder(gameHeight*gameWidth);
+		StringBuilder board = new StringBuilder(gameHeight * gameWidth);
 		for (int row = 0; row < gameHeight; row++) {
 			for (int col = 0; col < gameWidth; col++) {
 				board.append(get(row, col));
@@ -222,11 +229,14 @@ public class RConnect4 extends TieredIterGame {
 
 	@Override
 	public Collection<Pair<String, ItergameState>> validMoves() {
-		Collection<Pair<Integer,BigInteger>> children = iah.getChildren(myBoard.getTurn().toChar());
-		ArrayList<Pair<String,ItergameState>> moves = new ArrayList<Pair<String,ItergameState>>(children.size());
-		for(Pair<Integer,BigInteger> p:children){
+		Collection<Pair<Integer, BigInteger>> children = iah
+				.getChildren(myBoard.getTurn().toChar());
+		ArrayList<Pair<String, ItergameState>> moves = new ArrayList<Pair<String, ItergameState>>(
+				children.size());
+		for (Pair<Integer, BigInteger> p : children) {
 			int col = pieces.get(p.car).cdr;
-			moves.add(new Pair<String,ItergameState>("c"+col,new ItergameState(moveTiers[col],p.cdr)));
+			moves.add(new Pair<String, ItergameState>("c" + col,
+					new ItergameState(moveTiers[col], p.cdr)));
 		}
 		return moves;
 	}
@@ -248,12 +258,17 @@ public class RConnect4 extends TieredIterGame {
 
 	@Override
 	public char[] pieces() {
-		return new char[]{'X','O'};
+		return new char[] { 'X', 'O' };
 	}
-	
+
 	@Override
 	public String toString() {
 		return "Connect 4";
+	}
+
+	@Override
+	public int numberOfTiers() {
+		return (int) Util.longpow(gameHeight + 1, gameWidth);
 	}
 
 }

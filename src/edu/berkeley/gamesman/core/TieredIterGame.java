@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.util.Pair;
+import edu.berkeley.gamesman.util.Util;
 
 /**
  * @author DNSpies
@@ -169,4 +170,6 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> implement
 	 * Cycles to the next hash in this tier
 	 */
 	public abstract void nextHashInTier();
+	
+	public abstract int numberOfTiers();
 }

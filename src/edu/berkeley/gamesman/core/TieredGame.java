@@ -64,7 +64,7 @@ public abstract class TieredGame<State> extends Game<State> {
 	/**
 	 * @return the number of Tiers in this particular game
 	 */
-	public final int numberOfTiers(){
+	public int numberOfTiers(){
 		if(myHasher == null)
 			Util.fatalError("You must call prepare() before hashing!");
 		return myHasher.numberOfTiers();

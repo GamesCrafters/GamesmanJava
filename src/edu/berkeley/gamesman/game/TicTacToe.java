@@ -85,4 +85,9 @@ public class TicTacToe extends DartboardGame {
 	public int getDefaultBoardWidth() {
 		return 3;
 	}
+
+	@Override
+	public int numberOfTiers() {
+		return gameHeight * gameWidth;
+	}
 }

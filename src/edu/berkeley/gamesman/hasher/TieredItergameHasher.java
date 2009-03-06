@@ -34,7 +34,7 @@ public class TieredItergameHasher extends TieredHasher<ItergameState> {
 
 	@Override
 	public int numberOfTiers() {
-		return (int) Util.longpow((conf.getGame().getGameHeight() + 1), conf.getGame().getGameWidth());
+		return ((TieredIterGame) conf.getGame()).numberOfTiers();
 	}
 
 	@Override

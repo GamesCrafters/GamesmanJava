@@ -11,6 +11,7 @@ import edu.berkeley.gamesman.game.connect4.OneTierC4Board;
 import edu.berkeley.gamesman.hasher.TieredItergameHasher;
 import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.Pair;
+import edu.berkeley.gamesman.util.Util;
 
 /**
  * @author DNSpies
@@ -162,5 +163,10 @@ public class FastConnect4 extends TieredIterGame {
 			return "";
 		else
 			return otc4b.toString();
+	}
+
+	@Override
+	public int numberOfTiers() {
+		return (int) Util.longpow(gameHeight+1, gameWidth);
 	}
 }

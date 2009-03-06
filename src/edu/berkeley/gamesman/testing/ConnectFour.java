@@ -13,6 +13,7 @@ import edu.berkeley.gamesman.core.ItergameState;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.database.FileDatabase;
 import edu.berkeley.gamesman.game.FastConnect4;
+import edu.berkeley.gamesman.game.RConnect4;
 import edu.berkeley.gamesman.util.Pair;
 
 public class ConnectFour implements MouseListener {
@@ -24,7 +25,7 @@ public class ConnectFour implements MouseListener {
 	private boolean win = false;
 	private Thread paintThread;
 	private DisplayFour df;
-	private FastConnect4 cgame;
+	private RConnect4 cgame;
 	private FileDatabase fd;
 	static int WIDTH = 4;
 	static int HEIGHT = 4;
@@ -33,7 +34,7 @@ public class ConnectFour implements MouseListener {
 		int c, r;
 		fd = db;
 		df = disfour;
-		cgame = new FastConnect4(db.getConfiguration());
+		cgame = new RConnect4(db.getConfiguration());
 		cgame.prepare();
 		for (c = 0; c < WIDTH; c++) {
 			for (r = 0; r < HEIGHT; r++) {
@@ -182,7 +183,7 @@ public class ConnectFour implements MouseListener {
 	public static void main(String[] args) throws InstantiationException,
 			IllegalAccessException {
 		FileDatabase fd = new FileDatabase();
-		fd.initialize("file:///tmp/fastdatabase.db", null);
+		fd.initialize("file:///tmp/fastdatabase4.db", null);
 		System.out.println(fd.getRecord(BigInteger.ZERO));
 		DisplayFour df = new DisplayFour();
 		/* ConnectFour cf= */new ConnectFour(df, fd);
