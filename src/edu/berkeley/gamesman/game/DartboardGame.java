@@ -9,6 +9,7 @@ import edu.berkeley.gamesman.core.TieredIterGame;
 import edu.berkeley.gamesman.game.util.PieceRearranger;
 import edu.berkeley.gamesman.game.util.SpaceRearranger;
 import edu.berkeley.gamesman.util.Pair;
+import edu.berkeley.gamesman.util.Util;
 
 /**
  * A game in which there are a fixed number of spaces in which either player can
@@ -82,6 +83,12 @@ public abstract class DartboardGame extends TieredIterGame {
 	@Override
 	public BigInteger numHashesForTier() {
 		return piece_empty.arrangements.multiply(o_x.arrangements);
+	}
+	
+	@Override
+	public BigInteger numHashesForTier(int tier) {
+		return BigInteger.valueOf(Util.nCr(gameWidth * gameHeight, tier))
+				.multiply(BigInteger.valueOf(Util.nCr(tier, tier / 2)));
 	}
 
 	@Override
