@@ -291,12 +291,4 @@ public final class SpaceRearranger implements Cloneable{
 		}
 		return toString();
 	}
-	public static void main(String[] args){
-		SpaceRearranger sr = new SpaceRearranger(7,5);
-		System.out.println(sr);
-		while(sr.hasNext()){
-			sr.next();
-			System.out.println(sr);
-		}
-	}
 }
