@@ -21,6 +21,7 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.database.FileDatabase;
 import edu.berkeley.gamesman.util.Pair;
@@ -123,8 +124,9 @@ public class DatabaseDump<S> {
 		S parent = gm.hashToState(parentHash);
 		
 		TreeMap<String, String> attrs = new TreeMap<String, String>();
-		PrimitiveValue v = db.getRecord(parentHash).get();
-		attrs.put("label","<"+parentHash+"<br/>"+gm.displayState(parent).replaceAll("\n", "<br align=\"left\"/>")+"<br/>"+v+" >");
+		Record rec = db.getRecord(parentHash);
+		PrimitiveValue v = rec.get();
+		attrs.put("label","<"+parentHash+"<br/>"+gm.displayState(parent).replaceAll("\n", "<br align=\"left\"/>")+"<br/>"+rec+" >");
 		
 		String color = PRIMITIVE_COLORS.get(v);
 		Util.assertTrue(color != null, "No color specified for primitive value: " + v);
