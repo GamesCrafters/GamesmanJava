@@ -38,11 +38,13 @@ public final class JythonInterface {
 			if((console = Consoles.valueOf(consoleName)) != null){
 				prefs.put("console", consoleName);
 			}
-		}
+		}else
+			console = Consoles.valueOf(consoleName);
 		InteractiveConsole rc = null;
 		switch(console){
 		case dumb:
 			rc = new InteractiveConsole();
+			break;
 		case jline:
 			try {
 				ConsoleReader cr = new ConsoleReader();
@@ -61,6 +63,7 @@ public final class JythonInterface {
 					return super.raw_input(prompt);
 				}
 			};
+			break;
 		case readline:
 			rc = new ReadlineConsole();
 		}
