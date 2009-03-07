@@ -208,15 +208,20 @@ public final class Record {
 	 * @return the value of that field
 	 */
 	public final long get(final RecordFields field) {
-		Util.debug(DebugFacility.Record,"Record gets "+field+" as "+fieldValues[sf.get(field).car]);
-		return fieldValues[sf.get(field).car];
+		Pair<Integer, Integer> f = sf.get(field);
+		if(f == null)
+			return -1;
+		Util.debug(DebugFacility.Record,"Record gets "+field+" as "+fieldValues[f.car]);
+		return fieldValues[f.car];
 	}
 	
 	/**
 	 * @return the value of this position
 	 */
 	public final PrimitiveValue get(){
-		return PrimitiveValue.values()[(int)get(RecordFields.Value)];
+		int i = (int)get(RecordFields.Value);
+		if(i == -1) return null;
+		return PrimitiveValue.values()[i];
 	}
 
 	private final void setupBits() {

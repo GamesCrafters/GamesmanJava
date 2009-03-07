@@ -48,4 +48,18 @@ public enum PrimitiveValue {
 	public boolean isPreferableTo(PrimitiveValue otherValue) {
 		return (value > otherValue.value);
 	}
+	
+	public PrimitiveValue previousMovesValue(){
+		switch(this){
+		case Lose:
+			return Win;
+		case Tie:
+			return Tie;
+		case Undecided:
+			return Undecided;
+		case Win:
+			return Lose;
+		}
+		return Undecided;
+	}
 }

@@ -1,6 +1,7 @@
 from edu.berkeley.gamesman.core import Configuration
 from edu.berkeley.gamesman.util import Util
 from java.util import Properties
+import sys,os
 
 """
 To use this file, do the following:
@@ -23,7 +24,8 @@ class GameState:
         buf += "\n"
         buf += self.game.displayState(self.state)
         if self.db is not None:
-            buf += self.db.getRecord(self.game.stateToHash(self.state)).toString()
+            rec = self.db.getRecord(self.game.stateToHash(self.state))
+            buf += rec.toString()
         return buf
 
     def hash(self):
@@ -32,16 +34,38 @@ class GameState:
     def unhash(self, hash):
         return GameState(self.game, self.game.hashToState(hash))
     
+    def moves(self):
+        s = []
+        for c in self.game.validMoves(self.state):
+            s += [(c.car,GameState(self.game, c.cdr, self.db))]
+        return s
+    
+    def printMoves(self):
+        for c in self.moves():
+            print '"'+c[0]+'"',
+            if self.db is not None:
+                v = rec.get()
+                if v is not None:
+                    print v.previousMovesValue().toString(),
+            print ' =>'
+            print c[1]
+    
     def __add__(self, move):
         nextState = self.game.doMove(self.state, move)
         if nextState == None:
             print "Invalid move: " + move
             return self
         gs = GameState(self.game, nextState, self.db)
-        print gs
+        #print gs
         return gs
 
 def play(jobFile):
+    
+    for possible_path in sys.path:
+        p = possible_path + "/" + jobFile + ".job"
+        if os.path.exists(p):
+            jobFile = p
+            break
     props = Properties()
     conf = Configuration(props)
     conf.addProperties(jobFile)
@@ -61,5 +85,23 @@ def play(jobFile):
     
 
     gs = GameState(game, game.startingPositions()[0], db)
+    
+    global globalState
+    globalState = gs
+    
     print gs
     return gs
+
+def m(mv):
+    move(mv)
+
+def move(m):
+    global globalState
+    globalState += m
+    print globalState
+
+def moves(s = None):
+    if s is None:
+        global globalState
+        s = globalState
+    s.printMoves()

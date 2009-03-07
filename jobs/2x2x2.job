@@ -7,6 +7,7 @@ gamesman.game.dirs = 1,3
 gamesman.solver = BreadthFirstSolver
 gamesman.hasher = NullHasher
 gamesman.db.uri = file:///database.db
+gamesman.database = FileDatabase
 gamesman.dotty.uri = file:///database.dot
 gamesman.dotty.prune = true
 gamesman.debug.Solver = false
