@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.util.Pair;
-import edu.berkeley.gamesman.util.Util;
 
 /**
  * @author DNSpies

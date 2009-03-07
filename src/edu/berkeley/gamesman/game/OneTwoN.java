@@ -1,7 +1,7 @@
 package edu.berkeley.gamesman.game;
 
-import java.util.Collection;
 import java.util.ArrayList;
+import java.util.Collection;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;

@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Database;
+import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.database.filer.DirectoryFilerClient;
 import edu.berkeley.gamesman.util.Util;
 

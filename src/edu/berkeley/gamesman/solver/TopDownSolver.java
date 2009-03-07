@@ -1,10 +1,8 @@
 package edu.berkeley.gamesman.solver;
 
-import java.io.EOFException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 

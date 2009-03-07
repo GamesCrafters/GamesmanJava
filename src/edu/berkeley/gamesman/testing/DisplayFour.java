@@ -1,7 +1,9 @@
 package edu.berkeley.gamesman.testing;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.GridLayout;
+
+import javax.swing.JPanel;
 
 public class DisplayFour extends JPanel implements Runnable {
 	private final static long serialVersionUID = 2;

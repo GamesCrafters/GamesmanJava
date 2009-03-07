@@ -1,7 +1,10 @@
 package edu.berkeley.gamesman.testing;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+
+import javax.swing.JComponent;
 
 class Slot extends JComponent {
 	private final static long serialVersionUID = 1;

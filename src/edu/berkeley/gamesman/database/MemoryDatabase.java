@@ -1,8 +1,8 @@
 package edu.berkeley.gamesman.database;
 
 import java.math.BigInteger;
-import java.util.Random;
 import java.util.Date;
+import java.util.Random;
 
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Record;
