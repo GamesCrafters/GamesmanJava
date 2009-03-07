@@ -14,6 +14,8 @@ import org.python.util.InteractiveConsole;
 import org.python.util.JLineConsole;
 import org.python.util.ReadlineConsole;
 
+import edu.berkeley.gamesman.util.Util;
+
 public final class JythonInterface {
 	
 	private enum Consoles {
@@ -27,45 +29,45 @@ public final class JythonInterface {
 	public static void main(String[] args) throws Exception {
 		Preferences prefs = Preferences.userNodeForPackage(JythonInterface.class);
 		
-		String consoleName = prefs.get("console", "ask");
+		String consoleName = prefs.get("console", null);
 		Consoles console = null;
 		
-		if(consoleName.equals("ask")){
-			System.out.print("What console would you like to use? "+Arrays.toString(Consoles.values())+": ");
-			System.out.flush();
-			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-			consoleName = br.readLine();
-			if((console = Consoles.valueOf(consoleName)) != null){
-				prefs.put("console", consoleName);
+		while(console == null){
+			if(consoleName == null){
+				System.out.print("What console would you like to use? "+Arrays.toString(Consoles.values())+": ");
+				System.out.flush();
+				BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+				consoleName = br.readLine();
 			}
-		}else
-			console = Consoles.valueOf(consoleName);
+			try {
+				console = Consoles.valueOf(consoleName);
+			} catch(IllegalArgumentException e) {
+				System.out.println(consoleName + " isn't one of " + Arrays.toString(Consoles.values()));
+				consoleName = null;
+			}
+		}
+		prefs.put("console", consoleName);
+		
 		InteractiveConsole rc = null;
 		switch(console){
 		case dumb:
-			rc = new InteractiveConsole();
-			break;
-		case jline:
-			try {
-				ConsoleReader cr = new ConsoleReader();
-				System.out.print("Press enter to start gamesman-jython!\n");
-				if(cr.readLine() != null) //eclipse doesn't work with jline
-					rc = new JLineConsole();
-			} catch(Error e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			//if jline isn't working for some reason
 			rc = new InteractiveConsole() {
 				@Override
 				public String raw_input(PyObject prompt) {
+					//eclipse sometimes interleaves the error messages 
+					exec("import sys; sys.stderr.flush()");
 					return super.raw_input(prompt);
 				}
 			};
 			break;
+		case jline:
+			rc = new JLineConsole();
+			break;
 		case readline:
 			rc = new ReadlineConsole();
+			break;
+		default:
+			Util.fatalError("Need to pick a console");
 		}
 		
 		//this will let us put .py files in the junk directory, and things will just work =)
