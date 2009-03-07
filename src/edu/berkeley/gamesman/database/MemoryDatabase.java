@@ -60,7 +60,7 @@ public class MemoryDatabase extends Database{
 		BigInteger bigIntData = this.getBits(recordIndex, recordSize);
 		recordToReturn.loadBigInteger(bigIntData);
 		/* Notifying Debugger */
-		Util.debug(DebugFacility.Database, 
+		Util.debug(DebugFacility.DATABASE, 
 				"Read record '" + recordIndex + "'. Value is '" + 
 				bigIntData.toString() + "'");
 		return recordToReturn;	
@@ -106,18 +106,18 @@ public class MemoryDatabase extends Database{
 	@Override
 	public void initialize(String locations) {
 		this.initialize();
-		Util.debug(DebugFacility.Database, 
+		Util.debug(DebugFacility.DATABASE, 
 				"Using Memory Database. Nothing is stored to disk.");
 	}
 	
 	/**
 	 * Null Constructor for testing the database outside of
-	 * GamesMan environment.
+	 * Gamesman environment.
 	 * Initializes the internal storage.
 	 * 
 	 * @author Alex Trofimov
 	 */
-	public void initialize() {
+	void initialize() {
 		//this.memoryStorage = new ArrayList<Byte>();
 		//this.memoryStorage.ensureCapacity(2);		
 		this.capacity = 2;
@@ -134,7 +134,7 @@ public class MemoryDatabase extends Database{
 		/* Writing Data */
 		this.putBits(recordIndex, bitSize, data);
 		/* Notifying Debugger */
-		Util.debug(DebugFacility.Database, 
+		Util.debug(DebugFacility.DATABASE, 
 				"Wrote record '" + recordIndex + "'. Value is '" + 
 				data.toString() + "'");
 	}
@@ -183,13 +183,13 @@ public class MemoryDatabase extends Database{
 
 	@Override
 	public void flush() {
-		Util.debug(DebugFacility.Database, "Flushing Memory DataBase. Does Nothing.");
+		Util.debug(DebugFacility.DATABASE, "Flushing Memory DataBase. Does Nothing.");
 	}
 	
 	@Override
 	public void close() {
 		this.open = false;
-		Util.debug(DebugFacility.Database, "Closing Memory DataBase. Does Nothing.");
+		Util.debug(DebugFacility.DATABASE, "Closing Memory DataBase. Does Nothing.");
 	}
 	
 	/**
