@@ -107,7 +107,7 @@ def moves(s = None):
         s = globalState
     s.printMoves()
 
-def moveloop(s = None):
+def moveloop():
     global globalState
     from edu.berkeley.gamesman.core import PrimitiveValue
     while globalState.game.primitiveValue(globalState.state) is PrimitiveValue.Undecided:
