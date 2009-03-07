@@ -151,6 +151,7 @@ public final class Record {
 		long bitoff = index * bitlength();
 		for (int i = 0; i < fieldValues.length; i++) {
 			fieldValues[i] = BitBuffer.get(buf, bitoff, fieldBitLength[i]);
+			Util.debug(DebugFacility.Bitwise, String.format("Read field %d (bit %d) as 0x%x",i,bitoff,fieldValues[i]));
 			bitoff += fieldBitLength[i];
 		}
 	}
@@ -398,9 +399,12 @@ public final class Record {
 			long val = vala & (1 << len) - 1;
 			if (off + len < 64) {
 				long l1 = b.getLong((int) (offa / 8));
+				Util.debug(DebugFacility.Bitwise, String.format("Read 0x%x from 0x%x mask=0x%x -> 0x%x",
+						l1,(offa/8),~(mask(off, off + len)),l1 & ~(mask(off, off + len))));
 				l1 &= ~(mask(off, off + len));
 				l1 |= val << (64 - len - off);
 				b.putLong((int) (offa / 8), l1);
+				Util.debug(DebugFacility.Bitwise, String.format("Putting 0x%x -> 0x%x to 0x%x",val << (64 - len - off),l1,(offa/8)));
 			} else {
 				Util.fatalError("abort");
 			}

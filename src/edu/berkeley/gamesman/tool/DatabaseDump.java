@@ -12,6 +12,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Properties;
 import java.util.Queue;
 import java.util.TreeMap;
 import java.util.Map.Entry;
@@ -48,8 +49,8 @@ public class DatabaseDump<S> {
 	 * @param conf
 	 */
 	public DatabaseDump(Configuration conf) {
-		Database db = new FileDatabase();
-		db.initialize(conf.getPropertyWithPrompt("gamesman.db.uri"), null);
+		Database db = conf.openDatabase();
+		//db.initialize(conf.getPropertyWithPrompt("gamesman.db.uri"), null);
 		
 		String dottyFile = conf.getPropertyWithPrompt("gamesman.dotty.uri");
 		PrintWriter w = null;
@@ -135,7 +136,8 @@ public class DatabaseDump<S> {
 		if(!pv.equals(PrimitiveValue.Undecided))
 			attrs.put("style","filled");
 		
-		Util.assertTrue(pv.equals(PrimitiveValue.Undecided) || pv.equals(v), "Primitive values don't match!");
+		Util.assertTrue(pv.equals(PrimitiveValue.Undecided) || pv.equals(v), "Primitive values don't match! "+pv
+				+" (db says "+v+") for pos "+parentHash+"\n"+gm.displayState(parent));
 		
 		w.print("\th"+parentHash+" [ ");
 		boolean didOne = false;
@@ -160,9 +162,9 @@ public class DatabaseDump<S> {
 	 * @throws IOException 
 	 */
 	public static <S> void main(String[] args) {
-		Configuration conf = new Configuration(System.getProperties());
-		if(args.length > 0)
-			conf.addProperties(args[0]);
+		if(args.length < 1) Util.fatalError("Please specify a jobfile");
+		Configuration conf = new Configuration(args[0]);
+		Util.debugInit(conf);
 		new DatabaseDump<S>(conf).dump();
 	}
 }

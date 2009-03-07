@@ -32,6 +32,7 @@ public class Configuration {
 	// storedFields stores a mapping of RecordFields to a pair of integers.
 	// The first integer is the bit offset, the second is the bit length
 	private EnumMap<RecordFields,Pair<Integer,Integer>> storedFields;
+	private Database db;
 	
 	private Properties props;
 	/**
@@ -41,12 +42,54 @@ public class Configuration {
 	 * @param h The hasher used
 	 * @param storedFields Which fields should be stored in the database
 	 */
-	public Configuration(Properties props,Game<?> g, Hasher<?> h, EnumMap<RecordFields,Pair<Integer,Integer>> storedFields) {
-		this.props = props;
-		this.g = g;
-		this.h = h;
-		this.storedFields = storedFields;
-		checkCompatibility();
+	//public Configuration(Properties props,Game<?> g, Hasher<?> h, EnumMap<RecordFields,Pair<Integer,Integer>> storedFields) {
+	//	this.props = new Properties(props);
+	//	this.g = g;
+	//	this.h = h;
+	//	this.storedFields = storedFields;
+	//	checkCompatibility();
+	//}
+	
+	public Configuration(String path){
+		props = new Properties();
+		addProperties(path);
+		g = Util.typedInstantiateArg("edu.berkeley.gamesman.game."+getProperty("gamesman.game"),this);
+		h = Util.typedInstantiateArg("edu.berkeley.gamesman.hasher."+getProperty("gamesman.hasher"),this);
+		storedFields = new EnumMap<RecordFields, Pair<Integer,Integer>>(RecordFields.class);
+		String fields = getProperty("record.fields", "Value,Remoteness");
+		int i = 0;
+		for(String fld : fields.split(",")){
+			String[] splt = fld.split(":");
+			if(splt.length > 1)
+				storedFields.put(RecordFields.valueOf(splt[0]), new Pair<Integer,Integer>(i++,Integer.parseInt(splt[1])));
+			else
+				storedFields.put(RecordFields.valueOf(splt[0]), new Pair<Integer,Integer>(i++,RecordFields.valueOf(splt[0]).defaultBitSize()));
+		}
+		g.prepare();
+	}
+
+	/**
+	 * Create a new Configuration
+	 * @param props The properties used to configure options
+	 * @param g The game we're playing
+	 * @param h The hasher to use
+	 * @param set Which records to save
+	 */
+	//public Configuration(Properties props,Game<?> g, Hasher<?> h, EnumSet<RecordFields> set){
+	//	this.props = props;
+	//	int i = 0;
+	//	EnumMap<RecordFields,Pair<Integer, Integer>> map = new EnumMap<RecordFields, Pair<Integer,Integer>>(RecordFields.class);
+	//	for(RecordFields rec : set){
+	//		map.put(rec, new Pair<Integer, Integer>(i++,rec.defaultBitSize()));
+	//	}
+	//	this.g = g;
+	//	this.h = h;
+	//	this.storedFields = map;
+	//	checkCompatibility();
+	//}
+	
+	protected Configuration(Properties props2) {
+		props = props2;
 	}
 	
 	/**
@@ -61,18 +104,18 @@ public class Configuration {
 	 * Must be called before using this Configuration.
 	 * @param g the game to play
 	 */
-	public void setGame(Game<?> g){
-		this.g = g;
-	}
+	//public void setGame(Game<?> g){
+	//	this.g = g;
+	//}
 	
 	/**
 	 * Specify the Hasher.
 	 * Must be called before using this Configuration
 	 * @param h the hasher to use
 	 */
-	public void setHasher(Hasher<?> h){
-		this.h = h;
-	}
+	//public void setHasher(Hasher<?> h){
+	//	this.h = h;
+	//}
 	
 	/**
 	 * Specify which fields are to be saved by the database
@@ -104,38 +147,6 @@ public class Configuration {
 		if(!DependencyResolver.isHasherAllowed(g.getClass(), h.getClass()))
 			Util.fatalError("Game and hasher are not compatible!");
 	}
-
-	/**
-	 * Create a new Configuration
-	 * @param props The properties used to configure options
-	 * @param g The game we're playing
-	 * @param h The hasher to use
-	 * @param set Which records to save
-	 */
-	public Configuration(Properties props,Game<?> g, Hasher<?> h, EnumSet<RecordFields> set){
-		this.props = props;
-		int i = 0;
-		EnumMap<RecordFields,Pair<Integer, Integer>> map = new EnumMap<RecordFields, Pair<Integer,Integer>>(RecordFields.class);
-		for(RecordFields rec : set){
-			map.put(rec, new Pair<Integer, Integer>(i++,rec.defaultBitSize()));
-		}
-		this.g = g;
-		this.h = h;
-		this.storedFields = map;
-		checkCompatibility();
-	}
-	
-	/**
-	 * A Configuration that is specified only by properties.
-	 * You <i>must</i> set the game and hasher before using this Configuration
-	 * @see #setGame(Game)
-	 * @see #setHasher(Hasher)
-	 * @see #setStoredFields
-	 * @param props2 The properties to inherit
-	 */
-	public Configuration(Properties props2) {
-		props = props2;
-	}
 	
 	/**
 	 * Unserialize a configuration from a bytestream
@@ -152,10 +163,12 @@ public class Configuration {
 		ByteArrayInputStream bin = new ByteArrayInputStream(t);
 		props.load(bin);
 		Configuration conf = new Configuration(props);
-		conf.setGame((Game<?>) Util.typedInstantiateArg(in.readUTF(),conf));
-		conf.setHasher((Hasher<?>) Util.typedInstantiateArg(in.readUTF(),conf));
+		conf.g = (Game<?>) Util.typedInstantiateArg(in.readUTF(),conf);
+		conf.h = (Hasher<?>) Util.typedInstantiateArg(in.readUTF(),conf);
 		
 		EnumMap<RecordFields, Pair<Integer, Integer>> sf = new EnumMap<RecordFields,Pair<Integer,Integer>>(RecordFields.class);
+		
+		conf.g.prepare();
 		
 		int num = in.readInt();
 		
@@ -216,7 +229,7 @@ public class Configuration {
 	public boolean equals(Object o) {
 		if(!(o instanceof Configuration)) return false;
 		Configuration c = (Configuration) o;
-		return c.props.equals(props) 
+		return c.props.equals(props)
 		&& c.g.getClass().equals(g.getClass()) 
 		&& c.h.getClass().equals(h.getClass());
 	}
@@ -316,5 +329,11 @@ public class Configuration {
 		return s;
 	}
 	
-
+	
+	public Database openDatabase() {
+		if(db != null) return db;
+		db = Util.typedInstantiate("edu.berkeley.gamesman.database."+getProperty("gamesman.database"));
+		db.initialize(getProperty("gamesman.db.uri"),this);
+		return db;
+	}
 }

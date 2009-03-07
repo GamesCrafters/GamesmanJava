@@ -30,10 +30,12 @@ public class BlockDatabase extends FileDatabase {
 			buf.force();
 			fd.seek(offset);
 			fd.writeLong(lastRecord);
+			Util.debug(DebugFacility.Database,"Database has "+lastRecord+" records");
 			long dblen = offset + headerSize + (Record.bitlength(conf)*lastRecord+7)/8;
-			Util.debug(DebugFacility.Database,"Attempting to truncate to "+dblen);
+			Util.debug(DebugFacility.Database,"Attempting to truncate to "+dblen+"(+1)");
+			fd.getChannel().force(true);
+			fd.getChannel().truncate(dblen+1);
 			fd.getChannel().close();
-			fd.getChannel().truncate(dblen);
 		} catch (IOException e) {
 			Util.warn("Could not cleanly close BlockDB: " + e);
 		}
@@ -64,6 +66,7 @@ public class BlockDatabase extends FileDatabase {
 		super.initialize(loc);
 		try {
 			buf = fd.getChannel().map(MapMode.READ_WRITE, offset + headerSize, Integer.MAX_VALUE/4);
+			Util.debug(DebugFacility.Database,"Mapped BlockDatabase into memory starting from "+(offset+headerSize));
 			fd.seek(offset);
 			lastRecord = fd.readLong();
 		} catch (IOException e) {

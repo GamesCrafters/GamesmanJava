@@ -61,6 +61,8 @@ public abstract class Game<State> {
 	public abstract Collection<Pair<String,State>> validMoves(State pos);
 	
 	public State doMove(State pos, String move) {
+		if(!primitiveValue(pos).equals(PrimitiveValue.Undecided))
+			return null;
 		for(Pair<String, State> next : validMoves(pos)) {
 			if(next.car.equals(move))
 				return next.cdr;

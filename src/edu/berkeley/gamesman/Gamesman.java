@@ -47,14 +47,13 @@ public final class Gamesman {
 	 */
 	public static void main(String[] args) {
 
-		Configuration conf = new Configuration(new Properties(System.getProperties()));
+		if(args.length != 1){
+			Util.fatalError("Please specify a jobfile as the only argument");
+		}
+		Configuration conf = new Configuration(args[0]);
 
 		Thread.currentThread().setName("Gamesman");
 
-		//OptionProcessor.initializeOptions(args);
-		if(args.length == 1){
-			conf.addProperties(args[0]);
-		}
 		
 		Util.debugInit(conf);
 
@@ -131,12 +130,12 @@ public final class Gamesman {
 		} else {
 			Util.debug(DebugFacility.Core,"Defaulting to solve...");
 			try {
-				Game<?> gm = Util.checkedCast(g.getConstructors()[0].newInstance(conf));
-				conf.setGame(gm);
-				Hasher<?> ha = Util.checkedCast(h.getConstructors()[0].newInstance(conf));
-				conf.setHasher(ha);
+				//Game<?> gm = Util.checkedCast(g.getConstructors()[0].newInstance(conf));
+				//conf.setGame(gm);
+				//Hasher<?> ha = Util.checkedCast(h.getConstructors()[0].newInstance(conf));
+				//conf.setHasher(ha);
 				conf.setStoredFields(EnumSet.of(RecordFields.Value,RecordFields.Remoteness));
-				gm.prepare();
+				//gm.prepare();
 				m.initialize(conf, s, d);
 			} catch (Exception e){
 				Util.fatalError("Exception while instantiating and initializing",e);

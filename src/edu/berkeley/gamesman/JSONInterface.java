@@ -45,8 +45,7 @@ public class JSONInterface {
 		if(args.length != 1){
 			Util.fatalError("You must specify a configuration file as the only command line argument");
 		}
-		conf = new Configuration(System.getProperties());
-		conf.addProperties(args[0]);
+		conf = new Configuration(args[0]);
 		
 		Util.debugInit(conf);
 		
