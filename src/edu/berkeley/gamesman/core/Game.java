@@ -60,11 +60,6 @@ public abstract class Game<State> {
 	 */
 	public abstract Collection<Pair<String,State>> validMoves(State pos);
 	
-	/**
-	 * @param pos
-	 * @param move
-	 * @return
-	 */
 	public State doMove(State pos, String move) {
 		for(Pair<String, State> next : validMoves(pos)) {
 			if(next.car.equals(move))
