@@ -35,20 +35,6 @@ public class Configuration {
 	private Database db;
 	
 	private Properties props;
-	/**
-	 * Initialize a new Configuration.  Both parameters should be fully initialized.
-	 * @param props The properties used to configure options
-	 * @param g The game used
-	 * @param h The hasher used
-	 * @param storedFields Which fields should be stored in the database
-	 */
-	//public Configuration(Properties props,Game<?> g, Hasher<?> h, EnumMap<RecordFields,Pair<Integer,Integer>> storedFields) {
-	//	this.props = new Properties(props);
-	//	this.g = g;
-	//	this.h = h;
-	//	this.storedFields = storedFields;
-	//	checkCompatibility();
-	//}
 	
 	public Configuration(String path){
 		props = new Properties();
@@ -67,26 +53,6 @@ public class Configuration {
 		}
 		g.prepare();
 	}
-
-	/**
-	 * Create a new Configuration
-	 * @param props The properties used to configure options
-	 * @param g The game we're playing
-	 * @param h The hasher to use
-	 * @param set Which records to save
-	 */
-	//public Configuration(Properties props,Game<?> g, Hasher<?> h, EnumSet<RecordFields> set){
-	//	this.props = props;
-	//	int i = 0;
-	//	EnumMap<RecordFields,Pair<Integer, Integer>> map = new EnumMap<RecordFields, Pair<Integer,Integer>>(RecordFields.class);
-	//	for(RecordFields rec : set){
-	//		map.put(rec, new Pair<Integer, Integer>(i++,rec.defaultBitSize()));
-	//	}
-	//	this.g = g;
-	//	this.h = h;
-	//	this.storedFields = map;
-	//	checkCompatibility();
-	//}
 	
 	protected Configuration(Properties props2) {
 		props = props2;
@@ -98,24 +64,6 @@ public class Configuration {
 	public Game<?> getGame(){
 		return g;
 	}
-	
-	/**
-	 * Specify the Game.
-	 * Must be called before using this Configuration.
-	 * @param g the game to play
-	 */
-	//public void setGame(Game<?> g){
-	//	this.g = g;
-	//}
-	
-	/**
-	 * Specify the Hasher.
-	 * Must be called before using this Configuration
-	 * @param h the hasher to use
-	 */
-	//public void setHasher(Hasher<?> h){
-	//	this.h = h;
-	//}
 	
 	/**
 	 * Specify which fields are to be saved by the database

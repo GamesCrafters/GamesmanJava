@@ -37,7 +37,7 @@ public class BlockDatabase extends FileDatabase {
 			fd.getChannel().truncate(dblen+1);
 			fd.getChannel().close();
 		} catch (IOException e) {
-			Util.warn("Could not cleanly close BlockDB: " + e);
+			Util.warn("Could not cleanly close BlockDB",e);
 		}
 		buf = null;
 		super.close();
@@ -49,7 +49,7 @@ public class BlockDatabase extends FileDatabase {
 			fd.seek(offset);
 			fd.writeLong(lastRecord);
 		} catch (IOException e) {
-			Util.warn("Could not flush BlockDB: " + e);
+			Util.warn("Could not flush BlockDB",e);
 		}
 		buf.force();
 		super.flush();
