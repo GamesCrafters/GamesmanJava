@@ -67,9 +67,7 @@ def play(jobFile):
         if os.path.exists(p):
             jobFile = p
             break
-    props = Properties()
-    conf = Configuration(props)
-    conf.addProperties(jobFile)
+    conf = Configuration(jobFile)
     
     response = raw_input("Would you like to load the database? (Y/n): ")
     if response.lower() != "n":

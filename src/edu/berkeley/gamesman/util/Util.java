@@ -53,6 +53,11 @@ public final class Util {
 	}
 
 	protected static class Warning extends Error {
+		
+		public Warning(String s, Exception cause) {
+			super(s,cause);
+		}
+		
 		private static final long serialVersionUID = -4160479272744795242L;
 	}
 
@@ -106,7 +111,22 @@ public final class Util {
 				+ s);
 		System.err.println("Stack trace follows:");
 		try {
-			throw new Warning();
+			throw new Warning(s,new Exception());
+		} catch (Warning e) {
+			e.printStackTrace(System.err);
+		}
+	}
+	
+	/**
+	 * Print a non-fatal warning and continue
+	 * @param s The condition that caused this warning
+	 */
+	public static void warn(String s, Exception ex) {
+		System.err.println("WARN: (" + Thread.currentThread().getName() + ") "
+				+ s);
+		System.err.println("Stack trace follows:");
+		try {
+			throw new Warning(s,ex);
 		} catch (Warning e) {
 			e.printStackTrace(System.err);
 		}
