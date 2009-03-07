@@ -283,16 +283,6 @@ public class RConnect4 extends TieredIterGame {
 		}
 	}
 
-	private String indicesString() {
-		StringBuilder s = new StringBuilder(gameHeight*gameWidth);
-		for(int row = 0; row < gameHeight; row++){
-			for(int col = 0; col < gameWidth; col ++){
-				s.append(Integer.toString(indices[row][col]));
-			}
-		}
-		return s.toString();		
-	}
-
 	@Override
 	public String stateToString() {
 		StringBuilder board = new StringBuilder(gameHeight * gameWidth);

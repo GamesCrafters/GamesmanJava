@@ -144,8 +144,8 @@ public final class PieceRearranger implements Cloneable{
 	public PieceRearranger(final char[] s) throws Exception {
 		LinkedList<HashGroup> g = new LinkedList<HashGroup>();
 		numSpaces = s.length;
-		HashGroup currentGroup = new HashGroup(0, null);
 		HashPiece lastPiece = new HashPiece(-1, 0, BigInteger.ZERO, 'O', null);
+		HashGroup currentGroup = new HashGroup(0, lastPiece);
 		pieces = new HashPiece[numSpaces];
 		int numPieces = 0, numOs = 0;
 		boolean onFX = true;
@@ -193,8 +193,8 @@ public final class PieceRearranger implements Cloneable{
 	public PieceRearranger(final char[] s, int os, int xs) throws Exception {
 		LinkedList<HashGroup> g = new LinkedList<HashGroup>();
 		numSpaces = s.length;
-		HashGroup currentGroup = new HashGroup(0, null);
 		HashPiece lastPiece = new HashPiece(-1, 0, BigInteger.ZERO, 'O', null);
+		HashGroup currentGroup = new HashGroup(0, lastPiece);
 		pieces = new HashPiece[numSpaces];
 		int numPieces = 0, numOs = 0;
 		for (int i = 0; i < numSpaces; i++) {
