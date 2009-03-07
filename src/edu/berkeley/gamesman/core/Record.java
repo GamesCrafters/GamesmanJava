@@ -304,7 +304,7 @@ public final class Record {
 						int min = Integer.MAX_VALUE;
 						for(Record r : vals)
 							if(r.get() == PrimitiveValue.LOSE)
-								max = (int) Math.min(min, r.get(RecordFields.REMOTENESS));
+								min = (int) Math.min(min, r.get(RecordFields.REMOTENESS));
 						rec.set(RecordFields.REMOTENESS, min+1);
 						break;
 					case UNDECIDED:
