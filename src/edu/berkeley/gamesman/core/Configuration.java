@@ -42,7 +42,7 @@ public class Configuration {
 		g = Util.typedInstantiateArg("edu.berkeley.gamesman.game."+getProperty("gamesman.game"),this);
 		h = Util.typedInstantiateArg("edu.berkeley.gamesman.hasher."+getProperty("gamesman.hasher"),this);
 		storedFields = new EnumMap<RecordFields, Pair<Integer,Integer>>(RecordFields.class);
-		String fields = getProperty("record.fields", "Value,Remoteness");
+		String fields = getProperty("record.fields", RecordFields.VALUE.name() + "," + RecordFields.REMOTENESS.name());
 		int i = 0;
 		for(String fld : fields.split(",")){
 			String[] splt = fld.split(":");
@@ -213,6 +213,18 @@ public class Configuration {
 	}
 	
 	/**
+	 * Parses a property as a boolean.
+	 * @param key the name of the configuration property
+	 * @param dfl default value
+	 * @return false iff s is "false" or s is "0", ignoring case
+	 */
+	public boolean getBoolean(String key, boolean dfl) {
+		String s = props.getProperty(key);
+		if(s == null) return dfl;
+		return !s.equalsIgnoreCase("false") && !s.equalsIgnoreCase("0");
+	}
+	
+	/**
 	 * Get a property by its name.  If the property is not set,
 	 * return dfl
 	 * @param key the name of the configuration property
@@ -276,7 +288,6 @@ public class Configuration {
 		}
 		return s;
 	}
-	
 	
 	public Database openDatabase() {
 		if(db != null) return db;
