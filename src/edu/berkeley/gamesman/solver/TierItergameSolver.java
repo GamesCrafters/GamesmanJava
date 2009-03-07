@@ -44,6 +44,8 @@ public final class TierItergameSolver extends TierSolver<ItergameState> {
 					Record r = db.getRecord(game.stateToHash(child.cdr));
 					vals.add(r);
 				}
+				
+				Util.assertTrue(!vals.isEmpty(), "Found an undecided non-primitive state with no children!");
 
 				Record newVal = Record.combine(conf, vals);
 				db.putRecord(current, newVal);
