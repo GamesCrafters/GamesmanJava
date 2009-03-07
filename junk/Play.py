@@ -106,3 +106,15 @@ def moves(s = None):
         global globalState
         s = globalState
     s.printMoves()
+
+def moveloop(s = None):
+    global globalState
+    from edu.berkeley.gamesman.core import PrimitiveValue
+    while globalState.game.primitiveValue(globalState.state) is PrimitiveValue.Undecided:
+        print "State is now"
+        print globalState
+        print "Avaliable moves:"
+        moves()
+        m = raw_input("Which move to take? ")
+        move(m)
+    print "Game is over!"
