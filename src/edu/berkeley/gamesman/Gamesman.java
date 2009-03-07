@@ -80,7 +80,7 @@ public final class Gamesman {
 
 		Master m = (Master) omaster;
 
-		Util.debug(DebugFacility.Core,"Preloading classes...");
+		Util.debug(DebugFacility.CORE,"Preloading classes...");
 
 		String gameName, solverName, hasherName, databaseName;
 
@@ -128,13 +128,13 @@ public final class Gamesman {
 				ite.getTargetException().printStackTrace();
 			}
 		} else {
-			Util.debug(DebugFacility.Core,"Defaulting to solve...");
+			Util.debug(DebugFacility.CORE,"Defaulting to solve...");
 			try {
 				//Game<?> gm = Util.checkedCast(g.getConstructors()[0].newInstance(conf));
 				//conf.setGame(gm);
 				//Hasher<?> ha = Util.checkedCast(h.getConstructors()[0].newInstance(conf));
 				//conf.setHasher(ha);
-				conf.setStoredFields(EnumSet.of(RecordFields.Value,RecordFields.Remoteness));
+				conf.setStoredFields(EnumSet.of(RecordFields.VALUE,RecordFields.REMOTENESS));
 				//gm.prepare();
 				m.initialize(conf, s, d);
 			} catch (Exception e){
@@ -149,7 +149,7 @@ public final class Gamesman {
 		//	return;
 		//}
 
-		Util.debug(DebugFacility.Core,"Finished run, tearing down...");
+		Util.debug(DebugFacility.CORE,"Finished run, tearing down...");
 
 	}
 

@@ -169,16 +169,16 @@ public final class C4Board {
 				moreMoves = true;
 			if (colHeight > 0 && get(stateArr, colHeight - 1, col) == lastPlayed()
 					&& checkLastWin(colHeight - 1,col, piecesToWin))
-				return PrimitiveValue.Lose;
+				return PrimitiveValue.LOSE;
 		}
 		if (moreMoves)
-			return PrimitiveValue.Undecided;
-		return PrimitiveValue.Tie;
+			return PrimitiveValue.UNDECIDED;
+		return PrimitiveValue.TIE;
 	}
 
 	private boolean checkLastWin(int row, int col, int piecesToWin) {
 		C4Piece turn = get(row, col);
-		Util.debug(DebugFacility.Game,turn+" last played in column "+col+", checking for win");
+		Util.debug(DebugFacility.GAME,turn+" last played in column "+col+", checking for win");
 		int ext;
 
 		// Check horizontal win

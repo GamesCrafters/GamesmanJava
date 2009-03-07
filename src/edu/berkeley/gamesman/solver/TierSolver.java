@@ -58,8 +58,8 @@ public class TierSolver<T> extends Solver {
 
 			PrimitiveValue pv = game.primitiveValue(state);
 			
-			if (pv.equals(PrimitiveValue.Undecided)) {
-				Util.debug(DebugFacility.Solver,"Primitive value for state "+current+" is undecided");
+			if (pv.equals(PrimitiveValue.UNDECIDED)) {
+				Util.debug(DebugFacility.SOLVER,"Primitive value for state "+current+" is undecided");
 				Collection<Pair<String,T>> children = game.validMoves(state);
 				ArrayList<Record> vals = new ArrayList<Record>(children.size());
 				for (Pair<String,T> child : children) {
@@ -70,7 +70,7 @@ public class TierSolver<T> extends Solver {
 				db.putRecord(current, newVal);
 			} else {				
 				Record prim = new Record(conf, pv);
-				Util.debug(DebugFacility.Solver,"Primitive value for state "+current+" is "+prim);
+				Util.debug(DebugFacility.SOLVER,"Primitive value for state "+current+" is "+prim);
 				db.putRecord(current, prim);
 			}
 		}
@@ -86,7 +86,7 @@ public class TierSolver<T> extends Solver {
 
 	protected Pair<BigInteger, BigInteger> nextSlice() {
 		if (needs2Sync) {
-			Util.debug(DebugFacility.Threading,"Thread waiting to tier-sync");
+			Util.debug(DebugFacility.THREADING,"Thread waiting to tier-sync");
 			try {
 				if (barr != null)
 					barr.await();
@@ -107,7 +107,7 @@ public class TierSolver<T> extends Solver {
 			offset = offset.add(step);
 			end = ret.add(step);
 			if (end.compareTo(myGame.lastHashValueForTier(tier)) >= 0) {
-				Util.debug(DebugFacility.Threading,"Reached end of tier");
+				Util.debug(DebugFacility.THREADING,"Reached end of tier");
 				end = myGame.lastHashValueForTier(tier);
 				tier--;
 				if (tier >= 0)
@@ -132,13 +132,13 @@ public class TierSolver<T> extends Solver {
 
 		@SuppressWarnings("synthetic-access")
 		public void conquer() {
-			Util.debug(DebugFacility.Solver,"Started the solver... (" + index + ")");
+			Util.debug(DebugFacility.SOLVER,"Started the solver... (" + index + ")");
 			Thread.currentThread().setName(
 					"Solver (" + index + "): " + myGame.toString());
 
 			Pair<BigInteger, BigInteger> slice;
 			while ((slice = nextSlice()) != null) {
-				Util.debug(DebugFacility.Threading,"Beginning to solve slice " + slice + " in thread "
+				Util.debug(DebugFacility.THREADING,"Beginning to solve slice " + slice + " in thread "
 						+ index);
 				solvePartialTier(myGame, slice.car, slice.cdr, updater);
 				db.flush();

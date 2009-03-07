@@ -9,19 +9,19 @@ public enum PrimitiveValue {
 	/**
 	 * The next player to move will lose even playing perfectly
 	 */
-	Lose(0),
+	LOSE(0),
 	/**
 	 * The game will eventually end in a tie
 	 */
-	Tie(1),
+	TIE(1),
 	/**
 	 * The next player to move will win in perfect play
 	 */
-	Win(2),
+	WIN(2),
 	/**
 	 * This value hasn't been computed yet
 	 */
-	Undecided(3);
+	UNDECIDED(3);
 
 	private int value;
 
@@ -51,15 +51,15 @@ public enum PrimitiveValue {
 	
 	public PrimitiveValue previousMovesValue(){
 		switch(this){
-		case Lose:
-			return Win;
-		case Tie:
-			return Tie;
-		case Undecided:
-			return Undecided;
-		case Win:
-			return Lose;
+		case LOSE:
+			return WIN;
+		case TIE:
+			return TIE;
+		case UNDECIDED:
+			return UNDECIDED;
+		case WIN:
+			return LOSE;
 		}
-		return Undecided;
+		return UNDECIDED;
 	}
 }

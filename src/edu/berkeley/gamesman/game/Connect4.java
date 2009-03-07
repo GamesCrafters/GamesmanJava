@@ -60,7 +60,7 @@ public class Connect4 extends TieredGame<C4Board> {
 	@Override
 	public PrimitiveValue primitiveValue(C4Board pos) {
 		PrimitiveValue v = pos.primitiveValue(piecesToWin);
-		Util.debug(DebugFacility.Game,"Primitive value of "+pos+" is "+v);
+		Util.debug(DebugFacility.GAME,"Primitive value of "+pos+" is "+v);
 		return v;
 	}
 
@@ -111,7 +111,7 @@ public class Connect4 extends TieredGame<C4Board> {
 			if (b != null)
 				nextBoards.add(new Pair<String, C4Board>("c" + col, b));
 		}
-		Util.debug(DebugFacility.Game, "Connect4 board "+pos+" yields children "+nextBoards);
+		Util.debug(DebugFacility.GAME, "Connect4 board "+pos+" yields children "+nextBoards);
 		return nextBoards;
 	}
 

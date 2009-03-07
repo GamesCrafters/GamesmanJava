@@ -103,14 +103,14 @@ public class RConnect4 extends TieredIterGame {
 			if (colHeights[col] > 0
 					&& get(colHeights[col]-1,col) == oppTurn
 					&& checkLastWin(colHeights[col] - 1, col))
-				return PrimitiveValue.Lose;
+				return PrimitiveValue.LOSE;
 			else if(colHeights[col]<gameHeight)
 				openColumns = true;
 		}
 		if (openColumns)
-			return PrimitiveValue.Undecided;
+			return PrimitiveValue.UNDECIDED;
 		else
-			return PrimitiveValue.Tie;
+			return PrimitiveValue.TIE;
 	}
 
 	/*

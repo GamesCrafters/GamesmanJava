@@ -12,11 +12,11 @@ public enum RecordFields {
 	 * The value of the position
 	 * @see PrimitiveValue
 	 */
-	Value(2),
+	VALUE(2),
 	/**
 	 * How many moves to the closest ending state
 	 */
-	Remoteness(6);
+	REMOTENESS(6);
 	
 	
 	private int bs;

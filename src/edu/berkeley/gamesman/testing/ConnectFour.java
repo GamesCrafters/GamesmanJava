@@ -75,7 +75,7 @@ public class ConnectFour implements MouseListener {
 			Collection<Pair<String, ItergameState>> moves = cgame.validMoves();
 			Pair<String,ItergameState> s;
 			Pair<String,ItergameState> best = null;
-			PrimitiveValue bestOutcome = PrimitiveValue.Undecided;
+			PrimitiveValue bestOutcome = PrimitiveValue.UNDECIDED;
 			PrimitiveValue thisOutcome;
 
 			for (Pair<String, ItergameState> move: moves) {

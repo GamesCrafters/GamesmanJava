@@ -136,8 +136,8 @@ public class Cuboid extends Game<CubeState> {
 	@Override
 	public PrimitiveValue primitiveValue(CubeState pos) {
 		if(pos.isSolved())
-			return PrimitiveValue.Win;
-		return PrimitiveValue.Undecided;
+			return PrimitiveValue.WIN;
+		return PrimitiveValue.UNDECIDED;
 	}
 
 	@Override

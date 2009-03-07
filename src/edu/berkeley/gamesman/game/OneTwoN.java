@@ -52,8 +52,8 @@ public class OneTwoN extends TieredGame<Integer> {
 	@Override
 	public PrimitiveValue primitiveValue(Integer pos) {
 		if (pos == gameHeight)
-			return PrimitiveValue.Lose;		
-		return PrimitiveValue.Undecided;
+			return PrimitiveValue.LOSE;		
+		return PrimitiveValue.UNDECIDED;
 	}
 	
 	@Override
@@ -80,7 +80,7 @@ public class OneTwoN extends TieredGame<Integer> {
 	public Collection<Pair<String,Integer>> validMoves(Integer pos) {
 		ArrayList<Pair<String,Integer>> nextBoards = new ArrayList<Pair<String,Integer>>();		
 	
-		if (primitiveValue(pos) != PrimitiveValue.Undecided)
+		if (primitiveValue(pos) != PrimitiveValue.UNDECIDED)
 			return nextBoards;
 		
 		for (int move = 1; move <= gameWidth && pos+move <= gameHeight; move++)

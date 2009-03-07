@@ -36,10 +36,10 @@ import edu.berkeley.gamesman.util.Util;
 public class DatabaseDump<S> {
 	private static final EnumMap<PrimitiveValue, String> PRIMITIVE_COLORS = new EnumMap<PrimitiveValue, String>(PrimitiveValue.class);
 	static {
-		PRIMITIVE_COLORS.put(PrimitiveValue.Undecided, "black");
-		PRIMITIVE_COLORS.put(PrimitiveValue.Lose, "red");
-		PRIMITIVE_COLORS.put(PrimitiveValue.Win, "green");
-		PRIMITIVE_COLORS.put(PrimitiveValue.Tie, "yellow");
+		PRIMITIVE_COLORS.put(PrimitiveValue.UNDECIDED, "black");
+		PRIMITIVE_COLORS.put(PrimitiveValue.LOSE, "red");
+		PRIMITIVE_COLORS.put(PrimitiveValue.WIN, "green");
+		PRIMITIVE_COLORS.put(PrimitiveValue.TIE, "yellow");
 	}
 	
 	private final PrintWriter w;
@@ -113,7 +113,7 @@ public class DatabaseDump<S> {
 	private void printNode(BigInteger parentHash, HashMap<Long, ArrayList<BigInteger>> levels, HashSet<BigInteger> seen, Queue<BigInteger> fringe) {
 		Util.assertTrue((seen == null) == (fringe == null), "seen and fringe must both be null or not null!");
 		
-		long remoteness = db.getRecord(parentHash).get(RecordFields.Remoteness);
+		long remoteness = db.getRecord(parentHash).get(RecordFields.REMOTENESS);
 		ArrayList<BigInteger> arr = levels.get(remoteness);
 		if(arr == null) {
 			arr = new ArrayList<BigInteger>();
@@ -135,10 +135,10 @@ public class DatabaseDump<S> {
 		attrs.put("fontname","courier");
 		
 		PrimitiveValue pv = gm.primitiveValue(parent);
-		if(!pv.equals(PrimitiveValue.Undecided))
+		if(!pv.equals(PrimitiveValue.UNDECIDED))
 			attrs.put("style","filled");
 		
-		Util.assertTrue(pv.equals(PrimitiveValue.Undecided) || pv.equals(v), "Primitive values don't match! "+pv
+		Util.assertTrue(pv.equals(PrimitiveValue.UNDECIDED) || pv.equals(v), "Primitive values don't match! "+pv
 				+" (db says "+v+") for pos "+parentHash+"\n"+gm.displayState(parent));
 		
 		w.print("\th"+parentHash+" [ ");
@@ -149,7 +149,7 @@ public class DatabaseDump<S> {
 		}
 		w.println(" ];");
 		for(Pair<String,S> child : gm.validMoves(parent)){
-			if(gm.primitiveValue(parent) != PrimitiveValue.Undecided && gm.primitiveValue(child.cdr) != PrimitiveValue.Undecided)
+			if(gm.primitiveValue(parent) != PrimitiveValue.UNDECIDED && gm.primitiveValue(child.cdr) != PrimitiveValue.UNDECIDED)
 				continue;
 			BigInteger childHash = gm.stateToHash(child.cdr);
 //			if(gm.primitiveValue(child.cdr) != PrimitiveValue.Undecidedgm.primitiveValue(child.cdr) != PrimitiveValue.Undecided) {

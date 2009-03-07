@@ -22,7 +22,7 @@ public final class NullDatabase extends Database {
 
 	@Override
 	public Record getRecord(BigInteger loc) {
-		return new Record(conf,PrimitiveValue.Undecided);
+		return new Record(conf,PrimitiveValue.UNDECIDED);
 	}
 
 	@Override

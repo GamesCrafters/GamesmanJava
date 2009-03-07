@@ -50,7 +50,7 @@ public final class LocalMaster implements Master,TaskFactory {
 		
 		solver.initialize(database);
 		
-		Util.debug(DebugFacility.Master,"Done initializing LocalMaster");
+		Util.debug(DebugFacility.MASTER,"Done initializing LocalMaster");
 		
 		
 	}
@@ -58,7 +58,7 @@ public final class LocalMaster implements Master,TaskFactory {
 	public void run() {
 		//System.err.println("Launched!");
 		int threads = Integer.parseInt(conf.getProperty("gamesman.threads","1"));
-		Util.debug(DebugFacility.Master,"Launching "+threads+" threads...");
+		Util.debug(DebugFacility.MASTER,"Launching "+threads+" threads...");
 		List<WorkUnit> list = solver.prepareSolve(conf,game).divide(threads);
 		
 		ArrayList<Thread> myThreads = new ArrayList<Thread>();
@@ -78,7 +78,7 @@ public final class LocalMaster implements Master,TaskFactory {
 			}
 		//System.err.println(myThreads);
 		database.close();
-		Util.debug(DebugFacility.Master, "Finished master run");
+		Util.debug(DebugFacility.MASTER, "Finished master run");
 	}
 	
 	private class LocalMasterRunnable implements Runnable {
@@ -88,9 +88,9 @@ public final class LocalMaster implements Master,TaskFactory {
 		}
 		
 		public void run(){
-			Util.debug(DebugFacility.Master,"LocalMasterRunnable begin");
+			Util.debug(DebugFacility.MASTER,"LocalMasterRunnable begin");
 			w.conquer();
-			Util.debug(DebugFacility.Master,"LocalMasterRunnable end");
+			Util.debug(DebugFacility.MASTER,"LocalMasterRunnable end");
 		}
 	}
 

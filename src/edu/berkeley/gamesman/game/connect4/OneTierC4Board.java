@@ -465,12 +465,12 @@ public final class OneTierC4Board implements Cloneable {
 			if (colHeight > 0
 					&& columns[col].topPiece().getColor() == turn.opposite()
 					&& checkLastWin(colHeight - 1, col))
-				return PrimitiveValue.Lose;
+				return PrimitiveValue.LOSE;
 		}
 		if (openColumns > 0)
-			return PrimitiveValue.Undecided;
+			return PrimitiveValue.UNDECIDED;
 		else
-			return PrimitiveValue.Tie;
+			return PrimitiveValue.TIE;
 	}
 
 	/**

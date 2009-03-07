@@ -35,8 +35,8 @@ public class OneTwoNGame extends Game<Integer> {
 	@Override
 	public PrimitiveValue primitiveValue(Integer pos) {
 		if (pos == MAX_NUMBER)
-			return PrimitiveValue.Lose;		
-		return PrimitiveValue.Undecided;
+			return PrimitiveValue.LOSE;		
+		return PrimitiveValue.UNDECIDED;
 	}
 	
 	@Override

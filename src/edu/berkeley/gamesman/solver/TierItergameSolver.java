@@ -35,7 +35,7 @@ public final class TierItergameSolver extends TierSolver<ItergameState> {
 
 			PrimitiveValue pv = game.primitiveValue();
 
-			if (pv.equals(PrimitiveValue.Undecided)) {
+			if (pv.equals(PrimitiveValue.UNDECIDED)) {
 				Collection<Pair<String, ItergameState>> children = game
 						.validMoves();
 				ArrayList<Record> vals = new ArrayList<Record>(children.size());

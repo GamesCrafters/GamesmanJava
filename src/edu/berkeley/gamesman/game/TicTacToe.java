@@ -31,13 +31,13 @@ public class TicTacToe extends DartboardGame {
 		for (int row = 0; row < gameHeight; row++) {
 			for (int col = 0; col < gameWidth; col++) {
 				if(checkWinOnPiece(row,col,lastTurn))
-					return PrimitiveValue.Lose;
+					return PrimitiveValue.LOSE;
 			}
 		}
 		if(numPieces == gameWidth*gameHeight)
-			return PrimitiveValue.Tie;
+			return PrimitiveValue.TIE;
 		else
-			return PrimitiveValue.Undecided;
+			return PrimitiveValue.UNDECIDED;
 	}
 
 	private boolean checkWinOnPiece(int row, int col, char lastTurn) {

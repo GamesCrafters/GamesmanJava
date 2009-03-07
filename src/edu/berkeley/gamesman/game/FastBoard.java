@@ -480,12 +480,12 @@ public final class FastBoard {
 			if (colHeight > 0
 					&& columns[col].topPiece().getColor() == turn.opposite()
 					&& checkLastWin(colHeight - 1, col, piecesToWin))
-				return PrimitiveValue.Lose;
+				return PrimitiveValue.LOSE;
 		}
 		if (openColumns>0)
-			return PrimitiveValue.Undecided;
+			return PrimitiveValue.UNDECIDED;
 		else
-			return PrimitiveValue.Tie;
+			return PrimitiveValue.TIE;
 	}
 
 	/*
@@ -613,7 +613,7 @@ public final class FastBoard {
 			ArrayList<BigInteger> moveOffsets,*/ int piecesToWin) {
 //		Record r = primitiveValue(piecesToWin);
 		PrimitiveValue pv=primitiveValue(piecesToWin);
-		if (pv == PrimitiveValue.Undecided) {
+		if (pv == PrimitiveValue.UNDECIDED) {
 //			Record bestMove = null;
 			ArrayList<BigInteger> m = moveHashes();
 //			for (int i = 0; i < m.size(); i++) {

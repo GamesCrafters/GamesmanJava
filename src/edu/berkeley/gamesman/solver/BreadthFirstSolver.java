@@ -67,17 +67,17 @@ public class BreadthFirstSolver extends Solver {
 			solveTask.setTotal(maxHash);
 			solveTask.setProgress(0);
 			while (!numPositionsInLevel.equals(BigInteger.ZERO) && remoteness < maxRemoteness) {
-				Util.debug(DebugFacility.Solver, "Number of states at remoteness " + remoteness + ": " + numPositionsInLevel);
+				Util.debug(DebugFacility.SOLVER, "Number of states at remoteness " + remoteness + ": " + numPositionsInLevel);
 				numPositionsInLevel = BigInteger.ZERO;
 				for (BigInteger hash : Util.bigIntIterator(maxHash)) {
 					if (seen.contains(hash)) {
 						Record rec = database.getRecord(hash);
-						if (rec.get(RecordFields.Remoteness) == remoteness) {
+						if (rec.get(RecordFields.REMOTENESS) == remoteness) {
 							for (Pair<String,T> child : game.validMoves(game.hashToState(hash))) {
 								BigInteger childhash = game.stateToHash(child.cdr);
 								if (!seen.contains(childhash)) {
-									Record childrec = new Record(conf, PrimitiveValue.Win);
-									childrec.set(RecordFields.Remoteness, remoteness + 1);
+									Record childrec = new Record(conf, PrimitiveValue.WIN);
+									childrec.set(RecordFields.REMOTENESS, remoteness + 1);
 									database.putRecord(childhash, childrec);
 									seen.add(childhash);
 									numPositionsInLevel = numPositionsInLevel.add(BigInteger.ONE);
@@ -92,7 +92,7 @@ public class BreadthFirstSolver extends Solver {
 				remoteness += 1;
 			}
 			solveTask.complete();
-			Util.debug(DebugFacility.Solver, "Solving finished!!! Max remoteness is "+(remoteness-1)+". Total positions seen = "+numPositionsSeen);
+			Util.debug(DebugFacility.SOLVER, "Solving finished!!! Max remoteness is "+(remoteness-1)+". Total positions seen = "+numPositionsSeen);
 		}
 
 		public List<WorkUnit> divide(int num) {

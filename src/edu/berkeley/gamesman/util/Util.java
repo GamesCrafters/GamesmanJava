@@ -144,12 +144,12 @@ public final class Util {
 	public static void debugInit(Configuration conf){
 		String env = System.getenv("GAMESMAN_DEBUG");
 		for(DebugFacility f: DebugFacility.values()){
-			if(conf.getProperty("gamesman.debug."+f.toString(),null) != null) debugOpts.add(f);
+			if(conf.getProperty("gamesman.debug."+f.toString().toUpperCase(),null) != null) debugOpts.add(f);
 			if(env != null && env.contains(f.toString())) debugOpts.add(f);
 		}
 		if(!debugOpts.isEmpty())
-			debugOpts.add(DebugFacility.Core);
-		Util.debug(DebugFacility.Core,"Debugging enabled for: "+debugOpts);
+			debugOpts.add(DebugFacility.CORE);
+		Util.debug(DebugFacility.CORE,"Debugging enabled for: "+debugOpts);
 	}
 	
 	/**
@@ -158,7 +158,7 @@ public final class Util {
 	 * @param s The message to print
 	 */
 	public static void debug(DebugFacility fac, String s) {
-		if(debugOpts.contains(fac) || debugOpts.contains(DebugFacility.All))
+		if(debugOpts.contains(fac) || debugOpts.contains(DebugFacility.ALL))
 			System.out.println("DEBUG "+fac+": (" + Thread.currentThread().getName() + ") " + s);
 	}
 

@@ -61,7 +61,7 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 		config = Configuration.load(conf.get("configuration_data").getBytes());
 		db.initialize(conf.get("dburi"),config);
 		
-		Util.debug(DebugFacility.Hadoop,"Hadoop is ready to work!");
+		Util.debug(DebugFacility.HADOOP,"Hadoop is ready to work!");
 		
 	}
 

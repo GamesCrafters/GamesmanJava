@@ -59,7 +59,7 @@ public final class Record {
 	public Record(Configuration conf2, PrimitiveValue primitiveValue) {
 		conf = conf2;
 		setupBits();
-		set(RecordFields.Value, primitiveValue.value());
+		set(RecordFields.VALUE, primitiveValue.value());
 	}
 
 	/**
@@ -124,7 +124,7 @@ public final class Record {
 	public void write(ByteBuffer buf, long index) {
 		long bitoff = index * bitlength();
 		for (int i = 0; i < fieldBitLength.length; i++) {
-			Util.debug(DebugFacility.Record, "Putting field " + fieldNames[i]
+			Util.debug(DebugFacility.RECORD, "Putting field " + fieldNames[i]
 					+ " (" + fieldValues[i] + ") to [" + bitoff + ":" + fieldBitLength[i]
 					+ "]");
 			BitBuffer.put(buf, bitoff, fieldBitLength[i], fieldValues[i]);
@@ -151,7 +151,7 @@ public final class Record {
 		long bitoff = index * bitlength();
 		for (int i = 0; i < fieldValues.length; i++) {
 			fieldValues[i] = BitBuffer.get(buf, bitoff, fieldBitLength[i]);
-			Util.debug(DebugFacility.Bitwise, String.format("Read field %d (bit %d) as 0x%x",i,bitoff,fieldValues[i]));
+			Util.debug(DebugFacility.BITWISE, String.format("Read field %d (bit %d) as 0x%x",i,bitoff,fieldValues[i]));
 			bitoff += fieldBitLength[i];
 		}
 	}
@@ -199,7 +199,7 @@ public final class Record {
 	 */
 	public final void set(final RecordFields field, final long value) {
 		fieldValues[sf.get(field).car] = value;
-		Util.debug(DebugFacility.Record,"Record sets "+field+" to "+value);
+		Util.debug(DebugFacility.RECORD,"Record sets "+field+" to "+value);
 	}
 
 	/**
@@ -212,7 +212,7 @@ public final class Record {
 		Pair<Integer, Integer> f = sf.get(field);
 		if(f == null)
 			return -1;
-		Util.debug(DebugFacility.Record,"Record gets "+field+" as "+fieldValues[f.car]);
+		Util.debug(DebugFacility.RECORD,"Record gets "+field+" as "+fieldValues[f.car]);
 		return fieldValues[f.car];
 	}
 	
@@ -220,7 +220,7 @@ public final class Record {
 	 * @return the value of this position
 	 */
 	public final PrimitiveValue get(){
-		int i = (int)get(RecordFields.Value);
+		int i = (int)get(RecordFields.VALUE);
 		if(i == -1) return null;
 		return PrimitiveValue.values()[i];
 	}
@@ -275,39 +275,39 @@ public final class Record {
 		}
 		
 		PrimitiveValue pv;
-		if(!conf.getStoredFields().containsKey(RecordFields.Value))
+		if(!conf.getStoredFields().containsKey(RecordFields.VALUE))
 			pv = null;
 		else
-			pv = primitiveCombine(map.get(RecordFields.Value));
+			pv = primitiveCombine(map.get(RecordFields.VALUE));
 
 		for (RecordFields rf : conf.getStoredFields().keySet()) {
 			switch (rf) {
-			case Value:
+			case VALUE:
 				rec.set(rf, pv.value());
 				break;
-			case Remoteness:
-				if(!conf.getStoredFields().containsKey(RecordFields.Value))
+			case REMOTENESS:
+				if(!conf.getStoredFields().containsKey(RecordFields.VALUE))
 					rec.set(rf, Collections.min(map.get(rf)) + 1);
 				else{
 					switch(pv){
-					case Tie:
+					case TIE:
 						int max = 0;
 						for(Record r : vals)
-							if(r.get() == PrimitiveValue.Tie)
-								max = (int) Math.max(max, r.get(RecordFields.Remoteness));
-						rec.set(RecordFields.Remoteness, max+1);
+							if(r.get() == PrimitiveValue.TIE)
+								max = (int) Math.max(max, r.get(RecordFields.REMOTENESS));
+						rec.set(RecordFields.REMOTENESS, max+1);
 						break;
-					case Lose:
+					case LOSE:
 						rec.set(rf, Collections.min(map.get(rf)) + 1);
 						break;
-					case Win:
+					case WIN:
 						int min = Integer.MAX_VALUE;
 						for(Record r : vals)
-							if(r.get() == PrimitiveValue.Lose)
-								max = (int) Math.min(min, r.get(RecordFields.Remoteness));
-						rec.set(RecordFields.Remoteness, min+1);
+							if(r.get() == PrimitiveValue.LOSE)
+								max = (int) Math.min(min, r.get(RecordFields.REMOTENESS));
+						rec.set(RecordFields.REMOTENESS, min+1);
 						break;
-					case Undecided:
+					case UNDECIDED:
 						break;
 					}
 				}
@@ -325,29 +325,29 @@ public final class Record {
 		for (Long iv : vals) {
 			PrimitiveValue v = PrimitiveValue.values()[iv.intValue()];
 			switch (v) {
-			case Undecided:
-				return PrimitiveValue.Undecided;
-			case Lose:
-				return PrimitiveValue.Win;
-			case Tie:
+			case UNDECIDED:
+				return PrimitiveValue.UNDECIDED;
+			case LOSE:
+				return PrimitiveValue.WIN;
+			case TIE:
 				seentie = true;
 				break;
-			case Win:
+			case WIN:
 				break;
 			default:
 				Util.fatalError("Illegal primitive value: " + iv);
 			}
 		}
 		if (seentie)
-			return PrimitiveValue.Tie;
-		return PrimitiveValue.Lose;
+			return PrimitiveValue.TIE;
+		return PrimitiveValue.LOSE;
 	}
 
 	public String toString() {
 		StringBuilder b = new StringBuilder();
 		//System.out.println(Arrays.toString(fieldValues));
 		for (int fieldnum = 0; fieldnum < fieldValues.length; fieldnum++) {
-			if (sf.get(RecordFields.Value).car == fieldnum)
+			if (sf.get(RecordFields.VALUE).car == fieldnum)
 				b.append(PrimitiveValue.values()[(int) fieldValues[fieldnum]]);
 			else
 				b.append(fieldValues[fieldnum]);
@@ -429,12 +429,12 @@ public final class Record {
 			long val = vala & (1 << len) - 1;
 			if (off + len < 64) {
 				long l1 = b.getLong((int) (offa / 8));
-				Util.debug(DebugFacility.Bitwise, String.format("Read 0x%x from 0x%x mask=0x%x -> 0x%x",
+				Util.debug(DebugFacility.BITWISE, String.format("Read 0x%x from 0x%x mask=0x%x -> 0x%x",
 						l1,(offa/8),~(mask(off, off + len)),l1 & ~(mask(off, off + len))));
 				l1 &= ~(mask(off, off + len));
 				l1 |= val << (64 - len - off);
 				b.putLong((int) (offa / 8), l1);
-				Util.debug(DebugFacility.Bitwise, String.format("Putting 0x%x -> 0x%x to 0x%x",val << (64 - len - off),l1,(offa/8)));
+				Util.debug(DebugFacility.BITWISE, String.format("Putting 0x%x -> 0x%x to 0x%x",val << (64 - len - off),l1,(offa/8)));
 			} else {
 				Util.fatalError("abort");
 			}
@@ -477,15 +477,15 @@ public final class Record {
 		else if (other.get().isPreferableTo(get()))
 			return false;
 		else {
-			if (get().equals(PrimitiveValue.Win))
-				if (get(RecordFields.Remoteness) < other
-						.get(RecordFields.Remoteness))
+			if (get().equals(PrimitiveValue.WIN))
+				if (get(RecordFields.REMOTENESS) < other
+						.get(RecordFields.REMOTENESS))
 					return true;
 				else
 					return false;
-			else if (get().equals(PrimitiveValue.Lose))
-				if (get(RecordFields.Remoteness) > other
-						.get(RecordFields.Remoteness))
+			else if (get().equals(PrimitiveValue.LOSE))
+				if (get(RecordFields.REMOTENESS) > other
+						.get(RecordFields.REMOTENESS))
 					return true;
 				else
 					return false;
