@@ -273,14 +273,44 @@ public final class Record {
 				map.get(rf).add(r.get(rf));
 			}
 		}
+		
+		PrimitiveValue pv;
+		if(!conf.getStoredFields().containsKey(RecordFields.Value))
+			pv = null;
+		else
+			pv = primitiveCombine(map.get(RecordFields.Value));
 
 		for (RecordFields rf : conf.getStoredFields().keySet()) {
 			switch (rf) {
 			case Value:
-				rec.set(rf, primitiveCombine(map.get(rf)).value());
+				rec.set(rf, pv.value());
 				break;
 			case Remoteness:
-				rec.set(rf, Collections.min(map.get(rf)) + 1); // TODO: this is wrong
+				if(!conf.getStoredFields().containsKey(RecordFields.Value))
+					rec.set(rf, Collections.min(map.get(rf)) + 1);
+				else{
+					switch(pv){
+					case Tie:
+						int max = 0;
+						for(Record r : vals)
+							if(r.get() == PrimitiveValue.Tie)
+								max = (int) Math.max(max, r.get(RecordFields.Remoteness));
+						rec.set(RecordFields.Remoteness, max+1);
+						break;
+					case Lose:
+						rec.set(rf, Collections.min(map.get(rf)) + 1);
+						break;
+					case Win:
+						int min = Integer.MAX_VALUE;
+						for(Record r : vals)
+							if(r.get() == PrimitiveValue.Lose)
+								max = (int) Math.min(min, r.get(RecordFields.Remoteness));
+						rec.set(RecordFields.Remoteness, min+1);
+						break;
+					case Undecided:
+						break;
+					}
+				}
 				break;
 			default:
 				Util.fatalError("Default case shouldn't have been reached");
