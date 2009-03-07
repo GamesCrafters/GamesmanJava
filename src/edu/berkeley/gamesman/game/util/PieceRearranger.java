@@ -46,7 +46,6 @@ import edu.berkeley.gamesman.util.Pair;
 public final class PieceRearranger implements Cloneable{
 	private static final class HashPiece {
 		private final int index;
-		private int os;
 		private char player;
 		private BigInteger hash;
 		private BigInteger nextO;
@@ -57,7 +56,6 @@ public final class PieceRearranger implements Cloneable{
 				HashGroup group) {
 			this.player = player;
 			this.index = pieces;
-			this.os = os;
 			this.hash = hash;
 			if (hash.equals(BigInteger.ZERO)) {
 				nextO = BigInteger.ZERO;
@@ -81,7 +79,6 @@ public final class PieceRearranger implements Cloneable{
 				oChange = oChange.subtract(nextO);
 			}
 			this.player = player;
-			this.os = os;
 			this.hash = hash;
 			if (hash.equals(BigInteger.ZERO)) {
 				this.nextO = BigInteger.ZERO;
@@ -105,45 +102,24 @@ public final class PieceRearranger implements Cloneable{
 		}
 	}
 
-	private static final class HashGroup {
-
-		private final HashPiece[] pieces;
-		private final int empty;
-		private final HashPiece lastPiece;
-		private BigInteger groupHash = BigInteger.ZERO;
+	private final class HashGroup {
+		private int empty;
+		private HashPiece lastPiece;
 		private BigInteger addO = BigInteger.ZERO;
 		private BigInteger addX = BigInteger.ZERO;
 
-		private HashGroup(char[] s, HashGroup lastGroup,
-				HashPiece[] pieceArray, int index) throws Exception {
-			pieces = new HashPiece[s.length];
-			HashPiece lastPiece;
-			if (lastGroup == null)
-				lastPiece = new HashPiece(-1, 0, BigInteger.ZERO, 'X', this);
-			else
-				lastPiece = lastGroup.lastPiece;
-			for (int i = 0; i < s.length; i++) {
-				if (s[i] == 'O') {
-					pieces[i] = new HashPiece(lastPiece.index + 1,
-							lastPiece.os + 1, lastPiece.nextO, 'O', this);
-					addO = addO.add(pieces[i].nextO.subtract(pieces[i].hash));
-					addX = addX.add(pieces[i].nextX.subtract(pieces[i].hash));
-					groupHash = groupHash.add(pieces[i].hash);
-				} else if (s[i] == 'X')
-					pieces[i] = new HashPiece(lastPiece.index + 1, lastPiece.os,
-							lastPiece.nextX, 'X', this);
-				else
-					throw new Exception("Bad character: " + s[i]);
-				lastPiece = pieces[i];
-				pieceArray[index++] = lastPiece;
-			}
+		private HashGroup(int index, HashPiece lastPiece) throws Exception {
 			this.empty = index;
 			this.lastPiece = lastPiece;
+		}
+		
+		private void addPiece(HashPiece p) {
+			setPiece(p.hash, p.nextO.subtract(p.hash), p.nextX.subtract(p.hash));
+			lastPiece = p;
 		}
 
 		private void setPiece(BigInteger hashChange, BigInteger addOChange,
 				BigInteger addXChange) {
-			groupHash = groupHash.add(hashChange);
 			addO = addO.add(addOChange);
 			addX = addX.add(addXChange);
 		}
@@ -159,6 +135,7 @@ public final class PieceRearranger implements Cloneable{
 	private int openX = 0, openO = 0;
 	private boolean hasNext = true;
 	private final HashPiece[] pieces;
+	private final int numSpaces;
 
 	/**
 	 * @param s A character representation of the board (in 'X' 'O' and ' ')
@@ -166,23 +143,17 @@ public final class PieceRearranger implements Cloneable{
 	 */
 	public PieceRearranger(final char[] s) throws Exception {
 		LinkedList<HashGroup> g = new LinkedList<HashGroup>();
-		HashGroup lastGroup;
-		HashGroup pg = null;
-		pieces = new HashPiece[s.length];
-		int index = 0;
+		numSpaces = s.length;
+		HashGroup currentGroup = new HashGroup(0, null);
+		HashPiece lastPiece = new HashPiece(-1, 0, BigInteger.ZERO, 'O', null);
+		pieces = new HashPiece[numSpaces];
 		int numPieces = 0, numOs = 0;
-		String thisGroup = "";
 		boolean onFX = true;
 		boolean onFO = true;
-		for (int i = 0; i < s.length; i++) {
+		for (int i = 0; i < numSpaces; i++) {
 			if (s[i] == ' ') {
-				lastGroup = pg;
-				pg = new HashGroup(thisGroup.toCharArray(), lastGroup, pieces,
-						index);
-				index = pg.empty + 1;
-				hash = hash.add(pg.groupHash);
-				g.add(pg);
-				thisGroup = "";
+				g.add(currentGroup);
+				currentGroup = new HashGroup(i + 1, lastPiece);
 			} else {
 				if (onFX && s[i] == 'X')
 					openX++;
@@ -193,21 +164,21 @@ public final class PieceRearranger implements Cloneable{
 					else
 						onFO = false;
 				}
-				if (s[i] == 'O')
+				if (s[i] == 'O'){
 					numOs++;
-				thisGroup += s[i];
+					lastPiece = new HashPiece(numPieces, numOs, lastPiece.nextO, 'O', currentGroup);
+					currentGroup.addPiece(lastPiece);
+				}else{
+					lastPiece = new HashPiece(numPieces, numOs, lastPiece.nextX, 'X', currentGroup);
+					currentGroup.addPiece(lastPiece);
+				}
+				pieces[i] = lastPiece;
 				numPieces++;
 			}
 		}
-		lastGroup = pg;
-		pg = new HashGroup(thisGroup.toCharArray(), lastGroup, pieces, index);
-		index = pg.empty + 1;
-		hash = hash.add(pg.groupHash);
-		g.add(pg);
-		thisGroup = "";
 		if (onFO)
 			hasNext = false;
-		arrangements = pg.lastPiece.nextX;
+		arrangements = lastPiece.nextX;
 		groups = g.toArray(new HashGroup[g.size()]);
 		this.numPieces = numPieces;
 		this.numOs = numOs;
@@ -221,47 +192,34 @@ public final class PieceRearranger implements Cloneable{
 	 */
 	public PieceRearranger(final char[] s, int os, int xs) throws Exception {
 		LinkedList<HashGroup> g = new LinkedList<HashGroup>();
-		numPieces = xs + os;
-		numOs = os;
-		openO = os;
-		openX = 0;
-		if(numPieces<=1)
-			hasNext=false;
-		HashGroup lastGroup;
-		HashGroup pg = null;
-		pieces = new HashPiece[s.length];
-		int index = 0;
-		String thisGroup = "";
-		for (int i = 0; i < s.length; i++) {
+		numSpaces = s.length;
+		HashGroup currentGroup = new HashGroup(0, null);
+		HashPiece lastPiece = new HashPiece(-1, 0, BigInteger.ZERO, 'O', null);
+		pieces = new HashPiece[numSpaces];
+		int numPieces = 0, numOs = 0;
+		for (int i = 0; i < numSpaces; i++) {
 			if (s[i] == ' ') {
-				lastGroup = pg;
-				pg = new HashGroup(thisGroup.toCharArray(), lastGroup, pieces,
-						index);
-				index = pg.empty + 1;
-				hash = hash.add(pg.groupHash);
-				g.add(pg);
-				thisGroup = "";
+				g.add(currentGroup);
+				currentGroup = new HashGroup(i + 1, lastPiece);
 			} else {
-				if(os>0){
-					thisGroup += 'O';
-					os--;
+				if (numOs < os){
+					numOs++;
+					lastPiece = new HashPiece(numPieces, numOs, lastPiece.nextO, 'O', currentGroup);
+					currentGroup.addPiece(lastPiece);
 				}else{
-					thisGroup += 'X';
-					xs--;
+					lastPiece = new HashPiece(numPieces, numOs, lastPiece.nextX, 'X', currentGroup);
+					currentGroup.addPiece(lastPiece);
 				}
+				pieces[i] = lastPiece;
+				numPieces++;
 			}
 		}
-		if(xs>0)
-			throw new Exception("os="+numOs+", and xs="+(numPieces-numOs)+", but frame=\n"+String.copyValueOf(s));
-		lastGroup = pg;
-		pg = new HashGroup(thisGroup.toCharArray(), lastGroup, pieces,
-				index);
-		index = pg.empty + 1;
-		hash = hash.add(pg.groupHash);
-		g.add(pg);
-		thisGroup = "";
-		arrangements = pg.lastPiece.nextX;
+		arrangements = lastPiece.nextX;
 		groups = g.toArray(new HashGroup[g.size()]);
+		this.numPieces = numPieces;
+		this.numOs = numOs;
+		openO = os;
+		openX = 0;
 	}
 
 	/**

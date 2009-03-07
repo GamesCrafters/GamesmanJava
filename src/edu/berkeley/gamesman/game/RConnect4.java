@@ -43,7 +43,8 @@ public class RConnect4 extends TieredIterGame {
 	@Override
 	public RConnect4 clone() {
 		RConnect4 other = new RConnect4(conf);
-		other.setToString(stateToString());
+		if(iah!=null)
+			other.setToString(stateToString());
 		return other;
 	}
 
@@ -258,51 +259,38 @@ public class RConnect4 extends TieredIterGame {
 
 	@Override
 	public void setToString(String pos) {
-		pieces.clear();
-		StringBuilder iahPos = new StringBuilder(gameWidth * gameHeight);
-		int numPieces = 0;
-		int row = 0, col = 0;
-		colHeights[col] = 0;
-		int index = 0;
-		for (int i = 0; i < pos.length(); i++) {
-			switch (pos.charAt(i)) {
-			case 'O':
-				indices[row][col] = index;
-				iahPos.append('O');
-				pieces.add(new Pair<Integer, Integer>(row, col));
-				numPieces++;
-				colHeights[col]++;
-				break;
-			case 'X':
-				indices[row][col] = index;
-				iahPos.append('X');
-				pieces.add(new Pair<Integer, Integer>(row, col));
-				numPieces++;
-				colHeights[col]++;
-				break;
-			case ' ':
-				iahPos.append(' ');
-				pieces.add(new Pair<Integer, Integer>(row, col));
-				for (; row < gameHeight; row++) {
-					i++;
-					indices[row][col] = index;
+		tier = 0;
+		StringBuilder iahString = new StringBuilder(gameHeight*gameWidth);
+		for(int col = gameWidth - 1; col >= 0; col--){
+			tier *= gameHeight + 1;
+			for(int row = 0; row < gameHeight; row++){
+				char c = pos.charAt(row*gameWidth+col);
+				if(c == ' '){
+					iahString.append(' ');
+					break;
+				}else{
+					tier++;
+					iahString.append(c);
 				}
-				break;
 			}
-			row++;
-			if (row >= gameHeight) {
-				row = 0;
-				col++;
-				colHeights[col] = 0;
-			}
-			index++;
 		}
+		setTier(tier);
 		try {
-			iah = new PieceRearranger(iahPos.toString(), numPieces / 2,
-					(numPieces + 1) / 2);
+			System.out.println(iah.toString());
+			iah = new PieceRearranger(iahString.toString());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	private String indicesString() {
+		StringBuilder s = new StringBuilder(gameHeight*gameWidth);
+		for(int row = 0; row < gameHeight; row++){
+			for(int col = 0; col < gameWidth; col ++){
+				s.append(Integer.toString(indices[row][col]));
+			}
+		}
+		return s.toString();		
 	}
 
 	@Override

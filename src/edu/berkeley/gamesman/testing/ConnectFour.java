@@ -4,6 +4,7 @@ import java.awt.Container;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -74,14 +75,12 @@ public class ConnectFour implements MouseListener {
 		if (compTurn() && !win()) {
 			cgame.setToString(arrToString(board));
 			Collection<Pair<String, ItergameState>> moves = cgame.validMoves();
-			Iterator<Pair<String, ItergameState>> nextStates = moves.iterator();
 			Pair<String,ItergameState> s;
 			Pair<String,ItergameState> best = null;
 			PrimitiveValue bestOutcome = PrimitiveValue.Undecided;
 			PrimitiveValue thisOutcome;
 
-			while (nextStates.hasNext()) {
-				Pair<String, ItergameState> move = nextStates.next();
+			for (Pair<String, ItergameState> move: moves) {
 				s = move;
 				thisOutcome = fd.getRecord(cgame.stateToHash(s.cdr)).get();
 				System.out.println("Next possible move " + move.car
