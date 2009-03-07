@@ -147,7 +147,17 @@ public class DatabaseDump<S> {
 		}
 		w.println(" ];");
 		for(Pair<String,S> child : gm.validMoves(parent)){
+			if(gm.primitiveValue(parent) != PrimitiveValue.Undecided && gm.primitiveValue(child.cdr) != PrimitiveValue.Undecided)
+				continue;
 			BigInteger childHash = gm.stateToHash(child.cdr);
+//			if(gm.primitiveValue(child.cdr) != PrimitiveValue.Undecidedgm.primitiveValue(child.cdr) != PrimitiveValue.Undecided) {
+//				boolean isStartingPosition = false;
+//				for(S s : gm.startingPositions())
+//					if(gm.stateToHash(s).equals(childHash))
+//						isStartingPosition = true;
+//				if(!isStartingPosition) continue;
+//			}
+			
 			//no reason to add the child to the fringe if we've already seen him
 			//this would work fine if we just added him anyways, but this is probably better
 			if(pruneInvalid && !seen.contains(childHash)) 
