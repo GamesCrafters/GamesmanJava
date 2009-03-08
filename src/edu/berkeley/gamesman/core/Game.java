@@ -53,8 +53,10 @@ public abstract class Game<State> {
 	 * @return The resulting State, or null if it isn't found in validMoves()
 	 */
 	public State doMove(State pos, String move) {
-		if(!primitiveValue(pos).equals(PrimitiveValue.UNDECIDED))
-			return null;
+		//TODO - better solution for games!
+		//we don't want to keep the user from turning a rubik's cube if solved (primitive)
+//		if(!primitiveValue(pos).equals(PrimitiveValue.UNDECIDED))
+//			return null;
 		for(Pair<String, State> next : validMoves(pos))
 			if(next.car.equals(move))
 				return next.cdr;
