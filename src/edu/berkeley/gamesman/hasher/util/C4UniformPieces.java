@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.hasher;
+package edu.berkeley.gamesman.hasher.util;
 
 
 import java.math.BigInteger;

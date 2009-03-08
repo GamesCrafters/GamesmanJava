@@ -8,6 +8,8 @@ import edu.berkeley.gamesman.core.Board2D;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.TieredHasher;
 import edu.berkeley.gamesman.game.connect4.C4Board;
+import edu.berkeley.gamesman.hasher.util.AlternatingRearranger;
+import edu.berkeley.gamesman.hasher.util.C4UniformPieces;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
