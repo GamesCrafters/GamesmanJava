@@ -175,6 +175,7 @@ public final class PieceRearranger implements Cloneable{
 				numPieces++;
 			}
 		}
+		g.add(currentGroup);
 		arrangements = lastPiece.nextX;
 		groups = g.toArray(new HashGroup[g.size()]);
 		this.numPieces = numPieces;
@@ -211,6 +212,7 @@ public final class PieceRearranger implements Cloneable{
 				numPieces++;
 			}
 		}
+		g.add(currentGroup);
 		arrangements = lastPiece.nextX;
 		groups = g.toArray(new HashGroup[g.size()]);
 		this.numPieces = numPieces;
@@ -246,17 +248,20 @@ public final class PieceRearranger implements Cloneable{
 		ArrayList<Pair<Integer, BigInteger>> result = new ArrayList<Pair<Integer, BigInteger>>(
 				groups.length);
 		BigInteger move = hash;
-		if (player == 'O')
-			for (int i = groups.length - 1; i >= 0; i--) {
+		if (player == 'O'){
+			move = move.add(groups[groups.length - 1].addO);
+			for (int i = groups.length - 2; i >= 0; i--) {
 				result.add(new Pair<Integer, BigInteger>(groups[i].empty, move
 						.add(groups[i].lastPiece.nextO)));
 				move = move.add(groups[i].addO);
 			}
-		else if (player == 'X')
-			for (int i = groups.length - 1; i >= 0; i--) {
+		}else if (player == 'X'){
+			move = move.add(groups[groups.length - 1].addX);
+			for (int i = groups.length - 2; i >= 0; i--) {
 				result.add(new Pair<Integer, BigInteger>(groups[i].empty, move));
 				move = move.add(groups[i].addX);
 			}
+		}
 		return result;
 	}
 
