@@ -15,14 +15,11 @@ import edu.berkeley.gamesman.util.Util;
  */
 public abstract class Game<State> {
 	
-	protected final int gameWidth, gameHeight;
 	protected final Configuration conf;
 	
 	@SuppressWarnings("unused")
 	private Game(){
 		Util.fatalError("Do not call this constructor!");
-		gameWidth = 0;
-		gameHeight = 0;
 		conf = null;
 	}
 	
@@ -33,17 +30,6 @@ public abstract class Game<State> {
 	 * @param conf configuration
 	 */
 	public Game(Configuration conf){
-		String w = conf.getProperty("gamesman.game.width","<auto>");
-		String h = conf.getProperty("gamesman.game.height","<auto>");
-		if(w.equals("<auto>"))
-			gameWidth = getDefaultBoardWidth();
-		else
-			gameWidth = Integer.parseInt(w);
-		
-		if(h.equals("<auto>"))
-			gameHeight = getDefaultBoardHeight();
-		else
-			gameHeight = Integer.parseInt(h);
 		this.conf = conf;
 	}
 	
@@ -60,13 +46,18 @@ public abstract class Game<State> {
 	 */
 	public abstract Collection<Pair<String,State>> validMoves(State pos);
 	
+	/**
+	 * Applies move to pos
+	 * @param pos The State on which to apply move
+	 * @param move A String for the move to apply to pos
+	 * @return The resulting State, or null if it isn't found in validMoves()
+	 */
 	public State doMove(State pos, String move) {
 		if(!primitiveValue(pos).equals(PrimitiveValue.UNDECIDED))
 			return null;
-		for(Pair<String, State> next : validMoves(pos)) {
+		for(Pair<String, State> next : validMoves(pos))
 			if(next.car.equals(move))
 				return next.cdr;
-		}
 		return null;
 	}
 	
@@ -122,9 +113,10 @@ public abstract class Game<State> {
 	/**
 	 * "Pretty-print" a State for display by Graphviz/Dotty.
 	 * See http://www.graphviz.org/Documentation.php for documentation.
-	 * By default, replaces newlines with <br />
-	 * @param pos
-	 * @return
+	 * By default, replaces newlines with <br />.
+	 * Do not use a <table> here!
+	 * @param pos The GameState to format.
+	 * @return The html-like formatting of the string.
 	 */
 	public String displayHTML(State pos) {
 		return displayState(pos).replaceAll("\n", "<br align=\"left\"/>");
@@ -141,29 +133,6 @@ public abstract class Game<State> {
 	public abstract State stringToState(String pos);
 	
 	/**
-	 * @return the default board width for this game
-	 */
-	public abstract int getDefaultBoardWidth();
-	/**
-	 * @return the default board height for this game
-	 */
-	public abstract int getDefaultBoardHeight();
-	
-	/**
-	 * @return the width of the board this game is played on
-	 */
-	public int getGameWidth(){
-		return gameWidth;
-	}
-	
-	/**
-	 * @return the height of the board this game is played on
-	 */
-	public int getGameHeight(){
-		return gameHeight;
-	}
-	
-	/**
 	 * @return a String that uniquely describes the setup of this Game (including any variant information, game size, etc)
 	 */
 	public abstract String describe();
@@ -174,10 +143,4 @@ public abstract class Game<State> {
 	 * Make sure to call your superclass's method!
 	 */
 	public void prepare(){}
-	
-	/**
-	 * @return the pieces that a Hasher will have to deal with
-	 */
-	public abstract char[] pieces();
-	
 }

@@ -19,7 +19,7 @@ import edu.berkeley.gamesman.util.Util;
  */
 public class FastConnect4 extends TieredIterGame {
 
-	private final int piecesToWin;
+	private final int piecesToWin, gameWidth, gameHeight;
 	private OneTierC4Board otc4b;
 
 	static {
@@ -32,27 +32,14 @@ public class FastConnect4 extends TieredIterGame {
 	 */
 	public FastConnect4(Configuration conf) {
 		super(conf);
-		piecesToWin = Integer.parseInt(conf.getProperty("connect4.pieces", "4"));
-	}
-
-	@Override
-	public int getDefaultBoardHeight() {
-		return 6;
-	}
-
-	@Override
-	public int getDefaultBoardWidth() {
-		return 7;
+		piecesToWin = Integer.parseInt(conf.getProperty("gamesman.game.pieces", "4"));
+		gameWidth = Integer.parseInt(conf.getProperty("gamesman.game.width", "7"));
+		gameHeight = Integer.parseInt(conf.getProperty("gamesman.game.height", "6"));
 	}
 
 	@Override
 	public String describe() {
-		return "FastConnect4: "+getGameWidth()+"x"+getGameHeight()+" "+piecesToWin+" to win.";
-	}
-
-	@Override
-	public char[] pieces() {
-		return new char[] {'X','O'};
+		return String.format("FastConnect4: %dx%d %d to win", gameWidth, gameHeight, piecesToWin);
 	}
 	
 	public PrimitiveValue primitiveValue(){

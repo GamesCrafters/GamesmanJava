@@ -15,7 +15,7 @@ public class TicTacToe extends DartboardGame {
 	 */
 	public TicTacToe(Configuration conf) {
 		super(conf);
-		piecesToWin = Integer.parseInt(conf.getProperty("tictactoe.pieces", "3"));
+		piecesToWin = Integer.parseInt(conf.getProperty("gamesman.game.pieces", "3"));
 	}
 
 	@Override
@@ -75,13 +75,4 @@ public class TicTacToe extends DartboardGame {
 	public String describe() {
 		return "Tic Tac Toe";
 	}
-
-	@Override
-	public int getDefaultBoardHeight() {
-		return 3;
-	}
-
-	@Override
-	public int getDefaultBoardWidth() {
-		return 3;
-	}}
+}

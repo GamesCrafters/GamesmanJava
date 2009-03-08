@@ -66,24 +66,6 @@ public class Cuboid extends Game<CubeState> {
 		return pos.display(true);
 	}
 
-	@Override
-	public int getDefaultBoardHeight() {
-		//		Util.fatalError("Cuboids don't have a height!");
-		return -1;
-	}
-
-	@Override
-	public int getDefaultBoardWidth() {
-		//		Util.fatalError("Cuboids don't have a width!");
-		return -1;
-	}
-
-	@Override
-	public char[] pieces() {
-//		Util.fatalError("Cuboids don't have pieces!");
-		return null;
-	}
-
 	private static final int pieceCount = 8;
 	private static final BigInteger[] THREE_TO_X = new BigInteger[pieceCount], FACTORIAL = new BigInteger[pieceCount];
 	{ //memoize some useful values for (un)hashing
@@ -149,8 +131,6 @@ public class Cuboid extends Game<CubeState> {
 	@Override
 	public Collection<CubeState> startingPositions() {
 		return Arrays.asList(new CubeState());
-//		Collection<Pair<String, CubeState>> moves = validMoves(new CubeState());
-//		return Arrays.asList(moves.iterator().next().cdr);
 	}
 
 	@Override
@@ -297,11 +277,9 @@ class CubeState {
 		cube_string += myFormat("                /  @  /  @  /%s", current_state[5][0], current_state[4][0], nl);
 		cube_string += myFormat("               /_____/_____/%s", nl);
 		cube_string += myFormat("               Down (mirror)%s", nl);
-		if(dotty) {
+		if(dotty)
 			for(String face : COLOR_SCHEME.keySet())
 				cube_string = cube_string.replaceAll(face, "<font color=\"" + COLOR_SCHEME.get(face) + "\">" + face + "</font>");
-//			cube_string = "<table><tr><td bgcolor=\"gray\">" + cube_string + "</td></tr></table>";
-		}
 		return cube_string;
 	}
 }

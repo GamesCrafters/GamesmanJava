@@ -4,24 +4,27 @@ import java.math.BigInteger;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.TieredHasher;
+import edu.berkeley.gamesman.game.OneTwoN;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
+/**
+ * @author Wesley Hart
+ *
+ */
 public class OneTwoNHasher extends TieredHasher<Integer> {
-	
+	private final OneTwoN game;
 	/**
 	 * Default constructor
 	 * @param conf the configuration
 	 */
 	public OneTwoNHasher(Configuration conf) {
 		super(conf);
-		
-		gameWidth = conf.getGame().getGameWidth();
-		gameHeight = conf.getGame().getGameHeight();
+		if(!(conf.getGame() instanceof OneTwoN))
+			Util.fatalError("This hasher is only designed for OneTwoN");
+		game = (OneTwoN) conf.getGame();
 	}
 
-	private int gameWidth, gameHeight;
-	
 	@Override
 	public BigInteger numHashesForTier(int tier) {
 		return BigInteger.ONE;
@@ -35,13 +38,11 @@ public class OneTwoNHasher extends TieredHasher<Integer> {
 
 	@Override
 	public int numberOfTiers() {
-		return gameHeight+1;
+		return game.maxNumber+1;
 	}
 	
 	@Override
 	public Pair<Integer, BigInteger> tierIndexForState(Integer state) {
-		//return new Pair<Integer, BigInteger>(state / gameWidth, 
-		//		new BigInteger(String.valueOf(state % gameWidth)));
 		return new Pair<Integer, BigInteger>(state,BigInteger.ZERO);
 	}
 

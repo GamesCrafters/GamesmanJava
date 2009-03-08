@@ -27,16 +27,6 @@ public class AlternatingRearrangerHasher extends Hasher<char[]> {
 		Util.assertTrue(pieces.length == 2,"Wrong number of pieces for AlternatingRearrangerHasher");
 	}
 
-	/**
-	 * Default constructor
-	 * @param conf the configuration
-	 * @param pieces the piece array
-	 */
-	public AlternatingRearrangerHasher(Configuration conf, char[] pieces) {
-		super(conf,pieces);
-	}
-
-	private static final long serialVersionUID = 2412440897524385670L;
 	private int cacheLevel = 0;
 	private Map<String,BigInteger> rearrCache = new ConcurrentHashMap<String, BigInteger>();
 	private Map<BigInteger,String> unrearrCache = new ConcurrentHashMap<BigInteger, String>();
@@ -45,7 +35,6 @@ public class AlternatingRearrangerHasher extends Hasher<char[]> {
 	public BigInteger hash(char[] board, int l) {
 		int[] count = countxo(board,l);
 		BigInteger val = pieceRearrange(board,0,count[0],count[1],count[2]);
-		//Util.debug("ARH hashes "+Arrays.toString(board)+" ("+l+") to "+val);
 		return val;
 	}
 

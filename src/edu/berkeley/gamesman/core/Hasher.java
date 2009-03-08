@@ -14,6 +14,7 @@ public abstract class Hasher<Board> {
 	protected Game<Board> game;
 	protected Configuration conf;
 	protected final char[] pieces;
+	protected final int gameWidth, gameHeight;
 	
 	/**
 	 * Default constructor
@@ -21,19 +22,13 @@ public abstract class Hasher<Board> {
 	 */
 	public Hasher(Configuration conf){
 		game = Util.checkedCast(conf.getGame());
+		if(!(game instanceof BoardGame2D))
+			Util.fatalError("This hasher only works for a BoardGame2D!");
+		BoardGame2D boardGame = (BoardGame2D) game;
+		gameWidth = boardGame.getGameWidth();
+		gameHeight = boardGame.getGameHeight();
+		pieces = boardGame.getPieces();
 		this.conf = conf;
-		pieces = game.pieces();
-	}
-	
-	/**
-	 * Create a Hasher with a specified piece set
-	 * @param conf the configuration
-	 * @param pieces the pieces
-	 */
-	public Hasher(final Configuration conf,final char[] pieces){
-		this.pieces = pieces;
-		this.conf = conf;
-		game = Util.checkedCast(conf.getGame());
 	}
 	
 	/**
@@ -42,7 +37,7 @@ public abstract class Hasher<Board> {
 	 * @return The board
 	 */
 	public Board unhash(BigInteger hash){
-		return unhash(hash,game.getGameWidth()*game.getGameHeight());
+		return unhash(hash,gameWidth*gameHeight);
 	}
 	/**
 	 * Convert a hashed board given its length

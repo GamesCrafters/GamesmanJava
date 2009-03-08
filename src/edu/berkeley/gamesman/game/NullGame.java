@@ -74,16 +74,6 @@ public class NullGame extends Game<Object> {
 		return null;
 	}
 
-	@Override
-	public int getDefaultBoardHeight() {
-		return 0;
-	}
-
-	@Override
-	public int getDefaultBoardWidth() {
-		return 0;
-	}
-	
 	private void fail(){
 		Util.fatalError("Please specify a game.");
 	}
@@ -96,11 +86,6 @@ public class NullGame extends Game<Object> {
 	@Override
 	public BigInteger lastHash() {
 		return BigInteger.ZERO;
-	}
-
-	@Override
-	public char[] pieces() {
-		return new char[] {};
 	}
 
 	@Override

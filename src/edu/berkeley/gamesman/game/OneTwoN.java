@@ -9,7 +9,6 @@ import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.hasher.OneTwoNHasher;
 import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.Pair;
-import edu.berkeley.gamesman.util.Util;
 
 /**
  * OneTwoTen
@@ -17,7 +16,14 @@ import edu.berkeley.gamesman.util.Util;
  * @author Wesley Hart
  */
 public class OneTwoN extends TieredGame<Integer> {
-	final char piece = 'X';
+	/**
+	 * The last number you can get to while playing OneTwoN
+	 */
+	public final int maxNumber;
+	/**
+	 * Each move must add a number in the range [1, maxStep]
+	 */
+	public final int maxStep;
 	
 	static {
 		DependencyResolver.allowHasher(OneTwoN.class, OneTwoNHasher.class);
@@ -29,7 +35,8 @@ public class OneTwoN extends TieredGame<Integer> {
 	 */
 	public OneTwoN(Configuration conf) {
 		super(conf);
-		//myHasher.initialize(null);
+		maxNumber = Integer.parseInt(conf.getProperty("gamesman.game.maxNumber", "10"));
+		maxStep = Integer.parseInt(conf.getProperty("gamesman.game.maxStep", "2"));
 	}
 	
 	@Override
@@ -40,41 +47,26 @@ public class OneTwoN extends TieredGame<Integer> {
 	}
 	
 	@Override
-	public int getDefaultBoardHeight() {
-		return 10;
-	}
-	
-	@Override
-	public int getDefaultBoardWidth() {
-		return 2;
-	}
-	
-	@Override
 	public PrimitiveValue primitiveValue(Integer pos) {
-		if (pos == gameHeight)
+		if(pos == maxNumber)
 			return PrimitiveValue.LOSE;		
 		return PrimitiveValue.UNDECIDED;
 	}
 	
 	@Override
 	public String displayState(Integer pos) {
-		//StringBuilder str = new StringBuilder();
-		//int i;
-		//for (i = 1; i < gameHeight; i++)
-		//	str.append((i == pos ? piece : i) + ' ');
-		//str.append((++i == pos ? piece : i) + '\n');		
-		//return str.toString();
 		return pos.toString();
 	}
 	
 	@Override
 	public Integer stringToState(String pos) {
-		if (pos.indexOf(piece) == pos.length() - 2)
-			return gameHeight;
-		String afterPiece = pos.substring(pos.indexOf(piece) + 2);
-		int pieceIndex = Integer.parseInt(afterPiece.substring(0, afterPiece.indexOf(' '))) - 1;
-		return pieceIndex;
-	}	
+		return Integer.parseInt(pos);
+	}
+	
+	@Override
+	public String stateToString(Integer pos) {
+		return pos.toString();
+	}
 
 	@Override
 	public Collection<Pair<String,Integer>> validMoves(Integer pos) {
@@ -83,30 +75,15 @@ public class OneTwoN extends TieredGame<Integer> {
 		if (primitiveValue(pos) != PrimitiveValue.UNDECIDED)
 			return nextBoards;
 		
-		for (int move = 1; move <= gameWidth && pos+move <= gameHeight; move++)
+		for (int move = 1; pos+move <= maxNumber; move++)
 			nextBoards.add(new Pair<String,Integer>("+"+move,pos + move));
 		
 		return nextBoards;
 	}
 	
 	@Override
-	public String toString() {
-		return "OneTwo"+gameHeight+" ("+gameWidth+" max spaces per move)";
-	}
-	
-	@Override
 	public String describe() {
-		return "OneTwoN|"+gameWidth+"|"+gameHeight;
+		return "OneTwoN|"+maxNumber+"|"+maxStep;
 	}
 
-	@Override
-	public char[] pieces() {
-		return new char[] {};
-	}
-
-	@Override
-	public String stateToString(Integer pos) {
-		Util.fatalError("Not written yet");
-		return null;
-	}
 }

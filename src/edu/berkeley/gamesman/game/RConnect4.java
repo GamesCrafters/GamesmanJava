@@ -21,6 +21,7 @@ public class RConnect4 extends TieredIterGame {
 	private final int[][] indices;
 	private final int[] colHeights;
 	private final int piecesToWin;
+	private final int gameHeight, gameWidth;
 	private final ArrayList<Pair<Integer, Integer>> pieces;
 	private final int[] moveTiers;
 	private int tier;
@@ -32,10 +33,11 @@ public class RConnect4 extends TieredIterGame {
 	 */
 	public RConnect4(Configuration conf) {
 		super(conf);
+		gameWidth = Integer.parseInt(conf.getProperty("gamesman.game.width", "7"));
+		gameHeight = Integer.parseInt(conf.getProperty("gamesman.game.width", "6"));
+		piecesToWin = Integer.parseInt(conf.getProperty("connect4.pieces", "4"));
 		indices = new int[gameHeight][gameWidth];
 		pieces = new ArrayList<Pair<Integer, Integer>>(gameWidth * gameHeight);
-		piecesToWin = Integer
-				.parseInt(conf.getProperty("connect4.pieces", "4"));
 		moveTiers = new int[gameWidth];
 		colHeights = new int[gameWidth];
 	}
@@ -311,26 +313,6 @@ public class RConnect4 extends TieredIterGame {
 	@Override
 	public String describe() {
 		return "IAH Connect 4";
-	}
-
-	@Override
-	public int getDefaultBoardHeight() {
-		return 6;
-	}
-
-	@Override
-	public int getDefaultBoardWidth() {
-		return 7;
-	}
-
-	@Override
-	public char[] pieces() {
-		return new char[] { 'X', 'O' };
-	}
-
-	@Override
-	public String toString() {
-		return "Connect 4";
 	}
 
 	@Override

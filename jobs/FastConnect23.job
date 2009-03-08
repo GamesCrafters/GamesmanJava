@@ -6,6 +6,7 @@ gamesman.hasher = TieredItergameHasher
 gamesman.solver = TierItergameSolver
 gamesman.database = BlockDatabase
 gamesman.db.uri = file:///tmp/fastdatabase23.db
+gamesman.dotty.uri = file:///tmp/fastdatabase23.dot
 gamesman.debug.DATABASE = true
 gamesman.debug.RECORD = true
 gamesman.debug.SOLVER = true

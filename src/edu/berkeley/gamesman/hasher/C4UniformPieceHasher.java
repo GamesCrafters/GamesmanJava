@@ -35,16 +35,6 @@ public final class C4UniformPieceHasher extends Hasher<char[]> {
 		idx = 0;
 	}
 	
-	/**
-	 * Default constructor
-	 * @param conf the configuration
-	 * @param arr the piece array
-	 */
-	public C4UniformPieceHasher(Configuration conf, char[] arr) {
-		super(conf,arr);
-	}
-
-	private static final long serialVersionUID = -9024431731925402905L;
 	Map<String,BigInteger> lookup;
 	String[] table;
 	

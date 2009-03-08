@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.game;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import edu.berkeley.gamesman.core.BoardGame2D;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.TieredGame;
@@ -19,13 +20,11 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author Steven Schlansker
  */
-public class Connect4 extends TieredGame<C4Board> {
-
-	final int piecesToWin;
+public class Connect4 extends TieredGame<C4Board> implements BoardGame2D {
+	final int piecesToWin, gameWidth, gameHeight;
 
 	static {
-		DependencyResolver.allowHasher(Connect4.class,
-				PerfectConnect4Hash.class);
+		DependencyResolver.allowHasher(Connect4.class, PerfectConnect4Hash.class);
 	}
 
 	/**
@@ -36,7 +35,9 @@ public class Connect4 extends TieredGame<C4Board> {
 	 */
 	public Connect4(Configuration conf) {
 		super(conf);
-		piecesToWin = Integer.parseInt(conf.getProperty("connect4.pieces", "4"));
+		piecesToWin = Integer.parseInt(conf.getProperty("gamesman.game.pieces", "4"));
+		gameWidth = Integer.parseInt(conf.getProperty(WIDTH_KEY, "7"));
+		gameHeight = Integer.parseInt(conf.getProperty(HEIGHT_KEY, "6"));
 	}
 
 	@Override
@@ -45,16 +46,6 @@ public class Connect4 extends TieredGame<C4Board> {
 		C4Board startBoard = new C4Board(gameWidth, gameHeight);
 		boards.add(startBoard);
 		return boards;
-	}
-
-	@Override
-	public int getDefaultBoardHeight() {
-		return 6;
-	}
-
-	@Override
-	public int getDefaultBoardWidth() {
-		return 7;
 	}
 
 	@Override
@@ -126,8 +117,15 @@ public class Connect4 extends TieredGame<C4Board> {
 		return "Connect4|" + gameWidth + "|" + gameHeight + "|" + piecesToWin;
 	}
 
-	@Override
-	public char[] pieces() {
-		return new char[]{'X','O'};
+	public int getGameHeight() {
+		return gameHeight;
+	}
+
+	public int getGameWidth() {
+		return gameWidth;
+	}
+
+	public char[] getPieces() {
+		return new char[] { 'X', 'O' };
 	}
 }

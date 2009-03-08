@@ -69,11 +69,6 @@ public class OneTwoNGame extends Game<Integer> {
 	}
 
 	@Override
-	public char[] pieces() {
-		return null;
-	}
-
-	@Override
 	public Integer hashToState(BigInteger hash) {
 		return hash.intValue();
 	}
@@ -86,15 +81,5 @@ public class OneTwoNGame extends Game<Integer> {
 	@Override
 	public BigInteger stateToHash(Integer pos) {
 		return BigInteger.valueOf(pos);
-	}
-
-	@Override
-	public int getDefaultBoardHeight() {
-		return 0;
-	}
-
-	@Override
-	public int getDefaultBoardWidth() {
-		return 0;
 	}
 }

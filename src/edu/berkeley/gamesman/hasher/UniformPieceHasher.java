@@ -35,18 +35,18 @@ public final class UniformPieceHasher extends Hasher<char[]> {
 		plen = BigInteger.valueOf(pieces.length);
 	}
 	
-	/**
-	 * Default constructor
-	 * @param conf the configuration
-	 * @param p the piece array
-	 */
-	public UniformPieceHasher(Configuration conf,char[] p){
-		super(conf,p);
-		lookup = new HashMap<Character,BigInteger>();
-		for(int i = 0; i < p.length; i++)
-			lookup.put(p[i], BigInteger.valueOf(i));
-		plen = BigInteger.valueOf(p.length);
-	}
+//	/**
+//	 * Default constructor
+//	 * @param conf the configuration
+//	 * @param p the piece array
+//	 */
+//	public UniformPieceHasher(Configuration conf,char[] p){
+//		super(conf,p);
+//		lookup = new HashMap<Character,BigInteger>();
+//		for(int i = 0; i < p.length; i++)
+//			lookup.put(p[i], BigInteger.valueOf(i));
+//		plen = BigInteger.valueOf(p.length);
+//	}
 
 	private static final long serialVersionUID = 5625295202888543943L;
 	HashMap<Character, BigInteger> lookup;
