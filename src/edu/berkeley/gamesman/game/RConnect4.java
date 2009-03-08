@@ -262,19 +262,20 @@ public class RConnect4 extends TieredIterGame {
 	@Override
 	public void setToString(String pos) {
 		tier = 0;
+		int colTier = 1;
 		StringBuilder iahString = new StringBuilder(gameHeight*gameWidth);
-		for(int col = gameWidth - 1; col >= 0; col--){
-			tier *= gameHeight + 1;
+		for(int col = 0; col < gameWidth; col++){
 			for(int row = 0; row < gameHeight; row++){
 				char c = pos.charAt(row*gameWidth+col);
 				if(c == ' '){
 					iahString.append(' ');
 					break;
 				}else{
-					tier++;
+					tier+=colTier;
 					iahString.append(c);
 				}
 			}
+			colTier *= gameHeight + 1;
 		}
 		setTier(tier);
 		try {
