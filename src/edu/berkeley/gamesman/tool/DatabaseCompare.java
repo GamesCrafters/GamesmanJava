@@ -52,6 +52,7 @@ public class DatabaseCompare<S> {
 	
 	public static void main(String args[]){
 		new DatabaseCompare<Object>().compare(args);
+		System.out.println("Compare successful!");
 	}
 
 }

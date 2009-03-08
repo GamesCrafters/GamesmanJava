@@ -8,6 +8,4 @@ gamesman.db.uri = file:///tmp/database23.db
 gamesman.dotty.uri = file:///tmp/database23.dot
 gamesman.dotty.prune = true
 gamesman.database = BlockDatabase
-gamesman.debug.Database = 1
-gamesman.debug.Record = 1
-gamesman.debug.Bitwise = 1
+gamesman.debug.DATABASE = 1
