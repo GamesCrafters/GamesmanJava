@@ -70,13 +70,11 @@ public final class PieceRearranger implements Cloneable{
 		}
 
 		protected void set(int os, BigInteger hash, char player) {
-			BigInteger hashChange = BigInteger.ZERO;
 			BigInteger xChange = BigInteger.ZERO;
 			BigInteger oChange = BigInteger.ZERO;
 			if (this.player == 'O') {
-				hashChange = hashChange.subtract(this.hash);
-				xChange = hashChange.subtract(nextX);
-				oChange = oChange.subtract(nextO);
+				xChange = xChange.subtract(nextX.subtract(this.hash));
+				oChange = oChange.subtract(nextO.subtract(this.hash));
 			}
 			this.player = player;
 			this.hash = hash;
@@ -90,11 +88,10 @@ public final class PieceRearranger implements Cloneable{
 						.divide(BigInteger.valueOf(index + 1 - os));
 			}
 			if (player == 'O') {
-				hashChange = hashChange.add(hash);
-				xChange = xChange.add(nextX);
-				oChange = oChange.add(nextO);
+				xChange = xChange.add(nextX.subtract(hash));
+				oChange = oChange.add(nextO.subtract(hash));
 			}
-			group.setPiece(hashChange, oChange, xChange);
+			group.setPiece(oChange, xChange);
 		}
 
 		public String toString() {
@@ -114,12 +111,13 @@ public final class PieceRearranger implements Cloneable{
 		}
 		
 		private void addPiece(HashPiece p) {
-			setPiece(p.hash, p.nextO.subtract(p.hash), p.nextX.subtract(p.hash));
+			if(p.player == 'O')
+				setPiece(p.nextO.subtract(p.hash), p.nextX.subtract(p.hash));
 			lastPiece = p;
+			empty++;
 		}
 
-		private void setPiece(BigInteger hashChange, BigInteger addOChange,
-				BigInteger addXChange) {
+		private void setPiece(BigInteger addOChange, BigInteger addXChange) {
 			addO = addO.add(addOChange);
 			addX = addX.add(addXChange);
 		}
@@ -153,7 +151,7 @@ public final class PieceRearranger implements Cloneable{
 		for (int i = 0; i < numSpaces; i++) {
 			if (s[i] == ' ') {
 				g.add(currentGroup);
-				currentGroup = new HashGroup(i + 1, lastPiece);
+				currentGroup = new HashGroup(i+1, lastPiece);
 			} else {
 				if (onFX && s[i] == 'X')
 					openX++;
@@ -250,13 +248,13 @@ public final class PieceRearranger implements Cloneable{
 				groups.length);
 		BigInteger move = hash;
 		if (player == 'O')
-			for (int i = groups.length - 2; i >= 0; i--) {
+			for (int i = groups.length - 1; i >= 0; i--) {
 				result.add(new Pair<Integer, BigInteger>(groups[i].empty, move
 						.add(groups[i].lastPiece.nextO)));
 				move = move.add(groups[i].addO);
 			}
 		else if (player == 'X')
-			for (int i = groups.length - 2; i >= 0; i--) {
+			for (int i = groups.length - 1; i >= 0; i--) {
 				result.add(new Pair<Integer, BigInteger>(groups[i].empty, move));
 				move = move.add(groups[i].addX);
 			}
@@ -285,8 +283,9 @@ public final class PieceRearranger implements Cloneable{
 		int piece = -1;
 		piece = nextPiece(piece);
 		int i;
-		HashPiece lastPiece = null;
+		HashPiece lastPiece;
 		if (openX > 0 && openO > 1) {
+			lastPiece = null;
 			for (i = 0; i < openO - 1; i++) {
 				if (get(piece) == 'X')
 					changedPieces.add(new Pair<Integer, Character>(piece, 'O'));
