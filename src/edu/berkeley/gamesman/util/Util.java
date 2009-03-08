@@ -137,14 +137,14 @@ public final class Util {
 	/**
 	 * Initialize the debugging facilities based on a Configuration object.
 	 * Each facility is set by setting the property gamesman.debug.Facility
-	 * (e.g. gamesman.debug.Core) to some non-null value.
+	 * (e.g. gamesman.debug.CORE) to some non-null value.
 	 * @see DebugFacility
 	 * @param conf the configuration
 	 */
 	public static void debugInit(Configuration conf){
 		String env = System.getenv("GAMESMAN_DEBUG");
 		for(DebugFacility f: DebugFacility.values()){
-			if(conf.getProperty("gamesman.debug."+f.toString().toUpperCase(),null) != null) debugOpts.add(f);
+			if(conf.getBoolean("gamesman.debug."+f.toString(), false)) debugOpts.add(f);
 			if(env != null && env.contains(f.toString())) debugOpts.add(f);
 		}
 		if(!debugOpts.isEmpty())
