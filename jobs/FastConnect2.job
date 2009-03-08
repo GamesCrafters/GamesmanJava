@@ -1,8 +1,12 @@
 gamesman.game = RConnect4
-gamesman.game.width = 3
+gamesman.game.width = 2
 gamesman.game.height = 2
-gamesman.game.pieces = 4
+connect4.pieces = 2
 gamesman.hasher = TieredItergameHasher
 gamesman.solver = TierItergameSolver
-gamesman.db.uri = file:///tmp/fastdatabase2.db
 gamesman.database = FileDatabase
+gamesman.db.uri = file:///tmp/fastdatabase2.db
+gamesman.dotty.uri = file:///tmp/fastdatabase2.dot
+gamesman.debug.DATABASE = true
+gamesman.debug.RECORD = true
+gamesman.debug.SOLVER = true
