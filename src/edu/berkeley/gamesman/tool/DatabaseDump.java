@@ -12,7 +12,6 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.Properties;
 import java.util.Queue;
 import java.util.TreeMap;
 import java.util.Map.Entry;
@@ -23,7 +22,6 @@ import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.RecordFields;
-import edu.berkeley.gamesman.database.FileDatabase;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -51,7 +49,6 @@ public class DatabaseDump<S> {
 	 */
 	public DatabaseDump(Configuration conf) {
 		Database db = conf.openDatabase();
-		//db.initialize(conf.getPropertyWithPrompt("gamesman.db.uri"), null);
 		
 		String dottyFile = conf.getPropertyWithPrompt("gamesman.dotty.uri");
 		PrintWriter w = null;
@@ -64,7 +61,7 @@ public class DatabaseDump<S> {
 		}
 		
 		Game<S> gm = Util.checkedCast(db.getConfiguration().getGame());
-		pruneInvalid = conf.getProperty("gamesman.dotty.prune", null) != null;
+		pruneInvalid = conf.getBoolean("gamesman.dotty.prune", false);
 		this.w = w;
 		this.db = db;
 		this.gm = gm;
@@ -126,7 +123,8 @@ public class DatabaseDump<S> {
 		TreeMap<String, String> attrs = new TreeMap<String, String>();
 		Record rec = db.getRecord(parentHash);
 		PrimitiveValue v = rec.get();
-		attrs.put("label","<"+parentHash+"<br/>"+gm.displayState(parent).replaceAll("\n", "<br align=\"left\"/>")+"<br/>"+rec+" >");
+		attrs.put("label", String.format("< %s <br/>%s<br/>%s >", parentHash.toString(), gm.displayHTML(parent), rec.toString()));//<"+parentHash.toString()+"<br/>"+gm.displayHTML(parent)+"<br/>"+rec+" >");
+//		attrs.put("label", String.format("< %2$s >", parentHash.toString(), gm.displayHTML(parent), rec.toString()));//<"+parentHash.toString()+"<br/>"+gm.displayHTML(parent)+"<br/>"+rec+" >");
 		
 		String color = PRIMITIVE_COLORS.get(v);
 		Util.assertTrue(color != null, "No color specified for primitive value: " + v);
@@ -149,16 +147,10 @@ public class DatabaseDump<S> {
 		}
 		w.println(" ];");
 		for(Pair<String,S> child : gm.validMoves(parent)){
+			//we're not interested in primitives that lead to primitives
 			if(gm.primitiveValue(parent) != PrimitiveValue.UNDECIDED && gm.primitiveValue(child.cdr) != PrimitiveValue.UNDECIDED)
 				continue;
 			BigInteger childHash = gm.stateToHash(child.cdr);
-//			if(gm.primitiveValue(child.cdr) != PrimitiveValue.Undecidedgm.primitiveValue(child.cdr) != PrimitiveValue.Undecided) {
-//				boolean isStartingPosition = false;
-//				for(S s : gm.startingPositions())
-//					if(gm.stateToHash(s).equals(childHash))
-//						isStartingPosition = true;
-//				if(!isStartingPosition) continue;
-//			}
 			
 			//no reason to add the child to the fringe if we've already seen him
 			//this would work fine if we just added him anyways, but this is probably better
