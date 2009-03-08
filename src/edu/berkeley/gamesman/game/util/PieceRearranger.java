@@ -146,36 +146,35 @@ public final class PieceRearranger implements Cloneable{
 		HashGroup currentGroup = new HashGroup(0, lastPiece);
 		pieces = new HashPiece[numSpaces];
 		int numPieces = 0, numOs = 0;
-		boolean onFX = true;
-		boolean onFO = true;
+		boolean onFX=true, onFO=true;
 		for (int i = 0; i < numSpaces; i++) {
 			if (s[i] == ' ') {
 				g.add(currentGroup);
-				currentGroup = new HashGroup(i+1, lastPiece);
+				currentGroup = new HashGroup(i + 1, lastPiece);
 			} else {
-				if (onFX && s[i] == 'X')
-					openX++;
-				else if (onFO) {
-					onFX = false;
-					if (s[i] == 'O')
+				if (s[i]=='O'){
+					if(onFO){
 						openO++;
-					else
-						onFO = false;
-				}
-				if (s[i] == 'O'){
+						if(onFX)
+							onFX=false;
+					}
 					numOs++;
 					lastPiece = new HashPiece(numPieces, numOs, lastPiece.nextO, 'O', currentGroup);
 					currentGroup.addPiece(lastPiece);
-				}else{
+				}else if(s[i]=='X'){
+					if(onFX)
+						openX++;
+					else
+						onFO=false;
 					lastPiece = new HashPiece(numPieces, numOs, lastPiece.nextX, 'X', currentGroup);
 					currentGroup.addPiece(lastPiece);
+				}else{
+					throw new Exception("Bad String");
 				}
 				pieces[i] = lastPiece;
 				numPieces++;
 			}
 		}
-		if (onFO)
-			hasNext = false;
 		arrangements = lastPiece.nextX;
 		groups = g.toArray(new HashGroup[g.size()]);
 		this.numPieces = numPieces;

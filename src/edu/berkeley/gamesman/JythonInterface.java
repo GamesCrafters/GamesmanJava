@@ -6,9 +6,6 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.prefs.Preferences;
 
-import jline.ConsoleReader;
-import jline.Terminal;
-
 import org.python.core.PyObject;
 import org.python.util.InteractiveConsole;
 import org.python.util.JLineConsole;
