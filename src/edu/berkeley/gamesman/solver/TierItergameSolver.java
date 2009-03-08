@@ -7,7 +7,6 @@ import java.util.Collection;
 import edu.berkeley.gamesman.core.ItergameState;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
-import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.core.TieredIterGame;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
@@ -21,38 +20,33 @@ import edu.berkeley.gamesman.util.Util;
  */
 public final class TierItergameSolver extends TierSolver<ItergameState> {
 
-	@Override
-	protected void solvePartialTier(TieredGame<ItergameState> game2, BigInteger start,
+	protected void solvePartialTier(TieredIterGame game, BigInteger start,
 			BigInteger end, TierSolverUpdater t) {
 		BigInteger current = start;
-		TieredIterGame game=Util.checkedCast(game2);
-		ItergameState state = game.hashToState(current);
-		game.setState(state);
-		while (current.compareTo(end) < 0) {
-
+		game.hashToState(start);
+		while (current.compareTo(end) <= 0) {
 			current = current.add(BigInteger.ONE);
 			if (current.mod(BigInteger.valueOf(10000)).compareTo(
 					BigInteger.ZERO) == 0)
 				t.calculated(10000);
 
-			PrimitiveValue pv = game.primitiveValue();
+			ItergameState state = game.getState();
 
+			PrimitiveValue pv = game.primitiveValue(state);
+			
 			if (pv.equals(PrimitiveValue.UNDECIDED)) {
-				Collection<Pair<String, ItergameState>> children = game
-						.validMoves();
+				Util.debug(DebugFacility.SOLVER,"Primitive value for state "+current+" is undecided");
+				Collection<Pair<String,ItergameState>> children = game.validMoves(state);
 				ArrayList<Record> vals = new ArrayList<Record>(children.size());
-
-				for (Pair<String, ItergameState> child : children) {
-					Record r = db.getRecord(game.stateToHash(child.cdr));
-					vals.add(r);
+				for (Pair<String,ItergameState> child : children) {
+					vals.add(db.getRecord(game.stateToHash(child.cdr)));
 				}
-				
-				Util.assertTrue(!vals.isEmpty(), "Found an undecided non-primitive state with no children!");
 
 				Record newVal = Record.combine(conf, vals);
 				db.putRecord(current, newVal);
-			} else {
+			} else {				
 				Record prim = new Record(conf, pv);
+				Util.debug(DebugFacility.SOLVER,"Primitive value for state "+current+" is "+prim);
 				db.putRecord(current, prim);
 			}
 			if(game.hasNextHashInTier())
