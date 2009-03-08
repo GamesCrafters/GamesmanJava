@@ -18,9 +18,6 @@ import edu.berkeley.gamesman.util.Util;
  */
 public class DatabaseCompare<S> {
 
-	/**
-	 * @param args
-	 */
 	public void compare(String args[]) {
 		Configuration c1 = new Configuration(args[0]);
 		Configuration c2 = new Configuration(args[1]);
@@ -51,6 +48,10 @@ public class DatabaseCompare<S> {
 				}
 			}
 		}
+	}
+	
+	public static void main(String args[]){
+		new DatabaseCompare<Object>().compare(args);
 	}
 
 }
