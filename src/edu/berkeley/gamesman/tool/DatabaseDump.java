@@ -123,7 +123,7 @@ public class DatabaseDump<S> {
 		TreeMap<String, String> attrs = new TreeMap<String, String>();
 		Record rec = db.getRecord(parentHash);
 		PrimitiveValue v = rec.get();
-		attrs.put("label", String.format("< %s <br/>%s<br/>%s >", parentHash.toString(), gm.displayHTML(parent), rec.toString()));//<"+parentHash.toString()+"<br/>"+gm.displayHTML(parent)+"<br/>"+rec+" >");
+		attrs.put("label", String.format("< %s <br/>%s<br/>%s >", parentHash.toString(), gm.displayHTML(parent), rec.toString()));
 		
 		String color = PRIMITIVE_COLORS.get(v);
 		Util.assertTrue(color != null, "No color specified for primitive value: " + v);
