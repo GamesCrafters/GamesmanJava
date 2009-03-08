@@ -5,4 +5,7 @@ gamesman.game.pieces = 3
 gamesman.hasher = TieredItergameHasher
 gamesman.solver = TierItergameSolver
 gamesman.db.uri = file:///tmp/fastdatabase3.db
+gamesman.dotty.uri = file:///tmp/fastdatabase3.dot
+gamesman.dotty.alignRemoteness = true
+gamesman.dotty.prune = true
 gamesman.database = FileDatabase

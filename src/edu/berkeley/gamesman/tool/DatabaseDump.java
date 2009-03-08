@@ -8,12 +8,14 @@ import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.TreeMap;
+import java.util.Vector;
 import java.util.Map.Entry;
 
 import edu.berkeley.gamesman.core.Configuration;
@@ -43,14 +45,15 @@ public class DatabaseDump<S> {
 	private final PrintWriter w;
 	private final Database db;
 	private final Game<S> gm;
-	private final boolean pruneInvalid;
+	private final boolean pruneInvalid, alignRemoteness;
+	private final String dottyFile;
 	/**
 	 * @param conf
 	 */
 	public DatabaseDump(Configuration conf) {
 		Database db = conf.openDatabase();
 		
-		String dottyFile = conf.getPropertyWithPrompt("gamesman.dotty.uri");
+		dottyFile = conf.getPropertyWithPrompt("gamesman.dotty.uri");
 		PrintWriter w = null;
 		try {
 			w = new PrintWriter(new FileWriter(new File(new URI(dottyFile))));
@@ -61,7 +64,8 @@ public class DatabaseDump<S> {
 		}
 		
 		Game<S> gm = Util.checkedCast(db.getConfiguration().getGame());
-		pruneInvalid = conf.getBoolean("gamesman.dotty.prune", false);
+		pruneInvalid = conf.getBoolean("gamesman.dotty.prune", true);
+		alignRemoteness = conf.getBoolean("gamesman.dotty.alignRemoteness", true);
 		this.w = w;
 		this.db = db;
 		this.gm = gm;
@@ -70,11 +74,25 @@ public class DatabaseDump<S> {
 	private void dump() {
 		if(pruneInvalid)
 			System.out.println("Pruning invalid hashes from the game tree");
+		else
+			System.out.println("Not pruning invalid hashes from the game tree");
+		if(alignRemoteness)
+			System.out.println("Aligning nodes by remoteness");
+		else
+			System.out.println("Aligning nodes by natural ordering. This would be the tier for tiered games.");
+		
 		w.println("digraph gamesman_dump {");
 		w.println("\tfontname = \"Courier\";");
+
+		long maxRemoteness = 0;
+		//TODO - this should get stored in the database or something
+		for(BigInteger i : Util.bigIntIterator(gm.lastHash()))
+			maxRemoteness = Math.max(maxRemoteness, db.getRecord(i).get(RecordFields.REMOTENESS));
 		
-		//TODO - this is a nasty way of ensuring everything is on the same row
-		//there's almost definitely a better way of doing this
+		for(long remoteness = maxRemoteness; remoteness > 0; remoteness--)
+			w.print(remoteness + " -> ");
+		w.print("0");
+		
 		HashMap<Long, ArrayList<BigInteger>> levels = new HashMap<Long, ArrayList<BigInteger>>();
 		if(pruneInvalid) {
 			//TODO - make this work with BFS and maxRemoteness!
@@ -93,17 +111,20 @@ public class DatabaseDump<S> {
 				printNode(i, levels, null, null);
 		}
 		
-		for(Long level : levels.keySet()) {
-			w.print("{ rank=same; ");
-			for(BigInteger hash : levels.get(level)) {
-				w.print("h" + hash + "; ");
+		if(alignRemoteness) {
+			for(Long level : levels.keySet()) {
+				w.print("{ rank=same; ");
+				for(BigInteger hash : levels.get(level)) {
+					w.print("h" + hash + "; ");
+				}
+				w.print(level + "; };\n");
 			}
-			w.print(" };\n");
 		}
 		
 		w.println("}");
 		
 		w.close();
+		System.out.println("Dotty file successfully written to " + dottyFile);
 	}
 	
 	private void printNode(BigInteger parentHash, HashMap<Long, ArrayList<BigInteger>> levels, HashSet<BigInteger> seen, Queue<BigInteger> fringe) {

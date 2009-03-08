@@ -138,10 +138,9 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> implement
 
 	@Override
 	public Collection<ItergameState> startingPositions() {
-		ArrayList<ItergameState> positions = new ArrayList<ItergameState>(
-				numStartingPositions());
+		ArrayList<ItergameState> positions = new ArrayList<ItergameState>();
 		TieredIterGame pos;
-		for (int i = 0; i < positions.size(); i++) {
+		for (int i = 0; i < numStartingPositions(); i++) {
 			pos = clone();
 			pos.setStartingPosition(i);
 			positions.add(pos.getState());
