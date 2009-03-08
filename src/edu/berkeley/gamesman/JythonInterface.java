@@ -16,7 +16,7 @@ import edu.berkeley.gamesman.util.Util;
 public final class JythonInterface {
 	
 	private enum Consoles {
-		dumb,readline,jline
+		DUMB,READLINE,JLINE
 	}
 
 	/**
@@ -28,26 +28,35 @@ public final class JythonInterface {
 		
 		String consoleName = prefs.get("console", null);
 		Consoles console = null;
-		
-		while(console == null){
-			if(consoleName == null){
-				System.out.print("What console would you like to use? "+Arrays.toString(Consoles.values())+": ");
-				System.out.flush();
-				BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-				consoleName = br.readLine();
-			}
-			try {
-				console = Consoles.valueOf(consoleName);
-			} catch(IllegalArgumentException e) {
-				System.out.println(consoleName + " isn't one of " + Arrays.toString(Consoles.values()));
-				consoleName = null;
-			}
+		try {
+			console = Consoles.valueOf(consoleName);
+		} catch(IllegalArgumentException e) {
+			System.out.println(consoleName + " isn't one of " + Arrays.toString(Consoles.values()));
 		}
-		prefs.put("console", consoleName);
+		while(console == null){
+			System.out.println("Available consoles:");
+			for(int i = 0; i < Consoles.values().length; i++)
+				System.out.printf("\t%d. %s\n", i, Consoles.values()[i].toString());
+			System.out.print("What console would you like to use? ");
+			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+			int i;
+			try {
+				i = Integer.parseInt(br.readLine());
+			} catch(NumberFormatException e) {
+				System.out.println("Please input a number");
+				continue;
+			}
+			if(i < 0 || i >= Consoles.values().length) {
+				System.out.println(i + " is out of range");
+				continue;
+			}
+			console = Consoles.values()[i];
+		}
+		prefs.put("console", console.name());
 		
 		InteractiveConsole rc = null;
 		switch(console){
-		case dumb:
+		case DUMB:
 			rc = new InteractiveConsole() {
 				@Override
 				public String raw_input(PyObject prompt) {
@@ -57,10 +66,10 @@ public final class JythonInterface {
 				}
 			};
 			break;
-		case jline:
+		case JLINE:
 			rc = new JLineConsole();
 			break;
-		case readline:
+		case READLINE:
 			rc = new ReadlineConsole();
 			break;
 		default:
@@ -78,9 +87,8 @@ public final class JythonInterface {
 	}
 	
 	private static void addpath(InteractiveConsole ic, String what){
-		String ud = System.getProperty("user.dir");
-		ic.exec(String.format("sys.path.append('%s/%s'); sys.path.append('%s/../%s');",
-				ud, what, ud, what));
+		ic.exec(String.format("sys.path.append('%1$s/%2$s'); sys.path.append('%1$s/../%2$s');", 
+				System.getProperty("user.dir"), what));
 	}
 
 }
