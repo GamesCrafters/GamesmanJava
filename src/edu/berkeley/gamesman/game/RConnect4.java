@@ -26,7 +26,7 @@ public class RConnect4 extends TieredIterGame {
 	private final int[] moveTiers;
 	private int tier;
 	private char turn;
-	public PieceRearranger iah;
+	private PieceRearranger iah;
 
 	/**
 	 * @param conf The configuration object
