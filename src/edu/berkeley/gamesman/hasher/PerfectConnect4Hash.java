@@ -3,7 +3,8 @@ package edu.berkeley.gamesman.hasher;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-import edu.berkeley.gamesman.core.BoardGame2D;
+import edu.berkeley.gamesman.core.Board1D;
+import edu.berkeley.gamesman.core.Board2D;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.TieredHasher;
 import edu.berkeley.gamesman.game.connect4.C4Board;
@@ -23,8 +24,7 @@ import edu.berkeley.gamesman.util.Util;
  */
 public class PerfectConnect4Hash extends TieredHasher<C4Board> {
 	private final int gameWidth, gameHeight;
-	C4UniformPieceHasher uh;
-	AlternatingRearrangerHasher ah;
+	C4UniformPieces uh;
 	
 	/**
 	 * Default constructor
@@ -32,10 +32,14 @@ public class PerfectConnect4Hash extends TieredHasher<C4Board> {
 	 */
 	public PerfectConnect4Hash(Configuration conf) {
 		super(conf);
-		if(!(conf.getGame() instanceof BoardGame2D))
-			Util.fatalError("Game is not an instance of BoardGame2D");
-		gameWidth = ((BoardGame2D) conf.getGame()).getGameWidth();
-		gameHeight = ((BoardGame2D) conf.getGame()).getGameHeight();
+		Object pos = conf.getGame().startingPositions().iterator().next();
+		
+		if(!(pos instanceof C4Board))
+			Util.fatalError("PerfectConnect4Hash must be used with Connect4 only!");
+		C4Board c4pos = (C4Board)pos;
+		
+		gameWidth = c4pos.getBoardWidth();
+		gameHeight = c4pos.getBoardHeight();
 		
 		Util.nCr_prefill(gameWidth*gameHeight, gameWidth*gameHeight);
 
@@ -45,8 +49,7 @@ public class PerfectConnect4Hash extends TieredHasher<C4Board> {
 			arr[i] = Character.forDigit(i, Character.MAX_RADIX);
 		}
 
-		uh = new C4UniformPieceHasher(conf);
-		ah = new AlternatingRearrangerHasher(conf);
+		uh = new C4UniformPieces(conf,gameWidth,arr);
 	}
 
 	@Override
@@ -57,7 +60,7 @@ public class PerfectConnect4Hash extends TieredHasher<C4Board> {
 		int sum = 0;
 		for(char h : colh)
 			sum += Character.digit(h, Character.MAX_RADIX);
-		BigInteger mh = ah.maxHash(sum);
+		BigInteger mh = AlternatingRearranger.maxHash(sum);
 		Util.debug(DebugFacility.HASHER,"UPH says ",Arrays.toString(colh)," for tier ",tier," sum = ",sum," maxhash = ",mh);
 		return mh;
 	}
@@ -70,7 +73,7 @@ public class PerfectConnect4Hash extends TieredHasher<C4Board> {
 		for(char h : colheights)
 			sum += Character.digit(h, Character.MAX_RADIX);
 		
-		char[] linpieces = ah.unhash(index,sum);
+		char[] linpieces = AlternatingRearranger.unhash(index,sum);
 		
 		char[][] ret = new char[gameWidth][gameHeight];
 		
@@ -112,7 +115,7 @@ public class PerfectConnect4Hash extends TieredHasher<C4Board> {
 		}
 		
 		int uhh = uh.hash(colheights,colheights.length).intValue();
-		BigInteger arh = ah.hash(linear,index);
+		BigInteger arh = AlternatingRearranger.hash(linear,index);
 
 		return new Pair<Integer,BigInteger>(uhh,arh);
 	}

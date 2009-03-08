@@ -26,17 +26,17 @@ public class NullHasher extends Hasher<Object> {
 	}
 
 	@Override
-	public BigInteger hash(Object board, int l) {
+	public BigInteger hash(Object board) {
 		return null;
 	}
 
 	@Override
-	public BigInteger maxHash(int boardlen) {
+	public BigInteger maxHash() {
 		return null;
 	}
 
 	@Override
-	public Object unhash(BigInteger hash, int l) {
+	public Object unhash(BigInteger hash) {
 		return null;
 	}
 }

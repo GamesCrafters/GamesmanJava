@@ -2,6 +2,8 @@ package edu.berkeley.gamesman.game.connect4;
 
 import java.util.Arrays;
 
+import edu.berkeley.gamesman.core.Board1D;
+import edu.berkeley.gamesman.core.Board2D;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
@@ -11,7 +13,7 @@ import edu.berkeley.gamesman.util.Util;
  * @author DNSpies
  * @author Steven Schlansker
  */
-public final class C4Board {
+public final class C4Board extends Board2D {
 	private C4Piece[][] stateArr; // states are in state[row][col] order
 	private C4Piece turn;
 	private Integer[] columnHeightsArr; // Integer, not int so that it's
@@ -301,5 +303,20 @@ public final class C4Board {
 	
 	protected final static void put(C4Piece[][] b, int row, int col, C4Piece c){
 		b[col][row] = c;
+	}
+
+	@Override
+	public int getBoardHeight() {
+		return height;
+	}
+
+	@Override
+	public int getBoardWidth() {
+		return width;
+	}
+
+	@Override
+	public char[] getPieces() {
+		return new char[] {'X','O'};
 	}
 }

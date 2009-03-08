@@ -4,19 +4,16 @@ package edu.berkeley.gamesman.core;
  * @author Jeremy Fleischman
  *
  */
-public interface BoardGame2D {
+public abstract class Board1D {
 	public static final String WIDTH_KEY = "gamesman.game.width";
-	public static final String HEIGHT_KEY = "gamesman.game.height";
 	/**
 	 * @return
 	 */
-	public abstract int getGameHeight();
-	/**
-	 * @return
-	 */
-	public abstract int getGameWidth();
+	public abstract int getBoardWidth();
 	/**
 	 * @return
 	 */
 	public abstract char[] getPieces();
+	
+	public abstract char[] getBoardChars();
 }

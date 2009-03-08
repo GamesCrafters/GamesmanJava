@@ -3,7 +3,7 @@ package edu.berkeley.gamesman.game;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import edu.berkeley.gamesman.core.BoardGame2D;
+import edu.berkeley.gamesman.core.Board2D;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.TieredGame;
@@ -20,7 +20,7 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author Steven Schlansker
  */
-public class Connect4 extends TieredGame<C4Board> implements BoardGame2D {
+public class Connect4 extends TieredGame<C4Board> {
 	final int piecesToWin, gameWidth, gameHeight;
 
 	static {
@@ -36,8 +36,8 @@ public class Connect4 extends TieredGame<C4Board> implements BoardGame2D {
 	public Connect4(Configuration conf) {
 		super(conf);
 		piecesToWin = Integer.parseInt(conf.getProperty("gamesman.game.pieces", "4"));
-		gameWidth = Integer.parseInt(conf.getProperty(WIDTH_KEY, "7"));
-		gameHeight = Integer.parseInt(conf.getProperty(HEIGHT_KEY, "6"));
+		gameWidth = Integer.parseInt(conf.getProperty("gamesman.game.width", "7"));
+		gameHeight = Integer.parseInt(conf.getProperty("gamesman.game.height", "6"));
 	}
 
 	@Override

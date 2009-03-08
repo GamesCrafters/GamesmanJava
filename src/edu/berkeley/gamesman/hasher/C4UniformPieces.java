@@ -20,39 +20,33 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * Few games are like this, so it is mostly a utility hasher used by other hashers piecewise.
  * @author Steven Schlansker
- * @see AlternatingRearrangerHasher
+ * @see AlternatingRearranger
  */
-public final class C4UniformPieceHasher extends Hasher<char[]> {
+public final class C4UniformPieces {
 
 	/**
 	 * Default constructor
 	 * @param conf the configuration
 	 */
-	public C4UniformPieceHasher(Configuration conf) {
-		super(conf);
+	public C4UniformPieces(Configuration conf, int l, char[] pieces) {
 		lookup = null;
 		table = null;
 		idx = 0;
+		init(new char[l],0,pieces,l*pieces.length);
 	}
 	
 	Map<String,BigInteger> lookup;
 	String[] table;
 	
-	@Override
 	public BigInteger hash(char[] board, int l) {
-		if(lookup == null) init(new char[l],0,pieces,l*pieces.length);
 		return lookup.get(new String(board));
 	}
 
-	@Override
 	public char[] unhash(BigInteger hash, int l) {
-		if(lookup == null) init(new char[l],0,pieces,l*pieces.length);
 		return table[hash.intValue()].toCharArray();
 	}
 
-	@Override
 	public BigInteger maxHash(int boardlen) {
-		if(lookup == null) init(new char[boardlen],0,pieces,boardlen*pieces.length);
 		return BigInteger.valueOf(table.length-1);
 	}
 	
@@ -94,10 +88,4 @@ public final class C4UniformPieceHasher extends Hasher<char[]> {
 		//if(off == 0)
 		//	Util.debug("CUPH finished building table: "+Arrays.toString(table));
 	}
-
-	@Override
-	public String describe() {
-		return "C4UPH"+Arrays.toString(pieces);
-	}
-	
 }

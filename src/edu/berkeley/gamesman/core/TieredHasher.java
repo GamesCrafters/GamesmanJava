@@ -24,19 +24,19 @@ public abstract class TieredHasher<State> extends Hasher<State> {
 	}
 
 	@Override
-	public BigInteger hash(State board, int l) {
+	public BigInteger hash(State board) {
 		Util.fatalError("Not implemented"); // TODO
 		return null;
 	}
 
 	@Override
-	public BigInteger maxHash(int boardlen) {
+	public BigInteger maxHash() {
 		Util.fatalError("Not implemented"); // TODO
 		return null;
 	}
 
 	@Override
-	public State unhash(BigInteger hash, int l) {
+	public State unhash(BigInteger hash) {
 		Util.fatalError("Not implemented"); // TODO
 		return null;
 	}

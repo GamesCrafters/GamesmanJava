@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import edu.berkeley.gamesman.core.Board1D;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.util.Util;
@@ -15,32 +16,18 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author Steven Schlansker
  */
-public class AlternatingRearrangerHasher extends Hasher<char[]> {
+public final class AlternatingRearranger {
 	
-	/**
-	 * Default constructor
-	 * @param conf the configuration
-	 */
-	public AlternatingRearrangerHasher(Configuration conf) {
-		super(conf);
-		
-		cacheLevel = Integer.parseInt(conf.getProperty("cachedepth","12"));
-		Util.assertTrue(pieces.length == 2,"Wrong number of pieces for AlternatingRearrangerHasher");
-	}
+	private AlternatingRearranger(){}
 
-	private int cacheLevel = 0;
-	private Map<String,BigInteger> rearrCache = new ConcurrentHashMap<String, BigInteger>();
-	private Map<BigInteger,String> unrearrCache = new ConcurrentHashMap<BigInteger, String>();
 	
-	@Override
-	public BigInteger hash(char[] board, int l) {
-		int[] count = countxo(board,l);
+	public static BigInteger hash(char[] board, int w) {
+		int[] count = countxo(board,w);
 		BigInteger val = pieceRearrange(board,0,count[0],count[1],count[2]);
 		return val;
 	}
 
-	@Override
-	public char[] unhash(BigInteger hash, int l) {
+	public static char[] unhash(BigInteger hash, int l) {
 		int x = l/2 + l%2;
 		int o = l/2;
 
@@ -51,7 +38,7 @@ public class AlternatingRearrangerHasher extends Hasher<char[]> {
 		return result;
 	}
 	
-	protected int[] countxo(char[] board, int l){
+	protected static int[] countxo(char[] board, int l){
 		int ret[] = new int[3];
 		for(char c : board){
 			if(ret[0] == l) break;
@@ -64,19 +51,19 @@ public class AlternatingRearrangerHasher extends Hasher<char[]> {
 		return ret;
 	}
 	
-	protected BigInteger pieceRearrange(char[] board, int src, int pcs, int x, int o){
+	protected static BigInteger pieceRearrange(char[] board, int src, int pcs, int x, int o){
 		if(pcs == 1 || x == 0) return BigInteger.ZERO;
 		boolean cache = false;
 		String cachestr = null;
 		
 		BigInteger rVal;
 		
-		if(board.length - src <= cacheLevel){
-			cachestr = new String(board).substring(src)+pcs+""+x+""+o;
-			if((rVal = rearrCache.get(cachestr)) != null)
-				return rVal;
-			cache = true;
-		}
+//		if(board.length - src <= cacheLevel){
+//			cachestr = new String(board).substring(src)+pcs+""+x+""+o;
+//			if((rVal = rearrCache.get(cachestr)) != null)
+//				return rVal;
+//			cache = true;
+//		}
 		
 		if(board[src] == 'X'){
 			rVal = pieceRearrange(board, src+1, pcs-1, x-1, o);
@@ -86,27 +73,27 @@ public class AlternatingRearrangerHasher extends Hasher<char[]> {
 			rVal = off.add(rVal);
 		}
 		
-		if(cache){
-			rearrCache.put(cachestr, rVal);
-		}
+//		if(cache){
+//			rearrCache.put(cachestr, rVal);
+//		}
 
 		return rVal;
 	}
 	
-	protected void pieceUnrearrange(BigInteger hash,char[] board, int src, int pcs, int x, int o){
+	protected static void pieceUnrearrange(BigInteger hash,char[] board, int src, int pcs, int x, int o){
 		if(pcs == 0) return;
 
 		BigInteger off;
 		boolean cache = false;
 		
-		if(board.length - src == cacheLevel){
-			String str;
-			if((str = unrearrCache.get(hash)) != null){
-				str.getChars(0, str.length()-1, board, src);
-				return;
-			}
-			cache = true;
-		}
+//		if(board.length - src == cacheLevel){
+//			String str;
+//			if((str = unrearrCache.get(hash)) != null){
+//				str.getChars(0, str.length()-1, board, src);
+//				return;
+//			}
+//			cache = true;
+//		}
 		
 		if(x == 0)
 			off = BigInteger.ZERO;
@@ -120,19 +107,13 @@ public class AlternatingRearrangerHasher extends Hasher<char[]> {
 			pieceUnrearrange(hash.subtract(off), board, src+1, pcs-1, x, o-1);
 		}
 		
-		if(cache){
-		//	unrearrCache.put(hash, new String(board,src,board.length-src));
-		}
+//		if(cache){
+//		//	unrearrCache.put(hash, new String(board,src,board.length-src));
+//		}
 	}
 
-	@Override
-	public BigInteger maxHash(int boardlen) {
+	public static BigInteger maxHash(int boardlen) {
 		return BigInteger.valueOf(Util.nCr(boardlen,(boardlen+1)/2));//.subtract(BigInteger.ONE);
-	}
-
-	@Override
-	public String describe() {
-		return "ARH"+Arrays.toString(pieces);
 	}
 
 }

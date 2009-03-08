@@ -70,7 +70,6 @@ public class DatabaseDump<S> {
 	private void dump() {
 		if(pruneInvalid)
 			System.out.println("Pruning invalid hashes from the game tree");
-		System.out.println("Running, this may take a while...");
 		w.println("digraph gamesman_dump {");
 		w.println("\tfontname = \"Courier\";");
 		
