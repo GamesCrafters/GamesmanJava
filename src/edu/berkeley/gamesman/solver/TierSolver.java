@@ -74,6 +74,8 @@ public class TierSolver<T> extends Solver {
 				db.putRecord(current, prim);
 			}
 		}
+		Util.debug(DebugFacility.THREADING,"Reached end of partial tier at "+end);
+		
 	}
 
 	protected int nextIndex = 0;
@@ -107,7 +109,6 @@ public class TierSolver<T> extends Solver {
 			offset = offset.add(step);
 			end = ret.add(step);
 			if (end.compareTo(myGame.lastHashValueForTier(tier)) >= 0) {
-				Util.debug(DebugFacility.THREADING,"Reached end of tier");
 				end = myGame.lastHashValueForTier(tier);
 				tier--;
 				if (tier >= 0)

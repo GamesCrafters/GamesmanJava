@@ -9,6 +9,7 @@ import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.core.TieredIterGame;
+import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -29,6 +30,7 @@ public final class TierItergameSolver extends TierSolver<ItergameState> {
 		game.setState(state);
 		while (current.compareTo(end) < 0) {
 
+			current = current.add(BigInteger.ONE);
 			if (current.mod(BigInteger.valueOf(10000)).compareTo(
 					BigInteger.ZERO) == 0)
 				t.calculated(10000);
@@ -53,9 +55,9 @@ public final class TierItergameSolver extends TierSolver<ItergameState> {
 				Record prim = new Record(conf, pv);
 				db.putRecord(current, prim);
 			}
-			current = current.add(BigInteger.ONE);
 			if(game.hasNextHashInTier())
 				game.nextHashInTier();
 		}
+		Util.debug(DebugFacility.SOLVER,"Reached end of partial tier at "+end);
 	}
 }

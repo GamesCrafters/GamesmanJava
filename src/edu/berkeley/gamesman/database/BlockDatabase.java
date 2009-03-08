@@ -78,6 +78,7 @@ public class BlockDatabase extends FileDatabase {
 	public void putRecord(BigInteger loc, Record value) {
 		lastRecord = Math.max(lastRecord,loc.longValue());
 		value.write(buf, loc.longValue());
+		Util.debug(DebugFacility.DATABASE, "Stored record "+value+" to "+loc);
 	}
 
 }
