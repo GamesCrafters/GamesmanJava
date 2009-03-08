@@ -35,7 +35,7 @@ public class RConnect4 extends TieredIterGame {
 		super(conf);
 		gameWidth = Integer.parseInt(conf.getProperty("gamesman.game.width", "7"));
 		gameHeight = Integer.parseInt(conf.getProperty("gamesman.game.width", "6"));
-		piecesToWin = Integer.parseInt(conf.getProperty("connect4.pieces", "4"));
+		piecesToWin = Integer.parseInt(conf.getProperty("gamesman.game.pieces", "4"));
 		indices = new int[gameHeight][gameWidth];
 		pieces = new ArrayList<Pair<Integer, Integer>>(gameWidth * gameHeight);
 		moveTiers = new int[gameWidth];
