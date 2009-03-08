@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Game;
@@ -34,7 +35,7 @@ public class Cuboid extends Game<CubeState> {
 	//    WIDTH 
 
 	/**
-	 * Constructs a Cubiod 
+	 * Constructs a Cuboid 
 	 * @param conf the configuration
 	 */
 	public Cuboid(Configuration conf) {
@@ -57,7 +58,12 @@ public class Cuboid extends Game<CubeState> {
 
 	@Override
 	public String displayState(CubeState pos) {
-		return pos.toString();
+		return pos.display(false);
+	}
+	
+	@Override
+	public String displayHTML(CubeState pos) {
+		return pos.display(true);
 	}
 
 	@Override
@@ -253,27 +259,49 @@ class CubeState {
 		return actual_colors;
 	}
 
-	public String toString() {
+	private static final HashMap<String, String> COLOR_SCHEME = new HashMap<String, String>();
+	static {
+		COLOR_SCHEME.put("F", "green");
+		COLOR_SCHEME.put("U", "white");
+		COLOR_SCHEME.put("R", "red");
+		COLOR_SCHEME.put("B", "blue");
+		COLOR_SCHEME.put("L", "orange");
+		COLOR_SCHEME.put("D", "yellow");
+	}
+	
+	private static String myFormat(String format, Object... args) {
+		//nasty hack so the cube is readable below
+		return String.format(format.replaceAll("@", "%c"), args);
+	}
+	
+	public String display(boolean dotty) {
+		String nl = dotty ? "<br align=\"left\" />" : "\n";
 		char[][] current_state = spit_out_colors();
-		String cube_string = "                                  __________\n";
-		cube_string += "                                 |     |    |\n";
-		cube_string += "                    __________   |  "+current_state[2][1]+"  | "+current_state[3][2]+"  |\n";
-		cube_string += "   /|              / "+current_state[3][0]+"  / "+current_state[2][0]+"  /|  |_____|____|\n";
-		cube_string += "  / |             /____/____/ |  |     |    |\n";
-		cube_string += " /| |            / "+current_state[1][0]+"  / "+current_state[0][0]+"  /| |  |  "+current_state[6][2]+"  | "+current_state[7][1]+"  |\n";
-		cube_string += "/ |"+current_state[1][2]+"|           /____/____/ |"+current_state[2][2]+"|  |_____|____|\n";
-		cube_string += "|"+current_state[3][1]+"| |          |     |    |"+current_state[0][1]+"| |     BACK\n";
-		cube_string += "| |/|          |  "+current_state[1][1]+"  | "+current_state[0][2]+"  | |/|\n";
-		cube_string += "|/|"+current_state[5][1]+"|          |_____|____|/|"+current_state[6][1]+"|\n";
-		cube_string += "|"+current_state[7][2]+"| |          |     |    |"+current_state[4][2]+"| |\n";
-		cube_string += "| |/           |  "+current_state[5][2]+"  | "+current_state[4][1]+"  | |/\n";
-		cube_string += "|/LEFT         |_____|____|/\n\n\n";
-		cube_string += "              __________\n";
-		cube_string += "             / "+current_state[5][0]+"  / "+current_state[4][0]+"  /\n";
-		cube_string += "            /____/____/\n";
-		cube_string += "           / "+current_state[7][0]+"  / "+current_state[6][0]+"  /\n";
-		cube_string += "          /____/____/\n";
-		cube_string += "              DOWN\n";
+		String cube_string = "";
+		cube_string += myFormat("                                   ___________%s", nl);
+		cube_string += myFormat("                                  |     |     |%s", nl);
+		cube_string += myFormat("                   ____________   |  @  |  @  |%s", current_state[3][2], current_state[2][1], nl);
+		cube_string += myFormat("   /|             /  @  /  @  /|  |_____|_____|%s", current_state[3][0], current_state[2][0], nl);
+		cube_string += myFormat("  / |            /_____/_____/ |  |     |     |%s", nl);
+		cube_string += myFormat(" /| |           /  @  /  @  /| |  |  @  |  @  |%s", current_state[1][0], current_state[0][0], current_state[6][2], current_state[7][1], nl);
+		cube_string += myFormat("/ |@|          /_____/_____/ |@|  |_____|_____|%s", current_state[3][1], current_state[2][2], nl);
+		cube_string += myFormat("|@| |          |     |     |@| |     Back (mirror)%s", current_state[1][2], current_state[0][1], nl);
+		cube_string += myFormat("| |/|          |  @  |  @  | |/|%s", current_state[1][1], current_state[0][2], nl);
+		cube_string += myFormat("|/|@|          |_____|_____|/|@|%s", current_state[7][2], current_state[6][1], nl);
+		cube_string += myFormat("|@| |          |     |     |@| |%s", current_state[5][1], current_state[4][2], nl);
+		cube_string += myFormat("| |/           |  @  |  @  | |/%s", current_state[5][2], current_state[4][1], nl);
+		cube_string += myFormat("|/Left (mirror)|_____|_____|/%1$s%1$s%1$s", nl);
+		cube_string += myFormat("                   ____________%s", nl);
+		cube_string += myFormat("                  /  @  /  @  /%s", current_state[7][0], current_state[6][0], nl);
+		cube_string += myFormat("                 /_____/_____/%s", nl);
+		cube_string += myFormat("                /  @  /  @  /%s", current_state[5][0], current_state[4][0], nl);
+		cube_string += myFormat("               /_____/_____/%s", nl);
+		cube_string += myFormat("               Down (mirror)%s", nl);
+		if(dotty) {
+			for(String face : COLOR_SCHEME.keySet())
+				cube_string = cube_string.replaceAll(face, "<font color=\"" + COLOR_SCHEME.get(face) + "\">" + face + "</font>");
+//			cube_string = "<table><tr><td bgcolor=\"gray\">" + cube_string + "</td></tr></table>";
+		}
 		return cube_string;
 	}
 }

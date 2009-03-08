@@ -118,6 +118,18 @@ public abstract class Game<State> {
 	 * @return a pretty-printed string
 	 */
 	public abstract String displayState(State pos);
+	
+	/**
+	 * "Pretty-print" a State for display by Graphviz/Dotty.
+	 * See http://www.graphviz.org/Documentation.php for documentation.
+	 * By default, replaces newlines with <br />
+	 * @param pos
+	 * @return
+	 */
+	public String displayHTML(State pos) {
+		return displayState(pos).replaceAll("\n", "<br align=\"left\"/>");
+	}
+	
 	/**
 	 * Given a String construct a State.
 	 * This <i>must</i> be compatible with stateToString as it is
