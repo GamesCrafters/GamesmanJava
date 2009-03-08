@@ -26,8 +26,6 @@ public class NullGame extends Game<Object> {
 		super(conf);
 	}
 
-	private static final long serialVersionUID = 2554568250821803152L;
-
 	static {
 		DependencyResolver.allowHasher(NullGame.class, NullHasher.class);
 	}

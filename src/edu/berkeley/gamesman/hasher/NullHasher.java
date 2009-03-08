@@ -3,16 +3,15 @@ package edu.berkeley.gamesman.hasher;
 import java.math.BigInteger;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.TieredHasher;
-import edu.berkeley.gamesman.util.Pair;
+import edu.berkeley.gamesman.core.Hasher;
 
 /**
  * NullHasher is a placeholder for games that do not allow use of a custom hasher.
  * It does nothing interesting.
  * @author Steven Schlansker
+ * @param <Board> 
  */
-public class NullHasher extends TieredHasher<char[]> {
-
+public class NullHasher extends Hasher<Object> {
 	/**
 	 * Default constructor
 	 * @param conf the configuration
@@ -21,15 +20,13 @@ public class NullHasher extends TieredHasher<char[]> {
 		super(conf);
 	}
 
-	private static final long serialVersionUID = -5302283345311520545L;
-
 	@Override
-	public char[] unhash(BigInteger hash, int l) {
-		return null;
+	public String describe() {
+		return "NullHasher";
 	}
 
 	@Override
-	public BigInteger hash(char[] board, int l) {
+	public BigInteger hash(Object board, int l) {
 		return null;
 	}
 
@@ -39,28 +36,7 @@ public class NullHasher extends TieredHasher<char[]> {
 	}
 
 	@Override
-	public char[] gameStateForTierAndOffset(int tier, BigInteger index) {
+	public Object unhash(BigInteger hash, int l) {
 		return null;
 	}
-
-	@Override
-	public BigInteger numHashesForTier(int tier) {
-		return null;
-	}
-
-	@Override
-	public int numberOfTiers() {
-		return 0;
-	}
-
-	@Override
-	public Pair<Integer, BigInteger> tierIndexForState(char[] state) {
-		return null;
-	}
-
-	@Override
-	public String describe() {
-		return "";
-	}
-
 }

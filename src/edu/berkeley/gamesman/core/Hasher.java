@@ -13,8 +13,6 @@ import edu.berkeley.gamesman.util.Util;
 public abstract class Hasher<Board> {
 	protected Game<Board> game;
 	protected Configuration conf;
-	protected final char[] pieces;
-	protected final int gameWidth, gameHeight;
 	
 	/**
 	 * Default constructor
@@ -22,12 +20,6 @@ public abstract class Hasher<Board> {
 	 */
 	public Hasher(Configuration conf){
 		game = Util.checkedCast(conf.getGame());
-		if(!(game instanceof BoardGame2D))
-			Util.fatalError("This hasher only works for a BoardGame2D!");
-		BoardGame2D boardGame = (BoardGame2D) game;
-		gameWidth = boardGame.getGameWidth();
-		gameHeight = boardGame.getGameHeight();
-		pieces = boardGame.getPieces();
 		this.conf = conf;
 	}
 	
@@ -36,30 +28,21 @@ public abstract class Hasher<Board> {
 	 * @param hash The hashed representation of a board
 	 * @return The board
 	 */
-	public Board unhash(BigInteger hash){
-		return unhash(hash,gameWidth*gameHeight);
-	}
-	/**
-	 * Convert a hashed board given its length
-	 * @param hash The hashed board
-	 * @param l Size of the board
-	 * @return The board
-	 */
-	public abstract Board unhash(BigInteger hash, int l);
+	public abstract Board unhash(BigInteger hash);
+
 	/**
 	 * Convert a board into a compact hash representation
 	 * @param board The board to hash
 	 * @param l The size of the Board
 	 * @return Hash of the board
 	 */
-	public abstract BigInteger hash(Board board, int l);
+	public abstract BigInteger hash(Board board);
 	
 	/**
-	 * @param boardlen Size of the board
 	 * @return Maximum hash that the Hasher could return via a call to hash()
 	 * @see Hasher#hash(Object, int)
 	 */
-	public abstract BigInteger maxHash(int boardlen);
+	public abstract BigInteger maxHash();
 	
 	/**
 	 * @return a String that uniquely identifies this Hasher (including valid pieces if appropriate, etc)

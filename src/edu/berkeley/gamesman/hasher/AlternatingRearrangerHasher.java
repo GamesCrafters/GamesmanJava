@@ -23,6 +23,7 @@ public class AlternatingRearrangerHasher extends Hasher<char[]> {
 	 */
 	public AlternatingRearrangerHasher(Configuration conf) {
 		super(conf);
+		
 		cacheLevel = Integer.parseInt(conf.getProperty("cachedepth","12"));
 		Util.assertTrue(pieces.length == 2,"Wrong number of pieces for AlternatingRearrangerHasher");
 	}
