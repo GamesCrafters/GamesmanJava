@@ -84,14 +84,16 @@ public class DatabaseDump<S> {
 		w.println("digraph gamesman_dump {");
 		w.println("\tfontname = \"Courier\";");
 
-		long maxRemoteness = 0;
-		//TODO - this should get stored in the database or something
-		for(BigInteger i : Util.bigIntIterator(gm.lastHash()))
-			maxRemoteness = Math.max(maxRemoteness, db.getRecord(i).get(RecordFields.REMOTENESS));
-		
-		for(long remoteness = maxRemoteness; remoteness > 0; remoteness--)
-			w.print(remoteness + " -> ");
-		w.print("0");
+		if(alignRemoteness) {
+			//TODO - this should get stored in the database or something
+			long maxRemoteness = 0;
+			for(BigInteger i : Util.bigIntIterator(gm.lastHash()))
+				maxRemoteness = Math.max(maxRemoteness, db.getRecord(i).get(RecordFields.REMOTENESS));
+
+			for(long remoteness = maxRemoteness; remoteness > 0; remoteness--)
+				w.print(remoteness + " -> ");
+			w.print("0");
+		}
 		
 		HashMap<Long, ArrayList<BigInteger>> levels = new HashMap<Long, ArrayList<BigInteger>>();
 		if(pruneInvalid) {
