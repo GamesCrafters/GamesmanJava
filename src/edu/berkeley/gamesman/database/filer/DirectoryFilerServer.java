@@ -85,7 +85,7 @@ public final class DirectoryFilerServer {
 
 		ThreadGroup grp = new ThreadGroup("DirectoryFilerServerThreads");
 
-		Util.debug(DebugFacility.FILER,"Directory filer server launched on port " + port);
+		Util.debug(DebugFacility.FILER,"Directory filer server launched on port " , port);
 
 		try {
 			while ((s = ss.accept()) != null) {
@@ -179,10 +179,10 @@ public final class DirectoryFilerServer {
 					case 2:
 						String[] files = df.ls();
 						dout.writeInt(files.length);
-						Util.debug(DebugFacility.FILER,"Sending " + files.length + " files");
+						Util.debug(DebugFacility.FILER,"Sending " , files.length , " files");
 						for (String file : files) {
 							dout.writeInt(file.length());
-							Util.debug(DebugFacility.FILER,"Filename len is " + file.length());
+							Util.debug(DebugFacility.FILER,"Filename len is " , file.length());
 							dout.write(file.getBytes());
 						}
 						break;
@@ -204,15 +204,15 @@ public final class DirectoryFilerServer {
 						fds.add(db);
 						locs.add(BigInteger.ZERO);
 						dout.writeInt(fds.indexOf(db));
-						Util.debug(DebugFacility.FILER,"Client opened db " +
-								"" + file + " for fd " + fds.indexOf(db)+" with config "+config);
+						Util.debug(DebugFacility.FILER,"Client opened db ",
+								file , " for fd " , fds.indexOf(db)," with config ",config);
 						break;
 					case 4:
 						fd = din.readInt();
 						db = fds.get(fd);
 						db.close();
 						fds.set(fd, null);
-						Util.debug(DebugFacility.FILER,"Closed " + fd + ": " + db);
+						Util.debug(DebugFacility.FILER,"Closed " , fd , ": " , db);
 						break;
 					case 5:
 						fd = din.readInt();

@@ -59,7 +59,7 @@ public class TierSolver<T> extends Solver {
 			PrimitiveValue pv = game.primitiveValue(state);
 			
 			if (pv.equals(PrimitiveValue.UNDECIDED)) {
-				Util.debug(DebugFacility.SOLVER,"Primitive value for state "+current+" is undecided");
+				Util.debug(DebugFacility.SOLVER,"Primitive value for state ",current," is undecided");
 				Collection<Pair<String,T>> children = game.validMoves(state);
 				ArrayList<Record> vals = new ArrayList<Record>(children.size());
 				for (Pair<String,T> child : children) {
@@ -70,7 +70,7 @@ public class TierSolver<T> extends Solver {
 				db.putRecord(current, newVal);
 			} else {				
 				Record prim = new Record(conf, pv);
-				Util.debug(DebugFacility.SOLVER,"Primitive value for state "+current+" is "+prim);
+				Util.debug(DebugFacility.SOLVER,"Primitive value for state ",current," is "+prim);
 				db.putRecord(current, prim);
 			}
 		}
@@ -133,14 +133,14 @@ public class TierSolver<T> extends Solver {
 
 		@SuppressWarnings("synthetic-access")
 		public void conquer() {
-			Util.debug(DebugFacility.SOLVER,"Started the solver... (" + index + ")");
+			Util.debug(DebugFacility.SOLVER,"Started the solver... (" , index , ")");
 			Thread.currentThread().setName(
 					"Solver (" + index + "): " + myGame.toString());
 
 			Pair<BigInteger, BigInteger> slice;
 			while ((slice = nextSlice()) != null) {
-				Util.debug(DebugFacility.THREADING,"Beginning to solve slice " + slice + " in thread "
-						+ index);
+				Util.debug(DebugFacility.THREADING,"Beginning to solve slice " , slice , " in thread "
+						, index);
 				solvePartialTier(myGame, slice.car, slice.cdr, updater);
 				db.flush();
 			}

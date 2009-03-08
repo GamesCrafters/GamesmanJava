@@ -178,7 +178,7 @@ public final class C4Board {
 
 	private boolean checkLastWin(int row, int col, int piecesToWin) {
 		C4Piece turn = get(row, col);
-		Util.debug(DebugFacility.GAME,turn+" last played in column "+col+", checking for win");
+		Util.debug(DebugFacility.GAME,turn," last played in column ",col,", checking for win");
 		int ext;
 
 		// Check horizontal win

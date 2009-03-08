@@ -61,8 +61,8 @@ public class MemoryDatabase extends Database{
 		recordToReturn.loadBigInteger(bigIntData);
 		/* Notifying Debugger */
 		Util.debug(DebugFacility.DATABASE, 
-				"Read record '" + recordIndex + "'. Value is '" + 
-				bigIntData.toString() + "'");
+				"Read record '" , recordIndex , "'. Value is '" , 
+				bigIntData.toString() , "'");
 		return recordToReturn;	
 	}
 	
@@ -135,8 +135,8 @@ public class MemoryDatabase extends Database{
 		this.putBits(recordIndex, bitSize, data);
 		/* Notifying Debugger */
 		Util.debug(DebugFacility.DATABASE, 
-				"Wrote record '" + recordIndex + "'. Value is '" + 
-				data.toString() + "'");
+				"Wrote record '" , recordIndex , "'. Value is '" , 
+				data.toString() , "'");
 	}
 	
 	/**

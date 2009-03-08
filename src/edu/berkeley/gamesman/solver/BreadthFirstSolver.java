@@ -67,7 +67,7 @@ public class BreadthFirstSolver extends Solver {
 			solveTask.setTotal(maxHash);
 			solveTask.setProgress(0);
 			while (!numPositionsInLevel.equals(BigInteger.ZERO) && remoteness < maxRemoteness) {
-				Util.debug(DebugFacility.SOLVER, "Number of states at remoteness " + remoteness + ": " + numPositionsInLevel);
+				Util.debug(DebugFacility.SOLVER, "Number of states at remoteness " , remoteness , ": " , numPositionsInLevel);
 				numPositionsInLevel = BigInteger.ZERO;
 				for (BigInteger hash : Util.bigIntIterator(maxHash)) {
 					if (seen.contains(hash)) {
@@ -92,7 +92,7 @@ public class BreadthFirstSolver extends Solver {
 				remoteness += 1;
 			}
 			solveTask.complete();
-			Util.debug(DebugFacility.SOLVER, "Solving finished!!! Max remoteness is "+(remoteness-1)+". Total positions seen = "+numPositionsSeen);
+			Util.debug(DebugFacility.SOLVER, "Solving finished!!! Max remoteness is ",(remoteness-1),". Total positions seen = ",numPositionsSeen);
 		}
 
 		public List<WorkUnit> divide(int num) {

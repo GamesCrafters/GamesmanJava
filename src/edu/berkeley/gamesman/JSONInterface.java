@@ -88,7 +88,7 @@ public class JSONInterface {
 		JSONThread(Socket s){
 			this.s = s;
 			g = Util.checkedCast(conf.getGame());
-			Util.debug(DebugFacility.JSON,"Accepted new connection "+s);
+			Util.debug(DebugFacility.JSON,"Accepted new connection ",s);
 		}
 		
 		public void run() {

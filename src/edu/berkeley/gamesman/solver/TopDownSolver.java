@@ -60,8 +60,8 @@ public class TopDownSolver extends Solver {
 				T state = workList.remove(workList.size()-1);
 				Collection<Pair<String,T>> children = game.validMoves(state);
 				//TODO - shouldn't these lines use the displayState method in game? --Jeremy
-				Util.debug(DebugFacility.SOLVER,"Looking at state "+game.stateToString(state));
-				Util.debug(DebugFacility.SOLVER,"Worklist is now "+Util.mapStateToString(game,workList));
+				Util.debug(DebugFacility.SOLVER,"Looking at state ",game.stateToString(state));
+				Util.debug(DebugFacility.SOLVER,"Worklist is now ",Util.mapStateToString(game,workList));
 				
 				long insertBefore = -1;
 				
@@ -72,7 +72,7 @@ public class TopDownSolver extends Solver {
 						seen.add(loc);
 						
 						insertBefore = seen.size();
-						Util.debug(DebugFacility.SOLVER,"Not seen child state "+game.stateToString(child.cdr)+" before, coming back later...");
+						Util.debug(DebugFacility.SOLVER,"Not seen child state ",game.stateToString(child.cdr)," before, coming back later...");
 						
 						workList.add(child.cdr);
 						continue;
@@ -91,7 +91,7 @@ public class TopDownSolver extends Solver {
 				}
 				
 				if(insertBefore != -1){
-					Util.debug(DebugFacility.SOLVER,"One of the children hasn't been solved yet, revisiting "+game.stateToString(state)+" later");
+					Util.debug(DebugFacility.SOLVER,"One of the children hasn't been solved yet, revisiting ",game.stateToString(state)," later");
 					workList.add(0, state);
 					continue;
 				}
@@ -100,13 +100,13 @@ public class TopDownSolver extends Solver {
 				Record next;
 				PrimitiveValue prim = game.primitiveValue(state);
 				if((!prim.equals(PrimitiveValue.UNDECIDED)) || children.isEmpty()){
-					Util.debug(DebugFacility.SOLVER,"Getting primitive value for state "+game.stateToString(state)+": "+prim);
+					Util.debug(DebugFacility.SOLVER,"Getting primitive value for state ",game.stateToString(state),": ",prim);
 					next = new Record(conf,prim);
 				}else{
 					next = Record.combine(conf, recs);
 				}
 				database.putRecord(loc, next);
-				Util.debug(DebugFacility.SOLVER,"Solved state \n"+game.displayState(state)+" to "+next);
+				Util.debug(DebugFacility.SOLVER,"Solved state \n",game.displayState(state)," to ",next);
 			}
 		}
 

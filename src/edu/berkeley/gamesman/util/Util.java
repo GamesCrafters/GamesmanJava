@@ -149,7 +149,7 @@ public final class Util {
 		}
 		if(!debugOpts.isEmpty())
 			debugOpts.add(DebugFacility.CORE);
-		Util.debug(DebugFacility.CORE,"Debugging enabled for: "+debugOpts);
+		Util.debug(DebugFacility.CORE,"Debugging enabled for: ",debugOpts);
 	}
 	
 	/**
@@ -157,9 +157,20 @@ public final class Util {
 	 * @param fac The facility that is logging this message
 	 * @param s The message to print
 	 */
-	public static void debug(DebugFacility fac, String s) {
-		if(debugOpts.contains(fac) || debugOpts.contains(DebugFacility.ALL))
+	public static void debug(DebugFacility fac, Object... args) {
+		if(debugOpts.contains(fac) || debugOpts.contains(DebugFacility.ALL)){
+			StringBuilder s = new StringBuilder();
+			for(Object o : args)
+				s.append(o);
 			System.out.println("DEBUG "+fac+": (" + Thread.currentThread().getName() + ") " + s);
+		}
+	}
+	
+	public static void debugFormat(DebugFacility fac, String format, Object... args){
+		if(debugOpts.contains(fac) || debugOpts.contains(DebugFacility.ALL)){
+			String s = String.format(format, args);
+			System.out.println("DEBUG "+fac+": (" + Thread.currentThread().getName() + ") " + s);
+		}
 	}
 
 	/**

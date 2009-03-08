@@ -64,7 +64,7 @@ public class PerfectConnect4Hash extends TieredHasher<C4Board> {
 		for(char h : colh)
 			sum += Character.digit(h, Character.MAX_RADIX);
 		BigInteger mh = ah.maxHash(sum);
-		Util.debug(DebugFacility.HASHER,"UPH says "+Arrays.toString(colh)+" for tier "+tier+" sum = "+sum+" maxhash = "+mh);
+		Util.debug(DebugFacility.HASHER,"UPH says ",Arrays.toString(colh)," for tier ",tier," sum = ",sum," maxhash = ",mh);
 		return mh;
 	}
 

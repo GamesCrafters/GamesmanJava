@@ -58,7 +58,7 @@ public final class LocalMaster implements Master,TaskFactory {
 	public void run() {
 		//System.err.println("Launched!");
 		int threads = Integer.parseInt(conf.getProperty("gamesman.threads","1"));
-		Util.debug(DebugFacility.MASTER,"Launching "+threads+" threads...");
+		Util.debug(DebugFacility.MASTER,"Launching ",threads," threads...");
 		List<WorkUnit> list = solver.prepareSolve(conf,game).divide(threads);
 		
 		ArrayList<Thread> myThreads = new ArrayList<Thread>();

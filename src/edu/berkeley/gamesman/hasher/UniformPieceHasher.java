@@ -57,7 +57,7 @@ public final class UniformPieceHasher extends Hasher<char[]> {
 		BigInteger hash = BigInteger.ZERO;
 		for(int i = 0; i < l; i++)
 				hash = hash.multiply(plen).add(lookup.get(board[i]));
-		Util.debug(DebugFacility.HASHER,"UPH hashes "+Arrays.toString(board)+" to "+hash);
+		Util.debug(DebugFacility.HASHER,"UPH hashes ",Arrays.toString(board)," to ",hash);
 		return hash;
 	}
 
