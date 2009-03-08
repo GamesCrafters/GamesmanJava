@@ -6,5 +6,5 @@ gamesman.hasher = PerfectConnect4Hash
 gamesman.solver = TierSolver
 gamesman.db.uri = file:///tmp/database3.db
 gamesman.dotty.uri = file:///tmp/database3.dot
-gamesman.dotty.alignRemoteness = true
+gamesman.dotty.alignRemoteness = false
 gamesman.database = BlockDatabase

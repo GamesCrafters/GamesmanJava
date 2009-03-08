@@ -18,7 +18,7 @@ import edu.berkeley.gamesman.util.Util;
  */
 public class Cuboid extends Game<CubeState> {
 	final int WIDTH, HEIGHT, DEPTH;
-	final int[] VALID_DIRS;
+	final Integer[] VALID_DIRS;
 	final String[] VALID_FACES;
 	//as you look at the F face of the cuboid,
 	//     H  +-----+
@@ -141,13 +141,7 @@ public class Cuboid extends Game<CubeState> {
 	@Override
 	public CubeState stringToState(String pos) {
 		String[] pieces_orientations = pos.split(";");
-		return new CubeState(parseArray(pieces_orientations[0].split(",")), parseArray(pieces_orientations[1].split(",")));
-	}
-	private Integer[] parseArray(String[] arr) {
-		Integer[] nums = new Integer[arr.length];
-		for(int i = 0; i < nums.length; i++) 
-			nums[i] = Integer.parseInt(arr[i]);
-		return nums;
+		return new CubeState(Util.parseInts(pieces_orientations[0].split(",")), Util.parseInts(pieces_orientations[1].split(",")));
 	}
 	
 	private void cycle_pieces(int p1, int p2, Integer[] pieces) {

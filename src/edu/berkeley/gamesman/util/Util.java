@@ -476,6 +476,10 @@ public final class Util {
 		};
 	}
 	
+	public static <H> H moduloAccess(H[] arr, int i) {
+		return arr[positiveModulo(i, arr.length)];
+	}
+	
 	public static long positiveModulo(long a, long b){
 		long y = a % b;
 		if(y >= 0) return y;
@@ -488,10 +492,17 @@ public final class Util {
 		return y+b;
 	}
 	
-	public static int[] parseInts(String... arr) {
-		int[] ints = new int[arr.length];
+	public static Integer[] parseInts(String... arr) {
+		Integer[] ints = new Integer[arr.length];
 		for(int i=0; i<ints.length; i++)
 			ints[i] = Integer.parseInt(arr[i]);
 		return ints;
+	}
+	
+	public static Boolean[] parseBooleans(String... arr) {
+		Boolean[] bools = new Boolean[arr.length];
+		for(int i=0; i<bools.length; i++)
+			bools[i] = Boolean.parseBoolean(arr[i]);
+		return bools;
 	}
 }

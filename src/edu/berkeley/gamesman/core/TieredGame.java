@@ -18,8 +18,6 @@ import edu.berkeley.gamesman.util.Util;
  * @param <State> The type that you use to represent your States
  */
 public abstract class TieredGame<State> extends Game<State> {
-	
-	private static final long serialVersionUID = 2597954028407397959L;
 	protected TieredHasher<State> myHasher;
 	
 	/**
@@ -90,7 +88,6 @@ public abstract class TieredGame<State> extends Game<State> {
 		return myHasher.lastHashValueForTier(tier);
 	}
 	
-
 	@Override
 	public final BigInteger lastHash() {
 		return lastHashValueForTier(numberOfTiers()-1);

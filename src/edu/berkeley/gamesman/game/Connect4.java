@@ -106,25 +106,7 @@ public class Connect4 extends TieredGame<C4Board> {
 	}
 
 	@Override
-	public String toString() {
-		return "Connect 4 " + gameWidth + "x" + gameHeight + " (" + piecesToWin
-				+ " to win)";
-	}
-
-	@Override
 	public String describe() {
-		return "Connect4|" + gameWidth + "|" + gameHeight + "|" + piecesToWin;
-	}
-
-	public int getGameHeight() {
-		return gameHeight;
-	}
-
-	public int getGameWidth() {
-		return gameWidth;
-	}
-
-	public char[] getPieces() {
-		return new char[] { 'X', 'O' };
+		return String.format("%dx%d Connect %d", gameWidth, gameHeight, piecesToWin);
 	}
 }

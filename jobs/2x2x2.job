@@ -9,5 +9,4 @@ gamesman.hasher = NullHasher
 gamesman.db.uri = file:///tmp/database2x2x2.db
 gamesman.database = BlockDatabase
 gamesman.dotty.uri = file:///tmp/database2x2x2.dot
-gamesman.dotty.prune = true
 gamesman.debug.SOLVER = true

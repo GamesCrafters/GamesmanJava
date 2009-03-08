@@ -1,0 +1,7 @@
+gamesman.game = Pyraminx
+gamesman.solver = BreadthFirstSolver
+gamesman.hasher = NullHasher
+gamesman.db.uri = file:///tmp/databasePyraminx.db
+gamesman.database = BlockDatabase
+gamesman.dotty.uri = file:///tmp/databasePyraminx.dot
+gamesman.debug.SOLVER = true
