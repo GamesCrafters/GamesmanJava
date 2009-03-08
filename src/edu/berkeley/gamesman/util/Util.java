@@ -99,7 +99,12 @@ public final class Util {
 				+ s);
 		System.err.println(cause.getMessage());
 		cause.printStackTrace(System.err);
-		throw new FatalError(s,cause);
+		try{
+			throw new FatalError(s,cause);
+		} catch (FatalError e) {
+			e.printStackTrace(System.err);
+			throw e;
+		}
 	}
 
 	/**
@@ -111,7 +116,7 @@ public final class Util {
 				+ s);
 		System.err.println("Stack trace follows:");
 		try {
-			throw new Warning(s,new Exception());
+			throw new Warning(s,null);
 		} catch (Warning e) {
 			e.printStackTrace(System.err);
 		}
