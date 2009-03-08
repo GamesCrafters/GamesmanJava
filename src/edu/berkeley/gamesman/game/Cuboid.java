@@ -262,7 +262,7 @@ class CubeState {
 	private static final HashMap<String, String> COLOR_SCHEME = new HashMap<String, String>();
 	static {
 		COLOR_SCHEME.put("F", "green");
-		COLOR_SCHEME.put("U", "white");
+		COLOR_SCHEME.put("U", "gray");
 		COLOR_SCHEME.put("R", "red");
 		COLOR_SCHEME.put("B", "blue");
 		COLOR_SCHEME.put("L", "orange");
@@ -283,7 +283,7 @@ class CubeState {
 		cube_string += myFormat("                   ____________   |  @  |  @  |%s", current_state[3][2], current_state[2][1], nl);
 		cube_string += myFormat("   /|             /  @  /  @  /|  |_____|_____|%s", current_state[3][0], current_state[2][0], nl);
 		cube_string += myFormat("  / |            /_____/_____/ |  |     |     |%s", nl);
-		cube_string += myFormat(" /| |           /  @  /  @  /| |  |  @  |  @  |%s", current_state[1][0], current_state[0][0], current_state[6][2], current_state[7][1], nl);
+		cube_string += myFormat(" /| |           /  @  /  @  /| |  |  @  |  @  |%s", current_state[1][0], current_state[0][0], current_state[7][1], current_state[6][2], nl);
 		cube_string += myFormat("/ |@|          /_____/_____/ |@|  |_____|_____|%s", current_state[3][1], current_state[2][2], nl);
 		cube_string += myFormat("|@| |          |     |     |@| |     Back (mirror)%s", current_state[1][2], current_state[0][1], nl);
 		cube_string += myFormat("| |/|          |  @  |  @  | |/|%s", current_state[1][1], current_state[0][2], nl);
