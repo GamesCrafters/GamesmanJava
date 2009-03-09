@@ -34,7 +34,7 @@ public class BlockDatabase extends FileDatabase {
 			long dblen = offset + headerSize + (Record.bitlength(conf)*lastRecord+7)/8;
 			Util.debug(DebugFacility.DATABASE,"Attempting to truncate to ",dblen,"(+1)");
 			fd.getChannel().force(true);
-			fd.getChannel().truncate(dblen+1);
+//			fd.getChannel().truncate(dblen+1);
 			fd.getChannel().close();
 		} catch (IOException e) {
 			Util.warn("Could not cleanly close BlockDB",e);

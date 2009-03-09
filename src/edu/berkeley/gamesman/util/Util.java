@@ -513,6 +513,6 @@ public final class Util {
 	
 	@SuppressWarnings("unchecked")
 	public static <H> H[] toArray(List<H> list) {
-		return (H[]) list.toArray();
+		return (H[]) list.toArray((H[])Array.newInstance(list.get(0).getClass(), list.size()));
 	}
 }
