@@ -91,6 +91,12 @@ def play(jobFile):
     print gs
     return gs
 
+def load(state):
+    global globalState
+    globalState.state = globalState.game.stringToState(state)
+    print globalState
+    return globalState
+
 def m(mv):
     move(mv)
 
@@ -108,11 +114,12 @@ def moves(s = None):
 def moveloop():
     global globalState
     from edu.berkeley.gamesman.core import PrimitiveValue
-    while globalState.game.primitiveValue(globalState.state) is PrimitiveValue.Undecided:
+    while globalState.game.primitiveValue(globalState.state) is PrimitiveValue.UNDECIDED:
         print "State is now"
         print globalState
         print "Avaliable moves:"
         moves()
         m = raw_input("Which move to take? ")
+        if len(m) == 0: return
         move(m)
     print "Game is over!"
