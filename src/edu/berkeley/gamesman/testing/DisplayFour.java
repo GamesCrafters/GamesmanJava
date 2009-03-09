@@ -14,7 +14,7 @@ public class DisplayFour extends JPanel implements Runnable {
 		int col, row;
 		setBackground(Color.YELLOW);
 		setForeground(Color.YELLOW);
-		setLayout(new GridLayout(ConnectFour.WIDTH, ConnectFour.HEIGHT));
+		setLayout(new GridLayout(ConnectFour.HEIGHT, ConnectFour.WIDTH));
 		for (row = ConnectFour.HEIGHT - 1; row >= 0; row--) {
 			for (col = 0; col < ConnectFour.WIDTH; col++) {
 				slots[row][col] = new Slot(row,col);
