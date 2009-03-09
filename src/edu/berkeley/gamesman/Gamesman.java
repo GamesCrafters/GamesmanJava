@@ -203,7 +203,7 @@ public final class Gamesman {
 			Util.fatalError("You must provide a shared secret to protect the server with -s or --secret");
 		
 		final DirectoryFilerServer serv = new DirectoryFilerServer(conf.getProperty("rootDirectory"),
-				Integer.parseInt(conf.getProperty("port","4263")),
+				conf.getInteger("port", 4263),
 				conf.getProperty("secret"));
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable(){

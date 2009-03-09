@@ -199,8 +199,8 @@ public class ConnectFour implements MouseListener {
 		Configuration conf = new Configuration(args[0]);
 		FileDatabase fd = new FileDatabase();
 		fd.initialize(conf.getProperty("gamesman.db.uri"), null);
-		int height = Integer.parseInt(conf.getProperty("gamesman.game.height"));
-		int width = Integer.parseInt(conf.getProperty("gamesman.game.width"));
+		int width = conf.getInteger("gamesman.game.width", 7);
+		int height = conf.getInteger("gamesman.game.height", 6);
 		System.out.println(fd.getRecord(BigInteger.ZERO));
 		DisplayFour df = new DisplayFour(height, width);
 		/* ConnectFour cf= */new ConnectFour(height, width, df, fd);

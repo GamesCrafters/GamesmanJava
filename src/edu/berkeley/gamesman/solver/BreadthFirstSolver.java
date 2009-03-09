@@ -2,7 +2,6 @@ package edu.berkeley.gamesman.solver;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.BrokenBarrierException;
@@ -43,10 +42,7 @@ public class BreadthFirstSolver extends Solver {
 	@Override
 	public WorkUnit prepareSolve(Configuration config, Game<Object> game) {
 		conf = config;
-		int maxRemoteness = Integer.parseInt(conf.getProperty("gamesman.solver.maxRemoteness", "-1"));
-		if (maxRemoteness <= 0) {
-			maxRemoteness = Integer.MAX_VALUE;
-		}
+		int maxRemoteness = conf.getInteger("gamesman.solver.maxRemoteness", Integer.MAX_VALUE);
 		maxHash = game.lastHash();
 		hashSpace = maxHash.add(BigInteger.ONE);
 		System.out.println("Calling alloc "+hashSpace);

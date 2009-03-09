@@ -103,32 +103,32 @@ public class Configuration {
 	 */
 	public static Configuration load(byte[] barr){
 		try{
-		DataInputStream in = new DataInputStream(new ByteArrayInputStream(barr));
-		Properties props = new Properties();
-		
-		byte[] t = new byte[in.readInt()];
-		in.readFully(t);
-		ByteArrayInputStream bin = new ByteArrayInputStream(t);
-		props.load(bin);
-		Configuration conf = new Configuration(props);
-		conf.g = (Game<?>) Util.typedInstantiateArg(in.readUTF(),conf);
-		conf.h = (Hasher<?>) Util.typedInstantiateArg(in.readUTF(),conf);
-		
-		EnumMap<RecordFields, Pair<Integer, Integer>> sf = new EnumMap<RecordFields,Pair<Integer,Integer>>(RecordFields.class);
-		
-		conf.g.prepare();
-		
-		int num = in.readInt();
-		
-		for(int i = 0; i < num; i++){
-			String name = in.readUTF();
-			sf.put(RecordFields.valueOf(name),
-					new Pair<Integer,Integer>(in.readInt(),in.readInt()));
-		}
-		conf.setStoredFields(sf);
-		conf.getGame().prepare();
-		
-		return conf;
+			DataInputStream in = new DataInputStream(new ByteArrayInputStream(barr));
+			Properties props = new Properties();
+
+			byte[] t = new byte[in.readInt()];
+			in.readFully(t);
+			ByteArrayInputStream bin = new ByteArrayInputStream(t);
+			props.load(bin);
+			Configuration conf = new Configuration(props);
+			conf.g = (Game<?>) Util.typedInstantiateArg(in.readUTF(),conf);
+			conf.h = (Hasher<?>) Util.typedInstantiateArg(in.readUTF(),conf);
+
+			EnumMap<RecordFields, Pair<Integer, Integer>> sf = new EnumMap<RecordFields,Pair<Integer,Integer>>(RecordFields.class);
+
+			conf.g.prepare();
+
+			int num = in.readInt();
+
+			for(int i = 0; i < num; i++){
+				String name = in.readUTF();
+				sf.put(RecordFields.valueOf(name),
+						new Pair<Integer,Integer>(in.readInt(),in.readInt()));
+			}
+			conf.setStoredFields(sf);
+			conf.getGame().prepare();
+
+			return conf;
 		}catch (IOException e) {
 			Util.fatalError("Could not resuscitate Configuration from bytes :(",e);
 		}
@@ -222,6 +222,32 @@ public class Configuration {
 		String s = props.getProperty(key);
 		if(s == null) return dfl;
 		return !s.equalsIgnoreCase("false") && !s.equalsIgnoreCase("0");
+	}
+	
+	/**
+	 * Parses a property as an Integer.
+	 * @param key the name of the configuration property
+	 * @param dfl default value
+	 * @return The value associated with the key, if defined and an integer. Otherwise, returns dfl.
+	 */
+	public Integer getInteger(String key, Integer dfl) {
+		try {
+			dfl = Integer.parseInt(props.getProperty(key));
+		} catch(Exception e) {}
+		return dfl;
+	}
+	
+	/**
+	 * Parses a property as an array of Integers separated by the regex ", *"
+	 * @param key the name of the configuration property
+	 * @param dfl default value
+	 * @return The value associated with the key, if defined and an integer array. Otherwise, returns dfl.
+	 */
+	public Integer[] getIntegers(String key, Integer[] dfl) {
+		try {
+			dfl = Util.parseIntegers(props.getProperty(key).split(", *"));
+		} catch(Exception e) {}
+		return dfl;
 	}
 	
 	/**

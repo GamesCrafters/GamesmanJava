@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -432,11 +433,12 @@ public final class Util {
 	 * @param arr An array of the elements to join together.
 	 * @return The toString() of each element of arr, separated by separator 
 	 */
-	public static String join(String separator, Object[] arr) {
-		if(arr.length == 0) return "";
+	public static String join(String separator, Object arr) {
+		assertTrue(arr.getClass().isArray(), "join() needs an array");
+		if(Array.getLength(arr) == 0) return "";
 		StringBuilder sb = new StringBuilder();
-		for(Object o : arr)
-			sb.append(separator).append(o.toString());
+		for(int i=0; i<Array.getLength(arr); i++)
+			sb.append(separator).append(Array.get(arr, i));
 		return sb.substring(separator.length());
 	}
 	
@@ -495,7 +497,7 @@ public final class Util {
 		return y+b;
 	}
 	
-	public static Integer[] parseInts(String... arr) {
+	public static Integer[] parseIntegers(String... arr) {
 		Integer[] ints = new Integer[arr.length];
 		for(int i=0; i<ints.length; i++)
 			ints[i] = Integer.parseInt(arr[i]);
@@ -507,5 +509,10 @@ public final class Util {
 		for(int i=0; i<bools.length; i++)
 			bools[i] = Boolean.parseBoolean(arr[i]);
 		return bools;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static <H> H[] toArray(List<H> list) {
+		return (H[]) list.toArray();
 	}
 }

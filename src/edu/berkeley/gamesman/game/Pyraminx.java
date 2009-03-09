@@ -78,9 +78,9 @@ public class Pyraminx extends Game<PyraminxState> {
 	@Override
 	public PyraminxState stringToState(String pos) {
 		String[] eperm_orient_cperm = pos.split(";");
-		return new PyraminxState(Util.parseInts(eperm_orient_cperm[0].split(",")),
+		return new PyraminxState(Util.parseIntegers(eperm_orient_cperm[0].split(",")),
 				Util.parseBooleans(eperm_orient_cperm[1].split(",")),
-				Util.parseInts(eperm_orient_cperm[2].split(",")));
+				Util.parseIntegers(eperm_orient_cperm[2].split(",")));
 	}
 	
 	private static final int UP = 0, RIGHT = 1, LEFT = 2, BACK = 3;

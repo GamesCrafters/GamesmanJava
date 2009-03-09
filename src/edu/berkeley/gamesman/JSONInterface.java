@@ -52,7 +52,7 @@ public class JSONInterface {
 		Util.debug(DebugFacility.JSON, "Loading JSON server...");
 		
 		try {
-			ssock = new ServerSocket(Integer.parseInt(conf.getProperty("gamesman.server.jsonport")));
+			ssock = new ServerSocket(conf.getInteger("gamesman.server.jsonport", 4242));
 		} catch (NumberFormatException e) {
 			Util.fatalError("Port must be an integer",e);
 		} catch (IOException e) {

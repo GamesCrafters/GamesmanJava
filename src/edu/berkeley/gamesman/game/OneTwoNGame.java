@@ -23,8 +23,8 @@ public class OneTwoNGame extends Game<Integer> {
 	 */
 	public OneTwoNGame(Configuration conf) {
 		super(conf);
-		MAX_NUMBER = Integer.parseInt(conf.getProperty("maxNumber", "10"));
-		MAX_STEP = Integer.parseInt(conf.getProperty("maxStep", "2"));
+		MAX_NUMBER = conf.getInteger("maxNumber", 10);
+		MAX_STEP = conf.getInteger("maxStep", 2);
 	}
 	
 	@Override

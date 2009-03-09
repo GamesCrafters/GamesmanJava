@@ -35,8 +35,8 @@ public class OneTwoN extends TieredGame<Integer> {
 	 */
 	public OneTwoN(Configuration conf) {
 		super(conf);
-		maxNumber = Integer.parseInt(conf.getProperty("gamesman.game.maxNumber", "10"));
-		maxStep = Integer.parseInt(conf.getProperty("gamesman.game.maxStep", "2"));
+		maxNumber = conf.getInteger("gamesman.game.maxNumber", 10);
+		maxStep = conf.getInteger("gamesman.game.maxStep", 2);
 	}
 	
 	@Override

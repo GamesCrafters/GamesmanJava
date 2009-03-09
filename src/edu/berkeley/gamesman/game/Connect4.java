@@ -34,9 +34,9 @@ public class Connect4 extends TieredGame<C4Board> {
 	 */
 	public Connect4(Configuration conf) {
 		super(conf);
-		piecesToWin = Integer.parseInt(conf.getProperty("gamesman.game.pieces", "4"));
-		gameWidth = Integer.parseInt(conf.getProperty("gamesman.game.width", "7"));
-		gameHeight = Integer.parseInt(conf.getProperty("gamesman.game.height", "6"));
+		piecesToWin = conf.getInteger("gamesman.game.pieces", 4);
+		gameWidth = conf.getInteger("gamesman.game.width", 7);
+		gameHeight = conf.getInteger("gamesman.game.height", 6);
 	}
 
 	@Override

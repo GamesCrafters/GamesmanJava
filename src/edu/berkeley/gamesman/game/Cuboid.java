@@ -40,11 +40,11 @@ public class Cuboid extends Game<CubeState> {
 	 */
 	public Cuboid(Configuration conf) {
 		super(conf);
-		WIDTH = Integer.parseInt(conf.getProperty("gamesman.game.width", "2"));
-		HEIGHT = Integer.parseInt(conf.getProperty("gamesman.game.height", "2"));
-		DEPTH = Integer.parseInt(conf.getProperty("gamesman.game.depth", "2"));
+		WIDTH = conf.getInteger("gamesman.game.width", 2);
+		HEIGHT = conf.getInteger("gamesman.game.height", 2);
+		DEPTH = conf.getInteger("gamesman.game.depth", 2);
 		VALID_FACES = conf.getProperty("gamesman.game.faces", "FUR").split(", *");
-		VALID_DIRS = Util.parseInts(conf.getProperty("gamesman.game.dirs", "1, 2").split(", *"));
+		VALID_DIRS = conf.getIntegers("gamesman.game.dirs", new Integer[] { 1, 3 });
 		// TODO - generalize to arbitrary cuboids!
 		// TODO should we treat a 2x2x3 as different from a 3x2x2
 		// we could require that WIDTH <= HEIGHT <= DEPTH,
@@ -118,7 +118,7 @@ public class Cuboid extends Game<CubeState> {
 			pieces.add(location, 6-i);
 		}
 		pieces.add(7);
-		return new CubeState(pieces.toArray(new Integer[0]), orientations);
+		return new CubeState(Util.toArray(pieces), orientations);
 	}
 
 	@Override
@@ -141,7 +141,7 @@ public class Cuboid extends Game<CubeState> {
 	@Override
 	public CubeState stringToState(String pos) {
 		String[] pieces_orientations = pos.split(";");
-		return new CubeState(Util.parseInts(pieces_orientations[0].split(",")), Util.parseInts(pieces_orientations[1].split(",")));
+		return new CubeState(Util.parseIntegers(pieces_orientations[0].split(",")), Util.parseIntegers(pieces_orientations[1].split(",")));
 	}
 	
 	private void cycle_pieces(int p1, int p2, Integer[] pieces) {

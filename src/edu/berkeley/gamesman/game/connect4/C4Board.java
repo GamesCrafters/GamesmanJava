@@ -2,7 +2,6 @@ package edu.berkeley.gamesman.game.connect4;
 
 import java.util.Arrays;
 
-import edu.berkeley.gamesman.core.Board1D;
 import edu.berkeley.gamesman.core.Board2D;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.util.DebugFacility;

@@ -3,8 +3,6 @@ package edu.berkeley.gamesman.hasher;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-import edu.berkeley.gamesman.core.Board1D;
-import edu.berkeley.gamesman.core.Board2D;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.TieredHasher;
 import edu.berkeley.gamesman.game.connect4.C4Board;

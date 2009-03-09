@@ -19,7 +19,7 @@ import edu.berkeley.gamesman.util.Util;
  * @author DNSpies
  */
 public abstract class DartboardGame extends TieredIterGame {
-	final int gameWidth, gameHeight;
+	protected final int gameWidth, gameHeight;
 	final BigInteger[] moveAdds;
 	int numPieces;
 	SpaceRearranger piece_empty;
@@ -30,11 +30,14 @@ public abstract class DartboardGame extends TieredIterGame {
 	 */
 	public DartboardGame(Configuration conf) {
 		super(conf);
-		gameWidth = Integer.parseInt(conf.getProperty("connect4.width", "7"));
-		gameHeight = Integer.parseInt(conf.getProperty("connect4.height", "6"));
+		gameWidth = conf.getInteger("gamesman.game.width", getDefaultWidth());
+		gameHeight = conf.getInteger("gamesman.game.height", getDefaultHeight());
 		moveAdds = new BigInteger[gameWidth*gameHeight];
 	}
 
+	public abstract int getDefaultWidth();
+	public abstract int getDefaultHeight();
+	
 	private void setOXs() {
 		try {
 			o_x = new PieceRearranger(piece_empty.toString(), numPieces / 2,
