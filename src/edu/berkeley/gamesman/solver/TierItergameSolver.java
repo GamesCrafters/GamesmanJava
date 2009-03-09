@@ -47,8 +47,7 @@ public class TierItergameSolver extends Solver {
 		ItergameState s = game.hashToState(start);
 		game.setState(s);
 		while (current.compareTo(end) <= 0) {
-			if (current.mod(BigInteger.valueOf(10000)).compareTo(
-					BigInteger.ZERO) == 0)
+			if (current.mod(BigInteger.valueOf(10000)).compareTo(BigInteger.ZERO) == 0)
 				t.calculated(10000);
 
 			PrimitiveValue pv = game.primitiveValue();

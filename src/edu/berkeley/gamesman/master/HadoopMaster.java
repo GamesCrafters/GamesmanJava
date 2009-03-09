@@ -24,7 +24,7 @@ public class HadoopMaster implements Master {
 
 	public void run() {
 		try {
-			ToolRunner.run(new TieredHadoopTool(), new String[]{new String(conf.store())});
+			ToolRunner.run(new TieredHadoopTool(), new String[]{Util.encodeBase64(conf.store())});
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 			Util.fatalError("Hadoop tool runner threw an exception: "+e);

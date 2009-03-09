@@ -3,7 +3,10 @@
 // - scs 03/07/09
 
 
-//package edu.berkeley.gamesman.hasher;
+package edu.berkeley.gamesman.hasher;
+
+public final class UniformPieceHasher {}
+
 //
 //
 //import java.math.BigInteger;

@@ -16,6 +16,7 @@ import edu.berkeley.gamesman.hadoop.util.BigIntegerWritable;
 import edu.berkeley.gamesman.hadoop.util.SequenceInputFormat;
 import edu.berkeley.gamesman.master.LocalMaster;
 import edu.berkeley.gamesman.solver.TierSolver;
+import edu.berkeley.gamesman.util.Util;
 
 /**
  * This is a simple Hadoop tool that is used to launch a HadoopSolver
@@ -28,7 +29,7 @@ public class TieredHadoopTool extends Configured implements Tool {
 	
 	public int run(String[] args) throws Exception {
 		Configuration conf = getConf();
-		myConf = edu.berkeley.gamesman.core.Configuration.load(args[0].getBytes());
+		myConf = edu.berkeley.gamesman.core.Configuration.load(Util.decodeBase64(args[0]));
 
 		conf.set("gameclass", myConf.getProperty("gamesman.game"));
 		conf.set("databaseclass", myConf.getProperty("gamesman.database"));

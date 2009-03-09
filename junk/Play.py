@@ -62,6 +62,8 @@ class GameState:
 
 def play(jobFile):
     
+    global conf
+    
     for possible_path in sys.path:
         p = possible_path + "/" + jobFile + ".job"
         if os.path.exists(p):
@@ -110,6 +112,14 @@ def moves(s = None):
         global globalState
         s = globalState
     s.printMoves()
+
+def curState():
+    global globalState
+    return globalState.state
+
+def getConf():
+    global conf
+    return conf
 
 def moveloop():
     global globalState

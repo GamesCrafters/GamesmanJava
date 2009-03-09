@@ -1,0 +1,9 @@
+gamesman.game = RConnect4
+gamesman.game.width = 6
+gamesman.game.height = 5
+gamesman.game.pieces = 4
+gamesman.hasher = TieredItergameHasher
+gamesman.solver = TierItergameSolver
+gamesman.database = MemoryDatabase
+gamesman.db.uri = file:///tmp/fastdatabase65.db
+gamesman.BlockDatabase.size = 1610612736
