@@ -222,6 +222,8 @@ public final class PieceRearranger implements Cloneable{
 		this.numOs = numOs;
 		openO = os;
 		openX = 0;
+		if(os==0)
+			hasNext=false;
 	}
 
 	/**
