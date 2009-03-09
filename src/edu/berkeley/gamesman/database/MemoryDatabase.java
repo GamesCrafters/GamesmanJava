@@ -13,7 +13,8 @@ import edu.berkeley.gamesman.util.Util;
 /** 
  * Test DataBase for GamesCrafters Java. 
  * Right now it just writes BigIntegers to memory, without byte padding.
- * 
+ *
+ *	
  * @author Alex Trofimov
  * @version 1.1
  * 
@@ -189,6 +190,7 @@ public class MemoryDatabase extends Database{
 	@Override
 	public void close() {
 		this.open = false;
+		flush();
 		Util.debug(DebugFacility.DATABASE, "Closing Memory DataBase. Does Nothing.");
 	}
 	
