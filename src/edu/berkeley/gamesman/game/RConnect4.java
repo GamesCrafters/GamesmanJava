@@ -279,7 +279,6 @@ public class RConnect4 extends TieredIterGame {
 		}
 		setTier(tier);
 		try {
-			System.out.println(iah.toString());
 			iah = new PieceRearranger(iahString.toString());
 		} catch (Exception e) {
 			e.printStackTrace();

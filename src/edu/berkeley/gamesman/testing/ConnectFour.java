@@ -82,8 +82,9 @@ public class ConnectFour implements MouseListener {
 				s = move;
 				thisOutcome = fd.getRecord(cgame.stateToHash(s.cdr)).get();
 				System.out.println("Next possible move " + move.car
-						+ " for state " + cgame.stateToHash(s.cdr) + " has value "
+						+ " for state " + s.car+","+s.cdr + " has value "
 						+ thisOutcome);
+				System.out.println(cgame.displayState(move.cdr));
 				if (best == null || thisOutcome.isPreferableTo(bestOutcome)) {
 					bestOutcome = thisOutcome;
 					best = s;
