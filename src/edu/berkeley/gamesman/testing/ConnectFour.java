@@ -4,7 +4,9 @@ import java.awt.Container;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Random;
 
 import javax.swing.JFrame;
 
@@ -25,6 +27,7 @@ public class ConnectFour implements MouseListener {
 	private DisplayFour df;
 	private RConnect4 cgame;
 	private FileDatabase fd;
+	private static Random r = new Random();
 	static int WIDTH = 4;
 	static int HEIGHT = 4;
 
@@ -71,11 +74,11 @@ public class ConnectFour implements MouseListener {
 
 	private void startCompMove() {
 		if (compTurn() && !win()) {
+			ArrayList<Pair<String,ItergameState>> bests = new ArrayList<Pair<String,ItergameState>>(WIDTH);
 			cgame.setToString(arrToString(board));
 			Collection<Pair<String, ItergameState>> moves = cgame.validMoves();
 			Pair<String,ItergameState> s;
-			Pair<String,ItergameState> best = null;
-			PrimitiveValue bestOutcome = PrimitiveValue.UNDECIDED;
+			PrimitiveValue bestOutcome = null;
 			PrimitiveValue thisOutcome;
 			for (Pair<String, ItergameState> move: moves) {
 				s = move;
@@ -83,11 +86,14 @@ public class ConnectFour implements MouseListener {
 				System.out.println("Next possible move " + move.car
 						+ " for state " + s.car+","+s.cdr + " has value "
 						+ thisOutcome);
-				if (best == null || thisOutcome.isPreferableTo(bestOutcome)) {
+				if (bests.size() == 0 || thisOutcome.isPreferableTo(bestOutcome)) {
 					bestOutcome = thisOutcome;
-					best = s;
-				}
+					bests.clear();
+					bests.add(s);
+				}else if(!bestOutcome.isPreferableTo(thisOutcome))
+					bests.add(s);
 			}
+			Pair<String,ItergameState> best = bests.get(r.nextInt(bests.size()));
 			makeMove(best.car.charAt(1)-'0');
 			System.out.println("Done with startCompMove");
 		}
