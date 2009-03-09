@@ -77,14 +77,12 @@ public class ConnectFour implements MouseListener {
 			Pair<String,ItergameState> best = null;
 			PrimitiveValue bestOutcome = PrimitiveValue.UNDECIDED;
 			PrimitiveValue thisOutcome;
-
 			for (Pair<String, ItergameState> move: moves) {
 				s = move;
-				thisOutcome = fd.getRecord(cgame.stateToHash(s.cdr)).get();
+				thisOutcome = fd.getRecord(cgame.stateToHash(s.cdr)).get().previousMovesValue();
 				System.out.println("Next possible move " + move.car
 						+ " for state " + s.car+","+s.cdr + " has value "
 						+ thisOutcome);
-				System.out.println(cgame.displayState(move.cdr));
 				if (best == null || thisOutcome.isPreferableTo(bestOutcome)) {
 					bestOutcome = thisOutcome;
 					best = s;

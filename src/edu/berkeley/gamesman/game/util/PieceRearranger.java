@@ -146,35 +146,38 @@ public final class PieceRearranger implements Cloneable{
 		HashGroup currentGroup = new HashGroup(0, lastPiece);
 		pieces = new HashPiece[numSpaces];
 		int numPieces = 0, numOs = 0;
-		boolean onFX=true, onFO=true;
+		boolean onFX = true, onFO = true;
 		for (int i = 0; i < numSpaces; i++) {
 			if (s[i] == ' ') {
 				g.add(currentGroup);
 				currentGroup = new HashGroup(i + 1, lastPiece);
 			} else {
-				if (s[i]=='O'){
-					if(onFO){
+				if (s[i] == 'O') {
+					if (onFO) {
+						onFX = false;
 						openO++;
-						if(onFX)
-							onFX=false;
 					}
 					numOs++;
-					lastPiece = new HashPiece(numPieces, numOs, lastPiece.nextO, 'O', currentGroup);
+					lastPiece = new HashPiece(numPieces, numOs,
+							lastPiece.nextO, 'O', currentGroup);
+					hash = hash.add(lastPiece.hash);
 					currentGroup.addPiece(lastPiece);
-				}else if(s[i]=='X'){
-					if(onFX)
+				} else if (s[i] == 'X') {
+					if (onFX)
 						openX++;
 					else
-						onFO=false;
-					lastPiece = new HashPiece(numPieces, numOs, lastPiece.nextX, 'X', currentGroup);
+						onFO = false;
+					lastPiece = new HashPiece(numPieces, numOs,
+							lastPiece.nextX, 'X', currentGroup);
 					currentGroup.addPiece(lastPiece);
-				}else{
-					throw new Exception("Bad String");
-				}
+				} else
+					throw new Exception("Bad String: " + String.valueOf(s));
 				pieces[i] = lastPiece;
 				numPieces++;
 			}
 		}
+		if(onFO)
+			hasNext = false;
 		g.add(currentGroup);
 		arrangements = lastPiece.nextX;
 		groups = g.toArray(new HashGroup[g.size()]);
