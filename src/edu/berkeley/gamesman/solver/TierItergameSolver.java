@@ -30,13 +30,11 @@ public final class TierItergameSolver extends TierSolver<ItergameState> {
 					BigInteger.ZERO) == 0)
 				t.calculated(10000);
 
-			ItergameState state = game.getState();
-
-			PrimitiveValue pv = game.primitiveValue(state);
+			PrimitiveValue pv = game.primitiveValue();
 			
 			if (pv.equals(PrimitiveValue.UNDECIDED)) {
 				Util.debug(DebugFacility.SOLVER,"Primitive value for state "+current+" is undecided");
-				Collection<Pair<String,ItergameState>> children = game.validMoves(state);
+				Collection<Pair<String,ItergameState>> children = game.validMoves();
 				ArrayList<Record> vals = new ArrayList<Record>(children.size());
 				for (Pair<String,ItergameState> child : children) {
 					vals.add(db.getRecord(game.stateToHash(child.cdr)));
