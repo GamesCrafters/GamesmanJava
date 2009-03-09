@@ -47,7 +47,6 @@ public class TierItergameSolver extends Solver {
 		ItergameState s = game.hashToState(start);
 		game.setState(s);
 		while (current.compareTo(end) <= 0) {
-			current = current.add(BigInteger.ONE);
 			if (current.mod(BigInteger.valueOf(10000)).compareTo(
 					BigInteger.ZERO) == 0)
 				t.calculated(10000);
@@ -69,6 +68,7 @@ public class TierItergameSolver extends Solver {
 				Util.debug(DebugFacility.SOLVER,"Primitive value for state "+current+" is "+prim);
 				db.putRecord(current, prim);
 			}
+			current = current.add(BigInteger.ONE);
 			if(game.hasNextHashInTier())
 				game.nextHashInTier();
 		}

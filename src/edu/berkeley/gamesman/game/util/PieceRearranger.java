@@ -50,7 +50,7 @@ public final class PieceRearranger implements Cloneable{
 		private BigInteger hash;
 		private BigInteger nextO;
 		private BigInteger nextX;
-		private HashGroup group;
+		private final HashGroup group;
 
 		protected HashPiece(int pieces, int os, BigInteger hash, char player,
 				HashGroup group) {
@@ -289,56 +289,56 @@ public final class PieceRearranger implements Cloneable{
 	public Collection<Pair<Integer, Character>> next() {
 		ArrayList<Pair<Integer, Character>> changedPieces = new ArrayList<Pair<Integer, Character>>(
 				2 * Math.min(openO - 1, openX) + 2);
-		int piece = -1;
-		piece = nextPiece(piece);
+		int index = -1;
+		index = nextPiece(index);
 		int i;
 		HashPiece lastPiece;
 		if (openX > 0 && openO > 1) {
 			lastPiece = null;
 			for (i = 0; i < openO - 1; i++) {
-				if (get(piece) == 'X')
-					changedPieces.add(new Pair<Integer, Character>(piece, 'O'));
-				pieces[piece].set(i + 1, BigInteger.ZERO, 'O');
-				lastPiece = pieces[piece];
-				piece = nextPiece(piece);
+				if (get(index) == 'X')
+					changedPieces.add(new Pair<Integer, Character>(index, 'O'));
+				pieces[index].set(i + 1, BigInteger.ZERO, 'O');
+				lastPiece = pieces[index];
+				index = nextPiece(index);
 			}
 			for (i = 0; i < openX; i++) {
-				if (get(piece) == 'O')
-					changedPieces.add(new Pair<Integer, Character>(piece, 'X'));
-				pieces[piece].set(openO - 1, lastPiece.nextX, 'X');
-				lastPiece = pieces[piece];
-				piece = nextPiece(piece);
+				if (get(index) == 'O')
+					changedPieces.add(new Pair<Integer, Character>(index, 'X'));
+				pieces[index].set(openO - 1, lastPiece.nextX, 'X');
+				lastPiece = pieces[index];
+				index = nextPiece(index);
 			}
 		} else if (openX == 0 && openO == 1) {
 			lastPiece = null;
 		} else {
 			for (i = 0; i < openX + openO - 2; i++)
-				piece = nextPiece(piece);
-			lastPiece = pieces[piece];
-			piece = nextPiece(piece);
+				index = nextPiece(index);
+			lastPiece = pieces[index];
+			index = nextPiece(index);
 		}
-		changedPieces.add(new Pair<Integer,Character>(piece, 'X'));
+		changedPieces.add(new Pair<Integer,Character>(index, 'X'));
 		if (lastPiece == null)
-			pieces[piece].set(openO - 1, BigInteger.ONE, 'X');
+			pieces[index].set(0, BigInteger.ONE, 'X');
 		else
-			pieces[piece].set(openO - 1, lastPiece.nextX, 'X');
-		lastPiece = pieces[piece];
-		piece = nextPiece(piece);
-		changedPieces.add(new Pair<Integer,Character>(piece, 'O'));
-		pieces[piece].set(openO, lastPiece.nextO, 'O');
+			pieces[index].set(openO - 1, lastPiece.nextX, 'X');
+		lastPiece = pieces[index];
+		index = nextPiece(index);
+		changedPieces.add(new Pair<Integer,Character>(index, 'O'));
+		pieces[index].set(openO, lastPiece.nextO, 'O');
 		if (openO > 1) {
 			openX = 0;
 			openO--;
 		} else {
 			openX++;
-			piece = nextPiece(piece);
-			if (piece == -1)
+			index = nextPiece(index);
+			if (index == -1)
 				hasNext = false;
 			else
-				while (get(piece) == 'O') {
+				while (get(index) == 'O') {
 					openO++;
-					piece = nextPiece(piece);
-					if (piece == -1) {
+					index = nextPiece(index);
+					if (index == -1) {
 						hasNext = false;
 						break;
 					}
