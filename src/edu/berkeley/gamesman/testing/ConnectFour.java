@@ -10,41 +10,47 @@ import java.util.Random;
 
 import javax.swing.JFrame;
 
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.ItergameState;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.database.FileDatabase;
 import edu.berkeley.gamesman.game.RConnect4;
 import edu.berkeley.gamesman.util.Pair;
+import edu.berkeley.gamesman.util.Util;
 
 public class ConnectFour implements MouseListener {
-	char[][] board = new char[HEIGHT][WIDTH];
+	final char[][] board;
 	private int[] columnHeight = new int[7];
 	private char turn = 'X';
-	private boolean compO = true;
-	private boolean compX = false;
+	private boolean compO = false;
+	private boolean compX = true;
 	private boolean win = false;
 	private Thread paintThread;
 	private DisplayFour df;
 	private RConnect4 cgame;
 	private FileDatabase fd;
 	private static Random r = new Random();
-	static int WIDTH = 4;
-	static int HEIGHT = 4;
+	final int gameWidth;
+	final int gameHeight;
 
-	public ConnectFour(DisplayFour disfour, FileDatabase db) {
+	public ConnectFour(int height, int width, DisplayFour disfour,
+			FileDatabase db) {
 		int c, r;
+		gameHeight = height;
+		gameWidth = width;
+		board = new char[gameHeight][gameWidth];
 		fd = db;
 		df = disfour;
 		cgame = new RConnect4(db.getConfiguration());
 		cgame.prepare();
-		for (c = 0; c < WIDTH; c++) {
-			for (r = 0; r < HEIGHT; r++) {
+		for (c = 0; c < gameWidth; c++) {
+			for (r = 0; r < gameHeight; r++) {
 				df.slots[r][c].addMouseListener(this);
 			}
 		}
 		paintThread = new Thread(df);
-		for (c = 0; c < WIDTH; c++) {
-			for (r = 0; r < HEIGHT; r++) {
+		for (c = 0; c < gameWidth; c++) {
+			for (r = 0; r < gameHeight; r++) {
 				board[r][c] = ' ';
 			}
 			columnHeight[c] = 0;
@@ -74,27 +80,31 @@ public class ConnectFour implements MouseListener {
 
 	private void startCompMove() {
 		if (compTurn() && !win()) {
-			ArrayList<Pair<String,ItergameState>> bests = new ArrayList<Pair<String,ItergameState>>(WIDTH);
+			ArrayList<Pair<String, ItergameState>> bests = new ArrayList<Pair<String, ItergameState>>(
+					gameWidth);
 			cgame.setToString(arrToString(board));
 			Collection<Pair<String, ItergameState>> moves = cgame.validMoves();
-			Pair<String,ItergameState> s;
+			Pair<String, ItergameState> s;
 			PrimitiveValue bestOutcome = null;
 			PrimitiveValue thisOutcome;
-			for (Pair<String, ItergameState> move: moves) {
+			for (Pair<String, ItergameState> move : moves) {
 				s = move;
-				thisOutcome = fd.getRecord(cgame.stateToHash(s.cdr)).get().previousMovesValue();
+				thisOutcome = fd.getRecord(cgame.stateToHash(s.cdr)).get()
+						.previousMovesValue();
 				System.out.println("Next possible move " + move.car
-						+ " for state " + s.car+","+s.cdr + " has value "
+						+ " for state " + s.car + "," + s.cdr + " has value "
 						+ thisOutcome);
-				if (bests.size() == 0 || thisOutcome.isPreferableTo(bestOutcome)) {
+				if (bests.size() == 0
+						|| thisOutcome.isPreferableTo(bestOutcome)) {
 					bestOutcome = thisOutcome;
 					bests.clear();
 					bests.add(s);
-				}else if(!bestOutcome.isPreferableTo(thisOutcome))
+				} else if (!bestOutcome.isPreferableTo(thisOutcome))
 					bests.add(s);
 			}
-			Pair<String,ItergameState> best = bests.get(r.nextInt(bests.size()));
-			makeMove(best.car.charAt(1)-'0');
+			Pair<String, ItergameState> best = bests.get(r
+					.nextInt(bests.size()));
+			makeMove(best.car.charAt(1) - '0');
 			System.out.println("Done with startCompMove");
 		}
 	}
@@ -115,12 +125,12 @@ public class ConnectFour implements MouseListener {
 		boolean up, right, upright, downright;
 		if (win)
 			return true;
-		for (col = 0; col < WIDTH; col++) {
-			for (row = 0; row < HEIGHT; row++) {
+		for (col = 0; col < gameWidth; col++) {
+			for (row = 0; row < gameHeight; row++) {
 				if (board[row][col] == ' ')
 					break;
-				up = row <= HEIGHT - 4;
-				right = col <= WIDTH - 4;
+				up = row <= gameHeight - 4;
+				right = col <= gameWidth - 4;
 				upright = up && right;
 				downright = row >= 3 && right;
 				for (i = 0; i < 4; i++) {
@@ -143,8 +153,8 @@ public class ConnectFour implements MouseListener {
 				}
 			}
 		}
-		for (col = 0; col < WIDTH; col++) {
-			if (columnHeight[col] < HEIGHT)
+		for (col = 0; col < gameWidth; col++) {
+			if (columnHeight[col] < gameHeight)
 				return false;
 		}
 		return true;
@@ -183,11 +193,17 @@ public class ConnectFour implements MouseListener {
 
 	public static void main(String[] args) throws InstantiationException,
 			IllegalAccessException {
+		if (args.length != 1) {
+			Util.fatalError("Please specify a jobfile as the only argument");
+		}
+		Configuration conf = new Configuration(args[0]);
 		FileDatabase fd = new FileDatabase();
-		fd.initialize("file:///tmp/fastdatabase4.db", null);
+		fd.initialize(conf.getProperty("gamesman.db.uri"), null);
+		int height = Integer.parseInt(conf.getProperty("gamesman.game.height"));
+		int width = Integer.parseInt(conf.getProperty("gamesman.game.width"));
 		System.out.println(fd.getRecord(BigInteger.ZERO));
-		DisplayFour df = new DisplayFour();
-		/* ConnectFour cf= */new ConnectFour(df, fd);
+		DisplayFour df = new DisplayFour(height, width);
+		/* ConnectFour cf= */new ConnectFour(height, width, df, fd);
 		JFrame jf = new JFrame();
 		Container c = jf.getContentPane();
 		c.add(df);

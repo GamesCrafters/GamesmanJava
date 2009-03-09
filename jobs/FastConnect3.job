@@ -1,4 +1,4 @@
-gamesman.game = FastConnect4
+gamesman.game = RConnect4
 gamesman.game.width = 3
 gamesman.game.height = 3
 gamesman.game.pieces = 3
