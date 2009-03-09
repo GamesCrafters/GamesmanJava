@@ -1,7 +1,7 @@
 gamesman.game = RConnect4
 gamesman.game.width = 2
 gamesman.game.height = 2
-connect4.pieces = 2
+gamesman.game.pieces = 2
 gamesman.hasher = TieredItergameHasher
 gamesman.solver = TierItergameSolver
 gamesman.database = FileDatabase
