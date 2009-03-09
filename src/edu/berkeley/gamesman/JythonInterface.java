@@ -82,7 +82,7 @@ public final class JythonInterface {
 		addpath(rc, "junk");
 		addpath(rc, "jobs");
 	
-//		rc.exec("from Play import *");
+		rc.exec("from Play import *");
 		rc.interact();
 	}
 	

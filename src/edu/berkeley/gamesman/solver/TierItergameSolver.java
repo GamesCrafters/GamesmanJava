@@ -167,7 +167,7 @@ public class TierItergameSolver extends Solver {
 		private long lastUpdate = 0;
 
 		TierSolverUpdater() {
-			t = Task.beginTask("Tier solving \"" + myGame.toString() + "\"");
+			t = Task.beginTask("Tier solving \"" + myGame.describe() + "\"");
 			t.setTotal(myGame.lastHashValueForTier(myGame.numberOfTiers() - 1));
 		}
 
