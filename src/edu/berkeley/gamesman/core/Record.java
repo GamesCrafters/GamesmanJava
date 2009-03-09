@@ -5,13 +5,16 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
@@ -364,15 +367,43 @@ public final class Record {
 	 */
 	public BigInteger toBigInteger() {
 		BigInteger r = BigInteger.ZERO;
-		int bitoff = 0;
 		long value;
 		for (int i = 0; i < fieldBitLength.length; i ++) {
-			r = r.shiftLeft(bitoff);
+			r = r.shiftLeft(fieldBitLength[i]);
 			value = fieldValues[i] &((1 << fieldBitLength[i]) - 1);
 			r = r.add(BigInteger.valueOf(value));
-			bitoff = fieldBitLength[i];
-		}		
+		}
 		return r;
+	}
+	
+	/**
+	 * Take all the field values and put them next to each other (bitwise) into a long.
+	 * 
+	 * @author Alex Trofimov
+	 * @return BigInteger of fieldValues packed together. Leading zeros truncated.
+	 */
+	public long toLong() {
+		long r = 0;
+		long value;
+		for (int i = 0; i < fieldBitLength.length; i ++) {
+			r = r<<fieldBitLength[i];
+			value = fieldValues[i] &((1 << fieldBitLength[i]) - 1);
+			r = r+value;
+		}
+		return r;
+	}
+	
+	/**
+	 * Take a long with bits correponding to fieldValues and load the bits from it.
+	 * 
+	 * @author Alex Trofimov
+	 * @param data - Long with fieldValues bits contcatenated together as one number.
+	 */
+	public void loadLong(long data) {
+		for (int i = this.fieldBitLength.length - 1; i >= 0; i --) {
+			this.fieldValues[i] = data & ((1 << this.fieldBitLength[i]) - 1);
+			data = data >>> this.fieldBitLength[i];
+		}
 	}
 	
 	/**
@@ -387,7 +418,7 @@ public final class Record {
 			data = data.shiftRight(this.fieldBitLength[i]);
 		}
 	}
-	
+
 	/**
 	 * A class that behaves almost entirely like a ByteBuffer but with bit-indexed positions
 	 * instead.

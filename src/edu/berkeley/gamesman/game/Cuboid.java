@@ -96,7 +96,7 @@ public class Cuboid extends Game<CubeState> {
 
 	@Override
 	public BigInteger lastHash() {
-		return THREE_TO_X[6].multiply(FACTORIAL[7]);
+		return THREE_TO_X[6].multiply(FACTORIAL[7]).subtract(BigInteger.ONE);
 	}
 
 	@Override

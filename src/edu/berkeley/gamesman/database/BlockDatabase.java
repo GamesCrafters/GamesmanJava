@@ -65,7 +65,11 @@ public class BlockDatabase extends FileDatabase {
 	public void initialize(String loc) {
 		super.initialize(loc);
 		try {
-			buf = fd.getChannel().map(MapMode.READ_WRITE, offset + headerSize, Integer.MAX_VALUE/4);
+			int max = Integer.parseInt(conf.getProperty("gamesman.BlockDatabase.size",
+					Integer.toString(Integer.MAX_VALUE/4)));
+			//int max = Integer.MAX_VALUE/4;
+			max += headerSize;
+			buf = fd.getChannel().map(MapMode.READ_WRITE, offset + headerSize, max);
 			Util.debug(DebugFacility.DATABASE,"Mapped BlockDatabase into memory starting from ",(offset+headerSize));
 			fd.seek(offset);
 			lastRecord = fd.readLong();

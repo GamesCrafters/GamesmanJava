@@ -449,12 +449,15 @@ public final class Util {
 	}
 	
 	public static Iterable<BigInteger> bigIntIterator(final BigInteger lastValue) {
+		return bigIntIterator(BigInteger.ZERO, lastValue);
+	}
+	public static Iterable<BigInteger> bigIntIterator(final BigInteger firstValue, final BigInteger lastValue) {
 		return new Iterable<BigInteger>(){
 
 			public Iterator<BigInteger> iterator() {
 				return new Iterator<BigInteger>(){
 
-					BigInteger cur = BigInteger.ZERO;
+					BigInteger cur = firstValue;
 					
 					public boolean hasNext() {
 						return cur.compareTo(lastValue) <= 0;
