@@ -31,15 +31,6 @@ public abstract class Database {
 	protected abstract void initialize(String uri);
 	
 	/**
-	 * Allocates a certain amount of space in the database. Required for certain
-	 * types of databases, such as MemoryDatabase, to allow writing from multiple threads.
-	 * 
-	 * @param numHashValues the size of the database (game.lastHash().add(BigInteger.ONE)).
-	 */
-	public void alloc(BigInteger numHashValues) {
-	}
-	
-	/**
 	 * Return the Nth Record in the Database
 	 * @param loc The record number
 	 * @param recordToReturn An already created record object to save memory.

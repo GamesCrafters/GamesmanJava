@@ -34,7 +34,6 @@ public class BlockDatabase extends FileDatabase {
 			long dblen = offset + headerSize + (Record.bitlength(conf)*lastRecord+7)/8;
 			Util.debug(DebugFacility.DATABASE,"Attempting to truncate to ",dblen,"(+1)");
 			fd.getChannel().force(true);
-//			fd.getChannel().truncate(dblen+1);
 			fd.getChannel().close();
 		} catch (IOException e) {
 			Util.warn("Could not cleanly close BlockDB",e);
@@ -65,9 +64,8 @@ public class BlockDatabase extends FileDatabase {
 	public void initialize(String loc) {
 		super.initialize(loc);
 		try {
-			int max = Integer.parseInt(conf.getProperty("gamesman.BlockDatabase.size",
-					Integer.toString(Integer.MAX_VALUE/4)));
-			//int max = Integer.MAX_VALUE/4;
+			long recordCount = conf.getLong("gamesman.BlockDatabase.size", conf.getGame().lastHash().longValue()+1);
+			long max = Record.bytelength(conf, recordCount);
 			max += headerSize;
 			buf = fd.getChannel().map(MapMode.READ_WRITE, offset + headerSize, max);
 			Util.debug(DebugFacility.DATABASE,"Mapped BlockDatabase into memory starting from ",(offset+headerSize));

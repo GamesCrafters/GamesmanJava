@@ -238,6 +238,19 @@ public class Configuration {
 	}
 	
 	/**
+	 * Parses a property as a Long.
+	 * @param key the name of the configuration property
+	 * @param dfl default value
+	 * @return The value associated with the key, if defined and an long. Otherwise, returns dfl.
+	 */
+	public Long getLong(String key, Long dfl) {
+		try {
+			dfl = Long.parseLong(props.getProperty(key));
+		} catch(Exception e) {}
+		return dfl;
+	}
+	
+	/**
 	 * Parses a property as an array of Integers separated by the regex ", *"
 	 * @param key the name of the configuration property
 	 * @param dfl default value

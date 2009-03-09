@@ -45,8 +45,6 @@ public class BreadthFirstSolver extends Solver {
 		int maxRemoteness = conf.getInteger("gamesman.solver.maxRemoteness", Integer.MAX_VALUE);
 		maxHash = game.lastHash();
 		hashSpace = maxHash.add(BigInteger.ONE);
-		System.out.println("Calling alloc "+hashSpace);
-		db.alloc(hashSpace);
 		Record defaultRecord = new Record(conf, PrimitiveValue.UNDECIDED);
 		for (BigInteger index : Util.bigIntIterator(hashSpace)) {
 			db.putRecord(index, defaultRecord);

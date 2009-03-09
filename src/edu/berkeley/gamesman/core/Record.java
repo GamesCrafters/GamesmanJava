@@ -176,6 +176,16 @@ public final class Record {
 	public static int bitlength(final Configuration conf) {
 		return new Record(conf).bitlength();
 	}
+	
+	/**
+	 * Returns the length of recordCount record in bytes
+	 * 
+	 * @param conf the Configuration to use for the record
+	 * @return length in bytes (rounded up)
+	 */
+	public static long bytelength(final Configuration conf, long recordCount) {
+		return (recordCount * bitlength(conf)+7)/8;
+	}
 
 	/**
 	 * @return the length of a single record in bits
