@@ -46,9 +46,9 @@ public class BreadthFirstSolver extends Solver {
 		maxHash = game.lastHash();
 		hashSpace = maxHash.add(BigInteger.ONE);
 		Record defaultRecord = new Record(conf, PrimitiveValue.UNDECIDED);
-		//for (BigInteger index : Util.bigIntIterator(hashSpace)) {
-		//	db.putRecord(index, defaultRecord);
-		//}
+		for (BigInteger index : Util.bigIntIterator(hashSpace)) {
+			db.putRecord(index, defaultRecord);
+		}
 		return new BreadthFirstWorkUnit<Object>(game, db, maxRemoteness);
 	}
 
@@ -97,7 +97,7 @@ public class BreadthFirstSolver extends Solver {
 					rec = database.getRecord(hash, rec);
 					if (rec.get() != PrimitiveValue.UNDECIDED &&
 							rec.get(RecordFields.REMOTENESS) == remoteness) {
-						//System.out.println("Found! "+hash+"="+rec);
+						System.out.println("Found! "+hash+"="+rec);
 						for (Pair<String,T> child : game.validMoves(game.hashToState(hash))) {
 							BigInteger childhash = game.stateToHash(child.cdr);
 							if (setValues.contains(childhash)) {
@@ -107,7 +107,7 @@ public class BreadthFirstSolver extends Solver {
 							if (childrec.get() == PrimitiveValue.UNDECIDED) {
 								childrec.set(RecordFields.VALUE, rec.get().value());
 								childrec.set(RecordFields.REMOTENESS, remoteness + 1);
-								//System.out.println("Setting child "+childhash+"="+childrec);
+								System.out.println("Setting child "+childhash+"="+childrec);
 								database.putRecord(childhash, childrec);
 								numPositionsInLevel = numPositionsInLevel.add(BigInteger.ONE);
 								numPositionsSeen = numPositionsSeen.add(BigInteger.ONE);
@@ -117,7 +117,7 @@ public class BreadthFirstSolver extends Solver {
 									solveTask.setProgress(numPositionsSeen);
 								}
 							} else {
-								//System.out.println("Get child "+childhash+"="+childrec);
+								System.out.println("Get child "+childhash+"="+childrec);
 							}
 						}
 					}
