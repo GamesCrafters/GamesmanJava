@@ -10,5 +10,7 @@ gamesman.db.uri = file:///tmp/database2x2x2.db
 gamesman.database = BlockDatabase
 gamesman.dotty.uri = file:///tmp/database2x2x2.dot
 gamesman.debug.SOLVER = true
+gamesman.debug.JSON = true
 gamesman.BlockDatabase.size = 3674160
 gamesman.threads = 2
+gamesman.server.jsonport = 1815

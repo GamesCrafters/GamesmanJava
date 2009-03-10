@@ -5,8 +5,13 @@ import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URLDecoder;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -51,8 +56,10 @@ public class JSONInterface {
 		
 		Util.debug(DebugFacility.JSON, "Loading JSON server...");
 		
+		int port = 0;
 		try {
-			ssock = new ServerSocket(conf.getInteger("gamesman.server.jsonport", 4242));
+			port = conf.getInteger("gamesman.server.jsonport", 4242);
+			ssock = new ServerSocket(port);
 		} catch (NumberFormatException e) {
 			Util.fatalError("Port must be an integer",e);
 		} catch (IOException e) {
@@ -63,7 +70,8 @@ public class JSONInterface {
 		db.initialize(conf.getProperty("gamesman.db.uri"), null);
 		conf = db.getConfiguration();
 		
-		Util.debug(DebugFacility.JSON, "Server ready!");
+		// Want to always print this out.
+		System.out.println("Server ready on port "+port+"!");
 		while(true){
 			Socket s;
 			try {
@@ -91,6 +99,20 @@ public class JSONInterface {
 			Util.debug(DebugFacility.JSON,"Accepted new connection ",s);
 		}
 		
+		private void fillJSONFields(JSONObject entry, S state) throws JSONException {
+			Set<RecordFields> storedFields = 
+				conf.getStoredFields().keySet();
+			Record rec = db.getRecord(g.stateToHash(state));
+			for(RecordFields f : storedFields){
+				if (f == RecordFields.VALUE) {
+					entry.put(f.name().toLowerCase(),rec.get().name().toLowerCase());
+				} else {
+					entry.put(f.name().toLowerCase(),rec.get(f));
+				}
+			}
+			entry.put("board", g.stateToString(state));
+		}
+		
 		public void run() {
 			LineNumberReader r = null;
 			PrintWriter w = null;
@@ -109,33 +131,56 @@ public class JSONInterface {
 					Util.warn("Unable to read line from socket, dropping");
 					break;
 				}
-				JSONObject j;
-				try {
-					j = new JSONObject("{"+line+"}");
-				} catch (JSONException e) {
-					Util.warn("Could not parse JSON: \n"+line);
-					break;
+				if (line == null) {
+					Util.debug(DebugFacility.JSON, "Connection closed.");
+					break; // connection closed.
+				}
+				Map<String,String> j = new HashMap<String,String>();
+				line = line.replace(';', '&');
+				for (String param : line.split("&")) {
+					String[] key_val = param.split("=");
+					if (key_val.length != 2) {
+						continue;
+					}
+					try {
+						j.put(URLDecoder.decode(key_val[0],"utf-8"),
+								URLDecoder.decode(key_val[1],"utf-8"));
+					} catch (UnsupportedEncodingException e) {
+					}
 				}
 				
 				JSONObject response = new JSONObject();
 				
 				try {
-					String board = j.getString("board");
-					
-					S state = g.stringToState(board);
-					
-					for(Pair<String,S> next : g.validMoves(state)){
-						JSONObject entry = new JSONObject();
-						Record rec = db.getRecord(g.stateToHash(next.cdr));
-						for(RecordFields f : conf.getStoredFields().keySet()){
-							entry.put(f.name(),rec.get(f));
+					String method = j.get("method");
+					if (method == null) {
+						response.put("status", "error");
+						response.put("msg","No method specified!");
+					} else if (method.equals("getNextMoveValues")) {
+						String board = j.get("board");
+						if (board == null) {
+							throw new RuntimeException("No board passed!");
 						}
-						entry.put("move", next.car);
-						response.accumulate("response", entry);
+						S state = g.stringToState(board);
+						for(Pair<String,S> next : g.validMoves(state)){
+							JSONObject entry = new JSONObject();
+							entry.put("move", next.car);
+							fillJSONFields(entry, next.cdr);
+							response.accumulate("response", entry);
+						}
+						response.put("status","ok");
+					} else if (method.equals("getMoveValue")) {
+						String board = j.get("board");
+						if (board == null) {
+							throw new RuntimeException("No board passed!");
+						}
+						S state = g.stringToState(board);
+						JSONObject entry = new JSONObject();
+						fillJSONFields(entry, state);
+						response.put("response", entry);
+						response.put("status","ok");
 					}
-					
-					response.put("status","ok");
-				} catch (JSONException e) {
+				} catch (Exception e) {
 					try {
 						response.put("status", "error");
 						response.put("msg", "An exception was generated: "+e);
