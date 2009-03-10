@@ -64,8 +64,7 @@ public class TierMapReduce<S> implements Mapper<BigIntegerWritable, NullWritable
 		game = Util.checkedCast(config.getGame());
 		hasher = Util.checkedCast(config.getHasher());
 		
-		Util.debug(DebugFacility.HADOOP,"Hadoop is ready to work! (",game,",",hasher,")");
-		
+		assert Util.debugFormat(DebugFacility.HADOOP, "Hadoop is ready to work! (%s, %s)", game.describe(), hasher.toString());
 	}
 
 	public void close() throws IOException {

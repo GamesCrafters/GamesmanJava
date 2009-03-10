@@ -1,285 +1,89 @@
 package edu.berkeley.gamesman;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
-import java.lang.reflect.InvocationTargetException;
-import java.math.BigInteger;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Properties;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Database;
-import edu.berkeley.gamesman.core.Game;
-import edu.berkeley.gamesman.core.Hasher;
-import edu.berkeley.gamesman.core.Master;
-import edu.berkeley.gamesman.core.RecordFields;
-import edu.berkeley.gamesman.core.Solver;
-import edu.berkeley.gamesman.database.filer.DirectoryFilerClient;
-import edu.berkeley.gamesman.database.filer.DirectoryFilerServer;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
 /**
- * @author Steven Schlansker
+ * An entry main for all of gamesman-java.
+ * Any application that wants to be part of this should extend either GamesmanApplication or GamesManUnconfigurableApplication
+ * @author Jeremy Fleischman
+ *
  */
-public final class Gamesman {
-
-	private Solver so;
-	private final Game<Object> gm;
-	private Database db;
-	private Configuration conf;
-
-	private Gamesman(Configuration c,Solver s,Database d) {
-		conf = c;
-		gm = Util.checkedCast(c.getGame());
-		so = s;
-		db = d;
-		
-		so.initialize(db);
+public class Gamesman {
+	private static final HashMap<String, String> APPLICATION_MAP = new HashMap<String, String>();
+	static {
+		APPLICATION_MAP.put("GamesmanMain", "edu.berkeley.gamesman.GamesmanMain");
+		APPLICATION_MAP.put("JythonInterface", "edu.berkeley.gamesman.JythonInterface");
+		APPLICATION_MAP.put("GamesmanShell", "edu.berkeley.gamesman.GamesmanShell");
+		APPLICATION_MAP.put("JSONInterface", "edu.berkeley.gamesman.JSONInterface");
+		APPLICATION_MAP.put("DatabaseDump", "edu.berkeley.gamesman.tool.DatabaseDump");
 	}
-
 	/**
-	 * The main entry point for any Java program
-	 * @param args Command line arguments
+	 * @param args The command line arguments. Should just be a job file.
 	 */
 	public static void main(String[] args) {
-
-		if(args.length != 1){
-			Util.fatalError("Please specify a jobfile as the only argument");
-		}
-		Configuration conf = new Configuration(args[0]);
-
-		Thread.currentThread().setName("Gamesman");
-
-		
-		Util.debugInit(conf);
-
-
-		String masterName = conf.getProperty("gamesman.master","LocalMaster");
-
-		Object omaster = null;
-		try {
-			omaster = Class.forName(
-					"edu.berkeley.gamesman.master." + masterName).newInstance();
-		} catch (ClassNotFoundException cnfe) {
-			Util.fatalError("Could not load master controller '"
-					+ masterName + "': " + cnfe);
-		} catch (IllegalAccessException iae) {
-			Util.fatalError("Not allowed to access requested master '"
-					+ masterName + "': " + iae);
-		} catch (InstantiationException ie) {
-			Util.fatalError("Master failed to instantiate: " + ie);
-		}
-
-		if (!(omaster instanceof Master)) {
-			Util.fatalError("Master does not implement master.Master interface");
-		}
-
-		Master m = (Master) omaster;
-
-		Util.debug(DebugFacility.CORE,"Preloading classes...");
-
-		String gameName, solverName, hasherName, databaseName;
-
-		gameName = conf.getProperty("gamesman.game");
-		if(gameName == null)
-			Util.fatalError("You must specify a game with the property gamesman.game");
-		solverName = conf.getProperty("gamesman.solver");
-		if(solverName == null)
-			Util.fatalError("You must specify a solver with the property gamesman.solver");
-		hasherName = conf.getProperty("gamesman.hasher");
-		if(hasherName == null)
-			Util.fatalError("You must specify a hasher with the property gamesman.hasher");
-		databaseName = conf.getProperty("gamesman.database","FileDatabase");
-
-		Class<? extends Game<Object>> g;
-		Class<? extends Solver> s;
-		Class<? extends Hasher<Object>> h;
-		Class<? extends Database> d;
-
-		try {
-			g = Util.typedForName("edu.berkeley.gamesman.game." + gameName);
-			s = Util.typedForName("edu.berkeley.gamesman.solver." + solverName);
-			h = Util.typedForName("edu.berkeley.gamesman.hasher." + hasherName);
-			d = Util.typedForName("edu.berkeley.gamesman.database." + databaseName);
-		} catch (Exception e) {
-			System.err.println("Fatal error in preloading: " + e);
+		String jobFile = null, entryPoint = null;
+		if(args.length == 1) {
+			String arg = args[0].toLowerCase();
+			if(APPLICATION_MAP.containsKey(arg)) {
+				//we have a GamesmanApplication
+				entryPoint = arg;
+			} else {
+				//if we just have a job file, use GamesmanMain
+				jobFile = args[0];
+				entryPoint = "GamesmanMain";
+			}
+		} else if(args.length == 2) {
+			entryPoint = args[0]; jobFile = args[1];
+		} else {
+			System.out.println("Usage: Gamesman [entry point] [job file]" +
+					"\n\tAvailable entry points (some require a job file, some don't): " + APPLICATION_MAP.keySet() + 
+					"\n\tIf a job file is given, but no entry point is, entry point defaults to GamesmanMain.");
 			return;
 		}
 		
-		String cmd = conf.getProperty("gamesman.command",null);
-		if (cmd != null) {
-			try {
-				Gamesman executor = new Gamesman(conf, s.newInstance(),d.newInstance());
-				executor.getClass().getMethod("execute" + cmd,
-						(Class<?>[]) null).invoke(executor);
-			} catch (NoSuchMethodException nsme) {
-				System.out.println("Don't know how to execute command " + nsme);
-			} catch (IllegalAccessException iae) {
-				System.out.println("Permission denied while executing command "
-						+ iae);
-			} catch (InstantiationException ie) {
-				System.out.println("Could not instantiate: " + ie);
-			} catch (InvocationTargetException ite) {
-				System.out.println("Exception while executing command: " + ite);
-				ite.getTargetException().printStackTrace();
-			}
-		} else {
-			Util.debug(DebugFacility.CORE,"Defaulting to solve...");
-			try {
-				//Game<?> gm = Util.checkedCast(g.getConstructors()[0].newInstance(conf));
-				//conf.setGame(gm);
-				//Hasher<?> ha = Util.checkedCast(h.getConstructors()[0].newInstance(conf));
-				//conf.setHasher(ha);
-				conf.setStoredFields(EnumSet.of(RecordFields.VALUE,RecordFields.REMOTENESS));
-				//gm.prepare();
-				m.initialize(conf, s, d);
-			} catch (Exception e){
-				Util.fatalError("Exception while instantiating and initializing",e);
-			}
-			m.run();
+		if(!APPLICATION_MAP.containsKey(entryPoint)) {
+			System.out.println("Couldn't find " + entryPoint + " in " + APPLICATION_MAP.keySet());
+			return;
 		}
 
-		//if (dohelp) {
-		//	System.out.println("Gamesman help stub, please fill this out!"); // TODO: help text
-		//	//OptionProcessor.help();
-		//	return;
-		//}
-
-		Util.debug(DebugFacility.CORE,"Finished run, tearing down...");
-
-	}
-
-	/**
-	 * Diagnostic call to unhash an arbitrary value to a game board
-	 */
-	public void executeunhash() {
-
-		Object state = gm.hashToState(new BigInteger(conf.getProperty("gamesman.hash")));
-		System.out.println(gm.displayState(state));
-	}
-
-	/**
-	 * Diagnostic call to view all child moves of a given hashed game state
-	 */
-	public void executegenmoves() {
-		Object state = gm.hashToState(new BigInteger(conf.getProperty("gamesman.hash")));
-		for (Object nextstate : gm.validMoves(state)) {
-			System.out.println(gm.stateToHash(nextstate));
-			System.out.println(gm.displayState(nextstate));
-		}
-	}
-
-	/**
-	 * Hash a single board with the given hasher and print it.
-	 */
-	public void executehash() {
-		String str = conf.getProperty("board");
-		if (str == null)
-			Util.fatalError("Please specify a board to hash");
-		System.out.println(gm.stateToHash(gm.stringToState(str.toUpperCase())));
-	}
-
-	/**
-	 * Evaluate a single board and return its primitive value.
-	 */
-	public void executeevaluate() {
-		String board = conf.getProperty("gamesman.board");
-		if (board == null)
-			Util.fatalError("Please specify a hash to evaluate");
-		BigInteger val = new BigInteger(board);
-		System.out.println(gm.primitiveValue(gm.hashToState(val)));
-	}
-
-	/**
-	 * Launch a directory filer server
-	 */
-	public void executelaunchDirectoryFiler() {
-		if (conf.getProperty("rootDirectory") == null)
-			Util.fatalError("You must provide a root directory for the filer with -r or --rootDirectory");
-		if (conf.getProperty("secret") == null)
-			Util.fatalError("You must provide a shared secret to protect the server with -s or --secret");
-		
-		final DirectoryFilerServer serv = new DirectoryFilerServer(conf.getProperty("rootDirectory"),
-				conf.getInteger("port", 4263),
-				conf.getProperty("secret"));
-		
-		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable(){
-			public void run() {
-				serv.close();
-			}
-		}));
-		
-		serv.launchServer();
-	}
-
-	private enum directoryConnectCommands {
-		quit, halt, ls, open, close, read, write
-	}
-
-	/**
-	 * Give a simple shell interface to a remote directory filer server
-	 * @throws URISyntaxException The given URI is malformed
-	 */
-	public void executedirectoryConnect() throws URISyntaxException {
-		DirectoryFilerClient dfc = new DirectoryFilerClient(new URI(conf.getProperty("uri","gdfp://game@localhost:4263/")));
-
-		LineNumberReader input = new LineNumberReader(new InputStreamReader(
-				System.in));
-
-		String dbname = "";
-		Database cdb = null;
-		
-		try {
-			while (true) {
-				String line = "quit";
-				System.out.print(dbname+"> ");
-				line = input.readLine();
-
-				switch (directoryConnectCommands.valueOf(line)) {
-				case quit:
-					dfc.close();
-					return;
-				case halt:
-					dfc.halt();
-					dfc.close();
-					return;
-				case ls:
-					dfc.ls();
-					break;
-				case open:
-					System.out.print("open> ");
-					dbname = input.readLine();
-					cdb = dfc.openDatabase(dbname, null); //TODO: not null here!
-					break;
-				case close:
-					if(cdb == null) break;
-					cdb.close();
-					cdb = null;
-					dbname = "";
-					break;
-				case read:
-					System.out.print(dbname+" read> ");
-					System.out.println("Result: "+cdb.getRecord(new BigInteger(input.readLine())));
-					break;
-				case write:
-					System.out.print(dbname+" write> ");
-					String loc = input.readLine();
-					System.out.print(dbname+" write "+loc+"> ");
-					line = input.readLine();
-		
-					//cdb.setValue(new BigInteger(loc), Record.parseRecord(conf,line)); TODO: fixme
+		Configuration conf = null;
+		if(jobFile != null) {
+			Properties props = Configuration.readProperties(jobFile);
+			EnumSet<DebugFacility> debugOpts = EnumSet.noneOf(DebugFacility.class);
+			ClassLoader cl = ClassLoader.getSystemClassLoader();
+			cl.setDefaultAssertionStatus(false);
+			for(DebugFacility f: DebugFacility.values()){
+				if(parseBoolean(props.getProperty("gamesman.debug."+f.toString(), "false"))) {
+					debugOpts.add(f);
+					f.setupClassloader(cl);
 				}
 			}
-		} catch (IOException e) {
-			Util.fatalError("IO Error: " + e);
+			if(!debugOpts.isEmpty()) {
+				debugOpts.add(DebugFacility.CORE);
+				DebugFacility.CORE.setupClassloader(cl);
+			}
+			Util.enableDebuging(debugOpts);
+			conf = new Configuration(props);
+		}
+
+		Class<? extends GamesmanApplication> cls = Util.typedForName(APPLICATION_MAP.get(entryPoint));
+		try {
+			GamesmanApplication ga = cls.getConstructor().newInstance();
+			ga.run(conf);
+		} catch (Exception e) {
+			Util.fatalError("Could not construct " + cls.getName(), e);
 		}
 	}
-	
-	//public void executetestRPC(){
-	//	new RPCTest();
-	//}
 
+	//This is a copy of Util.parseBoolean().
+	//It needs to be here to avoid loading the Util class before we're ready to
+	private static boolean parseBoolean(String s) {
+		return s != null && !s.equalsIgnoreCase("false") && !s.equalsIgnoreCase("0");
+	}
 }

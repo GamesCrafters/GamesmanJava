@@ -61,9 +61,6 @@ class GameState:
         return gs
 
 def play(jobFile):
-    
-    global conf
-    
     for possible_path in sys.path:
         p = possible_path + "/" + jobFile + ".job"
         if os.path.exists(p):

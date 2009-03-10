@@ -16,6 +16,7 @@ import java.util.Queue;
 import java.util.TreeMap;
 import java.util.Map.Entry;
 
+import edu.berkeley.gamesman.GamesmanApplication;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Game;
@@ -26,12 +27,14 @@ import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
 /**
+ * Dumps the given database to a .dot file. This can be converted to a
+ * pdf with graphviz/dotty by running
+ * dot -Tpdf -o pretty.pdf inputfile.dot
  * @author Steven Schlansker
  * @author Jeremy Fleischman
- * @param <S> 
  *
  */
-public class DatabaseDump<S> {
+public class DatabaseDump extends GamesmanApplication {
 	private static final EnumMap<PrimitiveValue, String> PRIMITIVE_COLORS = new EnumMap<PrimitiveValue, String>(PrimitiveValue.class);
 	static {
 		PRIMITIVE_COLORS.put(PrimitiveValue.UNDECIDED, "black");
@@ -40,15 +43,19 @@ public class DatabaseDump<S> {
 		PRIMITIVE_COLORS.put(PrimitiveValue.TIE, "yellow");
 	}
 	
-	private final PrintWriter w;
-	private final Database db;
-	private final Game<S> gm;
-	private final boolean pruneInvalid, alignRemoteness;
-	private final String dottyFile;
+	private PrintWriter w;
+	private Database db;
+	private Game<Object> gm;
+	private boolean pruneInvalid, alignRemoteness;
+	private String dottyFile;
+
 	/**
-	 * @param conf
+	 * No arg constructor.
 	 */
-	public DatabaseDump(Configuration conf) {
+	public DatabaseDump() {}
+	
+	@Override
+	public int run(Configuration conf) {
 		Database db = conf.openDatabase();
 		
 		dottyFile = conf.getPropertyWithPrompt("gamesman.dotty.uri");
@@ -61,15 +68,12 @@ public class DatabaseDump<S> {
 			Util.fatalError("Could not open URI: " + dottyFile, e);
 		}
 		
-		Game<S> gm = Util.checkedCast(db.getConfiguration().getGame());
+		Game<Object> gm = Util.checkedCast(db.getConfiguration().getGame());
 		pruneInvalid = conf.getBoolean("gamesman.dotty.prune", true);
 		alignRemoteness = conf.getBoolean("gamesman.dotty.alignRemoteness", true);
 		this.w = w;
 		this.db = db;
 		this.gm = gm;
-	}
-	
-	private void dump() {
 		if(pruneInvalid)
 			System.out.println("Pruning invalid hashes from the game tree");
 		else
@@ -98,7 +102,7 @@ public class DatabaseDump<S> {
 			//TODO - make this work with BFS and maxRemoteness!
 			HashSet<BigInteger> seen = new HashSet<BigInteger>();
 			Queue<BigInteger> fringe = new LinkedList<BigInteger>();
-			for(S s : gm.startingPositions())
+			for(Object s : gm.startingPositions())
 				fringe.add(gm.stateToHash(s));
 			while(!fringe.isEmpty()) {
 				BigInteger parentHash = fringe.remove();
@@ -125,6 +129,7 @@ public class DatabaseDump<S> {
 		
 		w.close();
 		System.out.println("Dotty file successfully written to " + dottyFile);
+		return 0;
 	}
 	
 	private void printNode(BigInteger parentHash, HashMap<Long, ArrayList<BigInteger>> levels, HashSet<BigInteger> seen, Queue<BigInteger> fringe) {
@@ -138,7 +143,7 @@ public class DatabaseDump<S> {
 		}
 		arr.add(parentHash);
 		
-		S parent = gm.hashToState(parentHash);
+		Object parent = gm.hashToState(parentHash);
 		
 		TreeMap<String, String> attrs = new TreeMap<String, String>();
 		Record rec = db.getRecord(parentHash);
@@ -165,7 +170,7 @@ public class DatabaseDump<S> {
 			didOne = true;
 		}
 		w.println(" ];");
-		for(Pair<String,S> child : gm.validMoves(parent)){
+		for(Pair<String, Object> child : gm.validMoves(parent)){
 			//we're not interested in primitives that lead to primitives
 			if(gm.primitiveValue(parent) != PrimitiveValue.UNDECIDED && gm.primitiveValue(child.cdr) != PrimitiveValue.UNDECIDED)
 				continue;
@@ -177,17 +182,5 @@ public class DatabaseDump<S> {
 				fringe.add(childHash);
 			w.println("\th"+parentHash+" -> h"+childHash+" [ label = \""+child.car+"\" ];");
 		}
-	}
-
-	/**
-	 * @param <S> 
-	 * @param args
-	 * @throws IOException 
-	 */
-	public static <S> void main(String[] args) {
-		if(args.length < 1) Util.fatalError("Please specify a jobfile");
-		Configuration conf = new Configuration(args[0]);
-		Util.debugInit(conf);
-		new DatabaseDump<S>(conf).dump();
 	}
 }

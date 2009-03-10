@@ -97,7 +97,7 @@ public class BreadthFirstSolver extends Solver {
 					rec = database.getRecord(hash, rec);
 					if (rec.get() != PrimitiveValue.UNDECIDED &&
 							rec.get(RecordFields.REMOTENESS) == remoteness) {
-						System.out.println("Found! "+hash+"="+rec);
+//						System.out.println("Found! "+hash+"="+rec);
 						for (Pair<String,T> child : game.validMoves(game.hashToState(hash))) {
 							BigInteger childhash = game.stateToHash(child.cdr);
 							if (setValues.contains(childhash)) {
@@ -107,7 +107,7 @@ public class BreadthFirstSolver extends Solver {
 							if (childrec.get() == PrimitiveValue.UNDECIDED) {
 								childrec.set(RecordFields.VALUE, rec.get().value());
 								childrec.set(RecordFields.REMOTENESS, remoteness + 1);
-								System.out.println("Setting child "+childhash+"="+childrec);
+//								System.out.println("Setting child "+childhash+"="+childrec);
 								database.putRecord(childhash, childrec);
 								numPositionsInLevel = numPositionsInLevel.add(BigInteger.ONE);
 								numPositionsSeen = numPositionsSeen.add(BigInteger.ONE);
@@ -117,13 +117,13 @@ public class BreadthFirstSolver extends Solver {
 									solveTask.setProgress(numPositionsSeen);
 								}
 							} else {
-								System.out.println("Get child "+childhash+"="+childrec);
+//								System.out.println("Get child "+childhash+"="+childrec);
 							}
 						}
 					}
 				}
 				remoteness += 1;
-				Util.debug(DebugFacility.SOLVER, "Number of states at remoteness " + remoteness + ": " + numPositionsInLevel);
+				assert Util.debug(DebugFacility.SOLVER, "Number of states at remoteness " + remoteness + ": " + numPositionsInLevel);
 				try {
 					db.flush();
 					barr.await();
@@ -136,7 +136,7 @@ public class BreadthFirstSolver extends Solver {
 				}
 			}
 			solveTask.complete();
-			Util.debug(DebugFacility.SOLVER, "Solving finished!!! Max remoteness is "+(remoteness-1)+".");
+			assert Util.debug(DebugFacility.SOLVER, "Solving finished!!! Max remoteness is "+(remoteness-1)+".");
 		}
 
 		public List<WorkUnit> divide(int num) {
@@ -155,8 +155,8 @@ public class BreadthFirstSolver extends Solver {
 				}
 				numPositionsZero += 1;
 			}
-			Util.debug(DebugFacility.SOLVER, "Number of states at remoteness 0: " + numPositionsZero);
-			Util.debug(DebugFacility.SOLVER, "Number of states at remoteness 1: " + numPositionsOne);
+			assert Util.debug(DebugFacility.SOLVER, "Number of states at remoteness 0: " + numPositionsZero);
+			assert Util.debug(DebugFacility.SOLVER, "Number of states at remoteness 1: " + numPositionsOne);
 			lastTier = 1;
 			database.flush();
 			ArrayList<WorkUnit> arr = new ArrayList<WorkUnit>(num);

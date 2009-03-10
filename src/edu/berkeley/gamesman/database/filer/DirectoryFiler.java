@@ -81,7 +81,7 @@ public class DirectoryFiler extends Filer<Database>{
 	public void close() {
 		File f = Util.getChild(rootdir, "MANIFEST");
 		PrintWriter fw = null;
-		Util.debug(DebugFacility.FILER,"Cleanly closing directory filer ",this);
+		assert Util.debug(DebugFacility.FILER, "Cleanly closing directory filer " + this);
 		try {
 			fw = new PrintWriter(new FileWriter(f,false));
 		} catch (IOException e1) {

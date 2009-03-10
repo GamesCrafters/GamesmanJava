@@ -59,7 +59,7 @@ public class TierSolver<T> extends Solver {
 			PrimitiveValue pv = game.primitiveValue(state);
 			
 			if (pv.equals(PrimitiveValue.UNDECIDED)) {
-				Util.debug(DebugFacility.SOLVER,"Primitive value for state ",current," is undecided");
+				assert Util.debug(DebugFacility.SOLVER, "Primitive value for state " + current + " is undecided");
 				Collection<Pair<String,T>> children = game.validMoves(state);
 				ArrayList<Record> vals = new ArrayList<Record>(children.size());
 				for (Pair<String,T> child : children) {
@@ -70,11 +70,11 @@ public class TierSolver<T> extends Solver {
 				db.putRecord(current, newVal);
 			} else {				
 				Record prim = new Record(conf, pv);
-				Util.debug(DebugFacility.SOLVER,"Primitive value for state ",current," is "+prim);
+				assert Util.debug(DebugFacility.SOLVER, "Primitive value for state " + current + " is " + prim);
 				db.putRecord(current, prim);
 			}
 		}
-		Util.debug(DebugFacility.THREADING,"Reached end of partial tier at "+end);
+		assert Util.debug(DebugFacility.THREADING, "Reached end of partial tier at " + end);
 		
 	}
 
@@ -88,7 +88,7 @@ public class TierSolver<T> extends Solver {
 
 	protected Pair<BigInteger, BigInteger> nextSlice() {
 		if (needs2Sync) {
-			Util.debug(DebugFacility.THREADING,"Thread waiting to tier-sync");
+			assert Util.debug(DebugFacility.THREADING, "Thread waiting to tier-sync");
 			try {
 				if (barr != null)
 					barr.await();
@@ -133,14 +133,13 @@ public class TierSolver<T> extends Solver {
 
 		@SuppressWarnings("synthetic-access")
 		public void conquer() {
-			Util.debug(DebugFacility.SOLVER,"Started the solver... (" , index , ")");
+			assert Util.debug(DebugFacility.SOLVER, "Started the solver... (" + index + ")");
 			Thread.currentThread().setName(
 					"Solver (" + index + "): " + myGame.toString());
 
 			Pair<BigInteger, BigInteger> slice;
 			while ((slice = nextSlice()) != null) {
-				Util.debug(DebugFacility.THREADING,"Beginning to solve slice " , slice , " in thread "
-						, index);
+				assert Util.debug(DebugFacility.THREADING, "Beginning to solve slice " + slice + " in thread " + index);
 				solvePartialTier(myGame, slice.car, slice.cdr, updater);
 				db.flush();
 			}

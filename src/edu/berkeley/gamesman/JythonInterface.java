@@ -11,19 +11,24 @@ import org.python.util.InteractiveConsole;
 import org.python.util.JLineConsole;
 import org.python.util.ReadlineConsole;
 
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.util.Util;
 
-public final class JythonInterface {
+/**
+ * @author Jeremy Fleischman
+ * @author Steven Schlansker
+ *
+ */
+public final class JythonInterface extends GamesmanApplication {
+	private enum Consoles {	DUMB,READLINE,JLINE	}
 	
-	private enum Consoles {
-		DUMB,READLINE,JLINE
-	}
-
 	/**
-	 * @param args
-	 * @throws IOException something bad happened
+	 * No arg constructor
 	 */
-	public static void main(String[] args) throws Exception {
+	public JythonInterface() {}
+	
+	@Override
+	public int run(Configuration conf) {
 		Preferences prefs = Preferences.userNodeForPackage(JythonInterface.class);
 		
 		String consoleName = prefs.get("console", null);
@@ -39,12 +44,14 @@ public final class JythonInterface {
 				System.out.printf("\t%d. %s\n", i, Consoles.values()[i].toString());
 			System.out.print("What console would you like to use? ");
 			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-			int i;
+			int i=-1;
 			try {
 				i = Integer.parseInt(br.readLine());
 			} catch(NumberFormatException e) {
 				System.out.println("Please input a number");
 				continue;
+			} catch (IOException e) {
+				Util.fatalError("Can't read from console", e);
 			}
 			if(i < 0 || i >= Consoles.values().length) {
 				System.out.println(i + " is out of range");
@@ -84,11 +91,11 @@ public final class JythonInterface {
 	
 		rc.exec("from Play import *");
 		rc.interact();
+		return 0;
 	}
-	
+
 	private static void addpath(InteractiveConsole ic, String what){
 		ic.exec(String.format("sys.path.append('%1$s/%2$s'); sys.path.append('%1$s/../%2$s');", 
 				System.getProperty("user.dir"), what));
 	}
-
 }

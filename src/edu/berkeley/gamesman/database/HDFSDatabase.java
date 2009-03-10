@@ -93,7 +93,7 @@ public class HDFSDatabase extends Database implements Runnable {
 		Thread t = new Thread(this);
 		t.setName("HDFS Databse runner: "+uri);
 		t.start();
-		Util.debug(DebugFacility.DATABASE, "Launched HDFS runner");
+		assert Util.debug(DebugFacility.DATABASE, "Launched HDFS runner");
 	}
 
 	@Override
@@ -160,7 +160,7 @@ public class HDFSDatabase extends Database implements Runnable {
 				Util.fatalError("Exception while writing DB",e);
 			}
 		}
-		Util.debug(DebugFacility.DATABASE, "Killed HDFS runner");
+		assert Util.debug(DebugFacility.DATABASE, "Killed HDFS runner");
 	}
 
 }

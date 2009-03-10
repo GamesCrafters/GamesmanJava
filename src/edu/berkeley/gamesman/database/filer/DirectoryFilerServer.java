@@ -85,7 +85,7 @@ public final class DirectoryFilerServer {
 
 		ThreadGroup grp = new ThreadGroup("DirectoryFilerServerThreads");
 
-		Util.debug(DebugFacility.FILER,"Directory filer server launched on port " , port);
+		assert Util.debug(DebugFacility.FILER, "Directory filer server launched on port " + port);
 
 		try {
 			while ((s = ss.accept()) != null) {
@@ -119,7 +119,7 @@ public final class DirectoryFilerServer {
 
 		public void run() {
 			try {
-				Util.debug(DebugFacility.FILER,"Accepted filer connection");
+				assert Util.debug(DebugFacility.FILER, "Accepted filer connection");
 				dout.writeInt(0x00FABFAB);
 				if (din.readInt() != 0xBAFBAF00) {
 					Util.warn("Dropping connection because of wrong magic");
@@ -152,7 +152,7 @@ public final class DirectoryFilerServer {
 					return;
 				}
 
-				Util.debug(DebugFacility.FILER,"Client passed authentication");
+				assert Util.debug(DebugFacility.FILER, "Client passed authentication");
 
 				while (true) {
 					
@@ -161,28 +161,28 @@ public final class DirectoryFilerServer {
 					BigInteger loc;
 					
 					if (shuttingdown) {
-						Util.debug(DebugFacility.FILER,"Client shutting down");
+						assert Util.debug(DebugFacility.FILER, "Client shutting down");
 						sock.close();
 						return;
 					}
 					byte what = din.readByte();
 					switch (what) {
 					case 0:
-						Util.debug(DebugFacility.FILER,"Client shutting down by request");
+						assert Util.debug(DebugFacility.FILER, "Client shutting down by request");
 						sock.close();
 						return;
 					case 1:
-						Util.debug(DebugFacility.FILER,"Server shutting down");
+						assert Util.debug(DebugFacility.FILER, "Server shutting down");
 						shuttingdown = true;
 						ss.close();
 						break;
 					case 2:
 						String[] files = df.ls();
 						dout.writeInt(files.length);
-						Util.debug(DebugFacility.FILER,"Sending " , files.length , " files");
+						assert Util.debug(DebugFacility.FILER, "Sending " + files.length + " files");
 						for (String file : files) {
 							dout.writeInt(file.length());
-							Util.debug(DebugFacility.FILER,"Filename len is " , file.length());
+							assert Util.debug(DebugFacility.FILER, "Filename len is " + file.length());
 							dout.write(file.getBytes());
 						}
 						break;
@@ -204,15 +204,15 @@ public final class DirectoryFilerServer {
 						fds.add(db);
 						locs.add(BigInteger.ZERO);
 						dout.writeInt(fds.indexOf(db));
-						Util.debug(DebugFacility.FILER,"Client opened db ",
-								file , " for fd " , fds.indexOf(db)," with config ",config);
+						assert Util.debug(DebugFacility.FILER, "Client opened db " +
+								file + " for fd " + fds.indexOf(db) + " with config " + config);
 						break;
 					case 4:
 						fd = din.readInt();
 						db = fds.get(fd);
 						db.close();
 						fds.set(fd, null);
-						Util.debug(DebugFacility.FILER,"Closed " , fd , ": " , db);
+						assert Util.debug(DebugFacility.FILER, "Closed " + fd + ": " + db);
 						break;
 					case 5:
 						fd = din.readInt();

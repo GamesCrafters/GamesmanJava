@@ -79,7 +79,7 @@ public final class DirectoryFilerClient {
 				Util.fatalError("Can't SHA?");
 			}
 
-			Util.debug(DebugFacility.FILER,"Connected!");
+			assert Util.debug(DebugFacility.FILER, "Connected!");
 		} catch (IOException e) {
 			Util.fatalError("IO error while communicating with server: " + e);
 		}
@@ -92,7 +92,7 @@ public final class DirectoryFilerClient {
 		try {
 			dout.write(0);
 			sock.close();
-			Util.debug(DebugFacility.FILER,"Closed database");
+			assert Util.debug(DebugFacility.FILER, "Closed database");
 		} catch (IOException e) {
 			Util.fatalError("IO error while communicating with server: " + e);
 		}
@@ -103,7 +103,7 @@ public final class DirectoryFilerClient {
 	 */
 	public void halt() {
 		try {
-			Util.debug(DebugFacility.FILER,"Asking server to halt...");
+			assert Util.debug(DebugFacility.FILER, "Asking server to halt...");
 			dout.write(1);
 		} catch (IOException e) {
 			Util.fatalError("IO error while communicating with server: " + e);
@@ -118,10 +118,10 @@ public final class DirectoryFilerClient {
 		try {
 			dout.write(2);
 			int nFiles = din.readInt();
-			Util.debug(DebugFacility.FILER,"Receiving " , nFiles , " files");
+			assert Util.debug(DebugFacility.FILER, "Receiving " + nFiles + " files");
 			for (int i = 0; i < nFiles; i++) {
 				int len = din.readInt();
-				Util.debug(DebugFacility.FILER,"Filename length is " , len);
+				assert Util.debug(DebugFacility.FILER, "Filename length is " + len);
 				byte[] name = new byte[len];
 				din.readFully(name);
 				System.out.println(new String(name));
@@ -147,7 +147,7 @@ public final class DirectoryFilerClient {
 			dout.writeInt(confb.length);
 			dout.write(confb);
 			int fd = din.readInt();
-			Util.debug(DebugFacility.FILER,"Client opened " , name , " for fd " , fd);
+			assert Util.debug(DebugFacility.FILER, "Client opened " + name + " for fd " + fd);
 			return new RemoteDatabase(fd,config);
 		} catch (IOException e) {
 			Util.fatalError("IO error while communicating with server: " + e);

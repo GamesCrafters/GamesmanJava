@@ -36,9 +36,23 @@ public class Configuration {
 	
 	private Properties props;
 	
-	public Configuration(String path){
-		props = new Properties();
-		addProperties(path);
+	/**
+	 * Reads the key value pairs from the given job file into a Properties object.
+	 * @param path A path to a job file
+	 * @return A Properties object containing all the key-value pairs from the given job file.
+	 */
+	public static Properties readProperties(String path) {
+		Properties props = new Properties();
+		addProperties(props, path);
+		return props;
+	}
+	
+	/**
+	 * Given a Properties, will construct a Configuration
+	 * @param props A Properties object (probably constructed from a job file).
+	 */
+	public Configuration(Properties props){
+		this.props = props;
 		g = Util.typedInstantiateArg("edu.berkeley.gamesman.game."+getProperty("gamesman.game"),this);
 		h = Util.typedInstantiateArg("edu.berkeley.gamesman.hasher."+getProperty("gamesman.hasher"),this);
 		storedFields = new EnumMap<RecordFields, Pair<Integer,Integer>>(RecordFields.class);
@@ -54,10 +68,14 @@ public class Configuration {
 		g.prepare();
 	}
 	
-	protected Configuration(Properties props2) {
-		props = props2;
+	/**
+	 * Calls new Configuration(Configuration.readProperties(path))
+	 * @param path The path to the job file to read
+	 */
+	public Configuration(String path) {
+		this(readProperties(path));
 	}
-	
+
 	/**
 	 * @return the Game this configuration plays
 	 */
@@ -219,9 +237,10 @@ public class Configuration {
 	 * @return false iff s is "false" or s is "0", ignoring case
 	 */
 	public boolean getBoolean(String key, boolean dfl) {
-		String s = props.getProperty(key);
-		if(s == null) return dfl;
-		return !s.equalsIgnoreCase("false") && !s.equalsIgnoreCase("0");
+		try {
+			return Util.parseBoolean(props.getProperty(key));
+		} catch(Exception e) {}
+		return dfl;
 	}
 	
 	/**
@@ -232,7 +251,7 @@ public class Configuration {
 	 */
 	public Integer getInteger(String key, Integer dfl) {
 		try {
-			dfl = Integer.parseInt(props.getProperty(key));
+			return Integer.parseInt(props.getProperty(key));
 		} catch(Exception e) {}
 		return dfl;
 	}
@@ -245,7 +264,7 @@ public class Configuration {
 	 */
 	public Long getLong(String key, Long dfl) {
 		try {
-			dfl = Long.parseLong(props.getProperty(key));
+			return Long.parseLong(props.getProperty(key));
 		} catch(Exception e) {}
 		return dfl;
 	}
@@ -258,7 +277,7 @@ public class Configuration {
 	 */
 	public Integer[] getIntegers(String key, Integer[] dfl) {
 		try {
-			dfl = Util.parseIntegers(props.getProperty(key).split(", *"));
+			return Util.parseIntegers(props.getProperty(key).split(", *"));
 		} catch(Exception e) {}
 		return dfl;
 	}
@@ -291,7 +310,7 @@ public class Configuration {
 	 * pairs.  Blank lines are ignored.
 	 * @param path The file path to open
 	 */
-	public void addProperties(String path){
+	private static void addProperties(Properties props, String path){
 		LineNumberReader r = null;
 		try {
 			r = new LineNumberReader(new FileReader(path));
@@ -303,8 +322,10 @@ public class Configuration {
 			while((line = r.readLine()) != null){
 				if(line.equals("")) continue;
 				String[] arr = line.split("\\s+=\\s+");
-				Util.assertTrue(arr.length == 2, "Malformed property file at line \""+line+"\"");
-				setProperty(arr[0], arr[1]);
+				//The following line can't be here because it causes the Util class to be loaded before
+				//we're ready for it.
+//				Util.assertTrue(arr.length == 2, "Malformed property file at line \""+line+"\"");
+				props.setProperty(arr[0], arr[1]);
 			}
 		} catch (IOException e) {
 			Util.fatalError("Could not read from property file",e);

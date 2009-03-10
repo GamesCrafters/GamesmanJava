@@ -30,9 +30,9 @@ public class BlockDatabase extends FileDatabase {
 			buf.force();
 			fd.seek(offset);
 			fd.writeLong(lastRecord);
-			Util.debug(DebugFacility.DATABASE,"Database has ",lastRecord," records");
+			assert Util.debug(DebugFacility.DATABASE, "Database has "+lastRecord+" records");
 			long dblen = offset + headerSize + (Record.bitlength(conf)*lastRecord+7)/8;
-			Util.debug(DebugFacility.DATABASE,"Attempting to truncate to ",dblen,"(+1)");
+			assert Util.debug(DebugFacility.DATABASE, "Attempting to truncate to "+dblen+"(+1)");
 			fd.getChannel().force(true);
 			fd.getChannel().close();
 		} catch (IOException e) {
@@ -68,7 +68,7 @@ public class BlockDatabase extends FileDatabase {
 			long max = Record.bytelength(conf, recordCount);
 			max += headerSize;
 			buf = fd.getChannel().map(MapMode.READ_WRITE, offset + headerSize, max);
-			Util.debug(DebugFacility.DATABASE,"Mapped BlockDatabase into memory starting from ",(offset+headerSize));
+			assert Util.debug(DebugFacility.DATABASE, "Mapped BlockDatabase into memory starting from "+(offset+headerSize));
 			fd.seek(offset);
 			lastRecord = fd.readLong();
 		} catch (IOException e) {
@@ -80,7 +80,7 @@ public class BlockDatabase extends FileDatabase {
 	public void putRecord(BigInteger loc, Record value) {
 		lastRecord = Math.max(lastRecord,loc.longValue());
 		value.write(buf, loc.longValue());
-		Util.debug(DebugFacility.DATABASE, "Stored record "+value+" to "+loc);
+		assert Util.debug(DebugFacility.DATABASE, "Stored record "+value+" to "+loc);
 	}
 
 }

@@ -124,9 +124,9 @@ public final class Record {
 	public void write(ByteBuffer buf, long index) {
 		long bitoff = index * bitlength();
 		for (int i = 0; i < fieldBitLength.length; i++) {
-			Util.debug(DebugFacility.RECORD, "Putting field " , fieldNames[i]
-					, " (" , fieldValues[i] , ") to [" , bitoff , ":" , fieldBitLength[i]
-					, "]");
+			assert Util.debug(DebugFacility.RECORD, "Putting field " + fieldNames[i]
+					+ " (" + fieldValues[i] + ") to [" + bitoff + ":" + fieldBitLength[i]
+					+ "]");
 			BitBuffer.put(buf, bitoff, fieldBitLength[i], fieldValues[i]);
 			bitoff += fieldBitLength[i];
 		}
@@ -151,7 +151,7 @@ public final class Record {
 		long bitoff = index * bitlength();
 		for (int i = 0; i < fieldValues.length; i++) {
 			fieldValues[i] = BitBuffer.get(buf, bitoff, fieldBitLength[i]);
-			Util.debugFormat(DebugFacility.BITWISE, "Read field %d (bit %d) as 0x%x",i,bitoff,fieldValues[i]);
+			assert Util.debugFormat(DebugFacility.BITWISE, "Read field %d (bit %d) as 0x%x", i, bitoff,fieldValues[i]);
 			bitoff += fieldBitLength[i];
 		}
 	}
@@ -180,27 +180,14 @@ public final class Record {
 	/**
 	 * Returns the length of recordCount record in bytes
 	 * 
-	 * @param conf the Configuration to use for the record
-	 * @return length in bytes (rounded up)
+	 * @param conf The Configuration to use for the record
+	 * @param recordCount The number of records to size up.
+	 * @return The length in bytes (rounded up)
 	 */
 	public static long bytelength(final Configuration conf, long recordCount) {
 		return (recordCount * bitlength(conf)+7)/8;
 	}
 
-	/**
-	 * @return the length of a single record in bits
-	 */
-	// public final int length() {
-	// return bits.length;
-	// //return (maxbits + 7) / 8;
-	// }
-	/**
-	 * @param conf a Configuration
-	 * @return the length of any record created with the specified Configuration
-	 */
-	// public static int length(final Configuration conf){
-	// return new Record(conf).length();
-	// }
 	/**
 	 * Set a field in this Record
 	 * 
@@ -209,7 +196,7 @@ public final class Record {
 	 */
 	public final void set(final RecordFields field, final long value) {
 		fieldValues[sf.get(field).car] = value;
-		Util.debug(DebugFacility.RECORD,"Record sets ",field," to ",value);
+		assert Util.debug(DebugFacility.RECORD, "Record sets " + field + " to " + value);
 	}
 
 	/**
@@ -222,7 +209,7 @@ public final class Record {
 		Pair<Integer, Integer> f = sf.get(field);
 		if(f == null)
 			return -1;
-		Util.debug(DebugFacility.RECORD,"Record gets ",field," as ",fieldValues[f.car]);
+		assert Util.debug(DebugFacility.RECORD, "Record gets " + field + " as " + fieldValues[f.car]);
 		return fieldValues[f.car];
 	}
 	
@@ -467,12 +454,12 @@ public final class Record {
 			long val = vala & (1 << len) - 1;
 			if (off + len < 64) {
 				long l1 = b.getLong((int) (offa / 8));
-				Util.debugFormat(DebugFacility.BITWISE, "Read 0x%x from 0x%x mask=0x%x -> 0x%x",
+				assert Util.debugFormat(DebugFacility.BITWISE, "Read 0x%x from 0x%x mask=0x%x -> 0x%x",
 						l1,(offa/8),~(mask(off, off + len)),l1 & ~(mask(off, off + len)));
 				l1 &= ~(mask(off, off + len));
 				l1 |= val << (64 - len - off);
 				b.putLong((int) (offa / 8), l1);
-				Util.debugFormat(DebugFacility.BITWISE, "Putting 0x%x -> 0x%x to 0x%x",val << (64 - len - off),l1,(offa/8));
+				assert Util.debugFormat(DebugFacility.BITWISE, "Putting 0x%x -> 0x%x to 0x%x",val << (64 - len - off),l1,(offa/8));
 			} else {
 				Util.fatalError("abort");
 			}

@@ -16,7 +16,6 @@ import java.util.List;
 
 import org.apache.commons.codec.binary.Base64;
 
-import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Game;
 
 /**
@@ -29,8 +28,7 @@ public final class Util {
 	
 	private static Base64 b64 = new Base64();
 
-	private Util() {
-	}
+	private Util() {}
 
 	protected static class AssertionFailedError extends Error {
 		private static final long serialVersionUID = 2545784238123111405L;
@@ -138,47 +136,50 @@ public final class Util {
 		}
 	}
 
-	static final EnumSet<DebugFacility> debugOpts = EnumSet.noneOf(DebugFacility.class);
+	static EnumSet<DebugFacility> debugOpts = EnumSet.noneOf(DebugFacility.class);
 	
 	/**
 	 * Initialize the debugging facilities based on a Configuration object.
-	 * Each facility is set by setting the property gamesman.debug.Facility
-	 * (e.g. gamesman.debug.CORE) to some non-null value.
-	 * @see DebugFacility
-	 * @param conf the configuration
+	 * Each facility is turned on by setting the property gamesman.debug.Facility
+	 * (e.g. gamesman.debug.CORE) to some value v such that Util.parseBoolean(v) is true;
+	 * @see DebugFacility {@link DebugFacility}
+	 * @see Util {@link Util#parseBoolean(String)}
+	 * @param debugs An EnumSet<DebugFacility> of the desired DebugFacility's to be printed.
 	 */
-	public static void debugInit(Configuration conf){
-		String env = System.getenv("GAMESMAN_DEBUG");
-		for(DebugFacility f: DebugFacility.values()){
-			if(conf.getBoolean("gamesman.debug."+f.toString(), false)) debugOpts.add(f);
-			if(env != null && env.contains(f.toString())) debugOpts.add(f);
+	public static void enableDebuging(EnumSet<DebugFacility> debugs){
+		debugOpts = debugs;
+		assert Util.debug(DebugFacility.CORE, "Debugging enabled for: " + debugOpts);
+	}
+
+	/**
+	 * (Possibly) print a debugging message. Calling this method should allways be 
+	 * wrapped in an assert statement, so the debug statements can be removed at
+	 * runtime. For example:
+	 * assert Util.debug(DebugFacility.GAME, "Testing testing");
+	 * @param fac The facility that is logging this message
+	 * @param s The message to print
+	 * @return true
+	 */
+	public static boolean debug(DebugFacility fac, String s) {
+		if(debugOpts.contains(fac) || debugOpts.contains(DebugFacility.ALL)){
+//			StackTraceElement stack = Thread.currentThread().getStackTrace()[3];
+//			System.out.printf("DEBUG %s (%s)\n\t%s\n", stack.toString(), Thread.currentThread().getName(), s);
+			System.out.println("DEBUG "+fac+": (" + Thread.currentThread().getName() + ") " + s);
 		}
-		if(!debugOpts.isEmpty())
-			debugOpts.add(DebugFacility.CORE);
-		Util.debug(DebugFacility.CORE,"Debugging enabled for: ",debugOpts);
+		return true;
 	}
 	
 	/**
-	 * (Possibly) print a debugging message
+	 * Calls Util.debug(fac, String.format(format, args))
 	 * @param fac The facility that is logging this message
-	 * @param s The message to print
+	 * @param format The format string
+	 * @param args The arguments to the format string
+	 * @return true
 	 */
-	public static void debug(DebugFacility fac, Object... args) {
-		if(debugOpts.contains(fac) || debugOpts.contains(DebugFacility.ALL)){
-			StringBuilder s = new StringBuilder();
-			for(Object o : args)
-				s.append(o);
-			System.out.println("DEBUG "+fac+": (" + Thread.currentThread().getName() + ") " + s);
-		}
+	public static boolean debugFormat(DebugFacility fac, String format, Object... args){
+		return debug(fac, String.format(format, args));
 	}
 	
-	public static void debugFormat(DebugFacility fac, String format, Object... args){
-		if(debugOpts.contains(fac) || debugOpts.contains(DebugFacility.ALL)){
-			String s = String.format(format, args);
-			System.out.println("DEBUG "+fac+": (" + Thread.currentThread().getName() + ") " + s);
-		}
-	}
-
 	/**
 	 * Convert milliseconds to a human-readable string
 	 * @param millis the number of milliseconds
@@ -507,8 +508,12 @@ public final class Util {
 	public static Boolean[] parseBooleans(String... arr) {
 		Boolean[] bools = new Boolean[arr.length];
 		for(int i=0; i<bools.length; i++)
-			bools[i] = Boolean.parseBoolean(arr[i]);
+			bools[i] = parseBoolean(arr[i]);
 		return bools;
+	}
+	
+	public static boolean parseBoolean(String s) {
+		return s != null && !s.equalsIgnoreCase("false") && !s.equalsIgnoreCase("0");
 	}
 	
 	@SuppressWarnings("unchecked")

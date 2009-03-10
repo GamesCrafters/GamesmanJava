@@ -61,9 +61,9 @@ public class MemoryDatabase extends Database{
 		BigInteger bigIntData = this.getBits(recordIndex, recordSize);
 		recordToReturn.loadBigInteger(bigIntData);
 		/* Notifying Debugger */
-		Util.debug(DebugFacility.DATABASE, 
-				"Read record '" , recordIndex , "'. Value is '" , 
-				bigIntData.toString() , "'");
+		assert Util.debug(DebugFacility.DATABASE, 
+				"Read record '" + recordIndex + "'. Value is '" + 
+				bigIntData.toString() + "'");
 		return recordToReturn;	
 	}
 	
@@ -107,7 +107,7 @@ public class MemoryDatabase extends Database{
 	@Override
 	public void initialize(String locations) {
 		this.initialize();
-		Util.debug(DebugFacility.DATABASE, 
+		assert Util.debug(DebugFacility.DATABASE, 
 				"Using Memory Database. Nothing is stored to disk.");
 	}
 	
@@ -135,9 +135,9 @@ public class MemoryDatabase extends Database{
 		/* Writing Data */
 		this.putBits(recordIndex, bitSize, data);
 		/* Notifying Debugger */
-		Util.debug(DebugFacility.DATABASE, 
-				"Wrote record '" , recordIndex , "'. Value is '" , 
-				data.toString() , "'");
+		assert Util.debug(DebugFacility.DATABASE, 
+				"Wrote record '" + recordIndex + "'. Value is '" + 
+				data.toString() + "'");
 	}
 	
 	/**
@@ -184,14 +184,14 @@ public class MemoryDatabase extends Database{
 
 	@Override
 	public void flush() {
-		Util.debug(DebugFacility.DATABASE, "Flushing Memory DataBase. Does Nothing.");
+		assert Util.debug(DebugFacility.DATABASE, "Flushing Memory DataBase. Does Nothing.");
 	}
 	
 	@Override
 	public void close() {
 		this.open = false;
 		flush();
-		Util.debug(DebugFacility.DATABASE, "Closing Memory DataBase. Does Nothing.");
+		assert Util.debug(DebugFacility.DATABASE, "Closing Memory DataBase. Does Nothing.");
 	}
 	
 	/**

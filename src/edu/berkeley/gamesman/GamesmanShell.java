@@ -28,7 +28,7 @@ public class GamesmanShell {
 			}
 			if(s.trim().equals("")) return;
 			try{
-				Gamesman.main(s.split(" "));
+//				GamesmanMain.main(s.split(" "));
 			}catch(Util.FatalError e){
 				System.out.println("Gamesman exited with a fatal error: ");
 				System.out.println(e);

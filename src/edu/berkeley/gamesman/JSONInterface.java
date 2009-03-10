@@ -29,33 +29,21 @@ import edu.berkeley.gamesman.util.Util;
  * Basic JSON interface for web app usage
  * @author Steven Schlansker
  */
-public class JSONInterface {
-	
+public class JSONInterface extends GamesmanApplication {
 	Database db;
-	Configuration conf;
-	
-	/**
-	 * Launch a JSON server for use by GamesmanWeb
-	 * @param args arguments
-	 */
-	public static void main(String[] args){
-		new JSONInterface().run(args);
-	}
 
 	/**
-	 * @param args arguments
+	 * No arg constructor
 	 */
-	public void run(String[] args) {
+	public JSONInterface() {}
+	
+	private Configuration conf;
+	@Override
+	public int run(Configuration conf) {
+		this.conf = conf;
+		assert Util.debug(DebugFacility.JSON, "Loading JSON server...");
+		
 		ServerSocket ssock = null;
-		if(args.length != 1){
-			Util.fatalError("You must specify a configuration file as the only command line argument");
-		}
-		conf = new Configuration(args[0]);
-		
-		Util.debugInit(conf);
-		
-		Util.debug(DebugFacility.JSON, "Loading JSON server...");
-		
 		int port = 0;
 		try {
 			port = conf.getInteger("gamesman.server.jsonport", 4242);
@@ -84,7 +72,7 @@ public class JSONInterface {
 			t.setName("JSONThread "+s);
 			t.start();
 		}
-		
+		return 0;
 	}
 	
 	
@@ -96,7 +84,7 @@ public class JSONInterface {
 		JSONThread(Socket s){
 			this.s = s;
 			g = Util.checkedCast(conf.getGame());
-			Util.debug(DebugFacility.JSON,"Accepted new connection ",s);
+			assert Util.debug(DebugFacility.JSON, "Accepted new connection " + s);
 		}
 		
 		private void fillJSONFields(JSONObject entry, S state) throws JSONException {
@@ -132,7 +120,7 @@ public class JSONInterface {
 					break;
 				}
 				if (line == null) {
-					Util.debug(DebugFacility.JSON, "Connection closed.");
+					assert Util.debug(DebugFacility.JSON, "Connection closed.");
 					break; // connection closed.
 				}
 				Map<String,String> j = new HashMap<String,String>();
@@ -192,10 +180,7 @@ public class JSONInterface {
 				
 				w.println(response.toString());
 				w.flush();
-				
 			}
 		}
-		
 	}
-
 }

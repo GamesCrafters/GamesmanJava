@@ -50,15 +50,12 @@ public final class LocalMaster implements Master,TaskFactory {
 		
 		solver.initialize(database);
 		
-		Util.debug(DebugFacility.MASTER,"Done initializing LocalMaster");
-		
-		
+		assert Util.debug(DebugFacility.MASTER, "Done initializing LocalMaster");
 	}
 	
 	public void run() {
-		//System.err.println("Launched!");
 		int threads = conf.getInteger("gamesman.threads", 1);
-		Util.debug(DebugFacility.MASTER,"Launching ",threads," threads...");
+		assert Util.debug(DebugFacility.MASTER, "Launching " + threads + " threads...");
 		List<WorkUnit> list = solver.prepareSolve(conf,game).divide(threads);
 		
 		ArrayList<Thread> myThreads = new ArrayList<Thread>();
@@ -76,9 +73,8 @@ public final class LocalMaster implements Master,TaskFactory {
 			}catch (InterruptedException e) {
 				Util.warn("Interrupted while joined on thread "+t);
 			}
-		//System.err.println(myThreads);
 		database.close();
-		Util.debug(DebugFacility.MASTER, "Finished master run");
+		assert Util.debug(DebugFacility.MASTER, "Finished master run");
 	}
 	
 	private class LocalMasterRunnable implements Runnable {
@@ -88,9 +84,9 @@ public final class LocalMaster implements Master,TaskFactory {
 		}
 		
 		public void run(){
-			Util.debug(DebugFacility.MASTER,"LocalMasterRunnable begin");
+			assert Util.debug(DebugFacility.MASTER, "LocalMasterRunnable begin");
 			w.conquer();
-			Util.debug(DebugFacility.MASTER,"LocalMasterRunnable end");
+			assert Util.debug(DebugFacility.MASTER, "LocalMasterRunnable end");
 		}
 	}
 
