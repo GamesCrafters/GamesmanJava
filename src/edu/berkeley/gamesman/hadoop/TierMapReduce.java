@@ -20,18 +20,20 @@ import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.TieredGame;
+import edu.berkeley.gamesman.database.HDFSDatabase;
 import edu.berkeley.gamesman.hadoop.util.BigIntegerWritable;
 import edu.berkeley.gamesman.util.DebugFacility;
+import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
 /**
  * 
  * @author Steven Schlansker
  */
-public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, BigIntegerWritable, BigIntegerWritable>,Reducer<BigIntegerWritable, BigIntegerWritable, BigIntegerWritable, RecordWritable>{
+public class TierMapReduce<S> implements Mapper<BigIntegerWritable, NullWritable, BigIntegerWritable, BigIntegerWritable>,Reducer<BigIntegerWritable, BigIntegerWritable, BigIntegerWritable, RecordWritable>{
 
-	protected TieredGame<Object> game;
-	protected Hasher<?> hasher;
+	protected TieredGame<S> game;
+	protected Hasher<S> hasher;
 	protected Database db;
 	//private BigIntegerWritable tempBI = new BigIntegerWritable();;
 	//private RecordWritable tempDB = new RecordWritable();
@@ -39,29 +41,30 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 
 	public void configure(JobConf conf) {
 		//Class<TieredGame<Object>> gc = null;
-		Class<Database> gd = null;
+		//Class<Database> gd = null;
 		//Class<Hasher<?>> gh = null;
 		final String base = "edu.berkeley.gamesman.";
 		//Properties props = new Properties(System.getProperties());
+
+		config = Configuration.load(Util.decodeBase64(conf.get("configuration_data")));
 		
-		//gc = Util.typedForName(base+"game."+conf.get("gameclass","NullGame"));
-		gd = Util.typedForName(base+"database."+conf.get("databaseclass", "NullDatabase"));
-		//gh = Util.typedForName(base+"hasher."+conf.get("hasherclass","NullHasher"));
+		//gd = Util.typedForName(base+"database."+config.getProperty("gamesman.database"));
 		
-		try {
-			//game = gc.newInstance();
-			//hasher = gh.newInstance();
+		/*try {
 			db = gd.newInstance();
 		} catch (InstantiationException e) {
 			Util.fatalError("Could not create class "+e);
 		} catch (IllegalAccessException e) {
 			Util.fatalError("Could not access class "+e);
-		}
+		}*/
 		
-		config = Configuration.load(conf.get("configuration_data").getBytes());
+		db = new HDFSDatabase(conf);
+		
 		db.initialize(conf.get("dburi"),config);
+		game = Util.checkedCast(config.getGame());
+		hasher = Util.checkedCast(config.getHasher());
 		
-		Util.debug(DebugFacility.HADOOP,"Hadoop is ready to work!");
+		Util.debug(DebugFacility.HADOOP,"Hadoop is ready to work! (",game,",",hasher,")");
 		
 	}
 
@@ -80,16 +83,16 @@ public class TierMapReduce implements Mapper<BigIntegerWritable, NullWritable, B
 
 		ArrayList<Record> vals = new ArrayList<Record>();
 		
-		Object myHash = game.hashToState(position.get());
+		S state = game.hashToState(position.get());
 		
-		for(Object move : game.validMoves(myHash)){
+		for(Pair<String,S> move : game.validMoves(state)){
 			seenOne = true;
-			vals.add(db.getRecord(game.stateToHash(move)));
+			vals.add(db.getRecord(game.stateToHash(move.cdr)));
 		}
 		if(seenOne){
 			record = Record.combine(config,vals);
 		}else{
-			record = new Record(config,game.primitiveValue(myHash));
+			record = new Record(config,game.primitiveValue(state));
 		}
 		
 		db.putRecord(position.get(),record);

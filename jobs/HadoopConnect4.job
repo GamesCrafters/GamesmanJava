@@ -6,4 +6,5 @@ gamesman.hasher = PerfectConnect4Hash
 gamesman.solver = TierSolver
 gamesman.master = HadoopMaster
 gamesman.db.uri = file:///tmp/database4.db
-gamesman.database = FileDatabase
+gamesman.database = HDFSDatabase
+gamesman.debug.HADOOP = 1

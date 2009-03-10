@@ -46,9 +46,9 @@ public class BreadthFirstSolver extends Solver {
 		maxHash = game.lastHash();
 		hashSpace = maxHash.add(BigInteger.ONE);
 		Record defaultRecord = new Record(conf, PrimitiveValue.UNDECIDED);
-		for (BigInteger index : Util.bigIntIterator(hashSpace)) {
-			db.putRecord(index, defaultRecord);
-		}
+		//for (BigInteger index : Util.bigIntIterator(hashSpace)) {
+		//	db.putRecord(index, defaultRecord);
+		//}
 		return new BreadthFirstWorkUnit<Object>(game, db, maxRemoteness);
 	}
 
