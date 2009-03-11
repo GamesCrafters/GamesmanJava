@@ -22,6 +22,10 @@ public class HadoopMaster implements Master {
 		this.conf = conf1;
 	}
 
+	public void run(boolean close) {
+		run();
+	}
+	
 	public void run() {
 		try {
 			ToolRunner.run(new TieredHadoopTool(), new String[]{Util.encodeBase64(conf.store())});

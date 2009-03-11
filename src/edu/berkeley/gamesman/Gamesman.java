@@ -17,11 +17,11 @@ import edu.berkeley.gamesman.util.Util;
 public class Gamesman {
 	private static final HashMap<String, String> APPLICATION_MAP = new HashMap<String, String>();
 	static {
-		APPLICATION_MAP.put("GamesmanMain", "edu.berkeley.gamesman.GamesmanMain");
-		APPLICATION_MAP.put("JythonInterface", "edu.berkeley.gamesman.JythonInterface");
-		APPLICATION_MAP.put("GamesmanShell", "edu.berkeley.gamesman.GamesmanShell");
-		APPLICATION_MAP.put("JSONInterface", "edu.berkeley.gamesman.JSONInterface");
-		APPLICATION_MAP.put("DatabaseDump", "edu.berkeley.gamesman.tool.DatabaseDump");
+		APPLICATION_MAP.put("gamesmanmain", "edu.berkeley.gamesman.GamesmanMain");
+		APPLICATION_MAP.put("jythoninterface", "edu.berkeley.gamesman.JythonInterface");
+		APPLICATION_MAP.put("gamesmanshell", "edu.berkeley.gamesman.GamesmanShell");
+		APPLICATION_MAP.put("jsoninterface", "edu.berkeley.gamesman.JSONInterface");
+		APPLICATION_MAP.put("databasedump", "edu.berkeley.gamesman.tool.DatabaseDump");
 	}
 	/**
 	 * @param args The command line arguments. Should just be a job file.

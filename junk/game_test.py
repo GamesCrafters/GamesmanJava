@@ -12,8 +12,8 @@ class OneTwo10(Game):
 
   def primitiveValue(self,state):
     if state.intValue() == 9:
-      return PrimitiveValue.Lose
-    return PrimitiveValue.Undecided
+      return PrimitiveValue.LOSE
+    return PrimitiveValue.UNDECIDED
 
   def initialize(self,conf):
     Game.initialize(self,conf)

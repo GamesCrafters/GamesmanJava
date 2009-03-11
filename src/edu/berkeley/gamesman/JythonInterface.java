@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.prefs.Preferences;
 
 import org.python.core.PyObject;
@@ -12,6 +13,7 @@ import org.python.util.JLineConsole;
 import org.python.util.ReadlineConsole;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -33,10 +35,12 @@ public final class JythonInterface extends GamesmanApplication {
 		
 		String consoleName = prefs.get("console", null);
 		Consoles console = null;
-		try {
-			console = Consoles.valueOf(consoleName);
-		} catch(IllegalArgumentException e) {
-			System.out.println(consoleName + " isn't one of " + Arrays.toString(Consoles.values()));
+		if (consoleName != null) {
+			try {
+				console = Consoles.valueOf(consoleName);
+			} catch(IllegalArgumentException e) {
+				System.out.println(consoleName + " isn't one of " + Arrays.toString(Consoles.values()));
+			}
 		}
 		while(console == null){
 			System.out.println("Available consoles:");
@@ -82,6 +86,15 @@ public final class JythonInterface extends GamesmanApplication {
 		default:
 			Util.fatalError("Need to pick a console");
 		}
+
+		EnumSet<DebugFacility> debugOpts = EnumSet.noneOf(DebugFacility.class);
+		ClassLoader cl = ClassLoader.getSystemClassLoader();
+		cl.setDefaultAssertionStatus(false);
+		debugOpts.add(DebugFacility.SOLVER);
+		DebugFacility.SOLVER.setupClassloader(cl);
+		debugOpts.add(DebugFacility.CORE);
+		DebugFacility.CORE.setupClassloader(cl);
+		Util.enableDebuging(debugOpts);
 		
 		//this will let us put .py files in the junk directory, and things will just work =)
 		rc.exec("import sys");
@@ -97,5 +110,16 @@ public final class JythonInterface extends GamesmanApplication {
 	private static void addpath(InteractiveConsole ic, String what){
 		ic.exec(String.format("sys.path.append('%1$s/%2$s'); sys.path.append('%1$s/../%2$s');", 
 				System.getProperty("user.dir"), what));
+	}
+
+	/**
+	 * Simple main function to run JythonInterface directly.
+	 * @param args program args
+	 */
+	public static void main(String[] args) {
+		String []newArgs = new String[args.length + 1];
+		newArgs[0] = "JythonInterface";
+		System.arraycopy(args, 0, newArgs, 1, args.length);
+		Gamesman.main(newArgs);
 	}
 }

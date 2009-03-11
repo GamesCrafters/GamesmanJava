@@ -50,11 +50,38 @@ public class Configuration {
 	/**
 	 * Given a Properties, will construct a Configuration
 	 * @param props A Properties object (probably constructed from a job file).
+	 * @param initLater You must call initialize() once you have created the appropriate Game and Hasher objects.
+	 */
+	public Configuration(Properties props, boolean initLater){
+		this.props = props;
+		initializeStoredFields();
+		if (initLater == false) {
+			g = Util.typedInstantiateArg("edu.berkeley.gamesman.game."+getProperty("gamesman.game"),this);
+			h = Util.typedInstantiateArg("edu.berkeley.gamesman.hasher."+getProperty("gamesman.hasher"),this);
+			initialize(g, h);
+		}
+	}
+	
+	/**
+	 * Given a Properties, will construct a Configuration
+	 * @param props A Properties object (probably constructed from a job file).
 	 */
 	public Configuration(Properties props){
-		this.props = props;
+		this(props, false);
+	}
+	/**
+	 * Calls new Configuration(Configuration.readProperties(path))
+	 * @param path The path to the job file to read
+	 */
+	public Configuration(String path) {
+		this.props = readProperties(path);
+		initializeStoredFields();
 		g = Util.typedInstantiateArg("edu.berkeley.gamesman.game."+getProperty("gamesman.game"),this);
 		h = Util.typedInstantiateArg("edu.berkeley.gamesman.hasher."+getProperty("gamesman.hasher"),this);
+		initialize(g, h);
+	}
+	
+	private void initializeStoredFields() {
 		storedFields = new EnumMap<RecordFields, Pair<Integer,Integer>>(RecordFields.class);
 		String fields = getProperty("record.fields", RecordFields.VALUE.name() + "," + RecordFields.REMOTENESS.name());
 		int i = 0;
@@ -65,15 +92,17 @@ public class Configuration {
 			else
 				storedFields.put(RecordFields.valueOf(splt[0]), new Pair<Integer,Integer>(i++,RecordFields.valueOf(splt[0]).defaultBitSize()));
 		}
-		g.prepare();
 	}
 	
 	/**
-	 * Calls new Configuration(Configuration.readProperties(path))
-	 * @param path The path to the job file to read
+	 * Initialize the Configuration with a game and a hasher object.
+	 * @param newG The Game associated with this configuration.
+	 * @param newH The Hasher associated with this configuration.
 	 */
-	public Configuration(String path) {
-		this(readProperties(path));
+	public void initialize(Game<?> newG, Hasher<?> newH) {
+		g = newG;
+		h = newH;
+		g.prepare();
 	}
 
 	/**
@@ -128,13 +157,9 @@ public class Configuration {
 			in.readFully(t);
 			ByteArrayInputStream bin = new ByteArrayInputStream(t);
 			props.load(bin);
-			Configuration conf = new Configuration(props);
-			conf.g = (Game<?>) Util.typedInstantiateArg(in.readUTF(),conf);
-			conf.h = (Hasher<?>) Util.typedInstantiateArg(in.readUTF(),conf);
+			Configuration conf = new Configuration(props, true);
 
 			EnumMap<RecordFields, Pair<Integer, Integer>> sf = new EnumMap<RecordFields,Pair<Integer,Integer>>(RecordFields.class);
-
-			conf.g.prepare();
 
 			int num = in.readInt();
 
@@ -144,7 +169,10 @@ public class Configuration {
 						new Pair<Integer,Integer>(in.readInt(),in.readInt()));
 			}
 			conf.setStoredFields(sf);
-			conf.getGame().prepare();
+
+			conf.initialize(
+					(Game<?>) Util.typedInstantiateArg(in.readUTF(),conf),
+					(Hasher<?>) Util.typedInstantiateArg(in.readUTF(),conf));
 
 			return conf;
 		}catch (IOException e) {
@@ -228,6 +256,22 @@ public class Configuration {
 		if(s == null)
 			Util.fatalError("Property "+key+" is unset and has no default!");
 		return s;
+	}
+	
+	/**
+	 * For python compatibility.
+	 * @see #getProperty(String)
+	 */
+	public String __getitem__(String key) {
+		return getProperty(key);
+	}
+	
+	/**
+	 * For python compatibility. Returns false if key does not exist.
+	 * @see #getProperty(String)
+	 */
+	public boolean __contains__(String key) {
+		return props.containsKey(key);
 	}
 	
 	/**

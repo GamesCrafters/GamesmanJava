@@ -1,4 +1,5 @@
 from edu.berkeley.gamesman.core import Configuration
+from edu.berkeley.gamesman.core import RecordFields
 from edu.berkeley.gamesman.util import Util
 from java.util import Properties
 import sys,os
@@ -46,8 +47,9 @@ class GameState:
             if self.db is not None:
                 rec = self.db.getRecord(self.game.stateToHash(c[1].state))
                 v = rec.get()
+                remoteness = rec.get(RecordFields.REMOTENESS)
                 if v is not None:
-                    print v.previousMovesValue().toString(),
+                    print v.previousMovesValue().toString(), " (", remoteness, ")"
             print ' =>'
             print c[1]
     

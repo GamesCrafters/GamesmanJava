@@ -18,4 +18,11 @@ public interface Master {
 	 * Execute the solve
 	 */
 	public void run();
+	
+	/**
+	 * Execute the solve
+	 * Currently used by the JythonInterface to allow interaction with the database afterwards.
+	 * @param close  If false, leaves database open for reading.
+	 */
+	public void run(boolean close);
 }

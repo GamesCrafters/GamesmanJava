@@ -53,7 +53,7 @@ public final class LocalMaster implements Master,TaskFactory {
 		assert Util.debug(DebugFacility.MASTER, "Done initializing LocalMaster");
 	}
 	
-	public void run() {
+	public void run(boolean closeDB) {
 		int threads = conf.getInteger("gamesman.threads", 1);
 		assert Util.debug(DebugFacility.MASTER, "Launching " + threads + " threads...");
 		List<WorkUnit> list = solver.prepareSolve(conf,game).divide(threads);
@@ -73,8 +73,16 @@ public final class LocalMaster implements Master,TaskFactory {
 			}catch (InterruptedException e) {
 				Util.warn("Interrupted while joined on thread "+t);
 			}
-		database.close();
+		if (closeDB) {
+			database.close();
+		} else {
+			database.flush();
+		}
 		assert Util.debug(DebugFacility.MASTER, "Finished master run");
+	}
+	
+	public void run() {
+		run(true);
 	}
 	
 	private class LocalMasterRunnable implements Runnable {
@@ -121,6 +129,13 @@ public final class LocalMaster implements Master,TaskFactory {
 	 */
 	public Game<?> getGame() {
 		return game;
+	}
+	
+	/**
+	 * @return the database
+	 */
+	public Database getDatabase() {
+		return database;
 	}
 
 }

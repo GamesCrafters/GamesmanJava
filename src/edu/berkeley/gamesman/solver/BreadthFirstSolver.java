@@ -35,7 +35,6 @@ public class BreadthFirstSolver extends Solver {
 	BigInteger hashSpace = null;
 
 	protected CyclicBarrier barr;
-	int nextIndex = 0;
 
 	volatile int lastTier = 0;
 	
@@ -67,8 +66,6 @@ public class BreadthFirstSolver extends Solver {
 			this.maxRemoteness = maxRemoteness;
 			lastHashPlusOne = hashSpace;
 			firstHash = BigInteger.ZERO;
-			nextIndex = 1;
-			barr = new CyclicBarrier(1);
 		}
 		// For divide()
 		private BreadthFirstWorkUnit(BreadthFirstWorkUnit<T> copy, BigInteger firstHash, BigInteger lastHashPlusOne) {
@@ -77,8 +74,6 @@ public class BreadthFirstSolver extends Solver {
 			maxRemoteness = copy.maxRemoteness;
 			this.firstHash = firstHash;
 			this.lastHashPlusOne = lastHashPlusOne;
-			nextIndex++;
-			barr = new CyclicBarrier(nextIndex);
 		}
 		
 		public void conquer() {
@@ -144,10 +139,11 @@ public class BreadthFirstSolver extends Solver {
 			long numPositionsOne = 0;
 			for (T s : game.startingPositions()) {
 				BigInteger hash = game.stateToHash(s);
-				Record rec = new Record(conf,game.primitiveValue(s));
+				PrimitiveValue win = game.primitiveValue(s);
+				Record rec = new Record(conf,win);
 				database.putRecord(hash, rec);
 				for (Pair<String,T> child: game.validMoves(s)) {
-					Record childrec = new Record(conf, PrimitiveValue.WIN);
+					Record childrec = new Record(conf,win);
 					BigInteger childhash = game.stateToHash(child.cdr);
 					childrec.set(RecordFields.REMOTENESS, 1);
 					database.putRecord(childhash, childrec);
@@ -165,7 +161,6 @@ public class BreadthFirstSolver extends Solver {
 			BigInteger hashIncrement = hashSpace.divide(bignum);
 			BigInteger currentHash = BigInteger.ZERO;
 			
-			nextIndex--; // this is not going to be included in the List<WorkUnit>.
 			if (bignum.compareTo(hashSpace) < 0) {
 				for (int i = 0; i < num-1; i++) {
 					BigInteger endHash = currentHash.add(hashIncrement);
@@ -175,6 +170,7 @@ public class BreadthFirstSolver extends Solver {
 			}
 			// add the last one separately in case of rounding errors.
 			arr.add(new BreadthFirstWorkUnit<T>(this, currentHash, hashSpace));
+			barr = new CyclicBarrier(arr.size());
 			return arr;
 		}
 		
