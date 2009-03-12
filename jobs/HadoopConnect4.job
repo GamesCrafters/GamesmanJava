@@ -8,3 +8,4 @@ gamesman.master = HadoopMaster
 gamesman.db.uri = file:///tmp/database4.db
 gamesman.database = HDFSDatabase
 gamesman.debug.HADOOP = 1
+gamesman.debug.DATABASE = 1

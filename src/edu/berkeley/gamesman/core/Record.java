@@ -126,6 +126,7 @@ public final class Record {
 	 */
 	public void write(ByteStorage buf, long index) {
 		long bitoff = index * bitlength();
+		assert index >= 0;
 		for (int i = 0; i < fieldBitLength.length; i++) {
 			assert Util.debug(DebugFacility.RECORD, "Putting field " + fieldNames[i]
 					+ " (" + fieldValues[i] + ") to [" + bitoff + ":" + fieldBitLength[i]

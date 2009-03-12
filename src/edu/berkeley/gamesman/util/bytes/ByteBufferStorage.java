@@ -26,4 +26,6 @@ public final class ByteBufferStorage implements ByteStorage {
 		return buf.getLong(idx);
 	}
 
+	public void close() {}
+
 }

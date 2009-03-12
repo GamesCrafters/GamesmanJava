@@ -36,7 +36,7 @@ public class Gamesman {
 			} else {
 				//if we just have a job file, use GamesmanMain
 				jobFile = args[0];
-				entryPoint = "GamesmanMain";
+				entryPoint = "gamesmanmain";
 			}
 		} else if(args.length == 2) {
 			entryPoint = args[0]; jobFile = args[1];

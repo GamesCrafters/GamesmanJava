@@ -68,7 +68,7 @@ public class TierMapReduce<S> implements Mapper<BigIntegerWritable, NullWritable
 	}
 
 	public void close() throws IOException {
-		db.close();
+		//db.close();
 	}
 	
 	final BigInteger minusone = BigInteger.ZERO.subtract(BigInteger.ONE);

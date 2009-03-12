@@ -16,6 +16,7 @@ import java.util.EnumSet;
 import java.util.Properties;
 import java.util.Map.Entry;
 
+import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
@@ -52,7 +53,7 @@ public class Configuration {
 	 * @param props A Properties object (probably constructed from a job file).
 	 * @param initLater You must call initialize() once you have created the appropriate Game and Hasher objects.
 	 */
-	public Configuration(Properties props, boolean initLater){
+	private Configuration(Properties props, boolean initLater){
 		this.props = props;
 		initializeStoredFields();
 		if (initLater == false) {
@@ -158,25 +159,35 @@ public class Configuration {
 			ByteArrayInputStream bin = new ByteArrayInputStream(t);
 			props.load(bin);
 			Configuration conf = new Configuration(props, true);
+			
+			//assert Util.debug(DebugFacility.CORE, "Deserialized properties:\n"+props);
 
 			EnumMap<RecordFields, Pair<Integer, Integer>> sf = new EnumMap<RecordFields,Pair<Integer,Integer>>(RecordFields.class);
 
+			String gamename = in.readUTF();
+			String hashername = in.readUTF();
+			
 			int num = in.readInt();
+			
+			//assert Util.debug(DebugFacility.CORE, "Expecting "+num+" stored fields");
 
 			for(int i = 0; i < num; i++){
 				String name = in.readUTF();
+				//assert Util.debug(DebugFacility.CORE," Found field "+name);
 				sf.put(RecordFields.valueOf(name),
 						new Pair<Integer,Integer>(in.readInt(),in.readInt()));
 			}
 			conf.setStoredFields(sf);
+			
 
-			conf.initialize(
-					(Game<?>) Util.typedInstantiateArg(in.readUTF(),conf),
-					(Hasher<?>) Util.typedInstantiateArg(in.readUTF(),conf));
+			conf.g = Util.typedInstantiateArg(gamename,conf);
+			conf.h = Util.typedInstantiateArg(hashername,conf);
+
+			conf.initialize(conf.g,conf.h);
 
 			return conf;
 		}catch (IOException e) {
-			Util.fatalError("Could not resuscitate Configuration from bytes :(",e);
+			Util.fatalError("Could not resuscitate Configuration from bytes :(\n"+new String(barr),e);
 		}
 		return null;
 	}

@@ -16,6 +16,7 @@ import edu.berkeley.gamesman.hadoop.util.BigIntegerWritable;
 import edu.berkeley.gamesman.hadoop.util.SequenceInputFormat;
 import edu.berkeley.gamesman.master.LocalMaster;
 import edu.berkeley.gamesman.solver.TierSolver;
+import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -29,6 +30,7 @@ public class TieredHadoopTool extends Configured implements Tool {
 	
 	public int run(String[] args) throws Exception {
 		Configuration conf = getConf();
+		assert Util.debug(DebugFacility.HADOOP,"Hadoop launching with configuration "+args[0]);
 		myConf = edu.berkeley.gamesman.core.Configuration.load(Util.decodeBase64(args[0]));
 
 		conf.set("gameclass", myConf.getProperty("gamesman.game"));
@@ -42,8 +44,7 @@ public class TieredHadoopTool extends Configured implements Tool {
 		LocalMaster m = new LocalMaster();
 		//Game<?> g = Util.typedInstantiate("edu.berkeley.gamesman.game." + conf.get("gameclass"));
 		//Hasher<?> h = Util.typedInstantiate("edu.berkeley.gamesman.hasher."+conf.get("hasherclass"));
-		m.initialize(myConf, TierSolver.class,
-				NullDatabase.class);
+		m.initialize(myConf, TierSolver.class, NullDatabase.class);
 
 		TieredGame<?> game = (TieredGame<?>) m.getGame();
 		

@@ -27,7 +27,7 @@ public final class NullDatabase extends Database {
 
 	@Override
 	public void initialize(String url) {
-		Util.warn("Using NullDatabase, answers will be incorrect and nothing will be saved.");
+		//Util.warn("Using NullDatabase, answers will be incorrect and nothing will be saved.");
 	}
 
 	@Override
