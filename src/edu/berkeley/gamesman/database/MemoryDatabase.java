@@ -124,6 +124,7 @@ public class MemoryDatabase extends Database{
 		this.capacity = 2;
 		this.memoryStorage = new byte[this.capacity];
 		this.open = true;
+		
 	}
 	
 	@Override
