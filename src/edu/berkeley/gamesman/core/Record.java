@@ -16,6 +16,9 @@ import java.util.Map;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
+import edu.berkeley.gamesman.util.bytes.ByteBufferStorage;
+import edu.berkeley.gamesman.util.bytes.ByteProducer;
+import edu.berkeley.gamesman.util.bytes.ByteStorage;
 
 /**
  * A Record stores a single game state's relevant information, possibly
@@ -82,7 +85,7 @@ public final class Record {
 	 */
 	public void writeStream(DataOutput out) throws IOException {
 		ByteBuffer b = ByteBuffer.allocate(bits2bytes(bitlength()) + 8);
-		write(b, 0);
+		write(new ByteBufferStorage(b), 0);
 		byte[] arr = new byte[bits2bytes(bitlength())];
 		b.get(arr);
 		out.write(arr);
@@ -109,7 +112,7 @@ public final class Record {
 		byte[] arr = new byte[bits2bytes(bitlength())];
 		in.readFully(arr);
 		b.put(arr);
-		read(b, 0);
+		read(new ByteBufferStorage(b), 0);
 	}
 
 	/**
@@ -121,7 +124,7 @@ public final class Record {
 	 * @param index The record number location to write
 	 * @see #read(Configuration, ByteBuffer, long)
 	 */
-	public void write(ByteBuffer buf, long index) {
+	public void write(ByteStorage buf, long index) {
 		long bitoff = index * bitlength();
 		for (int i = 0; i < fieldBitLength.length; i++) {
 			assert Util.debug(DebugFacility.RECORD, "Putting field " + fieldNames[i]
@@ -141,13 +144,13 @@ public final class Record {
 	 * @param index The location of the record
 	 * @return a new Record with the loaded data
 	 */
-	public static Record read(Configuration conf, ByteBuffer buf, long index) {
+	public static Record read(Configuration conf, ByteProducer buf, long index) {
 		Record r = new Record(conf);
 		r.read(buf, index);
 		return r;
 	}
 
-	private void read(ByteBuffer buf, long index) {
+	private void read(ByteProducer buf, long index) {
 		long bitoff = index * bitlength();
 		for (int i = 0; i < fieldValues.length; i++) {
 			fieldValues[i] = BitBuffer.get(buf, bitoff, fieldBitLength[i]);
@@ -431,7 +434,7 @@ public final class Record {
 			// (Util.longpow(2,64-lastbit)-1);
 		}
 
-		static long get(ByteBuffer b, long offa, int len) {
+		static long get(ByteProducer b, long offa, int len) {
 			Util.assertTrue(len <= 58,
 					"Don't support more than 58-bit fields yet :(");
 			long combine = b.getLong((int) (offa / 8));
@@ -447,7 +450,7 @@ public final class Record {
 			return combine >>> (64 - off - len);
 		}
 
-		static void put(ByteBuffer b, long offa, int len, long vala) {
+		static void put(ByteStorage b, long offa, int len, long vala) {
 			Util.assertTrue(len <= 58,
 					"Don't support more than 58-bit fields yet :(");
 			int off = (int) (offa % 8);
@@ -466,7 +469,7 @@ public final class Record {
 		}
 
 		public static void main(String args[]) throws IOException {
-			ByteBuffer buf = ByteBuffer.allocate(32 + 8);
+			ByteStorage buf = new ByteBufferStorage(ByteBuffer.allocate(32 + 8));
 			LineNumberReader in = new LineNumberReader(new InputStreamReader(
 					System.in));
 			while (true) {

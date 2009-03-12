@@ -21,9 +21,12 @@ import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.TieredHasher;
 import edu.berkeley.gamesman.master.HadoopMaster;
 import edu.berkeley.gamesman.util.DebugFacility;
-import edu.berkeley.gamesman.util.FileByteBuffer;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
+import edu.berkeley.gamesman.util.bytes.ByteProducer;
+import edu.berkeley.gamesman.util.bytes.ByteStorage;
+import edu.berkeley.gamesman.util.bytes.HDFSFileByteProducer;
+import edu.berkeley.gamesman.util.bytes.HDFSFileByteStorage;
 
 public class HDFSDatabase extends Database implements Runnable {
 	
@@ -32,7 +35,7 @@ public class HDFSDatabase extends Database implements Runnable {
 	
 	BlockingQueue<Pair<BigInteger,Record>> bq = new ArrayBlockingQueue<Pair<BigInteger,Record>>(100);
 	
-	LRULinkedHashMap<Integer, Pair<FileByteBuffer,FSDataInputStream>> inFiles = new LRULinkedHashMap<Integer, Pair<FileByteBuffer,FSDataInputStream>>();
+	LRULinkedHashMap<Integer, Pair<ByteProducer,FSDataInputStream>> inFiles = new LRULinkedHashMap<Integer, Pair<ByteProducer,FSDataInputStream>>();
 
 	private boolean open = true;
 	
@@ -60,7 +63,7 @@ public class HDFSDatabase extends Database implements Runnable {
 	@Override
 	public Record getRecord(BigInteger loc) {
 		int idx = findDB(loc);
-		Pair<FileByteBuffer,FSDataInputStream> p;
+		Pair<ByteProducer,FSDataInputStream> p;
 		FSDataInputStream din = null;
 		synchronized(inFiles){
 			p = inFiles.get(idx);
@@ -71,7 +74,7 @@ public class HDFSDatabase extends Database implements Runnable {
 					Util.fatalError("Could not open output path!",e);
 				}
 				
-				p = new Pair<FileByteBuffer, FSDataInputStream>(new FileByteBuffer(din),din);
+				p = new Pair<ByteProducer, FSDataInputStream>(new HDFSFileByteProducer(din),din);
 
 				inFiles.put(idx,p);
 			}
@@ -139,8 +142,9 @@ public class HDFSDatabase extends Database implements Runnable {
 	}
 
 	public void run() {
-		FileByteBuffer fb = null;
+		ByteStorage fb = null;
 		FSDataOutputStream dout = null;
+		FSDataInputStream din = null;
 		int idx = -1;
 		
 		while(open){
@@ -151,7 +155,8 @@ public class HDFSDatabase extends Database implements Runnable {
 				if(idx != newidx){
 					if(dout != null) dout.close();
 					dout = FileSystem.get(hadoopconf).create(pathForSlice(newidx), (short) 1);
-					fb = new FileByteBuffer(dout);
+					din = FileSystem.get(hadoopconf).open(pathForSlice(newidx));
+					fb = new HDFSFileByteStorage(dout,din);
 					idx = newidx;
 				}
 				p.cdr.write(fb, p.car.subtract(splits[idx].first).longValue());

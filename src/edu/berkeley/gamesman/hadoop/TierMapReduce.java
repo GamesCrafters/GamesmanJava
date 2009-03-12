@@ -82,16 +82,16 @@ public class TierMapReduce<S> implements Mapper<BigIntegerWritable, NullWritable
 
 		ArrayList<Record> vals = new ArrayList<Record>();
 		
-		S state = game.hashToState(position.get());
+		S myState = game.hashToState(position.get());
 		
-		for(Pair<String,S> move : game.validMoves(state)){
+		for(Pair<String,S> movep : game.validMoves(myState)){
 			seenOne = true;
-			vals.add(db.getRecord(game.stateToHash(move.cdr)));
+			vals.add(db.getRecord(game.stateToHash(movep.cdr)));
 		}
 		if(seenOne){
 			record = Record.combine(config,vals);
 		}else{
-			record = new Record(config,game.primitiveValue(state));
+			record = new Record(config,game.primitiveValue(myState));
 		}
 		
 		db.putRecord(position.get(),record);

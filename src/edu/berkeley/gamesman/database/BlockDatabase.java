@@ -8,6 +8,8 @@ import java.nio.channels.FileChannel.MapMode;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
+import edu.berkeley.gamesman.util.bytes.ByteBufferStorage;
+import edu.berkeley.gamesman.util.bytes.ByteStorage;
 
 /**
  * The BlockDatabase is a slightly more packed version of the FileDatabase.
@@ -20,6 +22,7 @@ public class BlockDatabase extends FileDatabase {
 	private final int headerSize = 8;
 
 	MappedByteBuffer buf;
+	ByteStorage wrappedbuf;
 
 	long lastRecord;
 
@@ -57,7 +60,7 @@ public class BlockDatabase extends FileDatabase {
 	@Override
 	public Record getRecord(BigInteger loc) {
 		lastRecord = Math.max(lastRecord,loc.longValue());
-		return Record.read(conf, buf, loc.longValue());
+		return Record.read(conf, wrappedbuf, loc.longValue());
 	}
 
 	@Override
@@ -71,6 +74,7 @@ public class BlockDatabase extends FileDatabase {
 			assert Util.debug(DebugFacility.DATABASE, "Mapped BlockDatabase into memory starting from "+(offset+headerSize));
 			fd.seek(offset);
 			lastRecord = fd.readLong();
+			wrappedbuf = new ByteBufferStorage(buf);
 		} catch (IOException e) {
 			Util.fatalError("Could not map ByteBuffer from blockdb", e);
 		}
@@ -79,7 +83,7 @@ public class BlockDatabase extends FileDatabase {
 	@Override
 	public void putRecord(BigInteger loc, Record value) {
 		lastRecord = Math.max(lastRecord,loc.longValue());
-		value.write(buf, loc.longValue());
+		value.write(wrappedbuf, loc.longValue());
 		assert Util.debug(DebugFacility.DATABASE, "Stored record "+value+" to "+loc);
 	}
 
