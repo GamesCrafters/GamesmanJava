@@ -19,7 +19,7 @@ import edu.berkeley.gamesman.util.Util;
 public class Pyraminx extends Game<PyraminxState> {
 
 	/**
-	 * @param conf
+	 * @param conf The configuration object
 	 */
 	public Pyraminx(Configuration conf) {
 		super(conf);

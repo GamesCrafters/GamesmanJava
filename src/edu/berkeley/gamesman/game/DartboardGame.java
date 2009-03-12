@@ -35,7 +35,14 @@ public abstract class DartboardGame extends TieredIterGame {
 		moveAdds = new BigInteger[gameWidth*gameHeight];
 	}
 
+	/**
+	 * @return The default width of the board
+	 */
 	public abstract int getDefaultWidth();
+	
+	/**
+	 * @return The default height of the board
+	 */
 	public abstract int getDefaultHeight();
 	
 	private void setOXs() {

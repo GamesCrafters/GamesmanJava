@@ -5,9 +5,13 @@ import java.math.BigInteger;
 import edu.berkeley.gamesman.util.Pair;
 
 /**
+ * All Itergames use this as the state.
  * @author DNSpies
  */
 public class ItergameState extends Pair<Integer, BigInteger> {
+
+	private static final long serialVersionUID = -2453498572553759443L;
+
 	/**
 	 * @param tier The tier
 	 * @param hash The hash

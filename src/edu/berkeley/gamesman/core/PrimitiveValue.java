@@ -49,6 +49,9 @@ public enum PrimitiveValue {
 		return (value > otherValue.value);
 	}
 	
+	/**
+	 * @return The value of this move from the perspective of the other player.
+	 */
 	public PrimitiveValue previousMovesValue(){
 		switch(this){
 		case LOSE:
