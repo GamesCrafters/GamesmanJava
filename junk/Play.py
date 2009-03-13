@@ -43,7 +43,7 @@ class GameState:
     
     def printMoves(self):
         for c in self.moves():
-            print '"'+c[0]+'"',
+            print '"'+str(c[0])+'"',
             if self.db is not None:
                 rec = self.db.getRecord(self.game.stateToHash(c[1].state))
                 v = rec.get()

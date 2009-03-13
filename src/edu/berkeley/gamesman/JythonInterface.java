@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.prefs.Preferences;
+import java.util.prefs.BackingStoreException;
 
 import org.python.core.PyObject;
 import org.python.util.InteractiveConsole;
@@ -15,6 +16,7 @@ import org.python.util.ReadlineConsole;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
+import javax.xml.parsers.FactoryConfigurationError;
 
 /**
  * @author Jeremy Fleischman
@@ -31,9 +33,9 @@ public final class JythonInterface extends GamesmanApplication {
 	
 	@Override
 	public int run(Configuration conf) {
-		Preferences prefs = Preferences.userNodeForPackage(JythonInterface.class);
+		//Preferences prefs = Preferences.userNodeForPackage(JythonInterface.class);
 		
-		String consoleName = prefs.get("console", null);
+		String consoleName =null; // prefs.get("console", null);
 		Consoles console = null;
 		if (consoleName != null) {
 			try {
@@ -63,8 +65,7 @@ public final class JythonInterface extends GamesmanApplication {
 			}
 			console = Consoles.values()[i];
 		}
-		prefs.put("console", console.name());
-		
+		//prefs.put("console", console.name());
 		InteractiveConsole rc = null;
 		switch(console){
 		case DUMB:

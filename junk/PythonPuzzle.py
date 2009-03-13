@@ -9,9 +9,9 @@ from java.util import Properties,EnumSet
 import Play
 
 class PythonPuzzle(Game):
-	def __init__(self, inst, config):
-		self.gameclass = inst.__class__
-		self.gameinst = inst
+	def __init__(self, config):
+		puzzlename = config['pythonpuzzle']
+		self.gameclass = getattr(__import__(puzzlename), puzzlename)
 		self.initialize(config)
 		Game.__init__(self, config)
 
@@ -20,7 +20,8 @@ class PythonPuzzle(Game):
 		self.config = config
 		for key in defaults:
 			if key not in self.config:
-				self.config.setProperty(key, defaults[key])
+				self.config.setProperty(key, str(defaults[key]))
+		self.gameinst = self.gameclass.unserialize(self.config)
 
 	def find_solutions(self):
 		puzzleQueue = []
@@ -101,12 +102,13 @@ class PythonPuzzle(Game):
 	def describe(self):
 		return self.gameclass.__name__
 
-class PuzzleSolver:
-	def __init__(self, puzzle, options={}, solverclass=None, hasherclass=None):
+class Solver:
+	def __init__(self, options={}, solverclass=None, hasherclass=None):
 		if not hasherclass:
 			hasherclass = NullHasher
 		if not solverclass:
 			solverclass = BreadthFirstSolver
+		puzzle = options['pythonpuzzle']
 
 		debugOpts = EnumSet.noneOf(DebugFacility)
 		debugOpts.add(DebugFacility.CORE)
@@ -124,7 +126,7 @@ class PuzzleSolver:
 		self.dbfile = props.getProperty("gamesman.db.uri")
 
 		self.conf = Configuration(props, True)
-		self.gm = PythonPuzzle(puzzle, self.conf)
+		self.gm = PythonPuzzle(self.conf)
 		self.hasher = hasherclass(self.conf)
 		self.conf.initialize(self.gm, self.hasher)
 
