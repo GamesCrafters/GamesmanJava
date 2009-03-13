@@ -29,6 +29,7 @@ public class HadoopDBOutputFormat extends
 		return new RecordWriter<BigIntegerWritable, RecordWritable>(){
 
 			public void close(Reporter arg0) throws IOException {
+				out.writeLong(0);
 				out.flush();
 				out.close();
 				System.out.println("closed!");
