@@ -11,9 +11,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.Properties;
+import java.util.Set;
 import java.util.Map.Entry;
 
 import edu.berkeley.gamesman.util.DebugFacility;
@@ -385,6 +387,20 @@ public class Configuration {
 		} catch (IOException e) {
 			Util.fatalError("Could not read from property file",e);
 		}
+	}
+	
+
+	public void addProperties(ArrayList<String> propStrings) {
+		for (String line : propStrings) {
+			if(line.equals("")) continue;
+			String[] arr = line.split("\\s+=\\s+");
+			Util.assertTrue(arr.length == 2, "Malformed property file at line \""+line+"\"");
+			setProperty(arr[0], arr[1]);
+		}
+	}
+	
+	public Set<Object> getKeys() {
+		return props.keySet();
 	}
 	
 	private static BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
