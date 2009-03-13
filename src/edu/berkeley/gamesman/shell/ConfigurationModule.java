@@ -254,7 +254,7 @@ public class ConfigurationModule extends UIModule {
 			line = in.readLine();
 			if (line != null) {
 				do {
-					if (!line.trim().isEmpty()) {
+					if (line.trim().length() != 0) {
 						if (line.charAt(0) == '{') {
 							conf = new Configuration(new Properties(), true);
 							propStrings = new ArrayList<String>();
