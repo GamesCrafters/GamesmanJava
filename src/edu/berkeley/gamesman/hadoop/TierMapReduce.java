@@ -20,7 +20,6 @@ import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.TieredGame;
-import edu.berkeley.gamesman.database.HDFSDatabase;
 import edu.berkeley.gamesman.hadoop.util.BigIntegerWritable;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
@@ -30,7 +29,7 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author Steven Schlansker
  */
-public class TierMapReduce<S> implements Mapper<BigIntegerWritable, NullWritable, BigIntegerWritable, BigIntegerWritable>,Reducer<BigIntegerWritable, BigIntegerWritable, BigIntegerWritable, RecordWritable>{
+public class TierMapReduce<S> implements Mapper<BigIntegerWritable, NullWritable, BigIntegerWritable, RecordWritable>,Reducer<BigIntegerWritable, RecordWritable, BigIntegerWritable, RecordWritable>{
 
 	protected TieredGame<S> game;
 	protected Hasher<S> hasher;
@@ -64,7 +63,7 @@ public class TierMapReduce<S> implements Mapper<BigIntegerWritable, NullWritable
 	final BigInteger minusone = BigInteger.ZERO.subtract(BigInteger.ONE);
 
 	public void map(BigIntegerWritable position, NullWritable nullVal,
-			OutputCollector<BigIntegerWritable, BigIntegerWritable> validMoves,
+			OutputCollector<BigIntegerWritable, RecordWritable> outRec,
 			Reporter reporter) throws IOException {
 		boolean seenOne = false;
 		
@@ -85,13 +84,16 @@ public class TierMapReduce<S> implements Mapper<BigIntegerWritable, NullWritable
 		}
 		
 		db.putRecord(position.get(),record);
+		
+		outRec.collect(position,new RecordWritable(record));
 	}
 
 	public void reduce(
 			BigIntegerWritable position,
-			Iterator<BigIntegerWritable> children,
+			Iterator<RecordWritable> record,
 			OutputCollector<BigIntegerWritable, RecordWritable> out,
 			Reporter rep) throws IOException {
+		out.collect(arg0, arg1)
 	}
 }
 
