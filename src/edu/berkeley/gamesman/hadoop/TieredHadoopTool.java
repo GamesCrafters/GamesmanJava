@@ -79,7 +79,7 @@ public class TieredHadoopTool<S> extends Configured implements Tool {
 		FileInputFormat.setInputPaths(job, new Path("in"));
 		job.setInputFormat(SequenceInputFormat.class);
 		job.setOutputFormat(HadoopDBOutputFormat.class);
-		FileOutputFormat.setOutputPath(job, new Path(OUTPUT_PREFIX+String.format("%020ld_%020ld", start, end)));
+		FileOutputFormat.setOutputPath(job, new Path(OUTPUT_PREFIX+String.format("%020d_%020d", start, end)));
 		job.setMapperClass(TierMapReduce.class);
 		job.setReducerClass(TierMapReduce.class);
 

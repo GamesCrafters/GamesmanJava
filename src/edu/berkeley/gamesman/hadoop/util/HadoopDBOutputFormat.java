@@ -12,6 +12,8 @@ import org.apache.hadoop.mapred.RecordWriter;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.util.Progressable;
 
+import edu.berkeley.gamesman.util.bytes.HDFSFileByteStorage;
+
 public class HadoopDBOutputFormat extends
 		FileOutputFormat<BigIntegerWritable, RecordWritable> implements
 		OutputFormat<BigIntegerWritable, RecordWritable> {
@@ -22,12 +24,14 @@ public class HadoopDBOutputFormat extends
 			throws IOException {
 		
 		final FSDataOutputStream out = fs.create(new Path(getWorkOutputPath(jc),"slice"));
+		final HDFSFileByteStorage bs = new HDFSFileByteStorage(out);
 		
 		return new RecordWriter<BigIntegerWritable, RecordWritable>(){
 
 			public void close(Reporter arg0) throws IOException {
 				out.flush();
 				out.close();
+				System.out.println("closed!");
 			}
 
 			public void write(BigIntegerWritable loc, RecordWritable rec)

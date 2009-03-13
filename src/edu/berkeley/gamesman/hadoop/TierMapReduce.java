@@ -49,6 +49,7 @@ public class TierMapReduce<S> implements Mapper<BigIntegerWritable, NullWritable
 		//Properties props = new Properties(System.getProperties());
 
 		config = Configuration.load(Util.decodeBase64(conf.get("configuration_data")));
+		jobconf = conf;
 		
 		db = Util.typedInstantiate(base+"database."+config.getProperty("gamesman.database"));
 		

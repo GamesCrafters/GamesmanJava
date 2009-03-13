@@ -1,0 +1,11 @@
+gamesman.game = Connect4
+gamesman.game.width = 2
+gamesman.game.height = 2
+gamesman.game.pieces = 2
+gamesman.hasher = PerfectConnect4Hash
+gamesman.solver = TierSolver
+gamesman.master = HadoopMaster
+gamesman.db.uri = file:///tmp/database4.db
+gamesman.database = HDFSDatabase
+gamesman.debug.HADOOP = 1
+gamesman.debug.DATABASE = 1
