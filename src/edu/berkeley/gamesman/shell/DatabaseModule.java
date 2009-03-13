@@ -6,21 +6,26 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.math.BigInteger;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Properties;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.util.Util;
+import edu.berkeley.gamesman.core.Database;
+import edu.berkeley.gamesman.database.BlockDatabase;
 
 public class DatabaseModule extends UIModule {
-	private static RandomAccessFile dbFile;
-	private static Record theRecord, curRecord;	
+	private Database db;
+	private static Record curRecord;
+	private BigInteger loc;
 	
 	public DatabaseModule(Configuration c) {
 		super(c, "data");
-		
-		//theRecord = new Record(conf);
+		loc = BigInteger.ZERO;
 		requiredPropKeys = new ArrayList<String>();
 		requiredPropKeys.add("gamesman.db.uri");
 		//what property would it want? 
@@ -32,8 +37,8 @@ public class DatabaseModule extends UIModule {
 				"open a database file from the current configuration.");
 		helpLines.setProperty("closeDatabase",
 				"close a database file that this module was working on.");
-		helpLines.setProperty("readRecord",
-				"read a record from the database file.");
+		helpLines.setProperty("readRecord(location)",
+				"read a record from the database file.\n\tlocation : location of the record(indexed from 0).");
 		helpLines.setProperty("viewRecord",
 				"view the record that has been read into the system.");
 		//helpLines.setProperty("editRecord", "");		
@@ -52,25 +57,34 @@ public class DatabaseModule extends UIModule {
 	 * @param conf configuration it's trying to read a database file from.
 	 */
 	private void openDatabase() {
-		String filePath = conf.getProperty("gamesman.db.uri");
+		db = new BlockDatabase();
+		URI f;
 		try {
-			dbFile = new RandomAccessFile(filePath, "rw");
-		}		
-		catch(FileNotFoundException e) {
+			f = new URI(conf.getProperty("gamesman.db.uri"));
+			System.out.println(f);
+			db.initialize(f.toString(), conf);
+		} catch (URISyntaxException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		/*
+		try {
+			f = new URI(conf.getProperty("gamesman.db.uri"));
+			db.initialize(f.toString(), conf);
+		} catch (URISyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		*/
 	}
 	
 	/**
 	 * u_closeDatabase closes the dbFile that's opened.
 	 */
 	protected void u_closeDatabase(ArrayList<String> args) {
-		if(dbFile != null) {
-			try {
-				dbFile.close();
-			} catch(IOException e) {
-				e.printStackTrace();
-			}
+		if(db != null) {
+				db.close();
 		}
 	}
 	
@@ -78,10 +92,16 @@ public class DatabaseModule extends UIModule {
 	 * u_readRecord reads a record from theRecord into curRecord.
 	 */	
 	protected void u_readRecord(ArrayList<String> args) {
-		try {
-			curRecord = theRecord.readStream(conf, dbFile);
-		} catch(IOException e) {
-			e.printStackTrace();
+		if(args.isEmpty()) {
+			curRecord = db.getRecord(loc);
+			System.out.println("Read a record at location " + loc);
+			loc = loc.add(BigInteger.ONE);
+		} else if(args.size() == 1){
+			loc = new BigInteger(args.get(0));
+			curRecord = db.getRecord(loc);
+			System.out.println("Read a record at location " + loc);
+		} else {
+			Util.fatalError("readRecord received too many arguments");
 		}
 	}
 	
