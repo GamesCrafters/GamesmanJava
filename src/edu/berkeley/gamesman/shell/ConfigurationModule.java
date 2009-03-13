@@ -37,9 +37,18 @@ public class ConfigurationModule extends UIModule {
 		helpLines.setProperty("viewConfigurations",
 				"List all the configurations available from the gamesman-java.conf file.");
 		
+		confList = new ArrayList<Configuration>();
+		
 		if (confFile == null)
 			confFile = new File("gamesman-java.conf");
-		loadConfigurationsFromFile();
+		if (confFile.exists())
+			loadConfigurationsFromFile();
+		else {
+			System.out.println("No gamesman-java.conf file found.\nYou can " +
+					"create this file using \"save\" in the conf module\nor it " +
+					"will be created automatically when you exit.");
+			createDefaultConfiguration();
+		}
 	}
 	
 	protected void u_loadConfiguration(ArrayList<String> args) {
@@ -110,14 +119,14 @@ public class ConfigurationModule extends UIModule {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		addConfigurationToFile(newConfProps);
-		loadConfigurationsFromFile();		
+		confList.add(new Configuration(newConfProps, true));		
 	}
 	
 	protected void u_editConfigurations(ArrayList<String> args) {
 		
 		// DUPLICATE CODE WITH LOADCONF
 		String confName = null;
+		Configuration matchingConf = null;
 		if (!args.isEmpty()) {
 			confName = args.get(0);			
 			ArrayList<Configuration> matchingConfs = new ArrayList<Configuration>();
@@ -132,8 +141,10 @@ public class ConfigurationModule extends UIModule {
 				System.out.println();
 				return;
 			}
-			else if (matchingConfs.size() == 1)
+			else if (matchingConfs.size() == 1) {
 				confName = matchingConfs.get(0).getProperty("conf.name");
+				matchingConf = matchingConfs.get(0);
+			}
 			else {
 				System.out.println("No configuration beginning with " + confName + " found.");
 				return;
@@ -142,10 +153,8 @@ public class ConfigurationModule extends UIModule {
 		else
 			confName = conf.getProperty("conf.name");
 		
-		System.out.println("Editing \"" + confName + "\" configuration.");
-		
-		
-		
+		System.out.println("Editing \"" + confName + "\" configuration.");	
+				
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 		String com = "";
 		while (!com.toLowerCase().startsWith("end")) {
@@ -153,23 +162,34 @@ public class ConfigurationModule extends UIModule {
 					"changeProperty, viewProperties, end): ");
 			try {
 				com = in.readLine().trim();
+			
+				if ("addproperty".startsWith(com.toLowerCase())) {
+					System.out.print("Enter a property key to be added (\"gamesman.\" is assumed): ");
+					String key = "gamesman." + in.readLine().trim();
+					if (!key.equals("gamesman.end")) {					
+						System.out.print("Enter a corresponding value for " + key + ": ");
+						String val = in.readLine().trim();
+						matchingConf.setProperty(key, val);
+					}					
+				}
+				else if ("deleteproperty".startsWith(com.toLowerCase())) {
+					System.out.print("Enter a property key to be deleted (\"gamesman.\" is assumed): ");
+					String key = "gamesman." + in.readLine().trim();
+					
+					
+					
+				}
+				else if ("changeproperty".startsWith(com.toLowerCase())) {
+					
+				}
+				else if ("viewproperties".startsWith(com.toLowerCase())) {
+					proccessCommand("v(" + confName + ")");				
+				}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			
-			if ("addproperty".startsWith(com.toLowerCase())) {
-				
-			}
-			else if ("deleteproperty".startsWith(com.toLowerCase())) {
-				
-			}
-			else if ("changeproperty".startsWith(com.toLowerCase())) {
-				
-			}
-			else if ("viewproperties".startsWith(com.toLowerCase())) {
-				proccessCommand("v(" + confName + ")");				
-			}
 		}	
 	}
 	
@@ -188,15 +208,25 @@ public class ConfigurationModule extends UIModule {
 			}
 		}
 	}
-
-	private void addConfigurationToFile(Properties confProps) {
+	
+	protected void u_saveConfigurations(ArrayList<String> args) {
+		System.out.println("Saving all configurations to gamesman-java.conf file.");
+		confFile.delete();
+		confFile = new File("gamesman-java.conf");
+		for (Configuration c : confList) {
+			addConfigurationToFile(c);
+		}
+		System.out.println("Done saving.");
+	}
+	
+	private void addConfigurationToFile(Configuration c) {
 		try {
 			PrintWriter out = new PrintWriter(new FileWriter(confFile, true));
 			
 			out.println("{");
-			for (Object oPropKey : confProps.keySet()) {
+			for (Object oPropKey : c.getKeys()) {
 				String propKey = (String)oPropKey;
-				String value = confProps.getProperty(propKey);
+				String value = c.getProperty(propKey);
 				out.println(propKey + " = " + value);
 			}
 			out.println("}");
@@ -206,7 +236,6 @@ public class ConfigurationModule extends UIModule {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		loadConfigurationsFromFile();
 	}
 	
 	private void loadConfigurationsFromFile() {
@@ -214,13 +243,12 @@ public class ConfigurationModule extends UIModule {
 		try {
 			in = new BufferedReader(new FileReader(confFile));
 		} catch (FileNotFoundException e) {
-			Util.fatalError(".conf file not found and unable to be created");
+			Util.fatalError("gamesman-java.conf file not found and unable to be created.");
 		}
 		
 		String line;
 		ArrayList<String> propStrings = null;
 		Configuration conf = null;
-		confList = new ArrayList<Configuration>();
 		
 		try {
 			line = in.readLine();
@@ -247,11 +275,16 @@ public class ConfigurationModule extends UIModule {
 		
 		if (confList.isEmpty()) {
 			System.out.println("No configurations found in gamesman-java.conf.");
-			System.out.println("Creating default configuration with no properties but name and default module.");
-			Properties defConfProps = new Properties();
-			defConfProps.setProperty("conf.name", "default");
-			defConfProps.setProperty("conf.defaultuimodule", "conf");
-			addConfigurationToFile(defConfProps);
+			createDefaultConfiguration();			
 		}
+	}
+	
+	private void createDefaultConfiguration() {
+		System.out.println("Creating default configuration with no properties but name and default module.");
+		Properties defConfProps = new Properties();
+		defConfProps.setProperty("conf.name", "default");
+		defConfProps.setProperty("conf.defaultuimodule", "conf");
+		confList.add(new Configuration(defConfProps, true));
+		proccessCommand("s");
 	}
 }
