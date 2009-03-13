@@ -1,6 +1,9 @@
 package edu.berkeley.gamesman.hadoop;
 
 
+import java.io.IOException;
+import java.math.BigInteger;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
@@ -13,6 +16,8 @@ import org.apache.hadoop.util.Tool;
 import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.database.NullDatabase;
 import edu.berkeley.gamesman.hadoop.util.BigIntegerWritable;
+import edu.berkeley.gamesman.hadoop.util.HadoopDBOutputFormat;
+import edu.berkeley.gamesman.hadoop.util.RecordWritable;
 import edu.berkeley.gamesman.hadoop.util.SequenceInputFormat;
 import edu.berkeley.gamesman.master.LocalMaster;
 import edu.berkeley.gamesman.solver.TierSolver;
@@ -24,9 +29,13 @@ import edu.berkeley.gamesman.util.Util;
  * @see org.apache.hadoop.util.Tool
  * @author Steven Schlansker
  */
-public class TieredHadoopTool extends Configured implements Tool {
+public class TieredHadoopTool<S> extends Configured implements Tool {
 
 	edu.berkeley.gamesman.core.Configuration myConf;
+	
+	private TieredGame<S> game;
+	
+	public static final String OUTPUT_PREFIX = "gjhadoop_";
 	
 	public int run(String[] args) throws Exception {
 		Configuration conf = getConf();
@@ -46,26 +55,36 @@ public class TieredHadoopTool extends Configured implements Tool {
 		//Hasher<?> h = Util.typedInstantiate("edu.berkeley.gamesman.hasher."+conf.get("hasherclass"));
 		m.initialize(myConf, TierSolver.class, NullDatabase.class);
 
-		TieredGame<?> game = (TieredGame<?>) m.getGame();
+		game = Util.checkedCast(m.getGame());
 		
-			conf.set("firsthash", "0");
-			conf.set("lasthash", game.lastHashValueForTier(game.numberOfTiers()-1).toString());
-			//Util.debug("Tier goes from "+conf.get("firsthash")+"-"+conf.get("lasthash"));
-
-			JobConf job = new JobConf(conf, TierMapReduce.class);
-
-			job.setMapOutputKeyClass(BigIntegerWritable.class);
-			job.setMapOutputValueClass(BigIntegerWritable.class);
-
-			job.setJobName("Tier Map-Reduce");
-			FileInputFormat.setInputPaths(job, new Path("in"));
-			job.setInputFormat(SequenceInputFormat.class);
-			FileOutputFormat.setOutputPath(job, new Path("out_0"));
-			job.setMapperClass(TierMapReduce.class);
-			job.setReducerClass(TierMapReduce.class);
-
-			JobClient.runJob(job);
+		for(int tier = game.numberOfTiers()-1 ; tier >= 0; tier--){
+			Util.debug(DebugFacility.HADOOP,"Processing tier "+tier);
+			processRun(conf, game.hashOffsetForTier(tier),game.lastHashValueForTier(tier));
+		}
+		
 		return 0;
+	}
+	
+	private void processRun(Configuration conf, BigInteger start, BigInteger end) throws IOException {
+		conf.set("firsthash", start.toString());
+		conf.set("lasthash", end.toString());
+		//Util.debug("Tier goes from "+conf.get("firsthash")+"-"+conf.get("lasthash"));
+
+		JobConf job = new JobConf(conf, TierMapReduce.class);
+
+		job.setMapOutputKeyClass(BigIntegerWritable.class);
+		job.setMapOutputValueClass(RecordWritable.class);
+
+		job.setJobName("Tier Map-Reduce");
+		FileInputFormat.setInputPaths(job, new Path("in"));
+		job.setInputFormat(SequenceInputFormat.class);
+		job.setOutputFormat(HadoopDBOutputFormat.class);
+		FileOutputFormat.setOutputPath(job, new Path(OUTPUT_PREFIX+String.format("%020ld_%020ld", start, end)));
+		job.setMapperClass(TierMapReduce.class);
+		job.setReducerClass(TierMapReduce.class);
+
+		JobClient.runJob(job);
+		return;
 	}
 
 }

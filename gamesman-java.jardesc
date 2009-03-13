@@ -1,18 +1,23 @@
 <?xml version="1.0" encoding="MacRoman"?>
 <jardesc>
 <jar path="gamesman-java.jar"/>
-<options buildIfNeeded="true" compress="true" descriptionLocation="/gamesman-java/gamesman-java.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="false" overwrite="false" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
+<options buildIfNeeded="true" compress="true" descriptionLocation="/GamesmanJava/gamesman-java.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="false" overwrite="false" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
 <storedRefactorings deprecationInfo="true" structuralOnly="false"/>
 <selectedProjects/>
-<manifest generateManifest="true" mainClassHandleIdentifier="=gamesman-java/src&lt;edu.berkeley.gamesman{Gamesman.java[Gamesman" manifestLocation="" manifestVersion="1.0" reuseManifest="false" saveManifest="false" usesManifest="true">
+<manifest generateManifest="true" mainClassHandleIdentifier="=GamesmanJava/src&lt;edu.berkeley.gamesman{Gamesman.java[Gamesman" manifestLocation="" manifestVersion="1.0" reuseManifest="false" saveManifest="false" usesManifest="true">
 <sealing sealJar="true">
 <packagesToSeal/>
 <packagesToUnSeal/>
 </sealing>
 </manifest>
 <selectedElements exportClassFiles="true" exportJavaFiles="false" exportOutputFolder="false">
-<folder path="/gamesman-java/doc"/>
-<javaElement handleIdentifier="=gamesman-java/src"/>
+<file path="/GamesmanJava/gamesman-java.conf"/>
+<file path="/GamesmanJava/gamesman-java.jardesc"/>
+<file path="/GamesmanJava/.classpath"/>
+<file path="/GamesmanJava/removed.options.txt"/>
+<javaElement handleIdentifier="=GamesmanJava/src"/>
+<file path="/GamesmanJava/.project"/>
+<file path="/GamesmanJava/build.xml"/>
 </selectedElements>
 <fatjar builder="org.eclipse.jdt.ui.plain_jar_builder" launchConfig=""/>
 </jardesc>

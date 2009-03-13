@@ -19,7 +19,7 @@ import edu.berkeley.gamesman.util.Util;
  * @version 1.1
  * 
  * Changelog:
- * 1.1 Switched to a byte[] instead of ArrayList<Byte> for inernal storage.
+ * 1.1 Switched to a byte[] instead of ArrayList<Byte> for internal storage.
  * 1.0 Initial Version.
  */
 public class MemoryDatabase extends Database{

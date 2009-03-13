@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
@@ -519,5 +520,33 @@ public final class Util {
 	@SuppressWarnings("unchecked")
 	public static <H> H[] toArray(List<H> list) {
 		return (H[]) list.toArray((H[])Array.newInstance(list.get(0).getClass(), list.size()));
+	}
+	
+	public static int binaryRangeSearch(BigInteger index,BigInteger[] rangeEnds){
+		int l = 0, r = rangeEnds.length;
+		int p;
+		//System.out.println("search "+idx);
+		while(true){
+			p = (r-l)/2;
+
+			if(p == 0 && rangeEnds[p].compareTo(index) < 0)
+				Util.fatalError("Index "+index+" not in binary search "+Arrays.toString(rangeEnds));
+			p += l;
+			//System.out.print(p);
+			if(rangeEnds[p].compareTo(index) >= 0){
+				if(p == 0 || rangeEnds[p-1].compareTo(index) < 0){
+					//System.out.println(idx+" E "+idx+" ("+sval(p)+"-"+ends[p]+")");
+					break;
+				}
+
+				//System.out.println(" r");
+				r = p;
+			}else{
+				//System.out.println(" l");
+				l = p;
+			}
+		}
+		assert p>=0 && p < rangeEnds.length;
+		return p;
 	}
 }

@@ -92,4 +92,9 @@ public abstract class TieredGame<State> extends Game<State> {
 	public final BigInteger lastHash() {
 		return lastHashValueForTier(numberOfTiers()-1);
 	}
+	
+	public int[] tierDependsOn(int tier){
+		if(tier >= numberOfTiers()-1) return new int[0];
+		return new int[] {tier+1};
+	}
 }
