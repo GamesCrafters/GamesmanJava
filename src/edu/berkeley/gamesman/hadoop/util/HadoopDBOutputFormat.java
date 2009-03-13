@@ -32,12 +32,12 @@ public class HadoopDBOutputFormat extends
 				out.writeLong(0);
 				out.flush();
 				out.close();
-				System.out.println("closed!");
+				//System.out.println("closed!");
 			}
 
 			public void write(BigIntegerWritable loc, RecordWritable rec)
 					throws IOException {
-				System.out.println("writing "+loc+ " -> "+rec);
+				//System.out.println("writing "+loc+ " -> "+rec);
 				rec.get().writeStream(out);
 			}
 			

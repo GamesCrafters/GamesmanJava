@@ -26,7 +26,7 @@ public class HDFSFileByteProducer implements ByteProducer {
 			byte b;
 			din.seek(index);
 			b = din.readByte();
-			System.out.println("byteread "+index+" => "+b);
+			//System.out.println("byteread "+index+" => "+b);
 			return b;
 		} catch (IOException e) {
 			Util.fatalError("Could not read from HDFS "+path+" @"+index,e);
@@ -41,7 +41,7 @@ public class HDFSFileByteProducer implements ByteProducer {
 			long b;
 			din.seek(index);
 			b = din.readLong();
-			System.out.println("longread "+index+" => "+b);
+			//System.out.println("longread "+index+" => "+b);
 			return b;
 		} catch (IOException e) {
 			Util.fatalError("Could not read from HDFS "+path+" @"+index,e);
