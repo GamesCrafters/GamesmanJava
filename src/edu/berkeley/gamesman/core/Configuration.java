@@ -55,7 +55,7 @@ public class Configuration {
 	 * @param props A Properties object (probably constructed from a job file).
 	 * @param initLater You must call initialize() once you have created the appropriate Game and Hasher objects.
 	 */
-	private Configuration(Properties props, boolean initLater){
+	public Configuration(Properties props, boolean initLater){
 		this.props = props;
 		initializeStoredFields();
 		if (initLater == false) {
