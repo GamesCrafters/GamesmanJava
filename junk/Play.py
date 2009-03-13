@@ -33,7 +33,7 @@ class GameState:
         return self.game.stateToHash(self.state)
     
     def unhash(self, hash):
-        return GameState(self.game, self.game.hashToState(hash))
+        return GameState(self.game, self.game.hashToState(hash), self.db)
     
     def moves(self):
         s = []

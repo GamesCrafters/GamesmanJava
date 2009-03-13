@@ -3,14 +3,15 @@ package edu.berkeley.gamesman;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 
-import edu.berkeley.gamesman.shell.*;
-import edu.berkeley.gamesman.util.Util;
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.shell.ConfigurationModule;
+import edu.berkeley.gamesman.shell.DatabaseModule;
+import edu.berkeley.gamesman.shell.SolverModule;
+import edu.berkeley.gamesman.shell.UIModule;
+import edu.berkeley.gamesman.util.Util;
 
 /**
  * The main class that accepts commands and passes them off to UI modules. It also handles

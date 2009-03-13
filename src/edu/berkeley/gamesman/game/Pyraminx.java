@@ -9,6 +9,7 @@ import java.util.HashMap;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.hasher.PermutationHash;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -38,36 +39,103 @@ public class Pyraminx extends Game<PyraminxState> {
 	
 	@Override
 	public PrimitiveValue primitiveValue(PyraminxState pos) {
-		if(pos.equals(SOLVED_STATE))
-			return PrimitiveValue.WIN;
-		return PrimitiveValue.UNDECIDED;
+		return pos.equals(SOLVED_STATE) ? PrimitiveValue.WIN : PrimitiveValue.UNDECIDED;
 	}
 
 	private static final PyraminxState SOLVED_STATE = new PyraminxState(new Integer[] { 0, 1, 2, 3, 4, 5 },
-			new Boolean[] { false, false, false, false, false, false},
-			new Integer[] { 0, 0, 0, 0, 0, 0 });
+			new Integer[] { 0, 0, 0, 0, 0, 0 },
+			new Integer[] { 0, 0, 0, 0 });
 	
 	@Override
 	public Collection<PyraminxState> startingPositions() {
 		return Arrays.asList(SOLVED_STATE);
 	}
-
-	@Override
-	public BigInteger stateToHash(PyraminxState pos) {
-		// TODO Auto-generated method stub
-		return null;
+	
+	private static final int edgeCount = 6, centerCount = 4;
+	//memoize some useful values for (un)hashing
+	private static final BigInteger[] THREE_TO_X = powers(3, centerCount+1), TWO_TO_X = powers(2, edgeCount+1);
+	//TODO - even permutations only!
+	private static final PermutationHash epHasher = new PermutationHash(edgeCount);
+	
+	private static BigInteger[] powers(int base, int maxExp) {
+		BigInteger[] powers = new BigInteger[maxExp];
+		powers[0] = BigInteger.ONE;
+		for(int i = 1; i < maxExp; i++)
+			powers[i] = BigInteger.valueOf(base).multiply(powers[i-1]);
+		return powers;
 	}
 
 	@Override
-	public PyraminxState hashToState(BigInteger hash) {
-		// TODO Auto-generated method stub
-		return null;
+	public BigInteger stateToHash(PyraminxState state) {
+		BigInteger hash = BigInteger.ZERO;
+		
+		//TODO - take advantage of the fact that the edges must
+		//always be in even permutation
+		//edge permutation
+		hash = hash.add(epHasher.hash(state.edgePermutation));
+
+		//edge orientation
+		hash = hash.multiply(TWO_TO_X[state.edgeOrientation.length-1]);
+		//don't need to hash the last edge, as it is determined by all the others
+		for(int i = 0; i < state.edgeOrientation.length - 1; i++)
+			hash = hash.add(BigInteger.valueOf(state.edgeOrientation[i]).multiply(TWO_TO_X[i]));
+	
+//		//center orientation
+		hash = hash.multiply(THREE_TO_X[state.centerOrientation.length]);
+		for(int i = 0; i < state.centerOrientation.length; i++)
+			hash = hash.add(BigInteger.valueOf(state.centerOrientation[i]).multiply(THREE_TO_X[i]));
+		
+		return hash;
+	}
+	
+	public static void main(String[] args) {
+		PermutationHash ph = new PermutationHash(3);
+		for(BigInteger i : Util.bigIntIterator(ph.maxHash())) {
+			ArrayList<Integer> arr = ph.unhash(i);
+			System.out.println(arr + " " + ph.hash(arr));
+		}
+//		Pyraminx p = new Pyraminx(new Configuration("jobs/Pyraminx.job"));
+//		System.out.println(p.lastHash());
+//		for(BigInteger i : Util.bigIntIterator(p.lastHash())) {
+//			PyraminxState state = p.hashToState(i);
+//			BigInteger hash = p.stateToHash(state);
+//			if(!i.equals(hash)) {
+//				System.out.println(i + " " + hash);
+//				System.out.println(p.displayState(state));
+//				System.out.println(p.displayState(p.hashToState(hash)));
+//				return;
+//			}
+//		}
+//		System.out.println("Done!");
 	}
 
 	@Override
 	public BigInteger lastHash() {
-		// TODO Auto-generated method stub
-		return null;
+		return epHasher.maxHash().add(BigInteger.ONE).multiply(TWO_TO_X[edgeCount-1].multiply(THREE_TO_X[centerCount])).subtract(BigInteger.ONE);
+	}
+
+	@Override
+	public PyraminxState hashToState(BigInteger hash) {
+		Integer[] centerOrientation = new Integer[centerCount];
+		for(int i = 0; i < centerCount; i++) {
+			BigInteger[] div_rem = hash.divideAndRemainder(BigInteger.valueOf(3));
+			centerOrientation[i] = div_rem[1].intValue();
+			hash = div_rem[0];
+		}
+		
+		Integer[] edgeOrientation = new Integer[edgeCount];
+		int totalorient = 0;
+		for(int i = 0; i < edgeCount-1; i++) {
+			BigInteger[] div_rem = hash.divideAndRemainder(BigInteger.valueOf(2));
+			edgeOrientation[i] = div_rem[1].intValue();
+			hash = div_rem[0];
+			totalorient += edgeOrientation[i];
+		}
+		//the number of flipped edges must be even!
+		edgeOrientation[edgeCount-1] = Util.positiveModulo(2-totalorient, 2);
+		
+		Integer[] edgePermutation = Util.toArray(epHasher.unhash(hash));
+		return new PyraminxState(edgePermutation, edgeOrientation, centerOrientation);
 	}
 
 	@Override
@@ -79,7 +147,7 @@ public class Pyraminx extends Game<PyraminxState> {
 	public PyraminxState stringToState(String pos) {
 		String[] eperm_orient_cperm = pos.split(";");
 		return new PyraminxState(Util.parseIntegers(eperm_orient_cperm[0].split(",")),
-				Util.parseBooleans(eperm_orient_cperm[1].split(",")),
+				Util.parseIntegers(eperm_orient_cperm[1].split(",")),
 				Util.parseIntegers(eperm_orient_cperm[2].split(",")));
 	}
 	
@@ -106,9 +174,9 @@ public class Pyraminx extends Game<PyraminxState> {
 				PyraminxState next = pos.clone();
 				Integer[] edgeIndices = EDGE_INDICES.get(axis).cdr;
 				for(int i = 0; i < dir; i++) {
-					cycle(next.edgePermutation, edgeIndices, dir);
-					next.centerOrientation[axis] = Util.positiveModulo(next.centerOrientation[axis] + dir, 3);
-					cycle(next.edgeOrientation, edgeIndices, dir);
+					cycle(next.edgePermutation, edgeIndices, 1);
+					next.centerOrientation[axis] = Util.positiveModulo(next.centerOrientation[axis] + 1, 3);
+					cycle(next.edgeOrientation, edgeIndices, 1);
 					//NOTE: we're updating the orientations *after* their permutations have been updated
 					if(axis == LEFT || axis == RIGHT) {
 						//these twists don't affect edge orientation
@@ -121,22 +189,23 @@ public class Pyraminx extends Game<PyraminxState> {
 							edge1 = 1;
 							edge2 = 2;
 						}
-						next.edgeOrientation[edge1] = !next.edgeOrientation[edge1];
-						next.edgeOrientation[edge2] = !next.edgeOrientation[edge2];
+						next.edgeOrientation[edge1] = 1-next.edgeOrientation[edge1];
+						next.edgeOrientation[edge2] = 1-next.edgeOrientation[edge2];
 					}
 				}
-				nextMoves.add(new Pair<String, PyraminxState>("" + EDGE_INDICES.get(axis).car, next));
+				String move = ""+EDGE_INDICES.get(axis).car;
+				if(Util.positiveModulo(dir, 3) == 2)
+					move += "'";
+				nextMoves.add(new Pair<String, PyraminxState>(move, next));
 			}
 		}
-		System.out.println("***" + nextMoves);
 		return nextMoves;
 	}
 }
 
 class PyraminxState  {
-	final Integer[] edgePermutation, centerOrientation;
-	final Boolean[] edgeOrientation;
-	public PyraminxState(Integer[] edgePermutation, Boolean[] edgeOrientation, Integer[] centerOrientation) {
+	final Integer[] edgePermutation, centerOrientation, edgeOrientation;
+	public PyraminxState(Integer[] edgePermutation, Integer[] edgeOrientation, Integer[] centerOrientation) {
 		this.edgePermutation = edgePermutation;
 		this.edgeOrientation = edgeOrientation;
 		this.centerOrientation = centerOrientation;

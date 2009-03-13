@@ -9,6 +9,7 @@ import java.util.HashMap;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.hasher.PermutationHash;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -66,27 +67,20 @@ public class Cuboid extends Game<CubeState> {
 		return pos.display(true);
 	}
 
-	private static final int pieceCount = 8;
-	private static final BigInteger[] THREE_TO_X = new BigInteger[pieceCount], FACTORIAL = new BigInteger[pieceCount];
+	private static final int cornerCount = 8;
+	private static final BigInteger[] THREE_TO_X = new BigInteger[cornerCount];
+	private static final PermutationHash cpHasher = new PermutationHash(cornerCount - 1);
 	{ //memoize some useful values for (un)hashing
 		THREE_TO_X[0] = BigInteger.ONE;
-		FACTORIAL[0] = BigInteger.ONE;
-		for(int i = 1; i < pieceCount; i++) {
+		for(int i = 1; i < cornerCount; i++)
 			THREE_TO_X[i] = BigInteger.valueOf(3).multiply(THREE_TO_X[i-1]);
-			FACTORIAL[i] = BigInteger.valueOf(i).multiply(FACTORIAL[i-1]);
-		}
 	}
 
 	@Override
 	public BigInteger stateToHash(CubeState state) {
-		BigInteger hash = BigInteger.ZERO;
-		ArrayList<Integer> pieces = new ArrayList<Integer>(Arrays.asList(state.pieces));
-		pieces.remove(pieces.size() - 1); //we don't care about the last piece because it will always be fixed
-		for(int i = 0; i < 6; i++) {
-			int pos = pieces.indexOf(i);
-			pieces.remove(pos);
-			hash = hash.add(FACTORIAL[pieces.size()].multiply(BigInteger.valueOf(pos)));
-		}
+		ArrayList<Integer> cp = new ArrayList<Integer>(Arrays.asList(state.pieces));
+		cp.remove(cp.size() - 1); //we don't care about the last piece because it will always be fixed
+		BigInteger hash = cpHasher.hash(cp);
 
 		hash = hash.multiply(THREE_TO_X[6]);
 		for(int i = 0; i < 6; i++)
@@ -96,36 +90,32 @@ public class Cuboid extends Game<CubeState> {
 
 	@Override
 	public BigInteger lastHash() {
-		return THREE_TO_X[6].multiply(FACTORIAL[7]).subtract(BigInteger.ONE);
+		return THREE_TO_X[6].multiply(cpHasher.maxHash().add(BigInteger.ONE)).subtract(BigInteger.ONE);
 	}
 
 	@Override
-	public CubeState hashToState(final BigInteger inhash) {
-		BigInteger hash = inhash;
-		Integer[] orientations = new Integer[pieceCount];
+	public CubeState hashToState(BigInteger hash) {
+		//corner orientations
+		Integer[] co = new Integer[cornerCount];
 		int totalorient = 0;
 		for(int i = 0; i < 6; i++) {
 			BigInteger[] div_rem = hash.divideAndRemainder(BigInteger.valueOf(3));
-			orientations[i] = div_rem[1].intValue();
+			co[i] = div_rem[1].intValue();
 			hash = div_rem[0];
-			totalorient += orientations[i];
+			totalorient += co[i];
 		}
-		orientations[6] = Util.positiveModulo((3-totalorient),3);
-		orientations[7] = 0;
-		ArrayList<Integer> pieces = new ArrayList<Integer>(pieceCount);
-		for(int i = 0; i < 7; i++) {
-			int location = hash.divide(FACTORIAL[pieces.size()]).mod(BigInteger.valueOf(i+1)).intValue();
-			pieces.add(location, 6-i);
-		}
-		pieces.add(7);
-		return new CubeState(Util.toArray(pieces), orientations);
+		co[6] = Util.positiveModulo((3-totalorient),3);
+		co[7] = 0;
+		
+		//corner permutations
+		ArrayList<Integer> cp = cpHasher.unhash(hash);
+		cp.add(7);
+		return new CubeState(Util.toArray(cp), co);
 	}
 
 	@Override
 	public PrimitiveValue primitiveValue(CubeState pos) {
-		if(pos.isSolved())
-			return PrimitiveValue.WIN;
-		return PrimitiveValue.UNDECIDED;
+		return pos.isSolved() ? PrimitiveValue.WIN : PrimitiveValue.UNDECIDED;
 	}
 
 	@Override

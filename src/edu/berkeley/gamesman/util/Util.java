@@ -506,17 +506,6 @@ public final class Util {
 		return ints;
 	}
 	
-	public static Boolean[] parseBooleans(String... arr) {
-		Boolean[] bools = new Boolean[arr.length];
-		for(int i=0; i<bools.length; i++)
-			bools[i] = parseBoolean(arr[i]);
-		return bools;
-	}
-	
-	public static boolean parseBoolean(String s) {
-		return s != null && !s.equalsIgnoreCase("false") && !s.equalsIgnoreCase("0");
-	}
-	
 	@SuppressWarnings("unchecked")
 	public static <H> H[] toArray(List<H> list) {
 		return (H[]) list.toArray((H[])Array.newInstance(list.get(0).getClass(), list.size()));

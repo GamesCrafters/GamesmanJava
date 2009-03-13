@@ -10,7 +10,7 @@ import edu.berkeley.gamesman.util.Util;
 
 /**
  * An entry main for all of gamesman-java.
- * Any application that wants to be part of this should extend either GamesmanApplication or GamesManUnconfigurableApplication
+ * Any application that wants to be part of this should extend GamesmanApplication
  * @author Jeremy Fleischman
  *
  */
@@ -21,7 +21,7 @@ public class Gamesman {
 		APPLICATION_MAP.put("jythoninterface", "edu.berkeley.gamesman.JythonInterface");
 		APPLICATION_MAP.put("gamesmanshell", "edu.berkeley.gamesman.GamesmanShell");
 		APPLICATION_MAP.put("jsoninterface", "edu.berkeley.gamesman.JSONInterface");
-		APPLICATION_MAP.put("databasedump", "edu.berkeley.gamesman.tool.DatabaseDump");
+		APPLICATION_MAP.put("DatabaseDump", "edu.berkeley.gamesman.tool.DatabaseDump");
 	}
 	/**
 	 * @param args The command line arguments. Should just be a job file.
@@ -29,7 +29,7 @@ public class Gamesman {
 	public static void main(String[] args) {
 		String jobFile = null, entryPoint = null;
 		if(args.length == 1) {
-			String arg = args[0].toLowerCase();
+			String arg = args[0];
 			if(APPLICATION_MAP.containsKey(arg)) {
 				//we have a GamesmanApplication
 				entryPoint = arg;
@@ -51,7 +51,6 @@ public class Gamesman {
 			System.out.println("Couldn't find " + entryPoint + " in " + APPLICATION_MAP.keySet());
 			return;
 		}
-
 		Configuration conf = null;
 		if(jobFile != null) {
 			Properties props = Configuration.readProperties(jobFile);

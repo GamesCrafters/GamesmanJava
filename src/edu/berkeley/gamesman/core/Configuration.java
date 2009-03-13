@@ -294,9 +294,12 @@ public class Configuration {
 	 * @return false iff s is "false" or s is "0", ignoring case
 	 */
 	public boolean getBoolean(String key, boolean dfl) {
-		try {
-			return Util.parseBoolean(props.getProperty(key));
-		} catch(Exception e) {}
+		String s = props.getProperty(key);
+		if(s != null) {
+			try {
+				return !s.equalsIgnoreCase("false") && !s.equalsIgnoreCase("0");
+			} catch(Exception e) {}
+		}
 		return dfl;
 	}
 	
