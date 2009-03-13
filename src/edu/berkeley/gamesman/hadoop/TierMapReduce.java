@@ -48,17 +48,7 @@ public class TierMapReduce<S> implements Mapper<BigIntegerWritable, NullWritable
 
 		config = Configuration.load(Util.decodeBase64(conf.get("configuration_data")));
 		
-		//gd = Util.typedForName(base+"database."+config.getProperty("gamesman.database"));
-		
-		/*try {
-			db = gd.newInstance();
-		} catch (InstantiationException e) {
-			Util.fatalError("Could not create class "+e);
-		} catch (IllegalAccessException e) {
-			Util.fatalError("Could not access class "+e);
-		}*/
-		
-		db = new HDFSDatabase(conf);
+		db = Util.typedInstantiate(base+"database."+config.getProperty("gamesman.database"));
 		
 		db.initialize(conf.get("dburi"),config);
 		game = Util.checkedCast(config.getGame());
