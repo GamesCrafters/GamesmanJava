@@ -100,6 +100,7 @@ public class DatabaseModule extends UIModule {
 			loc = new BigInteger(args.get(0));
 			curRecord = db.getRecord(loc);
 			System.out.println("Read a record at location " + loc);
+			loc = loc.add(BigInteger.ONE);
 		} else {
 			Util.fatalError("readRecord received too many arguments");
 		}
