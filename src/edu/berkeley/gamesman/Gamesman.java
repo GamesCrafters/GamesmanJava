@@ -21,7 +21,7 @@ public class Gamesman {
 		APPLICATION_MAP.put("jythoninterface", "edu.berkeley.gamesman.JythonInterface");
 		APPLICATION_MAP.put("gamesmanshell", "edu.berkeley.gamesman.GamesmanShell");
 		APPLICATION_MAP.put("jsoninterface", "edu.berkeley.gamesman.JSONInterface");
-		APPLICATION_MAP.put("DatabaseDump", "edu.berkeley.gamesman.tool.DatabaseDump");
+		APPLICATION_MAP.put("databasedump", "edu.berkeley.gamesman.tool.DatabaseDump");
 	}
 	/**
 	 * @param args The command line arguments. Should just be a job file.
@@ -30,9 +30,9 @@ public class Gamesman {
 		String jobFile = null, entryPoint = null;
 		if(args.length == 1) {
 			String arg = args[0];
-			if(APPLICATION_MAP.containsKey(arg)) {
+			if(APPLICATION_MAP.containsKey(arg.toLowerCase())) {
 				//we have a GamesmanApplication
-				entryPoint = arg;
+				entryPoint = arg.toLowerCase();
 			} else {
 				//if we just have a job file, use GamesmanMain
 				jobFile = args[0];
