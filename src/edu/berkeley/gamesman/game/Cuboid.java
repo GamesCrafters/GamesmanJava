@@ -69,7 +69,7 @@ public class Cuboid extends Game<CubeState> {
 
 	private static final int cornerCount = 8;
 	private static final BigInteger[] THREE_TO_X = new BigInteger[cornerCount];
-	private static final PermutationHash cpHasher = new PermutationHash(cornerCount - 1);
+	private static final PermutationHash cpHasher = new PermutationHash(cornerCount - 1, false);
 	{ //memoize some useful values for (un)hashing
 		THREE_TO_X[0] = BigInteger.ONE;
 		for(int i = 1; i < cornerCount; i++)

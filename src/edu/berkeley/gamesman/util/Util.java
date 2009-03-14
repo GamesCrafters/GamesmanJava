@@ -456,11 +456,12 @@ public final class Util {
 		return bigIntIterator(BigInteger.ZERO, lastValue);
 	}
 	public static Iterable<BigInteger> bigIntIterator(final BigInteger firstValue, final BigInteger lastValue) {
+		return bigIntIterator(firstValue, lastValue, BigInteger.ONE);
+	}
+	public static Iterable<BigInteger> bigIntIterator(final BigInteger firstValue, final BigInteger lastValue, final BigInteger stepSize) {
 		return new Iterable<BigInteger>(){
-
 			public Iterator<BigInteger> iterator() {
 				return new Iterator<BigInteger>(){
-
 					BigInteger cur = firstValue;
 					
 					public boolean hasNext() {
@@ -469,17 +470,15 @@ public final class Util {
 
 					public BigInteger next() {
 						BigInteger old = cur;
-						cur = cur.add(BigInteger.ONE);
+						cur = cur.add(stepSize);
 						return old;
 					}
 
 					public void remove() {
 						throw new UnsupportedOperationException("Cannot remove from a bigIntIterator");
 					}
-					
 				};
 			}
-			
 		};
 	}
 	

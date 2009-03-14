@@ -55,7 +55,7 @@ public class Pyraminx extends Game<PyraminxState> {
 	//memoize some useful values for (un)hashing
 	private static final BigInteger[] THREE_TO_X = powers(3, centerCount+1), TWO_TO_X = powers(2, edgeCount+1);
 	//TODO - even permutations only!
-	private static final PermutationHash epHasher = new PermutationHash(edgeCount);
+	private static final PermutationHash epHasher = new PermutationHash(edgeCount, true);
 	
 	private static BigInteger[] powers(int base, int maxExp) {
 		BigInteger[] powers = new BigInteger[maxExp];
@@ -69,18 +69,15 @@ public class Pyraminx extends Game<PyraminxState> {
 	public BigInteger stateToHash(PyraminxState state) {
 		BigInteger hash = BigInteger.ZERO;
 		
-		//TODO - take advantage of the fact that the edges must
-		//always be in even permutation
-		//edge permutation
 		hash = hash.add(epHasher.hash(state.edgePermutation));
 
 		//edge orientation
 		hash = hash.multiply(TWO_TO_X[state.edgeOrientation.length-1]);
-		//don't need to hash the last edge, as it is determined by all the others
+		//don't need to hash the orientation of the last edge, as it is determined by all the others
 		for(int i = 0; i < state.edgeOrientation.length - 1; i++)
 			hash = hash.add(BigInteger.valueOf(state.edgeOrientation[i]).multiply(TWO_TO_X[i]));
 	
-//		//center orientation
+		//center orientation
 		hash = hash.multiply(THREE_TO_X[state.centerOrientation.length]);
 		for(int i = 0; i < state.centerOrientation.length; i++)
 			hash = hash.add(BigInteger.valueOf(state.centerOrientation[i]).multiply(THREE_TO_X[i]));
@@ -89,10 +86,10 @@ public class Pyraminx extends Game<PyraminxState> {
 	}
 	
 	public static void main(String[] args) {
-		PermutationHash ph = new PermutationHash(3);
+		PermutationHash ph = new PermutationHash(3, true);
 		for(BigInteger i : Util.bigIntIterator(ph.maxHash())) {
 			ArrayList<Integer> arr = ph.unhash(i);
-			System.out.println(arr + " " + ph.hash(arr));
+			System.out.println(arr + " " + ph.hash(Util.toArray(arr)));
 		}
 //		Pyraminx p = new Pyraminx(new Configuration("jobs/Pyraminx.job"));
 //		System.out.println(p.lastHash());
