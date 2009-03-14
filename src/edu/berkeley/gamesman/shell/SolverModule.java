@@ -1,6 +1,7 @@
 package edu.berkeley.gamesman.shell;
 
 import java.util.ArrayList;
+import java.util.Properties;
 
 import edu.berkeley.gamesman.GamesmanMain;
 import edu.berkeley.gamesman.core.Configuration;
@@ -15,7 +16,9 @@ public class SolverModule extends UIModule {
 		requiredPropKeys.add("gamesman.game");
 		requiredPropKeys.add("gamesman.hasher");
 		requiredPropKeys.add("gamesman.solver");
-		requiredPropKeys.add("gamesman.database");		
+		requiredPropKeys.add("gamesman.database");
+		helpLines = new Properties();
+		helpLines.setProperty("solve", "solve the current game.");
 	}
 	
 	protected void u_solve(ArrayList<String> args) {
