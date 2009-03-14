@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 
 import edu.berkeley.gamesman.util.Util;
 
@@ -72,8 +73,8 @@ public class PermutationHash {
 	}
 	
 	public BigInteger hash(Integer[] pieces) {
-		assert pieces.length == permutationLength;
 		ArrayList<Integer> ident = getIdentityPermutation();
+		assert new HashSet<Integer>(Arrays.asList(pieces)).equals(ident);
 		BigInteger hash = BigInteger.ZERO;
 		int last = evenPermutation ? permutationLength - 2 : permutationLength - 1;
 		for(int i = 0; i < last; i++) {
@@ -100,7 +101,7 @@ public class PermutationHash {
 			pieces.add(ident.remove(0));
 			//is there a better way of doing this?
 			//it could be merged with the above loop,
-			//but that wouldn't this it any faster
+			//but that wouldn't make this it any faster
 			if(!isEven(Util.toArray(pieces)))
 				Collections.swap(pieces, pieces.size()-1, pieces.size()-2);
 			assert isEven(Util.toArray(pieces));
