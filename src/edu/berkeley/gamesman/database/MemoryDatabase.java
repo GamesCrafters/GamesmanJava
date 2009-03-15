@@ -16,19 +16,21 @@ import edu.berkeley.gamesman.util.Util;
  *
  *	
  * @author Alex Trofimov
- * @version 1.1
+ * @version 1.2
  * 
  * Changelog:
+ * 1.2 Slight speedup for operating on small data (<8bits); ensureCapacity() added.
  * 1.1 Switched to a byte[] instead of ArrayList<Byte> for internal storage.
  * 1.0 Initial Version.
  */
 public class MemoryDatabase extends Database{
 	
 	/* Class Variables */
-	//private ArrayList<Byte> memoryStorage;
 	private byte[] memoryStorage;		// byte array to store the data
-	private int capacity;				// the size of the data
-	private boolean open;				// whether this database is initialized 
+	
+	/* DB Variables */
+	protected int capacity;				// the size of the data
+	protected boolean open;				// whether this database is initialized 
 										// and not closed.
 	
 	/**
@@ -44,11 +46,28 @@ public class MemoryDatabase extends Database{
 	}
 	
 	/**
-	 * Get the size of this DB.
+	 * Get the size of this DB in bytes.
 	 * @return size of the DB in bytes.
 	 */
 	public int getSize() {
 		return this.capacity;
+	}
+	
+	/** 
+	 * Ensure that this database can store at least this number of bytes.
+	 * @param numBytes - number of bytes this DB should be able to fit (at least).
+	 */
+	protected void ensureCapacity(long numBytes) {
+		int newCapacity = 2;
+		while (newCapacity <= numBytes) newCapacity = newCapacity << 2;
+		if (newCapacity > this.capacity) {
+			this.capacity = newCapacity;
+			byte[] temp = this.memoryStorage;
+			this.memoryStorage = new byte[this.capacity];
+			for (int i = 0; i < temp.length; i ++) {
+				this.memoryStorage[i] = temp[i];	}
+			temp = null;
+		}
 	}
 	
 	@Override
@@ -78,7 +97,7 @@ public class MemoryDatabase extends Database{
 	 * 		  Assumes that all previous segments are of this size.
 	 * @return Record formatted to DB.conf
 	 */
-	public BigInteger getBits(long index, long bitSize) {
+	protected BigInteger getBits(long index, long bitSize) {
 		
 		/* Setting up Variables */
 		long bitBegin = bitSize * index;
@@ -118,9 +137,7 @@ public class MemoryDatabase extends Database{
 	 * 
 	 * @author Alex Trofimov
 	 */
-	void initialize() {
-		//this.memoryStorage = new ArrayList<Byte>();
-		//this.memoryStorage.ensureCapacity(2);		
+	private void initialize() {		
 		this.capacity = 2;
 		this.memoryStorage = new byte[this.capacity];
 		this.open = true;
@@ -152,7 +169,7 @@ public class MemoryDatabase extends Database{
 	 *		  Assumes all previous segments are of this size.
 	 * @param data are the bits that need to be stored compacted as BigInteger.
 	 */
-	public void putBits(long index, int bitSize, BigInteger data) {
+	protected void putBits(long index, int bitSize, BigInteger data) {
 		
 		/* Setting up Variables */		
 		long bitBegin = bitSize * index;
@@ -162,25 +179,23 @@ public class MemoryDatabase extends Database{
 		int byteSize = (int) (byteIndexEnd - byteIndexStart + 1);
 		byte[] updateData = new byte[byteSize];
 		int rightPad = (int) (7 - (bitEnd % 8));
-		int leftPad = (int) bitBegin % 8;
 		
 		/* Padding the data to be written */
-		if (rightPad > 0) {
+		if (rightPad > 0)
 			data = data.shiftLeft(rightPad);
-			byte rightPreserve = (byte) (this.get(byteIndexEnd) % (1 << rightPad));
-			data = data.add(BigInteger.valueOf(rightPreserve));	}
 		byte[] byteData = data.toByteArray();
 		int dataByteOffset = byteSize - byteData.length;
 		int signOffset = (dataByteOffset < 0) ? 1 : 0; // Skip first byte if it's a negative num
 		for (int i = signOffset; i < byteData.length; i ++) {
 				updateData[i + dataByteOffset] = byteData[i]; }
-		if (leftPad > 0) {
-			byte leftPreserve = (byte) (this.get(byteIndexStart) >>> (8 - leftPad)); 
-			updateData[0] += leftPreserve << (8 - leftPad);	}
 		
 		/* Writing the data to DataBase */
-		for(int i = 0; i < byteSize; i ++) {			
-			this.put(byteIndexStart + i, updateData[i]); }
+		ensureCapacity(byteIndexEnd); // Ensure that the data can be written.
+		for(int i = 0; i < byteSize; i ++) {
+			if (i == 0 || i == byteSize - 1)
+				put(byteIndexStart + i, updateData[i], true); // Ends should preserve bits
+			else put(byteIndexStart + i, updateData[i], false); 
+			}
 	}
 
 	@Override
@@ -201,13 +216,12 @@ public class MemoryDatabase extends Database{
 	 * @param index - sequential number of this byte in DB.
 	 * @return - one byte at specified byte index.
 	 */
-	private byte get(long index) {
+	protected byte get(long index) {
 		if (!this.open) 
 			Util.fatalError("Attempt to read from a closed database.");
 		else if (this.capacity <= index || index < 0)
 			return 0x0;
 		try {
-			//return this.memoryStorage.get((int) index);
 			return this.memoryStorage[(int) index];
 		} catch (Exception e) {
 			Util.fatalError("Read from DB failed. Capacity: " + this.capacity, e);
@@ -216,36 +230,20 @@ public class MemoryDatabase extends Database{
 	}
 	
 	/**
-	 * Write a byte into the database.
+	 * Write a byte into the database. Assumes that space is already allocated.
 	 * @author Alex Trofimov
 	 * @param index - sequential number of byte in DB.
 	 * @param data - byte that needs to be written.
+	 * @param preserve - set to true if you want data to be ORed with existing byte.
 	 */
-	private synchronized void put(long index, byte data) {
+	protected synchronized void put(long index, byte data, boolean preserve) {
 		if (!this.open) 
 			Util.fatalError("Attempt to write to closed database.");
-		try {			
-			/* if (index >= this.capacity) {
-				while(index >= this.capacity)
-					this.capacity = this.capacity << 1;
-				this.memoryStorage.ensureCapacity(this.capacity); }
-			if (this.memoryStorage.size() <= index)
-				this.memoryStorage.add((int) index, data);
-			else
-				this.memoryStorage.set((int) index, data); */
-			
-			if (index >= this.capacity) {
-				while (index >= this.capacity)
-					this.capacity = this.capacity << 2; // Grow by factor of 4
-				byte[] temp = this.memoryStorage;
-				this.memoryStorage = new byte[this.capacity];
-				for (int i = 0; i < temp.length; i ++) {
-					this.memoryStorage[i] = temp[i];	}
-				temp = null;
-			}
-			this.memoryStorage[(int) index] = data;
+		try {
+			if (preserve) this.memoryStorage[(int) index] |= data;
+			else this.memoryStorage[(int) index] = data;
 		} catch (Exception e) {
-			Util.fatalError("Write to DB failed.", e);
+			Util.fatalError("Write to DB failed. Byte #" + index, e);
 		}
 	}
 	
@@ -253,7 +251,7 @@ public class MemoryDatabase extends Database{
 	/** 
 	 * For testing purposes only. 
 	 * This tests this class for correctness (more or less).
-	 * It generats random BigIntegers of fixed size, stores
+	 * It generates random BigIntegers of fixed size, stores
 	 * them into the DB, then reads them and compares to 
 	 * the originals.
 	 * 
@@ -262,11 +260,11 @@ public class MemoryDatabase extends Database{
 	 */
 	public static void main(String[] args) {
 		
-		/* Defning Variables */
+		/* Defining Variables */
 		long startTime = (new Date()).getTime();
 		Random random = new Random();
 		int testSize = 5000;
-		int bitSize = 901; // Should be an odd number > 64 to test longs.
+		int bitSize = 66; // Should be an odd number > 64 to test longs.
 		BigInteger[] BigInts = new BigInteger[testSize];
 		MemoryDatabase DB = new MemoryDatabase();
 		
