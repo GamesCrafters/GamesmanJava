@@ -151,4 +151,7 @@ public class DatabaseModule extends UIModule {
 		conf.initialize(g, h);
 		
 	}
+	
+	public void quit() {
+	}
 }
