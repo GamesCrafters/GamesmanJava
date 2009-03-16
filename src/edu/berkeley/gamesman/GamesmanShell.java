@@ -35,7 +35,7 @@ public class GamesmanShell {
 		
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 		String com = "";
-		while (!com.equals("exit")) { // SAYS INVALID COMMAND IF PUT EXIT
+		while (true) {
 			System.out.print("gamesman/" + curConf.getProperty("conf.name", "NOCONF") 
 					+ "/" + curModule.getModuleName() + "> ");
 			System.out.flush();
@@ -45,8 +45,13 @@ public class GamesmanShell {
 				Util.fatalError("I/O error while reading from console", e);
 			}
 			com = com.trim();
-			proccessCommands(com.split(" "));
+			if (!com.equals("exit") && !com.equals("quit"))
+				proccessCommands(com.split(" "));
+			else
+				break;
 		}
+		changeModule("conf");
+		curModule.quit();		
 	}
 	
 	private static void proccessCommands(String[] coms) {
@@ -83,6 +88,7 @@ public class GamesmanShell {
 		for (Class<? extends UIModule> moduleClass : moduleClasses) {
 			if (moduleClass.getName().toLowerCase().startsWith("edu.berkeley.gamesman.shell." + name.toLowerCase())) {
 				try {
+					curModule.quit();
 					curModule = (UIModule)moduleClass.getDeclaredConstructors()[0].newInstance(curConf);
 					ArrayList<String> missingPropKeys = curModule.missingPropertyKeys();
 					if (!missingPropKeys.isEmpty()) {
