@@ -406,6 +406,10 @@ public class Configuration {
 		return props.keySet();
 	}
 	
+	public void deleteProperty(String key) {
+		props.remove(key);
+	}
+	
 	private static BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 
 	public String getPropertyWithPrompt(String key) {
