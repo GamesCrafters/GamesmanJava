@@ -1,15 +1,8 @@
 package edu.berkeley.gamesman.shell;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.RandomAccessFile;
+
+
 import java.math.BigInteger;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Properties;
 
@@ -20,13 +13,26 @@ import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.util.Util;
 import edu.berkeley.gamesman.core.Database;
-import edu.berkeley.gamesman.database.BlockDatabase;
+
+/**
+ * 
+ * @author Jin-Su Oh
+ *	DatabaseModules handles user's input to manipulate the database file.
+ *	It provides the ability open and close database, and read, edit and view records.
+ * 	db holds the opened database file.
+ *  curRecord holds a record that is read.
+ *  loc keeps track of where in the database file user is accessing.  
+ */
 
 public class DatabaseModule extends UIModule {
 	private Database db;
-	private static Record curRecord;
+	private Record curRecord;
 	private BigInteger loc;
 	
+	/**
+	 * constructor sets required properties and helpLines.
+	 * @param c configuration that the game works with.
+	 */
 	public DatabaseModule(Configuration c) {
 		super(c, "data");
 		loc = BigInteger.ZERO;
@@ -36,8 +42,6 @@ public class DatabaseModule extends UIModule {
 		requiredPropKeys.add("gamesman.hasher");
 		requiredPropKeys.add("gamesman.solver");
 		requiredPropKeys.add("gamesman.database");
-		//what property would it want? 
-		//maybe that if conf has a database path?
 		
 		helpLines = new Properties();
 		
@@ -45,53 +49,40 @@ public class DatabaseModule extends UIModule {
 				"open a database file from the current configuration.");
 		helpLines.setProperty("closeDatabase",
 				"close a database file that this module was working on.");
-		helpLines.setProperty("readRecord(location)",
-				"read a record from the database file.\n\tlocation : location of the record(indexed from 0).");
+		helpLines.setProperty("readRecord",
+				"read a record from the database file." +
+				"\n\treadRecord(location)" +
+				"\n\tlocation : location of the record(indexed from 0).");
 		helpLines.setProperty("viewRecord",
 				"view the record that has been read into the system.");
-		//helpLines.setProperty("editRecord", "");		
+		helpLines.setProperty("editRecord", 
+				"edit the current record." +
+				"\n\teditRecord(field, value)" +
+				"\n\tfield : field is either Primitive(u can type p), or Remoteness(u can type r)" +
+				"\n\tvalue : in Primitive - 0 is lose, 1 is tie, 2 is win.  in Remoteness - value is how far you are away from winning.");
+		helpLines.setProperty("initializeConfiguration", "initializes configuration.");
 	}
 	
 	/**
-	 * u_openDatabase calls openDatabase with curConf.
+	 * u_openDatabase calls openDatabase.
+	 * @param args it doesn't check for any args given.
 	 */
 	protected void u_openDatabase(ArrayList<String> args) {	
 		openDatabase();
 	}
 	
 	/**
-	 * openDatabase takes a configuration and instantiates dbFile as a RandomAccessFile for the user to read.
-	 * it's in RandomAccessFile because it uses Record class later on.
-	 * @param conf configuration it's trying to read a database file from.
+	 * openDatabase uses the configuration class's openDatabase function to open the database file.
+	 * processCommand("i") instantiates game and hasher property.
 	 */
 	private void openDatabase() {
 		proccessCommand("i");
 		db = conf.openDatabase();
-		/*
-		db = new BlockDatabase();
-		URI f;
-		try {
-			f = new URI(conf.getProperty("gamesman.db.uri"));
-			System.out.println(f);
-			db.initialize(f.toString(), conf);
-		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		*/
-		/*
-		try {
-			f = new URI(conf.getProperty("gamesman.db.uri"));
-			db.initialize(f.toString(), conf);
-		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		*/
 	}
 	
 	/**
 	 * u_closeDatabase closes the dbFile that's opened.
+	 * @param args it doesn't check for any args, if given.
 	 */
 	protected void u_closeDatabase(ArrayList<String> args) {
 		if(db != null) {
@@ -100,7 +91,9 @@ public class DatabaseModule extends UIModule {
 	}
 	
 	/**
-	 * u_readRecord reads a record from theRecord into curRecord.
+	 * u_readRecord reads a record into curRecord.
+	 * @param args what we expect is a number from the user which represent the index of the record.
+	 * if args is empty, then this fucntion proceeds to in default behavior which reads the record at loc.
 	 */	
 	protected void u_readRecord(ArrayList<String> args) {
 		if(db != null) {
@@ -119,15 +112,19 @@ public class DatabaseModule extends UIModule {
 	
 	/**
 	 * u_viewRecord prints out curRecord
+	 * @param args we don't check for any args given.
 	 */
 	protected void u_viewRecord(ArrayList<String> args) {
 		System.out.println(curRecord);
 	}
 	
 	/**
-	 * u_editRecord edits the curRecord
-	 */
-	//I don't know what you would put in to change the record.	
+	 * u_editRecord edits the last Record that was read by the user.
+	 * @param args (field, value)
+			field : field is either Primitive(u can type p), or Remoteness(u can type r)
+			value : in Primitive - 0 is lose, 1 is tie, 2 is win.  
+					in Remoteness - value is how far you are away from winning.
+	 */	
 	protected void u_editRecord(ArrayList<String> args) {
 		if(curRecord != null) {
 			if(!args.isEmpty()) {
@@ -144,6 +141,10 @@ public class DatabaseModule extends UIModule {
 		}		
 	}
 	
+	/**
+	 * initializes the game and hasher property
+	 * @param args we don't check for any args given.
+	 */
 	protected void u_initializeConfiguration(ArrayList<String> args) {
 		Game<?> g = Util.typedInstantiateArg("edu.berkeley.gamesman.game."+conf.getProperty("gamesman.game"), conf);
 		Hasher<?> h = Util.typedInstantiateArg("edu.berkeley.gamesman.hasher."+conf.getProperty("gamesman.hasher"), conf);
@@ -151,8 +152,3 @@ public class DatabaseModule extends UIModule {
 		
 	}
 }
-
-/*
- * ability to open database, close, 
- * read records, edit records, view records
- */
