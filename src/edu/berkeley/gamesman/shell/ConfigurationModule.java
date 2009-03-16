@@ -51,6 +51,10 @@ public class ConfigurationModule extends UIModule {
 		}
 	}
 	
+	public void quit() {
+		proccessCommand("s");
+	}
+	
 	protected void u_loadConfiguration(ArrayList<String> args) {
 		String confName = null;
 		if (!args.isEmpty()) {
@@ -150,8 +154,10 @@ public class ConfigurationModule extends UIModule {
 				return;
 			}
 		}
-		else
+		else {
 			confName = conf.getProperty("conf.name");
+			matchingConf = conf;
+		}
 		
 		System.out.println("Editing \"" + confName + "\" configuration.");	
 				
@@ -175,12 +181,16 @@ public class ConfigurationModule extends UIModule {
 				else if ("deleteproperty".startsWith(com.toLowerCase())) {
 					System.out.print("Enter a property key to be deleted (\"gamesman.\" is assumed): ");
 					String key = "gamesman." + in.readLine().trim();
-					
-					
-					
+					matchingConf.deleteProperty(key);				
 				}
 				else if ("changeproperty".startsWith(com.toLowerCase())) {
-					
+					System.out.print("Enter a property key whose value is to be changed (\"gamesman.\" is assumed): ");
+					String key = "gamesman." + in.readLine().trim();
+					if (!key.equals("gamesman.end")) {					
+						System.out.print("Enter a new value for " + key + ": ");
+						String val = in.readLine().trim();
+						matchingConf.setProperty(key, val);
+					}					
 				}
 				else if ("viewproperties".startsWith(com.toLowerCase())) {
 					proccessCommand("v(" + confName + ")");				

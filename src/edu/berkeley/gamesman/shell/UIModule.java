@@ -105,4 +105,6 @@ public abstract class UIModule {
 	public String getModuleName() {
 		return name;
 	}
+	
+	public abstract void quit();
 }

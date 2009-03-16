@@ -21,6 +21,9 @@ public class SolverModule extends UIModule {
 		helpLines.setProperty("solve", "solve the current game.");
 	}
 	
+	public void quit() {
+	}
+	
 	protected void u_solve(ArrayList<String> args) {
 		proccessCommand("i");
 		GamesmanMain main = new GamesmanMain();
@@ -30,8 +33,7 @@ public class SolverModule extends UIModule {
 	protected void u_initializeConfiguration(ArrayList<String> args) {
 		Game<?> g = Util.typedInstantiateArg("edu.berkeley.gamesman.game."+conf.getProperty("gamesman.game"), conf);
 		Hasher<?> h = Util.typedInstantiateArg("edu.berkeley.gamesman.hasher."+conf.getProperty("gamesman.hasher"), conf);
-		conf.initialize(g, h);
-		
+		conf.initialize(g, h);		
 	}
 
 }
