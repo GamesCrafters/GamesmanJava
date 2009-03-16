@@ -93,7 +93,7 @@ public class DatabaseModule extends UIModule {
 	/**
 	 * u_readRecord reads a record into curRecord.
 	 * @param args what we expect is a number from the user which represent the index of the record.
-	 * if args is empty, then this fucntion proceeds to in default behavior which reads the record at loc.
+	 * if args is empty, then this function proceeds to in default behavior which reads the record at loc.
 	 */	
 	protected void u_readRecord(ArrayList<String> args) {
 		if(db != null) {
@@ -129,14 +129,14 @@ public class DatabaseModule extends UIModule {
 		if(curRecord != null) {
 			if(!args.isEmpty()) {
 				if(args.get(0).toLowerCase().startsWith("r")) {
-					curRecord.set(RecordFields.REMOTENESS, Integer.parseInt(args.get(1)));
-					System.out.println("changed to: " + curRecord);
+					curRecord.set(RecordFields.REMOTENESS, Integer.parseInt(args.get(1)));					
 				} else if(args.get(0).toLowerCase().startsWith("p")) {
 					curRecord.set(RecordFields.VALUE, Integer.parseInt(args.get(1)));
-					System.out.println("changed to: " + curRecord);
 				} else {
 					Util.fatalError("Invalid arguments to editRecord");
 				}
+				db.putRecord(loc, curRecord);
+				System.out.println("changed to: " + curRecord);
 			}
 		}		
 	}
