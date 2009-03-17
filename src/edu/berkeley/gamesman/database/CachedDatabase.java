@@ -23,8 +23,7 @@ import edu.berkeley.gamesman.core.Configuration;
  */
 public class CachedDatabase extends MemoryDatabase {
 
-	private static int cacheSizeInMB = 5;  	 	// self-explanatory.
-	//private static int cacheSize = 8192;  	 	// self-explanatory.
+	private static int cacheSize = 4096 * 5000;	// Size of cache in bytes.
 	private static int pageSize = 4096; 		// Default Block Size = 4k.
 	private int bufferPoolSize;			 		// Number of pages that should fit into the cache.
 	
@@ -49,15 +48,13 @@ public class CachedDatabase extends MemoryDatabase {
 	 */
 	public CachedDatabase(String filename, Configuration conf) {
 		this.conf = conf;
-			this.initialize(filename);
-		//else super(filename, conf);
+		this.initialize(filename);
 	}
 	
 	@Override
 	public void initialize(String locations) {
 		// Initializing Variables
-		bufferPoolSize = cacheSizeInMB * 1024 * 1024 / pageSize;
-		//bufferPoolSize = cacheSize / pageSize;
+		bufferPoolSize = (cacheSize + pageSize - 1)/ pageSize; // ceil
 		clockPointer = 0;
 		open = true;
 		totalReadCount = 0;
@@ -71,30 +68,24 @@ public class CachedDatabase extends MemoryDatabase {
 			fileDescriptor = new RandomAccessFile(filePointer, "rw");
 		} catch (FileNotFoundException e) {
 			e.printStackTrace(); System.exit(0);
-		} catch (IOException e) {
-			e.printStackTrace(); System.exit(0);
 		} catch (Exception e) {
 			e.printStackTrace(); System.exit(0);
 		}
 				
 		// Initializing (big) internal variables
-		this.dirtyBit = new boolean[bufferPoolSize];
-		//for (int i = 0; i < bufferPoolSize; i ++ ) dirtyBit[i] = false;
-		this.pinBytes = new byte[bufferPoolSize];
-		//for (int i = 0; i < bufferPoolSize; i ++ ) pinBytes[i] = 0;
-		this.bufferPool = new byte[bufferPoolSize][pageSize];
+		dirtyBit = new boolean[bufferPoolSize];
+		pinBytes = new byte[bufferPoolSize];
+		bufferPool = new byte[bufferPoolSize][pageSize];
 		blockIDsArray = new int[bufferPoolSize];
-		this.blockIDs = new TreeMap<Integer, Integer>();
-		this.notUseful = new boolean[bufferPoolSize];
-		System.out.println("Buffer Pool Size: " + bufferPoolSize);
+		blockIDs = new TreeMap<Integer, Integer>();
+		notUseful = new boolean[bufferPoolSize];
 	}
 
 	@Override
 	public void flush() {
+		// Flush any dirty buffers
 		for (int i = 0; i < this.bufferPoolSize; i ++) {
-			if (dirtyBit[i])
-				this.unloadPage(i);
-		}
+			if (dirtyBit[i]) unloadPage(i); 	}
 		try {
 			//fileDescriptor.getChannel().force(true);
 			fileDescriptor.getFD().sync();
@@ -105,11 +96,11 @@ public class CachedDatabase extends MemoryDatabase {
 	
 	@Override
 	protected void ensureCapacity(long numBytes) {
+		if (numBytes > capacity)
+			capacity = numBytes;
 		try {
 			if (fileDescriptor.length() < numBytes)
 				fileDescriptor.setLength(numBytes);
-			//fileDescriptor.seek(numBytes);
-			//fileDescriptor.write(0);
 		} catch (IOException e) {
 			e.printStackTrace(); System.exit(0);
 		}
@@ -179,6 +170,8 @@ public class CachedDatabase extends MemoryDatabase {
 	 * @param blockID - ID of the block (page) on disk that is to be read.
 	 */
 	protected void loadPage(int blockID, int pageID) {
+		if ((blockID + 1) * pageSize >= capacity) // if the data might not be there
+			bufferPool[pageID] = new byte[pageSize]; // make sure to erase junk
 		try {
 			fileDescriptor.seek(blockID * pageSize);
 			fileDescriptor.read(bufferPool[pageID]);
@@ -196,6 +189,7 @@ public class CachedDatabase extends MemoryDatabase {
 	 */
 	protected void unloadPage(int pageID) {
 		int blockID = blockIDsArray[pageID];
+		this.blockIDs.remove(blockID);
 		dirtyBit[pageID] = false;
 		try {
 			fileDescriptor.seek(blockID * pageSize);
@@ -221,10 +215,12 @@ public class CachedDatabase extends MemoryDatabase {
 			notUseful[clockPointer] = true;
 			clockPointer = (clockPointer + 1) % bufferPoolSize;
 		} while (!(notUseful[clockPointer] && pinBytes[clockPointer] == 0));
+		if (dirtyBit[clockPointer])
+			unloadPage(clockPointer);
 		return clockPointer;
 	}
 	
-	/** print the staticstis */
+	/** print the statistics */
 	public void printStats() {
 		System.out.printf("+---------------+Statistics+----------------+\n");
 		float rhr = (readHitCount == 0) ? 0.0f : new Float(this.readHitCount * 100) / (totalReadCount);
@@ -243,8 +239,8 @@ public class CachedDatabase extends MemoryDatabase {
 	}
 	
 	@Override
-	public int getSize() {
-		return -1; //TODO: FIXME
+	public long getSize() {
+		return capacity;
 	}
 	
 	/**
@@ -258,17 +254,23 @@ public class CachedDatabase extends MemoryDatabase {
 		System.out.println("Available Processors: " + procNum);
 		System.out.println("Free Memory:  " + thisMachine.freeMemory() / 1024 / 1024 + "MB.");
 		System.out.println("Total Memory: " + thisMachine.totalMemory() / 1024 / 1024 + "MB.");
-		System.out.println("Cache Size: " + cacheSizeInMB + "MB.");
-		//System.out.println("Cache Size: " + cacheSize / 1024 / 1024 + "MB.");
+		//System.out.println("Cache Size: " + cacheSizeInMB + "MB.");
+		System.out.println("Cache Size: " + cacheSize);
+		
 
 		/* Defining Variables */
 		long startTime = (new Date()).getTime();
 		Random random = new Random();
-		int testSize = 11000;
-		int bitSize = 8; // Should be an odd number > 64 to test longs.
+		int testSize = 15000;
+		int bitSize = 1025; // Should be an odd number > 64 to test longs.
 		BigInteger[] BigInts = new BigInteger[testSize];
 		String filename = "CacheDB.TestFile.db";
+		File testFile = new File(filename);
+		if (testFile.exists()) {
+			testFile.delete();
+		}
 		CachedDatabase DB = new CachedDatabase(filename, null);
+		System.out.println("Number of Pages: " + DB.bufferPoolSize);
 		
 		/* Generating Random Numbers */
 		int bc;
@@ -278,9 +280,18 @@ public class CachedDatabase extends MemoryDatabase {
 			if (bc < bitSize)
 				BigInts[i] = BigInts[i].shiftLeft(bitSize - bc); }
 		
-		/* Writing numbers to database */
+		/* Writing numbers to database in random order */
+		java.util.TreeSet<Integer> visited = new java.util.TreeSet<Integer>();
+		java.util.Random randomness = new java.util.Random();
+		int index;
 		for (int i = 0; i < testSize; i ++) {
-			DB.putBits(i, bitSize, BigInts[i]);	}
+			index = randomness.nextInt(testSize);
+			while (visited.contains(index))
+				index = (index + 1) % testSize;
+			//System.out.printf("Want File[%d] = %s\n", index, BigInts[index].toString(16));
+			DB.putBits(index, bitSize, BigInts[index]);
+			visited.add(index);
+		}
 		
 		DB.close();
 		DB.printStats();
@@ -294,8 +305,9 @@ public class CachedDatabase extends MemoryDatabase {
 			temp = DB.getBits(i, bitSize);
 			if (temp.toString(2).equals(BigInts[i].toString(2)))
 				pass ++;
-			else
+			else {
 				fail ++;
+			}
 		}
 		long endTime = (new Date()).getTime() - startTime;
 		System.out.printf("Testing Complete in %d milli-seconds.\n", endTime);
