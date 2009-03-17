@@ -29,7 +29,7 @@ public class MemoryDatabase extends Database{
 	private byte[] memoryStorage;		// byte array to store the data
 	
 	/* DB Variables */
-	protected int capacity;				// the size of the data
+	protected long capacity;				// the size of the data
 	protected boolean open;				// whether this database is initialized 
 										// and not closed.
 	
@@ -49,7 +49,7 @@ public class MemoryDatabase extends Database{
 	 * Get the size of this DB in bytes.
 	 * @return size of the DB in bytes.
 	 */
-	public int getSize() {
+	public long getSize() {
 		return this.capacity;
 	}
 	
@@ -63,7 +63,7 @@ public class MemoryDatabase extends Database{
 		if (newCapacity > this.capacity) {
 			this.capacity = newCapacity;
 			byte[] temp = this.memoryStorage;
-			this.memoryStorage = new byte[this.capacity];
+			this.memoryStorage = new byte[(int) this.capacity];
 			for (int i = 0; i < temp.length; i ++) {
 				this.memoryStorage[i] = temp[i];	}
 			temp = null;
@@ -139,7 +139,7 @@ public class MemoryDatabase extends Database{
 	 */
 	private void initialize() {		
 		this.capacity = 2;
-		this.memoryStorage = new byte[this.capacity];
+		this.memoryStorage = new byte[(int) this.capacity];
 		this.open = true;
 		
 	}
@@ -264,7 +264,7 @@ public class MemoryDatabase extends Database{
 		long startTime = (new Date()).getTime();
 		Random random = new Random();
 		int testSize = 5000;
-		int bitSize = 66; // Should be an odd number > 64 to test longs.
+		int bitSize = 100; // Should be an odd number > 64 to test longs.
 		BigInteger[] BigInts = new BigInteger[testSize];
 		MemoryDatabase DB = new MemoryDatabase();
 		
@@ -276,9 +276,17 @@ public class MemoryDatabase extends Database{
 			if (bc < bitSize)
 				BigInts[i] = BigInts[i].shiftLeft(bitSize - bc); }
 		
-		/* Writing numbers to database */
+		/* Writing numbers to database in random order */
+		java.util.TreeSet<Integer> visited = new java.util.TreeSet<Integer>();
+		java.util.Random randomness = new java.util.Random();
+		int index;
 		for (int i = 0; i < testSize; i ++) {
-			DB.putBits(i, bitSize, BigInts[i]);	}
+			index = randomness.nextInt(testSize);
+			while (visited.contains(index))
+				index = (index + 1) % testSize;
+			DB.putBits(index, bitSize, BigInts[index]);
+			visited.add(index);
+		}
 		
 		/* Testing that it was written correctly */
 		BigInteger temp;
