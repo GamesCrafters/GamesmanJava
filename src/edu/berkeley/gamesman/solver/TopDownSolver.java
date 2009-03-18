@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 
 import edu.berkeley.gamesman.core.Configuration;
@@ -31,6 +32,12 @@ public class TopDownSolver extends Solver {
 	@Override
 	public WorkUnit prepareSolve(Configuration config, Game<Object> game) {
 		conf = config;
+		BigInteger hashSpace = game.lastHash().add(BigInteger.ONE);
+		Record defaultRecord = new Record(conf, PrimitiveValue.UNDECIDED);
+		for (BigInteger index : Util.bigIntIterator(hashSpace)) {
+			db.putRecord(index, defaultRecord);
+		}
+		db.flush();
 		TopDownSolverWorkUnit<Object> wu = new TopDownSolverWorkUnit<Object>(game,db);
 		return wu;
 	}
@@ -49,49 +56,45 @@ public class TopDownSolver extends Solver {
 			//HashMap<T, BigInteger> cache = new HashMap<T, BigInteger>();
 			HashSet<BigInteger> seen = new HashSet<BigInteger>();
 			
-			List<T> workList = new ArrayList<T>();
+			LinkedList<T> workList = new LinkedList<T>();
+			LinkedList<T> dependencies = new LinkedList<T>();
 			ArrayList<Record> recs = new ArrayList<Record>();
+			int maxRemoteness = 0;
 			for (T s : game.startingPositions()) {
 				workList.add(s);
 				seen.add(game.stateToHash(s));
 			}
-			while(!workList.isEmpty()){
+			while(!workList.isEmpty() || (dependencies != null && !dependencies.isEmpty())){
 				recs.clear();
-				T state = workList.remove(workList.size()-1);
+				T state;
+				if (workList.isEmpty()) {
+					workList = dependencies;
+					dependencies = null;
+				}
+				state = workList.removeLast();
 				Collection<Pair<String,T>> children = game.validMoves(state);
 				assert Util.debug(DebugFacility.SOLVER, "Looking at state " + game.stateToString(state));
-				assert Util.debug(DebugFacility.SOLVER, "Worklist is now " + Util.mapStateToString(game,workList));
+				//assert Util.debug(DebugFacility.SOLVER, "Worklist is now " + Util.mapStateToString(game,workList));
 				
-				long insertBefore = -1;
+				boolean insertBefore = false;
 				
 				for(Pair<String,T> child : children){
 					BigInteger loc = game.stateToHash(child.cdr);
 					Record r;
-					if(!seen.contains(loc)){
-						seen.add(loc);
-						
-						insertBefore = seen.size();
-						assert Util.debug(DebugFacility.SOLVER, "Not seen child state " + game.stateToString(child.cdr) + " before, coming back later...");
-						
-						workList.add(child.cdr);
-						continue;
-					}
-					try{ //TODO: make databases do something nicer than throw EOFExceptions
+
 					r = database.getRecord(loc);
 					if(r.get(RecordFields.VALUE) == PrimitiveValue.UNDECIDED.value()){
-						insertBefore = seen.size();
+						assert Util.debug(DebugFacility.SOLVER, "Not seen child state " + game.stateToString(child.cdr) + " before, coming back later...");
+						insertBefore = true;
 						workList.add(child.cdr);
-						continue;
-					}
-					recs.add(r);
-					}catch(Util.FatalError e){ // Hope this is an EOFException!
-						continue;
+					} else {
+						recs.add(r);
 					}
 				}
 				
-				if(insertBefore != -1){
+				if(insertBefore != false){
 					assert Util.debug(DebugFacility.SOLVER, "One of the children hasn't been solved yet, revisiting " + game.stateToString(state) + " later");
-					workList.add(0, state);
+					dependencies.add(state);
 					continue;
 				}
 				
@@ -101,8 +104,15 @@ public class TopDownSolver extends Solver {
 				if((!prim.equals(PrimitiveValue.UNDECIDED)) || children.isEmpty()){
 					assert Util.debug(DebugFacility.SOLVER, "Getting primitive value for state " + game.stateToString(state) + ": " + prim);
 					next = new Record(conf,prim);
+					next.set(RecordFields.SCORE, game.primitiveScore(state));
 				}else{
 					next = Record.combine(conf, recs);
+					int remoteness = (int) next.get(RecordFields.REMOTENESS);
+					if (remoteness > maxRemoteness) {
+						System.out.println("Found remoteness: "+remoteness);
+						maxRemoteness = remoteness;
+					}
+					assert Util.debug(DebugFacility.SOLVER, "COMBINE "+recs+" => "+next+"; children size = "+children.size());
 				}
 				database.putRecord(loc, next);
 				assert Util.debug(DebugFacility.SOLVER, "Solved state \n" + game.displayState(state) + " to " + next);

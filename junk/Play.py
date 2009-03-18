@@ -20,7 +20,7 @@ class GameState:
         self.db = db
         
     def __str__(self):
-        buf = ""
+        buf = str(self.hash())
         buf += "( " + self.game.stateToString(self.state) + " )"
         buf += self.game.displayState(self.state)
         if self.db is not None:
@@ -143,9 +143,12 @@ def moveloop(stateRef=None):
         print "Avaliable moves:"
         stateRef[0].printMoves()
         m = raw_input("Which move to take? ")
-        if len(m) == 0: return
+        if len(m) == 0:
+            print "Interrupt!"
+            print "Current state is: ", stateRef[0]
+            return
         stateRef[0] += m
-    print "Game is over!"
+    print "Game is over! Final state is:", stateRef[0]
 
 def playFromState(state):
     arr = [state]

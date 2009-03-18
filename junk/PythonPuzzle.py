@@ -22,7 +22,9 @@ class PythonPuzzle(Game):
 			if key not in self.config:
 				self.config.setProperty(key, str(defaults[key]))
 		self.gameinst = self.gameclass.unserialize(self.config)
-		self.gameinst = self.gameclass.unserialize(self.config)
+
+	def isPuzzle(self):
+		return True
 
 	def find_solutions(self):
 		puzzleQueue = []
@@ -56,6 +58,9 @@ class PythonPuzzle(Game):
 
 	def validMoves(self,state):
 		return [Pair(str(x), state.do_move(x)) for x in state.generate_moves()]
+
+	def primitiveScore(self,state):
+		return state.primitive_score()
 
 	def primitiveValue(self,state):
 		if state.is_a_solution():
@@ -113,7 +118,7 @@ class Solver:
 
 		debugOpts = EnumSet.noneOf(DebugFacility)
 		debugOpts.add(DebugFacility.CORE)
-		debugOpts.add(DebugFacility.SOLVER)
+		# debugOpts.add(DebugFacility.SOLVER)
 		Util.enableDebuging(debugOpts)
 
 		props = Properties()
@@ -130,13 +135,17 @@ class Solver:
 		self.conf = Configuration(props, True)
 		self.gm = PythonPuzzle(self.conf)
 		self.hasher = hasherclass(self.conf)
+		self.solverclass = solverclass
 		self.conf.initialize(self.gm, self.hasher)
+		self.master = None
 
+	def initializeDB(self):
 		self.master = LocalMaster()
-		self.master.initialize(self.conf,solverclass,BlockDatabase)
-
+		self.master.initialize(self.conf,self.solverclass,BlockDatabase)
 	def solve(self):
+		self.delete()
 		try:
+			self.initializeDB()
 			self.master.run(False)
 		except:
 			self.delete()
@@ -153,6 +162,8 @@ class Solver:
 			print e
 
 	def getDatabase(self):
+		if not self.master:
+			self.initializeDB()
 		return self.master.database
 
 	def __getitem__(self, state):

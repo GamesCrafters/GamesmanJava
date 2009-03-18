@@ -274,7 +274,7 @@ public final class Record {
 				map.get(rf).add(r.get(rf));
 			}
 		}
-		boolean isPuzzle = false; // FIXME: hardcoded; Don't want to lookup in Configuration each time.
+		boolean isPuzzle = conf.getGame().isPuzzle();
 
 		PrimitiveValue pv; // the value as if we were playing a game.
 		if(!conf.getStoredFields().containsKey(RecordFields.VALUE))
@@ -300,12 +300,12 @@ public final class Record {
 						rec.set(RecordFields.REMOTENESS, max+1);
 						break;
 					case LOSE:
-						rec.set(rf, Collections.min(map.get(rf)) + 1);
+						rec.set(rf, Collections.max(map.get(rf)) + 1);
 						break;
 					case WIN:
 						int min = Integer.MAX_VALUE;
 						for(Record r : vals)
-							if(r.get() == PrimitiveValue.LOSE)
+							if(r.get() == (isPuzzle?PrimitiveValue.WIN:PrimitiveValue.LOSE))
 								min = (int) Math.min(min, r.get(RecordFields.REMOTENESS));
 						rec.set(RecordFields.REMOTENESS, min+1);
 						break;

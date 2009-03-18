@@ -64,6 +64,25 @@ public abstract class Game<State> {
 	}
 	
 	/**
+	 * Given a primitive board state, return how good it is.
+	 * Return 0 if any winning/losing position is equal.
+	 * Otherwise, return the value of this endgame such that the best
+	 * possible ending state is 0 and worse states are higher.
+	 * @param pos The primitive State
+	 * @return the score of this position
+	 */
+	public int primitiveScore(State pos) {
+		return 0;
+	}
+	
+	/**
+	 * @return whether this is a puzzle--this is used to determine if move values should flip each turn.
+	 */
+	public boolean isPuzzle() {
+		return false;
+	}
+
+	/**
 	 * Given a board state return its primitive "value".
 	 * Usually this value includes WIN, LOSE, and perhaps TIE
 	 * Return UNDECIDED if this is not a primitive state

@@ -17,7 +17,11 @@ public enum RecordFields {
 	 * How many moves to the closest ending state
 	 */
 	REMOTENESS(6),
-	SCORE(6);
+	/**
+	 * The best possible ending position you can get.
+	 * @see Game#primitiveScore
+	 */
+	SCORE(4);
 	
 	
 	private int bs;

@@ -9,10 +9,12 @@ import java.io.UnsupportedEncodingException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URLDecoder;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -37,22 +39,9 @@ public class JSONInterface extends GamesmanApplication {
 	 */
 	public JSONInterface() {}
 	
-	private Configuration conf;
+	Configuration conf;
 	@Override
 	public int run(Configuration conf) {
-		this.conf = conf;
-		assert Util.debug(DebugFacility.JSON, "Loading JSON server...");
-		
-		ServerSocket ssock = null;
-		int port = 0;
-		try {
-			port = conf.getInteger("gamesman.server.jsonport", 4242);
-			ssock = new ServerSocket(port);
-		} catch (NumberFormatException e) {
-			Util.fatalError("Port must be an integer",e);
-		} catch (IOException e) {
-			Util.fatalError("Could not listen on port",e);
-		}
 		
 		try {
 			db = Util.typedInstantiate("edu.berkeley.gamesman.database."+conf.getProperty("gamesman.database","BlockDatabase"),
@@ -61,6 +50,27 @@ public class JSONInterface extends GamesmanApplication {
 			Util.fatalError("Failed to create database",e1);
 		}
 		db.initialize(conf.getProperty("gamesman.db.uri"), null);
+		this.conf = db.getConfiguration();
+		int port = 0;
+		try {
+			port = conf.getInteger("gamesman.server.jsonport", 4242);
+		} catch (NumberFormatException e) {
+			Util.fatalError("Port must be an integer",e);
+		}
+		reallyRun(port);
+		return 0;
+	}
+	
+	public void reallyRun(int port) {
+		assert Util.debug(DebugFacility.JSON, "Loading JSON server...");
+		
+		ServerSocket ssock;
+		try {
+			ssock = new ServerSocket(port);
+		} catch (IOException e) {
+			Util.fatalError("Could not listen on port "+port,e);
+			return;
+		}
 		conf = db.getConfiguration();
 		
 		// Want to always print this out.
@@ -77,9 +87,45 @@ public class JSONInterface extends GamesmanApplication {
 			t.setName("JSONThread "+s);
 			t.start();
 		}
-		return 0;
 	}
 	
+	public static void main(String[] args) {
+		boolean verbose = false;
+		int i = 0;
+		if (args.length > 0 && args[0].equals("-v")) {
+			verbose = true;
+			i = 1;
+		}
+		if (args.length < 2+i) {
+			Util.fatalError("Usage: JSONInterface [-v] file:///.../database.db  portnum  [DatabaseClass]");
+		}
+		String dbClass = "BlockDatabase";
+		String dbURI = args[i];
+		int port = Integer.valueOf(args[i+1]);
+		if (args.length > i+2) {
+			dbClass = args[i+2];
+		}
+		if (verbose) {
+			EnumSet<DebugFacility> debugOpts = EnumSet.noneOf(DebugFacility.class);
+			ClassLoader cl = ClassLoader.getSystemClassLoader();
+			cl.setDefaultAssertionStatus(false);
+			debugOpts.add(DebugFacility.JSON);
+			DebugFacility.JSON.setupClassloader(cl);
+			debugOpts.add(DebugFacility.CORE);
+			DebugFacility.CORE.setupClassloader(cl);
+			Util.enableDebuging(debugOpts);
+		}
+		JSONInterface ji = new JSONInterface();
+		try {
+			ji.db = Util.typedInstantiate("edu.berkeley.gamesman.database."+dbClass,Database.class);
+		} catch (ClassNotFoundException e1) {
+			Util.fatalError("Failed to create database",e1);
+			return;
+		}
+		ji.db.initialize(dbURI, null);
+		ji.conf = ji.db.getConfiguration();
+		ji.reallyRun(port);
+	}
 	
 	private class JSONThread<S> extends Thread {
 
@@ -155,12 +201,14 @@ public class JSONInterface extends GamesmanApplication {
 							throw new RuntimeException("No board passed!");
 						}
 						S state = g.stringToState(board);
+						JSONArray responseArray = new JSONArray();
 						for(Pair<String,S> next : g.validMoves(state)){
 							JSONObject entry = new JSONObject();
 							entry.put("move", next.car);
 							fillJSONFields(entry, next.cdr);
-							response.accumulate("response", entry);
+							responseArray.put(entry);
 						}
+						response.put("response", responseArray);
 						response.put("status","ok");
 					} else if (method.equals("getMoveValue")) {
 						String board = j.get("board");
@@ -176,13 +224,13 @@ public class JSONInterface extends GamesmanApplication {
 				} catch (Exception e) {
 					try {
 						response.put("status", "error");
+						e.printStackTrace();
 						response.put("msg", "An exception was generated: "+e);
 					} catch (JSONException e1) {
 						Util.warn("Could not send an error response to client: "+e);
 						break;
 					}
 				}
-				
 				w.println(response.toString());
 				w.flush();
 			}
