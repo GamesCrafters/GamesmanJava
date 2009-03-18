@@ -66,8 +66,6 @@ public final class C4UniformPieces {
 			
 			for(int s = 0; s < sum; s++)
 				init(board,off,mypcs,s, s);
-			System.out.println(Arrays.toString(numpiecestarts));
-			System.out.println(Arrays.toString(table));
 			task.complete();
 			return;
 		}

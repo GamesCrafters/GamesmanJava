@@ -41,7 +41,7 @@ public final class Record {
 	/*
 	 *  These three arrays are indexed by the physical on-disk
 	 *  ordering of the Record.  They store the type of the field
-	 *  (e.g. [Primitive value,Remotesness]), followed by the length
+	 *  (e.g. [Primitive value,Remoteness]), followed by the length
 	 *  of the field in bits (e.g. [2,6]), and finally the values
 	 *  (e.g. [Win,3] is Win in 3 moves)
 	 */

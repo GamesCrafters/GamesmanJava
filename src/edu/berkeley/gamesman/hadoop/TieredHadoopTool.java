@@ -37,7 +37,7 @@ public class TieredHadoopTool<S> extends Configured implements Tool {
 	
 	private TieredGame<S> game;
 	
-	public static final String OUTPUT_PREFIX = "gjhadoop_";
+	public static final String OUTPUT_PREFIX = "/scratch/scs_hadoop/gjhadoop_";
 	
 	public int run(String[] args) throws Exception {
 		Configuration conf = getConf();
@@ -100,7 +100,7 @@ public class TieredHadoopTool<S> extends Configured implements Tool {
 		job.setOutputFormat(HadoopDBOutputFormat.class);
 		FileOutputFormat.setOutputPath(job, new Path(OUTPUT_PREFIX+String.format("%020d_%020d", start, end)));
 		job.setMapperClass(TierMapReduce.class);
-		job.setReducerClass(TierMapReduce.class);
+		job.setReducerClass(null);
 
 		JobClient.runJob(job);
 		return;

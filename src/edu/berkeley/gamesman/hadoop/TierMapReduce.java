@@ -19,6 +19,7 @@ import org.apache.hadoop.mapred.Reporter;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Hasher;
+import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.hadoop.util.BigIntegerWritable;
@@ -69,7 +70,7 @@ public class TierMapReduce<S> implements Mapper<BigIntegerWritable, NullWritable
 		//db.close();
 	}
 	
-	final BigInteger minusone = BigInteger.ZERO.subtract(BigInteger.ONE);
+	final private BigInteger minusone = BigInteger.ZERO.subtract(BigInteger.ONE);
 
 	public void map(BigIntegerWritable position, NullWritable nullVal,
 			OutputCollector<BigIntegerWritable, RecordWritable> outRec,
@@ -82,14 +83,17 @@ public class TierMapReduce<S> implements Mapper<BigIntegerWritable, NullWritable
 		
 		S myState = game.hashToState(position.get());
 		
-		for(Pair<String,S> movep : game.validMoves(myState)){
-			seenOne = true;
-			vals.add(db.getRecord(game.stateToHash(movep.cdr)));
+		PrimitiveValue pv = game.primitiveValue(myState);
+		if(pv.equals(PrimitiveValue.UNDECIDED)){
+			for(Pair<String,S> movep : game.validMoves(myState)){
+				seenOne = true;
+				vals.add(db.getRecord(game.stateToHash(movep.cdr)));
+			}
 		}
 		if(seenOne){
 			record = Record.combine(config,vals);
 		}else{
-			record = new Record(config,game.primitiveValue(myState));
+			record = new Record(config,pv);
 		}
 		
 		//db.putRecord(position.get(),record);
@@ -105,6 +109,8 @@ public class TierMapReduce<S> implements Mapper<BigIntegerWritable, NullWritable
 			Iterator<RecordWritable> record,
 			OutputCollector<BigIntegerWritable, RecordWritable> out,
 			Reporter rep) throws IOException {
-		out.collect(position,record.next());
+		RecordWritable r = record.next();
+		//System.out.println("write "+position+": "+r.get());
+		out.collect(position,r);
 	}
 }

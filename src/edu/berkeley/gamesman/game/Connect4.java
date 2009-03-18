@@ -123,7 +123,6 @@ public class Connect4 extends TieredGame<C4Board> {
 				return cur <= numberOfTiers();
 			}
 			public Integer next() {
-				System.out.println(tier+" depends on "+cur);
 				return cur++;
 			}
 			public void remove() {

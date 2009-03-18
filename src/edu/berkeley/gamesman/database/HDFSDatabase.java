@@ -55,7 +55,7 @@ public final class HDFSDatabase extends Database {
 		
 		assert loc.compareTo(r.start) >= 0 && loc.compareTo(r.end) <= 0;
 		Record rec = Record.read(conf, r.bp, loc.subtract(r.start).longValue());
-		System.out.println("read "+loc+" -> "+rec);
+		//System.out.println("read "+loc+" -> "+rec);
 		return rec;
 	}
 
@@ -64,7 +64,7 @@ public final class HDFSDatabase extends Database {
 		dest = new Path(uri);
 		try {
 			fs = dest.getFileSystem(TierMapReduce.jobconf);
-			Path searchPath = new Path(dest,"../"+TieredHadoopTool.OUTPUT_PREFIX+"*");
+			Path searchPath = new Path(TieredHadoopTool.OUTPUT_PREFIX+"*");
 			FileStatus[] candidates = fs.globStatus(searchPath);
 			ranges = new ArrayList<BigIntRange>();
 			BigInteger leastStart = null;
