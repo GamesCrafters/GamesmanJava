@@ -303,7 +303,11 @@ public final class Record {
 						rec.set(RecordFields.REMOTENESS, max+1);
 						break;
 					case LOSE:
-						rec.set(rf, Collections.max(map.get(rf)) + 1);
+						if (isPuzzle) {
+							rec.set(rf, Collections.max(map.get(rf)) + 1);
+						} else {
+							rec.set(rf, Collections.min(map.get(rf)) + 1);
+						}
 						break;
 					case WIN:
 						int min = Integer.MAX_VALUE;
