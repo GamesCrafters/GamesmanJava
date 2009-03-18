@@ -5,4 +5,4 @@ gamesman.game.pieces = 4
 gamesman.hasher = PerfectConnect4Hash
 gamesman.solver = TierSolver
 gamesman.db.uri = file:///tmp/database45.db
-gamesman.database = MemoryDatabase
+gamesman.database = BlockDatabase

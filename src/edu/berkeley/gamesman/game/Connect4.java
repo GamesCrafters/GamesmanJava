@@ -71,7 +71,7 @@ public class Connect4 extends TieredGame<C4Board> {
 
 	@Override
 	public C4Board stringToState(String pos) {
-		C4Piece[][] board = new C4Piece[gameHeight][gameWidth];
+		C4Piece[][] board = new C4Piece[gameWidth][gameHeight];
 		for (int row = 0; row < gameHeight; row++) {
 			for (int col = 0; col < gameWidth; col++) {
 				board[col][row] = C4Piece.toPiece(pos.charAt(Util.index(row,
