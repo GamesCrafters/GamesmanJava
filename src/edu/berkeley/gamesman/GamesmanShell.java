@@ -79,7 +79,11 @@ public class GamesmanShell {
 			// Change module
 			if (coms[i].equals("cm")) {
 				i++;
-				changeModule(coms[i], true);
+				if (i < coms.length)
+					changeModule(coms[i], true);
+				else
+					System.out.println("Incorrect usage of \"cm\": " +
+							"did not specify a module to change to.");
 			}
 			// Get help
 			else if ("help".startsWith(coms[i]))
