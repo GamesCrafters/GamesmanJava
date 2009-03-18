@@ -22,6 +22,7 @@ public class SolverModule extends UIModule {
 	}
 	
 	public void quit() {
+		super.quit();
 	}
 	
 	protected void u_solve(ArrayList<String> args) {

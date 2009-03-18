@@ -106,5 +106,6 @@ public abstract class UIModule {
 		return name;
 	}
 	
-	public abstract void quit();
+	public void quit() {
+	}
 }

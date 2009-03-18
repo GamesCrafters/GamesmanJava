@@ -19,7 +19,7 @@ public class ConfigurationModule extends UIModule {
 	private static File confFile;
 	private static ArrayList<Configuration> confList;
 	
-	public ConfigurationModule(Configuration c) throws ClassNotFoundException {
+	public ConfigurationModule(Configuration c) {
 		super(c, "conf");
 		
 		requiredPropKeys = new ArrayList<String>();
@@ -37,6 +37,12 @@ public class ConfigurationModule extends UIModule {
 		helpLines.setProperty("viewConfigurations",
 				"List all the configurations available from the gamesman-java.conf file.");
 		
+		helpLines.setProperty("saveConfigurations",
+				"Save all configurations to the gamesman-java.conf file.");
+		
+		helpLines.setProperty("editConfigurations", 
+				"Add, delete, change, or view the properties of the current configuration.");
+		
 		confList = new ArrayList<Configuration>();
 		
 		if (confFile == null)
@@ -52,6 +58,7 @@ public class ConfigurationModule extends UIModule {
 	}
 	
 	public void quit() {
+		System.out.print("Exiting conf module... ");
 		proccessCommand("s");
 	}
 	
@@ -70,8 +77,10 @@ public class ConfigurationModule extends UIModule {
 					System.out.print(conf.getProperty("conf.name", "NONAME") + "\t");
 				System.out.println();
 			}
-			else if (matchingConfs.size() == 1)
+			else if (matchingConfs.size() == 1) {
 				GamesmanShell.setConfiguration(matchingConfs.get(0));
+				conf = matchingConfs.get(0);
+			}
 			else
 				System.out.println("No configuration beginning with " + confName + " found.");
 		}
@@ -109,9 +118,9 @@ public class ConfigurationModule extends UIModule {
 			String key = "", val = "";
 			
 			while (true) {
-				System.out.print("Enter a property key (\"gamesman.\" is assumed) (enter \"end\" to stop): ");
+				System.out.print("Enter a property key (\"gamesman.\" is assumed) (enter \"e\" to stop): ");
 				key = "gamesman." + in.readLine().trim();
-				if (!key.equals("gamesman.end")) {					
+				if (!key.equals("gamesman.e")) {					
 					System.out.print("Enter a corresponding value for " + key + ": ");
 					val = in.readLine().trim();
 					newConfProps.setProperty(key, val);
@@ -167,20 +176,18 @@ public class ConfigurationModule extends UIModule {
 				
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 		String com = "";
-		while (!com.toLowerCase().startsWith("end")) {
-			System.out.print("Enter a command (addProperty, deleteProperty, " +
-					"changeProperty, viewProperties, end): ");
+		while (!com.toLowerCase().equals("e")) {
+			System.out.print("Enter a command (add, delete, " +
+					"change, view, e to exit): ");
 			try {
 				com = in.readLine().trim();
 			
 				if ("addproperty".startsWith(com.toLowerCase())) {
 					System.out.print("Enter a property key to be added (\"gamesman.\" is assumed): ");
 					String key = "gamesman." + in.readLine().trim();
-					if (!key.equals("gamesman.end")) {					
-						System.out.print("Enter a corresponding value for " + key + ": ");
-						String val = in.readLine().trim();
-						matchingConf.setProperty(key, val);
-					}					
+					System.out.print("Enter a corresponding value for " + key + ": ");
+					String val = in.readLine().trim();
+					matchingConf.setProperty(key, val);					
 				}
 				else if ("deleteproperty".startsWith(com.toLowerCase())) {
 					System.out.print("Enter a property key to be deleted (\"gamesman.\" is assumed): ");
@@ -189,12 +196,9 @@ public class ConfigurationModule extends UIModule {
 				}
 				else if ("changeproperty".startsWith(com.toLowerCase())) {
 					System.out.print("Enter a property key whose value is to be changed (\"gamesman.\" is assumed): ");
-					String key = "gamesman." + in.readLine().trim();
-					if (!key.equals("gamesman.end")) {					
-						System.out.print("Enter a new value for " + key + ": ");
-						String val = in.readLine().trim();
-						matchingConf.setProperty(key, val);
-					}					
+					String key = "gamesman." + in.readLine().trim();					
+					System.out.print("Enter a new value for " + key + ": ");
+					String val = in.readLine().trim();				
 				}
 				else if ("viewproperties".startsWith(com.toLowerCase())) {
 					proccessCommand("v(" + confName + ")");				
@@ -224,13 +228,13 @@ public class ConfigurationModule extends UIModule {
 	}
 	
 	protected void u_saveConfigurations(ArrayList<String> args) {
-		System.out.println("Saving all configurations to gamesman-java.conf file.");
+		System.out.print("(Saving all configurations to gamesman-java.conf file... ");
 		confFile.delete();
 		confFile = new File("gamesman-java.conf");
 		for (Configuration c : confList) {
 			addConfigurationToFile(c);
 		}
-		System.out.println("Done saving.");
+		System.out.println("Done.)");
 	}
 	
 	private void addConfigurationToFile(Configuration c) {
@@ -252,7 +256,7 @@ public class ConfigurationModule extends UIModule {
 		}
 	}
 	
-	private void loadConfigurationsFromFile() throws ClassNotFoundException {
+	private void loadConfigurationsFromFile() {
 		BufferedReader in = null;
 		try {
 			in = new BufferedReader(new FileReader(confFile));
@@ -270,7 +274,11 @@ public class ConfigurationModule extends UIModule {
 				do {
 					if (line.trim().length() != 0) {
 						if (line.charAt(0) == '{') {
-							conf = new Configuration(new Properties(), true);
+							try {
+								conf = new Configuration(new Properties(), true);
+							} catch (ClassNotFoundException e) {
+								Util.fatalError("failed to load configuration", e);
+							}
 							propStrings = new ArrayList<String>();
 						}
 						else if (line.charAt(0) == '}') {
@@ -293,12 +301,16 @@ public class ConfigurationModule extends UIModule {
 		}
 	}
 	
-	private void createDefaultConfiguration() throws ClassNotFoundException {
+	private void createDefaultConfiguration(){
 		System.out.println("Creating default configuration with no properties but name and default module.");
 		Properties defConfProps = new Properties();
 		defConfProps.setProperty("conf.name", "default");
 		defConfProps.setProperty("conf.defaultuimodule", "conf");
-		confList.add(new Configuration(defConfProps, true));
+		try {
+			confList.add(new Configuration(defConfProps, true));
+		} catch (ClassNotFoundException e) {
+			Util.fatalError("failed to load configuration", e);
+		}
 		proccessCommand("s");
 	}
 }
