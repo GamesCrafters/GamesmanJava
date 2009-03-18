@@ -30,6 +30,7 @@ public abstract class UIModule {
 	 * and their descriptions.
 	 */
 	public void getHelp() {
+		System.out.println("Use \"cm <module name>\" to change module.");
 		System.out.println("Commands for " + name + " module:");
 		Method[] methods = this.getClass().getDeclaredMethods();
 		ArrayList<String> methodNames = new ArrayList<String>();
