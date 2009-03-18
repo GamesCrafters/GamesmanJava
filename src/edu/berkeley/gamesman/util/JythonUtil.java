@@ -12,7 +12,7 @@ import org.python.util.PythonInterpreter;
  * Utility function to load classes from .py files.
  */
 public class JythonUtil {
-	static String[] globalPath = {"jython_lib","junk","jobs"};
+	static String[] globalPath = {"jython_lib","junk","jobs","../GamesmanWeb/PythonPuzzles"};
 	static {
 		PythonInterpreter.initialize(System.getProperties(), null, new String[0]);
 		for (String pathElement : globalPath) {
