@@ -199,7 +199,10 @@ public final class Record {
 	 * @param value the value to store
 	 */
 	public final void set(final RecordFields field, final long value) {
-		fieldValues[sf.get(field).car] = value;
+		Pair<Integer,Integer> thisfield = sf.get(field);
+		if (thisfield != null) {
+			fieldValues[thisfield.car] = value;
+		}
 		assert Util.debug(DebugFacility.RECORD, "Record sets " + field + " to " + value);
 	}
 

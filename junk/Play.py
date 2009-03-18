@@ -60,7 +60,12 @@ class GameState:
         if type(move) == str and move[0]=='+':
             move = int(move[1:])
         if type(move) == int:
-            return self.moves()[move][1]
+            mvs = self.moves()
+            if move >= 0 and move < len(mvs):
+                return mvs[move][1]
+            else:
+                print "Invalid move number: " + str(move)
+                return self
         nextState = self.game.doMove(self.state, move)
         if nextState == None:
             print "Invalid move: " + move
