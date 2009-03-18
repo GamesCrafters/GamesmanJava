@@ -54,8 +54,8 @@ public class PermutationHash {
 		PermutationHash ph = new PermutationHash(4, true);
 		for(BigInteger h : Util.bigIntIterator(ph.maxHash())) {
 			Integer[] unhash1 = Util.toArray(ph.unhash(h));
-//			System.out.print(Arrays.toString(unhash1));
-//			System.out.println(" " + ph.hash(unhash1) + " " + ph.isEven(unhash1));
+			System.out.print(Arrays.toString(unhash1));
+			System.out.println(" " + ph.hash(unhash1) + " " + ph.isEven(unhash1));
 			assert ph.isEven(unhash1);
 			assert ph.hash(unhash1).equals(h);
 		}

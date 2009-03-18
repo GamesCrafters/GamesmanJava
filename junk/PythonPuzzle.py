@@ -22,6 +22,7 @@ class PythonPuzzle(Game):
 			if key not in self.config:
 				self.config.setProperty(key, str(defaults[key]))
 		self.gameinst = self.gameclass.unserialize(self.config)
+		self.gameinst = self.gameclass.unserialize(self.config)
 
 	def find_solutions(self):
 		puzzleQueue = []
@@ -54,7 +55,7 @@ class PythonPuzzle(Game):
 		return sols
 
 	def validMoves(self,state):
-		return [Pair(x, state.do_move(x)) for x in state.generate_moves()]
+		return [Pair(str(x), state.do_move(x)) for x in state.generate_moves()]
 
 	def primitiveValue(self,state):
 		if state.is_a_solution():
@@ -117,8 +118,9 @@ class Solver:
 
 		props = Properties()
 		props.setProperty("gamesman.db.uri","file:///tmp/python.db")
-		props.setProperty("gamesman.hasher",hasherclass.getName())
-		props.setProperty("gamesman.game","PythonPuzzle")
+		if "gamesman.hasher" not in props:
+			props.setProperty("gamesman.hasher",hasherclass.getName())
+		props.setProperty("gamesman.game","PythonPuzzle.py")
 		props.setProperty("gamesman.debug.SOLVER","true")
 		props.setProperty("gamesman.fields","VALUE,REMOTENESS")
 		for opt in options:
@@ -153,7 +155,7 @@ class Solver:
 	def getDatabase(self):
 		return self.master.database
 
-	def getGameState(self, state):
+	def __getitem__(self, state):
 		if type(state) == str:
 			st = self.gm.stringToState(state)
 		elif type(state) == int or type(state) == long:
@@ -161,4 +163,10 @@ class Solver:
 		else:
 			raise ValueError(str(type(state))+" is not str or long")
 		return Play.GameState(self.gm, st, self.getDatabase())
+
+	def game(self):
+		return self.gm.gameinst
+
+	def gameclass(self):
+		return self.gm.gameclass
 

@@ -81,11 +81,11 @@ public final class GamesmanMain extends GamesmanApplication {
 
 		try {
 //			g = Util.typedForName("edu.berkeley.gamesman.game." + gameName);
-			s = Util.typedForName("edu.berkeley.gamesman.solver." + solverName);
+			s = Util.typedForName("edu.berkeley.gamesman.solver." + solverName, Solver.class);
 //			h = Util.typedForName("edu.berkeley.gamesman.hasher." + hasherName);
-			d = Util.typedForName("edu.berkeley.gamesman.database." + databaseName);
+			d = Util.typedForName("edu.berkeley.gamesman.database." + databaseName, Database.class);
 		} catch (Exception e) {
-			System.err.println("Fatal error in preloading: " + e);
+			Util.fatalError("Fatal error in preloading", e);
 			return 1;
 		}
 		
@@ -177,9 +177,15 @@ public final class GamesmanMain extends GamesmanApplication {
 		if (conf.getProperty("secret") == null)
 			Util.fatalError("You must provide a shared secret to protect the server with -s or --secret");
 		
-		final DirectoryFilerServer serv = new DirectoryFilerServer(conf.getProperty("rootDirectory"),
+		final DirectoryFilerServer serv;
+		try {
+			serv = new DirectoryFilerServer(conf.getProperty("rootDirectory"),
 				conf.getInteger("port", 4263),
 				conf.getProperty("secret"));
+		} catch (ClassNotFoundException e1) {
+			Util.fatalError("failed to load configuration", e1);
+			return;
+		}
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable(){
 			public void run() {

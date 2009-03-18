@@ -77,7 +77,11 @@ public class DatabaseModule extends UIModule {
 	 */
 	private void openDatabase() {
 		proccessCommand("i");
-		db = conf.openDatabase();
+		try {
+			db = conf.openDatabase();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -145,10 +149,8 @@ public class DatabaseModule extends UIModule {
 	 * initializes the game and hasher property
 	 * @param args we don't check for any args given.
 	 */
-	protected void u_initializeConfiguration(ArrayList<String> args) {
-		Game<?> g = Util.typedInstantiateArg("edu.berkeley.gamesman.game."+conf.getProperty("gamesman.game"), conf);
-		Hasher<?> h = Util.typedInstantiateArg("edu.berkeley.gamesman.hasher."+conf.getProperty("gamesman.hasher"), conf);
-		conf.initialize(g, h);
+	protected void u_initializeConfiguration(ArrayList<String> args) throws ClassNotFoundException {
+		conf.initialize(conf.getProperty("gamesman.game"), conf.getProperty("gamesman.hasher"));
 		
 	}
 	

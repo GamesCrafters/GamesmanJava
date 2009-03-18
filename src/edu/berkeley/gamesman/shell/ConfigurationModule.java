@@ -19,7 +19,7 @@ public class ConfigurationModule extends UIModule {
 	private static File confFile;
 	private static ArrayList<Configuration> confList;
 	
-	public ConfigurationModule(Configuration c) {
+	public ConfigurationModule(Configuration c) throws ClassNotFoundException {
 		super(c, "conf");
 		
 		requiredPropKeys = new ArrayList<String>();
@@ -123,7 +123,11 @@ public class ConfigurationModule extends UIModule {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		confList.add(new Configuration(newConfProps, true));		
+		try {
+			confList.add(new Configuration(newConfProps, true));		
+		} catch (ClassNotFoundException e) {
+			Util.fatalError("failed to load configuration",e);
+		}
 	}
 	
 	protected void u_editConfigurations(ArrayList<String> args) {
@@ -248,7 +252,7 @@ public class ConfigurationModule extends UIModule {
 		}
 	}
 	
-	private void loadConfigurationsFromFile() {
+	private void loadConfigurationsFromFile() throws ClassNotFoundException {
 		BufferedReader in = null;
 		try {
 			in = new BufferedReader(new FileReader(confFile));
@@ -289,7 +293,7 @@ public class ConfigurationModule extends UIModule {
 		}
 	}
 	
-	private void createDefaultConfiguration() {
+	private void createDefaultConfiguration() throws ClassNotFoundException {
 		System.out.println("Creating default configuration with no properties but name and default module.");
 		Properties defConfProps = new Properties();
 		defConfProps.setProperty("conf.name", "default");

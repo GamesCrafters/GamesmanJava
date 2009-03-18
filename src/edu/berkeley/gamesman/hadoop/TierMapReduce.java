@@ -48,10 +48,14 @@ public class TierMapReduce<S> implements Mapper<BigIntegerWritable, NullWritable
 		final String base = "edu.berkeley.gamesman.";
 		//Properties props = new Properties(System.getProperties());
 
-		config = Configuration.load(Util.decodeBase64(conf.get("configuration_data")));
-		jobconf = conf;
-		
-		db = Util.typedInstantiate(base+"database."+config.getProperty("gamesman.database"));
+		try {
+			config = Configuration.load(Util.decodeBase64(conf.get("configuration_data")));
+			jobconf = conf;
+			db = Util.typedInstantiate(base+"database."+config.getProperty("gamesman.database"), Database.class);
+		} catch (ClassNotFoundException e) {
+			Util.fatalError("failed to load configuration class!", e);
+			return;
+		}
 		
 		//db.initialize(conf.get("dburi"),config);
 		db.initialize(FileOutputFormat.getOutputPath(conf).toString(), config);

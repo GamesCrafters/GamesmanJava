@@ -22,11 +22,11 @@ class GameState:
     def __str__(self):
         buf = ""
         buf += "( " + self.game.stateToString(self.state) + " )"
-        buf += "\n"
         buf += self.game.displayState(self.state)
         if self.db is not None:
             rec = self.db.getRecord(self.game.stateToHash(self.state))
             buf += rec.toString()
+        buf += "\n"
         return buf
 
     def hash(self):
@@ -42,18 +42,25 @@ class GameState:
         return s
     
     def printMoves(self):
+        i = 0
         for c in self.moves():
-            print '"'+str(c[0])+'"',
+            print '+'+str(i)+': "'+str(c[0])+'"',
             if self.db is not None:
                 rec = self.db.getRecord(self.game.stateToHash(c[1].state))
-                v = rec.get()
-                remoteness = rec.get(RecordFields.REMOTENESS)
-                if v is not None:
-                    print v.previousMovesValue().toString(), " (", remoteness, ")"
-            print ' =>'
+                print rec.toString(),
+                #v = rec.get()
+                #remoteness = rec.get(RecordFields.REMOTENESS)
+                #if v is not None:
+                #    print v.previousMovesValue().toString(), "(", remoteness, ")",
+            print ' =>',
             print c[1]
+            i += 1
     
     def __add__(self, move):
+        if type(move) == str and move[0]=='+':
+            move = int(move[1:])
+        if type(move) == int:
+            return self.moves()[move][1]
         nextState = self.game.doMove(self.state, move)
         if nextState == None:
             print "Invalid move: " + move
@@ -61,6 +68,9 @@ class GameState:
         gs = GameState(self.game, nextState, self.db)
         #print gs
         return gs
+
+    def __getitem__(self, index):
+        return self.moves()[index]
 
 def play(jobFile):
     for possible_path in sys.path:
@@ -120,15 +130,25 @@ def getConf():
     global conf
     return conf
 
-def moveloop():
-    global globalState
+# Pass in an array of length 1 to allow assignment
+def moveloop(stateRef=None):
+    if not stateRef:
+        global globalState
+        stateRef = [globalState]
+    if type(stateRef) is not list:
+        stateRef = [stateRef]
     from edu.berkeley.gamesman.core import PrimitiveValue
-    while globalState.game.primitiveValue(globalState.state) is PrimitiveValue.UNDECIDED:
-        print "State is now"
-        print globalState
+    while stateRef[0].game.primitiveValue(stateRef[0].state) is PrimitiveValue.UNDECIDED:
+        print "State is now", stateRef[0]
         print "Avaliable moves:"
-        moves()
+        stateRef[0].printMoves()
         m = raw_input("Which move to take? ")
         if len(m) == 0: return
-        move(m)
+        stateRef[0] += m
     print "Game is over!"
+
+def playFromState(state):
+    arr = [state]
+    moveloop(arr)
+    return arr[0]
+

@@ -27,7 +27,12 @@ public class GamesmanShell {
 	 * @param args Program arguments
 	 */
 	public static void main(String args[]) {	
-		curModule = new ConfigurationModule(curConf);
+		try {
+			curModule = new ConfigurationModule(curConf);
+		} catch (ClassNotFoundException e1) {
+			Util.fatalError("failed to load configuration", e1);
+			return;
+		}
 		curModule.proccessCommand("load(default)");
 		
 		if (args.length > 0)

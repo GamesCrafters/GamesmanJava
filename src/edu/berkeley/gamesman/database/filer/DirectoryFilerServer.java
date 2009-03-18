@@ -48,8 +48,9 @@ public final class DirectoryFilerServer {
 	 * @param rootdir The root of a DirectoryFiler datastore
 	 * @param port the port to listen on
 	 * @param secret a shared secret remote clients must present to connect
+	 * @throws ClassNotFoundException if the configuration failed to load
 	 */
-	public DirectoryFilerServer(String rootdir, int port, String secret) {
+	public DirectoryFilerServer(String rootdir, int port, String secret) throws ClassNotFoundException {
 		File root = new File(rootdir);
 		if (!root.isDirectory()) {
 			Util.fatalError("Root directory \"" + rootdir
@@ -197,7 +198,12 @@ public final class DirectoryFilerServer {
 						len = din.readInt();
 						fb = new byte[len];
 						din.readFully(fb);
-						config = Configuration.load(fb);
+						try {
+							config = Configuration.load(fb);
+						} catch (ClassNotFoundException e) {
+							Util.warn("Failed to load configuration "+file, e);
+							break;
+						}
 						//db.initialize(Util.getChild(root, file).toURL()
 						//		.toExternalForm(), new Configuration(config)); //TODO: don't reference Values
 						db = df.openDatabase(file,config);

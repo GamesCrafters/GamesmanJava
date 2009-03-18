@@ -54,7 +54,12 @@ public class JSONInterface extends GamesmanApplication {
 			Util.fatalError("Could not listen on port",e);
 		}
 		
-		db = Util.typedInstantiate("edu.berkeley.gamesman.database."+conf.getProperty("gamesman.database","BlockDatabase"));
+		try {
+			db = Util.typedInstantiate("edu.berkeley.gamesman.database."+conf.getProperty("gamesman.database","BlockDatabase"),
+					Database.class);
+		} catch (ClassNotFoundException e1) {
+			Util.fatalError("Failed to create database",e1);
+		}
 		db.initialize(conf.getProperty("gamesman.db.uri"), null);
 		conf = db.getConfiguration();
 		

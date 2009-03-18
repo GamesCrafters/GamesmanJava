@@ -18,7 +18,7 @@ import edu.berkeley.gamesman.util.Util;
  */
 public class DatabaseCompare<S> {
 
-	public void compare(String args[]) {
+	public void compare(String args[]) throws ClassNotFoundException {
 		Configuration c1 = new Configuration(args[0]);
 		Configuration c2 = new Configuration(args[1]);
 		
@@ -51,8 +51,12 @@ public class DatabaseCompare<S> {
 	}
 	
 	public static void main(String args[]){
-		new DatabaseCompare<Object>().compare(args);
-		System.out.println("Compare successful!");
+		try {
+			new DatabaseCompare<Object>().compare(args);
+			System.out.println("Compare successful!");
+		} catch (ClassNotFoundException e) {
+			Util.fatalError("Unable to load database class!", e);
+		}
 	}
 
 }

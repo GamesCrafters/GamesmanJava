@@ -196,7 +196,13 @@ public class ConnectFour implements MouseListener {
 		if (args.length != 1) {
 			Util.fatalError("Please specify a jobfile as the only argument");
 		}
-		Configuration conf = new Configuration(args[0]);
+		Configuration conf;
+		try {
+			conf = new Configuration(args[0]);
+		} catch (ClassNotFoundException e) {
+			Util.fatalError("failed to load class",e);
+			return;
+		}
 		FileDatabase fd = new FileDatabase();
 		fd.initialize(conf.getProperty("gamesman.db.uri"), null);
 		int width = conf.getInteger("gamesman.game.width", 7);

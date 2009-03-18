@@ -274,13 +274,14 @@ public final class Record {
 				map.get(rf).add(r.get(rf));
 			}
 		}
-		
-		PrimitiveValue pv;
+		boolean isPuzzle = false; // FIXME: hardcoded; Don't want to lookup in Configuration each time.
+
+		PrimitiveValue pv; // the value as if we were playing a game.
 		if(!conf.getStoredFields().containsKey(RecordFields.VALUE))
 			pv = null;
-		else
-			pv = primitiveCombine(map.get(RecordFields.VALUE));
-
+		else {
+			pv = primitiveCombine(map.get(RecordFields.VALUE), isPuzzle);
+		}
 		for (RecordFields rf : conf.getStoredFields().keySet()) {
 			switch (rf) {
 			case VALUE:
@@ -313,18 +314,29 @@ public final class Record {
 					}
 				}
 				break;
+			case SCORE: // Want lowest possible score.
+				rec.set(rf, Collections.min(map.get(rf)));
+				break;
 			default:
 				Util.fatalError("Default case shouldn't have been reached");
 			}
+		
 		}
 
 		return rec;
 	}
 
-	private static PrimitiveValue primitiveCombine(List<Long> vals) {
+	private static PrimitiveValue primitiveCombine(List<Long> vals, boolean isPuzzle) {
 		boolean seentie = false;
 		for (Long iv : vals) {
 			PrimitiveValue v = PrimitiveValue.values()[iv.intValue()];
+			if (isPuzzle) {
+				if (v == PrimitiveValue.WIN) {
+					v = PrimitiveValue.LOSE;
+				} else if (v == PrimitiveValue.LOSE) {
+					v = PrimitiveValue.WIN;
+				}
+			}
 			switch (v) {
 			case UNDECIDED:
 				return PrimitiveValue.UNDECIDED;

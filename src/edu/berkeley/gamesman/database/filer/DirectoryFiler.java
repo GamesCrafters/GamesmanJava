@@ -32,8 +32,9 @@ public class DirectoryFiler extends Filer<Database>{
 	/**
 	 * Open a preexisting DirectoryFiler datastore
 	 * @param rootdir The directory of the datastore
+	 * @throws ClassNotFoundException If the Configuration failed to load (unknown game)
 	 */
-	public DirectoryFiler(File rootdir){
+	public DirectoryFiler(File rootdir) throws ClassNotFoundException{
 		this.rootdir = rootdir;
 		LineNumberReader mf = null;
 		try {

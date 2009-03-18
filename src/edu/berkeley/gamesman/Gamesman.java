@@ -68,10 +68,21 @@ public class Gamesman {
 				DebugFacility.CORE.setupClassloader(cl);
 			}
 			Util.enableDebuging(debugOpts);
-			conf = new Configuration(props);
+			try {
+				conf = new Configuration(props);
+			} catch (ClassNotFoundException e) {
+				Util.fatalError("Configuration contains unknown game or hasher ", e);
+			}
 		}
 
-		Class<? extends GamesmanApplication> cls = Util.typedForName(APPLICATION_MAP.get(entryPoint));
+		Class<? extends GamesmanApplication> cls;
+		try {
+			cls = Util.typedForName(APPLICATION_MAP.get(entryPoint), GamesmanApplication.class);
+		} catch (ClassNotFoundException e1) {
+			// TODO Auto-generated catch block
+			Util.fatalError("Class could not be found!", e1);
+			return;
+		}
 		try {
 			GamesmanApplication ga = cls.getConstructor().newInstance();
 			ga.run(conf);

@@ -55,13 +55,13 @@ public class Configuration {
 	 * @param props A Properties object (probably constructed from a job file).
 	 * @param initLater You must call initialize() once you have created the appropriate Game and Hasher objects.
 	 */
-	public Configuration(Properties props, boolean initLater){
+	public Configuration(Properties props, boolean initLater) throws ClassNotFoundException{
 		this.props = props;
 		initializeStoredFields();
 		if (initLater == false) {
-			g = Util.typedInstantiateArg("edu.berkeley.gamesman.game."+getProperty("gamesman.game"),this);
-			h = Util.typedInstantiateArg("edu.berkeley.gamesman.hasher."+getProperty("gamesman.hasher"),this);
-			initialize(g, h);
+			String gamename = getProperty("gamesman.game");
+			String hashname = getProperty("gamesman.hasher");
+			initialize(gamename, hashname);
 		}
 	}
 	
@@ -69,19 +69,15 @@ public class Configuration {
 	 * Given a Properties, will construct a Configuration
 	 * @param props A Properties object (probably constructed from a job file).
 	 */
-	public Configuration(Properties props){
+	public Configuration(Properties props) throws ClassNotFoundException{
 		this(props, false);
 	}
 	/**
 	 * Calls new Configuration(Configuration.readProperties(path))
 	 * @param path The path to the job file to read
 	 */
-	public Configuration(String path) {
-		this.props = readProperties(path);
-		initializeStoredFields();
-		g = Util.typedInstantiateArg("edu.berkeley.gamesman.game."+getProperty("gamesman.game"),this);
-		h = Util.typedInstantiateArg("edu.berkeley.gamesman.hasher."+getProperty("gamesman.hasher"),this);
-		initialize(g, h);
+	public Configuration(String path) throws ClassNotFoundException{
+		this(readProperties(path),false);
 	}
 	
 	private void initializeStoredFields() {
@@ -105,6 +101,27 @@ public class Configuration {
 	public void initialize(Game<?> newG, Hasher<?> newH) {
 		g = newG;
 		h = newH;
+		g.prepare();
+	}
+
+	/**
+	 * Initialize the Configuration with a game and a hasher object.
+	 * @param gamename The Game associated with this configuration.
+	 * @param hashname The Hasher associated with this configuration.
+	 * @throws ClassNotFoundException 
+	 */
+	public void initialize(String gamename, String hashname) throws ClassNotFoundException {
+		// Python classes end with ".py"
+		if (gamename.indexOf('.') == -1) {
+			gamename = "edu.berkeley.gamesman.game."+gamename;
+		}
+		setProperty("gamesman.game",gamename);
+		if (hashname.indexOf('.') == -1) {
+			hashname = "edu.berkeley.gamesman.hasher."+hashname;
+		}
+		setProperty("gamesman.hasher",hashname);
+		g = Util.typedInstantiateArg(gamename,Game.class, this);
+		h = Util.typedInstantiateArg(hashname,Hasher.class, this);
 		g.prepare();
 	}
 
@@ -151,7 +168,7 @@ public class Configuration {
 	 * @param barr Bytes to deserialize
 	 * @return a Configuration
 	 */
-	public static Configuration load(byte[] barr){
+	public static Configuration load(byte[] barr) throws ClassNotFoundException{
 		try{
 			DataInputStream in = new DataInputStream(new ByteArrayInputStream(barr));
 			Properties props = new Properties();
@@ -182,8 +199,16 @@ public class Configuration {
 			conf.setStoredFields(sf);
 			
 
-			conf.g = Util.typedInstantiateArg(gamename,conf);
-			conf.h = Util.typedInstantiateArg(hashername,conf);
+			try {
+				conf.g = Util.typedInstantiateArg(gamename,Game.class, conf);
+			} catch (ClassNotFoundException e) {
+				conf.g = Util.typedInstantiateArg(conf.getProperty("gamesman.game"),Game.class, conf);
+			}
+			try {
+				conf.h = Util.typedInstantiateArg(hashername,Hasher.class, conf);
+			} catch (ClassNotFoundException e) {
+				conf.h = Util.typedInstantiateArg(conf.getProperty("gamesman.hasher"),Hasher.class, conf);
+			}
 
 			conf.initialize(conf.g,conf.h);
 
@@ -427,9 +452,11 @@ public class Configuration {
 		return s;
 	}
 	
-	public Database openDatabase() {
+	public Database openDatabase() throws ClassNotFoundException {
 		if(db != null) return db;
-		db = Util.typedInstantiate("edu.berkeley.gamesman.database."+getProperty("gamesman.database"));
+		db = Util.typedInstantiate(
+				"edu.berkeley.gamesman.database."+getProperty("gamesman.database"),
+				Database.class);
 		db.initialize(getProperty("gamesman.db.uri"),this);
 		return db;
 	}

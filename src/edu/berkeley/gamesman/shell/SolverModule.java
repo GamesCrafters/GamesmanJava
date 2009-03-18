@@ -30,10 +30,8 @@ public class SolverModule extends UIModule {
 		main.run(conf);
 	}
 	
-	protected void u_initializeConfiguration(ArrayList<String> args) {
-		Game<?> g = Util.typedInstantiateArg("edu.berkeley.gamesman.game."+conf.getProperty("gamesman.game"), conf);
-		Hasher<?> h = Util.typedInstantiateArg("edu.berkeley.gamesman.hasher."+conf.getProperty("gamesman.hasher"), conf);
-		conf.initialize(g, h);		
+	protected void u_initializeConfiguration(ArrayList<String> args) throws ClassNotFoundException {
+		conf.initialize(conf.getProperty("gamesman.game"), conf.getProperty("gamesman.hasher"));
 	}
 
 }

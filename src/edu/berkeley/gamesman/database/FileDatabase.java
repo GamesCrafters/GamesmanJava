@@ -92,8 +92,15 @@ public class FileDatabase extends Database {
 				int headerLen = fd.readInt();
 				byte[] header = new byte[headerLen];
 				fd.readFully(header);
-				if(conf == null)
-					conf = Configuration.load(header);
+				if(conf == null) {
+					try {
+						conf = Configuration.load(header);
+					} catch (ClassNotFoundException e) {
+						e.printStackTrace();
+						conf = null;
+					}
+				}
+				/*
 				Configuration newconf = Configuration.load(header);
 				Util.assertTrue(newconf.equals(conf),
 						"File database has wrong header; expecting \""
@@ -101,7 +108,7 @@ public class FileDatabase extends Database {
 								+ newconf.toString() + "\"");
 				//if(!new String(header).equals(conf.getConfigString()))
 				//	Util.warn("File database headers do not match, proceed at your own risk!");
-
+				t*/
 			} catch (IOException e) {
 				Util.fatalError("IO error while checking header: " + e);
 			}

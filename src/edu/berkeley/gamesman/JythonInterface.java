@@ -15,6 +15,7 @@ import org.python.util.ReadlineConsole;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.util.DebugFacility;
+import edu.berkeley.gamesman.util.JythonUtil;
 import edu.berkeley.gamesman.util.Util;
 import javax.xml.parsers.FactoryConfigurationError;
 
@@ -65,6 +66,7 @@ public final class JythonInterface extends GamesmanApplication {
 			}
 			console = Consoles.values()[i];
 		}
+		JythonUtil.init();
 		//prefs.put("console", console.name());
 		InteractiveConsole rc = null;
 		switch(console){
@@ -98,20 +100,12 @@ public final class JythonInterface extends GamesmanApplication {
 		Util.enableDebuging(debugOpts);
 		
 		//this will let us put .py files in the junk directory, and things will just work =)
-		rc.exec("import sys");
-		addpath(rc, "jython_lib");
-		addpath(rc, "junk");
-		addpath(rc, "jobs");
 	
 		rc.exec("from Play import *");
 		rc.interact();
 		return 0;
 	}
 
-	private static void addpath(InteractiveConsole ic, String what){
-		ic.exec(String.format("sys.path.append('%1$s/%2$s'); sys.path.append('%1$s/../%2$s');", 
-				System.getProperty("user.dir"), what));
-	}
 
 	/**
 	 * Simple main function to run JythonInterface directly.

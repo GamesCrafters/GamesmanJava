@@ -366,33 +366,38 @@ public final class Util {
 	 * 
 	 * @param <T> The type we want
 	 * @param name What class to forName
+	 * @param baseClass A base class to ensure type safety--pass in Object if you don't care.
 	 * @return The Class object
+	 * @throws ClassNotFoundException Usually, calling code should trigger a Util.fatalError.
 	 * @see Class#forName(String)
 	 */
-	@SuppressWarnings("unchecked")
-	public static <T> Class<T> typedForName(String name){
-		try {
-			Class<T> cls = (Class<T>) Class.forName(name);
-			return (Class<T>)cls;
-		} catch (ClassNotFoundException e) {
-			Util.fatalError("Could not find class \""+name+"\"");
+	public static <T> Class<? extends T> typedForName(String name, Class<T> baseClass)
+			throws ClassNotFoundException {
+		if (name.endsWith(".py")) {
+			String pyClass = name.substring(0, name.length()-3);
+			return JythonUtil.getClass(pyClass, pyClass, baseClass);
+		} else {
+			Class<? extends T> cls = Class.forName(name).asSubclass(baseClass);
+			return cls;
 		}
-		return null;
 	}
 	
 	/**
 	 * Like Class.forName(name).newInstance() but with type checking
 	 * @param <T> The type requested
 	 * @param name The name of the class to instantiate
+	 * @param baseClass Usually equals the template param
 	 * @return A new instance (created with the default constructor)
+	 * @throws ClassNotFoundException If the class could not be instantiated.
 	 */
-	public static <T> T typedInstantiate(String name){
+	public static <T> T typedInstantiate(String name, Class<T> baseClass) throws ClassNotFoundException{
 		try {
-			return (T)checkedCast(typedForName(name).newInstance());
+			return typedForName(name, baseClass).getConstructor().newInstance();
+		} catch (ClassNotFoundException e) {
+			throw e;
 		} catch (Exception e) {
-			Util.fatalError("Unchecked exception while instantiating",e);
+			throw new ClassNotFoundException("Uncaught exception while instantiating "+name,e);
 		}
-		return null;
 	}
 	
 	/**
@@ -400,16 +405,19 @@ public final class Util {
 	 * and an argument
 	 * @param <T> The type requested
 	 * @param name The name of the class to instantiate
+	 * @param baseClass Usually equals the template param
 	 * @param arg The argument to provide to the constructor
-	 * @return A new instance (created with the default constructor)
+	 * @return A new instance (created with the non-default constructor)
+	 * @throws ClassNotFoundException 
 	 */
-	public static <T> T typedInstantiateArg(String name, Object arg){
+	public static <T> T typedInstantiateArg(String name, Class<T> baseClass, Object arg) throws ClassNotFoundException{
 		try {
-			return (T)checkedCast(Class.forName(name).getConstructors()[0].newInstance(arg));
+			return (T) typedForName(name, baseClass).getConstructors()[0].newInstance(arg);
+		} catch (ClassNotFoundException e) {
+			throw e;
 		} catch (Exception e) {
-			Util.fatalError("Unchecked exception while instantiating",e);
+			throw new ClassNotFoundException("Uncaught exception while instantiating "+name,e);
 		}
-		return null;
 	}
 	
 	

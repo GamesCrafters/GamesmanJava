@@ -56,8 +56,50 @@ public class DatabaseDump extends GamesmanApplication {
 	
 	@Override
 	public int run(Configuration conf) {
-		Database db = conf.openDatabase();
-		
+		Database db;
+		try {
+			db = conf.openDatabase();
+		} catch (ClassNotFoundException e1) {
+			// TODO Auto-generated catch block
+			Util.fatalError("Failed to instantiantiate database class",e1);
+			return 1;
+		}
+		runWithDatabase(db);
+		return 0;
+	}
+	
+	/**
+	 * Dumps a database file without using an existing configuration.
+	 * @param args  Usage: DatabaseDump BlockDatabase file:///tmp/database.db
+	 */
+	public static void main(String[] args) {
+		Database db;
+		if (args.length < 2) {
+			System.err.println("Usage: DatabaseDump file:///tmp/database.db file:///tmp/output.dot [DatabaseClass]");
+			return;
+		}
+		String dbtype = "BlockDatabase";
+		if (args.length > 2) {
+			dbtype = args[2];
+		}
+		try {
+			db = Util.typedInstantiate(
+					"edu.berkeley.gamesman.database."+dbtype,
+					Database.class);
+		} catch (ClassNotFoundException e) {
+			Util.fatalError("failed to instantiate database",e);
+			return;
+		}
+		db.initialize(args[0], null);
+		db.getConfiguration().setProperty("gamesman.dotty.uri",args[1]);
+		new DatabaseDump().runWithDatabase(db);
+	}
+	
+	/**
+	 * @param db  The loaded database. db.getConfiguration() must not be null.
+	 */
+	public void runWithDatabase(Database db) {
+		Configuration conf = db.getConfiguration();
 		dottyFile = conf.getPropertyWithPrompt("gamesman.dotty.uri");
 		PrintWriter w = null;
 		try {
@@ -129,7 +171,6 @@ public class DatabaseDump extends GamesmanApplication {
 		
 		w.close();
 		System.out.println("Dotty file successfully written to " + dottyFile);
-		return 0;
 	}
 	
 	private void printNode(BigInteger parentHash, HashMap<Long, ArrayList<BigInteger>> levels, HashSet<BigInteger> seen, Queue<BigInteger> fringe) {
