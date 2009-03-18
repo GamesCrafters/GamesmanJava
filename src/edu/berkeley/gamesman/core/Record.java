@@ -45,12 +45,28 @@ public final class Record {
 	 *  of the field in bits (e.g. [2,6]), and finally the values
 	 *  (e.g. [Win,3] is Win in 3 moves)
 	 */
+	
 
 	private RecordFields[] fieldNames;
 	private int[] fieldBitLength;
 	private long[] fieldValues;
 
 	private int recordBitLength; // Cached total length
+	/** 
+	 * Null constructor. For testing purposes only.
+	 * @author Alex Trofimov (for testing DB)
+	 * @param bitSizes - lengths of fields. Size of the array is #fields
+	 */
+	public Record(int[] bitSizes) {
+		conf = null;
+		this.fieldBitLength = new int[bitSizes.length];
+		this.fieldValues    = new long[bitSizes.length];
+		for (int i = 0; i < bitSizes.length; i ++) {
+			this.fieldBitLength[i] = bitSizes[i];
+		}
+		this.recordBitLength = 0;
+		for (int i : bitSizes) this.recordBitLength += i;
+	}
 
 	/**
 	 * Convenience constructor for a Record with only a PrimitiveValue
@@ -245,12 +261,6 @@ public final class Record {
 			fieldNames[info.car] = key;
 		}
 		recordBitLength = bitOffset[bitOffset.length - 1] + fieldBitLength[fieldBitLength.length - 1];
-
-		// for(int i = 0; i < sf.size(); i++){
-		// System.out.println(RecordFields.values()[i]+" ("+bitOffset[i]+") = "+bits[i]);
-		// }
-		// Util.debug(DebugFacility.Record,
-		// "Records are "+bitlength()+" bits long");
 	}
 
 	/**
@@ -376,6 +386,35 @@ public final class Record {
 		return b.toString();
 	}
 
+	
+	/** 
+	 * Try to pack all the fields of this Record into a long.
+	 * This assumes that the sum of all fieldBitLength is < 63
+	 * @return concatenated fields into a long
+	 * @author Unknown. Patrick? 
+	 * @author Alex Trofimov
+	 * 
+	 */
+	public long toLong() {
+		long r = 0l;
+		for (int i = 0; i < fieldBitLength.length; i ++) {
+			if (i != 0) r = r << fieldBitLength[i];
+			r += fieldValues[i];
+		}
+		return r;
+	}
+	
+	/** 
+	 * Load field values from a long compacted form.
+	 * @param data - compacted field values in a long.
+	 */
+	public void loadLong (long data) {
+		for (int i = this.fieldBitLength.length - 1; i >= 0; i --) {
+			this.fieldValues[i] = data & ((1l << this.fieldBitLength[i]) - 1l);
+			data = data >>> this.fieldBitLength[i];
+		}
+	}
+	
 	/**
 	 * Take all the field values and put them next to each other (bitwise) into a BigInteger.
 	 * 
@@ -384,54 +423,22 @@ public final class Record {
 	 */
 	public BigInteger toBigInteger() {
 		BigInteger r = BigInteger.ZERO;
-		long value;
 		for (int i = 0; i < fieldBitLength.length; i ++) {
-			r = r.shiftLeft(fieldBitLength[i]);
-			value = fieldValues[i] &((1 << fieldBitLength[i]) - 1);
-			r = r.add(BigInteger.valueOf(value));
+			if (i != 0) r = r.shiftLeft(fieldBitLength[i]);
+			r = r.add(BigInteger.valueOf(fieldValues[i]));
 		}
 		return r;
-	}
-	
-	/**
-	 * Take all the field values and put them next to each other (bitwise) into a long.
-	 * 
-	 * @author Alex Trofimov
-	 * @return BigInteger of fieldValues packed together. Leading zeros truncated.
-	 */
-	public long toLong() {
-		long r = 0;
-		long value;
-		for (int i = 0; i < fieldBitLength.length; i ++) {
-			r = r<<fieldBitLength[i];
-			value = fieldValues[i] &((1 << fieldBitLength[i]) - 1);
-			r = r+value;
-		}
-		return r;
-	}
-	
-	/**
-	 * Take a long with bits correponding to fieldValues and load the bits from it.
-	 * 
-	 * @author Alex Trofimov
-	 * @param data - Long with fieldValues bits contcatenated together as one number.
-	 */
-	public void loadLong(long data) {
-		for (int i = this.fieldBitLength.length - 1; i >= 0; i --) {
-			this.fieldValues[i] = data & ((1 << this.fieldBitLength[i]) - 1);
-			data = data >>> this.fieldBitLength[i];
-		}
 	}
 	
 	/**
 	 * Take a BigInteger with bits correponding to fieldValues and load the bits from it.
 	 * 
 	 * @author Alex Trofimov
-	 * @param data - BigInteger with fieldValues bits contcatenated together as one number.
+	 * @param data - BigInteger with fieldValues bits concatenated together as one number.
 	 */
 	public void loadBigInteger(BigInteger data) {
 		for (int i = this.fieldBitLength.length - 1; i >= 0; i --) {
-			this.fieldValues[i] = data.longValue() & ((1 << this.fieldBitLength[i]) - 1);
+			this.fieldValues[i] = data.longValue() & ((1l << this.fieldBitLength[i]) - 1l);
 			data = data.shiftRight(this.fieldBitLength[i]);
 		}
 	}
@@ -448,10 +455,7 @@ public final class Record {
 		}
 
 		static private long mask(int firstbit, int lastbit) {
-			return -1l << (64 - lastbit + firstbit) >>> firstbit; // QuickFix by Alex
-			// return (Util.longpow(2, lastbit - firstbit) - 1) << (64 - (lastbit));
-			// return (Util.longpow(2, 64-firstbit)-1) ^
-			// (Util.longpow(2,64-lastbit)-1);
+			return -1l << (64 - lastbit + firstbit) >>> firstbit;
 		}
 
 		static long get(ByteProducer b, long offa, int len) {
