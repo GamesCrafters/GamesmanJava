@@ -9,8 +9,10 @@ import java.util.Properties;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Hasher;
+import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.RecordFields;
+import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 import edu.berkeley.gamesman.core.Database;
 
@@ -19,7 +21,7 @@ import edu.berkeley.gamesman.core.Database;
  * @author Jin-Su Oh
  *	DatabaseModules handles user's input to manipulate the database file.
  *	It provides the ability open and close database, and read, edit and view records.
- * 	db holds the opened database file.
+ * 	@db holds the opened database file.
  *  curRecord holds a record that is read.
  *  loc keeps track of where in the database file user is accessing.  
  */
@@ -66,9 +68,11 @@ public class DatabaseModule extends UIModule {
 	/**
 	 * u_openDatabase calls openDatabase.
 	 * @param args it doesn't check for any args given.
+	 * @see "openDatabase()"
 	 */
 	protected void u_openDatabase(ArrayList<String> args) {	
 		openDatabase();
+		System.out.println("Opened database.");
 	}
 	
 	/**
@@ -91,6 +95,9 @@ public class DatabaseModule extends UIModule {
 	protected void u_closeDatabase(ArrayList<String> args) {
 		if(db != null) {
 				db.close();
+				db = null;
+				loc = BigInteger.ZERO;
+				System.out.println("Closed the current database.");
 		}
 	}
 	
@@ -124,24 +131,60 @@ public class DatabaseModule extends UIModule {
 	
 	/**
 	 * u_editRecord edits the last Record that was read by the user.
-	 * @param args (field, value)
-			field : field is either Primitive(u can type p), or Remoteness(u can type r)
-			value : in Primitive - 0 is lose, 1 is tie, 2 is win.  
-					in Remoteness - value is how far you are away from winning.
+	 * @param args (arg0,arg1) No space in between the arguments
+	 * 		argument(ie. arg1, arg2...) can be a Primitive Type as in win, lose, tie and undecided(cases don't matter) or
+	 * 		a Remoteness value.
+	 * If the argument is a number, it will automatically be considered as Remoteness value.
+	 * If the argument is w, l, t, u, Win, Lose, Tie, or Undecided, it will be considered as Value of the record.
+	 * If there are more than 2 arguments passed in, only first two will be considered.
 	 */	
 	protected void u_editRecord(ArrayList<String> args) {
+		boolean isValid = true;
 		if(curRecord != null) {
 			if(!args.isEmpty()) {
-				if(args.get(0).toLowerCase().startsWith("r")) {
-					curRecord.set(RecordFields.REMOTENESS, Integer.parseInt(args.get(1)));					
-				} else if(args.get(0).toLowerCase().startsWith("p")) {
-					curRecord.set(RecordFields.VALUE, Integer.parseInt(args.get(1)));
-				} else {
-					Util.fatalError("Invalid arguments to editRecord");
+				int n = 0;
+				while(n < 2 && n < args.size()) { //do it for args.get(0) and args.get(1)
+					if(args.get(n).toLowerCase().equals("w") || args.get(n).equalsIgnoreCase("win")) {
+						curRecord.set(RecordFields.VALUE, PrimitiveValue.WIN.value());
+					} else if(args.get(n).toLowerCase().equals("l") || args.get(n).equalsIgnoreCase("lose")) {
+						curRecord.set(RecordFields.VALUE, PrimitiveValue.LOSE.value());
+					} else if(args.get(n).toLowerCase().equals("t") || args.get(n).equalsIgnoreCase("tie")) {
+						curRecord.set(RecordFields.VALUE, PrimitiveValue.TIE.value());
+					} else if(args.get(n).toLowerCase().equals("u") || args.get(n).equalsIgnoreCase("undecided")) {
+						curRecord.set(RecordFields.VALUE, PrimitiveValue.UNDECIDED.value());
+					} else if(isParsableToInt(args.get(n))) {
+						curRecord.set(RecordFields.REMOTENESS, Integer.parseInt(args.get(n)));
+					} else {
+						System.out.println("Invalid arguments to editRecord");
+						isValid = false;
+					}
+					if(isValid) {
+						db.putRecord(loc.subtract(BigInteger.ONE), curRecord); //because readRecord increases Loc by one.
+						System.out.println("changed to: " + curRecord);
+					}
+					n++;
 				}
-				db.putRecord(loc, curRecord);
-				System.out.println("changed to: " + curRecord);
 			}
+		} else {
+			System.out.println("No record has been read yet.");
+		}
+	}
+	
+	/**
+	 * isParsableToInt returns true if the string given is a string that represents a int number, and returns false
+	 * otherwise.
+	 * @param i String that is to be tested.
+	 * @return
+	 */
+	private boolean isParsableToInt(String i) {
+		try
+		{
+			Integer.parseInt(i);
+			return true;
+		}
+		catch(NumberFormatException nfe)
+		{
+			return false;
 		}		
 	}
 	
@@ -154,6 +197,9 @@ public class DatabaseModule extends UIModule {
 		
 	}
 	
+	/**
+	 * quit the program.
+	 */
 	public void quit() {
 	}
 }
