@@ -2,6 +2,7 @@ package edu.berkeley.gamesman.hasher.util;
 
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -30,11 +31,13 @@ public final class C4UniformPieces {
 		lookup = null;
 		table = null;
 		idx = 0;
-		init(new char[l],0,pieces,l*pieces.length);
+		init(new char[l],0,pieces,l*pieces.length, 0);
 	}
 	
 	Map<String,BigInteger> lookup;
 	String[] table;
+	
+	private Integer numpiecestarts[]; // nps[x] is the first hash (tier?) with the specified (total) number of (c4, not uph) pieces
 	
 	public BigInteger hash(char[] board, int l) {
 		return lookup.get(new String(board));
@@ -51,17 +54,20 @@ public final class C4UniformPieces {
 	private int idx;
 	transient private Task task;
 	
-	protected void init(char[] board,int off, char[] mypcs, int sum){
+	protected void init(char[] board,int off, char[] mypcs, int sum, int total){
 		if(lookup == null){
 			lookup = new ConcurrentHashMap<String,BigInteger>();
 			table = new String[(int)Util.longpow(mypcs.length,board.length)];
+			numpiecestarts = new Integer[sum-1];
 			idx = 0;
 			task = Task.beginTask("Initializing C4 Column Hash");
 			
 			task.setTotal(table.length-1);
 			
 			for(int s = 0; s < sum; s++)
-				init(board,off,mypcs,s);
+				init(board,off,mypcs,s, s);
+			System.out.println(Arrays.toString(numpiecestarts));
+			System.out.println(Arrays.toString(table));
 			task.complete();
 			return;
 		}
@@ -74,16 +80,31 @@ public final class C4UniformPieces {
 					String str = new String(board);
 					table[idx] = str;
 					lookup.put(str, BigInteger.valueOf(idx));
+					
+					if(numpiecestarts[total] == null || numpiecestarts[total] > idx)
+						numpiecestarts[total] = idx;
+
 					idx++;
 					if(idx % 1000 == 0)
 						task.setProgress(idx);
 				}
 			}else{
-				init(board,off+1,mypcs,sum-cur);
+				init(board,off+1,mypcs,sum-cur, total);
 			}
 		}
 		
 		//if(off == 0)
 		//	Util.debug("CUPH finished building table: "+Arrays.toString(table));
+	}
+	
+	public int firstHashForNumberOfPieces(int pcs){
+		return numpiecestarts[pcs];
+	}
+	
+	public int numberOfPiecesForHash(int hash){
+		for(int i = 0; i < numpiecestarts.length; i++)
+			if(numpiecestarts[i] > hash)
+				return i-1;
+		return numpiecestarts.length-1;
 	}
 }

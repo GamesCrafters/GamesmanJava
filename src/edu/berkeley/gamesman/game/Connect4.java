@@ -2,6 +2,7 @@ package edu.berkeley.gamesman.game;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;
@@ -9,6 +10,8 @@ import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.game.connect4.C4Board;
 import edu.berkeley.gamesman.game.connect4.C4Piece;
 import edu.berkeley.gamesman.hasher.PerfectConnect4Hash;
+import edu.berkeley.gamesman.hasher.UniformPieceHasher;
+import edu.berkeley.gamesman.hasher.util.C4UniformPieces;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.Pair;
@@ -108,5 +111,24 @@ public class Connect4 extends TieredGame<C4Board> {
 	@Override
 	public String describe() {
 		return String.format("%dx%d Connect %d", gameWidth, gameHeight, piecesToWin);
+	}
+	
+	@Override
+	public Iterator<Integer> tierDependsOn(final int tier){
+		C4UniformPieces c4up = ((PerfectConnect4Hash)myHasher).uh;
+		final int start = c4up.firstHashForNumberOfPieces(c4up.numberOfPiecesForHash(tier)+1);
+		return new Iterator<Integer>(){
+			private int cur = start;
+			public boolean hasNext() {
+				return cur <= numberOfTiers();
+			}
+			public Integer next() {
+				System.out.println(tier+" depends on "+cur);
+				return cur++;
+			}
+			public void remove() {
+				throw new UnsupportedOperationException();
+			}
+		};
 	}
 }

@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.hadoop;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.Arrays;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -22,6 +23,7 @@ import edu.berkeley.gamesman.hadoop.util.SequenceInputFormat;
 import edu.berkeley.gamesman.master.LocalMaster;
 import edu.berkeley.gamesman.solver.TierSolver;
 import edu.berkeley.gamesman.util.DebugFacility;
+import edu.berkeley.gamesman.util.IteratorWrapper;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -57,9 +59,26 @@ public class TieredHadoopTool<S> extends Configured implements Tool {
 
 		game = Util.checkedCast(m.getGame());
 		
-		for(int tier = game.numberOfTiers()-1 ; tier >= 0; tier--){
-			Util.debug(DebugFacility.HADOOP,"Processing tier "+tier);
-			processRun(conf, game.hashOffsetForTier(tier),game.lastHashValueForTier(tier));
+		//for(int tier = game.numberOfTiers()-1 ; tier >= 0; tier--){
+		//	Util.debug(DebugFacility.HADOOP,"Processing tier "+tier);
+		//	processRun(conf, game.hashOffsetForTier(tier),game.lastHashValueForTier(tier));
+		//}
+		
+		int startTier = game.numberOfTiers()-1;
+		while(startTier >= 0){
+			assert Util.debug(DebugFacility.HADOOP,"Starting from tier "+startTier);
+			int endTier = startTier;
+			
+			outer: while(endTier > 0){
+				int possibleEndTier = endTier-1;
+				for(int d : new IteratorWrapper<Integer>(game.tierDependsOn(possibleEndTier)))
+					if(d <= startTier)
+						break outer;
+				endTier = possibleEndTier;
+			}
+			assert Util.debug(DebugFacility.HADOOP,"Ending at tier "+endTier);
+			processRun(conf,game.hashOffsetForTier(endTier),game.lastHashValueForTier(startTier));
+			startTier = endTier-1;
 		}
 		
 		return 0;

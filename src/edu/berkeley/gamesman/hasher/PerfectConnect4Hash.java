@@ -24,7 +24,7 @@ import edu.berkeley.gamesman.util.Util;
  */
 public class PerfectConnect4Hash extends TieredHasher<C4Board> {
 	private final int gameWidth, gameHeight;
-	C4UniformPieces uh;
+	public final C4UniformPieces uh;
 	
 	/**
 	 * Default constructor
