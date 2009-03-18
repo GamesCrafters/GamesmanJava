@@ -102,7 +102,7 @@ public class Connect4 extends TieredGame<C4Board> {
 		for (int col = 0; col < gameWidth; col++) {
 			b = pos.makeMove(col);
 			if (b != null)
-				nextBoards.add(new Pair<String, C4Board>("c" + col, b));
+				nextBoards.add(new Pair<String, C4Board>(""+col, b));
 		}
 		assert Util.debug(DebugFacility.GAME, "Connect4 board " + pos + " yields children " + nextBoards);
 		return nextBoards;
