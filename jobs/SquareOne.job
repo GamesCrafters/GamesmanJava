@@ -1,0 +1,10 @@
+gamesman.game = SquareOne
+gamesman.game.twoLayer = true
+gamesman.game.ignoreColors = true
+gamesman.solver = BreadthFirstSolver
+gamesman.hasher = NullHasher
+gamesman.db.uri = file:///tmp/databaseSquareOne.db
+gamesman.database = FileDatabase
+gamesman.dotty.uri = file:///tmp/databaseSquareOne.dot
+gamesman.debug.SOLVER = true
+gamesman.threads = 1

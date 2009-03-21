@@ -460,16 +460,32 @@ public final class Util {
 	/**
 	 * Method to join the elements of arr, separated by separator.
 	 * @param separator What to separate the elements of arr by, usually something like , or ;
-	 * @param arr An array of the elements to join together.
+	 * @param arr An Array of the elements to join together.
 	 * @return The toString() of each element of arr, separated by separator 
 	 */
 	public static String join(String separator, Object arr) {
-		assertTrue(arr.getClass().isArray(), "join() needs an array");
-		if(Array.getLength(arr) == 0) return "";
+		if(!arr.getClass().isArray()) {
+			fatalError("join() needs an Array");
+			return null;
+		}
+			
 		StringBuilder sb = new StringBuilder();
 		for(int i=0; i<Array.getLength(arr); i++)
 			sb.append(separator).append(Array.get(arr, i));
-		return sb.substring(separator.length());
+		return sb.length() == 0 ? "" : sb.substring(separator.length());
+	}
+	
+	/**
+	 * Method to join the elements of i, separated by separator.
+	 * @param separator What to separate the elements of i by, usually something like , or ;
+	 * @param i An Iterable of the elements to join together.
+	 * @return The toString() of each element of i, separated by separator 
+	 */
+	public static String join(String separator, Iterable<?> i) {
+		StringBuilder sb = new StringBuilder();
+		for(Object o : i)
+			sb.append(separator).append(o.toString());
+		return sb.length() == 0 ? "" : sb.substring(separator.length());
 	}
 	
 	public static <T> List<String> mapStateToString(Game<T> g, List<T> l){

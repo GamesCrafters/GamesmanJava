@@ -85,27 +85,6 @@ public class Pyraminx extends Game<PyraminxState> {
 		return hash;
 	}
 	
-	public static void main(String[] args) {
-		PermutationHash ph = new PermutationHash(3, true);
-		for(BigInteger i : Util.bigIntIterator(ph.maxHash())) {
-			ArrayList<Integer> arr = ph.unhash(i);
-			System.out.println(arr + " " + ph.hash(Util.toArray(arr)));
-		}
-//		Pyraminx p = new Pyraminx(new Configuration("jobs/Pyraminx.job"));
-//		System.out.println(p.lastHash());
-//		for(BigInteger i : Util.bigIntIterator(p.lastHash())) {
-//			PyraminxState state = p.hashToState(i);
-//			BigInteger hash = p.stateToHash(state);
-//			if(!i.equals(hash)) {
-//				System.out.println(i + " " + hash);
-//				System.out.println(p.displayState(state));
-//				System.out.println(p.displayState(p.hashToState(hash)));
-//				return;
-//			}
-//		}
-//		System.out.println("Done!");
-	}
-
 	@Override
 	public BigInteger lastHash() {
 		return epHasher.maxHash().add(BigInteger.ONE).multiply(TWO_TO_X[edgeCount-1].multiply(THREE_TO_X[centerCount])).subtract(BigInteger.ONE);
