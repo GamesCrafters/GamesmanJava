@@ -111,7 +111,7 @@ public final class Util {
 	 * Print a non-fatal warning and continue
 	 * @param s The condition that caused this warning
 	 */
-	public static void warn(String s) {
+	public static boolean warn(String s) {
 		System.err.println("WARN: (" + Thread.currentThread().getName() + ") "
 				+ s);
 		System.err.println("Stack trace follows:");
@@ -120,6 +120,7 @@ public final class Util {
 		} catch (Warning e) {
 			e.printStackTrace(System.err);
 		}
+		return true;
 	}
 	
 	/**
@@ -191,6 +192,25 @@ public final class Util {
 		long min = (millis / 1000 / 60) % 60;
 		long hr = (millis / 1000 / 60 / 60);
 		return String.format("%02d:%02d:%02d", hr, min, sec);
+	}
+	
+	/** 
+	 * Convert a number of bytes say 4096 and convert it into
+	 * a more readable string like 4KB.
+	 * @param bytes - The number of bytes that needs to be converted
+	 * @return - Formatted string.
+	 * @author Alex Trofimov
+	 */
+	public static String bytesToString(long bytes) {
+		assert bytes > 0l;
+		if (bytes < 1024) return String.format("%dB", bytes);
+		char[] p = new char[] { 'K', 'M', 'G', 'T', 'P', 'E' };
+		byte ind = 0;
+		while (bytes >>> 10 > 0l) { 
+			bytes = bytes >>> 10;
+			ind ++;
+		}		
+		return String.format("%d%cB", bytes, p[ind - 1]);
 	}
 
 	/**
