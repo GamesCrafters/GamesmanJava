@@ -117,7 +117,7 @@ public class BreadthFirstSolver extends Solver {
 						}
 					}
 				}
-				remoteness += 1;
+				remoteness++;
 				assert Util.debug(DebugFacility.SOLVER, "Number of states at remoteness " + remoteness + ": " + numPositionsInLevel);
 				try {
 					db.flush();
@@ -143,13 +143,17 @@ public class BreadthFirstSolver extends Solver {
 				Record rec = new Record(conf,win);
 				database.putRecord(hash, rec);
 				for (Pair<String,T> child: game.validMoves(s)) {
-					Record childrec = new Record(conf,win);
 					BigInteger childhash = game.stateToHash(child.cdr);
-					childrec.set(RecordFields.REMOTENESS, 1);
-					database.putRecord(childhash, childrec);
-					numPositionsOne += 1;
+					//it is possible that some of our children are duplicates
+					//so to count numPositionsOne correctly, we ignore those duplicates
+					if(database.getRecord(childhash).get() == PrimitiveValue.UNDECIDED) {
+						Record childrec = new Record(conf,win);
+						childrec.set(RecordFields.REMOTENESS, 1);
+						database.putRecord(childhash, childrec);
+						numPositionsOne++;
+					}
 				}
-				numPositionsZero += 1;
+				numPositionsZero++;
 			}
 			assert Util.debug(DebugFacility.SOLVER, "Number of states at remoteness 0: " + numPositionsZero);
 			assert Util.debug(DebugFacility.SOLVER, "Number of states at remoteness 1: " + numPositionsOne);
