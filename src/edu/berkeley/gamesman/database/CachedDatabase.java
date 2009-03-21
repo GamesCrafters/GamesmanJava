@@ -12,6 +12,7 @@ import java.util.Random;
 import java.util.TreeMap;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.util.Util;
 
 /**
  * TODO: Description and Javadoc
@@ -24,6 +25,7 @@ import edu.berkeley.gamesman.core.Configuration;
  * TODO: add concurrency control for multiple threads
  * TODO: add support for breaking the DB into multiple files (say no file > 1GB)
  * TODO: fix getSize()
+ * TODO: if the file does not exist, on reads, load zeros instead of reading empty space.
  * TODO: allow blocks to be unsorted on disk (good for non-tiered solvers)
  * TODO: make it so that it prefetches some blocks.
  * TODO: add compression to save space.
@@ -31,10 +33,9 @@ import edu.berkeley.gamesman.core.Configuration;
 public class CachedDatabase extends MemoryDatabase {
 
 	/** Total size in bytes that cache will occupy in RAM */
-	public static int cacheSize = 4096 * 1000;
-	
+	public static int cacheSize = 1024 * 1024 * 40; 
 	/** Size of a basic block that this DB will work with */
-	public static int pageSize = 4096 * 500; 	// Default Block Size = 4k.
+	public static int pageSize = 1024 * 1024 * 2; 	// Default Block Size = 4k.
 	
 	/** Set this to False so that flush() only works at close() */
 	public static boolean flushWhenOpen = false;
@@ -49,6 +50,8 @@ public class CachedDatabase extends MemoryDatabase {
 	private int clockPointer;			 		// Pointer for the next available buffer.
 	
 	private RandomAccessFile fileDescriptor;	// The file descriptor to this database
+	
+	private int lastBlockID;					// ID of the block last referenced.
 	
 	/* Some statistical variables */
 	static enum Stats { HIT_READS, TOTAL_READS, HIT_WRITES,  TOTAL_WRITES,
@@ -99,6 +102,7 @@ public class CachedDatabase extends MemoryDatabase {
 		blockIDs.clear();
 		for (int i = 0; i < bufferPoolSize; i ++) blockIDsArray[i] = -1;
 		clockPointer = 0;
+		lastBlockID = -1;
 		Statistics = new int[Stats.values().length];
 	}
 	
@@ -137,7 +141,7 @@ public class CachedDatabase extends MemoryDatabase {
 			flush();
 			fileDescriptor.getChannel().close();
 			fileDescriptor.close();			
-			// printStats(); - not really necessary here
+			 printStats(); //not really necessary here
 		} catch (IOException e) {
 			e.printStackTrace(); System.exit(0);
 		} catch (Exception e) {
@@ -147,14 +151,14 @@ public class CachedDatabase extends MemoryDatabase {
 	
 	@Override
 	protected byte getByte(long index) {
-		Statistics[Stats.TOTAL_READS.ordinal()] ++;
 		int blockID = (int) (index / pageSize);
+		if (lastBlockID != blockID) Statistics[Stats.TOTAL_READS.ordinal()] ++;
 		int byteOffset = (int) index % pageSize;
 		int pageID;
 		
 		// First check cache
 		if (blockIDs.containsKey(blockID)) {
-			Statistics[Stats.HIT_READS.ordinal()] ++;
+			if (lastBlockID != blockID) Statistics[Stats.HIT_READS.ordinal()] ++;
 			pageID = blockIDs.get(blockID);
 		} else { // Then check disk
 			pageID = getFreePage();
@@ -162,19 +166,20 @@ public class CachedDatabase extends MemoryDatabase {
 		}
 
 		notUseful[pageID] = false;
+		lastBlockID = blockID;
 		return this.bufferPool[pageID][byteOffset];
 	}
 
 	@Override
 	protected void putByte(long index, byte data, boolean preserve) {
-		Statistics[Stats.TOTAL_WRITES.ordinal()] ++;
 		int blockID = (int) (index / pageSize);
+		if (lastBlockID != blockID) Statistics[Stats.TOTAL_WRITES.ordinal()] ++;
 		int byteOffset = (int) index % pageSize;
 		int pageID;
 		
 		// Check if the page is in cache
 		if (blockIDs.containsKey(blockID)) {
-			Statistics[Stats.HIT_WRITES.ordinal()] ++;
+			if (lastBlockID != blockID) Statistics[Stats.HIT_WRITES.ordinal()] ++;
 			pageID = blockIDs.get(blockID);
 		} else { // Have to go to disk
 			pageID = getFreePage();
@@ -183,6 +188,7 @@ public class CachedDatabase extends MemoryDatabase {
 		
 		notUseful[pageID] = false;
 		dirtyBit[pageID] = true;
+		lastBlockID = blockID;
 		if (preserve) bufferPool[pageID][byteOffset] |= data;
 		else bufferPool[pageID][byteOffset] = data;
 	}
@@ -257,13 +263,16 @@ public class CachedDatabase extends MemoryDatabase {
 		int writeHitCount = Statistics[Stats.HIT_WRITES.ordinal()];
 		int totalReadCount = Statistics[Stats.TOTAL_READS.ordinal()];
 		int totalWriteCount = Statistics[Stats.TOTAL_WRITES.ordinal()];
+		int pageLoads = Statistics[Stats.PAGE_LOADS.ordinal()];
+		int pageWrites = Statistics[Stats.PAGE_WRITES.ordinal()];
 		float rhr = (readHitCount == 0) ? 0.0f : new Float(readHitCount * 100) / (totalReadCount);
-		System.out.printf("+ Read Hit Rate:     %6.2f%% out of %-8d +\n", rhr, totalReadCount);
+		System.out.printf("+ Read Hit Rate:  %6.2f%% out of %s pages  +\n", rhr, Util.bytesToString(totalReadCount));
 		float whr = (writeHitCount == 0) ? 0.0f : new Float(writeHitCount * 100) / (totalWriteCount);
-		System.out.printf("+ Write Hit Rate:    %6.2f%% out of %-8d +\n", whr, totalWriteCount);		
-		System.out.printf("+ I/O Page Load Count:  %8d             +\n", Statistics[Stats.PAGE_LOADS.ordinal()]);
-		System.out.printf("+ I/O Page Write Count: %8d             +\n", Statistics[Stats.PAGE_WRITES.ordinal()]);
-		System.out.printf("+ Pages in Memory:     %8d/%-8d     +\n", Statistics[Stats.PAGES.ordinal()], bufferPoolSize);
+		System.out.printf("+ Write Hit Rate: %6.2f%% out of %s pages  +\n", whr, Util.bytesToString(totalWriteCount));		
+		System.out.printf("+ Cache/Page=Pages:  %sb /%sb = %5d    +\n", Util.bytesToString(cacheSize), Util.bytesToString(pageSize), bufferPoolSize);
+		System.out.printf("+ I/O Read:      %8d pages = %sb      +\n", pageLoads, Util.bytesToString(pageLoads * pageSize));
+		System.out.printf("+ I/O Write:     %8d pages = %sb      +\n", pageWrites, Util.bytesToString(pageWrites * pageSize));
+		System.out.printf("+ Pages Used/Total:    %8d/%-8d     +\n", Statistics[Stats.PAGES.ordinal()], bufferPoolSize);
 		System.out.printf("+ Flush() Call Count:   %8d             +\n", Statistics[Stats.FLUSHES.ordinal()]);
 		System.out.printf("+--------------------------------------------+\n");
 	}
@@ -280,19 +289,18 @@ public class CachedDatabase extends MemoryDatabase {
 	public static void main(String[] args) {
 		
 		/* Printing some variables */
-		System.out.println("Probing JVM...");
 		Runtime thisMachine = Runtime.getRuntime();
 		int procNum = thisMachine.availableProcessors();
 		System.out.println("Available Processors: " + procNum);
-		System.out.println("Free Memory:  " + thisMachine.freeMemory() / 1024 / 1024 + "MB.");
-		System.out.println("Total Memory: " + thisMachine.totalMemory() / 1024 / 1024 + "MB.");
+		System.out.println("Free Memory:  " + Util.bytesToString(thisMachine.freeMemory()));
+		System.out.println("Total Memory: " + Util.bytesToString(thisMachine.totalMemory()));
 		
 		
 		/* Defining Variables */
 		long startTime = (new Date()).getTime();
 		Random random = new Random();
-		int testSize = 25000;//000;
-		int [] bitSizes = new int[] { 57 }; //63, 32, 30, 29, 28, 60, 43, 32, 31, 9, 8, 7, 5, 3, 2, 1 };
+		int testSize = 250;//000;
+		int [] bitSizes = new int[] { 57, 63, 32, 30, 29, 28, 60, 43, 32, 31, 9, 8, 7, 5, 3, 2, 1 };
 		int bitSize = 0;
 		for (int i : bitSizes) bitSize += i; 
 		BigInteger[] BigInts = new BigInteger[testSize];
@@ -306,8 +314,6 @@ public class CachedDatabase extends MemoryDatabase {
 		/* Initializing the Database */
 		CachedDatabase DB = new CachedDatabase();
 		DB.initialize(filename, null);
-		System.out.println("Number of Pages: " + DB.bufferPoolSize);
-		System.out.println("Cache Size: " + cacheSize);
 		
 		/* Generating Random Numbers */
 		int bc;
@@ -353,11 +359,9 @@ public class CachedDatabase extends MemoryDatabase {
 		
 		/* Closing the database and outputting results */
 		DB.close();
-		DB.printStats();
-		System.out.printf("Datbase size: %d bytes.\n", DB.getSize());
 		System.out.printf("%d tests passed. %d tests failed.\n", pass, fail);
 		long endTime = (new Date()).getTime() - startTime;
-		System.out.printf("Testing Complete in %d milli-seconds.\n", endTime);
+		System.out.printf("Testing Complete in %s.\n", Util.millisToETA(endTime));
 		
 		
 		
