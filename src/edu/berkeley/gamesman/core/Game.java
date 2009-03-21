@@ -76,10 +76,10 @@ public abstract class Game<State> {
 	}
 	
 	/**
-	 * @return whether this is a puzzle--this is used to determine if move values should flip each turn.
+	 * @return The number of players, 2 for a game, 1 for a puzzle
 	 */
-	public boolean isPuzzle() {
-		return false;
+	public int getPlayerCount() {
+		return 2;
 	}
 
 	/**

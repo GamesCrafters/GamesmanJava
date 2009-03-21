@@ -287,7 +287,9 @@ public final class Record {
 				map.get(rf).add(r.get(rf));
 			}
 		}
-		boolean isPuzzle = conf.getGame().isPuzzle();
+		
+		//TODO - someday maybe take games with more than 2 players into account?
+		boolean isPuzzle = conf.getGame().getPlayerCount() == 0;
 
 		PrimitiveValue pv; // the value as if we were playing a game.
 		if(!conf.getStoredFields().containsKey(RecordFields.VALUE))
