@@ -212,12 +212,13 @@ public class JSONInterface extends GamesmanApplication {
 			} else if (filename != null && new File(new URI(filename)).exists()) {
 				System.out.println("Loading solved database "+filename+".");
 				Database db = dbClass.getConstructor().newInstance();
-				db.initialize(filename, new Configuration(new Properties(), true));
+				db.initialize(filename, null);
 				Configuration conf = db.getConfiguration();
 				conf.setDatabase(db);
 				return conf;
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			Util.warn("Failed to load database "+filename, e);
 		} catch (Util.FatalError fe) {
 			// These aren't actually fatal, so don't rethrow.
