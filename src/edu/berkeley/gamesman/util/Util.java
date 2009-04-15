@@ -357,7 +357,8 @@ public final class Util {
 		ObjectInputStream ois;
 		try {
 			ois = new ObjectInputStream(bais);
-			return checkedCast(ois.readObject());
+		//	return checkedCast(ois.readObject());
+			return (T)ois.readObject();
 		} catch (Exception e) {
 			Util.fatalError("Could not deserialize object", e);
 		}
@@ -431,7 +432,8 @@ public final class Util {
 	 */
 	public static <T> T typedInstantiateArg(String name, Class<T> baseClass, Object arg) throws ClassNotFoundException{
 		try {
-			return checkedCast(typedForName(name, baseClass).getConstructors()[0].newInstance(arg));
+			//return checkedCast(typedForName(name, baseClass).getConstructors()[0].newInstance(arg));
+			return (T)typedForName(name, baseClass).getConstructors()[0].newInstance(arg);
 		} catch (ClassNotFoundException e) {
 			throw e;
 		} catch (Exception e) {
