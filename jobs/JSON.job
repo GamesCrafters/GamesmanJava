@@ -1,0 +1,17 @@
+json.databasedirectory = file:///tmp/
+
+# "json.unsolved.*" is the default configuration for unsolved games.
+# "json.fields.*" is the list of valid fields (in the database filename)
+json.unsolved.2x2x2 = jobs/2x2x2.job
+json.fields.2x2x2 =
+
+json.unsolved.connect4 = jobs/Connect4.job
+json.fields.connect4 = width,height,pieces
+
+json.unsolved.pegsolitaire = jobs/TriangularPegSolitaire.job
+json.fields.pegsolitaire = size
+
+# Database filenames are gamename_name1_value1_name2_value2.db
+# Special cases (values on the right side of = are .job files):
+json.solved.2x2x2 = jobs/2x2x2.job
+json.solved.connect4_width_7_height_6 = jobs/Connect4Hadoop.job

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.Properties;
 import java.util.prefs.Preferences;
 import java.util.prefs.BackingStoreException;
 
@@ -13,7 +14,6 @@ import org.python.util.InteractiveConsole;
 import org.python.util.JLineConsole;
 import org.python.util.ReadlineConsole;
 
-import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.JythonUtil;
 import edu.berkeley.gamesman.util.Util;
@@ -33,7 +33,7 @@ public final class JythonInterface extends GamesmanApplication {
 	public JythonInterface() {}
 	
 	@Override
-	public int run(Configuration conf) {
+	public int run(Properties props) {
 		//Preferences prefs = Preferences.userNodeForPackage(JythonInterface.class);
 		
 		String consoleName =null; // prefs.get("console", null);

@@ -51,9 +51,9 @@ public class Gamesman {
 			System.out.println("Couldn't find " + entryPoint + " in " + APPLICATION_MAP.keySet());
 			return;
 		}
-		Configuration conf = null;
+		Properties props = null;
 		if(jobFile != null) {
-			Properties props = Configuration.readProperties(jobFile);
+			props = Configuration.readProperties(jobFile);
 			EnumSet<DebugFacility> debugOpts = EnumSet.noneOf(DebugFacility.class);
 			ClassLoader cl = ClassLoader.getSystemClassLoader();
 			cl.setDefaultAssertionStatus(false);
@@ -68,11 +68,13 @@ public class Gamesman {
 				DebugFacility.CORE.setupClassloader(cl);
 			}
 			Util.enableDebuging(debugOpts);
+			/*
 			try {
 				conf = new Configuration(props);
 			} catch (ClassNotFoundException e) {
 				Util.fatalError("Configuration contains unknown game or hasher ", e);
 			}
+			*/
 		}
 
 		Class<? extends GamesmanApplication> cls;
@@ -85,7 +87,7 @@ public class Gamesman {
 		}
 		try {
 			GamesmanApplication ga = cls.getConstructor().newInstance();
-			ga.run(conf);
+			ga.run(props);
 		} catch (Exception e) {
 			Util.fatalError("Could not construct " + cls.getName(), e);
 		}

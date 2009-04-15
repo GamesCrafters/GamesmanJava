@@ -8,6 +8,7 @@ import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.EnumSet;
+import java.util.Properties;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
@@ -33,8 +34,12 @@ public final class GamesmanMain extends GamesmanApplication {
 	public GamesmanMain() {}
 
 	@Override
-	public int run(Configuration conf) {
-		this.conf = conf;
+	public int run(Properties props) {
+		try {
+			this.conf = new Configuration(props);
+		} catch (ClassNotFoundException e) {
+			Util.fatalError("Configuration contains unknown game or hasher ", e);
+		}
 		gm = Util.checkedCast(conf.getGame());
 		Thread.currentThread().setName("Gamesman");
 		String masterName = conf.getProperty("gamesman.master","LocalMaster");

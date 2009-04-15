@@ -12,6 +12,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Properties;
 import java.util.Queue;
 import java.util.TreeMap;
 import java.util.Map.Entry;
@@ -55,7 +56,14 @@ public class DatabaseDump extends GamesmanApplication {
 	public DatabaseDump() {}
 	
 	@Override
-	public int run(Configuration conf) {
+	public int run(Properties props) {
+		Configuration conf;
+		try {
+			conf = new Configuration(props);
+		} catch (ClassNotFoundException e) {
+			Util.fatalError("Configuration contains unknown game or hasher ", e);
+			return 1;
+		}
 		Database db;
 		try {
 			db = conf.openDatabase();

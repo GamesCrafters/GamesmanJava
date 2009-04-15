@@ -28,7 +28,7 @@ public class SolverModule extends UIModule {
 	protected void u_solve(ArrayList<String> args) {
 		proccessCommand("i");
 		GamesmanMain main = new GamesmanMain();
-		main.run(conf);
+		main.run(conf.getProperties());
 	}
 	
 	protected void u_initializeConfiguration(ArrayList<String> args) throws ClassNotFoundException {

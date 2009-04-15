@@ -1,6 +1,6 @@
 package edu.berkeley.gamesman;
 
-import edu.berkeley.gamesman.core.Configuration;
+import java.util.Properties;
 
 /**
  * This is the abstract class that all classes that want to
@@ -17,8 +17,8 @@ public abstract class GamesmanApplication {
 	public GamesmanApplication() {}
 	/**
 	 * Causes the current GamesmanApplication to start running.
-	 * @param conf The configuration, probably from a job file
+	 * @param conf The properties, probably from a job file
 	 * @return Exit status
 	 */
-	public abstract int run(Configuration conf);
+	public abstract int run(Properties props);
 }

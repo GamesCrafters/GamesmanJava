@@ -99,9 +99,20 @@ public class Configuration {
 	 * @param newH The Hasher associated with this configuration.
 	 */
 	public void initialize(Game<?> newG, Hasher<?> newH) {
+		initialize(g,h,true);
+	}
+
+	/**
+	 * Initialize the Configuration with a game and a hasher object.
+	 * @param newG The Game associated with this configuration.
+	 * @param newH The Hasher associated with this configuration.
+	 */
+	public void initialize(Game<?> newG, Hasher<?> newH, boolean prepare) {
 		g = newG;
 		h = newH;
-		g.prepare();
+		if (prepare) {
+			g.prepare();
+		}
 	}
 
 	/**
@@ -110,7 +121,7 @@ public class Configuration {
 	 * @param hashname The Hasher associated with this configuration.
 	 * @throws ClassNotFoundException 
 	 */
-	public void initialize(String gamename, String hashname) throws ClassNotFoundException {
+	public void initialize(String gamename, String hashname, boolean prepare) throws ClassNotFoundException {
 		// Python classes end with ".py"
 		if (gamename.indexOf('.') == -1) {
 			gamename = "edu.berkeley.gamesman.game."+gamename;
@@ -120,9 +131,14 @@ public class Configuration {
 			hashname = "edu.berkeley.gamesman.hasher."+hashname;
 		}
 		setProperty("gamesman.hasher",hashname);
-		g = Util.typedInstantiateArg(gamename,Game.class, this);
-		h = Util.typedInstantiateArg(hashname,Hasher.class, this);
-		g.prepare();
+		initialize(
+			Util.typedInstantiateArg(gamename,Game.class, this),
+			Util.typedInstantiateArg(hashname,Hasher.class, this),
+			prepare);
+	}
+
+	public void initialize(String gamename, String hashname) throws ClassNotFoundException {
+		initialize(gamename, hashname, true);
 	}
 
 	/**
@@ -405,12 +421,13 @@ public class Configuration {
 		String line;
 		try {
 			while((line = r.readLine()) != null){
-				if(line.equals("")) continue;
-				String[] arr = line.split("\\s+=\\s+");
+				line = line.trim();
+				if(line.equals("") || line.charAt(0) == '#') continue;
+				String[] arr = line.split("=",2); // semantics are slightly different from python
 				//The following line can't be here because it causes the Util class to be loaded before
 				//we're ready for it.
 //				Util.assertTrue(arr.length == 2, "Malformed property file at line \""+line+"\"");
-				props.setProperty(arr[0], arr[1]);
+				props.setProperty(arr[0].trim(), arr[1].trim());
 			}
 		} catch (IOException e) {
 			Util.fatalError("Could not read from property file",e);
@@ -434,6 +451,10 @@ public class Configuration {
 	public void deleteProperty(String key) {
 		props.remove(key);
 	}
+
+	public Properties getProperties() {
+		return props;
+	}
 	
 	private static BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 
@@ -451,7 +472,15 @@ public class Configuration {
 		}
 		return s;
 	}
-	
+
+	public void setDatabase(Database db) {
+		this.db = db;
+	}
+
+	public Database getDatabase() {
+		return db;
+	}
+
 	public Database openDatabase() throws ClassNotFoundException {
 		if(db != null) return db;
 		db = Util.typedInstantiate(
