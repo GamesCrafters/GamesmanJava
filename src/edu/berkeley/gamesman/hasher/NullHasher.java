@@ -9,7 +9,6 @@ import edu.berkeley.gamesman.core.Hasher;
  * NullHasher is a placeholder for games that do not allow use of a custom hasher.
  * It does nothing interesting.
  * @author Steven Schlansker
- * @param <Board> 
  */
 public class NullHasher extends Hasher<Object> {
 	/**

@@ -111,7 +111,7 @@ public final class Util {
 	 * Print a non-fatal warning and continue
 	 * @param s The condition that caused this warning
 	 */
-	public static boolean warn(String s) {
+	public static void warn(String s) {
 		System.err.println("WARN: (" + Thread.currentThread().getName() + ") "
 				+ s);
 		System.err.println("Stack trace follows:");
@@ -120,12 +120,12 @@ public final class Util {
 		} catch (Warning e) {
 			e.printStackTrace(System.err);
 		}
-		return true;
 	}
 	
 	/**
 	 * Print a non-fatal warning and continue
 	 * @param s The condition that caused this warning
+	 * @param ex The exception that caused the warning
 	 */
 	public static void warn(String s, Exception ex) {
 		System.err.println("WARN: (" + Thread.currentThread().getName() + ") "
@@ -145,7 +145,6 @@ public final class Util {
 	 * Each facility is turned on by setting the property gamesman.debug.Facility
 	 * (e.g. gamesman.debug.CORE) to some value v such that Util.parseBoolean(v) is true;
 	 * @see DebugFacility {@link DebugFacility}
-	 * @see Util {@link Util#parseBoolean(String)}
 	 * @param debugs An EnumSet<DebugFacility> of the desired DebugFacility's to be printed.
 	 */
 	public static void enableDebuging(EnumSet<DebugFacility> debugs){
@@ -197,11 +196,12 @@ public final class Util {
 	/** 
 	 * Convert a number of bytes say 4096 and convert it into
 	 * a more readable string like 4KB.
-	 * @param bytes - The number of bytes that needs to be converted
+	 * @param in_bytes - The number of bytes that needs to be converted
 	 * @return - Formatted string.
 	 * @author Alex Trofimov
 	 */
-	public static String bytesToString(long bytes) {
+	public static String bytesToString(final long in_bytes) {
+		long bytes = in_bytes;
 		assert bytes > 0l;
 		if (bytes < 1024) return String.format("%dB", bytes);
 		char[] p = new char[] { 'K', 'M', 'G', 'T', 'P', 'E' };
@@ -357,7 +357,7 @@ public final class Util {
 		ObjectInputStream ois;
 		try {
 			ois = new ObjectInputStream(bais);
-			return (T)checkedCast(ois.readObject());
+			return checkedCast(ois.readObject());
 		} catch (Exception e) {
 			Util.fatalError("Could not deserialize object", e);
 		}
@@ -396,10 +396,9 @@ public final class Util {
 		if (name.endsWith(".py")) {
 			String pyClass = name.substring(0, name.length()-3);
 			return JythonUtil.getClass(pyClass, pyClass, baseClass);
-		} else {
-			Class<? extends T> cls = Class.forName(name).asSubclass(baseClass);
-			return cls;
 		}
+		Class<? extends T> cls = Class.forName(name).asSubclass(baseClass);
+		return cls;
 	}
 	
 	/**
@@ -428,11 +427,11 @@ public final class Util {
 	 * @param baseClass Usually equals the template param
 	 * @param arg The argument to provide to the constructor
 	 * @return A new instance (created with the non-default constructor)
-	 * @throws ClassNotFoundException 
+	 * @throws ClassNotFoundException The class could not be loaded
 	 */
 	public static <T> T typedInstantiateArg(String name, Class<T> baseClass, Object arg) throws ClassNotFoundException{
 		try {
-			return (T) typedForName(name, baseClass).getConstructors()[0].newInstance(arg);
+			return checkedCast(typedForName(name, baseClass).getConstructors()[0].newInstance(arg));
 		} catch (ClassNotFoundException e) {
 			throw e;
 		} catch (Exception e) {
@@ -551,7 +550,7 @@ public final class Util {
 	
 	@SuppressWarnings("unchecked")
 	public static <H> H[] toArray(List<H> list) {
-		return (H[]) list.toArray((H[])Array.newInstance(list.get(0).getClass(), list.size()));
+		return list.toArray((H[])Array.newInstance(list.get(0).getClass(), list.size()));
 	}
 	
 	public static int binaryRangeSearch(BigInteger index,BigInteger[] rangeEnds){

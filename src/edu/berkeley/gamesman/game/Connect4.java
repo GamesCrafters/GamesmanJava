@@ -10,7 +10,6 @@ import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.game.connect4.C4Board;
 import edu.berkeley.gamesman.game.connect4.C4Piece;
 import edu.berkeley.gamesman.hasher.PerfectConnect4Hash;
-import edu.berkeley.gamesman.hasher.UniformPieceHasher;
 import edu.berkeley.gamesman.hasher.util.C4UniformPieces;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.DependencyResolver;

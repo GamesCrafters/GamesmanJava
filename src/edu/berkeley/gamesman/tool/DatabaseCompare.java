@@ -14,10 +14,15 @@ import edu.berkeley.gamesman.util.Util;
 /**
  * @author Steven Schlansker
  *
- * @param <S>
+ * @param <S> The state type of the comparison
  */
 public class DatabaseCompare<S> {
 
+	/**
+	 * Compare two arguments
+	 * @param args the arguments
+	 * @throws ClassNotFoundException A class could not be loaded
+	 */
 	public void compare(String args[]) throws ClassNotFoundException {
 		Configuration c1 = new Configuration(args[0]);
 		Configuration c2 = new Configuration(args[1]);
@@ -50,6 +55,10 @@ public class DatabaseCompare<S> {
 		}
 	}
 	
+	/**
+	 * Call the database comparator
+	 * @param args the arguments to use
+	 */
 	public static void main(String args[]){
 		try {
 			new DatabaseCompare<Object>().compare(args);

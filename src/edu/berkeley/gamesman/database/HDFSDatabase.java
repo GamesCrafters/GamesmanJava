@@ -11,7 +11,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import edu.berkeley.gamesman.core.Database;
-import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.hadoop.TierMapReduce;
 import edu.berkeley.gamesman.hadoop.TieredHadoopTool;

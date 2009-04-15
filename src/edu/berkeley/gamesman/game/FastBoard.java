@@ -128,7 +128,7 @@ public final class FastBoard {
 		 * having to constantly be creating and destroying pieces
 		 */
 		void reset(final BigInteger black, final BigInteger hashNum,
-				final Color color) {
+				final Color color1) {
 			hash = hashNum;
 			if (hashNum.compareTo(BigInteger.ZERO) > 0) {
 				BigInteger addVal = hashNum.multiply(index.add(BigInteger.ONE));
@@ -139,7 +139,7 @@ public final class FastBoard {
 				addRed = BigInteger.ONE;
 				addBlack = BigInteger.ZERO;
 			}
-			this.color = color;
+			this.color = color1;
 		}
 
 		BigInteger nextBlack() {
@@ -153,15 +153,13 @@ public final class FastBoard {
 		BigInteger addBlack() {
 			if (color == Color.BLACK)				// So suppose I already know the current hash
 				return addBlack.subtract(hash);		// and I just want to calculate the change
-			else									// whenever a black move is made to the left...
-				return BigInteger.ZERO;				// Subtraction to the rescue
+			return BigInteger.ZERO;				// Subtraction to the rescue
 		}
 
 		BigInteger addRed() {						// Same goes for red pieces
 			if (color == Color.BLACK)
 				return addRed.subtract(hash);
-			else
-				return BigInteger.ZERO;
+			return BigInteger.ZERO;
 		}
 
 		BigInteger getHash() {
@@ -191,12 +189,13 @@ public final class FastBoard {
 	 * First position = All black pieces followed by all red pieces (hash is zero)
 	 * @param height The height of the board
 	 * @param width The width of the board
-	 * @param tier Each digit in base(height+1) is the height of a column
+	 * @param in_tier Each digit in base(height+1) is the height of a column
 	 */
-	public FastBoard(final int height, final int width, int tier) {
+	public FastBoard(final int height, final int width, final int in_tier) {
+		int tier1 = in_tier;
 		this.height = height;
 		this.width = width;
-		this.tier = tier;
+		this.tier = tier1;
 		columns = new Column[width];
 		int[] colHeight = new int[width];	//For temporary use
 		int pInt = 0;		//--> Makes things easier and faster to
@@ -206,11 +205,11 @@ public final class FastBoard {
 		for (col = 0; col < width; col++) {				// a) Determines column heights by unhashing tier number
 			columns[col] = new Column(height, colTier);	//   (If cycling through tiers, this can be done in constant time
 			colTier *= (height + 1);					//    but since there are so many more hashes than tiers, it hardly
-			colHeight[col] = tier%(height+1);			//    seems worthwhile)
+			colHeight[col] = tier1%(height+1);			//    seems worthwhile)
 			if (colHeight[col] == height)				// 
 				oc--;									// b) Initializes columns along with their tier values
 			pInt += colHeight[col];						//
-			tier /= height + 1;							// c) Determines the number of pieces on the board
+			tier1 /= height + 1;							// c) Determines the number of pieces on the board
 		}												//
 		pieces = BigInteger.valueOf(pInt);				//
 		turn = (pInt % 2 == 1) ? Color.BLACK : Color.RED;	// Red always goes first: Smoke before... my ass
@@ -484,15 +483,14 @@ public final class FastBoard {
 		}
 		if (openColumns>0)
 			return PrimitiveValue.UNDECIDED;
-		else
-			return PrimitiveValue.TIE;
+		return PrimitiveValue.TIE;
 	}
 
 	/*
 	 * Looks for a win that uses the given piece.
 	 */
 	private boolean checkLastWin(final int row, final int col, final int piecesToWin) {
-		Color turn = get(row, col).getColor();
+		Color turn1 = get(row, col).getColor();
 		int ext;
 		int stopPos;
 		Piece p;
@@ -502,7 +500,7 @@ public final class FastBoard {
 		stopPos = Math.min(col, piecesToWin - ext);
 		for (int i = 1; i <= stopPos; i++) {
 			p = get(row, col - i);
-			if (p != null && p.getColor() == turn)
+			if (p != null && p.getColor() == turn1)
 				ext++;
 			else
 				break;
@@ -510,7 +508,7 @@ public final class FastBoard {
 		stopPos = Math.min(width - 1 - col, piecesToWin - ext);
 		for (int i = 1; i <= stopPos; i++) {
 			p = get(row, col + i);
-			if (p != null && p.getColor() == turn)
+			if (p != null && p.getColor() == turn1)
 				ext++;
 			else
 				break;
@@ -523,7 +521,7 @@ public final class FastBoard {
 		stopPos = Math.min(Math.min(row, col), piecesToWin - ext);
 		for (int i = 1; i <= stopPos; i++) {
 			p = get(row - i, col - i);
-			if (p != null && p.getColor() == turn)
+			if (p != null && p.getColor() == turn1)
 				ext++;
 			else
 				break;
@@ -532,7 +530,7 @@ public final class FastBoard {
 				piecesToWin - ext);
 		for (int i = 1; i <= stopPos; i++) {
 			p = get(row + i, col + i);
-			if (p != null && p.getColor() == turn)
+			if (p != null && p.getColor() == turn1)
 				ext++;
 			else
 				break;
@@ -545,7 +543,7 @@ public final class FastBoard {
 		stopPos = Math.min(Math.min(height - 1 - row, col), piecesToWin - ext);
 		for (int i = 1; i <= stopPos; i++) {
 			p = get(row + i, col - i);
-			if (p != null && p.getColor() == turn)
+			if (p != null && p.getColor() == turn1)
 				ext++;
 			else
 				break;
@@ -553,7 +551,7 @@ public final class FastBoard {
 		stopPos = Math.min(Math.min(row, width - 1 - col), piecesToWin - ext);
 		for (int i = 1; i <= stopPos; i++) {
 			p = get(row - i, col + i);
-			if (p != null && p.getColor() == turn)
+			if (p != null && p.getColor() == turn1)
 				ext++;
 			else
 				break;
@@ -565,7 +563,7 @@ public final class FastBoard {
 		// necessary to look down, not up
 		if (row >= piecesToWin - 1)
 			for (ext = 1; ext < piecesToWin; ext++) {
-				if (get(row - ext, col).getColor() != turn)
+				if (get(row - ext, col).getColor() != turn1)
 					break;
 			}
 		if (ext >= piecesToWin)

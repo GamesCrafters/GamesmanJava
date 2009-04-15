@@ -21,7 +21,7 @@ import edu.berkeley.gamesman.core.Database;
  * @author Jin-Su Oh
  *	DatabaseModules handles user's input to manipulate the database file.
  *	It provides the ability open and close database, and read, edit and view records.
- * 	@db holds the opened database file.
+ * 	db holds the opened database file.
  *  curRecord holds a record that is read.
  *  loc keeps track of where in the database file user is accessing.  
  */

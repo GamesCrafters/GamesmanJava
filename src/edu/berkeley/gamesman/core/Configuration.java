@@ -18,8 +18,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.Map.Entry;
 
-import edu.berkeley.gamesman.util.DebugFacility;
-import edu.berkeley.gamesman.util.DependencyResolver;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -54,6 +52,7 @@ public class Configuration {
 	 * Given a Properties, will construct a Configuration
 	 * @param props A Properties object (probably constructed from a job file).
 	 * @param initLater You must call initialize() once you have created the appropriate Game and Hasher objects.
+	 * @throws ClassNotFoundException Could not find game class or hasher class
 	 */
 	public Configuration(Properties props, boolean initLater) throws ClassNotFoundException{
 		this.props = props;
@@ -68,15 +67,17 @@ public class Configuration {
 	/**
 	 * Given a Properties, will construct a Configuration
 	 * @param props A Properties object (probably constructed from a job file).
+	 * @throws ClassNotFoundException Could not find game class or hasher class
 	 */
-	public Configuration(Properties props) throws ClassNotFoundException{
+	public Configuration(Properties props) throws ClassNotFoundException {
 		this(props, false);
 	}
 	/**
 	 * Calls new Configuration(Configuration.readProperties(path))
 	 * @param path The path to the job file to read
+	 * @throws ClassNotFoundException Could not find game class or hasher class
 	 */
-	public Configuration(String path) throws ClassNotFoundException{
+	public Configuration(String path) throws ClassNotFoundException {
 		this(readProperties(path),false);
 	}
 	
@@ -117,11 +118,13 @@ public class Configuration {
 
 	/**
 	 * Initialize the Configuration with a game and a hasher object.
-	 * @param gamename The Game associated with this configuration.
-	 * @param hashname The Hasher associated with this configuration.
-	 * @throws ClassNotFoundException 
+	 * @param in_gamename The Game associated with this configuration.
+	 * @param in_hashname The Hasher associated with this configuration.
+	 * @throws ClassNotFoundException Could not load either the hasher or game class
 	 */
-	public void initialize(String gamename, String hashname, boolean prepare) throws ClassNotFoundException {
+	public void initialize(final String in_gamename, final String in_hashname, boolean prepare) throws ClassNotFoundException {
+		String gamename = in_gamename, hashname = in_hashname;
+		
 		// Python classes end with ".py"
 		if (gamename.indexOf('.') == -1) {
 			gamename = "edu.berkeley.gamesman.game."+gamename;
@@ -174,23 +177,19 @@ public class Configuration {
 		storedFields = map;
 	}
 	
-	private void checkCompatibility() {
-		if(!DependencyResolver.isHasherAllowed(g.getClass(), h.getClass()))
-			Util.fatalError("Game and hasher are not compatible!");
-	}
-	
 	/**
 	 * Unserialize a configuration from a bytestream
 	 * @param barr Bytes to deserialize
 	 * @return a Configuration
+	 * @throws ClassNotFoundException Could not find game class or hasher class
 	 */
-	public static Configuration load(byte[] barr) throws ClassNotFoundException{
+	public static Configuration load(byte[] barr) throws ClassNotFoundException {
 		try{
-			DataInputStream in = new DataInputStream(new ByteArrayInputStream(barr));
+			DataInputStream instream = new DataInputStream(new ByteArrayInputStream(barr));
 			Properties props = new Properties();
 
-			byte[] t = new byte[in.readInt()];
-			in.readFully(t);
+			byte[] t = new byte[instream.readInt()];
+			instream.readFully(t);
 			ByteArrayInputStream bin = new ByteArrayInputStream(t);
 			props.load(bin);
 			Configuration conf = new Configuration(props, true);
@@ -199,18 +198,18 @@ public class Configuration {
 
 			EnumMap<RecordFields, Pair<Integer, Integer>> sf = new EnumMap<RecordFields,Pair<Integer,Integer>>(RecordFields.class);
 
-			String gamename = in.readUTF();
-			String hashername = in.readUTF();
+			String gamename = instream.readUTF();
+			String hashername = instream.readUTF();
 			
-			int num = in.readInt();
+			int num = instream.readInt();
 			
 			//assert Util.debug(DebugFacility.CORE, "Expecting "+num+" stored fields");
 
 			for(int i = 0; i < num; i++){
-				String name = in.readUTF();
+				String name = instream.readUTF();
 				//assert Util.debug(DebugFacility.CORE," Found field "+name);
 				sf.put(RecordFields.valueOf(name),
-						new Pair<Integer,Integer>(in.readInt(),in.readInt()));
+						new Pair<Integer,Integer>(instream.readInt(),instream.readInt()));
 			}
 			conf.setStoredFields(sf);
 			
@@ -314,6 +313,8 @@ public class Configuration {
 	
 	/**
 	 * For python compatibility.
+	 * @param key the name of the configuration property
+	 * @return its value
 	 * @see #getProperty(String)
 	 */
 	public String __getitem__(String key) {
@@ -322,6 +323,8 @@ public class Configuration {
 	
 	/**
 	 * For python compatibility. Returns false if key does not exist.
+	 * @param key The key to check if it's in the configuration
+	 * @return is the key in the configuration?
 	 * @see #getProperty(String)
 	 */
 	public boolean __contains__(String key) {
@@ -435,6 +438,10 @@ public class Configuration {
 	}
 	
 
+	/**
+	 * Add all the properties into this configuration.  Property strings should be split by = signs.
+	 * @param propStrings the list of properties to set.
+	 */
 	public void addProperties(ArrayList<String> propStrings) {
 		for (String line : propStrings) {
 			if(line.equals("")) continue;
@@ -444,10 +451,17 @@ public class Configuration {
 		}
 	}
 	
+	/**
+	 * @return all keys in the configuration
+	 */
 	public Set<Object> getKeys() {
 		return props.keySet();
 	}
 	
+	/**
+	 * Remove a key from the configuration
+	 * @param key the key to remove
+	 */
 	public void deleteProperty(String key) {
 		props.remove(key);
 	}
@@ -458,6 +472,11 @@ public class Configuration {
 	
 	private static BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 
+	/**
+	 * Return a property, prompting the user if it doesn't exist
+	 * @param key the key to get
+	 * @return its value
+	 */
 	public String getPropertyWithPrompt(String key) {
 		String s = props.getProperty(key);
 		if(s == null){
@@ -481,6 +500,10 @@ public class Configuration {
 		return db;
 	}
 
+	/**
+	 * @return the Database used to store this particular solve
+	 * @throws ClassNotFoundException Could not load the database class
+	 */
 	public Database openDatabase() throws ClassNotFoundException {
 		if(db != null) return db;
 		db = Util.typedInstantiate(

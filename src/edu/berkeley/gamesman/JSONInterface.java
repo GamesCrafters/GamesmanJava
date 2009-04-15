@@ -48,9 +48,11 @@ public class JSONInterface extends GamesmanApplication {
 	Class<? extends Database> dbClass;
 
 	@Override
+
 	public int run(Properties props) {
 		this.serverConf = props;
 		try {
+
 			this.dbClass = Util.typedForName("edu.berkeley.gamesman.database."+serverConf.getProperty("gamesman.database","BlockDatabase"), Database.class);
 		} catch (ClassNotFoundException e) {
 			Util.warn("Can't load default database!", e);
@@ -63,7 +65,7 @@ public class JSONInterface extends GamesmanApplication {
 		} catch (ClassNotFoundException e1) {
 			Util.fatalError("Failed to create database",e1);
 		}
-		db.initialize(conf.getProperty("gamesman.db.uri"), null);
+		db.initialize(inconf.getProperty("gamesman.db.uri"), null);
 		this.conf = db.getConfiguration();
 		*/
 		int port = 0;
@@ -76,7 +78,11 @@ public class JSONInterface extends GamesmanApplication {
 		return 0;
 	}
 	
-	public void reallyRun(int port) {
+	/**
+	 * Run the server
+	 * @param port the port to listen on
+	 */
+	public void reallyRun(final int port) {
 		assert Util.debug(DebugFacility.JSON, "Loading JSON server...");
 		
 		ServerSocket ssock;

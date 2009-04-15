@@ -118,11 +118,7 @@ class SequenceReader implements RecordReader<BigIntegerWritable, NullWritable>{
 	
 	SequenceReader(SequenceSplit split){
 		this.split = split;
-		try {
-			pos = split.getLength();
-		} catch (IOException e) {
-			Util.fatalError("?");
-		}
+		pos = 0;
 	}
 	
 	public void close() throws IOException {
@@ -147,10 +143,10 @@ class SequenceReader implements RecordReader<BigIntegerWritable, NullWritable>{
 
 	public boolean next(BigIntegerWritable key, NullWritable value)
 			throws IOException {
-		if(pos >= 0){
+		if(pos <= split.getLength()){
 			key.set(split.s.add(BigInteger.valueOf(pos)));
 			//Util.debug("split: "+key.get()+" ("+split.s+")");
-			pos--;
+			pos++;
 			return true;
 		}
 		return false;

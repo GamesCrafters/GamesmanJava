@@ -88,7 +88,6 @@ public abstract class UIModule {
 	/**
 	 * Loops through the required properties for this module to run all of its
 	 * functions and creates a list of the keys missing in the configuration.
-	 * @param conf The configuration the module will be run on
 	 * @return List of missing keys in the given configuration
 	 */
 	public ArrayList<String> missingPropertyKeys() {
