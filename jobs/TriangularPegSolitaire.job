@@ -1,0 +1,9 @@
+gamesman.game = TriangularPegSolitaire.py
+gamesman.game.size = 5
+gamesman.solver = TopDownSolver
+gamesman.hasher = NullHasher
+gamesman.db.uri = file:///tmp/pegsolitaire.db
+gamesman.database = BlockDatabase
+gamesman.dotty.uri = file:///tmp/pegsolitaire.dot
+gamesman.debug.SOLVER = true
+gamesman.threads = 2

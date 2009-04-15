@@ -26,6 +26,7 @@ import edu.berkeley.gamesman.database.BlockDatabase;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Game;
+import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.util.DebugFacility;
@@ -277,10 +278,24 @@ public class JSONInterface extends GamesmanApplication {
 			if (rec != null) {
 				for(RecordFields f : storedFields){
 					if (f == RecordFields.VALUE) {
-						entry.put(f.name().toLowerCase(),rec.get().name().toLowerCase());
+						PrimitiveValue pv = rec.get();
+						if (pv==PrimitiveValue.WIN) pv = PrimitiveValue.LOSE;
+						else if (pv==PrimitiveValue.LOSE) pv = PrimitiveValue.WIN;
+						entry.put(f.name().toLowerCase(),pv.name().toLowerCase());
 					} else {
 						entry.put(f.name().toLowerCase(),rec.get(f));
 					}
+				}
+			} else {
+				PrimitiveValue pv = g.primitiveValue(state);
+				if (pv != PrimitiveValue.UNDECIDED) {
+					if (pv==PrimitiveValue.WIN) pv = PrimitiveValue.LOSE;
+					else if (pv==PrimitiveValue.LOSE) pv = PrimitiveValue.WIN;
+					entry.put("value", pv.name().toLowerCase());
+				}
+				int score = g.primitiveScore(state);
+				if (score > 0) {
+					entry.put("score", score);
 				}
 			}
 			entry.put("board", g.stateToString(state));
@@ -313,6 +328,7 @@ public class JSONInterface extends GamesmanApplication {
 					assert Util.debug(DebugFacility.JSON, "Connection closed.");
 					break; // connection closed.
 				}
+				System.out.println(line);
 				Map<String,String> j = new HashMap<String,String>();
 				line = line.replace(';', '&');
 				for (String param : line.split("&")) {
@@ -326,6 +342,7 @@ public class JSONInterface extends GamesmanApplication {
 					} catch (UnsupportedEncodingException e) {
 					}
 				}
+				System.out.println(j);
 				JSONObject response;
 				try {
 					try {
@@ -349,6 +366,7 @@ public class JSONInterface extends GamesmanApplication {
 						break;
 					}
 				}
+				System.out.println(response.toString());
 				w.println(response.toString());
 				w.flush();
 			}
@@ -374,11 +392,16 @@ public class JSONInterface extends GamesmanApplication {
 				}
 				T state = g.stringToState(board);
 				JSONArray responseArray = new JSONArray();
-				for(Pair<String,T> next : g.validMoves(state)){
-					JSONObject entry = new JSONObject();
-					entry.put("move", next.car);
-					fillJSONFields(config,entry, next.cdr);
-					responseArray.put(entry);
+
+				PrimitiveValue pv = g.primitiveValue(state);
+				if (pv == PrimitiveValue.UNDECIDED) {
+					// Game is not over yet...
+					for(Pair<String,T> next : g.validMoves(state)){
+						JSONObject entry = new JSONObject();
+						entry.put("move", next.car);
+						fillJSONFields(config,entry, next.cdr);
+						responseArray.put(entry);
+					}
 				}
 				response.put("response", responseArray);
 				response.put("status","ok");
