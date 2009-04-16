@@ -134,10 +134,11 @@ public class Configuration {
 			hashname = "edu.berkeley.gamesman.hasher."+hashname;
 		}
 		setProperty("gamesman.hasher",hashname);
-		initialize(
-			Util.typedInstantiateArg(gamename,Game.class, this),
-			Util.typedInstantiateArg(hashname,Hasher.class, this),
-			prepare);
+		this.g = Util.typedInstantiateArg(gamename,Game.class, this);
+		this.h = Util.typedInstantiateArg(hashname,Hasher.class, this);
+		if (prepare) {
+			g.prepare();
+		}
 	}
 
 	public void initialize(String gamename, String hashname) throws ClassNotFoundException {

@@ -1,0 +1,8 @@
+gamesman.game = Connect4
+gamesman.game.width = 5
+gamesman.game.height = 5
+gamesman.game.pieces = 4
+gamesman.hasher = PerfectConnect4Hash
+gamesman.solver = TierSolver
+gamesman.db.uri = file:///tmp/database5.db
+gamesman.database = BlockDatabase

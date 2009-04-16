@@ -68,11 +68,17 @@ public class MemoryDatabase extends Database{
 	}
 	
 	@Override
+	public Record getRecord(BigInteger recordIndex) {
+		return getRecord(recordIndex.longValue());
+	}
 	public Record getRecord(long recIndex) {
 		return getRecord(recIndex, new Record(this.conf));
 	}
 	
 	@Override 
+	public Record getRecord(BigInteger recordIndex, Record recordToReturn) {
+		return getRecord(recordIndex.longValue(), recordToReturn);
+	}
 	public Record getRecord(long recordIndex, Record recordToReturn) {
 		/* Defining Variables */
 		int recordSize = recordToReturn.bitlength();
@@ -177,6 +183,9 @@ public class MemoryDatabase extends Database{
 	}
 	
 	@Override
+	public void putRecord(BigInteger recordIndex, Record value) {
+		putRecord(recordIndex.longValue(), value);
+	}
 	public void putRecord(long recordIndex, Record value) {
 		int bitSize = value.bitlength();
 		if (bitSize > 57) {
