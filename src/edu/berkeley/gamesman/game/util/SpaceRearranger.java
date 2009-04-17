@@ -13,17 +13,17 @@ import edu.berkeley.gamesman.util.Pair;
 public final class SpaceRearranger implements Cloneable{
 	private static final class HashPlace {
 		private final int index;
-		boolean isPiece;
-		BigInteger hash;
-		BigInteger addPiece;
+		private boolean isPiece;
+		private BigInteger hash;
+		private BigInteger addPiece;
 
-		HashPlace(int index, int pieces, BigInteger lastHash,
+		private HashPlace(int index, int pieces, BigInteger lastHash,
 				boolean isPiece) {
 			this.index = index;
 			setFromLast(pieces, lastHash, isPiece);
 		}
 
-		void setFromLast(int pieces, BigInteger lastHash, boolean isPiece) {
+		private void setFromLast(int pieces, BigInteger lastHash, boolean isPiece) {
 			this.isPiece = isPiece;
 			if (lastHash.equals(BigInteger.ZERO)) {
 				if (isPiece)
@@ -48,7 +48,7 @@ public final class SpaceRearranger implements Cloneable{
 			return String.valueOf(isPiece);
 		}
 
-		void set(int pieces, BigInteger hash, boolean isPiece) {
+		private void set(int pieces, BigInteger hash, boolean isPiece) {
 			this.isPiece = isPiece;
 			this.hash = hash;
 			if (hash.equals(BigInteger.ZERO)) {
@@ -75,7 +75,7 @@ public final class SpaceRearranger implements Cloneable{
 	public SpaceRearranger(final boolean[] s){
 		numPlaces = s.length;
 		places = new HashPlace[numPlaces];
-		int numPieces1 = 0;
+		int numPieces = 0;
 		BigInteger lastHash = BigInteger.ZERO;
 		boolean onFSpace = true;
 		boolean onFPiece = true;
@@ -85,34 +85,33 @@ public final class SpaceRearranger implements Cloneable{
 					onFSpace = false;
 					openPiece++;
 				}
-				numPieces1++;
-				places[i] = new HashPlace(i,numPieces1,lastHash,true);
+				numPieces++;
+				places[i] = new HashPlace(i,numPieces,lastHash,true);
 				lastHash = places[i].hash;
 			}else{
 				if(onFSpace){
 					openSpace++;
 				}else
 					onFPiece=false;
-				places[i] = new HashPlace(i, numPieces1, lastHash, false);
+				places[i] = new HashPlace(i, numPieces, lastHash, false);
 				lastHash = places[i].hash;
 			}
 		}
 		if(onFPiece)
 			hasNext = false;
-		this.numPieces = numPieces1;
-		if (numPlaces == numPieces1)
+		this.numPieces = numPieces;
+		if (numPlaces == numPieces)
 			arrangements = BigInteger.ONE;
 		else
 			arrangements = lastHash.multiply(BigInteger.valueOf(numPlaces))
-					.divide(BigInteger.valueOf(numPlaces - numPieces1));
+					.divide(BigInteger.valueOf(numPlaces - numPieces));
 	}
 
 	/**
-	 * @param inpieces The number of pieces on the board
-	 * @param inspaces The number of spaces on the board
+	 * @param pieces The number of pieces on the board
+	 * @param spaces The number of spaces on the board
 	 */
-	public SpaceRearranger(final int inpieces, final int inspaces){
-		int pieces = inpieces, spaces = inspaces;
+	public SpaceRearranger(int pieces, int spaces){
 		numPlaces = pieces + spaces;
 		if(pieces==0 || spaces == 0)
 			hasNext = false;
@@ -206,7 +205,7 @@ public final class SpaceRearranger implements Cloneable{
 				lastPlace = places[place++];
 			}
 		} else if (openSpace == 0 && openPiece == 1) {
-			// lastPlace = null;  //extraneous
+			lastPlace = null;
 		} else {
 			place = openSpace + openPiece - 2;
 			lastPlace = places[place++];
@@ -271,33 +270,32 @@ public final class SpaceRearranger implements Cloneable{
 	
 	/**
 	 * Sets the board to the position represented by the given hash
-	 * @param inhash The hash
+	 * @param hash The hash
 	 * @return The new layout of the board
 	 */
-	public String unHash(final BigInteger inhash) {
-		BigInteger hash1 = inhash;
-		this.hash = hash1;
+	public String unHash(BigInteger hash) {
+		this.hash = hash;
 		openPiece = 0;
 		openSpace = 0;
 		BigInteger tryHash = arrangements.multiply(BigInteger.valueOf(numPlaces
 				- numPieces));
-		int numPieces1 = this.numPieces;
-		for (int numPlaces1 = this.numPlaces; numPlaces1 > 0; numPlaces1--) {
-			tryHash = tryHash.divide(BigInteger.valueOf(numPlaces1));
-			if (hash1.compareTo(tryHash) >= 0) {
-				hash1 = hash1.subtract(tryHash);
-				places[numPlaces1-1].set(numPieces1, tryHash, true);
-				tryHash = tryHash.multiply(BigInteger.valueOf(numPieces1));
-				numPieces1--;
+		int numPieces = this.numPieces;
+		for (int numPlaces = this.numPlaces; numPlaces > 0; numPlaces--) {
+			tryHash = tryHash.divide(BigInteger.valueOf(numPlaces));
+			if (hash.compareTo(tryHash) >= 0) {
+				hash = hash.subtract(tryHash);
+				places[numPlaces-1].set(numPieces, tryHash, true);
+				tryHash = tryHash.multiply(BigInteger.valueOf(numPieces));
+				numPieces--;
 				if(openSpace>0){
 					openPiece = 1;
 					openSpace = 0;
 				}else
 					openPiece++;
 			} else {
-				places[numPlaces1-1].set(numPieces1, tryHash, false);
+				places[numPlaces-1].set(numPieces, tryHash, false);
 				tryHash = tryHash.multiply(BigInteger
-						.valueOf(numPlaces1 - numPieces1 - 1));
+						.valueOf(numPlaces - numPieces - 1));
 				openSpace++;
 			}
 		}

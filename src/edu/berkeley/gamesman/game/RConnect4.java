@@ -304,7 +304,7 @@ public class RConnect4 extends TieredIterGame {
 				children.size());
 		for (Pair<Integer, BigInteger> p : children) {
 			int col = pieces.get(p.car).cdr;
-			moves.add(new Pair<String, ItergameState>("" + col,
+			moves.add(new Pair<String, ItergameState>(Integer.toString(col),
 					new ItergameState(moveTiers[col], p.cdr)));
 		}
 		return moves;
