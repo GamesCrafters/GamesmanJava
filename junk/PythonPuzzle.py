@@ -8,11 +8,28 @@ from java.util import Properties,EnumSet
 
 import Play
 
+class ConfigWrapper:
+	def __init__(self, config, prefix='gamesman.game.'):
+		self.realconfig = config
+		self.prefix = prefix
+
+	def __setitem__(self, key, val):
+		self.realconfig.setProperty(self.prefix+key, val)
+
+	def __getitem__(self, key):
+		return self.realconfig[self.prefix+key]
+
+	def __contains__(self, key):
+		return (self.prefix+key) in self.realconfig
+
+	def __delitem__(self, key):
+		del self.realconfig[self.prefix+key]
+
 class PythonPuzzle(Game):
 	def __init__(self, config):
 		puzzlename = config['pythonpuzzle']
 		self.gameclass = getattr(__import__(puzzlename), puzzlename)
-		self.initialize(config)
+		self.initialize(ConfigWrapper(config))
 		Game.__init__(self, config)
 
 	def initialize(self, config):
@@ -20,7 +37,7 @@ class PythonPuzzle(Game):
 		self.config = config
 		for key in defaults:
 			if key not in self.config:
-				self.config.setProperty(key, str(defaults[key]))
+				self.config[key] = str(defaults[key])
 		self.gameinst = self.gameclass.unserialize(self.config)
 
 	def isPuzzle(self):

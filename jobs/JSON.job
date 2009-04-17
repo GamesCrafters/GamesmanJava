@@ -9,7 +9,7 @@ json.unsolved.connect4 = jobs/Connect4.job
 json.fields.connect4 = width,height,pieces
 
 json.unsolved.pegsolitaire = jobs/TriangularPegSolitaire.job
-json.fields.pegsolitaire = size
+json.fields.pegsolitaire = size,start
 
 # Database filenames are gamename_name1_value1_name2_value2.db
 # Special cases (values on the right side of = are .job files):
