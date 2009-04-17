@@ -11,6 +11,7 @@ import java.util.Random;
 import javax.swing.JFrame;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.ItergameState;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.database.FileDatabase;
@@ -20,21 +21,32 @@ import edu.berkeley.gamesman.util.Util;
 
 public class ConnectFour implements MouseListener {
 	final char[][] board;
+
 	private int[] columnHeight = new int[7];
+
 	private char turn = 'X';
+
 	private boolean compO = false;
+
 	private boolean compX = true;
+
 	private boolean win = false;
+
 	private Thread paintThread;
+
 	private DisplayFour df;
+
 	private RConnect4 cgame;
-	private FileDatabase fd;
+
+	private Database fd;
+
 	private static Random r = new Random();
+
 	final int gameWidth;
+
 	final int gameHeight;
 
-	public ConnectFour(int height, int width, DisplayFour disfour,
-			FileDatabase db) {
+	public ConnectFour(int height, int width, DisplayFour disfour, Database db) {
 		int c, r;
 		gameHeight = height;
 		gameWidth = width;
@@ -104,7 +116,7 @@ public class ConnectFour implements MouseListener {
 			}
 			Pair<String, ItergameState> best = bests.get(r
 					.nextInt(bests.size()));
-			makeMove(best.car.charAt(1) - '0');
+			makeMove(best.car.charAt(0) - '0');
 			System.out.println("Done with startCompMove");
 		}
 	}
@@ -200,21 +212,26 @@ public class ConnectFour implements MouseListener {
 		try {
 			conf = new Configuration(args[0]);
 		} catch (ClassNotFoundException e) {
-			Util.fatalError("failed to load class",e);
+			Util.fatalError("failed to load class", e);
 			return;
 		}
-		FileDatabase fd = new FileDatabase();
-		fd.initialize(conf.getProperty("gamesman.db.uri"), null);
-		int width = conf.getInteger("gamesman.game.width", 7);
-		int height = conf.getInteger("gamesman.game.height", 6);
-		System.out.println(fd.getRecord(BigInteger.ZERO));
-		DisplayFour df = new DisplayFour(height, width);
-		/* ConnectFour cf= */new ConnectFour(height, width, df, fd);
-		JFrame jf = new JFrame();
-		Container c = jf.getContentPane();
-		c.add(df);
-		jf.setSize(350, 300);
-		jf.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		jf.setVisible(true);
+		Database fd;
+		try {
+			fd = conf.openDatabase();
+			int width = conf.getInteger("gamesman.game.width", 7);
+			int height = conf.getInteger("gamesman.game.height", 6);
+			System.out.println(fd.getRecord(BigInteger.ZERO));
+			DisplayFour df = new DisplayFour(height, width);
+			/* ConnectFour cf= */new ConnectFour(height, width, df, fd);
+			JFrame jf = new JFrame();
+			Container c = jf.getContentPane();
+			c.add(df);
+			jf.setSize(350, 300);
+			jf.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+			jf.setVisible(true);
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }
