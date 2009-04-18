@@ -1,5 +1,6 @@
 package edu.berkeley.gamesman.testing;
 
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -14,7 +15,6 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.ItergameState;
 import edu.berkeley.gamesman.core.PrimitiveValue;
-import edu.berkeley.gamesman.database.FileDatabase;
 import edu.berkeley.gamesman.game.RConnect4;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
@@ -26,9 +26,9 @@ public class ConnectFour implements MouseListener {
 
 	private char turn = 'X';
 
-	private boolean compO = false;
+	boolean compO;
 
-	private boolean compX = true;
+	boolean compX;
 
 	private boolean win = false;
 
@@ -38,7 +38,7 @@ public class ConnectFour implements MouseListener {
 
 	private RConnect4 cgame;
 
-	private Database fd;
+	Database fd;
 
 	private static Random r = new Random();
 
@@ -47,7 +47,13 @@ public class ConnectFour implements MouseListener {
 	final int gameHeight;
 
 	public ConnectFour(int height, int width, DisplayFour disfour, Database db) {
+		this(height,width,disfour,db,false,true);
+	}
+	
+	public ConnectFour(int height, int width, DisplayFour disfour, Database db, boolean cX, boolean cO) {
 		int c, r;
+		compX = cX;
+		compO = cO;
 		gameHeight = height;
 		gameWidth = width;
 		board = new char[gameHeight][gameWidth];
@@ -230,8 +236,11 @@ public class ConnectFour implements MouseListener {
 			jf.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 			jf.setVisible(true);
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+
+	public DisplayFour getDisplay() {
+		return df;
 	}
 }
