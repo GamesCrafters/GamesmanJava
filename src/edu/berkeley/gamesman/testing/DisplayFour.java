@@ -30,6 +30,7 @@ public class DisplayFour extends JPanel implements Runnable {
 
 	void setBoard(char[][] board) {
 		this.board = board;
+		new Thread(this).start();
 	}
 
 	public synchronized void run() {

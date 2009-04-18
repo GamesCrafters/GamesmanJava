@@ -73,6 +73,7 @@ public class ConnectFour implements MouseListener {
 			}
 			columnHeight[c] = 0;
 		}
+		df.setBoard(copy(board));
 		startCompMove();
 	}
 
@@ -96,7 +97,7 @@ public class ConnectFour implements MouseListener {
 			startCompMove();
 	}
 
-	private void startCompMove() {
+	void startCompMove() {
 		if (compTurn() && !win()) {
 			ArrayList<Pair<String, ItergameState>> bests = new ArrayList<Pair<String, ItergameState>>(
 					gameWidth);

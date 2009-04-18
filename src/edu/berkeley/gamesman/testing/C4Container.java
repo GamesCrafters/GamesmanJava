@@ -2,6 +2,7 @@ package edu.berkeley.gamesman.testing;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -29,11 +30,15 @@ public class C4Container extends JPanel implements ActionListener, KeyListener {
 		super();
 		setLayout(new BorderLayout());
 		JPanel jp = new JPanel();
+		jp.setLayout(new GridLayout(2,3));
 		add(jp, BorderLayout.SOUTH);
+		add(new JLabel("Press 'r' to restart"),BorderLayout.NORTH);
 		ButtonGroup bg = new ButtonGroup();
 		jp.add(new JLabel("Red"));
 		xButton = new JRadioButton("Computer");
+		xButton.addKeyListener(this);
 		JRadioButton jrb = new JRadioButton("Human");
+		jrb.addKeyListener(this);
 		bg.add(xButton);
 		bg.add(jrb);
 		jp.add(jrb);
@@ -42,9 +47,12 @@ public class C4Container extends JPanel implements ActionListener, KeyListener {
 		xButton.setSelected(false);
 		jrb.addActionListener(this);
 		xButton.addActionListener(this);
+		bg = new ButtonGroup();
 		jp.add(new JLabel("Black"));
 		oButton = new JRadioButton("Computer");
+		oButton.addKeyListener(this);
 		jrb = new JRadioButton("Human");
+		jrb.addKeyListener(this);
 		bg.add(oButton);
 		bg.add(jrb);
 		jp.add(jrb);
@@ -53,7 +61,8 @@ public class C4Container extends JPanel implements ActionListener, KeyListener {
 		oButton.setSelected(true);
 		jrb.addActionListener(this);
 		oButton.addActionListener(this);
-		addKeyListener(this);
+		jp.setFocusable(true);
+		jp.addKeyListener(this);
 	}
 
 	private void setGame(ConnectFour cf) {
@@ -85,7 +94,11 @@ public class C4Container extends JPanel implements ActionListener, KeyListener {
 			Container c = jf.getContentPane();
 			C4Container c4c = new C4Container();
 			c4c.setGame(cf);
-			jf.setSize(350, 300);
+			c.add(c4c);
+			jf.addKeyListener(c4c);
+			jf.setFocusable(true);
+			jf.requestFocus();
+			jf.setSize(375, 450);
 			jf.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 			jf.setVisible(true);
 		} catch (ClassNotFoundException e) {
@@ -96,6 +109,7 @@ public class C4Container extends JPanel implements ActionListener, KeyListener {
 	public void actionPerformed(ActionEvent ae) {
 		game.compX = xButton.isSelected();
 		game.compO = oButton.isSelected();
+		game.startCompMove();
 	}
 
 	public void keyPressed(KeyEvent arg0) {
@@ -106,10 +120,15 @@ public class C4Container extends JPanel implements ActionListener, KeyListener {
 
 	public void keyTyped(KeyEvent ke) {
 		if (ke.getKeyChar() == 'r') {
-			remove(game.getDisplay());
+			for (int c = 0; c < game.gameWidth; c++) {
+				for (int r = 0; r < game.gameHeight; r++) {
+					game.getDisplay().slots[r][c].removeMouseListener(game);
+				}
+			}
 			setGame(new ConnectFour(game.gameHeight, game.gameWidth, game
 					.getDisplay(), game.fd, xButton.isSelected(), oButton
 					.isSelected()));
+			repaint();
 		}
 	}
 }
