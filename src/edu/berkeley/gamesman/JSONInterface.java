@@ -286,8 +286,10 @@ public class JSONInterface extends GamesmanApplication {
 				for(RecordFields f : storedFields){
 					if (f == RecordFields.VALUE) {
 						PrimitiveValue pv = rec.get();
-						if (pv==PrimitiveValue.WIN) pv = PrimitiveValue.LOSE;
-						else if (pv==PrimitiveValue.LOSE) pv = PrimitiveValue.WIN;
+						if (g.getPlayerCount() != 0) {
+							if (pv==PrimitiveValue.WIN) pv = PrimitiveValue.LOSE;
+							else if (pv==PrimitiveValue.LOSE) pv = PrimitiveValue.WIN;
+						}
 						entry.put(f.name().toLowerCase(),pv.name().toLowerCase());
 					} else {
 						entry.put(f.name().toLowerCase(),rec.get(f));
