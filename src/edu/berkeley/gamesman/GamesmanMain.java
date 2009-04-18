@@ -110,12 +110,6 @@ public final class GamesmanMain extends GamesmanApplication {
 		} else {
 			assert Util.debug(DebugFacility.CORE, "Defaulting to solve...");
 			try {
-				//Game<?> gm = Util.checkedCast(g.getConstructors()[0].newInstance(conf));
-				//conf.setGame(gm);
-				//Hasher<?> ha = Util.checkedCast(h.getConstructors()[0].newInstance(conf));
-				//conf.setHasher(ha);
-				conf.setStoredFields(EnumSet.of(RecordFields.VALUE,RecordFields.REMOTENESS));
-				//gm.prepare();
 				m.initialize(conf, s, d);
 			} catch (Exception e){
 				Util.fatalError("Exception while instantiating and initializing",e);

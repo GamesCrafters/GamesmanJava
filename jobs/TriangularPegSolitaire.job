@@ -1,12 +1,12 @@
 gamesman.game = PythonPuzzle.py
 gamesman.game.size = 5
-gamesman.game.start = 1
+gamesman.game.start = 0
 gamesman.solver = TopDownSolver
 gamesman.hasher = NullHasher
 gamesman.db.uri = file:///tmp/pegsolitaire.db
 gamesman.database = BlockDatabase
 gamesman.dotty.uri = file:///tmp/pegsolitaire.dot
 gamesman.debug.SOLVER = true
-gamesman.threads = 2
+gamesman.threads = 1
 record.fields = VALUE,REMOTENESS:4,SCORE:2
 pythonpuzzle = TriangularPegSolitaire

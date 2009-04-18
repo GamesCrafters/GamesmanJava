@@ -40,8 +40,8 @@ class PythonPuzzle(Game):
 				self.config[key] = str(defaults[key])
 		self.gameinst = self.gameclass.unserialize(self.config)
 
-	def isPuzzle(self):
-		return True
+	def getPlayerCount(self):
+		return 0
 
 	def find_solutions(self):
 		puzzleQueue = []
