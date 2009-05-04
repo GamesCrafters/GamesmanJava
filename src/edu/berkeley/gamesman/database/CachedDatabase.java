@@ -20,6 +20,7 @@ import edu.berkeley.gamesman.util.Util;
  * @author Alex Trofimov
  * @version 1.1
  * ChangeLog:
+ * 1.2 - BlockID converted from Integer to Long, for creation of files > 1GB.
  * 1.1 - Switched added to disable flush()ing when still open.
  * 1.0 - Initial Release
  * TODO: add concurrency control for multiple threads
@@ -33,7 +34,7 @@ import edu.berkeley.gamesman.util.Util;
 public class CachedDatabase extends MemoryDatabase {
 
 	/** Total size in bytes that cache will occupy in RAM */
-	public static int cacheSize = 1024 * 1024 * 40; 
+	public static long cacheSize = 1024 * 1024 * 40; 
 	/** Size of a basic block that this DB will work with */
 	public static int pageSize = 1024 * 1024 * 2; 	// Default Block Size = 4k.
 	
@@ -46,12 +47,12 @@ public class CachedDatabase extends MemoryDatabase {
 	private byte[] pinBytes;			 		// Count of who is using the bit
 	private byte[][] bufferPool;		 		// Page Pool of size bufferPoolSize x blockSize.
 	private TreeMap<Integer, Integer> blockIDs;	// Array of Block IDs in Page Pool.
-	private int[] blockIDsArray;				// - || -
+	private long[] blockIDsArray;				// - || -
 	private int clockPointer;			 		// Pointer for the next available buffer.
 	
 	private RandomAccessFile fileDescriptor;	// The file descriptor to this database
 	
-	private int lastBlockID;					// ID of the block last referenced.
+	private long lastBlockID;					// ID of the block last referenced.
 	
 	/* Some statistical variables */
 	static enum Stats { HIT_READS, TOTAL_READS, HIT_WRITES,  TOTAL_WRITES,
@@ -68,14 +69,14 @@ public class CachedDatabase extends MemoryDatabase {
 	@Override
 	public void initialize(String filePath) {
 		// Initializing Variables
-		bufferPoolSize = (cacheSize + pageSize - 1)/ pageSize; // ceil
+		bufferPoolSize = (int) ((cacheSize + pageSize - 1)/ pageSize); // ceil
 		open = true;	
-		dirtyBit = new boolean[bufferPoolSize];
-		pinBytes = new byte[bufferPoolSize];
-		bufferPool = new byte[bufferPoolSize][pageSize];
-		blockIDsArray = new int[bufferPoolSize];
+		dirtyBit = new boolean[(int) bufferPoolSize];
+		pinBytes = new byte[(int) bufferPoolSize];
+		bufferPool = new byte[(int) bufferPoolSize][(int) pageSize];
+		blockIDsArray = new long[(int) bufferPoolSize];
 		blockIDs = new TreeMap<Integer, Integer>();
-		notUseful = new boolean[bufferPoolSize];
+		notUseful = new boolean[(int) bufferPoolSize];
 		reset(); // some initialization happens there
 		
 		// Initializing the storage file
@@ -98,7 +99,6 @@ public class CachedDatabase extends MemoryDatabase {
 	
 	/** Reset all the data stored in cache. */
 	public void reset() {
-		Statistics = new int[Stats.values().length];
 		blockIDs.clear();
 		for (int i = 0; i < bufferPoolSize; i ++) blockIDsArray[i] = -1;
 		clockPointer = 0;
@@ -153,7 +153,7 @@ public class CachedDatabase extends MemoryDatabase {
 	protected byte getByte(long index) {
 		int blockID = (int) (index / pageSize);
 		if (lastBlockID != blockID) Statistics[Stats.TOTAL_READS.ordinal()] ++;
-		int byteOffset = (int) index % pageSize;
+		int byteOffset = (int) ((int) index % pageSize);
 		int pageID;
 		
 		// First check cache
@@ -172,15 +172,15 @@ public class CachedDatabase extends MemoryDatabase {
 
 	@Override
 	protected void putByte(long index, byte data, boolean preserve) {
-		int blockID = (int) (index / pageSize);
+		long blockID = index / pageSize;
 		if (lastBlockID != blockID) Statistics[Stats.TOTAL_WRITES.ordinal()] ++;
-		int byteOffset = (int) index % pageSize;
+		int byteOffset = (int) (index % pageSize);
 		int pageID;
 		
-		// Check if the page is in cache
-		if (blockIDs.containsKey(blockID)) {
+		// Check if the page is in cache		
+		if (blockIDs.containsKey((int) blockID)) {
 			if (lastBlockID != blockID) Statistics[Stats.HIT_WRITES.ordinal()] ++;
-			pageID = blockIDs.get(blockID);
+			pageID = blockIDs.get((int) blockID);
 		} else { // Have to go to disk
 			pageID = getFreePage();
 			loadPage(blockID, pageID);
@@ -199,11 +199,11 @@ public class CachedDatabase extends MemoryDatabase {
 	 * @param pageID - ID of the buffer where to store read data
 	 * @param blockID - ID of the block (page) on disk that is to be read.
 	 */
-	protected void loadPage(int blockID, int pageID) {
+	protected void loadPage(long blockID, int pageID) {
 		assert !(dirtyBit[pageID] || blockIDs.containsKey(blockID));
 		Statistics[Stats.PAGE_LOADS.ordinal()] ++;
 		if (this.blockIDsArray[pageID] >= 0)  // There's a non-dirty page in there.
-			blockIDs.remove(blockIDsArray[pageID]); // Let it know that it's a goner
+			blockIDs.remove((int) blockIDsArray[pageID]); // Let it know that it's a goner
 		else Statistics[Stats.PAGES.ordinal()] ++; // This pageID wasn't used before.
 		if ((blockID + 1) * pageSize >= capacity) // if the data might not be there
 			bufferPool[pageID] = new byte[pageSize]; // make sure to erase junk
@@ -213,7 +213,7 @@ public class CachedDatabase extends MemoryDatabase {
 		} catch (IOException e) {
 			e.printStackTrace(); System.exit(1);
 		}
-		blockIDs.put(blockID, pageID); 
+		blockIDs.put((int) blockID, pageID); 
 		notUseful[pageID] = false;
 		blockIDsArray[pageID] = blockID;
 	}
@@ -225,7 +225,7 @@ public class CachedDatabase extends MemoryDatabase {
 	protected void unloadPage(int pageID) {
 		assert dirtyBit[pageID];
 		Statistics[Stats.PAGE_WRITES.ordinal()] ++;
-		int blockID = blockIDsArray[pageID];
+		long blockID = blockIDsArray[pageID];
 		dirtyBit[pageID] = false;
 		try {
 			fileDescriptor.seek(blockID * pageSize);
@@ -299,7 +299,8 @@ public class CachedDatabase extends MemoryDatabase {
 		/* Defining Variables */
 		long startTime = (new Date()).getTime();
 		Random random = new Random();
-		int testSize = 250;//000;
+		int bloatedness = 1; //40000000; // use this and test size 25, to make 10GB file.
+		int testSize = 25;
 		int [] bitSizes = new int[] { 57, 63, 32, 30, 29, 28, 60, 43, 32, 31, 9, 8, 7, 5, 3, 2, 1 };
 		int bitSize = 0;
 		for (int i : bitSizes) bitSize += i; 
@@ -338,7 +339,7 @@ public class CachedDatabase extends MemoryDatabase {
 			index = randomness.nextInt(testSize);
 			while (visited.contains(index))
 				index = (index + 1) % testSize;
-			DB.putRecord(i, Records[i]);
+			DB.putRecord(i * bloatedness, Records[i]);
 			visited.add(index);
 		}
 		
@@ -352,7 +353,7 @@ public class CachedDatabase extends MemoryDatabase {
 		int pass = 0;
 		int fail = 0;
 		for (int i = 0; i < testSize; i ++) {
-			temp = DB.getRecord(i, Records[i]).toBigInteger();
+			temp = DB.getRecord(i * bloatedness, Records[i]).toBigInteger();
 			if (temp.toString(2).equals(BigInts[i].toString(2))) pass ++;
 			else fail ++;
 		}
@@ -363,7 +364,7 @@ public class CachedDatabase extends MemoryDatabase {
 		long endTime = (new Date()).getTime() - startTime;
 		System.out.printf("Testing Complete in %s.\n", Util.millisToETA(endTime));
 		
-		
+		System.exit(0);
 		
 	}
 
