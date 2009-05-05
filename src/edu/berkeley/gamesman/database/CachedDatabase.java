@@ -123,7 +123,7 @@ public class CachedDatabase extends MemoryDatabase {
 	}
 	
 	@Override
-	protected void ensureCapacity(long numBytes) {
+	public void ensureCapacity(long numBytes) {
 		if (numBytes > capacity)
 			capacity = numBytes;
 		try {
