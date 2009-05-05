@@ -50,7 +50,9 @@ public abstract class Database {
 	 * @param recordToReturn An already created record object to save memory.
 	 * @return The stored Record
 	 */
-	public abstract Record getRecord(long recordIndex, Record recordToReturn);
+	public Record getRecord(long recordIndex, Record recordToReturn) {
+		throw new java.lang.UnsupportedOperationException();
+	}
 	
 	/**
 	 * Return the Nth Record in the Database
@@ -65,7 +67,9 @@ public abstract class Database {
 	 * @param recordIndex The record number
 	 * @return The stored Record
 	 */
-	public abstract Record getRecord(long recordIndex);
+	public Record getRecord(long recordIndex) {
+		throw new java.lang.UnsupportedOperationException();
+	}
 	/**
 	 * Store a record in the Database
 	 * @param recordIndex The record number
@@ -79,7 +83,9 @@ public abstract class Database {
 	 * @param recordIndex The record number
 	 * @param value The Record to store
 	 */
-	public abstract void putRecord(long recordIndex, Record value);
+	public void putRecord(long recordIndex, Record value) {
+		throw new java.lang.UnsupportedOperationException();
+	}
 	
 	
 	
