@@ -20,6 +20,11 @@ public abstract class Database {
 	 * The URI must be in the URI syntax, ex: file:///absolute/path/to/file.db or gdfp://server:port/dbname
 	 * If config is null, it will use whatever is in the database.  It is recommended that you pass in the
 	 * configuration that you are expecting to ensure you don't load a db for a different game.
+	 * 
+	 * Note (By Alex Trofimov) I've updated the file Database to accept Relative URL,
+	 * so instead of file:/// you can just put the filename, and it will create a file
+	 * in the working directory (tested under windows & ubuntu).
+	 * 
 	 * @param uri The URI that the Database is associated with
 	 * @param config The Configuration that is relevant
 	 */
@@ -32,25 +37,51 @@ public abstract class Database {
 	
 	/**
 	 * Return the Nth Record in the Database
-	 * @param loc The record number
+	 * @param recordIndex The record number
 	 * @param recordToReturn An already created record object to save memory.
 	 * @return The stored Record
 	 */
-	public Record getRecord(BigInteger loc, Record recordToReturn) {
-		return getRecord(loc);
+	public Record getRecord(BigInteger recordIndex, Record recordToReturn) {
+		return getRecord(recordIndex.longValue(), recordToReturn);
 	}
 	/**
 	 * Return the Nth Record in the Database
-	 * @param loc The record number
+	 * @param recordIndex The record number
+	 * @param recordToReturn An already created record object to save memory.
 	 * @return The stored Record
 	 */
-	public abstract Record getRecord(BigInteger loc);
+	public abstract Record getRecord(long recordIndex, Record recordToReturn);
+	
+	/**
+	 * Return the Nth Record in the Database
+	 * @param recordIndex The record number
+	 * @return The stored Record
+	 */
+	public Record getRecord(BigInteger recordIndex) {
+		return getRecord(recordIndex.longValue());
+	}
+	/**
+	 * Return the Nth Record in the Database
+	 * @param recordIndex The record number
+	 * @return The stored Record
+	 */
+	public abstract Record getRecord(long recordIndex);
 	/**
 	 * Store a record in the Database
-	 * @param loc The record number
+	 * @param recordIndex The record number
 	 * @param value The Record to store
 	 */
-	public abstract void putRecord(BigInteger loc, Record value);
+	public void putRecord(BigInteger recordIndex, Record value) {
+		putRecord(recordIndex.longValue(), value);
+	}
+	/**
+	 * Store a record in the Database
+	 * @param recordIndex The record number
+	 * @param value The Record to store
+	 */
+	public abstract void putRecord(long recordIndex, Record value);
+	
+	
 	
 	/**
 	 * Ensure all buffers are flushed to disk.  The on-disk state should be consistent after this call returns.
