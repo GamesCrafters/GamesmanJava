@@ -18,7 +18,7 @@ import edu.berkeley.gamesman.util.Util;
  * @author Alex Trofimov
  * @version 1.3
  * 
- * Changelog:
+ * Change log:
  * 1.3 With data sizes < 58 bits, longs are used instead of BigInts, 20% speedup.
  * 1.2 Slight speedup for operating on small data (< 8 bits); ensureCapacity() added.
  * 1.1 Switched to a byte[] instead of ArrayList<Byte> for internal storage.
@@ -54,7 +54,7 @@ public class MemoryDatabase extends Database{
 	 * Ensure that this database can store at least this number of bytes.
 	 * @param numBytes - number of bytes this DB should be able to fit (at least).
 	 */
-	protected void ensureCapacity(long numBytes) {
+	public void ensureCapacity(long numBytes) {
 		int newCapacity = 2;
 		while (newCapacity <= numBytes) newCapacity = newCapacity << 2;
 		if (newCapacity > this.capacity) {
@@ -68,17 +68,11 @@ public class MemoryDatabase extends Database{
 	}
 	
 	@Override
-	public Record getRecord(BigInteger recordIndex) {
-		return getRecord(recordIndex.longValue());
-	}
 	public Record getRecord(long recIndex) {
 		return getRecord(recIndex, new Record(this.conf));
 	}
 	
 	@Override 
-	public Record getRecord(BigInteger recordIndex, Record recordToReturn) {
-		return getRecord(recordIndex.longValue(), recordToReturn);
-	}
 	public Record getRecord(long recordIndex, Record recordToReturn) {
 		/* Defining Variables */
 		int recordSize = recordToReturn.bitlength();
@@ -183,9 +177,6 @@ public class MemoryDatabase extends Database{
 	}
 	
 	@Override
-	public void putRecord(BigInteger recordIndex, Record value) {
-		putRecord(recordIndex.longValue(), value);
-	}
 	public void putRecord(long recordIndex, Record value) {
 		int bitSize = value.bitlength();
 		if (bitSize > 57) {
@@ -309,7 +300,7 @@ public class MemoryDatabase extends Database{
 	 * @param data - byte that needs to be written.
 	 * @param preserve - set to true if you want data to be ORed with existing byte.
 	 */
-	protected void putByte(long index, byte data, boolean preserve) {
+	synchronized protected void putByte(long index, byte data, boolean preserve) {
 		assert !open;
 		try {
 			ensureCapacity((int) index + 1); // Ensure that the data can be written.
@@ -384,7 +375,7 @@ public class MemoryDatabase extends Database{
 				
 			}
 			
-			/* Finshing this test round */
+			/* Finishing this test round */
 			System.out.printf("%d tests passed. %d tests failed with Bitsize = %d.\n", pass, fail, bitSize);
 			DB.close();
 		}
