@@ -66,13 +66,27 @@ public class FileDatabase extends Database {
 	protected synchronized void initialize(String loc) {
 
 		boolean previouslyExisted;
-
+		/*// Old Code
 		try {
 			myFile = new File(new URI(loc));
 			assert Util.debug(DebugFacility.DATABASE, "Opened DB: " + myFile);
 		} catch (URISyntaxException e1) {
 			Util.fatalError("Could not open URI " + loc + ": " + e1);
+		} */
+		
+		try {
+			URI fileLocation = new URI(loc);
+			if (!fileLocation.isAbsolute()) {
+				String currentDirectory = System.getProperty("user.dir").replace('\\', '/');
+				currentDirectory = currentDirectory.replace(" ", "%20");
+				fileLocation = new URI("file:///" + currentDirectory + "/" + loc);
+			}
+			File filePointer = new File(fileLocation);
+			myFile = filePointer;
+		} catch (Exception e) {
+			e.printStackTrace(); System.exit(0);
 		}
+		
 
 		previouslyExisted = myFile.exists();
 
