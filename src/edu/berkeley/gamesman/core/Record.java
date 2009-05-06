@@ -167,7 +167,7 @@ public final class Record {
 		return r;
 	}
 
-	private void read(ByteProducer buf, long index) {
+	public void read(ByteProducer buf, long index) {
 		long bitoff = index * bitlength();
 		for (int i = 0; i < fieldValues.length; i++) {
 			fieldValues[i] = BitBuffer.get(buf, bitoff, fieldBitLength[i]);
