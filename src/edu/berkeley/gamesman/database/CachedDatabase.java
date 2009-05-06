@@ -16,20 +16,20 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.util.Util;
 
 /**
- * TODO: Description and JavaDoc
- *  
  * @author Alex Trofimov
  * @version 1.4
+ * 
  * ChangeLog:
- * 1.4 - getSize() fixed. Block pre-loading added.
- * 1.3 - synchronized keywords added. Tested, works in parallel, 2 Cores => 40% increase
- * 1.2 - BlockID converted from Integer to Long, for creation of files > 1GB.
- * 1.1 - Switched added to disable flush()ing when still open.
- * 1.0 - Initial Release
+ * 05/06/09 - 1.4 - getSize() fixed. Block pre-loading added.
+ * 05/05/09 - 1.3 - synchronized keywords added. Tested, works in parallel, 2 Cores => 40% increase
+ * 05/04/09 - 1.2 - BlockID converted from Integer to Long, for creation of files > 1GB.
+ * 03/18/09 - 1.1 - Switched added to disable flush()ing when still open.
+ * 03/15/09 - 1.0 - Initial Release
+ * 
  * TODO: add support for breaking the DB into multiple files (say no file > 1GB)
  * TODO: allow blocks to be unsorted on disk (good for non-tiered solvers)
- * TODO: make it so that it pre-fetches some blocks.
  * TODO: add compression to save space.
+ * TODO: for random block allocation and compression, make an index file?
  */
 public class CachedDatabase extends MemoryDatabase {
 

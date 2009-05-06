@@ -16,14 +16,14 @@ import edu.berkeley.gamesman.util.Util;
  *
  *	
  * @author Alex Trofimov
- * @version 1.3
+ * @version 1.4
  * 
  * Change log:
- * 1.4 putByte() is now synchronized, for multi-threading. This is really important. 
- * 1.3 With data sizes < 58 bits, longs are used instead of BigInts, 20% speedup.
- * 1.2 Slight speedup for operating on small data (< 8 bits); ensureCapacity() added.
- * 1.1 Switched to a byte[] instead of ArrayList<Byte> for internal storage.
- * 1.0 Initial Version.
+ * 05/05/09 - 1.4 - putByte() is now synchronized, for multi-threading. This is really important. 
+ * 03/20/09 - 1.3 - With data sizes < 58 bits, longs are used instead of BigInts, 20% speedup.
+ * 03/15/09 - 1.2 - Slight speedup for operating on small data (< 8 bits); ensureCapacity() added.
+ * 02/22/09 - 1.1 - Switched to a byte[] instead of ArrayList<Byte> for internal storage.
+ * 02/21/09 - 1.0 - Initial (working) Version.
  */
 public class MemoryDatabase extends Database{
 	
