@@ -550,6 +550,16 @@ public final class Util {
 		return ints;
 	}
 	
+	/** Return max of two numbers
+	 * @param a - a number
+	 * @param b - a number 
+	 * @return the max of and b*/
+	public static Number max(Number a, Number b) {
+		if(a.doubleValue() > b.doubleValue())
+			return a;
+		else return b;
+	}
+	
 	@SuppressWarnings("unchecked")
 	public static <H> H[] toArray(List<H> list) {
 		return list.toArray((H[])Array.newInstance(list.get(0).getClass(), list.size()));
