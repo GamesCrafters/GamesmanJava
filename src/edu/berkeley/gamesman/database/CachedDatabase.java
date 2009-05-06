@@ -10,36 +10,39 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.TreeMap;
+import java.util.concurrent.Semaphore;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.util.Util;
 
 /**
- * TODO: Description and Javadoc
+ * TODO: Description and JavaDoc
  *  
  * @author Alex Trofimov
- * @version 1.1
+ * @version 1.4
  * ChangeLog:
+ * 1.4 - getSize() fixed. Block pre-loading added.
+ * 1.3 - synchronized keywords added. Tested, works in parallel, 2 Cores => 40% increase
  * 1.2 - BlockID converted from Integer to Long, for creation of files > 1GB.
  * 1.1 - Switched added to disable flush()ing when still open.
  * 1.0 - Initial Release
- * TODO: add concurrency control for multiple threads
  * TODO: add support for breaking the DB into multiple files (say no file > 1GB)
- * TODO: fix getSize()
- * TODO: if the file does not exist, on reads, load zeros instead of reading empty space.
  * TODO: allow blocks to be unsorted on disk (good for non-tiered solvers)
- * TODO: make it so that it prefetches some blocks.
+ * TODO: make it so that it pre-fetches some blocks.
  * TODO: add compression to save space.
  */
 public class CachedDatabase extends MemoryDatabase {
 
 	/** Total size in bytes that cache will occupy in RAM */
-	public static long cacheSize = 1024 * 1024 * 40; 
+	public static long cacheSize = 1024 * 1024 * 40;
 	/** Size of a basic block that this DB will work with */
 	public static int pageSize = 1024 * 1024 * 2; 	// Default Block Size = 4k.
 	
 	/** Set this to False so that flush() only works at close() */
 	public static boolean flushWhenOpen = false;
+	
+	/** The number of pages that should be pre-loaded on each load */
+	public static int preLoad = 1; // set to 0 to disable pre-loading.
 	
 	private int bufferPoolSize;			 		// Number of pages that should fit into the cache.
 	private boolean[] dirtyBit;			 		// The array of dirty bits.
@@ -60,23 +63,17 @@ public class CachedDatabase extends MemoryDatabase {
 	private int[] Statistics;
 	
 	
-	/** 
-	 * Null Constructor... for testing purposes only.
-	 */
-	public CachedDatabase() {};
-	
-
 	@Override
-	public void initialize(String filePath) {
+	synchronized public void initialize(String filePath) {
 		// Initializing Variables
 		bufferPoolSize = (int) ((cacheSize + pageSize - 1)/ pageSize); // ceil
 		open = true;	
-		dirtyBit = new boolean[(int) bufferPoolSize];
-		pinBytes = new byte[(int) bufferPoolSize];
-		bufferPool = new byte[(int) bufferPoolSize][(int) pageSize];
-		blockIDsArray = new long[(int) bufferPoolSize];
+		dirtyBit = new boolean[bufferPoolSize];
+		pinBytes = new byte[bufferPoolSize];
+		bufferPool = new byte[bufferPoolSize][pageSize];
+		blockIDsArray = new long[bufferPoolSize];
 		blockIDs = new TreeMap<Integer, Integer>();
-		notUseful = new boolean[(int) bufferPoolSize];
+		notUseful = new boolean[bufferPoolSize];
 		reset(); // some initialization happens there
 		
 		// Initializing the storage file
@@ -98,17 +95,19 @@ public class CachedDatabase extends MemoryDatabase {
 	}
 	
 	/** Reset all the data stored in cache. */
-	public void reset() {
-		blockIDs.clear();
-		for (int i = 0; i < bufferPoolSize; i ++) blockIDsArray[i] = -1;
-		clockPointer = 0;
-		lastBlockID = -1;
-		Statistics = new int[Stats.values().length];
+	synchronized public void reset() {
+		synchronized (blockIDs) {
+			blockIDs.clear();
+			for (int i = 0; i < bufferPoolSize; i ++) blockIDsArray[i] = -1;
+			clockPointer = 0;
+			lastBlockID = -1;
+			Statistics = new int[Stats.values().length];
+		}
 	}
 	
 
 	@Override
-	public void flush() {
+	synchronized public void flush() {
 		Statistics[Stats.FLUSHES.ordinal()] ++;
 		if (!flushWhenOpen && open) return;
 		// Flush any dirty buffers
@@ -123,9 +122,8 @@ public class CachedDatabase extends MemoryDatabase {
 	}
 	
 	@Override
-	public void ensureCapacity(long numBytes) {
-		if (numBytes > capacity)
-			capacity = numBytes;
+	synchronized public void ensureCapacity(long numBytes) {
+		capacity = Util.max(capacity, numBytes).longValue();
 		try {
 			if (fileDescriptor.length() < numBytes)
 				fileDescriptor.setLength(numBytes);
@@ -135,7 +133,7 @@ public class CachedDatabase extends MemoryDatabase {
 	}
 	
 	@Override
-	public void close() {
+	synchronized public void close() {
 		try {
 			open = false;
 			flush();
@@ -150,7 +148,7 @@ public class CachedDatabase extends MemoryDatabase {
 	}
 	
 	@Override
-	protected byte getByte(long index) {
+	synchronized protected byte getByte(long index) {
 		int blockID = (int) (index / pageSize);
 		if (lastBlockID != blockID) Statistics[Stats.TOTAL_READS.ordinal()] ++;
 		int byteOffset = (int) ((int) index % pageSize);
@@ -161,17 +159,15 @@ public class CachedDatabase extends MemoryDatabase {
 			if (lastBlockID != blockID) Statistics[Stats.HIT_READS.ordinal()] ++;
 			pageID = blockIDs.get(blockID);
 		} else { // Then check disk
-			pageID = getFreePage();
-			loadPage(blockID, pageID);
+			pageID = cacheBlock(blockID);
 		}
-
 		notUseful[pageID] = false;
 		lastBlockID = blockID;
 		return this.bufferPool[pageID][byteOffset];
 	}
 
 	@Override
-	protected void putByte(long index, byte data, boolean preserve) {
+	synchronized protected void putByte(long index, byte data, boolean preserve) {
 		long blockID = index / pageSize;
 		if (lastBlockID != blockID) Statistics[Stats.TOTAL_WRITES.ordinal()] ++;
 		int byteOffset = (int) (index % pageSize);
@@ -182,21 +178,35 @@ public class CachedDatabase extends MemoryDatabase {
 			if (lastBlockID != blockID) Statistics[Stats.HIT_WRITES.ordinal()] ++;
 			pageID = blockIDs.get((int) blockID);
 		} else { // Have to go to disk
-			pageID = getFreePage();
-			loadPage(blockID, pageID);
+			pageID = cacheBlock(blockID);
 		}
-		
 		notUseful[pageID] = false;
 		dirtyBit[pageID] = true;
 		lastBlockID = blockID;
 		if (preserve) bufferPool[pageID][byteOffset] |= data;
 		else bufferPool[pageID][byteOffset] = data;
+	
 	}
+	
+	/** Load a page identified by 'blockID', and 'preLoad' consecutive pages 
+	 * @param blockID - the ID of the block being loaded first
+	 * @return pageID - the ID of the page where blockID is located 
+	 */
+	protected int cacheBlock(long blockID) {		
+		int iPageID = -1, pageID;
+		for (int i = 0; i < preLoad; i ++) {
+			pageID = getFreePage();
+			if (i == 0) iPageID = pageID;
+			loadPage(blockID + i, pageID);
+		}
+		assert iPageID > -1;
+		return iPageID;
+	}
+	
 	
 	/**
 	 * Read one page from disk and put it into cache.
 	 * Size of the page is specified by pageSize
-	 * @param pageID - ID of the buffer where to store read data
 	 * @param blockID - ID of the block (page) on disk that is to be read.
 	 */
 	protected void loadPage(long blockID, int pageID) {
@@ -205,8 +215,10 @@ public class CachedDatabase extends MemoryDatabase {
 		if (this.blockIDsArray[pageID] >= 0)  // There's a non-dirty page in there.
 			blockIDs.remove((int) blockIDsArray[pageID]); // Let it know that it's a goner
 		else Statistics[Stats.PAGES.ordinal()] ++; // This pageID wasn't used before.
-		if ((blockID + 1) * pageSize >= capacity) // if the data might not be there
+		if ((blockID + 1) * pageSize >= capacity) { // if the data might not be there
 			bufferPool[pageID] = new byte[pageSize]; // make sure to erase junk
+			capacity = (blockID + 1) * pageSize; // update capacity reading
+		}
 		try {
 			fileDescriptor.seek(blockID * pageSize);
 			fileDescriptor.read(bufferPool[pageID]);
@@ -226,6 +238,7 @@ public class CachedDatabase extends MemoryDatabase {
 		assert dirtyBit[pageID];
 		Statistics[Stats.PAGE_WRITES.ordinal()] ++;
 		long blockID = blockIDsArray[pageID];
+		capacity = Util.max(capacity, (blockID + 1) * pageSize).longValue();
 		dirtyBit[pageID] = false;
 		try {
 			fileDescriptor.seek(blockID * pageSize);
@@ -266,14 +279,15 @@ public class CachedDatabase extends MemoryDatabase {
 		int pageLoads = Statistics[Stats.PAGE_LOADS.ordinal()];
 		int pageWrites = Statistics[Stats.PAGE_WRITES.ordinal()];
 		float rhr = (readHitCount == 0) ? 0.0f : new Float(readHitCount * 100) / (totalReadCount);
-		System.out.printf("+ Read Hit Rate:  %6.2f%% out of %s pages  +\n", rhr, Util.bytesToString(totalReadCount));
+		System.out.printf("+ Read Hit Rate:  %6.2f%% out of %4s pages  +\n", rhr, Util.bytesToString(totalReadCount));
 		float whr = (writeHitCount == 0) ? 0.0f : new Float(writeHitCount * 100) / (totalWriteCount);
-		System.out.printf("+ Write Hit Rate: %6.2f%% out of %s pages  +\n", whr, Util.bytesToString(totalWriteCount));		
-		System.out.printf("+ Cache/Page=Pages:  %sb /%sb = %5d    +\n", Util.bytesToString(cacheSize), Util.bytesToString(pageSize), bufferPoolSize);
-		System.out.printf("+ I/O Read:      %8d pages = %sb      +\n", pageLoads, Util.bytesToString(pageLoads * pageSize));
-		System.out.printf("+ I/O Write:     %8d pages = %sb      +\n", pageWrites, Util.bytesToString(pageWrites * pageSize));
+		System.out.printf("+ Write Hit Rate: %6.2f%% out of %4s pages  +\n", whr, Util.bytesToString(totalWriteCount));		
+		System.out.printf("+ Cache/Page = Pages:  %5s /%5s = %5d  +\n", Util.bytesToString(cacheSize), Util.bytesToString(pageSize), bufferPoolSize);
+		System.out.printf("+ I/O Read:      %8d pages = %5s      +\n", pageLoads, Util.bytesToString(pageLoads * pageSize));
+		System.out.printf("+ I/O Write:     %8d pages = %5s      +\n", pageWrites, Util.bytesToString(pageWrites * pageSize));
 		System.out.printf("+ Pages Used/Total:    %8d/%-8d     +\n", Statistics[Stats.PAGES.ordinal()], bufferPoolSize);
 		System.out.printf("+ Flush() Call Count:   %8d             +\n", Statistics[Stats.FLUSHES.ordinal()]);
+		System.out.printf("+ Capacity:                %6s            +\n", Util.bytesToString(capacity));
 		System.out.printf("+--------------------------------------------+\n");
 	}
 	
@@ -281,91 +295,4 @@ public class CachedDatabase extends MemoryDatabase {
 	public long getSize() {
 		return capacity;
 	}
-	
-	/**
-	 * Run a test to see if this DB is working.
-	 * @param args - nothing
-	 */
-	public static void main(String[] args) {
-		
-		/* Printing some variables */
-		Runtime thisMachine = Runtime.getRuntime();
-		int procNum = thisMachine.availableProcessors();
-		System.out.println("Available Processors: " + procNum);
-		System.out.println("Free Memory:  " + Util.bytesToString(thisMachine.freeMemory()));
-		System.out.println("Total Memory: " + Util.bytesToString(thisMachine.totalMemory()));
-		
-		
-		/* Defining Variables */
-		long startTime = (new Date()).getTime();
-		Random random = new Random();
-		int bloatedness = 1; //40000000; // use this and test size 25, to make 10GB file.
-		int testSize = 25;
-		int [] bitSizes = new int[] { 57, 63, 32, 30, 29, 28, 60, 43, 32, 31, 9, 8, 7, 5, 3, 2, 1 };
-		int bitSize = 0;
-		for (int i : bitSizes) bitSize += i; 
-		BigInteger[] BigInts = new BigInteger[testSize];
-		
-		
-		/* Initializing the file */
-		String filename = "CacheDB.TestFile.db";
-		File testFile = new File(filename);
-		if (testFile.exists()) testFile.delete();
-		
-		/* Initializing the Database */
-		CachedDatabase DB = new CachedDatabase();
-		DB.initialize(filename, null);
-		
-		/* Generating Random Numbers */
-		int bc;
-		for (int i = 0; i < testSize; i ++) {
-			BigInts[i] = new BigInteger(bitSize, random);
-			bc = BigInts[i].bitLength();
-			if (bc < bitSize)
-				BigInts[i] = BigInts[i].shiftLeft(bitSize - bc); }
-		
-		/* Putting them into records */
-		edu.berkeley.gamesman.core.Record[] Records = new edu.berkeley.gamesman.core.Record[testSize];
-		for (int i = 0; i < testSize; i ++) {
-			Records[i] = new edu.berkeley.gamesman.core.Record(bitSizes);
-			Records[i].loadBigInteger(BigInts[i]);
-		}
-		
-		/* Writing numbers to database in random order */
-		java.util.TreeSet<Integer> visited = new java.util.TreeSet<Integer>();
-		java.util.Random randomness = new java.util.Random();
-		int index;
-		for (int i = 0; i < testSize; i ++) {
-			index = randomness.nextInt(testSize);
-			while (visited.contains(index))
-				index = (index + 1) % testSize;
-			DB.putRecord(i * bloatedness, Records[i]);
-			visited.add(index);
-		}
-		
-		/* Closing the database */
-		//DB.close();
-		//DB.printStats();
-		//DB.initialize(filename);
-		
-		/* Testing that it was written correctly */
-		BigInteger temp;
-		int pass = 0;
-		int fail = 0;
-		for (int i = 0; i < testSize; i ++) {
-			temp = DB.getRecord(i * bloatedness, Records[i]).toBigInteger();
-			if (temp.toString(2).equals(BigInts[i].toString(2))) pass ++;
-			else fail ++;
-		}
-		
-		/* Closing the database and outputting results */
-		DB.close();
-		System.out.printf("%d tests passed. %d tests failed.\n", pass, fail);
-		long endTime = (new Date()).getTime() - startTime;
-		System.out.printf("Testing Complete in %s.\n", Util.millisToETA(endTime));
-		
-		System.exit(0);
-		
-	}
-
 }
