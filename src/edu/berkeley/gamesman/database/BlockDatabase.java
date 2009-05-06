@@ -1,6 +1,8 @@
 package edu.berkeley.gamesman.database;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.math.BigInteger;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel.MapMode;
@@ -56,11 +58,18 @@ public class BlockDatabase extends FileDatabase {
 		buf.force();
 		super.flush();
 	}
+	
 
 	@Override
 	public Record getRecord(BigInteger loc) {
 		lastRecord = Math.max(lastRecord,loc.longValue());
 		return Record.read(conf, wrappedbuf, loc.longValue());
+	}
+	
+	@Override
+	public Record getRecord(BigInteger loc, Record rec) {
+		rec.read(wrappedbuf, loc.longValue());
+		return rec;
 	}
 
 	@Override
@@ -86,5 +95,5 @@ public class BlockDatabase extends FileDatabase {
 		value.write(wrappedbuf, loc.longValue());
 		assert Util.debug(DebugFacility.DATABASE, "Stored record "+value+" to "+loc);
 	}
-
+	
 }
