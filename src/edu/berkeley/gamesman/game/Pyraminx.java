@@ -32,6 +32,11 @@ public class Pyraminx extends Game<PyraminxState> {
 	}
 
 	@Override
+	public int getPlayerCount() {
+		return 1;
+	}
+	
+	@Override
 	public String displayState(PyraminxState pos) {
 		// TODO Auto-generated method stub
 		return stateToString(pos);
@@ -175,6 +180,7 @@ public class Pyraminx extends Game<PyraminxState> {
 				nextMoves.add(new Pair<String, PyraminxState>(move, next));
 			}
 		}
+		System.out.println(nextMoves);
 		return nextMoves;
 	}
 }

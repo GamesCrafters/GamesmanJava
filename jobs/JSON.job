@@ -5,6 +5,9 @@ json.databasedirectory = file:///tmp/
 json.unsolved.rubik = jobs/2x2x2.job
 json.fields.rubik =
 
+json.unsolved.pyraminx = jobs/Pyraminx.job
+json.fields.pyraminx =
+
 json.unsolved.connect4 = jobs/Connect4.job
 json.fields.connect4 = width,height,pieces
 

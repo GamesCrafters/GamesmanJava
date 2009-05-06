@@ -403,7 +403,7 @@ public class JSONInterface extends GamesmanApplication {
 				JSONArray responseArray = new JSONArray();
 
 				PrimitiveValue pv = g.primitiveValue(state);
-				if (pv == PrimitiveValue.UNDECIDED) {
+				if (g.getPlayerCount() <= 1 || pv == PrimitiveValue.UNDECIDED) {
 					// Game is not over yet...
 					for(Pair<String,T> next : g.validMoves(state)){
 						JSONObject entry = new JSONObject();
