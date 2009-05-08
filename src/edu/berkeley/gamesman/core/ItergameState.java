@@ -1,23 +1,21 @@
 package edu.berkeley.gamesman.core;
 
-import java.math.BigInteger;
-
 import edu.berkeley.gamesman.util.Pair;
 
 /**
  * All Itergames use this as the state.
  * @author DNSpies
  */
-public class ItergameState extends Pair<Integer, BigInteger> {
+public class ItergameState extends Pair<Integer, Long> {
 
 	private static final long serialVersionUID = -2453498572553759443L;
 
 	/**
 	 * @param tier The tier
-	 * @param hash The hash
+	 * @param hashVal The hash
 	 */
-	public ItergameState(Integer tier, BigInteger hash) {
-		super(tier, hash);
+	public ItergameState(int tier, long hashVal) {
+		super(tier, hashVal);
 	}
 
 	/**
@@ -30,7 +28,7 @@ public class ItergameState extends Pair<Integer, BigInteger> {
 	/**
 	 * @return The hash
 	 */
-	public BigInteger hash() {
+	public long hash() {
 		return cdr;
 	}
 

@@ -20,39 +20,44 @@ import edu.berkeley.gamesman.util.Util;
  */
 public abstract class DartboardGame extends TieredIterGame {
 	protected final int gameWidth, gameHeight;
-	final BigInteger[] moveAdds;
+
+	final long[] moveAdds;
+
 	int numPieces;
+
 	SpaceRearranger piece_empty;
+
 	PieceRearranger o_x;
 
 	/**
-	 * @param conf The configuration object
+	 * @param conf
+	 *            The configuration object
 	 */
 	public DartboardGame(Configuration conf) {
 		super(conf);
 		gameWidth = conf.getInteger("gamesman.game.width", getDefaultWidth());
-		gameHeight = conf.getInteger("gamesman.game.height", getDefaultHeight());
-		moveAdds = new BigInteger[gameWidth*gameHeight];
+		gameHeight = conf
+				.getInteger("gamesman.game.height", getDefaultHeight());
+		moveAdds = new long[gameWidth * gameHeight];
 	}
 
 	/**
 	 * @return The default width of the board
 	 */
 	public abstract int getDefaultWidth();
-	
+
 	/**
 	 * @return The default height of the board
 	 */
 	public abstract int getDefaultHeight();
-	
+
 	private void setOXs() {
 		try {
 			o_x = new PieceRearranger(piece_empty.toString(), numPieces / 2,
 					(numPieces + 1) / 2);
-			ArrayList<Pair<Integer, BigInteger>> children = piece_empty
-					.getChildren();
-			for (Pair<Integer, BigInteger> child : children)
-				moveAdds[child.car] = child.cdr.multiply(o_x.arrangements);
+			ArrayList<Pair<Integer, Long>> children = piece_empty.getChildren();
+			for (Pair<Integer, Long> child : children)
+				moveAdds[child.car] = child.cdr*o_x.arrangements;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -61,16 +66,18 @@ public abstract class DartboardGame extends TieredIterGame {
 	@Override
 	public String displayState() {
 		String s = stateToString();
-		StringBuffer str = new StringBuffer((gameWidth+3)*gameHeight);
-		for(int row=gameHeight-1;row>=0;row--)
-			str.append("|"+s.substring(row*gameWidth,row*(gameWidth+1)-1)+"|\n");
+		StringBuffer str = new StringBuffer((gameWidth + 3) * gameHeight);
+		for (int row = gameHeight - 1; row >= 0; row--)
+			str.append("|"
+					+ s.substring(row * gameWidth, row * (gameWidth + 1) - 1)
+					+ "|\n");
 		return str.toString();
 	}
 
 	@Override
 	public ItergameState getState() {
-		return new ItergameState(getTier(), piece_empty.getHash().multiply(
-				o_x.arrangements).add(o_x.getHash()));
+		return new ItergameState(getTier(), piece_empty.getHash()
+				* o_x.arrangements + o_x.getHash());
 	}
 
 	@Override
@@ -95,13 +102,12 @@ public abstract class DartboardGame extends TieredIterGame {
 
 	@Override
 	public BigInteger numHashesForTier() {
-		return piece_empty.arrangements.multiply(o_x.arrangements);
+		return BigInteger.valueOf(piece_empty.arrangements*o_x.arrangements);
 	}
-	
+
 	@Override
 	public BigInteger numHashesForTier(int tier) {
-		return BigInteger.valueOf(Util.nCr(gameWidth * gameHeight, tier))
-				.multiply(BigInteger.valueOf(Util.nCr(tier, tier / 2)));
+		return BigInteger.valueOf(Util.nCr(gameWidth * gameHeight, tier)*Util.nCr(tier, tier / 2));
 	}
 
 	@Override
@@ -110,8 +116,10 @@ public abstract class DartboardGame extends TieredIterGame {
 	}
 
 	/**
-	 * @param row The row
-	 * @param col The column
+	 * @param row
+	 *            The row
+	 * @param col
+	 *            The column
 	 * @return Whether this place is on a board of this size
 	 */
 	public boolean exists(int row, int col) {
@@ -119,12 +127,14 @@ public abstract class DartboardGame extends TieredIterGame {
 	}
 
 	/**
-	 * @param row The row
-	 * @param col The column
+	 * @param row
+	 *            The row
+	 * @param col
+	 *            The column
 	 * @return 'O' 'X' or ' '
 	 */
 	public char get(int row, int col) {
-		return o_x.get(row*gameWidth+col);
+		return o_x.get(row * gameWidth + col);
 	}
 
 	@Override
@@ -135,10 +145,11 @@ public abstract class DartboardGame extends TieredIterGame {
 	@Override
 	public void setState(ItergameState pos) {
 		setTier(pos.tier());
-		BigInteger[] hashes = pos.hash().divideAndRemainder(o_x.arrangements);
-		piece_empty.unHash(hashes[0]);
+		long hash0 = pos.hash()/o_x.arrangements;
+		long hash1 = pos.hash()%o_x.arrangements;
+		piece_empty.unHash(hash0);
 		setOXs();
-		o_x.unHash(hashes[1]);
+		o_x.unHash(hash1);
 	}
 
 	@Override
@@ -163,21 +174,21 @@ public abstract class DartboardGame extends TieredIterGame {
 	public String stateToString() {
 		return o_x.toString();
 	}
-	
-	private Pair<Integer, Integer> rowCol(int piece){
-		return new Pair<Integer, Integer>(piece/gameWidth,piece%gameWidth);
+
+	private Pair<Integer, Integer> rowCol(int piece) {
+		return new Pair<Integer, Integer>(piece / gameWidth, piece % gameWidth);
 	}
 
 	@Override
 	public ArrayList<Pair<String, ItergameState>> validMoves() {
-		ArrayList<Pair<Integer, BigInteger>> moves = o_x
+		ArrayList<Pair<Integer, Long>> moves = o_x
 				.getChildren((numPieces % 2 == 1) ? 'O' : 'X');
 		ArrayList<Pair<String, ItergameState>> retMoves = new ArrayList<Pair<String, ItergameState>>(
 				moves.size());
-		for (Pair<Integer, BigInteger> move : moves) {
+		for (Pair<Integer, Long> move : moves) {
 			Pair<Integer, Integer> rowCol = rowCol(move.car);
 			String s = "r" + rowCol.car + "c" + rowCol.cdr;
-			BigInteger hashVal = moveAdds[move.car].add(move.cdr);
+			long hashVal = moveAdds[move.car]+move.cdr;
 			retMoves.add(new Pair<String, ItergameState>(s, new ItergameState(
 					getTier(), hashVal)));
 		}

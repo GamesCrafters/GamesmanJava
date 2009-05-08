@@ -83,7 +83,7 @@ public class RConnect4 extends TieredIterGame {
 
 	@Override
 	public BigInteger numHashesForTier() {
-		return iah.arrangements;
+		return BigInteger.valueOf(iah.arrangements);
 	}
 
 	@Override
@@ -298,11 +298,11 @@ public class RConnect4 extends TieredIterGame {
 
 	@Override
 	public Collection<Pair<String, ItergameState>> validMoves() {
-		Collection<Pair<Integer, BigInteger>> children = iah
+		Collection<Pair<Integer, Long>> children = iah
 				.getChildren(turn);
 		ArrayList<Pair<String, ItergameState>> moves = new ArrayList<Pair<String, ItergameState>>(
 				children.size());
-		for (Pair<Integer, BigInteger> p : children) {
+		for (Pair<Integer, Long> p : children) {
 			int col = pieces.get(p.car).cdr;
 			moves.add(new Pair<String, ItergameState>(Integer.toString(col),
 					new ItergameState(moveTiers[col], p.cdr)));

@@ -23,7 +23,7 @@ public class TieredItergameHasher extends TieredHasher<ItergameState> {
 
 	@Override
 	public ItergameState gameStateForTierAndOffset(int tier, BigInteger index) {
-		return new ItergameState(tier,index);
+		return new ItergameState(tier,index.longValue());
 	}
 
 	@Override
@@ -38,7 +38,7 @@ public class TieredItergameHasher extends TieredHasher<ItergameState> {
 
 	@Override
 	public Pair<Integer, BigInteger> tierIndexForState(ItergameState state) {
-		return state;
+		return new Pair<Integer,BigInteger>(state.car,BigInteger.valueOf(state.cdr));
 	}
 
 	@Override
