@@ -44,34 +44,34 @@ public class TierItergameSolver extends Solver {
 	protected void solvePartialTier(TieredIterGame game, BigInteger start,
 			BigInteger end, TierSolverUpdater t) {
 		BigInteger current = start;
-		ItergameState s = game.hashToState(start);
-		game.setState(s);
+		game.setState(game.hashToState(start));
 		while (current.compareTo(end) <= 0) {
 			if (current.mod(BigInteger.valueOf(10000)).compareTo(BigInteger.ZERO) == 0)
 				t.calculated(10000);
-
 			PrimitiveValue pv = game.primitiveValue();
 			
 			if (pv.equals(PrimitiveValue.UNDECIDED)) {
-				assert Util.debug(DebugFacility.SOLVER, "Primitive value for state " + current + " is undecided");
 				Collection<Pair<String,ItergameState>> children = game.validMoves();
+				int i=0;
+				long[] fullHashes=new long[children.size()];
+				if(current.equals(BigInteger.valueOf(13929)))
+					System.out.println("Break point");
 				ArrayList<Record> vals = new ArrayList<Record>(children.size());
 				for (Pair<String,ItergameState> child : children) {
 					vals.add(db.getRecord(game.stateToHash(child.cdr)));
+					fullHashes[i++]=game.stateToHash(child.cdr).longValue();
 				}
 
 				Record newVal = Record.combine(conf, vals);
 				db.putRecord(current, newVal);
 			} else {				
 				Record prim = new Record(conf, pv);
-				assert Util.debug(DebugFacility.SOLVER, "Primitive value for state "+current+" is "+prim);
 				db.putRecord(current, prim);
 			}
-			current = current.add(BigInteger.ONE);
-			if(game.hasNextHashInTier())
+			if(!current.equals(end))
 				game.nextHashInTier();
+			current = current.add(BigInteger.ONE);
 		}
-		assert Util.debug(DebugFacility.SOLVER, "Reached end of partial tier at " + end);
 	}
 
 	protected int nextIndex = 0;

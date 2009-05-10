@@ -1,6 +1,5 @@
 package edu.berkeley.gamesman.testing;
 
-import java.awt.Component;
 import java.awt.Container;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -47,10 +46,11 @@ public class ConnectFour implements MouseListener {
 	final int gameHeight;
 
 	public ConnectFour(int height, int width, DisplayFour disfour, Database db) {
-		this(height,width,disfour,db,false,true);
+		this(height, width, disfour, db, false, true);
 	}
-	
-	public ConnectFour(int height, int width, DisplayFour disfour, Database db, boolean cX, boolean cO) {
+
+	public ConnectFour(int height, int width, DisplayFour disfour, Database db,
+			boolean cX, boolean cO) {
 		int c, r;
 		compX = cX;
 		compO = cO;
@@ -93,6 +93,8 @@ public class ConnectFour implements MouseListener {
 		df.setBoard(copy(board));
 		paintThread.start();
 		paintThread = new Thread(df);
+		cgame.setFromString(arrToString(board));
+		System.out.println(cgame.stateToHash(cgame.getState()));
 		if (!win())
 			startCompMove();
 	}
@@ -101,7 +103,7 @@ public class ConnectFour implements MouseListener {
 		if (compTurn() && !win()) {
 			ArrayList<Pair<String, ItergameState>> bests = new ArrayList<Pair<String, ItergameState>>(
 					gameWidth);
-			cgame.setToString(arrToString(board));
+			cgame.setFromString(arrToString(board));
 			Collection<Pair<String, ItergameState>> moves = cgame.validMoves();
 			Pair<String, ItergameState> s;
 			PrimitiveValue bestOutcome = null;
@@ -111,7 +113,8 @@ public class ConnectFour implements MouseListener {
 				thisOutcome = fd.getRecord(cgame.stateToHash(s.cdr)).get()
 						.previousMovesValue();
 				System.out.println("Next possible move " + move.car
-						+ " for state " + s.car + "," + s.cdr + " has value "
+						+ " for state " + s.car + ", "
+						+ cgame.stateToHash(s.cdr) + " has value "
 						+ thisOutcome);
 				if (bests.size() == 0
 						|| thisOutcome.isPreferableTo(bestOutcome)) {

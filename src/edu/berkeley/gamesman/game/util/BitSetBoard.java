@@ -80,6 +80,9 @@ public class BitSetBoard extends Board2D {
 		}
 	}
 	
+	/**
+	 * Switches X with O
+	 */
 	public void switchColors(){
 		BigInteger tmp=xPlayer;
 		xPlayer=oPlayer;
@@ -111,5 +114,31 @@ public class BitSetBoard extends Board2D {
 		int lastCheck=dist-checked;
 		board=board.and(board.shiftRight(lastCheck));
 		return !board.equals(BigInteger.ZERO);
+	}
+
+	/**
+	 * Clears the board
+	 */
+	public void clear() {
+		xPlayer=BigInteger.ZERO;
+		oPlayer=BigInteger.ZERO;
+	}
+	
+	public String toString(){
+		StringBuilder str=new StringBuilder(width*2+1);
+		for(int row=height-1;row>=0;row--){
+			str.append('|');
+			for(int col=0;col<width;col++){
+				if(xPlayer.testBit(getBit(row,col)))
+					str.append('X');
+				else if(oPlayer.testBit(getBit(row,col)))
+					str.append('O');
+				else
+					str.append(' ');
+				str.append('|');
+			}
+			str.append('\n');
+		}
+		return str.toString();
 	}
 }

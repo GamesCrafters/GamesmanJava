@@ -70,7 +70,7 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> implement
 		if(hasNextHashInTier())
 			nextHashInTier();
 		else
-			setTier(getTier()+1);
+			setNumPieces(getTier()+1);
 	}
 	
 	@Override
@@ -86,14 +86,14 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> implement
 	@Override
 	public ItergameState stringToState(String pos) {
 		TieredIterGame c = clone();
-		c.setToString(pos);
+		c.setFromString(pos);
 		return c.getState();
 	}
 	
 	/**
 	 * @param pos A string representing this position
 	 */
-	public abstract void setToString(String pos);
+	public abstract void setFromString(String pos);
 
 	/**
 	 * Returns a state object for this position
@@ -115,7 +115,7 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> implement
 	 */
 	public BigInteger numHashesForTier(int tier){
 		TieredIterGame s = clone();
-		s.setTier(tier);
+		s.setNumPieces(tier);
 		return s.numHashesForTier();
 	}
 	
@@ -123,7 +123,7 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> implement
 	 * Sets this game to the given tier.
 	 * @param tier The tier to set to.
 	 */
-	public abstract void setTier(int tier);
+	public abstract void setNumPieces(int tier);
 
 	/**
 	 * Pretty-print's the current position
