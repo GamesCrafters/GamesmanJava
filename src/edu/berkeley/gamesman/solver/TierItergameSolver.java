@@ -52,19 +52,12 @@ public class TierItergameSolver extends Solver {
 			
 			if (pv.equals(PrimitiveValue.UNDECIDED)) {
 				Collection<Pair<String,ItergameState>> children = game.validMoves();
-				int i=0;
-				long[] fullHashes=new long[children.size()];
-				if(current.equals(BigInteger.valueOf(13929)))
-					System.out.println("Break point");
 				ArrayList<Record> vals = new ArrayList<Record>(children.size());
-				for (Pair<String,ItergameState> child : children) {
+				for (Pair<String,ItergameState> child : children)
 					vals.add(db.getRecord(game.stateToHash(child.cdr)));
-					fullHashes[i++]=game.stateToHash(child.cdr).longValue();
-				}
-
 				Record newVal = Record.combine(conf, vals);
 				db.putRecord(current, newVal);
-			} else {				
+			} else {
 				Record prim = new Record(conf, pv);
 				db.putRecord(current, prim);
 			}
