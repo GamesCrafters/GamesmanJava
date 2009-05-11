@@ -246,8 +246,10 @@ public final class PieceRearranger implements Cloneable {
             lastPiece = pieces.get(numOs - 1);
         else
             lastPiece = lowPiece;
-        for (; i < pieces.size(); i++)
+        for (; i < pieces.size(); i++){
             pieces.get(i).set(numOs, lastPiece.nextX, 'X');
+            lastPiece=pieces.get(i);
+        }
         openO = numOs;
         openX = 0;
         hasNext = pieces.size() > numOs && numOs > 0;
