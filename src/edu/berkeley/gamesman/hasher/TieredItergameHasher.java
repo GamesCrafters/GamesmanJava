@@ -9,42 +9,42 @@ import edu.berkeley.gamesman.core.TieredIterGame;
 import edu.berkeley.gamesman.util.Pair;
 
 /**
- * @author DNSpies
- * Hasher for Tiered Cycle Games
+ * @author DNSpies Hasher for Tiered Cycle Games
  */
-public class TieredItergameHasher extends TieredHasher<ItergameState> {
+public final class TieredItergameHasher extends TieredHasher<ItergameState> {
 
-	/**
-	 * @param conf The configuration object
-	 */
-	public TieredItergameHasher(Configuration conf) {
-		super(conf);
-	}
+    /**
+     * @param conf The configuration object
+     */
+    public TieredItergameHasher(Configuration conf) {
+        super(conf);
+    }
 
-	@Override
-	public ItergameState gameStateForTierAndOffset(int tier, BigInteger index) {
-		return new ItergameState(tier,index.longValue());
-	}
+    @Override
+    public ItergameState gameStateForTierAndOffset(int tier, BigInteger index) {
+        return new ItergameState(tier, index.longValue());
+    }
 
-	@Override
-	public BigInteger numHashesForTier(int tier) {
-		return ((TieredIterGame) conf.getGame()).numHashesForTier(tier);
-	}
+    @Override
+    public BigInteger numHashesForTier(int tier) {
+        return ((TieredIterGame) conf.getGame()).numHashesForTier(tier);
+    }
 
-	@Override
-	public int numberOfTiers() {
-		return ((TieredIterGame) conf.getGame()).numberOfTiers();
-	}
+    @Override
+    public int numberOfTiers() {
+        return ((TieredIterGame) conf.getGame()).numberOfTiers();
+    }
 
-	@Override
-	public Pair<Integer, BigInteger> tierIndexForState(ItergameState state) {
-		return new Pair<Integer,BigInteger>(state.car,BigInteger.valueOf(state.cdr));
-	}
+    @Override
+    public Pair<Integer, BigInteger> tierIndexForState(ItergameState state) {
+        return new Pair<Integer, BigInteger>(state.car, BigInteger
+                .valueOf(state.cdr));
+    }
 
-	@Override
-	public String describe() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public String describe() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
 }
