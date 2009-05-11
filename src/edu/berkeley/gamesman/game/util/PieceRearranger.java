@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 
 /**
  * @author DNSpies
@@ -306,20 +307,20 @@ public final class PieceRearranger implements Cloneable {
     public long[] getChildren(final char player) {
         long[] result = new long[groups.size() - 1];
         long move = hash;
-        Iterator<HashGroup> it = groups.descendingIterator();
+        ListIterator<HashGroup> it = groups.listIterator(groups.size());
         if (player == 'O') {
             HashGroup g;
-            move += it.next().addO;
+            move += it.previous().addO;
             for (int i = result.length - 1; i >= 0; i--) {
-                g = it.next();
+                g = it.previous();
                 result[i] = move + g.lastPiece.nextO;
                 move += g.addO;
             }
         } else if (player == 'X') {
-            move += it.next().addX;
+            move += it.previous().addX;
             for (int i = result.length - 1; i >= 0; i--) {
                 result[i] = move;
-                move += it.next().addX;
+                move += it.previous().addX;
             }
         }
         return result;
