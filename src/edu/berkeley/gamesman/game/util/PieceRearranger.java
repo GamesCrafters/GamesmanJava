@@ -113,9 +113,7 @@ public final class PieceRearranger implements Cloneable {
 
     private static final class HashGroup {
         private HashPiece lastPiece;
-
         private long addO = 0;
-
         private long addX = 0;
 
         private HashGroup(HashPiece lastPiece) {
@@ -265,16 +263,17 @@ public final class PieceRearranger implements Cloneable {
         int k = 0;
         int totSize = 0;
         HashPiece lastPiece = lowPiece;
-        HashGroup g = new HashGroup(lastPiece);
+        HashGroup g;
         for (int count : groupSizes) {
+            g = new HashGroup(lastPiece);
             for (totSize += count; k < totSize; k++) {
                 lastPiece = pieces.get(k);
                 lastPiece.group = g;
                 g.addPiece(lastPiece);
             }
             groups.add(g);
-            g = new HashGroup(lastPiece);
         }
+        g = new HashGroup(lastPiece);
         for (; k < pieces.size(); k++) {
             lastPiece = pieces.get(k);
             lastPiece.group = g;

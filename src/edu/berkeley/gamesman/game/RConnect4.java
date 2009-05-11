@@ -158,8 +158,8 @@ public final class RConnect4 extends TieredIterGame {
             }
         }
         setMoveArrangements();
-        iah.reset();
         iah.setGroupSizes(groupSizes);
+        iah.reset();
         setBSBfromIAH();
     }
 
@@ -279,6 +279,7 @@ public final class RConnect4 extends TieredIterGame {
         setMoveArrangements();
         iah = new PieceRearranger(rearrangeString.toString(), os, numPieces
                 - os);
+        setBSBfromIAH();
     }
 
     private void setMoveArrangements() {
