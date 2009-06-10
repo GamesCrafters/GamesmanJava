@@ -194,9 +194,9 @@ public final class DirectoryFilerClient {
 		public RecordGroup getRecordGroup(long loc) {
 			try {
 				// Util.debug("Trying to read "+loc);
-				BigInteger loc = BigInteger.valueOf(loc);
-				if (loc.compareTo(pos) != 0)
-					seek(loc);
+				BigInteger bigLoc = BigInteger.valueOf(loc);
+				if (bigLoc.compareTo(pos) != 0)
+					seek(bigLoc);
 
 				dout.write(5);
 				dout.writeInt(fd);
@@ -232,9 +232,9 @@ public final class DirectoryFilerClient {
 		@Override
 		public void putRecordGroup(long loc, RecordGroup value) {
 			try {
-				BigInteger loc = BigInteger.valueOf(loc);
-				if(loc.compareTo(pos) != 0)
-					seek(loc);
+				BigInteger bigLoc = BigInteger.valueOf(loc);
+				if(bigLoc.compareTo(pos) != 0)
+					seek(bigLoc);
 				dout.write(6);
 				dout.writeInt(fd);
 				value.getState().outputPaddedUnsignedBytes((OutputStream)dout, conf.recordGroupByteLength);
