@@ -5,4 +5,6 @@ gamesman.game.pieces = 4
 gamesman.hasher = TieredItergameHasher
 gamesman.solver = TierItergameSolver
 gamesman.database = BlockDatabase
-gamesman.db.uri = file:///tmp/fastdatabase5.db
+gamesman.db.uri = fastdatabase5.db
+record.fields = VALUE:3,REMOTENESS:26
+record.groupSize = 5

@@ -12,16 +12,16 @@ public enum RecordFields {
 	 * The value of the position
 	 * @see PrimitiveValue
 	 */
-	VALUE(2),
+	VALUE(4),
 	/**
 	 * How many moves to the closest ending state
 	 */
-	REMOTENESS(6),
+	REMOTENESS(1<<6),
 	/**
 	 * The best possible ending position you can get.
 	 * @see Game#primitiveScore
 	 */
-	SCORE(4);
+	SCORE(1<<4);
 	
 	
 	private int bs;
@@ -32,10 +32,10 @@ public enum RecordFields {
 	/**
 	 * @return the default size in bits of this field
 	 */
-	public int defaultBitSize(){
+	public int defaultNumberOfStates(){
 		if(bs != -1)
 			return bs;
-		Util.fatalError("Tried to get default bit size of field without a default");
+		Util.fatalError("Tried to get default possibilities of field without a default");
 		return 0;
 	}
 }

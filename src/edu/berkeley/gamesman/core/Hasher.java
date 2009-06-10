@@ -1,7 +1,5 @@
 package edu.berkeley.gamesman.core;
 
-import java.math.BigInteger;
-
 import edu.berkeley.gamesman.util.Util;
 
 
@@ -28,21 +26,20 @@ public abstract class Hasher<Board> {
 	 * @param hash The hashed representation of a board
 	 * @return The board
 	 */
-	public abstract Board unhash(BigInteger hash);
+	public abstract Board unhash(long hash);
 
 	/**
 	 * Convert a board into a compact hash representation
 	 * @param board The board to hash
-	 * @param l The size of the Board
 	 * @return Hash of the board
 	 */
-	public abstract BigInteger hash(Board board);
+	public abstract long hash(Board board);
 	
 	/**
 	 * @return Maximum hash that the Hasher could return via a call to hash()
-	 * @see Hasher#hash(Object, int)
+	 * @see Hasher#hash(Object)
 	 */
-	public abstract BigInteger maxHash();
+	public abstract long maxHash();
 	
 	/**
 	 * @return a String that uniquely identifies this Hasher (including valid pieces if appropriate, etc)

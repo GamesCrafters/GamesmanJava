@@ -1,8 +1,5 @@
 package edu.berkeley.gamesman.hasher.util;
 
-
-import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -11,13 +8,15 @@ import edu.berkeley.gamesman.util.Task;
 import edu.berkeley.gamesman.util.Util;
 
 /**
- * The UniformPieceHasher is a perfect hash given a 1-dimensional board with a fixed list of possible pieces
- * Note that this is only a perfect hash if every location can contain any piece
- * As an example, tic-tac-toe is /not/ a UniformPieceHasher-style game as (|X|-|O|) E {0,1}
- * but this hasher could represent the board XXO-XXO-XXO
- * Use AlternatingRearrangerHasher instead
+ * The UniformPieceHasher is a perfect hash given a 1-dimensional board with a
+ * fixed list of possible pieces Note that this is only a perfect hash if every
+ * location can contain any piece As an example, tic-tac-toe is /not/ a
+ * UniformPieceHasher-style game as (|X|-|O|) E {0,1} but this hasher could
+ * represent the board XXO-XXO-XXO Use AlternatingRearrangerHasher instead
  * 
- * Few games are like this, so it is mostly a utility hasher used by other hashers piecewise.
+ * Few games are like this, so it is mostly a utility hasher used by other
+ * hashers piecewise.
+ * 
  * @author Steven Schlansker
  * @see AlternatingRearranger
  */
@@ -25,84 +24,89 @@ public final class C4UniformPieces {
 
 	/**
 	 * Default constructor
+	 * 
 	 * @param conf the configuration
 	 */
 	public C4UniformPieces(Configuration conf, int l, char[] pieces) {
 		lookup = null;
 		table = null;
 		idx = 0;
-		init(new char[l],0,pieces,l*pieces.length, 0);
+		init(new char[l], 0, pieces, l * pieces.length, 0);
 	}
-	
-	Map<String,BigInteger> lookup;
+
+	Map<String, Long> lookup;
+
 	String[] table;
-	
-	private Integer numpiecestarts[]; // nps[x] is the first hash (tier?) with the specified (total) number of (c4, not uph) pieces
-	
-	public BigInteger hash(char[] board, int l) {
+
+	private Integer numpiecestarts[]; // nps[x] is the first hash (tier?) with
+										// the specified (total) number of (c4,
+										// not uph) pieces
+
+	public long hash(char[] board, int l) {
 		return lookup.get(new String(board));
 	}
 
-	public char[] unhash(BigInteger hash, int l) {
-		return table[hash.intValue()].toCharArray();
+	public char[] unhash(long hash, int l) {
+		return table[(int)hash].toCharArray();
 	}
 
-	public BigInteger maxHash(int boardlen) {
-		return BigInteger.valueOf(table.length-1);
+	public long maxHash(int boardlen) {
+		return table.length - 1;
 	}
-	
-	private int idx;
+
+	private long idx;
+
 	transient private Task task;
-	
-	protected void init(char[] board,int off, char[] mypcs, int sum, int total){
-		if(lookup == null){
-			lookup = new ConcurrentHashMap<String,BigInteger>();
-			table = new String[(int)Util.longpow(mypcs.length,board.length)];
-			numpiecestarts = new Integer[sum-1];
+
+	protected void init(char[] board, int off, char[] mypcs, int sum, int total) {
+		if (lookup == null) {
+			lookup = new ConcurrentHashMap<String, Long>();
+			table = new String[(int) Util.longpow(mypcs.length, board.length)];
+			numpiecestarts = new Integer[sum - 1];
 			idx = 0;
 			task = Task.beginTask("Initializing C4 Column Hash");
-			
-			task.setTotal(table.length-1);
-			
-			for(int s = 0; s < sum; s++)
-				init(board,off,mypcs,s, s);
+
+			task.setTotal(table.length - 1);
+
+			for (int s = 0; s < sum; s++)
+				init(board, off, mypcs, s, s);
 			task.complete();
 			return;
 		}
-		
-		
-		for(int cur = 0; cur < mypcs.length; cur++){
+
+		for (int cur = 0; cur < mypcs.length; cur++) {
 			board[off] = mypcs[cur];
-			if(off == board.length-1){
-				if(sum == cur){
+			if (off == board.length - 1) {
+				if (sum == cur) {
 					String str = new String(board);
-					table[idx] = str;
-					lookup.put(str, BigInteger.valueOf(idx));
-					
-					if(numpiecestarts[total] == null || numpiecestarts[total] > idx)
-						numpiecestarts[total] = idx;
+					table[(int)idx] = str;
+					lookup.put(str, idx);
+
+					if (numpiecestarts[total] == null
+							|| numpiecestarts[total] > idx)
+						numpiecestarts[total] = (int)idx;
 
 					idx++;
-					if(idx % 1000 == 0)
+					if (idx % 1000 == 0)
 						task.setProgress(idx);
 				}
-			}else{
-				init(board,off+1,mypcs,sum-cur, total);
+			} else {
+				init(board, off + 1, mypcs, sum - cur, total);
 			}
 		}
-		
-		//if(off == 0)
-		//	Util.debug("CUPH finished building table: "+Arrays.toString(table));
+
+		// if(off == 0)
+		// Util.debug("CUPH finished building table: "+Arrays.toString(table));
 	}
-	
-	public int firstHashForNumberOfPieces(int pcs){
+
+	public int firstHashForNumberOfPieces(int pcs) {
 		return numpiecestarts[pcs];
 	}
-	
-	public int numberOfPiecesForHash(int hash){
-		for(int i = 0; i < numpiecestarts.length; i++)
-			if(numpiecestarts[i] > hash)
-				return i-1;
-		return numpiecestarts.length-1;
+
+	public int numberOfPiecesForHash(int hash) {
+		for (int i = 0; i < numpiecestarts.length; i++)
+			if (numpiecestarts[i] > hash)
+				return i - 1;
+		return numpiecestarts.length - 1;
 	}
 }

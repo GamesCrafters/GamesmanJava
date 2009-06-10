@@ -17,7 +17,7 @@ public abstract class GamesmanApplication {
 	public GamesmanApplication() {}
 	/**
 	 * Causes the current GamesmanApplication to start running.
-	 * @param conf The properties, probably from a job file
+	 * @param props The properties, probably from a job file
 	 * @return Exit status
 	 */
 	public abstract int run(Properties props);

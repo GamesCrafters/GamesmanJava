@@ -6,6 +6,7 @@ package edu.berkeley.gamesman.core;
  * @author Steven Schlansker
  */
 public enum PrimitiveValue {
+	//These must be in order so that PrimitiveValue.values()[x].value() == x
 	/**
 	 * The next player to move will lose even playing perfectly
 	 */
@@ -19,7 +20,7 @@ public enum PrimitiveValue {
 	 */
 	WIN(2),
 	/**
-	 * This value hasn't been computed yet
+	 * The game is not over yet
 	 */
 	UNDECIDED(3);
 

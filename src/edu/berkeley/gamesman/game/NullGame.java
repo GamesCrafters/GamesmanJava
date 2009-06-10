@@ -55,15 +55,15 @@ public class NullGame extends Game<Object> {
 	}
 
 	@Override
-	public Object hashToState(BigInteger hash) {
+	public Object hashToState(long hash) {
 		fail();
 		return null;
 	}
 
 	@Override
-	public BigInteger stateToHash(Object state) {
+	public long stateToHash(Object state) {
 		fail();
-		return null;
+		return 0;
 	}
 
 	@Override
@@ -82,8 +82,8 @@ public class NullGame extends Game<Object> {
 	}
 	
 	@Override
-	public BigInteger lastHash() {
-		return BigInteger.ZERO;
+	public long lastHash() {
+		return 0;
 	}
 
 	@Override

@@ -585,7 +585,7 @@ public final class FastBoard {
 	 */
 	public static void main(String[] args) {
 		int height = 4, width = 4, piecesToWin = 4;
-//		FileDatabase fd = new FileDatabase("file:///tmp/database.db");
+//		FileDatabase fd = new FileDatabase("database.db");
 //		BigInteger tierOffset = BigInteger.ZERO;
 		for (int tier = (int) (Math.pow(height + 1, width) - 1); tier >= 0; tier--) {
 			FastBoard fb = new FastBoard(height, width, tier);

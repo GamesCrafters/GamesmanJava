@@ -1,6 +1,5 @@
 package edu.berkeley.gamesman.core;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -113,7 +112,7 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> implement
 	 * @param tier The tier in question
 	 * @return The number of hashes in the tier
 	 */
-	public BigInteger numHashesForTier(int tier){
+	public long numHashesForTier(int tier){
 		TieredIterGame s = clone();
 		s.setNumPieces(tier);
 		return s.numHashesForTier();
@@ -134,7 +133,7 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> implement
 	/**
 	 * @return The number of hashes in this tier.
 	 */
-	public abstract BigInteger numHashesForTier();
+	public abstract long numHashesForTier();
 
 	@Override
 	public Collection<ItergameState> startingPositions() {

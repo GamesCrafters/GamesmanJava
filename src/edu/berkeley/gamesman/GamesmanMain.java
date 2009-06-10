@@ -4,17 +4,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.lang.reflect.InvocationTargetException;
-import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.EnumSet;
 import java.util.Properties;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Master;
-import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.core.Solver;
 import edu.berkeley.gamesman.database.filer.DirectoryFilerClient;
 import edu.berkeley.gamesman.database.filer.DirectoryFilerServer;
@@ -77,7 +74,7 @@ public final class GamesmanMain extends GamesmanApplication {
 		hasherName = conf.getProperty("gamesman.hasher");
 		if(hasherName == null)
 			Util.fatalError("You must specify a hasher with the property gamesman.hasher");
-		databaseName = conf.getProperty("gamesman.database","FileDatabase");
+		databaseName = conf.getProperty("gamesman.database","CachedDatabase");
 
 		Class<? extends Solver> s;
 		Class<? extends Database> d;
@@ -131,7 +128,7 @@ public final class GamesmanMain extends GamesmanApplication {
 	 * Diagnostic call to unhash an arbitrary value to a game board
 	 */
 	public void executeunhash() {
-		Object state = gm.hashToState(new BigInteger(conf.getProperty("gamesman.hash")));
+		Object state = gm.hashToState(Long.parseLong(conf.getProperty("gamesman.hash")));
 		System.out.println(gm.displayState(state));
 	}
 
@@ -139,7 +136,7 @@ public final class GamesmanMain extends GamesmanApplication {
 	 * Diagnostic call to view all child moves of a given hashed game state
 	 */
 	public void executegenmoves() {
-		Object state = gm.hashToState(new BigInteger(conf.getProperty("gamesman.hash")));
+		Object state = gm.hashToState(Long.parseLong(conf.getProperty("gamesman.hash")));
 		for (Object nextstate : gm.validMoves(state)) {
 			System.out.println(gm.stateToHash(nextstate));
 			System.out.println(gm.displayState(nextstate));
@@ -163,7 +160,7 @@ public final class GamesmanMain extends GamesmanApplication {
 		String board = conf.getProperty("gamesman.board");
 		if (board == null)
 			Util.fatalError("Please specify a hash to evaluate");
-		BigInteger val = new BigInteger(board);
+		long val = Long.parseLong(board);
 		System.out.println(gm.primitiveValue(gm.hashToState(val)));
 	}
 
@@ -242,7 +239,7 @@ public final class GamesmanMain extends GamesmanApplication {
 					break;
 				case read:
 					System.out.print(dbname+" read> ");
-					System.out.println("Result: "+cdb.getRecord(new BigInteger(input.readLine())));
+					System.out.println("Result: "+cdb.getRecord(Long.parseLong(input.readLine())));
 					break;
 				case write:
 					System.out.print(dbname+" write> ");

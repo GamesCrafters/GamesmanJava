@@ -68,47 +68,46 @@ public class Cuboid extends Game<CubeState> {
 	}
 
 	private static final int cornerCount = 8;
-	private static final BigInteger[] THREE_TO_X = new BigInteger[cornerCount];
+	private static final long[] THREE_TO_X = new long[cornerCount];
 	private static final PermutationHash cpHasher = new PermutationHash(cornerCount - 1, false);
 	{ //memoize some useful values for (un)hashing
-		THREE_TO_X[0] = BigInteger.ONE;
+		THREE_TO_X[0] = 1;
 		for(int i = 1; i < cornerCount; i++)
-			THREE_TO_X[i] = BigInteger.valueOf(3).multiply(THREE_TO_X[i-1]);
+			THREE_TO_X[i] = 3*THREE_TO_X[i-1];
 	}
 
 	@Override
-	public BigInteger stateToHash(CubeState state) {
+	public long stateToHash(CubeState state) {
 		ArrayList<Integer> cp = new ArrayList<Integer>(Arrays.asList(state.pieces));
 		cp.remove(cp.size() - 1); //we don't care about the last piece because it will always be fixed
-		BigInteger hash = cpHasher.hash(cp);
+		long hash = cpHasher.hash(cp).longValue();
 
-		hash = hash.multiply(THREE_TO_X[6]);
+		hash *= THREE_TO_X[6];
 		for(int i = 0; i < 6; i++)
-			hash = hash.add(BigInteger.valueOf(state.orientations[i]).multiply(THREE_TO_X[i]));
+			hash += state.orientations[i]*THREE_TO_X[i];
 		return hash;
 	}
 
 	@Override
-	public BigInteger lastHash() {
-		return THREE_TO_X[6].multiply(cpHasher.maxHash().add(BigInteger.ONE)).subtract(BigInteger.ONE);
+	public long lastHash() {
+		return THREE_TO_X[6]*(cpHasher.maxHash().longValue()+1)-1;
 	}
 
 	@Override
-	public CubeState hashToState(BigInteger hash) {
+	public CubeState hashToState(long hash) {
 		//corner orientations
 		Integer[] co = new Integer[cornerCount];
 		int totalorient = 0;
 		for(int i = 0; i < 6; i++) {
-			BigInteger[] div_rem = hash.divideAndRemainder(BigInteger.valueOf(3));
-			co[i] = div_rem[1].intValue();
-			hash = div_rem[0];
+			co[i] = (int) (hash%3);
+			hash/=3;
 			totalorient += co[i];
 		}
 		co[6] = Util.positiveModulo((3-totalorient),3);
 		co[7] = 0;
 		
 		//corner permutations
-		ArrayList<Integer> cp = cpHasher.unhash(hash);
+		ArrayList<Integer> cp = cpHasher.unhash(BigInteger.valueOf(hash));
 		cp.add(7);
 		return new CubeState(Util.toArray(cp), co);
 	}

@@ -1,6 +1,5 @@
 package edu.berkeley.gamesman.hasher;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 
 import edu.berkeley.gamesman.core.Configuration;
@@ -53,21 +52,21 @@ public class PerfectConnect4Hash extends TieredHasher<C4Board> {
 	}
 
 	@Override
-	public BigInteger numHashesForTier(int tier) {
+	public long numHashesForTier(int tier) {
 		char[] colh;
-		colh = uh.unhash(BigInteger.valueOf(tier),gameWidth);
+		colh = uh.unhash(tier,gameWidth);
 		
 		int sum = 0;
 		for(char h : colh)
 			sum += Character.digit(h, Character.MAX_RADIX);
-		BigInteger mh = AlternatingRearranger.maxHash(sum);
+		long mh = AlternatingRearranger.maxHash(sum);
 		assert Util.debug(DebugFacility.HASHER, "UPH says " + Arrays.toString(colh) + " for tier " + tier + " sum = " + sum + " maxhash = " + mh);
 		return mh;
 	}
 
 	@Override
-	public C4Board gameStateForTierAndOffset(int tier, BigInteger index) {
-		char[] colheights = uh.unhash(BigInteger.valueOf(tier),gameWidth);
+	public C4Board gameStateForTierAndOffset(int tier, long index) {
+		char[] colheights = uh.unhash(tier,gameWidth);
 		
 		int sum = 0;
 		for(char h : colheights)
@@ -92,11 +91,11 @@ public class PerfectConnect4Hash extends TieredHasher<C4Board> {
 	
 	@Override
 	public int numberOfTiers() {
-		return uh.maxHash(gameWidth).intValue()+1;
+		return (int)(uh.maxHash(gameWidth)+1);
 	}
 
 	@Override
-	public Pair<Integer, BigInteger> tierIndexForState(C4Board st) {
+	public Pair<Integer, Long> tierIndexForState(C4Board st) {
 		int index = 0;
 		char[] linear = new char[gameWidth*gameHeight];
 		char[] colheights = new char[gameWidth];
@@ -114,10 +113,10 @@ public class PerfectConnect4Hash extends TieredHasher<C4Board> {
 			colheight = 0;
 		}
 		
-		int uhh = uh.hash(colheights,colheights.length).intValue();
-		BigInteger arh = AlternatingRearranger.hash(linear,index);
+		int uhh = (int)uh.hash(colheights,colheights.length);
+		long arh = AlternatingRearranger.hash(linear,index);
 
-		return new Pair<Integer,BigInteger>(uhh,arh);
+		return new Pair<Integer,Long>(uhh,arh);
 	}
 
 	@Override

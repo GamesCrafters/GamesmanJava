@@ -1,19 +1,12 @@
 package edu.berkeley.gamesman.shell;
 
-
-
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Properties;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Game;
-import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.RecordFields;
-import edu.berkeley.gamesman.util.DebugFacility;
-import edu.berkeley.gamesman.util.Util;
 import edu.berkeley.gamesman.core.Database;
 
 /**
@@ -29,7 +22,7 @@ import edu.berkeley.gamesman.core.Database;
 public class DatabaseModule extends UIModule {
 	private Database db;
 	private Record curRecord;
-	private BigInteger loc;
+	private long loc;
 	
 	/**
 	 * constructor sets required properties and helpLines.
@@ -37,7 +30,7 @@ public class DatabaseModule extends UIModule {
 	 */
 	public DatabaseModule(Configuration c) {
 		super(c, "data");
-		loc = BigInteger.ZERO;
+		loc = 0;
 		requiredPropKeys = new ArrayList<String>();
 		requiredPropKeys.add("gamesman.db.uri");
 		requiredPropKeys.add("gamesman.game");
@@ -96,7 +89,7 @@ public class DatabaseModule extends UIModule {
 		if(db != null) {
 				db.close();
 				db = null;
-				loc = BigInteger.ZERO;
+				loc = 0;
 				System.out.println("Closed the current database.");
 		}
 	}
@@ -109,11 +102,11 @@ public class DatabaseModule extends UIModule {
 	protected void u_readRecord(ArrayList<String> args) {
 		if(db != null) {
 			if(!args.isEmpty())
-				loc = new BigInteger(args.get(0));
+				loc = Long.parseLong(args.get(0));
 			curRecord = db.getRecord(loc);
 			System.out.println("Read a record at location " + loc);
 			System.out.println(curRecord);
-			loc = loc.add(BigInteger.ONE);
+			loc++;
 		} else {
 			openDatabase();
 			System.out.println("GamesmanJava has opened the database file for you.");
@@ -159,7 +152,7 @@ public class DatabaseModule extends UIModule {
 						isValid = false;
 					}
 					if(isValid) {
-						db.putRecord(loc.subtract(BigInteger.ONE), curRecord); //because readRecord increases Loc by one.
+						db.putRecord(loc-1, curRecord); //because readRecord increases Loc by one.
 						System.out.println("changed to: " + curRecord);
 					}
 					n++;

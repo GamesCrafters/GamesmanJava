@@ -1,6 +1,5 @@
 package edu.berkeley.gamesman.database;
 
-import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -8,7 +7,7 @@ import java.util.Collections;
 import java.util.List;
 
 import edu.berkeley.gamesman.core.Database;
-import edu.berkeley.gamesman.core.Record;
+import edu.berkeley.gamesman.core.RecordGroup;
 import edu.berkeley.gamesman.database.filer.DirectoryFilerClient;
 import edu.berkeley.gamesman.util.Util;
 
@@ -49,8 +48,8 @@ public class RemoteDatabase extends Database {
 	}
 
 	@Override
-	public Record getRecord(BigInteger loc) {
-		return real.get().getRecord(loc);
+	public RecordGroup getRecordGroup(long onByte) {
+		return real.get().getRecordGroup(onByte);
 	}
 
 	@Override
@@ -84,8 +83,8 @@ public class RemoteDatabase extends Database {
 	}
 
 	@Override
-	public void putRecord(BigInteger loc, Record value) {
-		real.get().putRecord(loc, value);
+	public void putRecordGroup(long onByte, RecordGroup value) {
+		real.get().putRecordGroup(onByte, value);
 	}
 
 }

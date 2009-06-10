@@ -1,17 +1,12 @@
 package edu.berkeley.gamesman.database;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.math.BigInteger;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
-import edu.berkeley.gamesman.core.Record;
-import edu.berkeley.gamesman.util.DebugFacility;
+import edu.berkeley.gamesman.core.RecordGroup;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -26,6 +21,8 @@ public class FileDatabase extends Database {
 	protected File myFile;
 
 	protected RandomAccessFile fd;
+
+	byte[] rawRecord;
 
 	long offset;
 
@@ -49,114 +46,60 @@ public class FileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized Record getRecord(BigInteger loc) {
+	public synchronized RecordGroup getRecordGroup(long onByte) {
 		try {
-			fd.seek(loc.longValue() + offset);
-			Record v = Record.readStream(conf, fd);
-			assert Util.debug(DebugFacility.DATABASE, "read " + loc + ": " + v);
+			fd.seek(onByte + offset);
+			fd.read(rawRecord);
+			RecordGroup v = new RecordGroup(conf, rawRecord);
 			return v;
 		} catch (IOException e) {
 			Util.fatalError("IO Error: " + e);
 		}
-		Util.fatalError("WTF");
-		return null; // Not reached
+		return null;
+	}
+
+	@Override
+	public synchronized void putRecordGroup(long onByte, RecordGroup value) {
+		try {
+			fd.seek(onByte + offset);
+			writeRecordGroup(conf, fd, value);
+		} catch (IOException e) {
+			Util.fatalError("IO Error: " + e);
+		}
 	}
 
 	@Override
 	protected synchronized void initialize(String loc) {
 
 		boolean previouslyExisted;
-		/*// Old Code
 		try {
-			myFile = new File(new URI(loc));
-			assert Util.debug(DebugFacility.DATABASE, "Opened DB: " + myFile);
-		} catch (URISyntaxException e1) {
-			Util.fatalError("Could not open URI " + loc + ": " + e1);
-		} */
-		
-		try {
-			URI fileLocation = new URI(loc);
-			if (!fileLocation.isAbsolute()) {
-				String currentDirectory = System.getProperty("user.dir").replace('\\', '/');
-				currentDirectory = currentDirectory.replace(" ", "%20");
-				fileLocation = new URI("file:///" + currentDirectory + "/" + loc);
-			}
-			File filePointer = new File(fileLocation);
-			myFile = filePointer;
-		} catch (Exception e) {
-			e.printStackTrace(); System.exit(0);
-		}
-		
-
-		previouslyExisted = myFile.exists();
-
-		try {
+			myFile = new File(loc);
+			previouslyExisted = myFile.exists();
 			fd = new RandomAccessFile(myFile, "rw");
-		} catch (FileNotFoundException e) {
-			Util.fatalError("Could not create/open database: " + e);
-		}
-
-		try {
-			fd.seek(0);
-		} catch (IOException e) {
-			Util.fatalError("IO error while seeking header: " + e);
-		}
-		if (previouslyExisted) {
-			try {
+			if (previouslyExisted) {
 				int headerLen = fd.readInt();
 				byte[] header = new byte[headerLen];
 				fd.readFully(header);
-				if(conf == null) {
-					try {
-						conf = Configuration.load(header);
-					} catch (ClassNotFoundException e) {
-						e.printStackTrace();
-						conf = null;
-					}
+				if (conf == null) {
+					conf = Configuration.load(header);
 				}
-				/*
-				Configuration newconf = Configuration.load(header);
-				Util.assertTrue(newconf.equals(conf),
-						"File database has wrong header; expecting \""
-						+ conf.toString() + "\" got \""
-								+ newconf.toString() + "\"");
-				//if(!new String(header).equals(conf.getConfigString()))
-				//	Util.warn("File database headers do not match, proceed at your own risk!");
-				t*/
-			} catch (IOException e) {
-				Util.fatalError("IO error while checking header: " + e);
-			}
-		} else {
-			if(conf == null)
-				Util.fatalError("You must specify a configuration if the database is to be created");
-			try {
+			} else {
+				if (conf == null)
+					Util
+							.fatalError("You must specify a configuration if the database is to be created");
 				byte[] b = conf.store();
 				fd.writeInt(b.length);
 				fd.write(b);
-			} catch (IOException e) {
-				Util.fatalError("IO error while creating header: " + e);
 			}
-		}
-		
-		Util.assertTrue(Record.bitlength(conf) <= 8,
-		"FileDatabase can only store 8 bits per record for now"); // TODO: FIXME
-		
-		try {
 			offset = fd.getFilePointer();
+			rawRecord = new byte[conf.recordGroupByteLength];
+			fd.setLength(offset + getByteSize());
 		} catch (IOException e) {
-			Util.fatalError("IO error while getting file pointer: " + e);
+			e.printStackTrace();
+			Util.fatalError(e.toString());
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+			Util.fatalError(e.toString());
 		}
 	}
-
-	@Override
-	public synchronized void putRecord(BigInteger loc, Record value) {
-		try {
-			fd.seek(loc.longValue() + offset);
-			value.writeStream(fd);
-			assert Util.debug(DebugFacility.DATABASE, "write " + loc + ": " + value);
-		} catch (IOException e) {
-			Util.fatalError("IO Error: " + e);
-		}
-	}
-
 }

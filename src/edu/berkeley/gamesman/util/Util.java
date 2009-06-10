@@ -433,7 +433,7 @@ public final class Util {
 	public static <T> T typedInstantiateArg(String name, Class<T> baseClass, Object arg) throws ClassNotFoundException{
 		try { //TODO why is this broken on nyc?
 			//return checkedCast(typedForName(name, baseClass).getConstructors()[0].newInstance(arg));
-			return (T)typedForName(name, baseClass).getConstructors()[0].newInstance(arg);
+			return (T)typedForName(name, baseClass).getConstructor(arg.getClass()).newInstance(arg);
 		} catch (ClassNotFoundException e) {
 			throw e;
 		} catch (Exception e) {

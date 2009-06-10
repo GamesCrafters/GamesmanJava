@@ -12,7 +12,6 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.Map;
@@ -220,7 +219,7 @@ public class JSONInterface extends GamesmanApplication {
 				Database db = dbClass.getConstructor().newInstance();
 				db.initialize(filename, null);
 				Configuration conf = db.getConfiguration();
-				conf.setDatabase(db);
+				conf.db=db;
 				return conf;
 			}
 		} catch (Exception e) {
@@ -276,9 +275,9 @@ public class JSONInterface extends GamesmanApplication {
 		private <T> void fillJSONFields(Configuration conf, JSONObject entry, T state) throws JSONException {
 			Set<RecordFields> storedFields = 
 				conf.getStoredFields().keySet();
-			Database db = conf.getDatabase();
+			Database db = conf.db;
 			Record rec = null;
-			Game<T> g = (Game<T>)conf.getGame();
+			Game<T> g = Util.checkedCast(conf.getGame());
 			if (db != null) {
 				rec = db.getRecord(g.stateToHash(state));
 			}
@@ -385,8 +384,8 @@ public class JSONInterface extends GamesmanApplication {
 			if (config == null) {
 				throw new RequestException("This game does not exist.");
 			}
-			Database db = config.getDatabase();
-			Game<T> g = (Game<T>)config.getGame();
+//			Database db = config.getDatabase();
+			Game<T> g = Util.checkedCast(config.getGame());
 			
 			JSONObject response = new JSONObject();
 			

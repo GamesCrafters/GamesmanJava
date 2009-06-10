@@ -1,6 +1,5 @@
 package edu.berkeley.gamesman.core;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 
 import edu.berkeley.gamesman.util.DebugFacility;
@@ -24,19 +23,19 @@ public abstract class TieredHasher<State> extends Hasher<State> {
 	}
 
 	@Override
-	public BigInteger hash(State board) {
+	public long hash(State board) {
 		Util.fatalError("Not implemented"); // TODO
-		return null;
+		return 0;
 	}
 
 	@Override
-	public BigInteger maxHash() {
+	public long maxHash() {
 		Util.fatalError("Not implemented"); // TODO
-		return null;
+		return 0;
 	}
 
 	@Override
-	public State unhash(BigInteger hash) {
+	public State unhash(long hash) {
 		Util.fatalError("Not implemented"); // TODO
 		return null;
 	}
@@ -48,7 +47,7 @@ public abstract class TieredHasher<State> extends Hasher<State> {
 	 */
 	public abstract int numberOfTiers();
 	
-	BigInteger tierEnds[];  // For tier i, tierEnds[i] is the /last/ hash value for that tier.
+	long tierEnds[];  // For tier i, tierEnds[i] is the /last/ hash value for that tier.
 
 	int cacheNumTiers = -1;
 	
@@ -58,12 +57,12 @@ public abstract class TieredHasher<State> extends Hasher<State> {
 	 * @return The first hash value that will be in this tier
 	 * @see #tierIndexForState
 	 */
-	public final BigInteger hashOffsetForTier(int tier){
+	public final long hashOffsetForTier(int tier){
 		if(tier == 0)
-			return BigInteger.ZERO;
+			return 0;
 		if(tierEnds == null)
 			lastHashValueForTier(numberOfTiers()-1);
-		return tierEnds[tier-1].add(BigInteger.ONE);
+		return tierEnds[tier-1]+1;
 	}
 	
 	/**
@@ -71,11 +70,11 @@ public abstract class TieredHasher<State> extends Hasher<State> {
 	 * @param tier The tier we're interested in
 	 * @return The last hash that will be in the given tier
 	 */
-	public final BigInteger lastHashValueForTier(int tier){
+	public final long lastHashValueForTier(int tier){
 		if(tierEnds == null){
-			tierEnds = new BigInteger[numberOfTiers()];
+			tierEnds = new long[numberOfTiers()];
 			for(int i = 0; i < tierEnds.length; i++){
-				tierEnds[i] = hashOffsetForTier(i).add(numHashesForTier(i)).subtract(BigInteger.ONE);
+				tierEnds[i] = hashOffsetForTier(i)+numHashesForTier(i)-1;
 			}
 			assert Util.debug(DebugFacility.HASHER, "Created offset table: " + Arrays.toString(tierEnds));
 		}
@@ -86,7 +85,7 @@ public abstract class TieredHasher<State> extends Hasher<State> {
 	 * @param tier The tier we're interested in
 	 * @return Size of the tier
 	 */
-	public abstract BigInteger numHashesForTier(int tier);
+	public abstract long numHashesForTier(int tier);
 	/**
 	 * Convert a tier/index pair into a State
 	 * Analogous to unhash for a Tiered game
@@ -94,14 +93,14 @@ public abstract class TieredHasher<State> extends Hasher<State> {
 	 * @param index The hash offset into that tier (relative to the start - 0 is the first board in the tier)
 	 * @return The represented GameState
 	 */
-	public abstract State gameStateForTierAndOffset(int tier, BigInteger index);
+	public abstract State gameStateForTierAndOffset(int tier, long index);
 	/**
 	 * Convert a State into a tier/index pair
 	 * Analogous to hash for a Tiered game
 	 * @param state The game state we have
 	 * @return a Pair with tier/offset enclosed
 	 */
-	public abstract Pair<Integer,BigInteger> tierIndexForState(State state);
+	public abstract Pair<Integer,Long> tierIndexForState(State state);
 	
 
 }

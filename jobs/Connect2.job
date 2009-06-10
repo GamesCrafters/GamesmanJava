@@ -8,5 +8,5 @@ gamesman.debug.SOLVER = 1
 gamesman.debug.RECORD = 1
 gamesman.hasher = PerfectConnect4Hash
 gamesman.solver = TierSolver
-gamesman.db.uri = file:///tmp/database2.db
+gamesman.db.uri = database2.db
 gamesman.database = FileDatabase

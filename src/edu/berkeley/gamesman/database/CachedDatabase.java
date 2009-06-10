@@ -4,15 +4,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.math.BigInteger;
-import java.net.URI;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Random;
 import java.util.TreeMap;
-import java.util.concurrent.Semaphore;
 
-import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -78,20 +71,15 @@ public class CachedDatabase extends MemoryDatabase {
 		
 		// Initializing the storage file
 		try {
-			URI fileLocation = new URI(filePath);
-			if (!fileLocation.isAbsolute()) {
-				String currentDirectory = System.getProperty("user.dir").replace('\\', '/');
-				currentDirectory = currentDirectory.replace(" ", "%20");
-				fileLocation = new URI("file:///" + currentDirectory + "/" + filePath);
-			}
-			File filePointer = new File(fileLocation);
+			File filePointer = new File(filePath);
 			fileDescriptor = new RandomAccessFile(filePointer, "rw");
+			fileDescriptor.setLength(getByteSize());
 		} catch (FileNotFoundException e) {
 			e.printStackTrace(); System.exit(0);
 		} catch (Exception e) {
 			e.printStackTrace(); System.exit(0);
 		}
-
+		rawRecord = new byte[conf.recordGroupByteLength];
 	}
 	
 	/** Reset all the data stored in cache. */
@@ -119,17 +107,6 @@ public class CachedDatabase extends MemoryDatabase {
 		} catch (IOException e) {
 			e.printStackTrace(); System.exit(0);
 		}
-	}
-	
-	@Override
-	synchronized public void ensureCapacity(long numBytes) {
-		capacity = Util.max(capacity, numBytes).longValue();
-		try {
-			if (fileDescriptor.length() < numBytes)
-				fileDescriptor.setLength(numBytes);
-		} catch (IOException e) {
-			e.printStackTrace(); System.exit(0);
-		} 
 	}
 	
 	@Override
@@ -167,7 +144,7 @@ public class CachedDatabase extends MemoryDatabase {
 	}
 
 	@Override
-	synchronized protected void putByte(long index, byte data, boolean preserve) {
+	synchronized protected void putByte(long index, byte data) {
 		long blockID = index / pageSize;
 		if (lastBlockID != blockID) Statistics[Stats.TOTAL_WRITES.ordinal()] ++;
 		int byteOffset = (int) (index % pageSize);
@@ -183,9 +160,7 @@ public class CachedDatabase extends MemoryDatabase {
 		notUseful[pageID] = false;
 		dirtyBit[pageID] = true;
 		lastBlockID = blockID;
-		if (preserve) bufferPool[pageID][byteOffset] |= data;
-		else bufferPool[pageID][byteOffset] = data;
-	
+		bufferPool[pageID][byteOffset] = data;
 	}
 	
 	/** Load a page identified by 'blockID', and 'preLoad' consecutive pages 
@@ -215,10 +190,6 @@ public class CachedDatabase extends MemoryDatabase {
 		if (this.blockIDsArray[pageID] >= 0)  // There's a non-dirty page in there.
 			blockIDs.remove((int) blockIDsArray[pageID]); // Let it know that it's a goner
 		else Statistics[Stats.PAGES.ordinal()] ++; // This pageID wasn't used before.
-		if ((blockID + 1) * pageSize >= capacity) { // if the data might not be there
-			bufferPool[pageID] = new byte[pageSize]; // make sure to erase junk
-			capacity = (blockID + 1) * pageSize; // update capacity reading
-		}
 		try {
 			fileDescriptor.seek(blockID * pageSize);
 			fileDescriptor.read(bufferPool[pageID]);
@@ -238,7 +209,6 @@ public class CachedDatabase extends MemoryDatabase {
 		assert dirtyBit[pageID];
 		Statistics[Stats.PAGE_WRITES.ordinal()] ++;
 		long blockID = blockIDsArray[pageID];
-		capacity = Util.max(capacity, (blockID + 1) * pageSize).longValue();
 		dirtyBit[pageID] = false;
 		try {
 			fileDescriptor.seek(blockID * pageSize);
@@ -287,12 +257,7 @@ public class CachedDatabase extends MemoryDatabase {
 		System.out.printf("+ I/O Write:     %8d pages = %5s      +\n", pageWrites, Util.bytesToString(pageWrites * pageSize));
 		System.out.printf("+ Pages Used/Total:    %8d/%-8d     +\n", Statistics[Stats.PAGES.ordinal()], bufferPoolSize);
 		System.out.printf("+ Flush() Call Count:   %8d             +\n", Statistics[Stats.FLUSHES.ordinal()]);
-		System.out.printf("+ Capacity:                %6s            +\n", Util.bytesToString(capacity));
+		System.out.printf("+ Capacity:                %6s            +\n", Util.bytesToString(getByteSize()));
 		System.out.printf("+--------------------------------------------+\n");
-	}
-	
-	@Override
-	public long getSize() {
-		return capacity;
 	}
 }

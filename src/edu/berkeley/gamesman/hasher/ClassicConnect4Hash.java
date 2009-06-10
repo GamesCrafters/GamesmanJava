@@ -22,15 +22,15 @@ public class ClassicConnect4Hash extends TieredHasher<C4Board> {
 	}
 	
 	@Override
-	public C4Board gameStateForTierAndOffset(int tier, BigInteger index) {
+	public C4Board gameStateForTierAndOffset(int tier, long index) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public BigInteger numHashesForTier(int tier) {
+	public long numHashesForTier(int tier) {
 		// TODO Auto-generated method stub
-		return null;
+		return 0;
 	}
 
 	@Override
@@ -40,7 +40,7 @@ public class ClassicConnect4Hash extends TieredHasher<C4Board> {
 	}
 
 	@Override
-	public Pair<Integer, BigInteger> tierIndexForState(C4Board state) {
+	public Pair<Integer, Long> tierIndexForState(C4Board state) {
 		// TODO Auto-generated method stub
 		return null;
 	}

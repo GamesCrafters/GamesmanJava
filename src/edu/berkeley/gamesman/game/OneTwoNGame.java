@@ -1,6 +1,5 @@
 package edu.berkeley.gamesman.game;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -69,17 +68,17 @@ public class OneTwoNGame extends Game<Integer> {
 	}
 
 	@Override
-	public Integer hashToState(BigInteger hash) {
-		return hash.intValue();
+	public Integer hashToState(long hash) {
+		return (int)hash;
 	}
 
 	@Override
-	public BigInteger lastHash() {
-		return BigInteger.valueOf(MAX_NUMBER);
+	public long lastHash() {
+		return MAX_NUMBER;
 	}
 
 	@Override
-	public BigInteger stateToHash(Integer pos) {
-		return BigInteger.valueOf(pos);
+	public long stateToHash(Integer pos) {
+		return pos.longValue();
 	}
 }

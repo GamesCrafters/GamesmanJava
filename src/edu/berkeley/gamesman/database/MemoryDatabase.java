@@ -1,314 +1,120 @@
 package edu.berkeley.gamesman.database;
 
-import java.math.BigInteger;
-import java.util.Date;
-import java.util.Random;
-
 import edu.berkeley.gamesman.core.Database;
-import edu.berkeley.gamesman.core.Record;
+import edu.berkeley.gamesman.core.RecordGroup;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
-
-/** 
- * Test DataBase for GamesCrafters Java. 
- * Right now it just writes BigIntegers to memory, without byte padding.
- *
- *	
+/**
+ * Test DataBase for GamesCrafters Java. Right now it just writes BigIntegers to
+ * memory, without byte padding.
+ * 
+ * 
  * @author Alex Trofimov
  * @version 1.4
  * 
- * Change log:
- * 05/05/09 - 1.4 - putByte() is now synchronized, for multi-threading. This is really important. 
- * 03/20/09 - 1.3 - With data sizes < 58 bits, longs are used instead of BigInts, 20% speedup.
- * 03/15/09 - 1.2 - Slight speedup for operating on small data (< 8 bits); ensureCapacity() added.
- * 02/22/09 - 1.1 - Switched to a byte[] instead of ArrayList<Byte> for internal storage.
- * 02/21/09 - 1.0 - Initial (working) Version.
+ *          Change log: 05/05/09 - 1.4 - putByte() is now synchronized, for
+ *          multi-threading. This is really important. 03/20/09 - 1.3 - With
+ *          data sizes < 58 bits, longs are used instead of BigInts, 20%
+ *          speedup. 03/15/09 - 1.2 - Slight speedup for operating on small data
+ *          (< 8 bits); ensureCapacity() added. 02/22/09 - 1.1 - Switched to a
+ *          byte[] instead of ArrayList<Byte> for internal storage. 02/21/09 -
+ *          1.0 - Initial (working) Version.
  */
-public class MemoryDatabase extends Database{
-	
+public class MemoryDatabase extends Database {
+
 	/* Class Variables */
-	private byte[] memoryStorage;		// byte array to store the data
-	
-	/* DB Variables */
-	protected long capacity;			// the size of the data
-	protected boolean open;				// whether this database is initialized 
-										// and not closed.
-	
+	private byte[] memoryStorage; // byte array to store the data
+
+	protected byte[] rawRecord;
+
+	protected boolean open; // whether this database is initialized
+
+	// and not closed.
+
 	/**
-	 * Null Constructor, used primarily for testing.
-	 * It doesn't set anything
+	 * Null Constructor, used primarily for testing. It doesn't set anything
 	 * 
 	 * @author Alex Trofimov
 	 */
-	public MemoryDatabase() {	}
-	
-	/**
-	 * Get the size of this DB in bytes.
-	 * @return size of the DB in bytes.
-	 */
-	public long getSize() {
-		return this.capacity;
+	public MemoryDatabase() {
 	}
-	
-	/** 
-	 * Ensure that this database can store at least this number of bytes.
-	 * @param numBytes - number of bytes this DB should be able to fit (at least).
-	 */
-	public void ensureCapacity(long numBytes) {
-		int newCapacity = 2;
-		while (newCapacity <= numBytes) newCapacity = newCapacity << 2;
-		if (newCapacity > this.capacity) {
-			this.capacity = newCapacity;
-			byte[] temp = this.memoryStorage;
-			this.memoryStorage = new byte[(int) this.capacity];
-			for (int i = 0; i < temp.length; i ++) {
-				this.memoryStorage[i] = temp[i];	}
-			temp = null;
-		}
-	}
-	
+
 	@Override
-	public Record getRecord(long recIndex) {
-		return getRecord(recIndex, new Record(this.conf));
-	}
-	
-	@Override 
-	public Record getRecord(long recordIndex, Record recordToReturn) {
-		/* Defining Variables */
-		int recordSize = recordToReturn.bitlength();
-		/* Getting the Record */
-		if (recordSize > 57)
-			recordToReturn.loadBigInteger(getBitsAsBigInteger(recordIndex, recordSize));
-		else
-			recordToReturn.loadLong(getBitsAsLong(recordIndex, recordSize));
-		return recordToReturn;	
-	}
-	
-	/** 
-	 * Read a record from DB specified by recIndex.
-	 * Reads byte-array from DB byte-by-byte, truncates it
-	 * into a BigInteger.
-	 * 
-	 * @author Alex Trofimov
-	 * @param index sequential index of this segment in DB.
-	 * @param bitSize the size in bits of the segment.
-	 * 		  Assumes that all previous segments are of this size.
-	 * @return Record in BigInteger representation
-	 */
-	protected BigInteger getBitsAsBigInteger(long index, long bitSize) {
-		
-		/* Setting up Variables */
-		long bitBegin = bitSize * index;
-		long bitEnd = bitSize * (index + 1) - 1;
-		long byteIndexStart = (bitBegin) >> 3;
-		long byteIndexEnd = (bitEnd) >> 3; 
-		int byteSize = (int) (byteIndexEnd - byteIndexStart + 1);
-		int unSign = 1; // Padding left, to make it unsigned
-		byte[] downloadData = new byte[byteSize + unSign];
-		int rightPad = (int) (7 - (bitEnd % 8));
-		int leftPad = (int) bitBegin % 8;
-		
-		/* Getting data from DB */
-		for (int i = 0; i < byteSize; i ++) {
-			downloadData[i + unSign] = getByte(i + byteIndexStart); }		
-		
-		/* Truncating data and returning */		
-		if (leftPad > 0) 
-			downloadData[unSign] &= ((-1 & 0xFF) >>> leftPad); // off by one :/
-		BigInteger bigIntData = new BigInteger(downloadData);
-		if (rightPad > 0) 
-			bigIntData = bigIntData.shiftRight(rightPad);
-		return bigIntData;
-	}
-
-	/** 
-	 * Read a record from DB specified by recIndex.
-	 * Reads byte-array from DB byte-by-byte, truncates it
-	 * into a long.
-	 * 
-	 * @author Alex Trofimov
-	 * @param index sequential index of this segment in DB.
-	 * @param bitSize the size in bits of the segment.
-	 * 		  Assumes that all previous segments are of this size.
-	 * @return Record in long representation
-	 */
-	protected long getBitsAsLong(long index, long bitSize) {
-		
-		/* Setting up Variables */
-		long bitBegin = bitSize * index;
-		long bitEnd = bitSize * (index + 1) - 1;
-		long byteIndexStart = (bitBegin) >> 3;
-		long byteIndexEnd = (bitEnd) >> 3; 
-		int byteSize = (int) (byteIndexEnd - byteIndexStart + 1);
-		int rightPad = (int) (7 - (bitEnd % 8));
-		int leftPad = (int) bitBegin % 8;
-		
-		/* Getting data from DB */
-		long data = 0;
-		long temp;
-		for (int i = 0; i < byteSize; i ++) {
-			temp = (getByte(i + byteIndexStart) & 0xFF);
-			if (i == 0) temp &=  (-1l >>> (leftPad + 56));				
-			data += temp << (8 * (byteSize - 1 - i));
+	public RecordGroup getRecordGroup(long onByte) {
+		for (int i = 0; i < conf.recordGroupByteLength; i++) {
+			rawRecord[i] = getByte(onByte++);
 		}
-		data = data >>> rightPad;
-
-		/* returning */
-		return data;
+		return new RecordGroup(conf, rawRecord);
 	}
-	
+
 	@Override
 	public void initialize(String locations) {
 		this.initialize();
 	}
-	
+
 	/**
-	 * Null Constructor for testing the database outside of
-	 * Gamesman environment.
-	 * Initializes the internal storage.
+	 * Null Constructor for testing the database outside of Gamesman
+	 * environment. Initializes the internal storage.
 	 * 
 	 * @author Alex Trofimov
 	 */
-	private void initialize() {		
-		this.capacity = 2;
-		this.memoryStorage = new byte[(int) this.capacity];
+	private void initialize() {
+		System.out.println(getByteSize());
+		this.memoryStorage = new byte[(int) getByteSize()];
 		this.open = true;
-		
+		rawRecord = new byte[conf.recordGroupByteLength];
 	}
-	
+
 	@Override
-	public void putRecord(long recordIndex, Record value) {
-		int bitSize = value.bitlength();
-		if (bitSize > 57) {
-			BigInteger data = value.toBigInteger();
-			putBitsAsBigInteger(recordIndex, bitSize, data);
+	public void putRecordGroup(long onByte, RecordGroup value) {
+		byte[] putRecord = value.getState().toByteArray();
+		if (putRecord.length > conf.recordGroupByteLength) {
+			int top = conf.recordGroupByteLength + 1;
+			for (int i = 1; i < top; i++)
+				putByte(onByte++, putRecord[i]);
 		} else {
-			long data = value.toLong();
-			putBitsAsLong(recordIndex, bitSize, data);
-		}
-	}
-	
-	/**
-	 * Takes a BigInteger, then aligns it to bytes, 
-	 * filling the gaps with data from actual DB (memory reads are cheap).
-	 * Then puts data into the DB byte-by-byte.
-	 * 
-	 * @author Alex Trofimov
-	 * @param index is the sequential number of the segment in DB.
-	 * @param bitSize size of the segment.
-	 *		  Assumes all previous segments are of this size.
-	 * @param data are the bits that need to be stored compacted as BigInteger.
-	 */
-	protected void putBitsAsBigInteger(long index, int bitSize, BigInteger data) {
-		
-		/* Setting up Variables */		
-		long bitBegin = bitSize * index;
-		long bitEnd = bitSize * (index + 1) - 1;
-		long byteIndexStart = (bitBegin) >> 3;
-		long byteIndexEnd = (bitEnd) >> 3; 
-		int byteSize = (int) (byteIndexEnd - byteIndexStart + 1);
-		byte[] updateData = new byte[byteSize];
-		int rightPad = (int) (7 - (bitEnd % 8));
-		
-		/* Padding the data to be written */
-		if (rightPad > 0)
-			data = data.shiftLeft(rightPad);
-		byte[] byteData = data.toByteArray();
-		int dataByteOffset = byteSize - byteData.length;
-		int signOffset = (dataByteOffset < 0) ? 1 : 0; // Skip first byte if it's a negative num
-		for (int i = signOffset; i < byteData.length; i ++) {
-				updateData[i + dataByteOffset] = byteData[i]; }
-		
-		/* Writing the data to DataBase */
-		for(int i = 0; i < byteSize; i ++) {
-			if (i == 0 || i == byteSize - 1)
-				putByte(byteIndexStart + i, updateData[i], true); // Ends should preserve bits
-			else putByte(byteIndexStart + i, updateData[i], false); 
-			}
-	}
-	
-	/**
-	 * Takes a long, then aligns it, filling the gaps with data 
-	 * from actual DB (memory reads are cheap).
-	 * Then puts data into the DB byte-by-byte.
-	 * 
-	 * @author Alex Trofimov
-	 * @param index is the sequential number of the segment in DB.
-	 * @param bitSize size of the segment.
-	 *		  Assumes all previous segments are of this size.
-	 * @param data are the bits that need to be stored compacted as BigInteger.
-	 */
-	protected void putBitsAsLong(long index, int bitSize, long data) {
-		assert bitSize <= 64; // otherwise the BigInteger should be used
-		
-		/* Setting up Variables */		
-		long bitBegin = bitSize * index;
-		long bitEnd = bitSize * (index + 1) - 1;
-		long byteIndexStart = (bitBegin) >> 3;
-		long byteIndexEnd = (bitEnd) >> 3; 
-		int byteSize = (int) (byteIndexEnd - byteIndexStart + 1);
-		int rightPad = (int) (7 - (bitEnd % 8));
-		
-		/* Putting padded data into a byte array */
-		byte[] byteData = new byte[byteSize];
-		for (int i = byteSize - 1; i >= 0; i --) {
-			byteData[i] = (byte) (((data << rightPad) >> ((byteSize - i - 1) * 8)) & 0xFF);
-		}
-		
-		/* Writing the data to DataBase */
-		for(int i = 0; i < byteSize; i ++) {
-			if (i == 0 || i == byteSize - 1)
-				putByte(byteIndexStart + i, byteData[i], true); // Ends should preserve bits
-			else putByte(byteIndexStart + i, byteData[i], false); 
+			int i;
+			for (i = putRecord.length; i < conf.recordGroupByteLength; i++)
+				putByte(onByte++, (byte) 0);
+			for (i = 0; i < putRecord.length; i++)
+				putByte(onByte++, putRecord[i]);
 		}
 	}
 
 	@Override
 	public void flush() {
-		assert Util.debug(DebugFacility.DATABASE, "Flushing Memory DataBase. Does Nothing.");
+		assert Util.debug(DebugFacility.DATABASE,
+				"Flushing Memory DataBase. Does Nothing.");
 	}
-	
+
 	@Override
 	public void close() {
 		this.open = false;
 		flush();
-		assert Util.debug(DebugFacility.DATABASE, "Closing Memory DataBase. Does Nothing.");
+		assert Util.debug(DebugFacility.DATABASE,
+				"Closing Memory DataBase. Does Nothing.");
 	}
-	
+
 	/**
 	 * Get a byte from the database.
+	 * 
 	 * @author Alex Trofimov
-	 * @param index - sequential number of this byte in DB.
+	 * @param index sequential number of this byte in DB.
 	 * @return - one byte at specified byte index.
 	 */
 	protected byte getByte(long index) {
-		assert !open;
-		if (this.capacity <= index || index < 0)
-			return 0x0;
-		try {
-			return this.memoryStorage[(int) index];
-		} catch (Exception e) {
-			Util.fatalError("Read from DB failed. Capacity: " + this.capacity, e);
-			return (byte) 0x0; // Not Reached.
-		}
+		return this.memoryStorage[(int) index];
 	}
-	
+
 	/**
 	 * Write a byte into the database. Assumes that space is already allocated.
+	 * 
 	 * @author Alex Trofimov
-	 * @param index - sequential number of byte in DB.
-	 * @param data - byte that needs to be written.
-	 * @param preserve - set to true if you want data to be ORed with existing byte.
+	 * @param index sequential number of byte in DB.
+	 * @param data byte that needs to be written.
 	 */
-	synchronized protected void putByte(long index, byte data, boolean preserve) {
-		assert !open;
-		try {
-			ensureCapacity((int) index + 1); // Ensure that the data can be written.
-			if (preserve) this.memoryStorage[(int) index] |= data;
-			else this.memoryStorage[(int) index] = data;
-		} catch (Exception e) {
-			Util.fatalError("Write to DB failed. Byte #" + index, e);
-		}
+	synchronized protected void putByte(long index, byte data) {
+		this.memoryStorage[(int) index] = data;
 	}
-}	
+}

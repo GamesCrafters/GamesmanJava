@@ -35,7 +35,7 @@ public class Gamesman {
 				entryPoint = arg.toLowerCase();
 			} else {
 				//if we just have a job file, use GamesmanMain
-				jobFile = args[0];
+				jobFile = arg;
 				entryPoint = "gamesmanmain";
 			}
 		} else if(args.length == 2) {
@@ -66,8 +66,8 @@ public class Gamesman {
 			if(!debugOpts.isEmpty()) {
 				debugOpts.add(DebugFacility.CORE);
 				DebugFacility.CORE.setupClassloader(cl);
+				Util.enableDebuging(debugOpts);
 			}
-			Util.enableDebuging(debugOpts);
 			/*
 			try {
 				conf = new Configuration(props);

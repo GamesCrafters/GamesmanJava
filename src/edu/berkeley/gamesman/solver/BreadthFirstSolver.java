@@ -21,133 +21,153 @@ import edu.berkeley.gamesman.util.Task;
 import edu.berkeley.gamesman.util.Util;
 
 /**
- * A solver designed with puzzles in mind that will do a breadth first
- * search from all of the starting positions until every reachable position
- * has been hit. It is assumed that every starting position is a WIN and that
- * the puzzle is reversible.
+ * A solver designed with puzzles in mind that will do a breadth first search
+ * from all of the starting positions until every reachable position has been
+ * hit. It is assumed that every starting position is a WIN and that the puzzle
+ * is reversible.
+ * 
  * @author Patrick Horn (with Jeremy Fleischman watching)
  */
 public class BreadthFirstSolver extends Solver {
 
 	Configuration conf;
-	BigInteger maxHash = null;
-	/// = maxHash + 1
-	BigInteger hashSpace = null;
+
+	long maxHash;
+
+	// / = maxHash + 1
+	long hashSpace;
 
 	protected CyclicBarrier barr;
 
 	volatile int lastTier = 0;
-	
+
 	@Override
 	public WorkUnit prepareSolve(Configuration config, Game<Object> game) {
 		conf = config;
-		int maxRemoteness = conf.getInteger("gamesman.solver.maxRemoteness", Integer.MAX_VALUE);
+		int maxRemoteness = conf.getInteger("gamesman.solver.maxRemoteness",
+				Integer.MAX_VALUE);
 		maxHash = game.lastHash();
-		hashSpace = maxHash.add(BigInteger.ONE);
+		hashSpace = maxHash + 1;
 		Record defaultRecord = new Record(conf, PrimitiveValue.UNDECIDED);
-		for (BigInteger index : Util.bigIntIterator(hashSpace)) {
+		for (long index = 0; index < hashSpace; index++)
 			db.putRecord(index, defaultRecord);
-		}
 		return new BreadthFirstWorkUnit<Object>(game, db, maxRemoteness);
 	}
 
 	class BreadthFirstWorkUnit<T> implements WorkUnit {
 
 		final private Game<T> game;
+
 		final private Database database;
+
 		final private int maxRemoteness;
-		final private BigInteger firstHash;
-		final private BigInteger lastHashPlusOne;
-		
+
+		final private long firstHash;
+
+		final private long lastHashPlusOne;
+
 		// Constructs for the entire hash space.
 		public BreadthFirstWorkUnit(Game<T> g, Database db, int maxRemoteness) {
 			game = g;
 			database = db;
 			this.maxRemoteness = maxRemoteness;
 			lastHashPlusOne = hashSpace;
-			firstHash = BigInteger.ZERO;
+			firstHash = 0;
 		}
+
 		// For divide()
-		private BreadthFirstWorkUnit(BreadthFirstWorkUnit<T> copy, BigInteger firstHash, BigInteger lastHashPlusOne) {
+		private BreadthFirstWorkUnit(BreadthFirstWorkUnit<T> copy,
+				long firstHash, long lastHashPlusOne) {
 			game = copy.game;
 			database = copy.database;
 			maxRemoteness = copy.maxRemoteness;
 			this.firstHash = firstHash;
 			this.lastHashPlusOne = lastHashPlusOne;
 		}
-		
+
 		public void conquer() {
 			BigInteger numPositionsInLevel = BigInteger.ZERO;
 			BigInteger numPositionsSeen = numPositionsInLevel;
 			int remoteness = lastTier;
-			Task solveTask = Task.beginTask(String.format("BFS solving \"%s\"", game.describe()));
-			solveTask.setTotal(lastHashPlusOne.subtract(firstHash));
+			Task solveTask = Task.beginTask(String.format("BFS solving \"%s\"",
+					game.describe()));
+			solveTask.setTotal(lastHashPlusOne - firstHash);
 			solveTask.setProgress(0);
-			Record rec = new Record(conf);
-			Record childrec = new Record(conf);
+			Record rec;
+			Record childrec;
 			while (lastTier >= remoteness && remoteness < maxRemoteness) {
-				HashSet<BigInteger> setValues = new HashSet<BigInteger>();
+				HashSet<Long> setValues = new HashSet<Long>();
 				numPositionsInLevel = BigInteger.ZERO;
-				for (BigInteger hash : Util.bigIntIterator(firstHash, lastHashPlusOne.subtract(BigInteger.ONE))) {
-					rec = database.getRecord(hash, rec);
-					if (rec.get() != PrimitiveValue.UNDECIDED &&
-							rec.get(RecordFields.REMOTENESS) == remoteness) {
-//						System.out.println("Found! "+hash+"="+rec);
-						for (Pair<String,T> child : game.validMoves(game.hashToState(hash))) {
-							BigInteger childhash = game.stateToHash(child.cdr);
+				for (long hash = firstHash; hash < lastHashPlusOne - 1; hash++) {
+					rec = database.getRecord(hash);
+					if (rec.get() != PrimitiveValue.UNDECIDED
+							&& rec.get(RecordFields.REMOTENESS) == remoteness) {
+						// System.out.println("Found! "+hash+"="+rec);
+						for (Pair<String, T> child : game.validMoves(game
+								.hashToState(hash))) {
+							long childhash = game.stateToHash(child.cdr);
 							if (setValues.contains(childhash)) {
 								continue;
 							}
-							childrec = database.getRecord(childhash, childrec);
+							childrec = database.getRecord(childhash);
 							if (childrec.get() == PrimitiveValue.UNDECIDED) {
-								childrec.set(RecordFields.VALUE, rec.get().value());
-								childrec.set(RecordFields.REMOTENESS, remoteness + 1);
-//								System.out.println("Setting child "+childhash+"="+childrec);
+								childrec.set(RecordFields.VALUE, rec.get()
+										.value());
+								childrec.set(RecordFields.REMOTENESS,
+										remoteness + 1);
+								// System.out.println("Setting child "+childhash+"="+childrec);
 								database.putRecord(childhash, childrec);
-								numPositionsInLevel = numPositionsInLevel.add(BigInteger.ONE);
-								numPositionsSeen = numPositionsSeen.add(BigInteger.ONE);
+								numPositionsInLevel = numPositionsInLevel
+										.add(BigInteger.ONE);
+								numPositionsSeen = numPositionsSeen
+										.add(BigInteger.ONE);
 								setValues.add(childhash);
 								lastTier = remoteness + 1;
-								if(numPositionsSeen.remainder(BigInteger.valueOf(100000)).equals(BigInteger.ZERO)) {
+								if (numPositionsSeen.remainder(
+										BigInteger.valueOf(100000)).equals(
+										BigInteger.ZERO)) {
 									solveTask.setProgress(numPositionsSeen);
 								}
 							} else {
-//								System.out.println("Get child "+childhash+"="+childrec);
+								// System.out.println("Get child "+childhash+"="+childrec);
 							}
 						}
 					}
 				}
 				remoteness++;
-				assert Util.debug(DebugFacility.SOLVER, "Number of states at remoteness " + remoteness + ": " + numPositionsInLevel);
+				assert Util.debug(DebugFacility.SOLVER,
+						"Number of states at remoteness " + remoteness + ": "
+								+ numPositionsInLevel);
 				try {
 					db.flush();
 					barr.await();
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (BrokenBarrierException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
 			solveTask.complete();
-			assert Util.debug(DebugFacility.SOLVER, "Solving finished!!! Max remoteness is "+(remoteness-1)+".");
+			assert Util.debug(DebugFacility.SOLVER,
+					"Solving finished!!! Max remoteness is " + (remoteness - 1)
+							+ ".");
 		}
 
 		public List<WorkUnit> divide(int num) {
 			long numPositionsZero = 0;
 			long numPositionsOne = 0;
 			for (T s : game.startingPositions()) {
-				BigInteger hash = game.stateToHash(s);
+				long hash = game.stateToHash(s);
 				PrimitiveValue win = game.primitiveValue(s);
-				Record rec = new Record(conf,win);
+				Record rec = new Record(conf, win);
 				database.putRecord(hash, rec);
-				for (Pair<String,T> child: game.validMoves(s)) {
-					BigInteger childhash = game.stateToHash(child.cdr);
-					//it is possible that some of our children are duplicates
-					//so to count numPositionsOne correctly, we ignore those duplicates
-					if(database.getRecord(childhash).get() == PrimitiveValue.UNDECIDED) {
-						Record childrec = new Record(conf,win);
+				for (Pair<String, T> child : game.validMoves(s)) {
+					long childhash = game.stateToHash(child.cdr);
+					// it is possible that some of our children are duplicates
+					// so to count numPositionsOne correctly, we ignore those
+					// duplicates
+					if (database.getRecord(childhash).get() == PrimitiveValue.UNDECIDED) {
+						Record childrec = new Record(conf, win);
 						childrec.set(RecordFields.REMOTENESS, 1);
 						database.putRecord(childhash, childrec);
 						numPositionsOne++;
@@ -155,20 +175,22 @@ public class BreadthFirstSolver extends Solver {
 				}
 				numPositionsZero++;
 			}
-			assert Util.debug(DebugFacility.SOLVER, "Number of states at remoteness 0: " + numPositionsZero);
-			assert Util.debug(DebugFacility.SOLVER, "Number of states at remoteness 1: " + numPositionsOne);
+			assert Util.debug(DebugFacility.SOLVER,
+					"Number of states at remoteness 0: " + numPositionsZero);
+			assert Util.debug(DebugFacility.SOLVER,
+					"Number of states at remoteness 1: " + numPositionsOne);
 			lastTier = 1;
 			database.flush();
 			ArrayList<WorkUnit> arr = new ArrayList<WorkUnit>(num);
-			//arr.add(this);
-			BigInteger bignum = BigInteger.valueOf(num);
-			BigInteger hashIncrement = hashSpace.divide(bignum);
-			BigInteger currentHash = BigInteger.ZERO;
-			
-			if (bignum.compareTo(hashSpace) < 0) {
-				for (int i = 0; i < num-1; i++) {
-					BigInteger endHash = currentHash.add(hashIncrement);
-					arr.add(new BreadthFirstWorkUnit<T>(this, currentHash, endHash));
+			// arr.add(this);
+			long hashIncrement = hashSpace / num;
+			long currentHash = 0;
+
+			if (num < hashSpace) {
+				for (int i = 0; i < num - 1; i++) {
+					long endHash = currentHash + hashIncrement;
+					arr.add(new BreadthFirstWorkUnit<T>(this, currentHash,
+							endHash));
 					currentHash = endHash;
 				}
 			}
@@ -177,7 +199,7 @@ public class BreadthFirstSolver extends Solver {
 			barr = new CyclicBarrier(arr.size());
 			return arr;
 		}
-		
+
 	}
-	
+
 }

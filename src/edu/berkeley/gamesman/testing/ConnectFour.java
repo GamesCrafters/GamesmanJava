@@ -1,234 +1,206 @@
 package edu.berkeley.gamesman.testing;
 
-import java.awt.Container;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Random;
 
-import javax.swing.JFrame;
-
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.ItergameState;
-import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.game.RConnect4;
 import edu.berkeley.gamesman.util.Pair;
-import edu.berkeley.gamesman.util.Util;
 
 public class ConnectFour implements MouseListener {
-    final char[][] board;
-    private int[] columnHeight = new int[7];
-    private char turn = 'X';
-    boolean compO;
-    boolean compX;
-    private boolean win = false;
-    private Thread paintThread;
-    private DisplayFour df;
-    private RConnect4 cgame;
-    Database fd;
-    private static Random r = new Random();
-    final int gameWidth;
-    final int gameHeight;
+	final char[][] board;
 
-    public ConnectFour(int height, int width, DisplayFour disfour, Database db) {
-        this(height, width, disfour, db, false, true);
-    }
+	private int[] columnHeight = new int[7];
 
-    public ConnectFour(int height, int width, DisplayFour disfour, Database db,
-            boolean cX, boolean cO) {
-        int c, r;
-        compX = cX;
-        compO = cO;
-        gameHeight = height;
-        gameWidth = width;
-        board = new char[gameHeight][gameWidth];
-        fd = db;
-        df = disfour;
-        cgame = new RConnect4(db.getConfiguration());
-        cgame.prepare();
-        for (c = 0; c < gameWidth; c++) {
-            for (r = 0; r < gameHeight; r++) {
-                df.slots[r][c].addMouseListener(this);
-            }
-        }
-        paintThread = new Thread(df);
-        for (c = 0; c < gameWidth; c++) {
-            for (r = 0; r < gameHeight; r++) {
-                board[r][c] = ' ';
-            }
-            columnHeight[c] = 0;
-        }
-        df.setBoard(copy(board));
-        startCompMove();
-    }
+	private char turn = 'X';
 
-    boolean compTurn() {
-        return (turn == 'O' && compO) || (turn == 'X' && compX);
-    }
+	boolean compO;
 
-    void makeMove(int move) {
-        if (columnHeight[move] >= 6 || win())
-            return;
-        board[columnHeight[move]][move] = turn;
-        if (turn == 'O')
-            turn = 'X';
-        else
-            turn = 'O';
-        columnHeight[move]++;
-        df.setBoard(copy(board));
-        paintThread.start();
-        paintThread = new Thread(df);
-        cgame.setFromString(arrToString(board));
-        System.out.println(cgame.stateToHash(cgame.getState()));
-        if (!win())
-            startCompMove();
-    }
+	boolean compX;
 
-    void startCompMove() {
-        if (compTurn() && !win()) {
-            ArrayList<Pair<String, ItergameState>> bests = new ArrayList<Pair<String, ItergameState>>(
-                    gameWidth);
-            cgame.setFromString(arrToString(board));
-            Collection<Pair<String, ItergameState>> moves = cgame.validMoves();
-            Pair<String, ItergameState> s;
-            PrimitiveValue bestOutcome = null;
-            PrimitiveValue thisOutcome;
-            for (Pair<String, ItergameState> move : moves) {
-                s = move;
-                thisOutcome = fd.getRecord(cgame.stateToHash(s.cdr)).get()
-                        .previousMovesValue();
-                System.out.println("Next possible move " + move.car
-                        + " for state " + s.car + ", "
-                        + cgame.stateToHash(s.cdr) + " has value "
-                        + thisOutcome);
-                if (bests.size() == 0
-                        || thisOutcome.isPreferableTo(bestOutcome)) {
-                    bestOutcome = thisOutcome;
-                    bests.clear();
-                    bests.add(s);
-                } else if (!bestOutcome.isPreferableTo(thisOutcome))
-                    bests.add(s);
-            }
-            Pair<String, ItergameState> best = bests.get(r
-                    .nextInt(bests.size()));
-            makeMove(best.car.charAt(0) - '0');
-            System.out.println("Done with startCompMove");
-        }
-    }
+	private boolean win = false;
 
-    private String arrToString(char[][] c) {
-        String s = "";
-        for (int i = 0; i < c.length; i++)
-            s += new String(c[i]);
-        return s;
-    }
+	private Thread paintThread;
 
-    char getTurn() {
-        return turn;
-    }
+	private DisplayFour df;
 
-    private boolean win() {
-        int col, row, i;
-        boolean up, right, upright, downright;
-        if (win)
-            return true;
-        for (col = 0; col < gameWidth; col++) {
-            for (row = 0; row < gameHeight; row++) {
-                if (board[row][col] == ' ')
-                    break;
-                up = row <= gameHeight - 4;
-                right = col <= gameWidth - 4;
-                upright = up && right;
-                downright = row >= 3 && right;
-                for (i = 0; i < 4; i++) {
-                    up = up && board[row + i][col] == board[row][col];
-                    right = right && board[row][col + i] == board[row][col];
-                    upright = upright
-                            && board[row + i][col + i] == board[row][col];
-                    downright = downright
-                            && board[row - i][col + i] == board[row][col];
-                }
-                if (up || right || upright || downright) {
-                    if (board[row][col] == 'O')
-                        System.out.println("Black wins");
-                    else
-                        System.out.println("Red wins");
-                    win = true;
-                    paintThread.start();
-                    paintThread = new Thread(df);
-                    return true;
-                }
-            }
-        }
-        for (col = 0; col < gameWidth; col++) {
-            if (columnHeight[col] < gameHeight)
-                return false;
-        }
-        return true;
-    }
+	private RConnect4 cgame;
+	
+	private Configuration conf;
 
-    private char[][] copy(char[][] b) {
-        int c, r;
-        char[][] rBoard = new char[b.length][];
-        for (r = 0; r < b.length; r++) {
-            rBoard[r] = new char[b[r].length];
-            for (c = 0; c < b[r].length; c++) {
-                rBoard[r][c] = b[r][c];
-            }
-        }
-        return rBoard;
-    }
+	Database fd;
 
-    public void mouseClicked(MouseEvent me) {}
+	private static Random r = new Random();
 
-    public void mousePressed(MouseEvent me) {}
+	final int gameWidth;
 
-    public void mouseReleased(MouseEvent me) {
-        Slot o = (Slot) me.getSource();
-        if (compTurn())
-            return;
-        makeMove(o.getCol());
-    }
+	final int gameHeight;
 
-    public void mouseEntered(MouseEvent me) {}
+	public ConnectFour(Configuration conf, DisplayFour disfour) {
+		this(conf, disfour, false, true);
+	}
 
-    public void mouseExited(MouseEvent me) {}
+	public ConnectFour(Configuration conf, DisplayFour disfour,
+			boolean cX, boolean cO) {
+		int c, r;
+		this.conf=conf;
+		compX = cX;
+		compO = cO;
+		gameHeight = Integer.parseInt(conf.getProperty("gamesman.game.height"));
+		gameWidth = Integer.parseInt(conf.getProperty("gamesman.game.width"));
+		board = new char[gameHeight][gameWidth];
+		fd = conf.db;
+		df = disfour;
+		cgame = new RConnect4(conf);
+		cgame.prepare();
+		for (c = 0; c < gameWidth; c++) {
+			for (r = 0; r < gameHeight; r++) {
+				df.slots[r][c].addMouseListener(this);
+			}
+		}
+		paintThread = new Thread(df);
+		for (c = 0; c < gameWidth; c++) {
+			for (r = 0; r < gameHeight; r++) {
+				board[r][c] = ' ';
+			}
+			columnHeight[c] = 0;
+		}
+		df.setBoard(copy(board));
+		startCompMove();
+	}
 
-    public static void main(String[] args) throws InstantiationException,
-            IllegalAccessException {
-        if (args.length != 1) {
-            Util.fatalError("Please specify a jobfile as the only argument");
-        }
-        Configuration conf;
-        try {
-            conf = new Configuration(args[0]);
-        } catch (ClassNotFoundException e) {
-            Util.fatalError("failed to load class", e);
-            return;
-        }
-        Database fd;
-        try {
-            fd = conf.openDatabase();
-            int width = conf.getInteger("gamesman.game.width", 7);
-            int height = conf.getInteger("gamesman.game.height", 6);
-            System.out.println(fd.getRecord(BigInteger.ZERO));
-            DisplayFour df = new DisplayFour(height, width);
-            /* ConnectFour cf= */new ConnectFour(height, width, df, fd);
-            JFrame jf = new JFrame();
-            Container c = jf.getContentPane();
-            c.add(df);
-            jf.setSize(350, 300);
-            jf.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-            jf.setVisible(true);
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
+	boolean compTurn() {
+		return (turn == 'O' && compO) || (turn == 'X' && compX);
+	}
 
-    public DisplayFour getDisplay() {
-        return df;
-    }
+	void makeMove(int move) {
+		if (columnHeight[move] >= 6 || win())
+			return;
+		board[columnHeight[move]][move] = turn;
+		if (turn == 'O')
+			turn = 'X';
+		else
+			turn = 'O';
+		columnHeight[move]++;
+		df.setBoard(copy(board));
+		paintThread.start();
+		paintThread = new Thread(df);
+		cgame.setFromString(arrToString(board));
+		if (!win())
+			startCompMove();
+	}
+
+	void startCompMove() {
+		if (compTurn() && !win()) {
+			cgame.setFromString(arrToString(board));
+			Collection<Pair<String, ItergameState>> moves = cgame.validMoves();
+			ArrayList<Pair<String, ItergameState>> listMoves = new ArrayList<Pair<String, ItergameState>>(moves.size());
+			listMoves.addAll(moves);
+			ArrayList<Record> records = new ArrayList<Record>(moves.size());
+			for (Pair<String, ItergameState> move : listMoves){
+				Record rec=fd.getRecord(cgame.stateToHash(move.cdr));
+				rec.previousPosition();
+				records.add(rec);
+			}
+			Record bestRecord=Record.combine(conf, records);
+			ArrayList<Pair<String, ItergameState>> bestMoves = new ArrayList<Pair<String, ItergameState>>(listMoves.size());
+			for (int i=0;i<records.size();i++){
+				if(records.get(i).equals(bestRecord))
+					bestMoves.add(listMoves.get(i));
+			}
+			makeMove(bestMoves.get(r.nextInt(bestMoves.size())).car.charAt(0) - '0');
+		}
+	}
+
+	private String arrToString(char[][] c) {
+		String s = "";
+		for (int i = 0; i < c.length; i++)
+			s += new String(c[i]);
+		return s;
+	}
+
+	char getTurn() {
+		return turn;
+	}
+
+	private boolean win() {
+		int col, row, i;
+		boolean up, right, upright, downright;
+		if (win)
+			return true;
+		for (col = 0; col < gameWidth; col++) {
+			for (row = 0; row < gameHeight; row++) {
+				if (board[row][col] == ' ')
+					break;
+				up = row <= gameHeight - 4;
+				right = col <= gameWidth - 4;
+				upright = up && right;
+				downright = row >= 3 && right;
+				for (i = 0; i < 4; i++) {
+					up = up && board[row + i][col] == board[row][col];
+					right = right && board[row][col + i] == board[row][col];
+					upright = upright
+							&& board[row + i][col + i] == board[row][col];
+					downright = downright
+							&& board[row - i][col + i] == board[row][col];
+				}
+				if (up || right || upright || downright) {
+					if (board[row][col] == 'O')
+						System.out.println("Black wins");
+					else
+						System.out.println("Red wins");
+					win = true;
+					paintThread.start();
+					paintThread = new Thread(df);
+					return true;
+				}
+			}
+		}
+		for (col = 0; col < gameWidth; col++) {
+			if (columnHeight[col] < gameHeight)
+				return false;
+		}
+		return true;
+	}
+
+	private char[][] copy(char[][] b) {
+		int c, r;
+		char[][] rBoard = new char[b.length][];
+		for (r = 0; r < b.length; r++) {
+			rBoard[r] = new char[b[r].length];
+			for (c = 0; c < b[r].length; c++) {
+				rBoard[r][c] = b[r][c];
+			}
+		}
+		return rBoard;
+	}
+
+	public void mouseClicked(MouseEvent me) {
+	}
+
+	public void mousePressed(MouseEvent me) {
+	}
+
+	public void mouseReleased(MouseEvent me) {
+		Slot o = (Slot) me.getSource();
+		if (compTurn())
+			return;
+		makeMove(o.getCol());
+	}
+
+	public void mouseEntered(MouseEvent me) {
+	}
+
+	public void mouseExited(MouseEvent me) {
+	}
+
+	public DisplayFour getDisplay() {
+		return df;
+	}
 }

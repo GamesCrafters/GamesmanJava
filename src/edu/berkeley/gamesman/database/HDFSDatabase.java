@@ -11,7 +11,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import edu.berkeley.gamesman.core.Database;
-import edu.berkeley.gamesman.core.Record;
+import edu.berkeley.gamesman.core.RecordGroup;
 import edu.berkeley.gamesman.hadoop.TierMapReduce;
 import edu.berkeley.gamesman.hadoop.TieredHadoopTool;
 import edu.berkeley.gamesman.util.Util;
@@ -20,10 +20,15 @@ import edu.berkeley.gamesman.util.bytes.HDFSFileByteProducer;
 public final class HDFSDatabase extends Database {
 
 	private Path dest;
+
 	private ArrayList<BigIntRange> ranges;
+
 	private BigInteger[] sliceEnds;
+
 	private FileSystem fs;
-	
+
+	private byte[] rawRecord;
+
 	@Override
 	public void close() {
 		// TODO Auto-generated method stub
@@ -37,25 +42,29 @@ public final class HDFSDatabase extends Database {
 	}
 
 	@Override
-	public Record getRecord(BigInteger loc) {
-		BigIntRange r = ranges.get(Util.binaryRangeSearch(loc, sliceEnds));
-		if(r.path == null)
-			Util.fatalError("Tried to read unsolved location "+loc);
+	public RecordGroup getRecordGroup(long onByte) {
+		BigIntRange r = ranges.get(Util.binaryRangeSearch(BigInteger
+				.valueOf(onByte), sliceEnds));
+		BigInteger onByteBigInt = BigInteger.valueOf(onByte);
+		if (r.path == null)
+			Util.fatalError("Tried to read unsolved location " + onByte);
 		try {
-			if(r.in == null){
+			if (r.in == null)
 				r.in = fs.open(r.path);
-				r.bp = new HDFSFileByteProducer(r.in,r.path,fs.getFileStatus(r.path).getLen());
-			}
-			
-			//Record.readStream(conf, r.in);
+
+			// Record.readStream(conf, r.in);
+
+			assert onByteBigInt.compareTo(r.start) >= 0
+					&& onByteBigInt.compareTo(r.end) <= 0;
+			r.in.seek(onByteBigInt.subtract(r.start).longValue());
+			r.in.read(rawRecord);
+			RecordGroup rec = new RecordGroup(conf, rawRecord);
+			// System.out.println("read "+loc+" -> "+rec);
+			return rec;
 		} catch (IOException e) {
-			Util.fatalError("Could not read record",e);
+			Util.fatalError("Could not read record", e);
 		}
-		
-		assert loc.compareTo(r.start) >= 0 && loc.compareTo(r.end) <= 0;
-		Record rec = Record.read(conf, r.bp, loc.subtract(r.start).longValue());
-		//System.out.println("read "+loc+" -> "+rec);
-		return rec;
+		return null;
 	}
 
 	@Override
@@ -63,57 +72,63 @@ public final class HDFSDatabase extends Database {
 		dest = new Path(uri);
 		try {
 			fs = dest.getFileSystem(TierMapReduce.jobconf);
-			Path searchPath = new Path(TieredHadoopTool.OUTPUT_PREFIX+"*");
+			Path searchPath = new Path(TieredHadoopTool.OUTPUT_PREFIX + "*");
 			FileStatus[] candidates = fs.globStatus(searchPath);
 			ranges = new ArrayList<BigIntRange>();
 			BigInteger leastStart = null;
-			for(FileStatus f : candidates){
+			for (FileStatus f : candidates) {
 				String bits[] = f.getPath().getName().split("_");
 				assert bits.length == 3;
 				BigInteger start = new BigInteger(bits[1]);
 				BigInteger end = new BigInteger(bits[2]);
-				if(leastStart == null || start.compareTo(leastStart) < 0)
+				if (leastStart == null || start.compareTo(leastStart) < 0)
 					leastStart = start;
-				ranges.add(new BigIntRange(start,end,new Path(f.getPath(),"slice")));
+				ranges.add(new BigIntRange(start, end, new Path(f.getPath(),
+						"slice")));
 			}
-			System.out.println("Found slice ranges "+ranges);
-			if(leastStart != null){
-				if(leastStart.compareTo(BigInteger.ZERO) > 0)
-					ranges.add(new BigIntRange(BigInteger.ZERO,leastStart,null));
+			System.out.println("Found slice ranges " + ranges);
+			if (leastStart != null) {
+				if (leastStart.compareTo(BigInteger.ZERO) > 0)
+					ranges.add(new BigIntRange(BigInteger.ZERO, leastStart,
+							null));
 				Collections.sort(ranges);
 
 				sliceEnds = new BigInteger[ranges.size()];
 				int i = 0;
 
-				for(BigIntRange r : ranges){
+				for (BigIntRange r : ranges) {
 					sliceEnds[i] = r.end;
 					i++;
 				}
 			}
+			rawRecord = new byte[conf.recordGroupByteLength];
 		} catch (IOException e) {
-			Util.fatalError("Hadoop filesystem gone?",e);
+			Util.fatalError("Hadoop filesystem gone?", e);
 		}
 	}
 
 	@Override
-	public void putRecord(BigInteger loc, Record value) {
+	public void putRecordGroup(long onByte, RecordGroup value) {
 		Util.fatalError("HDFSDatabase is read only!");
 	}
 
 }
 
 class BigIntRange implements Comparable<BigIntRange> {
-	final BigInteger start,end;
+	final BigInteger start, end;
+
 	final Path path;
-	
+
 	FSDataInputStream in;
+
 	HDFSFileByteProducer bp;
-	
-	BigIntRange(BigInteger s, BigInteger e, Path p){
+
+	BigIntRange(BigInteger s, BigInteger e, Path p) {
 		start = s;
 		end = e;
 		path = p;
 	}
+
 	public int compareTo(BigIntRange o) {
 		return start.compareTo(o.start);
 	}

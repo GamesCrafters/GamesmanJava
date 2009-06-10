@@ -1,7 +1,5 @@
 package edu.berkeley.gamesman.hasher;
 
-import java.math.BigInteger;
-
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Hasher;
 
@@ -25,17 +23,17 @@ public class NullHasher extends Hasher<Object> {
 	}
 
 	@Override
-	public BigInteger hash(Object board) {
-		return null;
+	public long hash(Object board) {
+		return 0;
 	}
 
 	@Override
-	public BigInteger maxHash() {
-		return null;
+	public long maxHash() {
+		return 0;
 	}
 
 	@Override
-	public Object unhash(BigInteger hash) {
+	public Object unhash(long hash) {
 		return null;
 	}
 }

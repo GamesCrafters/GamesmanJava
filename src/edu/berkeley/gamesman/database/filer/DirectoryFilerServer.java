@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -17,7 +18,7 @@ import java.util.Random;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
-import edu.berkeley.gamesman.core.Record;
+import edu.berkeley.gamesman.core.RecordGroup;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
@@ -224,7 +225,7 @@ public final class DirectoryFilerServer {
 						fd = din.readInt();
 						db = fds.get(fd);
 						loc = locs.get(fd);
-						db.getRecord(loc).writeStream(dout);
+						Database.writeRecordGroup(db.getConfiguration(), (OutputStream)dout,db.getRecordGroup(loc.longValue()));
 						locs.set(fd, loc.add(BigInteger.ONE));
 						break;
 					case 6:
@@ -232,7 +233,9 @@ public final class DirectoryFilerServer {
 						db = fds.get(fd);
 						//byte val = din.readByte();
 						loc = locs.get(fd);
-						db.putRecord(loc, Record.readStream(db.getConfiguration(), din));
+						byte[] rawRecord=new byte[db.getConfiguration().recordGroupByteLength];
+						din.read(rawRecord);
+						db.putRecordGroup(loc.longValue(), new RecordGroup(db.getConfiguration(),rawRecord));
 						locs.set(fd, loc.add(BigInteger.ONE));
 						break;
 					case 7:

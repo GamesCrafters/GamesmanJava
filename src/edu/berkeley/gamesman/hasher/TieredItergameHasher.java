@@ -1,7 +1,5 @@
 package edu.berkeley.gamesman.hasher;
 
-import java.math.BigInteger;
-
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.ItergameState;
 import edu.berkeley.gamesman.core.TieredHasher;
@@ -21,12 +19,12 @@ public final class TieredItergameHasher extends TieredHasher<ItergameState> {
     }
 
     @Override
-    public ItergameState gameStateForTierAndOffset(int tier, BigInteger index) {
-        return new ItergameState(tier, index.longValue());
+    public ItergameState gameStateForTierAndOffset(int tier, long index) {
+        return new ItergameState(tier, index);
     }
 
     @Override
-    public BigInteger numHashesForTier(int tier) {
+    public long numHashesForTier(int tier) {
         return ((TieredIterGame) conf.getGame()).numHashesForTier(tier);
     }
 
@@ -36,9 +34,8 @@ public final class TieredItergameHasher extends TieredHasher<ItergameState> {
     }
 
     @Override
-    public Pair<Integer, BigInteger> tierIndexForState(ItergameState state) {
-        return new Pair<Integer, BigInteger>(state.car, BigInteger
-                .valueOf(state.cdr));
+    public Pair<Integer, Long> tierIndexForState(ItergameState state) {
+        return state;
     }
 
     @Override

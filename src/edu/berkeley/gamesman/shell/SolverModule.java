@@ -5,9 +5,6 @@ import java.util.Properties;
 
 import edu.berkeley.gamesman.GamesmanMain;
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Game;
-import edu.berkeley.gamesman.core.Hasher;
-import edu.berkeley.gamesman.util.Util;
 
 public class SolverModule extends UIModule {
 	public SolverModule(Configuration c) {
@@ -28,7 +25,7 @@ public class SolverModule extends UIModule {
 	protected void u_solve(ArrayList<String> args) {
 		proccessCommand("i");
 		GamesmanMain main = new GamesmanMain();
-		main.run(conf.getProperties());
+		main.run(conf.props);
 	}
 	
 	protected void u_initializeConfiguration(ArrayList<String> args) throws ClassNotFoundException {

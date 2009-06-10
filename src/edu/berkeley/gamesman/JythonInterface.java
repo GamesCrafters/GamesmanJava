@@ -6,8 +6,6 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Properties;
-import java.util.prefs.Preferences;
-import java.util.prefs.BackingStoreException;
 
 import org.python.core.PyObject;
 import org.python.util.InteractiveConsole;
@@ -17,7 +15,6 @@ import org.python.util.ReadlineConsole;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.JythonUtil;
 import edu.berkeley.gamesman.util.Util;
-import javax.xml.parsers.FactoryConfigurationError;
 
 /**
  * @author Jeremy Fleischman

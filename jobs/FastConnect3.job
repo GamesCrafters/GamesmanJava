@@ -4,5 +4,5 @@ gamesman.game.height = 3
 gamesman.game.pieces = 3
 gamesman.hasher = TieredItergameHasher
 gamesman.solver = TierItergameSolver
-gamesman.db.uri = file:///tmp/fastdatabase3.db
+gamesman.db.uri = fastdatabase3.db
 gamesman.database = BlockDatabase

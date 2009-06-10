@@ -1,6 +1,5 @@
 package edu.berkeley.gamesman.core;
 
-import java.math.BigInteger;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.util.Pair;
@@ -102,18 +101,18 @@ public abstract class Game<State> {
 	 * @param hash The hash given
 	 * @return the State represented
 	 */
-	public abstract State hashToState(BigInteger hash);
+	public abstract State hashToState(long hash);
 	/**
 	 * Hash a given state into a hashed value
 	 * @param pos The State given
 	 * @return The hash that represents that State
 	 */
-	public abstract BigInteger stateToHash(State pos);
+	public abstract long stateToHash(State pos);
 	
 	/**
 	 * @return the last valid hash possible in the current configuration
 	 */
-	public abstract BigInteger lastHash();
+	public abstract long lastHash();
 	
 	/**
 	 * Produce a machine-parsable String representing the state.  This

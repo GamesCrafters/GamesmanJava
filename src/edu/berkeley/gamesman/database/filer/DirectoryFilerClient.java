@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.database.filer;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.math.BigInteger;
 import java.net.Socket;
 import java.net.URI;
@@ -13,7 +14,7 @@ import java.util.Random;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
-import edu.berkeley.gamesman.core.Record;
+import edu.berkeley.gamesman.core.RecordGroup;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
@@ -159,10 +160,12 @@ public final class DirectoryFilerClient {
 		final int fd;
 		BigInteger pos = BigInteger.ZERO;
 		final Configuration conf;
+		byte[] rawRecord;
 
 		protected RemoteDatabase(int fd, Configuration config) {
 			this.fd = fd;
 			conf = config;
+			rawRecord=new byte[conf.recordGroupByteLength];
 		}
 
 		@Override
@@ -188,17 +191,18 @@ public final class DirectoryFilerClient {
 		}
 
 		@Override
-		public Record getRecord(BigInteger loc) {
+		public RecordGroup getRecordGroup(long onByte) {
 			try {
 				// Util.debug("Trying to read "+loc);
-
+				BigInteger loc = BigInteger.valueOf(onByte);
 				if (loc.compareTo(pos) != 0)
 					seek(loc);
 
 				dout.write(5);
 				dout.writeInt(fd);
 				pos = pos.add(BigInteger.ONE);
-				return Record.readStream(conf, din);
+				din.read(rawRecord);
+				return new RecordGroup(conf, rawRecord);
 			} catch (IOException e) {
 				Util.fatalError("IO error while communicating with server: "
 						+ e);
@@ -226,18 +230,19 @@ public final class DirectoryFilerClient {
 		}
 
 		@Override
-		public void putRecord(BigInteger loc, Record value) {
+		public void putRecordGroup(long onByte, RecordGroup value) {
 			try {
-				if(loc.compareTo(pos) != 0) seek(loc);
+				BigInteger loc = BigInteger.valueOf(onByte);
+				if(loc.compareTo(pos) != 0)
+					seek(loc);
 				dout.write(6);
 				dout.writeInt(fd);
-				value.writeStream(dout);
+				writeRecordGroup(conf, (OutputStream)dout, value);
 				pos = pos.add(BigInteger.ONE);
 			} catch (IOException e) {
 				Util.fatalError("IO error while communicating with server: "
 						+ e);
 			}
 		}
-
 	}
 }
