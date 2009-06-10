@@ -42,21 +42,21 @@ public final class HDFSDatabase extends Database {
 	}
 
 	@Override
-	public RecordGroup getRecordGroup(long onByte) {
+	public RecordGroup getRecordGroup(long loc) {
 		BigIntRange r = ranges.get(Util.binaryRangeSearch(BigInteger
-				.valueOf(onByte), sliceEnds));
-		BigInteger onByteBigInt = BigInteger.valueOf(onByte);
+				.valueOf(loc), sliceEnds));
+		BigInteger locBigInt = BigInteger.valueOf(loc);
 		if (r.path == null)
-			Util.fatalError("Tried to read unsolved location " + onByte);
+			Util.fatalError("Tried to read unsolved location " + loc);
 		try {
 			if (r.in == null)
 				r.in = fs.open(r.path);
 
 			// Record.readStream(conf, r.in);
 
-			assert onByteBigInt.compareTo(r.start) >= 0
-					&& onByteBigInt.compareTo(r.end) <= 0;
-			r.in.seek(onByteBigInt.subtract(r.start).longValue());
+			assert locBigInt.compareTo(r.start) >= 0
+					&& locBigInt.compareTo(r.end) <= 0;
+			r.in.seek(locBigInt.subtract(r.start).longValue());
 			r.in.read(rawRecord);
 			RecordGroup rec = new RecordGroup(conf, rawRecord);
 			// System.out.println("read "+loc+" -> "+rec);
@@ -108,7 +108,7 @@ public final class HDFSDatabase extends Database {
 	}
 
 	@Override
-	public void putRecordGroup(long onByte, RecordGroup value) {
+	public void putRecordGroup(long loc, RecordGroup value) {
 		Util.fatalError("HDFSDatabase is read only!");
 	}
 

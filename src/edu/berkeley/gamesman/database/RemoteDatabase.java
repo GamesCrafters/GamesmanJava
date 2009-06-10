@@ -48,8 +48,8 @@ public class RemoteDatabase extends Database {
 	}
 
 	@Override
-	public RecordGroup getRecordGroup(long onByte) {
-		return real.get().getRecordGroup(onByte);
+	public RecordGroup getRecordGroup(long loc) {
+		return real.get().getRecordGroup(loc);
 	}
 
 	@Override
@@ -83,8 +83,8 @@ public class RemoteDatabase extends Database {
 	}
 
 	@Override
-	public void putRecordGroup(long onByte, RecordGroup value) {
-		real.get().putRecordGroup(onByte, value);
+	public void putRecordGroup(long loc, RecordGroup value) {
+		real.get().putRecordGroup(loc, value);
 	}
 
 }

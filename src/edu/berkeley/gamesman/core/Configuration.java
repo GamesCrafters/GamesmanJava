@@ -10,7 +10,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.Properties;
@@ -18,6 +17,7 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 import edu.berkeley.gamesman.util.Util;
+import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 /**
  * A Configuration object stores information related to a specific configuration

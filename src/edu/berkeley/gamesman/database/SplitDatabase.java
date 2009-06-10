@@ -16,7 +16,7 @@ public class SplitDatabase extends Database {
 	}
 
 	@Override
-	public RecordGroup getRecordGroup(long onByte) {
+	public RecordGroup getRecordGroup(long loc) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -27,7 +27,7 @@ public class SplitDatabase extends Database {
 	}
 
 	@Override
-	public void putRecordGroup(long onByte, RecordGroup value) {
+	public void putRecordGroup(long loc, RecordGroup value) {
 
 	}
 

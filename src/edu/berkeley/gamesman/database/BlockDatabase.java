@@ -35,8 +35,8 @@ public class BlockDatabase extends FileDatabase {
 	}
 
 	@Override
-	public RecordGroup getRecordGroup(long onByte) {
-		buf.position((int) onByte);
+	public RecordGroup getRecordGroup(long loc) {
+		buf.position((int) loc);
 		buf.get(rawRecord);
 		return new RecordGroup(conf, rawRecord);
 	}
@@ -54,8 +54,8 @@ public class BlockDatabase extends FileDatabase {
 	}
 
 	@Override
-	public synchronized void putRecordGroup(long onByte, RecordGroup value) {
-		buf.position((int) onByte);
-		writeRecordGroup(conf, buf,value);
+	public synchronized void putRecordGroup(long loc, RecordGroup value) {
+		buf.position((int) loc);
+		value.getState().outputPaddedUnsignedBytes(buf,conf.recordGroupByteLength);
 	}
 }

@@ -23,35 +23,42 @@ import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
 /**
- * A DirectoryFilerServer opens a local DirectoryFiler and makes its
- * services available to remove clients connecting with a DirectoryFilerClient
+ * A DirectoryFilerServer opens a local DirectoryFiler and makes its services
+ * available to remove clients connecting with a DirectoryFilerClient
+ * 
  * @see DirectoryFiler
  * @see DirectoryFilerClient
  * @author Steven Schlansker
  */
 public final class DirectoryFilerServer {
 
-	//File root;
+	// File root;
 	ServerSocket ss;
+
 	int port;
+
 	String secret;
+
 	boolean shuttingdown = false;
 
 	protected DirectoryFiler df;
 
 	List<Database> fds = Collections
 			.synchronizedList(new ArrayList<Database>());
-	List<BigInteger> locs = Collections.synchronizedList(new ArrayList<BigInteger>());
+
+	List<BigInteger> locs = Collections
+			.synchronizedList(new ArrayList<BigInteger>());
 
 	/**
-	 * Launch a DirectoryFilerServer and begin listening
-	 * to the outside world
+	 * Launch a DirectoryFilerServer and begin listening to the outside world
+	 * 
 	 * @param rootdir The root of a DirectoryFiler datastore
 	 * @param port the port to listen on
 	 * @param secret a shared secret remote clients must present to connect
 	 * @throws ClassNotFoundException if the configuration failed to load
 	 */
-	public DirectoryFilerServer(String rootdir, int port, String secret) throws ClassNotFoundException {
+	public DirectoryFilerServer(String rootdir, int port, String secret)
+			throws ClassNotFoundException {
 		File root = new File(rootdir);
 		if (!root.isDirectory()) {
 			Util.fatalError("Root directory \"" + rootdir
@@ -62,11 +69,11 @@ public final class DirectoryFilerServer {
 		this.secret = secret;
 		df = new DirectoryFiler(root);
 	}
-	
+
 	/**
 	 * Close down this server
 	 */
-	public void close(){
+	public void close() {
 		try {
 			ss.close();
 		} catch (IOException e) {
@@ -87,7 +94,8 @@ public final class DirectoryFilerServer {
 
 		ThreadGroup grp = new ThreadGroup("DirectoryFilerServerThreads");
 
-		assert Util.debug(DebugFacility.FILER, "Directory filer server launched on port " + port);
+		assert Util.debug(DebugFacility.FILER,
+				"Directory filer server launched on port " + port);
 
 		try {
 			while ((s = ss.accept()) != null) {
@@ -96,7 +104,9 @@ public final class DirectoryFilerServer {
 			}
 		} catch (IOException e) {
 			if (!shuttingdown)
-				Util.warn("Server socket unexpectedly could not accept new connections, exiting after current connections close: "+ e);
+				Util
+						.warn("Server socket unexpectedly could not accept new connections, exiting after current connections close: "
+								+ e);
 		}
 		df.close();
 	}
@@ -104,8 +114,11 @@ public final class DirectoryFilerServer {
 	private class DirectoryFilerServerThread implements Runnable {
 
 		Socket sock;
+
 		DataInputStream din;
+
 		DataOutputStream dout;
+
 		Random r = new Random();
 
 		public DirectoryFilerServerThread(Socket s) {
@@ -121,7 +134,8 @@ public final class DirectoryFilerServer {
 
 		public void run() {
 			try {
-				assert Util.debug(DebugFacility.FILER, "Accepted filer connection");
+				assert Util.debug(DebugFacility.FILER,
+						"Accepted filer connection");
 				dout.writeInt(0x00FABFAB);
 				if (din.readInt() != 0xBAFBAF00) {
 					Util.warn("Dropping connection because of wrong magic");
@@ -154,42 +168,48 @@ public final class DirectoryFilerServer {
 					return;
 				}
 
-				assert Util.debug(DebugFacility.FILER, "Client passed authentication");
+				assert Util.debug(DebugFacility.FILER,
+						"Client passed authentication");
 
 				while (true) {
-					
+
 					int fd;
 					Database db;
 					BigInteger loc;
-					
+
 					if (shuttingdown) {
-						assert Util.debug(DebugFacility.FILER, "Client shutting down");
+						assert Util.debug(DebugFacility.FILER,
+								"Client shutting down");
 						sock.close();
 						return;
 					}
 					byte what = din.readByte();
 					switch (what) {
 					case 0:
-						assert Util.debug(DebugFacility.FILER, "Client shutting down by request");
+						assert Util.debug(DebugFacility.FILER,
+								"Client shutting down by request");
 						sock.close();
 						return;
 					case 1:
-						assert Util.debug(DebugFacility.FILER, "Server shutting down");
+						assert Util.debug(DebugFacility.FILER,
+								"Server shutting down");
 						shuttingdown = true;
 						ss.close();
 						break;
 					case 2:
 						String[] files = df.ls();
 						dout.writeInt(files.length);
-						assert Util.debug(DebugFacility.FILER, "Sending " + files.length + " files");
+						assert Util.debug(DebugFacility.FILER, "Sending "
+								+ files.length + " files");
 						for (String file : files) {
 							dout.writeInt(file.length());
-							assert Util.debug(DebugFacility.FILER, "Filename len is " + file.length());
+							assert Util.debug(DebugFacility.FILER,
+									"Filename len is " + file.length());
 							dout.write(file.getBytes());
 						}
 						break;
 					case 3:
-						//db = new FileDatabase();
+						// db = new FileDatabase();
 						String file;
 						Configuration config;
 						int len = din.readInt();
@@ -202,40 +222,52 @@ public final class DirectoryFilerServer {
 						try {
 							config = Configuration.load(fb);
 						} catch (ClassNotFoundException e) {
-							Util.warn("Failed to load configuration "+file, e);
+							Util
+									.warn("Failed to load configuration "
+											+ file, e);
 							break;
 						}
-						//db.initialize(Util.getChild(root, file).toURL()
-						//		.toExternalForm(), new Configuration(config)); //TODO: don't reference Values
-						db = df.openDatabase(file,config);
+						// db.initialize(Util.getChild(root, file).toURL()
+						// .toExternalForm(), new Configuration(config));
+						// //TODO: don't reference Values
+						db = df.openDatabase(file, config);
 						fds.add(db);
 						locs.add(BigInteger.ZERO);
 						dout.writeInt(fds.indexOf(db));
-						assert Util.debug(DebugFacility.FILER, "Client opened db " +
-								file + " for fd " + fds.indexOf(db) + " with config " + config);
+						assert Util.debug(DebugFacility.FILER,
+								"Client opened db " + file + " for fd "
+										+ fds.indexOf(db) + " with config "
+										+ config);
 						break;
 					case 4:
 						fd = din.readInt();
 						db = fds.get(fd);
 						db.close();
 						fds.set(fd, null);
-						assert Util.debug(DebugFacility.FILER, "Closed " + fd + ": " + db);
+						assert Util.debug(DebugFacility.FILER, "Closed " + fd
+								+ ": " + db);
 						break;
 					case 5:
 						fd = din.readInt();
 						db = fds.get(fd);
 						loc = locs.get(fd);
-						Database.writeRecordGroup(db.getConfiguration(), (OutputStream)dout,db.getRecordGroup(loc.longValue()));
+						db
+								.getRecordGroup(loc.longValue())
+								.getState()
+								.outputPaddedUnsignedBytes(
+										(OutputStream) dout,
+										db.getConfiguration().recordGroupByteLength);
 						locs.set(fd, loc.add(BigInteger.ONE));
 						break;
 					case 6:
 						fd = din.readInt();
 						db = fds.get(fd);
-						//byte val = din.readByte();
+						// byte val = din.readByte();
 						loc = locs.get(fd);
-						byte[] rawRecord=new byte[db.getConfiguration().recordGroupByteLength];
+						byte[] rawRecord = new byte[db.getConfiguration().recordGroupByteLength];
 						din.read(rawRecord);
-						db.putRecordGroup(loc.longValue(), new RecordGroup(db.getConfiguration(),rawRecord));
+						db.putRecordGroup(loc.longValue(), new RecordGroup(db
+								.getConfiguration(), rawRecord));
 						locs.set(fd, loc.add(BigInteger.ONE));
 						break;
 					case 7:

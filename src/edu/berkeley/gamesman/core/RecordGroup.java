@@ -1,6 +1,6 @@
 package edu.berkeley.gamesman.core;
 
-import java.math.BigInteger;
+import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 /**
  * @author dnspies Stores a small group of records in the most compressed

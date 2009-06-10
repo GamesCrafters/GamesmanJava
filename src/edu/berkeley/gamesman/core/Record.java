@@ -1,10 +1,11 @@
 package edu.berkeley.gamesman.core;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.Map.Entry;
+
+import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 /**
  * Stores information about a game state

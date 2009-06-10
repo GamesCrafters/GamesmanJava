@@ -1,9 +1,8 @@
 package edu.berkeley.gamesman.database;
 
-import java.math.BigInteger;
-
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.RecordGroup;
+import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 /**
  * The NullDatabase is a database that simply throws away its results and
@@ -22,7 +21,7 @@ public final class NullDatabase extends Database {
 	}
 
 	@Override
-	public RecordGroup getRecordGroup(long onByte) {
+	public RecordGroup getRecordGroup(long loc) {
 		return new RecordGroup(null, BigInteger.ZERO);
 	}
 
@@ -32,7 +31,7 @@ public final class NullDatabase extends Database {
 	}
 
 	@Override
-	public void putRecordGroup(long onByte, RecordGroup value) {
+	public void putRecordGroup(long loc, RecordGroup value) {
 	}
 
 }

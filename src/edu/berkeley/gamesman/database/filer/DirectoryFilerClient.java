@@ -4,7 +4,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.math.BigInteger;
 import java.net.Socket;
 import java.net.URI;
 import java.net.UnknownHostException;
@@ -17,6 +16,7 @@ import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.RecordGroup;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
+import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 /**
  * A DirectoryFilerClient connects to a DirectoryFilerServer and allows
@@ -191,10 +191,10 @@ public final class DirectoryFilerClient {
 		}
 
 		@Override
-		public RecordGroup getRecordGroup(long onByte) {
+		public RecordGroup getRecordGroup(long loc) {
 			try {
 				// Util.debug("Trying to read "+loc);
-				BigInteger loc = BigInteger.valueOf(onByte);
+				BigInteger loc = BigInteger.valueOf(loc);
 				if (loc.compareTo(pos) != 0)
 					seek(loc);
 
@@ -230,14 +230,14 @@ public final class DirectoryFilerClient {
 		}
 
 		@Override
-		public void putRecordGroup(long onByte, RecordGroup value) {
+		public void putRecordGroup(long loc, RecordGroup value) {
 			try {
-				BigInteger loc = BigInteger.valueOf(onByte);
+				BigInteger loc = BigInteger.valueOf(loc);
 				if(loc.compareTo(pos) != 0)
 					seek(loc);
 				dout.write(6);
 				dout.writeInt(fd);
-				writeRecordGroup(conf, (OutputStream)dout, value);
+				value.getState().outputPaddedUnsignedBytes((OutputStream)dout, conf.recordGroupByteLength);
 				pos = pos.add(BigInteger.ONE);
 			} catch (IOException e) {
 				Util.fatalError("IO error while communicating with server: "

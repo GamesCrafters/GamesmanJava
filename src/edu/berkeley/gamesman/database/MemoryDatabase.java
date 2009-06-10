@@ -41,9 +41,9 @@ public class MemoryDatabase extends Database {
 	}
 
 	@Override
-	public RecordGroup getRecordGroup(long onByte) {
+	public RecordGroup getRecordGroup(long loc) {
 		for (int i = 0; i < conf.recordGroupByteLength; i++) {
-			rawRecord[i] = getByte(onByte++);
+			rawRecord[i] = getByte(loc++);
 		}
 		return new RecordGroup(conf, rawRecord);
 	}
@@ -67,18 +67,18 @@ public class MemoryDatabase extends Database {
 	}
 
 	@Override
-	public void putRecordGroup(long onByte, RecordGroup value) {
+	public void putRecordGroup(long loc, RecordGroup value) {
 		byte[] putRecord = value.getState().toByteArray();
 		if (putRecord.length > conf.recordGroupByteLength) {
 			int top = conf.recordGroupByteLength + 1;
 			for (int i = 1; i < top; i++)
-				putByte(onByte++, putRecord[i]);
+				putByte(loc++, putRecord[i]);
 		} else {
 			int i;
 			for (i = putRecord.length; i < conf.recordGroupByteLength; i++)
-				putByte(onByte++, (byte) 0);
+				putByte(loc++, (byte) 0);
 			for (i = 0; i < putRecord.length; i++)
-				putByte(onByte++, putRecord[i]);
+				putByte(loc++, putRecord[i]);
 		}
 	}
 

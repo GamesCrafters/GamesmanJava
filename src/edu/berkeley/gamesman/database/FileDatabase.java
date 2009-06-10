@@ -46,9 +46,9 @@ public class FileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized RecordGroup getRecordGroup(long onByte) {
+	public synchronized RecordGroup getRecordGroup(long loc) {
 		try {
-			fd.seek(onByte + offset);
+			fd.seek(loc + offset);
 			fd.read(rawRecord);
 			RecordGroup v = new RecordGroup(conf, rawRecord);
 			return v;
@@ -59,10 +59,10 @@ public class FileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void putRecordGroup(long onByte, RecordGroup value) {
+	public synchronized void putRecordGroup(long loc, RecordGroup value) {
 		try {
-			fd.seek(onByte + offset);
-			writeRecordGroup(conf, fd, value);
+			fd.seek(loc + offset);
+			value.getState().outputPaddedUnsignedBytes(fd, conf.recordGroupByteLength);
 		} catch (IOException e) {
 			Util.fatalError("IO Error: " + e);
 		}

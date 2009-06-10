@@ -1,10 +1,5 @@
 package edu.berkeley.gamesman.core;
 
-import java.io.DataOutput;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
-
 /**
  * A Database is the abstract superclass of all data storage methods used in
  * Gamesman. Each particular Database is responsible for the persistent storage
@@ -41,58 +36,6 @@ public abstract class Database {
 	}
 
 	protected abstract void initialize(String uri);
-
-	/**
-	 * @param conf The configuartion object
-	 * @param output The output to write to
-	 * @param value The RecordGroup to write
-	 * @throws IOException If an IOException occurs
-	 */
-	public static void writeRecordGroup(Configuration conf, DataOutput output, RecordGroup value)
-			throws IOException {
-		byte[] putRecord = value.getState().toByteArray();
-		if (putRecord.length > conf.recordGroupByteLength) {
-			output.write(putRecord, 1, conf.recordGroupByteLength);
-		} else {
-			for (int i = putRecord.length; i < conf.recordGroupByteLength; i++)
-				output.write(0);
-			output.write(putRecord);
-		}
-	}
-
-	/**
-	 * @param conf The configuration object
-	 * @param output The stream to write to
-	 * @param value The RecordGroup to write
-	 * @throws IOException If an IOException occurs
-	 */
-	public static void writeRecordGroup(Configuration conf, OutputStream output, RecordGroup value)
-			throws IOException {
-		byte[] putRecord = value.getState().toByteArray();
-		if (putRecord.length > conf.recordGroupByteLength) {
-			output.write(putRecord, 1, conf.recordGroupByteLength);
-		} else {
-			for (int i = putRecord.length; i < conf.recordGroupByteLength; i++)
-				output.write(0);
-			output.write(putRecord);
-		}
-	}
-
-	/**
-	 * @param conf The configuration object
-	 * @param output The buffer to write to
-	 * @param value The RecordGroup to write
-	 */
-	public static void writeRecordGroup(Configuration conf, ByteBuffer output, RecordGroup value) {
-		byte[] putRecord = value.getState().toByteArray();
-		if (putRecord.length > conf.recordGroupByteLength) {
-			output.put(putRecord, 1, conf.recordGroupByteLength);
-		} else {
-			for (int i = putRecord.length; i < conf.recordGroupByteLength; i++)
-				output.put((byte) 0);
-			output.put(putRecord);
-		}
-	}
 
 	/**
 	 * Ensure all buffers are flushed to disk. The on-disk state should be
@@ -144,16 +87,16 @@ public abstract class Database {
 	}
 
 	/**
-	 * @param onByte The index of the byte the group begins on
-	 * @return The group beginning at onByte
+	 * @param loc The index of the byte the group begins on
+	 * @return The group beginning at loc
 	 */
-	public abstract RecordGroup getRecordGroup(long onByte);
+	public abstract RecordGroup getRecordGroup(long loc);
 
 	/**
-	 * @param onByte The index of the byte the group begins on
+	 * @param loc The index of the byte the group begins on
 	 * @param rg The record group to store
 	 */
-	public abstract void putRecordGroup(long onByte, RecordGroup rg);
+	public abstract void putRecordGroup(long loc, RecordGroup rg);
 
 	/**
 	 * @return The number of bytes used to store all the records (This does not
