@@ -144,7 +144,8 @@ public class CachedDatabase extends MemoryDatabase {
 	}
 
 	@Override
-	synchronized protected void putByte(long index, byte data) {
+	public
+	synchronized void putByte(long index, byte data) {
 		long blockID = index / pageSize;
 		if (lastBlockID != blockID) Statistics[Stats.TOTAL_WRITES.ordinal()] ++;
 		int byteOffset = (int) (index % pageSize);

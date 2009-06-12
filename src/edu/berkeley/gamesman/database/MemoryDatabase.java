@@ -21,7 +21,7 @@ import edu.berkeley.gamesman.util.Util;
  *          byte[] instead of ArrayList<Byte> for internal storage. 02/21/09 -
  *          1.0 - Initial (working) Version.
  */
-public class MemoryDatabase extends Database {
+public class MemoryDatabase extends Database{
 
 	/* Class Variables */
 	private byte[] memoryStorage; // byte array to store the data
@@ -68,18 +68,7 @@ public class MemoryDatabase extends Database {
 
 	@Override
 	public void putRecordGroup(long loc, RecordGroup value) {
-		byte[] putRecord = value.getState().toByteArray();
-		if (putRecord.length > conf.recordGroupByteLength) {
-			int top = conf.recordGroupByteLength + 1;
-			for (int i = 1; i < top; i++)
-				putByte(loc++, putRecord[i]);
-		} else {
-			int i;
-			for (i = putRecord.length; i < conf.recordGroupByteLength; i++)
-				putByte(loc++, (byte) 0);
-			for (i = 0; i < putRecord.length; i++)
-				putByte(loc++, putRecord[i]);
-		}
+		value.getState().writeToUnsignedMemoryDatabase(this, loc, conf.recordGroupByteLength);
 	}
 
 	@Override
@@ -114,7 +103,7 @@ public class MemoryDatabase extends Database {
 	 * @param index sequential number of byte in DB.
 	 * @param data byte that needs to be written.
 	 */
-	synchronized protected void putByte(long index, byte data) {
+	public synchronized void putByte(long index, byte data) {
 		this.memoryStorage[(int) index] = data;
 	}
 }

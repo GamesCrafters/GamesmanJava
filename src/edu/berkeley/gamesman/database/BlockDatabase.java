@@ -56,6 +56,6 @@ public class BlockDatabase extends FileDatabase {
 	@Override
 	public synchronized void putRecordGroup(long loc, RecordGroup value) {
 		buf.position((int) loc);
-		value.getState().outputPaddedUnsignedBytes(buf,conf.recordGroupByteLength);
+		value.getState().outputUnsignedBytes(buf,conf.recordGroupByteLength);
 	}
 }

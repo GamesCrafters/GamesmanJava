@@ -62,7 +62,7 @@ public class FileDatabase extends Database {
 	public synchronized void putRecordGroup(long loc, RecordGroup value) {
 		try {
 			fd.seek(loc + offset);
-			value.getState().outputPaddedUnsignedBytes(fd, conf.recordGroupByteLength);
+			value.getState().outputUnsignedBytes(fd, conf.recordGroupByteLength);
 		} catch (IOException e) {
 			Util.fatalError("IO Error: " + e);
 		}

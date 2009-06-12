@@ -13,6 +13,8 @@ import java.util.Random;
 import java.io.*;
 import java.nio.ByteBuffer;
 
+import edu.berkeley.gamesman.database.MemoryDatabase;
+
 /**
  * Immutable arbitrary-precision integers.  All operations behave as if
  * BigIntegers were represented in two's-complement notation (like Java's
@@ -2720,72 +2722,63 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
         return byteArray;
     }
     
-    public void toPaddedUnsignedByteArray(byte[] byteArray, int offset, int len) {
-		int byteLen = (bitLength() + 7) / 8;
-		for(int start=len-byteLen+offset;offset<start;offset++)
-			byteArray[offset] = 0;
-
-		for (int i = byteLen - 1 + offset, bytesCopied = 4, nextInt = 0, intIndex = 0; i >= offset; i--) {
-			if (bytesCopied == 4) {
-				nextInt = getInt(intIndex++);
-				bytesCopied = 1;
-			} else {
-				nextInt >>>= 8;
-				bytesCopied++;
-			}
-			byteArray[i] = (byte) nextInt;
+    public void toUnsignedByteArray(byte[] byteArray, int offset,
+			int len) {
+		for (int i = offset, top = offset + len, byteIndex = 8 * (len % 4), intIndex = len / 4, nextInt = getInt(intIndex); i < top; i++) {
+			if (byteIndex == 0) {
+				nextInt = getInt(--intIndex);
+				byteIndex = 24;
+			} else
+				byteIndex -= 8;
+			byteArray[i] = (byte) (nextInt >>> byteIndex);
 		}
 	}
     
-    public void outputPaddedUnsignedBytes(OutputStream output, int len) throws IOException{
-		int byteLen = (bitLength() + 7) / 8;
-		for(int i=len-byteLen;i>0;i--)
-			output.write(0);
-
-		for (int i = byteLen - 1, bytesCopied = 4, nextInt = 0, intIndex = 0; i >= 0; i--) {
-			if (bytesCopied == 4) {
-				nextInt = getInt(intIndex++);
-				bytesCopied = 1;
-			} else {
-				nextInt >>>= 8;
-				bytesCopied++;
-			}
-			output.write(nextInt);
-		}
-    }
-    
-	public void outputPaddedUnsignedBytes(ByteBuffer output, int len) {
-		int byteLen = (bitLength() + 7) / 8;
-		for(int i=len-byteLen;i>0;i--)
-			output.put((byte) 0);
-
-		for (int i = byteLen - 1, bytesCopied = 4, nextInt = 0, intIndex = 0; i >= 0; i--) {
-			if (bytesCopied == 4) {
-				nextInt = getInt(intIndex++);
-				bytesCopied = 1;
-			} else {
-				nextInt >>>= 8;
-				bytesCopied++;
-			}
-			output.put((byte) nextInt);
+    public void writeToUnsignedMemoryDatabase(MemoryDatabase output, long offset,
+			int len) {
+		long i = offset, top = offset + len;
+		for (int byteIndex = 8 * (len % 4), intIndex = len / 4, nextInt = getInt(intIndex); i < top; i++) {
+			if (byteIndex == 0) {
+				nextInt = getInt(--intIndex);
+				byteIndex = 24;
+			} else
+				byteIndex -= 8;
+			output.putByte(i, (byte) (nextInt >>> byteIndex));
 		}
 	}
-	
-	public void outputPaddedUnsignedBytes(DataOutput output,
-			int len) throws IOException {
-		int byteLen = (bitLength() + 7) / 8;
-		for(int i=len-byteLen;i>0;i--)
-			output.write(0);
+    
+    public void outputUnsignedBytes(OutputStream output, int len)
+			throws IOException {
+		for (int i = len, byteIndex = 8 * (len % 4), intIndex = len / 4, nextInt = getInt(intIndex); i > 0; i--) {
+			if (byteIndex == 0) {
+				nextInt = getInt(--intIndex);
+				byteIndex = 24;
+			} else
+				byteIndex -= 8;
+			output.write(nextInt >>> byteIndex);
+		}
+	}
 
-		for (int i = byteLen - 1, bytesCopied = 4, nextInt = 0, intIndex = 0; i >= 0; i--) {
-			if (bytesCopied == 4) {
-				nextInt = getInt(intIndex++);
-				bytesCopied = 1;
-			} else {
-				nextInt >>>= 8;
-				bytesCopied++;
-			}
-			output.write(nextInt);
+	public void outputUnsignedBytes(ByteBuffer output, int len) {
+		for (int i = len, byteIndex = 8 * (len % 4), intIndex = len / 4, nextInt = getInt(intIndex); i > 0; i--) {
+			if (byteIndex == 0) {
+				nextInt = getInt(--intIndex);
+				byteIndex = 24;
+			} else
+				byteIndex -= 8;
+			output.put((byte) (nextInt >>> byteIndex));
+		}
+	}
+
+	public void outputUnsignedBytes(DataOutput output, int len)
+			throws IOException {
+		for (int i = len, byteIndex = 8 * (len % 4), intIndex = len / 4, nextInt = getInt(intIndex); i > 0; i--) {
+			if (byteIndex == 0) {
+				nextInt = getInt(--intIndex);
+				byteIndex = 24;
+			} else
+				byteIndex -= 8;
+			output.write(nextInt >>> byteIndex);
 		}
 	}
 
