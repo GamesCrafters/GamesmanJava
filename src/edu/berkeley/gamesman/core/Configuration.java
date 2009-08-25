@@ -75,9 +75,42 @@ public class Configuration {
 	public Configuration(Properties props, boolean initLater)
 			throws ClassNotFoundException {
 		this.props = props;
-		recordsPerGroup = Integer
-				.parseInt(getProperty("record.groupSize", "1"));
+		double requiredCompression = Double.parseDouble(getProperty(
+				"record.compression", "0")) / 100;
 		totalStates = initializeStoredFields();
+		double compression;
+		if (requiredCompression == 0D)
+			recordsPerGroup = 1;
+		else {
+			int recordGuess;
+			int bitLength;
+			double log2;
+			if (totalStates.getLowestSetBit() == totalStates.bitLength() - 1)
+				log2 = totalStates.bitLength() - 1;
+			else
+				log2 = Math.log(totalStates.longValue()) / Math.log(2);
+			if (log2 > 8) {
+				recordGuess = 1;
+				bitLength = (int) Math.ceil(log2);
+				compression = (log2 / 8) / ((bitLength + 7) >> 3);
+				while (compression < requiredCompression) {
+					recordGuess++;
+					bitLength = (int) Math.ceil(recordGuess * log2);
+					compression = (recordGuess * log2 / 8)
+							/ ((bitLength + 7) >> 3);
+				}
+			} else {
+				bitLength = 8;
+				recordGuess = (int) (8D / log2);
+				compression = recordGuess * log2 / 8;
+				while (compression < requiredCompression) {
+					bitLength += 8;
+					recordGuess = (int) (bitLength / log2);
+					compression = (recordGuess * log2 / 8) / (bitLength >> 3);
+				}
+			}
+			recordsPerGroup = recordGuess;
+		}
 		recordGroupByteLength = (totalStates.pow(recordsPerGroup).bitLength() + 7) >> 3;
 		if (!initLater) {
 			String gamename = getProperty("gamesman.game");
@@ -147,10 +180,8 @@ public class Configuration {
 	/**
 	 * Initialize the Configuration with a game and a hasher object.
 	 * 
-	 * @param newG
-	 *            The Game associated with this configuration.
-	 * @param newH
-	 *            The Hasher associated with this configuration.
+	 * @param newG The Game associated with this configuration.
+	 * @param newH The Hasher associated with this configuration.
 	 */
 	public void initialize(Game<?> newG, Hasher<?> newH, boolean prepare) {
 		g = newG;
@@ -163,12 +194,9 @@ public class Configuration {
 	/**
 	 * Initialize the Configuration with a game and a hasher object.
 	 * 
-	 * @param in_gamename
-	 *            The Game associated with this configuration.
-	 * @param in_hashname
-	 *            The Hasher associated with this configuration.
-	 * @throws ClassNotFoundException
-	 *             Could not load either the hasher or game class
+	 * @param in_gamename The Game associated with this configuration.
+	 * @param in_hashname The Hasher associated with this configuration.
+	 * @throws ClassNotFoundException Could not load either the hasher or game class
 	 */
 	public void initialize(final String in_gamename, final String in_hashname,
 			boolean prepare) throws ClassNotFoundException {

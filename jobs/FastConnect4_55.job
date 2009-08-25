@@ -7,4 +7,4 @@ gamesman.solver = TierItergameSolver
 gamesman.database = BlockDatabase
 gamesman.db.uri = fastdatabase5.db
 record.fields = VALUE:3,REMOTENESS:26
-record.groupSize = 5
+record.compression = 1
