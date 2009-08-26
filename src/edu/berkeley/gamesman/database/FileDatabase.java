@@ -3,6 +3,8 @@ package edu.berkeley.gamesman.database;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.ConcurrentModificationException;
+import java.util.Iterator;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
@@ -22,9 +24,13 @@ public class FileDatabase extends Database {
 
 	protected RandomAccessFile fd;
 
-	byte[] rawRecord;
+	private byte[] rawRecord;
 
-	long offset;
+	private byte[] groups;
+
+	private int groupsLength;
+
+	private long offset;
 
 	@Override
 	public synchronized void close() {
@@ -59,10 +65,64 @@ public class FileDatabase extends Database {
 	}
 
 	@Override
+	public Iterator<RecordGroup> getRecordGroups(long loc, int numGroups) {
+		try {
+			groupsLength = numGroups * conf.recordGroupByteLength;
+			if (groups == null || groups.length < groupsLength)
+				groups = new byte[groupsLength];
+			fd.seek(loc + offset);
+			fd.read(groups);
+			RecordGroupByteIterator rgi = new RecordGroupByteIterator();
+			return rgi;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public void putRecordGroups(long loc, Iterator<RecordGroup> recordGroups,
+			int numGroups) {
+		try {
+			groupsLength = numGroups * conf.recordGroupByteLength;
+			if (groups == null || groups.length < groupsLength)
+				groups = new byte[groupsLength];
+			int onByte = 0;
+			for (int i = 0; i < numGroups; i++) {
+				recordGroups.next().getState().toUnsignedByteArray(groups,
+						onByte, conf.recordGroupByteLength);
+			}
+			fd.seek(loc + offset);
+			fd.write(groups);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private class RecordGroupByteIterator implements Iterator<RecordGroup> {
+		int onByte = 0;
+
+		public boolean hasNext() throws ConcurrentModificationException {
+			return onByte < groupsLength;
+		}
+
+		public RecordGroup next() throws ConcurrentModificationException {
+			for (int i = 0; i < rawRecord.length; i++) {
+				rawRecord[i] = groups[onByte++];
+			}
+			return new RecordGroup(conf, rawRecord);
+		}
+
+		public void remove() {
+			throw new UnsupportedOperationException("remove() not supported");
+		}
+	}
+
+	@Override
 	public synchronized void putRecordGroup(long loc, RecordGroup value) {
 		try {
 			fd.seek(loc + offset);
-			value.getState().outputUnsignedBytes(fd, conf.recordGroupByteLength);
+			value.getState()
+					.outputUnsignedBytes(fd, conf.recordGroupByteLength);
 		} catch (IOException e) {
 			Util.fatalError("IO Error: " + e);
 		}

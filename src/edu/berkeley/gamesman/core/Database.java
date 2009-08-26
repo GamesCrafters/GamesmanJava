@@ -78,12 +78,12 @@ public abstract class Database {
 		return getRecordGroup(byteOffset).getRecord(num);
 	}
 
-	public Iterator<Record> getRecords(long recordIndex, long numRecords) {
+	public Iterator<Record> getRecords(long recordIndex, int numRecords) {
 		int num = (int) (recordIndex % conf.recordsPerGroup);
 		long byteOffset = recordIndex / conf.recordsPerGroup
 				* conf.recordGroupByteLength;
 		int preRecords = (int) (recordIndex % conf.recordsPerGroup);
-		long recordGroups = (numRecords + preRecords - 1)
+		int recordGroups = (numRecords + preRecords - 1)
 				/ conf.recordsPerGroup + 1;
 		RecordIterator ri = new RecordIterator(getRecordGroups(byteOffset,
 				recordGroups), preRecords, numRecords);
@@ -132,7 +132,7 @@ public abstract class Database {
 	 */
 	public abstract RecordGroup getRecordGroup(long loc);
 
-	public Iterator<RecordGroup> getRecordGroups(long startLoc, long numGroups) {
+	public Iterator<RecordGroup> getRecordGroups(long startLoc, int numGroups) {
 		throw new UnsupportedOperationException(
 				"getRecordGroups should be overridden");
 	}
