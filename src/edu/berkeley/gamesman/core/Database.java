@@ -107,11 +107,11 @@ public abstract class Database {
 		putRecordGroup(byteOffset, rg);
 	}
 
-	public void putRecords(long recordIndex, Iterator<Record> r, long numRecords) {
-		long preRecords = conf.recordsPerGroup - recordIndex
-				% conf.recordsPerGroup;
-		long recordGroups = (numRecords - preRecords) / conf.recordsPerGroup;
-		long postRecords = (numRecords - preRecords) % conf.recordsPerGroup;
+	public void putRecords(long recordIndex, Iterator<Record> r, int numRecords) {
+		int preRecords = (int) (conf.recordsPerGroup - recordIndex
+				% conf.recordsPerGroup);
+		int recordGroups = (numRecords - preRecords) / conf.recordsPerGroup;
+		int postRecords = (numRecords - preRecords) % conf.recordsPerGroup;
 		for (long i = 0; i < preRecords; i++) {
 			putRecord(recordIndex++, r.next());
 		}
@@ -146,7 +146,7 @@ public abstract class Database {
 	public abstract void putRecordGroup(long loc, RecordGroup rg);
 
 	public void putRecordGroups(long loc, Iterator<RecordGroup> it,
-			long numGroups) {
+			int numGroups) {
 		throw new UnsupportedOperationException(
 				"putRecordGroups should be overridden");
 	}

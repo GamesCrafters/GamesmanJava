@@ -26,9 +26,9 @@ public class FileDatabase extends Database {
 
 	protected byte[] rawRecord;
 
-	private byte[] groups;
+	protected byte[] groups;
 
-	private int groupsLength;
+	protected int groupsLength;
 
 	protected long offset;
 
@@ -80,6 +80,7 @@ public class FileDatabase extends Database {
 		}
 	}
 
+	@Override
 	public void putRecordGroups(long loc, Iterator<RecordGroup> recordGroups,
 			int numGroups) {
 		try {
@@ -98,7 +99,7 @@ public class FileDatabase extends Database {
 		}
 	}
 
-	private class RecordGroupByteIterator implements Iterator<RecordGroup> {
+	class RecordGroupByteIterator implements Iterator<RecordGroup> {
 		int onByte = 0;
 
 		public boolean hasNext() throws ConcurrentModificationException {
