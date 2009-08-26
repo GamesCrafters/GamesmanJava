@@ -31,8 +31,10 @@ public abstract class Database {
 	 * URL, so instead of file:/// you can just put the filename, and it will
 	 * create a file in the working directory (tested under windows & ubuntu).
 	 * 
-	 * @param uri The URI that the Database is associated with
-	 * @param config The Configuration that is relevant
+	 * @param uri
+	 *            The URI that the Database is associated with
+	 * @param config
+	 *            The Configuration that is relevant
 	 */
 	public final void initialize(String uri, Configuration config) {
 		conf = config;
@@ -65,7 +67,8 @@ public abstract class Database {
 	/**
 	 * Return the Nth Record in the Database
 	 * 
-	 * @param recordIndex The record number
+	 * @param recordIndex
+	 *            The record number
 	 * @return The stored Record
 	 */
 	public synchronized Record getRecord(long recordIndex) {
@@ -75,16 +78,30 @@ public abstract class Database {
 		return getRecordGroup(byteOffset).getRecord(num);
 	}
 
+	public Iterator<Record> getRecords(long recordIndex, long numRecords) {
+		int num = (int) (recordIndex % conf.recordsPerGroup);
+		long byteOffset = recordIndex / conf.recordsPerGroup
+				* conf.recordGroupByteLength;
+		int preRecords = (int) (recordIndex % conf.recordsPerGroup);
+		long recordGroups = (numRecords + preRecords - 1)
+				/ conf.recordsPerGroup + 1;
+		RecordIterator ri = new RecordIterator(getRecordGroups(byteOffset,
+				recordGroups), preRecords, numRecords);
+		return ri;
+	}
+
 	/**
 	 * Store a record in the Database
 	 * 
-	 * @param recordIndex The record number
-	 * @param r The Record to store
+	 * @param recordIndex
+	 *            The record number
+	 * @param r
+	 *            The Record to store
 	 */
 	public synchronized void putRecord(long recordIndex, Record r) {
-		long group = recordIndex / conf.recordsPerGroup;
 		int num = (int) (recordIndex % conf.recordsPerGroup);
-		long byteOffset = group * conf.recordGroupByteLength;
+		long byteOffset = recordIndex / conf.recordsPerGroup
+				* conf.recordGroupByteLength;
 		RecordGroup rg = getRecordGroup(byteOffset);
 		rg.setRecord(num, r);
 		putRecordGroup(byteOffset, rg);
@@ -109,19 +126,22 @@ public abstract class Database {
 	}
 
 	/**
-	 * @param loc The index of the byte the group begins on
+	 * @param loc
+	 *            The index of the byte the group begins on
 	 * @return The group beginning at loc
 	 */
 	public abstract RecordGroup getRecordGroup(long loc);
 
-	public Iterator<RecordGroup> getRecordGroups(long startLoc, int numGroups) {
+	public Iterator<RecordGroup> getRecordGroups(long startLoc, long numGroups) {
 		throw new UnsupportedOperationException(
 				"getRecordGroups should be overridden");
 	}
 
 	/**
-	 * @param loc The index of the byte the group begins on
-	 * @param rg The record group to store
+	 * @param loc
+	 *            The index of the byte the group begins on
+	 * @param rg
+	 *            The record group to store
 	 */
 	public abstract void putRecordGroup(long loc, RecordGroup rg);
 
@@ -164,5 +184,49 @@ public abstract class Database {
 		public void remove() {
 			throw new UnsupportedOperationException("remove() not supported");
 		}
+	}
+
+	private class RecordIterator implements Iterator<Record> {
+		private BigInteger currentGroup;
+
+		private long nextRecord = 0;
+
+		private final long numRecords;
+
+		private final BigInteger startDivide = conf.totalStates
+				.pow(conf.recordsPerGroup - 1);
+
+		private BigInteger divide = BigInteger.ZERO;
+
+		private Iterator<RecordGroup> recordGroups;
+
+		private RecordIterator(Iterator<RecordGroup> recordGroups,
+				int preRecords, long numRecords) {
+			this.recordGroups = recordGroups;
+			this.numRecords = numRecords + preRecords;
+			for (int i = 0; i < preRecords; i++)
+				next();
+		}
+
+		public boolean hasNext() {
+			return nextRecord < numRecords;
+		}
+
+		public Record next() {
+			if (divide.equals(BigInteger.ZERO)) {
+				divide = startDivide;
+				currentGroup = recordGroups.next().getState();
+			}
+			BigInteger ret = currentGroup.divide(divide);
+			currentGroup = currentGroup.subtract(ret.multiply(divide));
+			divide = divide.divide(conf.totalStates);
+			nextRecord++;
+			return new Record(conf, ret);
+		}
+
+		public void remove() {
+			throw new UnsupportedOperationException("remove() not supported");
+		}
+
 	}
 }
