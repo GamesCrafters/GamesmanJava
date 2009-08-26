@@ -1,5 +1,7 @@
 package edu.berkeley.gamesman.database;
 
+import java.util.Iterator;
+
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.RecordGroup;
 import edu.berkeley.gamesman.util.DebugFacility;
@@ -21,7 +23,7 @@ import edu.berkeley.gamesman.util.Util;
  *          byte[] instead of ArrayList<Byte> for internal storage. 02/21/09 -
  *          1.0 - Initial (working) Version.
  */
-public class MemoryDatabase extends Database{
+public class MemoryDatabase extends Database {
 
 	/* Class Variables */
 	private byte[] memoryStorage; // byte array to store the data
@@ -49,6 +51,32 @@ public class MemoryDatabase extends Database{
 	}
 
 	@Override
+	public Iterator<RecordGroup> getRecordGroups(final long loc,
+			final int numGroups) {
+		return new Iterator<RecordGroup>() {
+			private long location = loc;
+
+			private int groupNumber = 0;
+
+			public boolean hasNext() {
+				return groupNumber < numGroups;
+			}
+
+			public RecordGroup next() {
+				RecordGroup rg = getRecordGroup(location);
+				location += conf.recordGroupByteLength;
+				groupNumber++;
+				return rg;
+			}
+
+			public void remove() {
+				throw new UnsupportedOperationException(
+						"remove() not implemented");
+			}
+		};
+	}
+
+	@Override
 	public void initialize(String locations) {
 		this.initialize();
 	}
@@ -68,7 +96,16 @@ public class MemoryDatabase extends Database{
 
 	@Override
 	public void putRecordGroup(long loc, RecordGroup value) {
-		value.getState().writeToUnsignedMemoryDatabase(this, loc, conf.recordGroupByteLength);
+		value.getState().writeToUnsignedMemoryDatabase(this, loc,
+				conf.recordGroupByteLength);
+	}
+
+	public void putRecordGroups(long loc, Iterator<RecordGroup> it,
+			int numGroups) {
+		for (int i = 0; i < numGroups; i++) {
+			putRecordGroup(loc, it.next());
+			loc += conf.recordGroupByteLength;
+		}
 	}
 
 	@Override
@@ -89,7 +126,8 @@ public class MemoryDatabase extends Database{
 	 * Get a byte from the database.
 	 * 
 	 * @author Alex Trofimov
-	 * @param index sequential number of this byte in DB.
+	 * @param index
+	 *            sequential number of this byte in DB.
 	 * @return - one byte at specified byte index.
 	 */
 	protected byte getByte(long index) {
@@ -100,8 +138,10 @@ public class MemoryDatabase extends Database{
 	 * Write a byte into the database. Assumes that space is already allocated.
 	 * 
 	 * @author Alex Trofimov
-	 * @param index sequential number of byte in DB.
-	 * @param data byte that needs to be written.
+	 * @param index
+	 *            sequential number of byte in DB.
+	 * @param data
+	 *            byte that needs to be written.
 	 */
 	public synchronized void putByte(long index, byte data) {
 		this.memoryStorage[(int) index] = data;
