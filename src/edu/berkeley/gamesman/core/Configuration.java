@@ -534,7 +534,7 @@ public class Configuration {
 		try {
 			while ((line = r.readLine()) != null) {
 				line = line.trim();
-				if (line.isEmpty() || line.charAt(0) == '#')
+				if (line.equals("") || line.charAt(0) == '#')
 					continue;
 				String[] arr = line.split("=", 2); // semantics are slightly
 				// different from python
