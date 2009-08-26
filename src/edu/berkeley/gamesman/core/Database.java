@@ -1,5 +1,9 @@
 package edu.berkeley.gamesman.core;
 
+import java.util.Iterator;
+
+import edu.berkeley.gamesman.util.biginteger.BigInteger;
+
 /**
  * A Database is the abstract superclass of all data storage methods used in
  * Gamesman. Each particular Database is responsible for the persistent storage
@@ -86,17 +90,46 @@ public abstract class Database {
 		putRecordGroup(byteOffset, rg);
 	}
 
+	public void putRecords(long recordIndex, Iterator<Record> r, long numRecords) {
+		long preRecords = conf.recordsPerGroup - recordIndex
+				% conf.recordsPerGroup;
+		long recordGroups = (numRecords - preRecords) / conf.recordsPerGroup;
+		long postRecords = (numRecords - preRecords) % conf.recordsPerGroup;
+		for (long i = 0; i < preRecords; i++) {
+			putRecord(recordIndex++, r.next());
+		}
+		RecordGroupIterator rgi = new RecordGroupIterator(r);
+		long groupByteOffset = recordIndex / conf.recordsPerGroup
+				* conf.recordGroupByteLength;
+		putRecordGroups(groupByteOffset, rgi, recordGroups);
+		recordIndex += recordGroups * conf.recordsPerGroup;
+		for (long i = 0; i < postRecords; i++) {
+			putRecord(recordIndex++, r.next());
+		}
+	}
+
 	/**
 	 * @param loc The index of the byte the group begins on
 	 * @return The group beginning at loc
 	 */
 	public abstract RecordGroup getRecordGroup(long loc);
 
+	public Iterator<RecordGroup> getRecordGroups(long startLoc, int numGroups) {
+		throw new UnsupportedOperationException(
+				"getRecordGroups should be overridden");
+	}
+
 	/**
 	 * @param loc The index of the byte the group begins on
 	 * @param rg The record group to store
 	 */
 	public abstract void putRecordGroup(long loc, RecordGroup rg);
+
+	public void putRecordGroups(long loc, Iterator<RecordGroup> it,
+			long numGroups) {
+		throw new UnsupportedOperationException(
+				"putRecordGroups should be overridden");
+	}
 
 	/**
 	 * @return The number of bytes used to store all the records (This does not
@@ -105,5 +138,31 @@ public abstract class Database {
 	public long getByteSize() {
 		return (conf.getGame().lastHash() / conf.recordsPerGroup + 1)
 				* conf.recordGroupByteLength;
+	}
+
+	private class RecordGroupIterator implements Iterator<RecordGroup> {
+		private Iterator<Record> recordIterator;
+
+		private RecordGroupIterator(Iterator<Record> recordIterator) {
+			this.recordIterator = recordIterator;
+		}
+
+		public boolean hasNext() {
+			return recordIterator.hasNext();
+		}
+
+		public RecordGroup next() {
+			BigInteger bi = BigInteger.ZERO;
+			for (int i = 0; i < conf.recordsPerGroup; i++) {
+				bi = bi.multiply(conf.totalStates);
+				if (recordIterator.hasNext())
+					bi = bi.add(recordIterator.next().getState());
+			}
+			return new RecordGroup(conf, bi);
+		}
+
+		public void remove() {
+			throw new UnsupportedOperationException("remove() not supported");
+		}
 	}
 }
