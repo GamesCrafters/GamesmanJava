@@ -24,13 +24,13 @@ public class FileDatabase extends Database {
 
 	protected RandomAccessFile fd;
 
-	private byte[] rawRecord;
+	protected byte[] rawRecord;
 
 	private byte[] groups;
 
 	private int groupsLength;
 
-	private long offset;
+	protected long offset;
 
 	@Override
 	public synchronized void close() {
