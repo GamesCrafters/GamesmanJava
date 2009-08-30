@@ -13,7 +13,7 @@ public interface Master {
 	 * @param solver The Solver to use to solve it
 	 * @param database The Database to store information to
 	 */
-	public void initialize(Configuration conf, Class<? extends Solver> solver, Class<? extends Database> database);
+	public void initialize(Configuration conf, Class<? extends Solver> solver, Class<? extends Database> database, boolean cached);
 	/**
 	 * Execute the solve
 	 */

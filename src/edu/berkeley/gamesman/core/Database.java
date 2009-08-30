@@ -41,7 +41,7 @@ public abstract class Database {
 		initialize(uri);
 	}
 
-	protected abstract void initialize(String uri);
+	public abstract void initialize(String uri);
 
 	/**
 	 * Ensure all buffers are flushed to disk. The on-disk state should be
@@ -83,8 +83,8 @@ public abstract class Database {
 		long byteOffset = recordIndex / conf.recordsPerGroup
 				* conf.recordGroupByteLength;
 		int preRecords = (int) (recordIndex % conf.recordsPerGroup);
-		int recordGroups = (numRecords + preRecords - 1)
-				/ conf.recordsPerGroup + 1;
+		int recordGroups = (numRecords + preRecords - 1) / conf.recordsPerGroup
+				+ 1;
 		RecordIterator ri = new RecordIterator(getRecordGroups(byteOffset,
 				recordGroups), preRecords, numRecords);
 		return ri;
@@ -163,20 +163,44 @@ public abstract class Database {
 	private class RecordGroupIterator implements Iterator<RecordGroup> {
 		private Iterator<Record> recordIterator;
 
+		Record[] records;
+
+		int offset, stop;
+
+		int index;
+
 		private RecordGroupIterator(Iterator<Record> recordIterator) {
 			this.recordIterator = recordIterator;
 		}
 
+		public RecordGroupIterator(Record[] records, int offset, int length) {
+			this.records = records;
+			this.offset = offset;
+			this.stop = offset + length;
+			this.index = offset;
+		}
+
 		public boolean hasNext() {
-			return recordIterator.hasNext();
+			if (recordIterator == null)
+				return index < stop;
+			else
+				return recordIterator.hasNext();
 		}
 
 		public RecordGroup next() {
 			BigInteger bi = BigInteger.ZERO;
-			for (int i = 0; i < conf.recordsPerGroup; i++) {
-				bi = bi.multiply(conf.totalStates);
-				if (recordIterator.hasNext())
-					bi = bi.add(recordIterator.next().getState());
+			if (recordIterator == null) {
+				for (int i = 0; i < conf.recordsPerGroup; i++) {
+					bi = bi.multiply(conf.totalStates);
+					if (index < stop)
+						bi = bi.add(records[index++].getState());
+				}
+			} else {
+				for (int i = 0; i < conf.recordsPerGroup; i++) {
+					bi = bi.multiply(conf.totalStates);
+					if (recordIterator.hasNext())
+						bi = bi.add(recordIterator.next().getState());
+				}
 			}
 			return new RecordGroup(conf, bi);
 		}
@@ -228,5 +252,27 @@ public abstract class Database {
 			throw new UnsupportedOperationException("remove() not supported");
 		}
 
+	}
+
+	public void putRecords(long recordIndex, Record[] records, int offset,
+			int numRecords) {
+		int preRecords = (int) (conf.recordsPerGroup - recordIndex
+				% conf.recordsPerGroup);
+		int recordGroups = (numRecords - preRecords) / conf.recordsPerGroup;
+		int mainRecords = recordGroups * conf.recordsPerGroup;
+		int postRecords = (numRecords - preRecords) % conf.recordsPerGroup;
+		for (int i = 0; i < preRecords; i++) {
+			putRecord(recordIndex++, records[offset++]);
+		}
+		RecordGroupIterator rgi = new RecordGroupIterator(records, offset,
+				numRecords);
+		long groupByteOffset = recordIndex / conf.recordsPerGroup
+				* conf.recordGroupByteLength;
+		putRecordGroups(groupByteOffset, rgi, recordGroups);
+		recordIndex += mainRecords;
+		offset += mainRecords;
+		for (long i = 0; i < postRecords; i++) {
+			putRecord(recordIndex++, records[offset++]);
+		}
 	}
 }

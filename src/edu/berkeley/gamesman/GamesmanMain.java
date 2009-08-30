@@ -13,6 +13,7 @@ import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Master;
 import edu.berkeley.gamesman.core.Solver;
+import edu.berkeley.gamesman.database.DatabaseCache;
 import edu.berkeley.gamesman.database.filer.DirectoryFilerClient;
 import edu.berkeley.gamesman.database.filer.DirectoryFilerServer;
 import edu.berkeley.gamesman.util.DebugFacility;
@@ -63,7 +64,8 @@ public final class GamesmanMain extends GamesmanApplication {
 
 		assert Util.debug(DebugFacility.CORE, "Preloading classes...");
 
-		String gameName, solverName, hasherName, databaseName;
+		String gameName, solverName, hasherName;
+		String[] databaseName;
 
 		gameName = conf.getProperty("gamesman.game");
 		if(gameName == null)
@@ -74,10 +76,11 @@ public final class GamesmanMain extends GamesmanApplication {
 		hasherName = conf.getProperty("gamesman.hasher");
 		if(hasherName == null)
 			Util.fatalError("You must specify a hasher with the property gamesman.hasher");
-		databaseName = conf.getProperty("gamesman.database","CachedDatabase");
+		databaseName = conf.getProperty("gamesman.database","CachedDatabase").split(":");
 
 		Class<? extends Solver> s;
 		Class<? extends Database> d;
+		boolean cached;
 //		Class<? extends Game<Object>> g;
 //		Class<? extends Hasher<Object>> h;
 
@@ -85,7 +88,16 @@ public final class GamesmanMain extends GamesmanApplication {
 //			g = Util.typedForName("edu.berkeley.gamesman.game." + gameName);
 			s = Util.typedForName("edu.berkeley.gamesman.solver." + solverName, Solver.class);
 //			h = Util.typedForName("edu.berkeley.gamesman.hasher." + hasherName);
-			d = Util.typedForName("edu.berkeley.gamesman.database." + databaseName, Database.class);
+			if (databaseName.length > 1
+					&& databaseName[0].trim().equals("cached")) {
+				d = Util.typedForName("edu.berkeley.gamesman.database."
+						+ databaseName[1].trim(), Database.class);
+				cached=true;
+			}else{
+				d = Util.typedForName("edu.berkeley.gamesman.database."
+						+ databaseName[0].trim(), Database.class);
+				cached=false;
+			}
 		} catch (Exception e) {
 			Util.fatalError("Fatal error in preloading", e);
 			return 1;
@@ -107,7 +119,7 @@ public final class GamesmanMain extends GamesmanApplication {
 		} else {
 			assert Util.debug(DebugFacility.CORE, "Defaulting to solve...");
 			try {
-				m.initialize(conf, s, d);
+				m.initialize(conf, s, d, cached);
 			} catch (Exception e){
 				Util.fatalError("Exception while instantiating and initializing",e);
 			}

@@ -10,6 +10,7 @@ import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.core.Master;
 import edu.berkeley.gamesman.core.Solver;
 import edu.berkeley.gamesman.core.WorkUnit;
+import edu.berkeley.gamesman.database.DatabaseCache;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Task;
 import edu.berkeley.gamesman.util.TaskFactory;
@@ -17,61 +18,72 @@ import edu.berkeley.gamesman.util.Util;
 
 /**
  * LocalMaster runs one or more threads on the local machine to solve a game
+ * 
  * @author Steven Schlansker
  */
-public final class LocalMaster implements Master,TaskFactory {
+public final class LocalMaster implements Master, TaskFactory {
 
 	private Game<Object> game;
+
 	Solver solver;
+
 	Hasher<?> hasher;
+
 	Database database;
-	
+
 	Configuration conf;
-	
-	public void initialize(Configuration inconf, Class<? extends Solver> solverc, Class<? extends Database> databasec) {
-		
+
+	public void initialize(Configuration inconf,
+			Class<? extends Solver> solverc,
+			Class<? extends Database> databasec, boolean cached) {
+
 		Task.setTaskFactory(this);
-		
-		try{
+
+		try {
 			game = Util.checkedCast(inconf.getGame());
 			solver = solverc.newInstance();
 			hasher = inconf.getHasher();
 			database = databasec.newInstance();
-		}catch(IllegalAccessException e){
-			Util.fatalError("Fatal error while initializing",e);
-		}catch (InstantiationException e) {
-			Util.fatalError("Fatal error while initializing",e);
+			if (cached)
+				database = new DatabaseCache(database);
+		} catch (IllegalAccessException e) {
+			Util.fatalError("Fatal error while initializing", e);
+		} catch (InstantiationException e) {
+			Util.fatalError("Fatal error while initializing", e);
 		}
-		
+
 		conf = inconf;
-		//conf = new Configuration(game,hasher,EnumSet.of(RecordFields.Value)); //TODO: have more than Value here
-		
-		database.initialize(conf.getProperty("gamesman.db.uri"),inconf);
-		
+		// conf = new Configuration(game,hasher,EnumSet.of(RecordFields.Value));
+		// //TODO: have more than Value here
+
+		database.initialize(conf.getProperty("gamesman.db.uri"), inconf);
+
 		solver.initialize(database);
-		
-		assert Util.debug(DebugFacility.MASTER, "Done initializing LocalMaster");
+
+		assert Util
+				.debug(DebugFacility.MASTER, "Done initializing LocalMaster");
 	}
-	
+
 	public void run(boolean closeDB) {
 		int threads = conf.getInteger("gamesman.threads", 1);
-		assert Util.debug(DebugFacility.MASTER, "Launching " + threads + " threads...");
-		List<WorkUnit> list = solver.prepareSolve(conf,game).divide(threads);
-		
+		assert Util.debug(DebugFacility.MASTER, "Launching " + threads
+				+ " threads...");
+		List<WorkUnit> list = solver.prepareSolve(conf, game).divide(threads);
+
 		ArrayList<Thread> myThreads = new ArrayList<Thread>();
-		
-		ThreadGroup solverGroup = new ThreadGroup("Solver Group: "+game);
-		for(WorkUnit w : list){
-			Thread t = new Thread(solverGroup,new LocalMasterRunnable(w));
+
+		ThreadGroup solverGroup = new ThreadGroup("Solver Group: " + game);
+		for (WorkUnit w : list) {
+			Thread t = new Thread(solverGroup, new LocalMasterRunnable(w));
 			t.start();
 			myThreads.add(t);
 		}
-		
-		for(Thread t : myThreads)
-			try{
+
+		for (Thread t : myThreads)
+			try {
 				t.join();
-			}catch (InterruptedException e) {
-				Util.warn("Interrupted while joined on thread "+t);
+			} catch (InterruptedException e) {
+				Util.warn("Interrupted while joined on thread " + t);
 			}
 		if (closeDB) {
 			database.close();
@@ -80,19 +92,21 @@ public final class LocalMaster implements Master,TaskFactory {
 		}
 		assert Util.debug(DebugFacility.MASTER, "Finished master run");
 	}
-	
+
 	public void run() {
 		run(true);
 	}
-	
+
 	private class LocalMasterRunnable implements Runnable {
 		WorkUnit w;
-		LocalMasterRunnable(WorkUnit u){
+
+		LocalMasterRunnable(WorkUnit u) {
 			w = u;
 		}
-		
-		public void run(){
-			assert Util.debug(DebugFacility.MASTER, "LocalMasterRunnable begin");
+
+		public void run() {
+			assert Util
+					.debug(DebugFacility.MASTER, "LocalMasterRunnable begin");
 			w.conquer();
 			assert Util.debug(DebugFacility.MASTER, "LocalMasterRunnable end");
 		}
@@ -100,26 +114,39 @@ public final class LocalMaster implements Master,TaskFactory {
 
 	private class LocalMasterTextTask extends Task {
 		private String name;
-		LocalMasterTextTask(String name){ this.name = name; }
+
+		LocalMasterTextTask(String name) {
+			this.name = name;
+		}
+
 		private long start;
+
 		@Override
 		protected void begin() {
 			start = System.currentTimeMillis();
 		}
+
 		@Override
 		public void complete() {
-			System.out.println("\nCompleted task "+name+" in "+Util.millisToETA(System.currentTimeMillis()-start)+".");
+			System.out.println("\nCompleted task " + name + " in "
+					+ Util.millisToETA(System.currentTimeMillis() - start)
+					+ ".");
 		}
+
 		@Override
 		public void update() {
 			long elapsedMillis = System.currentTimeMillis() - start;
-			double thousandpct = completed.doubleValue() / (total.doubleValue()/100000);
-			double pct = thousandpct/1000;
-			long totalMillis = (long)((double)elapsedMillis * 100 / pct);
-			System.out.print("Task: "+name+", "+String.format("%4.02f",pct)+"% ETA "+Util.millisToETA(totalMillis-elapsedMillis)+" remains\r");
+			double thousandpct = completed.doubleValue()
+					/ (total.doubleValue() / 100000);
+			double pct = thousandpct / 1000;
+			long totalMillis = (long) ((double) elapsedMillis * 100 / pct);
+			System.out.print("Task: " + name + ", "
+					+ String.format("%4.02f", pct) + "% ETA "
+					+ Util.millisToETA(totalMillis - elapsedMillis)
+					+ " remains\r");
 		}
 	}
-	
+
 	public Task createTask(String name) {
 		return new LocalMasterTextTask(name);
 	}
@@ -130,7 +157,7 @@ public final class LocalMaster implements Master,TaskFactory {
 	public Game<?> getGame() {
 		return game;
 	}
-	
+
 	/**
 	 * @return the database
 	 */

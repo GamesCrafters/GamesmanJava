@@ -22,7 +22,7 @@ public class SplitDatabase extends Database {
 	}
 
 	@Override
-	protected void initialize(String uri) {
+	public void initialize(String uri) {
 
 	}
 

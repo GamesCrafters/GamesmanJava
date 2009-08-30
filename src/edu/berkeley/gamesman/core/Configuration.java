@@ -16,6 +16,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.Map.Entry;
 
+import edu.berkeley.gamesman.database.DatabaseCache;
 import edu.berkeley.gamesman.util.Util;
 import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
@@ -180,8 +181,10 @@ public class Configuration {
 	/**
 	 * Initialize the Configuration with a game and a hasher object.
 	 * 
-	 * @param newG The Game associated with this configuration.
-	 * @param newH The Hasher associated with this configuration.
+	 * @param newG
+	 *            The Game associated with this configuration.
+	 * @param newH
+	 *            The Hasher associated with this configuration.
 	 */
 	public void initialize(Game<?> newG, Hasher<?> newH, boolean prepare) {
 		g = newG;
@@ -194,9 +197,12 @@ public class Configuration {
 	/**
 	 * Initialize the Configuration with a game and a hasher object.
 	 * 
-	 * @param in_gamename The Game associated with this configuration.
-	 * @param in_hashname The Hasher associated with this configuration.
-	 * @throws ClassNotFoundException Could not load either the hasher or game class
+	 * @param in_gamename
+	 *            The Game associated with this configuration.
+	 * @param in_hashname
+	 *            The Hasher associated with this configuration.
+	 * @throws ClassNotFoundException
+	 *             Could not load either the hasher or game class
 	 */
 	public void initialize(final String in_gamename, final String in_hashname,
 			boolean prepare) throws ClassNotFoundException {
@@ -620,8 +626,15 @@ public class Configuration {
 	public Database openDatabase() throws ClassNotFoundException {
 		if (db != null)
 			return db;
-		db = Util.typedInstantiate("edu.berkeley.gamesman.database."
-				+ getProperty("gamesman.database"), Database.class);
+		String[] dbType = getProperty("gamesman.database").split(":");
+		if (dbType.length > 1 && dbType[0].trim().equals("cached")) {
+			db = new DatabaseCache(Util.typedInstantiate(
+					"edu.berkeley.gamesman.database." + dbType[1],
+					Database.class));
+		} else {
+			db = Util.typedInstantiate("edu.berkeley.gamesman.database."
+					+ dbType[0], Database.class);
+		}
 		db.initialize(getProperty("gamesman.db.uri"), this);
 		return db;
 	}

@@ -130,7 +130,7 @@ public class FileDatabase extends Database {
 	}
 
 	@Override
-	protected synchronized void initialize(String loc) {
+	public synchronized void initialize(String loc) {
 
 		boolean previouslyExisted;
 		try {
