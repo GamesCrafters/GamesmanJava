@@ -48,7 +48,7 @@ public class DatabaseCache extends Database {
 	}
 
 	public DatabaseCache(Database db) {
-		this(db, 1<<20);
+		this(db, 1 << 20);
 	}
 
 	private void setPoint(long recordIndex) {
@@ -87,6 +87,8 @@ public class DatabaseCache extends Database {
 				break;
 			} else if (tags[index][i] == tag)
 				break;
+			else
+				System.out.println("Wow");
 		}
 		if (i >= nWayAssociative) {
 			i = pageChooser.nextInt(nWayAssociative);
@@ -102,14 +104,14 @@ public class DatabaseCache extends Database {
 		tags[index][i] = tag;
 		dirty[index][i] = false;
 		used[index][i] = true;
-		long firstRecord = ((tag << indexBits) & index) << offsetBits;
+		long firstRecord = ((tag << indexBits) | index) << offsetBits;
 		Iterator<Record> it = db.getRecords(firstRecord, pageSize);
 		for (int off = 0; off < pageSize; off++)
 			records[index][i][off] = it.next();
 	}
 
 	private void writeBack(int i) {
-		long firstRecord = ((tag << indexBits) & index) << offsetBits;
+		long firstRecord = ((tag << indexBits) | index) << offsetBits;
 		db.putRecords(firstRecord, records[index][i], 0, pageSize);
 		dirty[index][i] = false;
 	}
@@ -131,21 +133,23 @@ public class DatabaseCache extends Database {
 
 	@Override
 	public RecordGroup getRecordGroup(long loc) {
-		throw new UnsupportedOperationException("DatabaseCache does not operate on the group level");
+		throw new UnsupportedOperationException(
+				"DatabaseCache does not operate on the group level");
 	}
 
 	@Override
 	public void initialize(String uri) {
-		if(conf!=null)
+		if (conf != null)
 			db.initialize(uri, conf);
-		else{
+		else {
 			db.initialize(uri);
-			conf=db.getConfiguration();
+			conf = db.getConfiguration();
 		}
 	}
 
 	@Override
 	public void putRecordGroup(long loc, RecordGroup rg) {
-		throw new UnsupportedOperationException("DatabaseCache does not operate on the group level");
+		throw new UnsupportedOperationException(
+				"DatabaseCache does not operate on the group level");
 	}
 }

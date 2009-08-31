@@ -79,7 +79,6 @@ public abstract class Database {
 	}
 
 	public Iterator<Record> getRecords(long recordIndex, int numRecords) {
-		int num = (int) (recordIndex % conf.recordsPerGroup);
 		long byteOffset = recordIndex / conf.recordsPerGroup
 				* conf.recordGroupByteLength;
 		int preRecords = (int) (recordIndex % conf.recordsPerGroup);
@@ -107,21 +106,23 @@ public abstract class Database {
 		putRecordGroup(byteOffset, rg);
 	}
 
-	public void putRecords(long recordIndex, Iterator<Record> r, int numRecords) {
-		int preRecords = (int) (conf.recordsPerGroup - recordIndex
-				% conf.recordsPerGroup);
+	public void putRecords(long recordIndex, RecordIterator records,
+			int numRecords) {
+		int preRecords = conf.recordsPerGroup
+				- ((int) ((recordIndex - 1) % conf.recordsPerGroup) + 1);
 		int recordGroups = (numRecords - preRecords) / conf.recordsPerGroup;
+		int mainRecords = recordGroups * conf.recordsPerGroup;
 		int postRecords = (numRecords - preRecords) % conf.recordsPerGroup;
-		for (long i = 0; i < preRecords; i++) {
-			putRecord(recordIndex++, r.next());
+		for (int i = 0; i < preRecords; i++) {
+			putRecord(recordIndex++, records.next());
 		}
-		RecordGroupIterator rgi = new RecordGroupIterator(r);
+		RecordGroupIterator rgi = new RecordGroupIterator(records);
 		long groupByteOffset = recordIndex / conf.recordsPerGroup
 				* conf.recordGroupByteLength;
 		putRecordGroups(groupByteOffset, rgi, recordGroups);
-		recordIndex += recordGroups * conf.recordsPerGroup;
-		for (long i = 0; i < postRecords; i++) {
-			putRecord(recordIndex++, r.next());
+		recordIndex += mainRecords;
+		for (int i = 0; i < postRecords; i++) {
+			putRecord(recordIndex++, records.next());
 		}
 	}
 
@@ -189,17 +190,20 @@ public abstract class Database {
 
 		public RecordGroup next() {
 			BigInteger bi = BigInteger.ZERO;
+			BigInteger multiplier = BigInteger.ONE;
 			if (recordIterator == null) {
 				for (int i = 0; i < conf.recordsPerGroup; i++) {
-					bi = bi.multiply(conf.totalStates);
 					if (index < stop)
-						bi = bi.add(records[index++].getState());
+						bi = bi.add(records[index++].getState().multiply(
+								multiplier));
+					multiplier = multiplier.multiply(conf.totalStates);
 				}
 			} else {
 				for (int i = 0; i < conf.recordsPerGroup; i++) {
-					bi = bi.multiply(conf.totalStates);
 					if (recordIterator.hasNext())
-						bi = bi.add(recordIterator.next().getState());
+						bi = bi.add(recordIterator.next().getState().multiply(
+								multiplier));
+					multiplier = multiplier.multiply(conf.totalStates);
 				}
 			}
 			return new RecordGroup(conf, bi);
@@ -217,10 +221,10 @@ public abstract class Database {
 
 		private final long numRecords;
 
+		int index;
+
 		private final BigInteger startDivide = conf.totalStates
 				.pow(conf.recordsPerGroup - 1);
-
-		private BigInteger divide = BigInteger.ZERO;
 
 		private Iterator<RecordGroup> recordGroups;
 
@@ -228,6 +232,7 @@ public abstract class Database {
 				int preRecords, long numRecords) {
 			this.recordGroups = recordGroups;
 			this.numRecords = numRecords + preRecords;
+			index = conf.recordsPerGroup;
 			for (int i = 0; i < preRecords; i++)
 				next();
 		}
@@ -237,15 +242,16 @@ public abstract class Database {
 		}
 
 		public Record next() {
-			if (divide.equals(BigInteger.ZERO)) {
-				divide = startDivide;
+			if (index >= conf.recordsPerGroup) {
 				currentGroup = recordGroups.next().getState();
+				index = 0;
 			}
-			BigInteger ret = currentGroup.divide(divide);
-			currentGroup = currentGroup.subtract(ret.multiply(divide));
-			divide = divide.divide(conf.totalStates);
+			BigInteger[] divmod = currentGroup
+					.divideAndRemainder(conf.totalStates);
+			currentGroup = divmod[0];
 			nextRecord++;
-			return new Record(conf, ret);
+			index++;
+			return new Record(conf, divmod[1]);
 		}
 
 		public void remove() {
@@ -256,8 +262,8 @@ public abstract class Database {
 
 	public void putRecords(long recordIndex, Record[] records, int offset,
 			int numRecords) {
-		int preRecords = (int) (conf.recordsPerGroup - recordIndex
-				% conf.recordsPerGroup);
+		int preRecords = conf.recordsPerGroup
+				- ((int) ((recordIndex - 1) % conf.recordsPerGroup) + 1);
 		int recordGroups = (numRecords - preRecords) / conf.recordsPerGroup;
 		int mainRecords = recordGroups * conf.recordsPerGroup;
 		int postRecords = (numRecords - preRecords) % conf.recordsPerGroup;
@@ -271,7 +277,7 @@ public abstract class Database {
 		putRecordGroups(groupByteOffset, rgi, recordGroups);
 		recordIndex += mainRecords;
 		offset += mainRecords;
-		for (long i = 0; i < postRecords; i++) {
+		for (int i = 0; i < postRecords; i++) {
 			putRecord(recordIndex++, records[offset++]);
 		}
 	}

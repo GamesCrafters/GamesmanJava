@@ -2724,14 +2724,16 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
     
     public void toUnsignedByteArray(byte[] byteArray, int offset,
 			int len) {
-		for (int i = offset, top = offset + len, byteIndex = 8 * (len % 4), intIndex = len / 4, nextInt = getInt(intIndex); i < top; i++) {
-			if (byteIndex == 0) {
-				nextInt = getInt(--intIndex);
-				byteIndex = 24;
-			} else
-				byteIndex -= 8;
-			byteArray[i] = (byte) (nextInt >>> byteIndex);
-		}
+        for (int i=len-1, bytesCopied=4, nextInt=0, intIndex=0; i>=0; i--) {
+            if (bytesCopied == 4) {
+                nextInt = getInt(intIndex++);
+                bytesCopied = 1;
+            } else {
+                nextInt >>>= 8;
+                bytesCopied++;
+            }
+            byteArray[i+offset] = (byte)nextInt;
+        }
 	}
     
     public void writeToUnsignedMemoryDatabase(MemoryDatabase output, long offset,

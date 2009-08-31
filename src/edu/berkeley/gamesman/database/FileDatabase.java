@@ -3,7 +3,6 @@ package edu.berkeley.gamesman.database;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 
 import edu.berkeley.gamesman.core.Configuration;
@@ -71,7 +70,7 @@ public class FileDatabase extends Database {
 			if (groups == null || groups.length < groupsLength)
 				groups = new byte[groupsLength];
 			fd.seek(loc + offset);
-			fd.read(groups);
+			fd.read(groups,0,groupsLength);
 			RecordGroupByteIterator rgi = new RecordGroupByteIterator();
 			return rgi;
 		} catch (IOException e) {
@@ -91,25 +90,25 @@ public class FileDatabase extends Database {
 			for (int i = 0; i < numGroups; i++) {
 				recordGroups.next().getState().toUnsignedByteArray(groups,
 						onByte, conf.recordGroupByteLength);
+				onByte+=conf.recordGroupByteLength;
 			}
 			fd.seek(loc + offset);
-			fd.write(groups);
+			fd.write(groups,0,groupsLength);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	class RecordGroupByteIterator implements Iterator<RecordGroup> {
+	protected class RecordGroupByteIterator implements Iterator<RecordGroup> {
 		int onByte = 0;
 
-		public boolean hasNext() throws ConcurrentModificationException {
+		public boolean hasNext() {
 			return onByte < groupsLength;
 		}
 
-		public RecordGroup next() throws ConcurrentModificationException {
-			for (int i = 0; i < rawRecord.length; i++) {
+		public RecordGroup next() {
+			for (int i = 0; i < rawRecord.length; i++)
 				rawRecord[i] = groups[onByte++];
-			}
 			return new RecordGroup(conf, rawRecord);
 		}
 
