@@ -13,13 +13,13 @@ import edu.berkeley.gamesman.util.biginteger.BigInteger;
  * @author dnspies
  */
 public final class Record {
-	private EnumMap<RecordFields, Long> values = new EnumMap<RecordFields, Long>(
-			RecordFields.class);
+	private final EnumMap<RecordFields, Long> values;
 
-	private EnumMap<RecordFields, Long> numStates;
+	private final EnumMap<RecordFields, Long> numStates;
 
 	Record(Configuration conf, BigInteger state) {
 		numStates = conf.getStoredFields();
+		values = new EnumMap<RecordFields, Long>(RecordFields.class);
 		BigInteger remainingState = state;
 		for (Entry<RecordFields, Long> e : numStates.entrySet()) {
 			BigInteger[] divmod = remainingState.divideAndRemainder(BigInteger
@@ -38,6 +38,7 @@ public final class Record {
 	 */
 	public Record(Configuration conf, long... values) {
 		numStates = conf.getStoredFields();
+		this.values = new EnumMap<RecordFields, Long>(RecordFields.class);
 		int i = 0;
 		for (Entry<RecordFields, Long> e : numStates.entrySet())
 			this.values.put(e.getKey(), values[i++]);
@@ -51,6 +52,7 @@ public final class Record {
 	 *            zero.
 	 */
 	public Record(Configuration conf, PrimitiveValue pVal) {
+		this.values = new EnumMap<RecordFields, Long>(RecordFields.class);
 		numStates = conf.getStoredFields();
 		for (Entry<RecordFields, Long> e : numStates.entrySet())
 			this.values.put(e.getKey(), 0L);
@@ -177,18 +179,31 @@ public final class Record {
 		if (values.containsKey(RecordFields.REMOTENESS))
 			set(RecordFields.REMOTENESS, get(RecordFields.REMOTENESS) + 1);
 	}
-	
+
 	@Override
-	public boolean equals(Object r){
-		if(r instanceof Record){
-			Record rec=(Record)r;
+	public boolean equals(Object r) {
+		if (r instanceof Record) {
+			Record rec = (Record) r;
 			return values.equals(rec.values);
-		}else
+		} else
 			return false;
 	}
-	
+
 	@Override
-	public String toString(){
+	public String toString() {
 		return values.toString();
+	}
+
+	private Record(Record record) {
+		this.values = new EnumMap<RecordFields, Long>(RecordFields.class);
+		for (Entry<RecordFields,Long> value : record.values.entrySet()) {
+			this.values.put(value.getKey(), value.getValue());
+		}
+		numStates = record.numStates;
+	}
+
+	@Override
+	public Record clone() {
+		return new Record(this);
 	}
 }

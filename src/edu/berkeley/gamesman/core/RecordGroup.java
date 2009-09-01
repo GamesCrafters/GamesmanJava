@@ -1,5 +1,7 @@
 package edu.berkeley.gamesman.core;
 
+import java.util.Iterator;
+
 import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 /**
@@ -27,6 +29,26 @@ public class RecordGroup {
 		this.conf = conf;
 		this.values = values;
 	}
+	
+	public RecordGroup(Configuration conf, Record[] recs, int offset){
+		BigInteger multiplier=BigInteger.ONE;
+		this.conf=conf;
+		values=BigInteger.ZERO;
+		for(int i=0;i<conf.recordsPerGroup;i++){
+			values=values.add(recs[offset++].getState().multiply(multiplier));
+			multiplier=multiplier.multiply(conf.totalStates);
+		}
+	}
+
+	public RecordGroup(Configuration conf, Iterator<Record> recordIterator) {
+		BigInteger multiplier=BigInteger.ONE;
+		this.conf=conf;
+		values=BigInteger.ZERO;
+		for(int i=0;i<conf.recordsPerGroup;i++){
+			values=values.add(recordIterator.next().getState().multiply(multiplier));
+			multiplier=multiplier.multiply(conf.totalStates);
+		}
+	}
 
 	/**
 	 * @param num The index of the desired record
@@ -36,6 +58,14 @@ public class RecordGroup {
 		BigInteger divideOut = conf.totalStates.pow(num);
 		BigInteger val = values.divide(divideOut).mod(conf.totalStates);
 		return new Record(conf, val);
+	}
+	
+	public void getRecords(Record[] recs, int offset){
+		BigInteger[] remainingValues={values};
+		for(int i=0;i<conf.recordsPerGroup;i++){
+			remainingValues=remainingValues[0].divideAndRemainder(conf.totalStates);
+			recs[offset++]=new Record(conf, remainingValues[1]);
+		}
 	}
 
 	/**

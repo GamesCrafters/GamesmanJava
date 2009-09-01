@@ -8,6 +8,11 @@ import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.RecordGroup;
 
+/**
+ * Caches records obtained from another database passed as an argument
+ * 
+ * @author dnspies
+ */
 public class DatabaseCache extends Database {
 	private final Record[][][] records; // index,n,offset
 
@@ -30,6 +35,13 @@ public class DatabaseCache extends Database {
 
 	private final Database db;
 
+	/**
+	 * @param db
+	 *            The inner database to be used.
+	 * @param recordsHeld
+	 *            The number of records this database can hold (this will be
+	 *            rounded up to the nearest power of 2)
+	 */
 	public DatabaseCache(Database db, int recordsHeld) {
 		int numRecordsBits = (int) Math.ceil(Math.log(recordsHeld)
 				/ Math.log(2));
@@ -47,6 +59,12 @@ public class DatabaseCache extends Database {
 		conf = db.getConfiguration();
 	}
 
+	/**
+	 * Instantiates a database cache using the default size of 1 MebiRecord.
+	 * 
+	 * @param db
+	 *            The inner database
+	 */
 	public DatabaseCache(Database db) {
 		this(db, 1 << 20);
 	}
@@ -74,7 +92,7 @@ public class DatabaseCache extends Database {
 			i = pageChooser.nextInt(nWayAssociative);
 			loadPage(i);
 		}
-		return records[index][i][offset];
+		return records[index][i][offset].clone();
 	}
 
 	@Override
@@ -87,14 +105,12 @@ public class DatabaseCache extends Database {
 				break;
 			} else if (tags[index][i] == tag)
 				break;
-			else
-				System.out.println("Wow");
 		}
 		if (i >= nWayAssociative) {
 			i = pageChooser.nextInt(nWayAssociative);
 			loadPage(i);
 		}
-		records[index][i][offset] = r;
+		records[index][i][offset] = r.clone();
 		dirty[index][i] = true;
 	}
 
@@ -111,7 +127,8 @@ public class DatabaseCache extends Database {
 	}
 
 	private void writeBack(int i) {
-		long firstRecord = ((tag << indexBits) | index) << offsetBits;
+		long thisTag = tags[index][i];
+		long firstRecord = ((thisTag << indexBits) | index) << offsetBits;
 		db.putRecords(firstRecord, records[index][i], 0, pageSize);
 		dirty[index][i] = false;
 	}

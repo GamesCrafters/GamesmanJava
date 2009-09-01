@@ -13,8 +13,6 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
 
-import edu.berkeley.gamesman.util.Util;
-
 /**
  * A SequenceInputFormat is a Hadoop input format
  * Normally an InputFormat reads data from a file, however here we just want to split over

@@ -46,6 +46,7 @@ public final class LocalMaster implements Master, TaskFactory {
 			database = databasec.newInstance();
 			if (cached)
 				database = new DatabaseCache(database);
+			inconf.db = database;
 		} catch (IllegalAccessException e) {
 			Util.fatalError("Fatal error while initializing", e);
 		} catch (InstantiationException e) {

@@ -24,6 +24,8 @@ import edu.berkeley.gamesman.util.Util;
  *          1.0 - Initial (working) Version.
  */
 public class MemoryDatabase extends Database {
+	
+	public static MemoryDatabase md;
 
 	/* Class Variables */
 	private byte[] memoryStorage; // byte array to store the data
@@ -40,6 +42,7 @@ public class MemoryDatabase extends Database {
 	 * @author Alex Trofimov
 	 */
 	public MemoryDatabase() {
+		md=this;
 	}
 
 	@Override

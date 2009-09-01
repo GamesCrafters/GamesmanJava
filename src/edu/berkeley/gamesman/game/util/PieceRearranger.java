@@ -422,9 +422,8 @@ public final class PieceRearranger implements Cloneable {
     }
 
     /**
-     * Sets the board to the positoin represented by the given hash
-     * 
-     * @param hash
+     * Sets the board to the position represented by the given hash
+     * @param hash The hash to set from
      */
     public void setFromHash(long hash) {
         this.hash = hash;

@@ -7,11 +7,14 @@ import java.awt.event.*;
 
 import javax.swing.*;
 
+import edu.berkeley.gamesman.Gamesman;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
+import edu.berkeley.gamesman.database.RecordDatabase;
 import edu.berkeley.gamesman.util.Util;
 
-public class C4Container extends JPanel implements ActionListener, KeyListener, WindowListener {
+public class C4Container extends JPanel implements ActionListener, KeyListener,
+		WindowListener {
 	ConnectFour game;
 
 	private Configuration conf;
@@ -71,35 +74,37 @@ public class C4Container extends JPanel implements ActionListener, KeyListener, 
 			Util.fatalError("Please specify a jobfile as the only argument");
 		}
 		Configuration conf;
+		Database fd;
 		try {
 			conf = new Configuration(args[0]);
+			if (conf.getProperty("gamesman.database").equals("RecordDatabase")) {
+				Gamesman.main(args);
+				fd = RecordDatabase.rd;
+				conf = fd.getConfiguration();
+			} else {
+				fd = conf.openDatabase();
+			}
 		} catch (ClassNotFoundException e) {
 			Util.fatalError("failed to load class", e);
 			return;
 		}
-		Database fd;
-		try {
-			fd = conf.openDatabase();
-			int width = conf.getInteger("gamesman.game.width", 7);
-			int height = conf.getInteger("gamesman.game.height", 6);
-			System.out.println(fd.getRecord(0));
-			DisplayFour df = new DisplayFour(height, width);
-			ConnectFour cf = new ConnectFour(conf, df);
-			JFrame jf = new JFrame();
-			Container c = jf.getContentPane();
-			C4Container c4c = new C4Container(conf);
-			c4c.setGame(cf);
-			c.add(c4c);
-			jf.addKeyListener(c4c);
-			jf.setFocusable(true);
-			jf.requestFocus();
-			jf.setSize(375, 450);
-			jf.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-			jf.setVisible(true);
-			jf.addWindowListener(c4c);
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
+		int width = conf.getInteger("gamesman.game.width", 7);
+		int height = conf.getInteger("gamesman.game.height", 6);
+		System.out.println(fd.getRecord(0));
+		DisplayFour df = new DisplayFour(height, width);
+		ConnectFour cf = new ConnectFour(conf, df);
+		JFrame jf = new JFrame();
+		Container c = jf.getContentPane();
+		C4Container c4c = new C4Container(conf);
+		c4c.setGame(cf);
+		c.add(c4c);
+		jf.addKeyListener(c4c);
+		jf.setFocusable(true);
+		jf.requestFocus();
+		jf.setSize(375, 450);
+		jf.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		jf.setVisible(true);
+		jf.addWindowListener(c4c);
 	}
 
 	public void actionPerformed(ActionEvent ae) {
@@ -126,20 +131,26 @@ public class C4Container extends JPanel implements ActionListener, KeyListener, 
 			repaint();
 		}
 	}
-	
-	public void windowActivated(WindowEvent e) {}
+
+	public void windowActivated(WindowEvent e) {
+	}
 
 	public void windowClosed(WindowEvent e) {
 		conf.db.close();
 	}
 
-	public void windowClosing(WindowEvent e) {}
+	public void windowClosing(WindowEvent e) {
+	}
 
-	public void windowDeactivated(WindowEvent e) {}
+	public void windowDeactivated(WindowEvent e) {
+	}
 
-	public void windowDeiconified(WindowEvent e) {}
+	public void windowDeiconified(WindowEvent e) {
+	}
 
-	public void windowIconified(WindowEvent e) {}
+	public void windowIconified(WindowEvent e) {
+	}
 
-	public void windowOpened(WindowEvent e) {}
+	public void windowOpened(WindowEvent e) {
+	}
 }

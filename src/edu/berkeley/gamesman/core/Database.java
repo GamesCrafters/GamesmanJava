@@ -164,11 +164,11 @@ public abstract class Database {
 	private class RecordGroupIterator implements Iterator<RecordGroup> {
 		private Iterator<Record> recordIterator;
 
-		Record[] records;
+		private Record[] records;
 
-		int offset, stop;
+		private int offset, stop;
 
-		int index;
+		private int index;
 
 		private RecordGroupIterator(Iterator<Record> recordIterator) {
 			this.recordIterator = recordIterator;
@@ -189,24 +189,12 @@ public abstract class Database {
 		}
 
 		public RecordGroup next() {
-			BigInteger bi = BigInteger.ZERO;
-			BigInteger multiplier = BigInteger.ONE;
 			if (recordIterator == null) {
-				for (int i = 0; i < conf.recordsPerGroup; i++) {
-					if (index < stop)
-						bi = bi.add(records[index++].getState().multiply(
-								multiplier));
-					multiplier = multiplier.multiply(conf.totalStates);
-				}
-			} else {
-				for (int i = 0; i < conf.recordsPerGroup; i++) {
-					if (recordIterator.hasNext())
-						bi = bi.add(recordIterator.next().getState().multiply(
-								multiplier));
-					multiplier = multiplier.multiply(conf.totalStates);
-				}
-			}
-			return new RecordGroup(conf, bi);
+				RecordGroup rg = new RecordGroup(conf,records,index);
+				index+=conf.recordsPerGroup;
+				return rg;
+			} else
+				return new RecordGroup(conf,recordIterator);
 		}
 
 		public void remove() {
