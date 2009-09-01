@@ -5,27 +5,24 @@ import java.util.Collection;
 import java.util.EnumMap;
 import java.util.Map.Entry;
 
-import edu.berkeley.gamesman.util.biginteger.BigInteger;
-
 /**
  * Stores information about a game state
  * 
  * @author dnspies
  */
 public final class Record {
-	private final EnumMap<RecordFields, Long> values;
+	private final EnumMap<RecordFields, Integer> values;
 
-	private final EnumMap<RecordFields, Long> numStates;
+	private final EnumMap<RecordFields, Integer> numStates;
 
-	Record(Configuration conf, BigInteger state) {
+	Record(Configuration conf, long state) {
 		numStates = conf.getStoredFields();
-		values = new EnumMap<RecordFields, Long>(RecordFields.class);
-		BigInteger remainingState = state;
-		for (Entry<RecordFields, Long> e : numStates.entrySet()) {
-			BigInteger[] divmod = remainingState.divideAndRemainder(BigInteger
-					.valueOf(e.getValue()));
-			this.values.put(e.getKey(), divmod[1].longValue());
-			remainingState = divmod[0];
+		values = new EnumMap<RecordFields, Integer>(RecordFields.class);
+		long remainingState = state;
+		for (Entry<RecordFields, Integer> e : numStates.entrySet()) {
+			int val = e.getValue();
+			this.values.put(e.getKey(), (int) (remainingState % val));
+			remainingState /= val;
 		}
 	}
 
@@ -36,11 +33,11 @@ public final class Record {
 	 *            The values of each of the respective fields in this record
 	 *            ordered VALUE, REMOTENESS, SCORE
 	 */
-	public Record(Configuration conf, long... values) {
+	public Record(Configuration conf, int... values) {
 		numStates = conf.getStoredFields();
-		this.values = new EnumMap<RecordFields, Long>(RecordFields.class);
+		this.values = new EnumMap<RecordFields, Integer>(RecordFields.class);
 		int i = 0;
-		for (Entry<RecordFields, Long> e : numStates.entrySet())
+		for (Entry<RecordFields, Integer> e : numStates.entrySet())
 			this.values.put(e.getKey(), values[i++]);
 	}
 
@@ -52,11 +49,11 @@ public final class Record {
 	 *            zero.
 	 */
 	public Record(Configuration conf, PrimitiveValue pVal) {
-		this.values = new EnumMap<RecordFields, Long>(RecordFields.class);
+		this.values = new EnumMap<RecordFields, Integer>(RecordFields.class);
 		numStates = conf.getStoredFields();
-		for (Entry<RecordFields, Long> e : numStates.entrySet())
-			this.values.put(e.getKey(), 0L);
-		this.values.put(RecordFields.VALUE, (long) pVal.value());
+		for (Entry<RecordFields, Integer> e : numStates.entrySet())
+			this.values.put(e.getKey(), 0);
+		this.values.put(RecordFields.VALUE, pVal.value());
 	}
 
 	/**
@@ -65,7 +62,7 @@ public final class Record {
 	 * @param value
 	 *            The new value of the field
 	 */
-	public void set(RecordFields field, long value) {
+	public void set(RecordFields field, int value) {
 		values.put(field, value);
 	}
 
@@ -74,7 +71,7 @@ public final class Record {
 	 *            The type of one block of information
 	 * @return The information encoded as a long
 	 */
-	public long get(RecordFields rf) {
+	public int get(RecordFields rf) {
 		return values.get(rf);
 	}
 
@@ -88,14 +85,12 @@ public final class Record {
 	/**
 	 * @return The integer value of this record
 	 */
-	public BigInteger getState() {
-		BigInteger currentState = BigInteger.ZERO;
-		BigInteger multiplier = BigInteger.ONE;
-		for (Entry<RecordFields, Long> e : values.entrySet()) {
-			currentState = currentState.add(BigInteger.valueOf(e.getValue())
-					.multiply(multiplier));
-			multiplier = multiplier.multiply(BigInteger.valueOf(numStates.get(e
-					.getKey())));
+	public long getState() {
+		long currentState = 0;
+		long multiplier = 1;
+		for (Entry<RecordFields, Integer> e : values.entrySet()) {
+			currentState += e.getValue() * multiplier;
+			multiplier *= numStates.get(e.getKey());
 		}
 		return currentState;
 	}
@@ -120,7 +115,7 @@ public final class Record {
 			} else if (pv.equals(bestPrim))
 				valsBest.add(val);
 		}
-		EnumMap<RecordFields, Long> storedFields = conf.getStoredFields();
+		EnumMap<RecordFields, Integer> storedFields = conf.getStoredFields();
 		if (storedFields.containsKey(RecordFields.SCORE)) {
 			ArrayList<Record> valsBestScore = new ArrayList<Record>(valsBest
 					.size());
@@ -195,8 +190,8 @@ public final class Record {
 	}
 
 	private Record(Record record) {
-		this.values = new EnumMap<RecordFields, Long>(RecordFields.class);
-		for (Entry<RecordFields,Long> value : record.values.entrySet()) {
+		this.values = new EnumMap<RecordFields, Integer>(RecordFields.class);
+		for (Entry<RecordFields, Integer> value : record.values.entrySet()) {
 			this.values.put(value.getKey(), value.getValue());
 		}
 		numStates = record.numStates;

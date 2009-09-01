@@ -66,7 +66,7 @@ public class DatabaseCache extends Database {
 	 *            The inner database
 	 */
 	public DatabaseCache(Database db) {
-		this(db, 1 << 20);
+		this(db, 1 << 16);
 	}
 
 	private void setPoint(long recordIndex) {

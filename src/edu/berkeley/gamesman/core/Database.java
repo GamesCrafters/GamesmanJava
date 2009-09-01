@@ -211,9 +211,6 @@ public abstract class Database {
 
 		int index;
 
-		private final BigInteger startDivide = conf.totalStates
-				.pow(conf.recordsPerGroup - 1);
-
 		private Iterator<RecordGroup> recordGroups;
 
 		private RecordIterator(Iterator<RecordGroup> recordGroups,
@@ -234,12 +231,11 @@ public abstract class Database {
 				currentGroup = recordGroups.next().getState();
 				index = 0;
 			}
-			BigInteger[] divmod = currentGroup
-					.divideAndRemainder(conf.totalStates);
-			currentGroup = divmod[0];
+			long mod=currentGroup.mod(conf.bigIntTotalStates).longValue();
+			currentGroup=currentGroup.divide(conf.bigIntTotalStates);
 			nextRecord++;
 			index++;
-			return new Record(conf, divmod[1]);
+			return new Record(conf, mod);
 		}
 
 		public void remove() {

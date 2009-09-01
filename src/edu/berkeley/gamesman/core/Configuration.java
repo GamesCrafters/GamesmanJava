@@ -35,9 +35,13 @@ public class Configuration {
 
 	// storedFields stores a mapping of RecordFields to an integer.
 	// The integer is the number of possible values of the field
-	private EnumMap<RecordFields, Long> storedFields;
+	private EnumMap<RecordFields, Integer> storedFields;
 
-	public final BigInteger totalStates;
+	public final long totalStates;
+
+	public final BigInteger bigIntTotalStates;
+
+	final BigInteger[] multipliers;
 
 	public final int recordsPerGroup;
 
@@ -86,10 +90,7 @@ public class Configuration {
 			int recordGuess;
 			int bitLength;
 			double log2;
-			if (totalStates.getLowestSetBit() == totalStates.bitLength() - 1)
-				log2 = totalStates.bitLength() - 1;
-			else
-				log2 = Math.log(totalStates.longValue()) / Math.log(2);
+			log2 = Math.log(totalStates) / Math.log(2);
 			if (log2 > 8) {
 				recordGuess = 1;
 				bitLength = (int) Math.ceil(log2);
@@ -112,7 +113,15 @@ public class Configuration {
 			}
 			recordsPerGroup = recordGuess;
 		}
-		recordGroupByteLength = (totalStates.pow(recordsPerGroup).bitLength() + 7) >> 3;
+		multipliers = new BigInteger[recordsPerGroup + 1];
+		BigInteger multiplier = BigInteger.ONE;
+		bigIntTotalStates = BigInteger.valueOf(totalStates);
+		for (int i = 0; i <= recordsPerGroup; i++) {
+			multipliers[i] = multiplier;
+			multiplier = multiplier.multiply(bigIntTotalStates);
+		}
+		recordGroupByteLength = (bigIntTotalStates.pow(recordsPerGroup)
+				.bitLength() + 7) >> 3;
 		if (!initLater) {
 			String gamename = getProperty("gamesman.game");
 			String hashname = getProperty("gamesman.hasher");
@@ -146,13 +155,13 @@ public class Configuration {
 
 	// To specify the bit size, use ':' followed by the number of possible
 	// states
-	private BigInteger initializeStoredFields() {
-		storedFields = new EnumMap<RecordFields, Long>(RecordFields.class);
+	private long initializeStoredFields() {
+		storedFields = new EnumMap<RecordFields, Integer>(RecordFields.class);
 		String fields = getProperty("record.fields", RecordFields.VALUE.name()
 				+ "," + RecordFields.REMOTENESS.name());
 		RecordFields field;
-		BigInteger totalStates = BigInteger.ONE;
-		long states;
+		long totalStates = 1;
+		int states;
 		for (String fld : fields.split(",")) {
 			String[] splt = fld.split(":");
 			field = RecordFields.valueOf(splt[0]);
@@ -161,7 +170,7 @@ public class Configuration {
 			else
 				states = field.defaultNumberOfStates();
 			storedFields.put(field, states);
-			totalStates = totalStates.multiply(BigInteger.valueOf(states));
+			totalStates *= states;
 		}
 		return totalStates;
 	}
@@ -243,7 +252,7 @@ public class Configuration {
 	 * @param sf
 	 *            EnumMap as described above
 	 */
-	public void setStoredFields(EnumMap<RecordFields, Long> sf) {
+	public void setStoredFields(EnumMap<RecordFields, Integer> sf) {
 		storedFields = sf;
 	}
 
@@ -271,7 +280,7 @@ public class Configuration {
 			// assert Util.debug(DebugFacility.CORE, "Deserialized
 			// properties:\n"+props);
 
-			EnumMap<RecordFields, Long> sf = new EnumMap<RecordFields, Long>(
+			EnumMap<RecordFields, Integer> sf = new EnumMap<RecordFields, Integer>(
 					RecordFields.class);
 
 			String gamename = instream.readUTF();
@@ -285,7 +294,7 @@ public class Configuration {
 			for (int i = 0; i < num; i++) {
 				String name = instream.readUTF();
 				// assert Util.debug(DebugFacility.CORE," Found field "+name);
-				sf.put(RecordFields.valueOf(name), instream.readLong());
+				sf.put(RecordFields.valueOf(name), (int) instream.readLong());
 			}
 			conf.setStoredFields(sf);
 
@@ -340,7 +349,7 @@ public class Configuration {
 
 			out.writeInt(storedFields.size());
 
-			for (Entry<RecordFields, Long> e : storedFields.entrySet()) {
+			for (Entry<RecordFields, Integer> e : storedFields.entrySet()) {
 				out.writeUTF(e.getKey().name());
 				out.writeLong(e.getValue());
 			}
@@ -366,7 +375,7 @@ public class Configuration {
 	/**
 	 * @return the records available from a database using this Configuration
 	 */
-	public EnumMap<RecordFields, Long> getStoredFields() {
+	public EnumMap<RecordFields, Integer> getStoredFields() {
 		return storedFields;
 	}
 
