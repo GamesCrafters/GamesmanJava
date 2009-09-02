@@ -10,6 +10,8 @@ import edu.berkeley.gamesman.core.Board2D;
 public final class BitSetBoard extends Board2D {
 	private BigInteger xPlayer = BigInteger.ZERO, oPlayer = BigInteger.ZERO;
 
+	private long xPlayerLong = 0, oPlayerLong = 0;
+
 	private int height, width;
 
 	private boolean usesLong;
@@ -55,8 +57,13 @@ public final class BitSetBoard extends Board2D {
 	 */
 	public void flipPiece(int row, int col) {
 		int bit = getBit(row, col);
-		xPlayer = xPlayer.flipBit(bit);
-		oPlayer = oPlayer.flipBit(bit);
+		if (usesLong) {
+			xPlayerLong = xPlayerLong ^ (1 << bit);
+			oPlayerLong = oPlayerLong ^ (1 << bit);
+		} else {
+			xPlayer = xPlayer.flipBit(bit);
+			oPlayer = oPlayer.flipBit(bit);
+		}
 	}
 
 	/**
@@ -69,8 +76,13 @@ public final class BitSetBoard extends Board2D {
 	 */
 	public void removePiece(int row, int col) {
 		int bit = getBit(row, col);
-		xPlayer = xPlayer.clearBit(bit);
-		oPlayer = oPlayer.clearBit(bit);
+		if (usesLong) {
+			xPlayerLong = xPlayerLong & (-1L ^ (1 << bit));
+			oPlayerLong = oPlayerLong & (-1L ^ (1 << bit));
+		} else {
+			xPlayer = xPlayer.clearBit(bit);
+			oPlayer = oPlayer.clearBit(bit);
+		}
 	}
 
 	/**
@@ -86,10 +98,16 @@ public final class BitSetBoard extends Board2D {
 	public void addPiece(int row, int col, char color) {
 		switch (color) {
 		case 'X':
-			xPlayer = xPlayer.setBit(getBit(row, col));
+			if (usesLong)
+				xPlayerLong = xPlayerLong | (1 << getBit(row, col));
+			else
+				xPlayer = xPlayer.setBit(getBit(row, col));
 			break;
 		case 'O':
-			oPlayer = oPlayer.setBit(getBit(row, col));
+			if (usesLong)
+				oPlayerLong = oPlayerLong | (1 << getBit(row, col));
+			else
+				oPlayer = oPlayer.setBit(getBit(row, col));
 			break;
 		}
 	}
@@ -98,9 +116,15 @@ public final class BitSetBoard extends Board2D {
 	 * Switches X with O
 	 */
 	public void switchColors() {
-		BigInteger tmp = xPlayer;
-		xPlayer = oPlayer;
-		oPlayer = tmp;
+		if (usesLong) {
+			long tmp = xPlayerLong;
+			xPlayerLong = oPlayerLong;
+			oPlayerLong = tmp;
+		} else {
+			BigInteger tmp = xPlayer;
+			xPlayer = oPlayer;
+			oPlayer = tmp;
+		}
 	}
 
 	/**
@@ -112,10 +136,19 @@ public final class BitSetBoard extends Board2D {
 	 *         the board.
 	 */
 	public boolean xInALine(int x, char color) {
-		BigInteger board = (color == 'X' ? xPlayer : oPlayer);
-		return checkDirection(x, 1, board) || checkDirection(x, width, board)
-				|| checkDirection(x, width + 1, board)
-				|| checkDirection(x, width + 2, board);
+		if (usesLong) {
+			long board = (color == 'X' ? xPlayerLong : oPlayerLong);
+			return checkDirection(x, 1, board)
+					|| checkDirection(x, width, board)
+					|| checkDirection(x, width + 1, board)
+					|| checkDirection(x, width + 2, board);
+		} else {
+			BigInteger board = (color == 'X' ? xPlayer : oPlayer);
+			return checkDirection(x, 1, board)
+					|| checkDirection(x, width, board)
+					|| checkDirection(x, width + 1, board)
+					|| checkDirection(x, width + 2, board);
+		}
 	}
 
 	private boolean checkDirection(int x, int direction, long board) {
@@ -151,25 +184,45 @@ public final class BitSetBoard extends Board2D {
 	 * Clears the board
 	 */
 	public void clear() {
-		xPlayer = BigInteger.ZERO;
-		oPlayer = BigInteger.ZERO;
+		if (usesLong) {
+			xPlayerLong = 0L;
+			oPlayerLong = 0L;
+		} else {
+			xPlayer = BigInteger.ZERO;
+			oPlayer = BigInteger.ZERO;
+		}
 	}
 
 	public String toString() {
 		StringBuilder str = new StringBuilder(width * 2 + 1);
-
-		for (int row = height - 1; row >= 0; row--) {
-			str.append('|');
-			for (int col = 0; col < width; col++) {
-				if (xPlayer.testBit(getBit(row, col)))
-					str.append('X');
-				else if (oPlayer.testBit(getBit(row, col)))
-					str.append('O');
-				else
-					str.append(' ');
+		if (usesLong) {
+			for (int row = height - 1; row >= 0; row--) {
 				str.append('|');
+				for (int col = 0; col < width; col++) {
+					if ((xPlayerLong & (1 << getBit(row, col))) > 0L)
+						str.append('X');
+					else if ((oPlayerLong & (1 << getBit(row, col))) > 0L)
+						str.append('O');
+					else
+						str.append(' ');
+					str.append('|');
+				}
+				str.append('\n');
 			}
-			str.append('\n');
+		} else {
+			for (int row = height - 1; row >= 0; row--) {
+				str.append('|');
+				for (int col = 0; col < width; col++) {
+					if (xPlayer.testBit(getBit(row, col)))
+						str.append('X');
+					else if (oPlayer.testBit(getBit(row, col)))
+						str.append('O');
+					else
+						str.append(' ');
+					str.append('|');
+				}
+				str.append('\n');
+			}
 		}
 		return str.toString();
 	}
