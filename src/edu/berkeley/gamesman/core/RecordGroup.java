@@ -72,7 +72,7 @@ public class RecordGroup {
 		for (int i = 0; i < conf.recordsPerGroup; i++) {
 			long mod = remainingValues.mod(conf.bigIntTotalStates).longValue();
 			remainingValues = remainingValues.divide(conf.bigIntTotalStates);
-			recs[offset++] = new Record(conf, mod);
+			recs[offset++].set(mod);
 		}
 	}
 

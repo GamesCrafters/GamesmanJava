@@ -67,7 +67,7 @@ public final class DatabaseCache extends Database {
 
 	private final int indexBits, indices;
 
-	private final int offsetBits, pageSize;
+	private final int offsetBits = 8, pageSize = 1 << offsetBits;
 
 	private final int nWayAssociativeBits = 2,
 			nWayAssociative = 1 << nWayAssociativeBits;
@@ -122,8 +122,6 @@ public final class DatabaseCache extends Database {
 	public DatabaseCache(Database db, int recordsHeld) {
 		int numRecordsBits = (int) Math.ceil(Math.log(recordsHeld)
 				/ Math.log(2));
-		offsetBits = numRecordsBits / 2;
-		pageSize = 1 << offsetBits;
 		groupIterator = new CachedbGroupIterator();
 		indexBits = numRecordsBits - (offsetBits + nWayAssociativeBits);
 		indices = 1 << indexBits;
