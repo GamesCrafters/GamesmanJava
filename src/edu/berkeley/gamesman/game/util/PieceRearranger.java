@@ -16,9 +16,9 @@ public final class PieceRearranger implements Cloneable {
 	 * @author dnspies
 	 */
 	public static final class ChangedPieces {
-		private final int firstEnd, secondEnd, thirdEnd;
+		private int firstEnd, secondEnd, thirdEnd;
 
-		private int next = 0;
+		private int next;
 
 		/**
 		 * @param firstSwitchedX
@@ -26,7 +26,8 @@ public final class PieceRearranger implements Cloneable {
 		 * @param firstSwitchedO
 		 *            The number of o's that moved to the left
 		 */
-		public ChangedPieces(int firstSwitchedX, int firstSwitchedO) {
+		private void reset(int firstSwitchedX, int firstSwitchedO) {
+			next = 0;
 			if (firstSwitchedX < firstSwitchedO) {
 				firstEnd = firstSwitchedX;
 				secondEnd = firstSwitchedO;
@@ -155,6 +156,8 @@ public final class PieceRearranger implements Cloneable {
 	private final ArrayList<HashPiece> pieces;
 
 	private final HashPiece lowPiece = new HashPiece(-1, 0, 0, 'O', null);
+
+	private final ChangedPieces cp = new ChangedPieces();
 
 	/**
 	 * @param s
@@ -354,14 +357,17 @@ public final class PieceRearranger implements Cloneable {
 	 * Each time next() is called, the pieces assume their new positions in the
 	 * next hash and a list of all the pieces that were changed is returned.
 	 * It's expected that the calling program will use this list to speed up
-	 * win-checking (if possible).
+	 * win-checking (if possible). Since PieceRearranger retains a reference to
+	 * the returned ChangePieces in order to conserve space. It's important the
+	 * calling class finish using changePieces before the next call to next() or
+	 * else it risks nondeterministic behavior.
 	 * 
 	 * @return An iterator over the pieces that changed
 	 */
 	public ChangedPieces next() {
 		int newOpenO = openO - 1;
 		int totalOpen = openX + newOpenO;
-		ChangedPieces cp = new ChangedPieces(openX, newOpenO);
+		cp.reset(openX, newOpenO);
 		int i;
 		if (openX > 0 && newOpenO > 0) {
 			for (i = 0; i < newOpenO; i++)
