@@ -1,7 +1,13 @@
 package edu.berkeley.gamesman.core;
 
+import java.io.DataOutput;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
 import java.util.Iterator;
 
+import edu.berkeley.gamesman.database.MemoryDatabase;
 import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 /**
@@ -92,13 +98,14 @@ public class RecordGroup {
 				BigInteger.valueOf(r.getState()).multiply(multiplier));
 	}
 
-	/**
-	 * @return A BigInteger containing all the information about every record in
-	 *         this group.
-	 */
-	public BigInteger getState() {
-		return values;
-	}
+	// /**
+	// * @return A BigInteger containing all the information about every record
+	// in
+	// * this group.
+	// */
+	// public BigInteger getState() {
+	// return values;
+	// }
 
 	/**
 	 * @param values
@@ -129,5 +136,28 @@ public class RecordGroup {
 		for (int i = 0; i < conf.recordsPerGroup; i++)
 			values = values.add(BigInteger.valueOf(recs[i].getState())
 					.multiply(conf.multipliers[i]));
+	}
+
+	public void outputUnsignedBytes(ByteBuffer output, int len) {
+		values.outputUnsignedBytes(output, len);
+	}
+
+	public void toUnsignedByteArray(byte[] byteArray, int offset, int len) {
+		values.toUnsignedByteArray(byteArray, offset, len);
+	}
+
+	public void outputUnsignedBytes(DataOutput output, int len)
+			throws IOException {
+		values.outputUnsignedBytes(output, len);
+	}
+
+	public void writeToUnsignedMemoryDatabase(MemoryDatabase output,
+			long offset, int len) {
+		values.writeToUnsignedMemoryDatabase(output, offset, len);
+	}
+
+	public void outputUnsignedBytes(OutputStream output, int len)
+			throws IOException {
+		values.outputUnsignedBytes(output, len);
 	}
 }

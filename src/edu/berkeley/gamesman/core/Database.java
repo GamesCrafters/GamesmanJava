@@ -77,13 +77,14 @@ public abstract class Database {
 		long byteOffset = group * conf.recordGroupByteLength;
 		return getRecordGroup(byteOffset).getRecord(num);
 	}
-	
+
 	/**
 	 * Store the Nth Record in the Database in provided record
 	 * 
 	 * @param recordIndex
 	 *            The record number
-	 * @param r The record to store in
+	 * @param r
+	 *            The record to store in
 	 * @return The stored Record
 	 */
 	public synchronized void getRecord(long recordIndex, Record r) {
@@ -205,11 +206,11 @@ public abstract class Database {
 
 		public RecordGroup next() {
 			if (recordIterator == null) {
-				RecordGroup rg = new RecordGroup(conf,records,index);
-				index+=conf.recordsPerGroup;
+				RecordGroup rg = new RecordGroup(conf, records, index);
+				index += conf.recordsPerGroup;
 				return rg;
 			} else
-				return new RecordGroup(conf,recordIterator);
+				return new RecordGroup(conf, recordIterator);
 		}
 
 		public void remove() {
@@ -219,6 +220,8 @@ public abstract class Database {
 
 	private class RecordIterator implements Iterator<Record> {
 		private BigInteger currentGroup;
+
+		private final Record[] currentRecords;
 
 		private long nextRecord = 0;
 
@@ -232,6 +235,9 @@ public abstract class Database {
 				int preRecords, long numRecords) {
 			this.recordGroups = recordGroups;
 			this.numRecords = numRecords + preRecords;
+			currentRecords = new Record[conf.recordsPerGroup];
+			for (int i = 0; i < conf.recordsPerGroup; i++)
+				currentRecords[i] = new Record(conf);
 			index = conf.recordsPerGroup;
 			for (int i = 0; i < preRecords; i++)
 				next();
@@ -243,14 +249,10 @@ public abstract class Database {
 
 		public Record next() {
 			if (index >= conf.recordsPerGroup) {
-				currentGroup = recordGroups.next().getState();
+				recordGroups.next().getRecords(currentRecords, 0);
 				index = 0;
 			}
-			long mod=currentGroup.mod(conf.bigIntTotalStates).longValue();
-			currentGroup=currentGroup.divide(conf.bigIntTotalStates);
-			nextRecord++;
-			index++;
-			return new Record(conf, mod);
+			return currentRecords[index++].clone();
 		}
 
 		public void remove() {

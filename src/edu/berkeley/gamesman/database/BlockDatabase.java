@@ -57,7 +57,7 @@ public class BlockDatabase extends FileDatabase {
 	@Override
 	public synchronized void putRecordGroup(long loc, RecordGroup value) {
 		buf.position((int) loc);
-		value.getState().outputUnsignedBytes(buf, conf.recordGroupByteLength);
+		value.outputUnsignedBytes(buf, conf.recordGroupByteLength);
 	}
 
 	@Override
@@ -79,7 +79,7 @@ public class BlockDatabase extends FileDatabase {
 			groups = new byte[groupsLength];
 		int onByte = 0;
 		for (int i = 0; i < numGroups; i++)
-			recordGroups.next().getState().toUnsignedByteArray(groups, onByte,
+			recordGroups.next().toUnsignedByteArray(groups, onByte,
 					conf.recordGroupByteLength);
 		buf.position((int) (loc + offset));
 		buf.put(groups);

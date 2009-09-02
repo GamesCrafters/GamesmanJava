@@ -70,7 +70,7 @@ public class FileDatabase extends Database {
 			if (groups == null || groups.length < groupsLength)
 				groups = new byte[groupsLength];
 			fd.seek(loc + offset);
-			fd.read(groups,0,groupsLength);
+			fd.read(groups, 0, groupsLength);
 			RecordGroupByteIterator rgi = new RecordGroupByteIterator();
 			return rgi;
 		} catch (IOException e) {
@@ -88,12 +88,12 @@ public class FileDatabase extends Database {
 				groups = new byte[groupsLength];
 			int onByte = 0;
 			for (int i = 0; i < numGroups; i++) {
-				recordGroups.next().getState().toUnsignedByteArray(groups,
-						onByte, conf.recordGroupByteLength);
-				onByte+=conf.recordGroupByteLength;
+				recordGroups.next().toUnsignedByteArray(groups, onByte,
+						conf.recordGroupByteLength);
+				onByte += conf.recordGroupByteLength;
 			}
 			fd.seek(loc + offset);
-			fd.write(groups,0,groupsLength);
+			fd.write(groups, 0, groupsLength);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -121,8 +121,7 @@ public class FileDatabase extends Database {
 	public synchronized void putRecordGroup(long loc, RecordGroup value) {
 		try {
 			fd.seek(loc + offset);
-			value.getState()
-					.outputUnsignedBytes(fd, conf.recordGroupByteLength);
+			value.outputUnsignedBytes(fd, conf.recordGroupByteLength);
 		} catch (IOException e) {
 			Util.fatalError("IO Error: " + e);
 		}

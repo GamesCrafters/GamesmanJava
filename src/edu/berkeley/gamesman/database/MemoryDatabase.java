@@ -99,7 +99,7 @@ public class MemoryDatabase extends Database {
 
 	@Override
 	public void putRecordGroup(long loc, RecordGroup value) {
-		value.getState().writeToUnsignedMemoryDatabase(this, loc,
+		value.writeToUnsignedMemoryDatabase(this, loc,
 				conf.recordGroupByteLength);
 	}
 

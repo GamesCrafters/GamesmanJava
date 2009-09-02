@@ -52,10 +52,14 @@ public final class DirectoryFilerServer {
 	/**
 	 * Launch a DirectoryFilerServer and begin listening to the outside world
 	 * 
-	 * @param rootdir The root of a DirectoryFiler datastore
-	 * @param port the port to listen on
-	 * @param secret a shared secret remote clients must present to connect
-	 * @throws ClassNotFoundException if the configuration failed to load
+	 * @param rootdir
+	 *            The root of a DirectoryFiler datastore
+	 * @param port
+	 *            the port to listen on
+	 * @param secret
+	 *            a shared secret remote clients must present to connect
+	 * @throws ClassNotFoundException
+	 *             if the configuration failed to load
 	 */
 	public DirectoryFilerServer(String rootdir, int port, String secret)
 			throws ClassNotFoundException {
@@ -251,12 +255,9 @@ public final class DirectoryFilerServer {
 						fd = din.readInt();
 						db = fds.get(fd);
 						loc = locs.get(fd);
-						db
-								.getRecordGroup(loc.longValue())
-								.getState()
-								.outputUnsignedBytes(
-										(OutputStream) dout,
-										db.getConfiguration().recordGroupByteLength);
+						db.getRecordGroup(loc.longValue()).outputUnsignedBytes(
+								(OutputStream) dout,
+								db.getConfiguration().recordGroupByteLength);
 						locs.set(fd, loc.add(BigInteger.ONE));
 						break;
 					case 6:
