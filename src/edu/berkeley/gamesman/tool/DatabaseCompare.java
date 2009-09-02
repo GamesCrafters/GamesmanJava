@@ -13,15 +13,18 @@ import edu.berkeley.gamesman.util.Util;
 /**
  * @author Steven Schlansker
  * 
- * @param <S> The state type of the comparison
+ * @param <S>
+ *            The state type of the comparison
  */
 public class DatabaseCompare<S> {
 
 	/**
 	 * Compare two arguments
 	 * 
-	 * @param args the arguments
-	 * @throws ClassNotFoundException A class could not be loaded
+	 * @param args
+	 *            the arguments
+	 * @throws ClassNotFoundException
+	 *             A class could not be loaded
 	 */
 	public void compare(String args[]) throws ClassNotFoundException {
 		Configuration c1 = new Configuration(args[0]);
@@ -43,9 +46,9 @@ public class DatabaseCompare<S> {
 				.lastHash(); hash1++) {
 			long hash2 = g2.stateToHash(g1.hashToState(hash1));
 
-			Set<RecordFields> toCheck = EnumSet.copyOf(c1.getStoredFields()
-					.keySet());
-			toCheck.retainAll(c2.getStoredFields().keySet());
+			Set<RecordFields> toCheck = EnumSet
+					.copyOf(c1.storedFields.keySet());
+			toCheck.retainAll(c2.storedFields.keySet());
 
 			Record r1 = db1.getRecord(hash1);
 			Record r2 = db2.getRecord(hash2);
@@ -63,7 +66,8 @@ public class DatabaseCompare<S> {
 	/**
 	 * Call the database comparator
 	 * 
-	 * @param args the arguments to use
+	 * @param args
+	 *            the arguments to use
 	 */
 	public static void main(String args[]) {
 		try {

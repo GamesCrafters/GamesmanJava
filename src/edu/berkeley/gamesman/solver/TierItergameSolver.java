@@ -23,6 +23,8 @@ public final class TierItergameSolver extends TierSolver<ItergameState> {
 			vals[i] = new Record(conf);
 		Record prim = new Record(conf);
 		ItergameState[] children = new ItergameState[game.maxChildren()];
+		boolean hasRemoteness = conf.storedFields
+				.containsKey(RecordFields.REMOTENESS);
 		for (int i = 0; i < children.length; i++)
 			children[i] = new ItergameState();
 		while (current <= end) {
@@ -41,7 +43,8 @@ public final class TierItergameSolver extends TierSolver<ItergameState> {
 				db.putRecord(current, newVal);
 			} else {
 				prim.reset();
-				prim.set(RecordFields.REMOTENESS, 0);
+				if (hasRemoteness)
+					prim.set(RecordFields.REMOTENESS, 0);
 				prim.set(RecordFields.VALUE, pv.value());
 				db.putRecord(current, prim);
 			}

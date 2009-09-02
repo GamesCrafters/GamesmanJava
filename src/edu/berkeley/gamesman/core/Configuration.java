@@ -35,7 +35,7 @@ public class Configuration {
 
 	// storedFields stores a mapping of RecordFields to an integer.
 	// The integer is the number of possible values of the field
-	private EnumMap<RecordFields, Integer> storedFields;
+	public EnumMap<RecordFields, Integer> storedFields;
 
 	public final long totalStates;
 
@@ -381,13 +381,6 @@ public class Configuration {
 		Configuration c = (Configuration) o;
 		return c.props.equals(props) && c.g.getClass().equals(g.getClass())
 				&& c.h.getClass().equals(h.getClass());
-	}
-
-	/**
-	 * @return the records available from a database using this Configuration
-	 */
-	public EnumMap<RecordFields, Integer> getStoredFields() {
-		return storedFields;
 	}
 
 	/**

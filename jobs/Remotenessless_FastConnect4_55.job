@@ -1,0 +1,10 @@
+gamesman.game = RConnect4
+gamesman.game.width = 5
+gamesman.game.height = 5
+gamesman.game.pieces = 4
+gamesman.hasher = TieredItergameHasher
+gamesman.solver = TierItergameSolver
+gamesman.database = cached:FileDatabase
+gamesman.db.uri = rLessfastdatabase5.db
+record.fields = VALUE:3
+record.compression = 90

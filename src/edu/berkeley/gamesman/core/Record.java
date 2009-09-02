@@ -14,7 +14,7 @@ public final class Record {
 	private final EnumMap<RecordFields, Integer> numStates;
 
 	Record(Configuration conf, long state) {
-		numStates = conf.getStoredFields();
+		numStates = conf.storedFields;
 		values = new EnumMap<RecordFields, Integer>(RecordFields.class);
 		long remainingState = state;
 		for (Entry<RecordFields, Integer> e : numStates.entrySet()) {
@@ -32,7 +32,7 @@ public final class Record {
 	 *            ordered VALUE, REMOTENESS, SCORE
 	 */
 	public Record(Configuration conf, int... values) {
-		numStates = conf.getStoredFields();
+		numStates = conf.storedFields;
 		this.values = new EnumMap<RecordFields, Integer>(RecordFields.class);
 		int i = 0;
 		for (Entry<RecordFields, Integer> e : numStates.entrySet())
@@ -48,7 +48,7 @@ public final class Record {
 	 */
 	public Record(Configuration conf, PrimitiveValue pVal) {
 		this.values = new EnumMap<RecordFields, Integer>(RecordFields.class);
-		numStates = conf.getStoredFields();
+		numStates = conf.storedFields;
 		for (Entry<RecordFields, Integer> e : numStates.entrySet())
 			this.values.put(e.getKey(), 0);
 		this.values.put(RecordFields.VALUE, pVal.value());
@@ -61,7 +61,7 @@ public final class Record {
 	 *            The configuration object
 	 */
 	public Record(Configuration conf) {
-		numStates = conf.getStoredFields();
+		numStates = conf.storedFields;
 		values = new EnumMap<RecordFields, Integer>(RecordFields.class);
 	}
 
@@ -154,5 +154,9 @@ public final class Record {
 
 	public void reset() {
 		values.clear();
+	}
+
+	public boolean contains(RecordFields rf) {
+		return values.containsKey(rf);
 	}
 }

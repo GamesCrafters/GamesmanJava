@@ -274,7 +274,7 @@ public class JSONInterface extends GamesmanApplication {
 		
 		private <T> void fillJSONFields(Configuration conf, JSONObject entry, T state) throws JSONException {
 			Set<RecordFields> storedFields = 
-				conf.getStoredFields().keySet();
+				conf.storedFields.keySet();
 			Database db = conf.db;
 			Record rec = null;
 			Game<T> g = Util.checkedCast(conf.getGame());

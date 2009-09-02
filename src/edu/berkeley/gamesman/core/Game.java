@@ -197,7 +197,7 @@ public abstract class Game<State> {
 				valsBest.add(val);
 		}
 		vals=valsBest;
-		EnumMap<RecordFields, Integer> storedFields = conf.getStoredFields();
+		EnumMap<RecordFields, Integer> storedFields = conf.storedFields;
 		if (storedFields.containsKey(RecordFields.SCORE)) {
 			valsBestScore.clear();
 			long bestScore = Long.MIN_VALUE;
@@ -260,7 +260,7 @@ public abstract class Game<State> {
 				valsBest.add(val);
 		}
 		ArrayList<Record> vals=valsBest;
-		EnumMap<RecordFields, Integer> storedFields = conf.getStoredFields();
+		EnumMap<RecordFields, Integer> storedFields = conf.storedFields;
 		if (storedFields.containsKey(RecordFields.SCORE)) {
 			valsBestScore.clear();
 			long bestScore = Long.MIN_VALUE;

@@ -7,6 +7,7 @@ import java.util.Random;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Record;
+import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.core.RecordGroup;
 
 /**
