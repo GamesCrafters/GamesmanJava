@@ -256,8 +256,7 @@ public final class DirectoryFilerServer {
 						db = fds.get(fd);
 						loc = locs.get(fd);
 						db.getRecordGroup(loc.longValue()).outputUnsignedBytes(
-								(OutputStream) dout,
-								db.getConfiguration().recordGroupByteLength);
+								(OutputStream) dout);
 						locs.set(fd, loc.add(BigInteger.ONE));
 						break;
 					case 6:

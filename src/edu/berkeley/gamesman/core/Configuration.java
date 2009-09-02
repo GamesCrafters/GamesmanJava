@@ -43,6 +43,8 @@ public class Configuration {
 
 	final BigInteger[] multipliers;
 
+	final long[] longMultipliers;
+
 	public final int recordsPerGroup;
 
 	public final int recordGroupByteLength;
@@ -122,6 +124,15 @@ public class Configuration {
 		}
 		recordGroupByteLength = (bigIntTotalStates.pow(recordsPerGroup)
 				.bitLength() + 7) >> 3;
+		if (recordGroupByteLength < 8) {
+			longMultipliers = new long[recordsPerGroup + 1];
+			long longMultiplier = 1;
+			for (int i = 0; i <= recordsPerGroup; i++) {
+				longMultipliers[i] = longMultiplier;
+				longMultiplier *= totalStates;
+			}
+		} else
+			longMultipliers = null;
 		if (!initLater) {
 			String gamename = getProperty("gamesman.game");
 			String hashname = getProperty("gamesman.hasher");

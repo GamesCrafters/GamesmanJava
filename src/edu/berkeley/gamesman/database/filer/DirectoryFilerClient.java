@@ -237,7 +237,7 @@ public final class DirectoryFilerClient {
 					seek(bigLoc);
 				dout.write(6);
 				dout.writeInt(fd);
-				value.outputUnsignedBytes((OutputStream)dout, conf.recordGroupByteLength);
+				value.outputUnsignedBytes((OutputStream)dout);
 				pos = pos.add(BigInteger.ONE);
 			} catch (IOException e) {
 				Util.fatalError("IO error while communicating with server: "

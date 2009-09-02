@@ -3,7 +3,6 @@ package edu.berkeley.gamesman.core;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 
@@ -138,26 +137,26 @@ public class RecordGroup {
 					.multiply(conf.multipliers[i]));
 	}
 
-	public void outputUnsignedBytes(ByteBuffer output, int len) {
-		values.outputUnsignedBytes(output, len);
+	public void outputUnsignedBytes(ByteBuffer output) {
+		values.outputUnsignedBytes(output, conf.recordGroupByteLength);
 	}
 
-	public void toUnsignedByteArray(byte[] byteArray, int offset, int len) {
-		values.toUnsignedByteArray(byteArray, offset, len);
+	public void toUnsignedByteArray(byte[] byteArray, int offset) {
+		values.toUnsignedByteArray(byteArray, offset, conf.recordGroupByteLength);
 	}
 
-	public void outputUnsignedBytes(DataOutput output, int len)
+	public void outputUnsignedBytes(DataOutput output)
 			throws IOException {
-		values.outputUnsignedBytes(output, len);
+		values.outputUnsignedBytes(output, conf.recordGroupByteLength);
 	}
 
 	public void writeToUnsignedMemoryDatabase(MemoryDatabase output,
-			long offset, int len) {
-		values.writeToUnsignedMemoryDatabase(output, offset, len);
+			long offset) {
+		values.writeToUnsignedMemoryDatabase(output, offset, conf.recordGroupByteLength);
 	}
 
-	public void outputUnsignedBytes(OutputStream output, int len)
+	public void outputUnsignedBytes(OutputStream output)
 			throws IOException {
-		values.outputUnsignedBytes(output, len);
+		values.outputUnsignedBytes(output, conf.recordGroupByteLength);
 	}
 }
