@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.core;
 import java.util.Arrays;
 
 import edu.berkeley.gamesman.util.DebugFacility;
+import edu.berkeley.gamesman.util.MutablePair;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -101,6 +102,8 @@ public abstract class TieredHasher<State> extends Hasher<State> {
 	 * @return a Pair with tier/offset enclosed
 	 */
 	public abstract Pair<Integer,Long> tierIndexForState(State state);
-	
 
+	public MutablePair<Integer, Long> mutableTierIndexForState(State state){
+		return new MutablePair<Integer, Long>(tierIndexForState(state));
+	}
 }

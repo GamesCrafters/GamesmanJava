@@ -4,6 +4,7 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.ItergameState;
 import edu.berkeley.gamesman.core.TieredHasher;
 import edu.berkeley.gamesman.core.TieredIterGame;
+import edu.berkeley.gamesman.util.MutablePair;
 import edu.berkeley.gamesman.util.Pair;
 
 /**
@@ -36,6 +37,11 @@ public final class TieredItergameHasher extends TieredHasher<ItergameState> {
     @Override
     public Pair<Integer, Long> tierIndexForState(ItergameState state) {
         return new Pair<Integer, Long>(state);
+    }
+    
+    @Override
+    public MutablePair<Integer, Long> mutableTierIndexForState(ItergameState state){
+    	return state;
     }
 
     @Override

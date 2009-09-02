@@ -5,6 +5,7 @@ import java.util.Collection;
 
 import edu.berkeley.gamesman.util.MutablePair;
 import edu.berkeley.gamesman.util.Pair;
+import edu.berkeley.gamesman.util.Util;
 
 /**
  * @author DNSpies
@@ -168,6 +169,14 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> implement
 	 * Cycles to the next hash in this tier
 	 */
 	public abstract void nextHashInTier();
+	
+	@Override
+	public long stateToHash(ItergameState pos) {
+		if (myHasher == null)
+			Util.fatalError("You must call prepare() before hashing!");
+		MutablePair<Integer, Long> p = myHasher.mutableTierIndexForState(pos);
+		return myHasher.hashOffsetForTier(p.car)+p.cdr;
+	}
 	
 	public abstract int numberOfTiers();
 

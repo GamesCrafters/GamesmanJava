@@ -129,7 +129,6 @@ public class DatabaseCache extends Database {
 		}
 		records[index][i][offset].set(r);
 		dirty[index][i] = true;
-		System.out.println(recordIndex+" recieved "+r);
 	}
 
 	private void loadPage(int i) {
