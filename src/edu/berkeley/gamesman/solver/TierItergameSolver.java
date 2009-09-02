@@ -1,14 +1,11 @@
 package edu.berkeley.gamesman.solver;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import edu.berkeley.gamesman.core.ItergameState;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
+import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.core.TieredIterGame;
-import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -21,24 +18,31 @@ public final class TierItergameSolver extends TierSolver<ItergameState> {
 		TieredIterGame game = Util.checkedCast(tierGame);
 		long current = start;
 		game.setState(game.hashToState(start));
+		Record[] vals = new Record[game.maxChildren()];
+		for (int i = 0; i < vals.length; i++)
+			vals[i] = new Record(conf);
+		Record prim = new Record(conf);
+		ItergameState[] children = new ItergameState[game.maxChildren()];
+		for (int i = 0; i < children.length; i++)
+			children[i] = new ItergameState();
 		while (current <= end) {
 			if (current % STEP_SIZE == 0)
 				t.calculated(STEP_SIZE);
 			PrimitiveValue pv = game.primitiveValue();
 			if (pv.equals(PrimitiveValue.UNDECIDED)) {
-				Collection<Pair<String, ItergameState>> children = game
-						.validMoves();
-				ArrayList<Record> vals = new ArrayList<Record>(children.size());
+				int len = game.validMoves(children);
 				Record r;
-				for (Pair<String, ItergameState> child : children) {
-					r = db.getRecord(game.stateToHash(child.cdr));
+				for (int i = 0; i < len; i++) {
+					r = vals[i];
+					db.getRecord(game.stateToHash(children[i]), r);
 					r.previousPosition();
-					vals.add(r);
 				}
-				Record newVal = Record.combine(conf, vals);
+				Record newVal = game.combine(conf, vals, 0, len);
 				db.putRecord(current, newVal);
 			} else {
-				Record prim = new Record(conf, pv);
+				prim.reset();
+				prim.set(RecordFields.REMOTENESS, 0);
+				prim.set(RecordFields.VALUE, pv.value());
 				db.putRecord(current, prim);
 			}
 			if (current != end)

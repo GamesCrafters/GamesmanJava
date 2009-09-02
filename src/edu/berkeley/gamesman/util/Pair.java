@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
+import edu.berkeley.gamesman.core.ItergameState;
+
 /**
  * A pair is a simple data type that stores two distinct pieces of information
  * 
@@ -35,6 +37,11 @@ public class Pair<A,B> implements Serializable {
 		cdr = dr;
 	}
 	
+	public Pair(MutablePair<A,B> mp) {
+		car=mp.car;
+		cdr=mp.cdr;
+	}
+
 	@Override
 	public String toString(){
 		return "("+car+"."+cdr+")";

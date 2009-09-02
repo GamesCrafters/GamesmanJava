@@ -33,6 +33,8 @@ public final class RConnect4 extends TieredIterGame {
 
 	private final long[] moveArrangement;
 
+	private final long[] children;
+
 	private final BitSetBoard bsb;
 
 	private final ExpCoefs ec;
@@ -44,7 +46,8 @@ public final class RConnect4 extends TieredIterGame {
 	private PieceRearranger iah;
 
 	/**
-	 * @param conf The configuration object
+	 * @param conf
+	 *            The configuration object
 	 */
 	public RConnect4(Configuration conf) {
 		super(conf);
@@ -65,6 +68,7 @@ public final class RConnect4 extends TieredIterGame {
 		multiplier[0] = 1;
 		for (int i = 1; i <= gameSize; i++)
 			multiplier[i] = multiplier[i - 1] * i / ((i + 1) / 2);
+		children = new long[gameWidth];
 	}
 
 	@Override
@@ -216,9 +220,9 @@ public final class RConnect4 extends TieredIterGame {
 
 	@Override
 	public void setState(ItergameState pos) {
-		setNumPieces(pos.tier());
+		setNumPieces(pos.getTier());
 		long mult = iah.colorArrangements;
-		long hash = pos.hash();
+		long hash = pos.getHash();
 		setArrangement(hash / mult);
 		iah.setFromHash(hash % mult);
 		setBSBfromIAH();
@@ -351,12 +355,13 @@ public final class RConnect4 extends TieredIterGame {
 
 	@Override
 	public Collection<Pair<String, ItergameState>> validMoves() {
-		long[] children = iah.getChildren(pieces.size() % 2 == 1 ? 'O' : 'X');
+		int lenChildren = iah.getChildren(pieces.size() % 2 == 1 ? 'O' : 'X',
+				children);
 		int nextNumPieces = pieces.size() + 1;
 		ArrayList<Pair<String, ItergameState>> moves = new ArrayList<Pair<String, ItergameState>>(
-				children.length);
+				lenChildren);
 		int col = 0;
-		for (int i = 0; i < children.length; i++) {
+		for (int i = 0; i < lenChildren; i++) {
 			while (colHeights[col] == gameHeight)
 				col++;
 			moves.add(new Pair<String, ItergameState>(String.valueOf(col),
@@ -368,6 +373,23 @@ public final class RConnect4 extends TieredIterGame {
 	}
 
 	@Override
+	public int validMoves(ItergameState[] moves) {
+		int lenChildren = iah.getChildren(pieces.size() % 2 == 1 ? 'O' : 'X',
+				children);
+		int nextNumPieces = pieces.size() + 1;
+		int col = 0;
+		for (int i = 0; i < lenChildren; i++) {
+			while (colHeights[col] == gameHeight)
+				col++;
+			moves[i].setTier(nextNumPieces);
+			moves[i].setHash(moveArrangement[col] * multiplier[nextNumPieces]
+					+ children[i]);
+			col++;
+		}
+		return lenChildren;
+	}
+
+	@Override
 	public String describe() {
 		return String.format("%dx%d RConnect %d", gameWidth, gameHeight,
 				piecesToWin);
@@ -376,6 +398,11 @@ public final class RConnect4 extends TieredIterGame {
 	@Override
 	public int numberOfTiers() {
 		return gameSize + 1;
+	}
+
+	@Override
+	public int maxChildren() {
+		return gameWidth;
 	}
 
 }

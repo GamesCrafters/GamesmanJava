@@ -35,7 +35,7 @@ public final class TieredItergameHasher extends TieredHasher<ItergameState> {
 
     @Override
     public Pair<Integer, Long> tierIndexForState(ItergameState state) {
-        return state;
+        return new Pair<Integer, Long>(state);
     }
 
     @Override

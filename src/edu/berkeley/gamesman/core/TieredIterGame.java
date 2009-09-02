@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.core;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import edu.berkeley.gamesman.util.MutablePair;
 import edu.berkeley.gamesman.util.Pair;
 
 /**
@@ -169,4 +170,8 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> implement
 	public abstract void nextHashInTier();
 	
 	public abstract int numberOfTiers();
+
+	public abstract int maxChildren();
+
+	public abstract int validMoves(ItergameState[] moves);
 }

@@ -77,6 +77,21 @@ public abstract class Database {
 		long byteOffset = group * conf.recordGroupByteLength;
 		return getRecordGroup(byteOffset).getRecord(num);
 	}
+	
+	/**
+	 * Store the Nth Record in the Database in provided record
+	 * 
+	 * @param recordIndex
+	 *            The record number
+	 * @param r The record to store in
+	 * @return The stored Record
+	 */
+	public synchronized void getRecord(long recordIndex, Record r) {
+		long group = recordIndex / conf.recordsPerGroup;
+		int num = (int) (recordIndex % conf.recordsPerGroup);
+		long byteOffset = group * conf.recordGroupByteLength;
+		getRecordGroup(byteOffset).getRecord(num, r);
+	}
 
 	public Iterator<Record> getRecords(long recordIndex, int numRecords) {
 		long byteOffset = recordIndex / conf.recordsPerGroup

@@ -68,7 +68,7 @@ public class TierSolver<T> extends Solver {
 					vals.add(db.getRecord(game.stateToHash(child.cdr)));
 				}
 
-				Record newVal = Record.combine(conf, vals);
+				Record newVal = game.combine(conf, vals);
 				db.putRecord(current, newVal);
 			} else {
 				Record prim = new Record(conf, pv);

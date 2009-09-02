@@ -1,6 +1,9 @@
 package edu.berkeley.gamesman.core;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumMap;
+import java.util.List;
 
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
@@ -15,6 +18,14 @@ import edu.berkeley.gamesman.util.Util;
 public abstract class Game<State> {
 	
 	protected final Configuration conf;
+	
+	private final ArrayList<Record> allVals=new ArrayList<Record>();
+	
+	private final ArrayList<Record> valsBest=new ArrayList<Record>();
+	
+	private final ArrayList<Record> valsBestScore = new ArrayList<Record>();
+	
+	private final ArrayList<Record> valsBestRemoteness = new ArrayList<Record>();
 	
 	@SuppressWarnings("unused")
 	private Game(){
@@ -163,4 +174,136 @@ public abstract class Game<State> {
 	 * Make sure to call your superclass's method!
 	 */
 	public void prepare(){}
+	
+
+	/**
+	 * @param conf
+	 *            The configuration object
+	 * @param vals
+	 *            A collection of records
+	 * @return The "best" record in the collection (ordered by primitive value,
+	 *         then score, then remoteness)
+	 */
+	public Record combine(Configuration conf, List<Record> vals) {
+		valsBest.clear();
+		PrimitiveValue bestPrim = PrimitiveValue.LOSE;
+		for (Record val : vals) {
+			PrimitiveValue pv = val.get();
+			if (pv.isPreferableTo(bestPrim)) {
+				valsBest.clear();
+				valsBest.add(val);
+				bestPrim = pv;
+			} else if (pv.equals(bestPrim))
+				valsBest.add(val);
+		}
+		vals=valsBest;
+		EnumMap<RecordFields, Integer> storedFields = conf.getStoredFields();
+		if (storedFields.containsKey(RecordFields.SCORE)) {
+			valsBestScore.clear();
+			long bestScore = Long.MIN_VALUE;
+			for (Record val : vals) {
+				long score = val.get(RecordFields.SCORE);
+				if (score > bestScore) {
+					valsBestScore.clear();
+					valsBestScore.add(val);
+					bestScore = score;
+				} else if (score == bestScore)
+					valsBestScore.add(val);
+			}
+			vals = valsBestScore;
+		}
+		if (storedFields.containsKey(RecordFields.REMOTENESS)) {
+			if (bestPrim.equals(PrimitiveValue.LOSE)) {
+				valsBestRemoteness.clear();
+				long bestRemoteness = 0;
+				for (Record val : vals) {
+					long remoteness = val.get(RecordFields.REMOTENESS);
+					if (remoteness > bestRemoteness) {
+						valsBestRemoteness.clear();
+						valsBestRemoteness.add(val);
+						bestRemoteness = remoteness;
+					} else if (remoteness == bestRemoteness)
+						valsBestRemoteness.add(val);
+				}
+				vals = valsBestRemoteness;
+			} else {
+				valsBestRemoteness.clear();
+				long bestRemoteness = Long.MAX_VALUE;
+				for (Record val : vals) {
+					long remoteness = val.get(RecordFields.REMOTENESS);
+					if (remoteness < bestRemoteness) {
+						valsBestRemoteness.clear();
+						valsBestRemoteness.add(val);
+						bestRemoteness = remoteness;
+					} else if (remoteness == bestRemoteness)
+						valsBestRemoteness.add(val);
+				}
+				vals = valsBestRemoteness;
+			}
+		}
+		return vals.get(0);
+	}
+	
+	public Record combine(Configuration conf, Record[] recordArray, int offset, int len) {
+		allVals.clear();
+		for(int i=0;i<len;i++)
+			allVals.add(recordArray[offset++]);
+		valsBest.clear();
+		PrimitiveValue bestPrim = PrimitiveValue.LOSE;
+		for (Record val : allVals) {
+			PrimitiveValue pv = val.get();
+			if (pv.isPreferableTo(bestPrim)) {
+				valsBest.clear();
+				valsBest.add(val);
+				bestPrim = pv;
+			} else if (pv.equals(bestPrim))
+				valsBest.add(val);
+		}
+		ArrayList<Record> vals=valsBest;
+		EnumMap<RecordFields, Integer> storedFields = conf.getStoredFields();
+		if (storedFields.containsKey(RecordFields.SCORE)) {
+			valsBestScore.clear();
+			long bestScore = Long.MIN_VALUE;
+			for (Record val : vals) {
+				long score = val.get(RecordFields.SCORE);
+				if (score > bestScore) {
+					valsBestScore.clear();
+					valsBestScore.add(val);
+					bestScore = score;
+				} else if (score == bestScore)
+					valsBestScore.add(val);
+			}
+			vals = valsBestScore;
+		}
+		if (storedFields.containsKey(RecordFields.REMOTENESS)) {
+			if (bestPrim.equals(PrimitiveValue.LOSE)) {
+				valsBestRemoteness.clear();
+				long bestRemoteness = 0;
+				for (Record val : vals) {
+					long remoteness = val.get(RecordFields.REMOTENESS);
+					if (remoteness > bestRemoteness) {
+						valsBestRemoteness.clear();
+						valsBestRemoteness.add(val);
+						bestRemoteness = remoteness;
+					} else if (remoteness == bestRemoteness)
+						valsBestRemoteness.add(val);
+				}
+				vals = valsBestRemoteness;
+			} else {
+				valsBestRemoteness.clear();
+				long bestRemoteness = Long.MAX_VALUE;
+				for (Record val : vals) {
+					long remoteness = val.get(RecordFields.REMOTENESS);
+					if (remoteness < bestRemoteness) {
+						valsBestRemoteness.clear();
+						valsBestRemoteness.add(val);
+						bestRemoteness = remoteness;
+					} else if (remoteness == bestRemoteness)
+						valsBestRemoteness.add(val);
+				}
+				vals = valsBestRemoteness;
+			}
+		}
+		return vals.get(0);
+	}
 }

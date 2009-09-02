@@ -103,4 +103,15 @@ public class RecordGroup {
 	public void setValue(byte[] values) {
 		this.values = new BigInteger(1, values);
 	}
+
+	/**
+	 * @param num
+	 *            The index of the desired record
+	 * @param r The Record to store in.
+	 */
+	public void getRecord(int num, Record r) {
+		long val = values.divide(conf.multipliers[num]).mod(
+				conf.bigIntTotalStates).longValue();
+		r.set(val);
+	}
 }

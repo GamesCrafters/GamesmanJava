@@ -121,7 +121,7 @@ public class TopDownSolver extends Solver {
 					next = new Record(conf, prim);
 					next.set(RecordFields.SCORE, game.primitiveScore(state));
 				} else {
-					next = Record.combine(conf, recs);
+					next = game.combine(conf, recs);
 					int remoteness = (int) next.get(RecordFields.REMOTENESS);
 					if (remoteness > maxRemoteness) {
 						System.out.println("Found remoteness: " + remoteness);

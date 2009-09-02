@@ -56,7 +56,6 @@ public class DatabaseCache extends Database {
 		for (boolean[] u : used)
 			Arrays.fill(u, false);
 		this.db = db;
-		conf = db.getConfiguration();
 	}
 
 	/**
@@ -94,6 +93,24 @@ public class DatabaseCache extends Database {
 		}
 		return records[index][i][offset].clone();
 	}
+	
+	@Override
+	public void getRecord(long recordIndex, Record r) {
+		setPoint(recordIndex);
+		int i;
+		for (i = 0; i < nWayAssociative; i++) {
+			if (!used[index][i]) {
+				loadPage(i);
+				break;
+			} else if (tags[index][i] == tag)
+				break;
+		}
+		if (i >= nWayAssociative) {
+			i = pageChooser.nextInt(nWayAssociative);
+			loadPage(i);
+		}
+		r.set(records[index][i][offset]);
+	}
 
 	@Override
 	public void putRecord(long recordIndex, Record r) {
@@ -110,8 +127,9 @@ public class DatabaseCache extends Database {
 			i = pageChooser.nextInt(nWayAssociative);
 			loadPage(i);
 		}
-		records[index][i][offset] = r.clone();
+		records[index][i][offset].set(r);
 		dirty[index][i] = true;
+		System.out.println(recordIndex+" recieved "+r);
 	}
 
 	private void loadPage(int i) {
@@ -161,6 +179,12 @@ public class DatabaseCache extends Database {
 		else {
 			db.initialize(uri);
 			conf = db.getConfiguration();
+		}
+		for(Record[][] pages:records){
+			for(Record[] page:pages){
+				for(int i=0;i<page.length;i++)
+					page[i]=new Record(conf);
+			}
 		}
 	}
 
