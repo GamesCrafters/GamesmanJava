@@ -52,6 +52,10 @@ public class RecordGroup {
 		}
 	}
 
+	public RecordGroup(Configuration conf) {
+		this.conf = conf;
+	}
+
 	/**
 	 * @param num
 	 *            The index of the desired record
@@ -107,11 +111,23 @@ public class RecordGroup {
 	/**
 	 * @param num
 	 *            The index of the desired record
-	 * @param r The Record to store in.
+	 * @param r
+	 *            The Record to store in.
 	 */
 	public void getRecord(int num, Record r) {
 		long val = values.divide(conf.multipliers[num]).mod(
 				conf.bigIntTotalStates).longValue();
 		r.set(val);
+	}
+
+	public void set(RecordGroup group) {
+		values = group.values;
+	}
+
+	public void set(Record[] recs) {
+		values = BigInteger.ZERO;
+		for (int i = 0; i < conf.recordsPerGroup; i++)
+			values = values.add(BigInteger.valueOf(recs[i].getState())
+					.multiply(conf.multipliers[i]));
 	}
 }
