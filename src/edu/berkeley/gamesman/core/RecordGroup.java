@@ -248,4 +248,9 @@ public class RecordGroup {
 		} else
 			values.outputUnsignedBytes(output, conf.recordGroupByteLength);
 	}
+
+	public static int byteSize(Configuration conf) {
+		return 20 + (conf.recordGroupUsesLong ? 0
+				: (conf.recordGroupByteLength + 1));
+	}
 }

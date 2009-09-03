@@ -167,4 +167,8 @@ public final class Record {
 			remainingState /= val;
 		}
 	}
+
+	public static int byteSize(Configuration conf) {
+		return 12 + 4 * conf.numFields();
+	}
 }

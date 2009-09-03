@@ -7,7 +7,6 @@ import java.util.Random;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Record;
-import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.core.RecordGroup;
 
 /**
@@ -60,22 +59,26 @@ public final class DatabaseCache extends Database {
 				rg.set(r);
 			return rg;
 		}
+
+		private static int byteSize(Configuration conf) {
+			return 14 + RecordGroup.byteSize(conf) + conf.recordsPerGroup * 4
+					+ conf.recordsPerGroup * Record.byteSize(conf);
+		}
 	}
 
-	private final GroupHolder[][][] records; // index,n,offset
+	private GroupHolder[][][] records; // index,n,offset
 
 	private final Random pageChooser = new Random();
 
-	private final int indexBits, indices;
+	private int indexBits, indices;
 
-	private final int offsetBits = 8, pageSize = 1 << offsetBits;
+	private int offsetBits, pageSize;
 
-	private final int nWayAssociativeBits = 2,
-			nWayAssociative = 1 << nWayAssociativeBits;
+	private int nWayAssociative;
 
-	private final long[][] tags;
+	private long[][] tags;
 
-	private final boolean[][] dirty, used;
+	private boolean[][] dirty, used;
 
 	private long tag;
 
@@ -116,33 +119,10 @@ public final class DatabaseCache extends Database {
 	/**
 	 * @param db
 	 *            The inner database to be used.
-	 * @param recordsHeld
-	 *            The number of records this database can hold (this will be
-	 *            rounded up to the nearest power of 2)
-	 */
-	public DatabaseCache(Database db, int recordsHeld) {
-		int numRecordsBits = (int) Math.ceil(Math.log(recordsHeld)
-				/ Math.log(2));
-		groupIterator = new CachedbGroupIterator();
-		indexBits = numRecordsBits - (offsetBits + nWayAssociativeBits);
-		indices = 1 << indexBits;
-		records = new GroupHolder[indices][nWayAssociative][pageSize];
-		tags = new long[indices][nWayAssociative];
-		dirty = new boolean[indices][nWayAssociative];
-		used = new boolean[indices][nWayAssociative];
-		for (boolean[] u : used)
-			Arrays.fill(u, false);
-		this.db = db;
-	}
-
-	/**
-	 * Instantiates a database cache using the default size of 1 MebiRecord.
-	 * 
-	 * @param db
-	 *            The inner database
 	 */
 	public DatabaseCache(Database db) {
-		this(db, 1 << 14);
+		groupIterator = new CachedbGroupIterator();
+		this.db = db;
 	}
 
 	private void setPoint(long recordIndex) {
@@ -263,6 +243,25 @@ public final class DatabaseCache extends Database {
 			db.initialize(uri);
 			conf = db.getConfiguration();
 		}
+		int totalBytes = Integer.parseInt(conf.getProperty("CacheSize",
+				"1048576"));
+		int groupHolderSize = GroupHolder.byteSize(conf);
+		int totalGroups = totalBytes / groupHolderSize;
+		int pageBytes = Integer.parseInt(conf.getProperty("PageSize", "1024"));
+		pageSize = pageBytes / groupHolderSize;
+		offsetBits = (int) (Math.log(pageSize) / Math.log(2));
+		pageSize = 1 << offsetBits;
+		nWayAssociative = Integer.parseInt(conf.getProperty("nWayAssociative",
+				"4"));
+		indices = totalGroups / (nWayAssociative * pageSize);
+		indexBits = (int) (Math.log(indices) / Math.log(2));
+		indices = 1 << indexBits;
+		records = new GroupHolder[indices][nWayAssociative][pageSize];
+		tags = new long[indices][nWayAssociative];
+		dirty = new boolean[indices][nWayAssociative];
+		used = new boolean[indices][nWayAssociative];
+		for (boolean[] u : used)
+			Arrays.fill(u, false);
 		for (GroupHolder[][] pages : records) {
 			for (GroupHolder[] page : pages) {
 				for (int i = 0; i < page.length; i++)
