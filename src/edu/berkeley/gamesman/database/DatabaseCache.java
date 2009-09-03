@@ -243,19 +243,20 @@ public final class DatabaseCache extends Database {
 			db.initialize(uri);
 			conf = db.getConfiguration();
 		}
-		int totalBytes = Integer.parseInt(conf.getProperty("CacheSize",
-				"1048576"));
+		int totalBytes = Integer.parseInt(conf.getProperty(
+				"gamesman.db.cacheSize", "1048576"));
 		int groupHolderSize = GroupHolder.byteSize(conf);
 		int totalGroups = totalBytes / groupHolderSize;
-		int pageBytes = Integer.parseInt(conf.getProperty("PageSize", "1024"));
+		int pageBytes = Integer.parseInt(conf.getProperty(
+				"gamesman.db.pageSize", "1024"));
 		pageSize = pageBytes / groupHolderSize;
 		offsetBits = (int) (Math.log(pageSize) / Math.log(2));
-		pageSize = 1 << offsetBits;
-		nWayAssociative = Integer.parseInt(conf.getProperty("nWayAssociative",
-				"4"));
+		pageSize = Math.max(1 << offsetBits, 1);
+		nWayAssociative = Integer.parseInt(conf.getProperty(
+				"gamesman.db.nWayAssociative", "4"));
 		indices = totalGroups / (nWayAssociative * pageSize);
 		indexBits = (int) (Math.log(indices) / Math.log(2));
-		indices = 1 << indexBits;
+		indices = Math.max(1 << indexBits, 1);
 		records = new GroupHolder[indices][nWayAssociative][pageSize];
 		tags = new long[indices][nWayAssociative];
 		dirty = new boolean[indices][nWayAssociative];
