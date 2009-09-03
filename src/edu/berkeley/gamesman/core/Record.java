@@ -128,7 +128,10 @@ public final class Record {
 	public boolean equals(Object r) {
 		if (r instanceof Record) {
 			Record rec = (Record) r;
-			return values.equals(rec.values);
+			for (int i = 0; i < values.length; i++)
+				if (rec.values[i] != values[i])
+					return false;
+			return true;
 		} else
 			return false;
 	}
