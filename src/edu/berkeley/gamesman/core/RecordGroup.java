@@ -20,8 +20,6 @@ public class RecordGroup {
 
 	private long longValues;
 
-	private final boolean usesLong;
-
 	/**
 	 * @param conf
 	 *            The configuration object.
@@ -30,8 +28,7 @@ public class RecordGroup {
 	 */
 	public RecordGroup(Configuration conf, byte[] values) {
 		this.conf = conf;
-		usesLong = conf.recordGroupByteLength < 8;
-		if (usesLong) {
+		if (conf.recordGroupUsesLong) {
 			this.longValues = 0;
 			for (int i = 0; i < conf.recordGroupByteLength; i++) {
 				longValues <<= 8;
@@ -49,8 +46,7 @@ public class RecordGroup {
 	 */
 	public RecordGroup(Configuration conf, BigInteger values) {
 		this.conf = conf;
-		usesLong = conf.recordGroupByteLength < 8;
-		if (usesLong)
+		if (conf.recordGroupUsesLong)
 			this.longValues = values.longValue();
 		else
 			this.values = values;
@@ -58,8 +54,7 @@ public class RecordGroup {
 
 	public RecordGroup(Configuration conf, Record[] recs, int offset) {
 		this.conf = conf;
-		usesLong = conf.recordGroupByteLength < 8;
-		if (usesLong) {
+		if (conf.recordGroupUsesLong) {
 			this.longValues = 0;
 			for (int i = 0; i < conf.recordsPerGroup; i++)
 				longValues += recs[offset++].getState()
@@ -75,8 +70,7 @@ public class RecordGroup {
 
 	public RecordGroup(Configuration conf, Iterator<Record> recordIterator) {
 		this.conf = conf;
-		usesLong = conf.recordGroupByteLength < 8;
-		if (usesLong) {
+		if (conf.recordGroupUsesLong) {
 			this.longValues = 0;
 			for (int i = 0; i < conf.recordsPerGroup; i++)
 				longValues += recordIterator.next().getState()
@@ -93,7 +87,6 @@ public class RecordGroup {
 
 	public RecordGroup(Configuration conf) {
 		this.conf = conf;
-		usesLong = conf.recordGroupByteLength < 8;
 	}
 
 	/**
@@ -103,7 +96,7 @@ public class RecordGroup {
 	 */
 	public Record getRecord(int num) {
 		long val;
-		if (usesLong) {
+		if (conf.recordGroupUsesLong) {
 			val = longValues / conf.longMultipliers[num] % conf.totalStates;
 		} else {
 			val = values.divide(conf.multipliers[num]).mod(
@@ -113,7 +106,7 @@ public class RecordGroup {
 	}
 
 	public void getRecords(Record[] recs, int offset) {
-		if (usesLong) {
+		if (conf.recordGroupUsesLong) {
 			long remainingValues = longValues;
 			for (int i = 0; i < conf.recordsPerGroup; i++) {
 				long mod = remainingValues % conf.totalStates;
@@ -141,7 +134,7 @@ public class RecordGroup {
 	 *            The values to change it to
 	 */
 	public void setRecord(int num, Record r) {
-		if (usesLong) {
+		if (conf.recordGroupUsesLong) {
 			long multiplier = conf.longMultipliers[num];
 			long zeroOut = conf.longMultipliers[num + 1];
 			longValues = longValues
@@ -161,7 +154,7 @@ public class RecordGroup {
 	 *            The new value to give this RecordGroup
 	 */
 	public void setValue(byte[] values) {
-		if (usesLong) {
+		if (conf.recordGroupUsesLong) {
 			this.longValues = 0;
 			for (int i = 0; i < conf.recordGroupByteLength; i++) {
 				longValues <<= 8;
@@ -179,7 +172,7 @@ public class RecordGroup {
 	 */
 	public void getRecord(int num, Record r) {
 		long val;
-		if (usesLong) {
+		if (conf.recordGroupUsesLong) {
 			val = longValues / conf.longMultipliers[num] % conf.totalStates;
 		} else {
 			val = values.divide(conf.multipliers[num]).mod(
@@ -189,14 +182,14 @@ public class RecordGroup {
 	}
 
 	public void set(RecordGroup group) {
-		if (usesLong)
+		if (conf.recordGroupUsesLong)
 			longValues = group.longValues;
 		else
 			values = group.values;
 	}
 
 	public void set(Record[] recs) {
-		if (usesLong) {
+		if (conf.recordGroupUsesLong) {
 			this.longValues = 0;
 			for (int i = 0; i < conf.recordsPerGroup; i++)
 				longValues += recs[i].getState() * conf.longMultipliers[i];
@@ -209,7 +202,7 @@ public class RecordGroup {
 	}
 
 	public void outputUnsignedBytes(ByteBuffer output) {
-		if (usesLong) {
+		if (conf.recordGroupUsesLong) {
 			for (int i = (conf.recordGroupByteLength - 1) * 8; i >= 0; i -= 8)
 				output.put((byte) (longValues >>> i));
 		} else
@@ -217,7 +210,7 @@ public class RecordGroup {
 	}
 
 	public void toUnsignedByteArray(byte[] byteArray, int offset) {
-		if (usesLong) {
+		if (conf.recordGroupUsesLong) {
 			long inValues = longValues;
 			for (int i = offset + conf.recordGroupByteLength - 1; i >= offset; i--) {
 				byteArray[i] = (byte) inValues;
@@ -229,7 +222,7 @@ public class RecordGroup {
 	}
 
 	public void outputUnsignedBytes(DataOutput output) throws IOException {
-		if (usesLong) {
+		if (conf.recordGroupUsesLong) {
 			for (int i = (conf.recordGroupByteLength - 1) * 8; i >= 0; i -= 8)
 				output.write((int) (longValues >>> i));
 		} else
@@ -237,7 +230,7 @@ public class RecordGroup {
 	}
 
 	public void writeToUnsignedMemoryDatabase(MemoryDatabase output, long offset) {
-		if (usesLong) {
+		if (conf.recordGroupUsesLong) {
 			long inValues = longValues;
 			for (long i = offset + conf.recordGroupByteLength - 1; i >= offset; i--) {
 				output.putByte(i, (byte) inValues);
@@ -249,7 +242,7 @@ public class RecordGroup {
 	}
 
 	public void outputUnsignedBytes(OutputStream output) throws IOException {
-		if (usesLong) {
+		if (conf.recordGroupUsesLong) {
 			for (int i = (conf.recordGroupByteLength - 1) * 8; i >= 0; i -= 8)
 				output.write((int) (longValues >>> i));
 		} else

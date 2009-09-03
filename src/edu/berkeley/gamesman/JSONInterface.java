@@ -12,6 +12,7 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.Map;
@@ -34,140 +35,127 @@ import edu.berkeley.gamesman.util.Util;
 
 /**
  * Basic JSON interface for web app usage
+ * 
  * @author Steven Schlansker
  */
 public class JSONInterface extends GamesmanApplication {
 	/**
 	 * No arg constructor
 	 */
-	public JSONInterface() {}
-	
+	public JSONInterface() {
+	}
+
 	Properties serverConf;
-	Map<String,Configuration> loadedConfigurations = new HashMap<String,Configuration>();
+
+	Map<String, Configuration> loadedConfigurations = new HashMap<String, Configuration>();
+
 	Class<? extends Database> dbClass;
 
 	@Override
-
 	public int run(Properties props) {
 		this.serverConf = props;
 		try {
 
-			this.dbClass = Util.typedForName("edu.berkeley.gamesman.database."+serverConf.getProperty("gamesman.database","BlockDatabase"), Database.class);
+			this.dbClass = Util.typedForName("edu.berkeley.gamesman.database."
+					+ serverConf.getProperty("gamesman.database",
+							"BlockDatabase"), Database.class);
 		} catch (ClassNotFoundException e) {
 			Util.warn("Can't load default database!", e);
 			this.dbClass = BlockDatabase.class;
 		}
 		/*
-		try {
-			db = Util.typedInstantiate(,
-					Database.class);
-		} catch (ClassNotFoundException e1) {
-			Util.fatalError("Failed to create database",e1);
-		}
-		db.initialize(inconf.getProperty("gamesman.db.uri"), null);
-		this.conf = db.getConfiguration();
-		*/
+		 * try { db = Util.typedInstantiate(, Database.class); } catch
+		 * (ClassNotFoundException e1) {
+		 * Util.fatalError("Failed to create database",e1); }
+		 * db.initialize(inconf.getProperty("gamesman.db.uri"), null); this.conf
+		 * = db.getConfiguration();
+		 */
 		int port = 0;
 		try {
-			port = Integer.parseInt(serverConf.getProperty("json.port", "4242"));
+			port = Integer
+					.parseInt(serverConf.getProperty("json.port", "4242"));
 		} catch (NumberFormatException e) {
-			Util.fatalError("Port must be an integer",e);
+			Util.fatalError("Port must be an integer", e);
 		}
 		reallyRun(port);
 		return 0;
 	}
-	
+
 	/**
 	 * Run the server
-	 * @param port the port to listen on
+	 * 
+	 * @param port
+	 *            the port to listen on
 	 */
 	public void reallyRun(final int port) {
 		assert Util.debug(DebugFacility.JSON, "Loading JSON server...");
-		
+
 		ServerSocket ssock;
 		try {
 			ssock = new ServerSocket(port);
 		} catch (IOException e) {
-			Util.fatalError("Could not listen on port "+port,e);
+			Util.fatalError("Could not listen on port " + port, e);
 			return;
 		}
-		
+
 		// Want to always print this out.
-		System.out.println("Server ready on port "+port+"!");
-		while(true){
+		System.out.println("Server ready on port " + port + "!");
+		while (true) {
 			Socket s;
 			try {
 				s = ssock.accept();
 			} catch (IOException e) {
-				Util.warn("IO Exception while accepting: "+e);
+				Util.warn("IO Exception while accepting: " + e);
 				break;
 			}
 			JSONThread t = new JSONThread(s);
-			t.setName("JSONThread "+s);
+			t.setName("JSONThread " + s);
 			t.start();
 		}
 	}
-	
+
 	/*
-	public static void main(String[] args) {
-		boolean verbose = false;
-		int i = 0;
-		if (args.length > 0 && args[0].equals("-v")) {
-			verbose = true;
-			i = 1;
-		}
-		if (args.length < 2+i) {
-			Util.fatalError("Usage: JSONInterface [-v] file:///.../database.db  portnum  [DatabaseClass]");
-		}
-		String dbClass = "BlockDatabase";
-		String dbURI = args[i];
-		int port = Integer.valueOf(args[i+1]);
-		if (args.length > i+2) {
-			dbClass = args[i+2];
-		}
-		if (verbose) {
-			EnumSet<DebugFacility> debugOpts = EnumSet.noneOf(DebugFacility.class);
-			ClassLoader cl = ClassLoader.getSystemClassLoader();
-			cl.setDefaultAssertionStatus(false);
-			debugOpts.add(DebugFacility.JSON);
-			DebugFacility.JSON.setupClassloader(cl);
-			debugOpts.add(DebugFacility.CORE);
-			DebugFacility.CORE.setupClassloader(cl);
-			Util.enableDebuging(debugOpts);
-		}
-		JSONInterface ji = new JSONInterface();
-		Database db;
-		try {
-			db = Util.typedInstantiate("edu.berkeley.gamesman.database."+dbClass,Database.class);
-		} catch (ClassNotFoundException e1) {
-			Util.fatalError("Failed to create database",e1);
-			return;
-		}
-		db.initialize(dbURI, null);
-		ji.conf = db.getConfiguration();
-		ji.conf.db = db;
-		ji.reallyRun(port);
-	}
-	*/
+	 * public static void main(String[] args) { boolean verbose = false; int i =
+	 * 0; if (args.length > 0 && args[0].equals("-v")) { verbose = true; i = 1;
+	 * } if (args.length < 2+i) {Util.fatalError(
+	 * "Usage: JSONInterface [-v] file:///.../database.db  portnum  [DatabaseClass]"
+	 * ); } String dbClass = "BlockDatabase"; String dbURI = args[i]; int port =
+	 * Integer.valueOf(args[i+1]); if (args.length > i+2) { dbClass = args[i+2];
+	 * } if (verbose) { EnumSet<DebugFacility> debugOpts =
+	 * EnumSet.noneOf(DebugFacility.class); ClassLoader cl =
+	 * ClassLoader.getSystemClassLoader(); cl.setDefaultAssertionStatus(false);
+	 * debugOpts.add(DebugFacility.JSON);
+	 * DebugFacility.JSON.setupClassloader(cl);
+	 * debugOpts.add(DebugFacility.CORE);
+	 * DebugFacility.CORE.setupClassloader(cl); Util.enableDebuging(debugOpts);
+	 * } JSONInterface ji = new JSONInterface(); Database db; try { db =
+	 * Util.typedInstantiate
+	 * ("edu.berkeley.gamesman.database."+dbClass,Database.class); } catch
+	 * (ClassNotFoundException e1) {
+	 * Util.fatalError("Failed to create database",e1); return; }
+	 * db.initialize(dbURI, null); ji.conf = db.getConfiguration(); ji.conf.db =
+	 * db; ji.reallyRun(port); }
+	 */
 
 	static String sanitise(String val) {
-		val = val.replace('.','-');
-		val = val.replace('\\','-');
-		val = val.replace('/','-');
+		val = val.replace('.', '-');
+		val = val.replace('\\', '-');
+		val = val.replace('/', '-');
 		try {
-			return URLEncoder.encode(val,"utf-8");
+			return URLEncoder.encode(val, "utf-8");
 		} catch (java.io.UnsupportedEncodingException e) {
 			return "";
 		}
 	}
 
-	Configuration loadDatabase(Map<String,String> params) {
+	Configuration loadDatabase(Map<String, String> params) {
 		String game = params.get("game");
 		if (game == null) {
 			return null;
 		}
 		String filename = sanitise(game);
-		String[] allowedFields = serverConf.getProperty("json.fields."+game,"").split(",");
+		String[] allowedFields = serverConf.getProperty("json.fields." + game,
+				"").split(",");
 		for (String key : allowedFields) {
 			key = key.trim();
 			if (key.length() == 0) {
@@ -192,11 +180,14 @@ public class JSONInterface extends GamesmanApplication {
 		}
 		return conf;
 	}
-	synchronized Configuration addDatabase(Map<String,String> params, String game, String filename) {
-		String solvedJob = serverConf.getProperty("json.solved."+filename,null);
-		String dbPath = serverConf.getProperty("json.databasedirectory","");
+
+	synchronized Configuration addDatabase(Map<String, String> params,
+			String game, String filename) {
+		String solvedJob = serverConf.getProperty("json.solved." + filename,
+				null);
+		String dbPath = serverConf.getProperty("json.databasedirectory", "");
 		if (dbPath != null && dbPath.length() > 0) {
-			if (dbPath.charAt(dbPath.length()-1) != '/') {
+			if (dbPath.charAt(dbPath.length() - 1) != '/') {
 				dbPath += '/';
 			}
 			filename = dbPath + filename + ".db";
@@ -206,33 +197,38 @@ public class JSONInterface extends GamesmanApplication {
 		}
 		try {
 			if (solvedJob != null && solvedJob.length() > 0) {
-				System.out.println("Loading solved job "+solvedJob+".");
+				System.out.println("Loading solved job " + solvedJob + ".");
 				Configuration config = new Configuration(solvedJob);
 				try {
 					config.openDatabase();
 				} catch (Exception e) {
-					Util.warn("Error when loading database for special configuration "+filename, e);
+					Util.warn(
+							"Error when loading database for special configuration "
+									+ filename, e);
 				}
 				return config;
 			} else if (filename != null && new File(new URI(filename)).exists()) {
-				System.out.println("Loading solved database "+filename+".");
+				System.out.println("Loading solved database " + filename + ".");
 				Database db = dbClass.getConstructor().newInstance();
 				db.initialize(filename, null);
 				Configuration conf = db.getConfiguration();
-				conf.db=db;
+				conf.db = db;
 				return conf;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			Util.warn("Failed to load database "+filename, e);
+			Util.warn("Failed to load database " + filename, e);
 		} catch (Util.FatalError fe) {
 			// These aren't actually fatal, so don't rethrow.
-			Util.warn("FatalError(TM) when loading database "+filename+": "+fe.toString());
+			Util.warn("FatalError(TM) when loading database " + filename + ": "
+					+ fe.toString());
 		}
-		String unsolvedJob = serverConf.getProperty("json.unsolved."+game,null);
+		String unsolvedJob = serverConf.getProperty("json.unsolved." + game,
+				null);
 		if (unsolvedJob != null) {
 			Properties props = Configuration.readProperties(unsolvedJob);
-			String[] allowedFields = serverConf.getProperty("json.fields."+game,"").split(",");
+			String[] allowedFields = serverConf.getProperty(
+					"json.fields." + game, "").split(",");
 			for (String key : allowedFields) {
 				key = key.trim();
 				if (key.length() == 0) {
@@ -242,39 +238,43 @@ public class JSONInterface extends GamesmanApplication {
 				if (val == null) {
 					val = "";
 				}
-				props.setProperty("gamesman.game."+key, val);
+				props.setProperty("gamesman.game." + key, val);
 			}
 			props.setProperty("gamesman.hasher", "NullHasher");
 			String gamename = props.getProperty("gamesman.game");
 			Configuration config = null;
 			try {
 				config = new Configuration(props, true);
-				config.initialize(gamename,"NullHasher",false);
+				config.initialize(gamename, "NullHasher", false);
 			} catch (ClassNotFoundException e) {
 				Util.warn("Failed to load the game class.", e);
 				throw new RuntimeException("Failed to load the game class.", e);
 			} catch (Util.FatalError fe) {
-				throw new RuntimeException("FatalError when loading configuration for "+game);
+				throw new RuntimeException(
+						"FatalError when loading configuration for " + game);
 			}
 			return config;
 		} else {
-			//throw new RuntimeException("Failed to find an appropriate job file for " + game);
+			// throw new
+			// RuntimeException("Failed to find an appropriate job file for " +
+			// game);
 			return null;
 		}
 	}
-	
+
 	private class JSONThread extends Thread {
 
 		final Socket s;
-		
-		JSONThread(Socket s){
+
+		JSONThread(Socket s) {
 			this.s = s;
-			assert Util.debug(DebugFacility.JSON, "Accepted new connection " + s);
+			assert Util.debug(DebugFacility.JSON, "Accepted new connection "
+					+ s);
 		}
-		
-		private <T> void fillJSONFields(Configuration conf, JSONObject entry, T state) throws JSONException {
-			Set<RecordFields> storedFields = 
-				conf.storedFields.keySet();
+
+		private <T> void fillJSONFields(Configuration conf, JSONObject entry,
+				T state) throws JSONException {
+			Collection<RecordFields> storedFields = conf.usedFields;
 			Database db = conf.db;
 			Record rec = null;
 			Game<T> g = Util.checkedCast(conf.getGame());
@@ -282,23 +282,28 @@ public class JSONInterface extends GamesmanApplication {
 				rec = db.getRecord(g.stateToHash(state));
 			}
 			if (rec != null) {
-				for(RecordFields f : storedFields){
+				for (RecordFields f : storedFields) {
 					if (f == RecordFields.VALUE) {
 						PrimitiveValue pv = rec.get();
 						if (g.getPlayerCount() != 0) {
-							if (pv==PrimitiveValue.WIN) pv = PrimitiveValue.LOSE;
-							else if (pv==PrimitiveValue.LOSE) pv = PrimitiveValue.WIN;
+							if (pv == PrimitiveValue.WIN)
+								pv = PrimitiveValue.LOSE;
+							else if (pv == PrimitiveValue.LOSE)
+								pv = PrimitiveValue.WIN;
 						}
-						entry.put(f.name().toLowerCase(),pv.name().toLowerCase());
+						entry.put(f.name().toLowerCase(), pv.name()
+								.toLowerCase());
 					} else {
-						entry.put(f.name().toLowerCase(),rec.get(f));
+						entry.put(f.name().toLowerCase(), rec.get(f));
 					}
 				}
 			} else {
 				PrimitiveValue pv = g.primitiveValue(state);
 				if (pv != PrimitiveValue.UNDECIDED) {
-					if (pv==PrimitiveValue.WIN) pv = PrimitiveValue.LOSE;
-					else if (pv==PrimitiveValue.LOSE) pv = PrimitiveValue.WIN;
+					if (pv == PrimitiveValue.WIN)
+						pv = PrimitiveValue.LOSE;
+					else if (pv == PrimitiveValue.LOSE)
+						pv = PrimitiveValue.WIN;
 					entry.put("value", pv.name().toLowerCase());
 				}
 				int score = g.primitiveScore(state);
@@ -308,23 +313,25 @@ public class JSONInterface extends GamesmanApplication {
 			}
 			entry.put("board", g.stateToString(state));
 		}
-		
+
 		class RequestException extends Exception {
 			public RequestException(String msg) {
 				super(msg);
 			}
 		}
+
 		public void run() {
 			LineNumberReader r = null;
 			PrintWriter w = null;
-			try{
-				r = new LineNumberReader(new InputStreamReader(s.getInputStream()));
+			try {
+				r = new LineNumberReader(new InputStreamReader(s
+						.getInputStream()));
 				w = new PrintWriter(new OutputStreamWriter(s.getOutputStream()));
-			}catch (IOException e) {
-				Util.warn("Got IO exception in JSONThread: "+e);
+			} catch (IOException e) {
+				Util.warn("Got IO exception in JSONThread: " + e);
 			}
-			
-			while(true){
+
+			while (true) {
 				String line;
 				try {
 					line = r.readLine();
@@ -337,16 +344,16 @@ public class JSONInterface extends GamesmanApplication {
 					break; // connection closed.
 				}
 				System.out.println(line);
-				Map<String,String> j = new HashMap<String,String>();
+				Map<String, String> j = new HashMap<String, String>();
 				line = line.replace(';', '&');
 				for (String param : line.split("&")) {
-					String[] key_val = param.split("=",2);
+					String[] key_val = param.split("=", 2);
 					if (key_val.length != 2) {
 						continue;
 					}
 					try {
-						j.put(URLDecoder.decode(key_val[0],"utf-8"),
-								URLDecoder.decode(key_val[1],"utf-8"));
+						j.put(URLDecoder.decode(key_val[0], "utf-8"),
+								URLDecoder.decode(key_val[1], "utf-8"));
 					} catch (UnsupportedEncodingException e) {
 					}
 				}
@@ -357,8 +364,8 @@ public class JSONInterface extends GamesmanApplication {
 						response = handleRequest(j);
 					} catch (RequestException re) {
 						response = new JSONObject();
-						response.put("status","error");
-						response.put("msg",re.toString());
+						response.put("status", "error");
+						response.put("msg", re.toString());
 					} catch (Util.FatalError fe) {
 						fe.printStackTrace();
 						throw new Exception(fe.toString());
@@ -368,9 +375,11 @@ public class JSONInterface extends GamesmanApplication {
 					try {
 						response = new JSONObject();
 						response.put("status", "error");
-						response.put("msg", "An exception was generated: "+e);
+						response.put("msg", "An exception was generated: " + e);
 					} catch (JSONException e1) {
-						Util.warn("Could not send an error response to client: "+e);
+						Util
+								.warn("Could not send an error response to client: "
+										+ e);
 						break;
 					}
 				}
@@ -379,20 +388,22 @@ public class JSONInterface extends GamesmanApplication {
 				w.flush();
 			}
 		}
-		private <T> JSONObject handleRequest (Map<String,String> j) throws RequestException, JSONException {
+
+		private <T> JSONObject handleRequest(Map<String, String> j)
+				throws RequestException, JSONException {
 			Configuration config = loadDatabase(j);
 			if (config == null) {
 				throw new RequestException("This game does not exist.");
 			}
-//			Database db = config.getDatabase();
+			// Database db = config.getDatabase();
 			Game<T> g = Util.checkedCast(config.getGame());
-			
+
 			JSONObject response = new JSONObject();
-			
+
 			String method = j.get("method");
 			if (method == null) {
 				response.put("status", "error");
-				response.put("msg","No method specified!");
+				response.put("msg", "No method specified!");
 			} else if (method.equals("getNextMoveValues")) {
 				String board = j.get("board");
 				if (board == null) {
@@ -404,15 +415,15 @@ public class JSONInterface extends GamesmanApplication {
 				PrimitiveValue pv = g.primitiveValue(state);
 				if (g.getPlayerCount() <= 1 || pv == PrimitiveValue.UNDECIDED) {
 					// Game is not over yet...
-					for(Pair<String,T> next : g.validMoves(state)){
+					for (Pair<String, T> next : g.validMoves(state)) {
 						JSONObject entry = new JSONObject();
 						entry.put("move", next.car);
-						fillJSONFields(config,entry, next.cdr);
+						fillJSONFields(config, entry, next.cdr);
 						responseArray.put(entry);
 					}
 				}
 				response.put("response", responseArray);
-				response.put("status","ok");
+				response.put("status", "ok");
 			} else if (method.equals("getMoveValue")) {
 				String board = j.get("board");
 				if (board == null) {
@@ -420,9 +431,9 @@ public class JSONInterface extends GamesmanApplication {
 				}
 				T state = g.stringToState(board);
 				JSONObject entry = new JSONObject();
-				fillJSONFields(config,entry, state);
+				fillJSONFields(config, entry, state);
 				response.put("response", entry);
-				response.put("status","ok");
+				response.put("status", "ok");
 			}
 			return response;
 		}

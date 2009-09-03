@@ -11,7 +11,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.LinkedList;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Map.Entry;
@@ -35,7 +37,11 @@ public class Configuration {
 
 	// storedFields stores a mapping of RecordFields to an integer.
 	// The integer is the number of possible values of the field
-	public EnumMap<RecordFields, Integer> storedFields;
+	protected int[] storedFields;
+
+	private final int[] fieldIndices = new int[RecordFields.values().length];
+
+	public final LinkedList<RecordFields> usedFields = new LinkedList<RecordFields>();
 
 	public final long totalStates;
 
@@ -48,6 +54,8 @@ public class Configuration {
 	public final int recordsPerGroup;
 
 	public final int recordGroupByteLength;
+
+	public final boolean recordGroupUsesLong;
 
 	public Database db;
 
@@ -125,14 +133,17 @@ public class Configuration {
 		recordGroupByteLength = (bigIntTotalStates.pow(recordsPerGroup)
 				.bitLength() + 7) >> 3;
 		if (recordGroupByteLength < 8) {
+			recordGroupUsesLong = true;
 			longMultipliers = new long[recordsPerGroup + 1];
 			long longMultiplier = 1;
 			for (int i = 0; i <= recordsPerGroup; i++) {
 				longMultipliers[i] = longMultiplier;
 				longMultiplier *= totalStates;
 			}
-		} else
+		} else {
+			recordGroupUsesLong = false;
 			longMultipliers = null;
+		}
 		if (!initLater) {
 			String gamename = getProperty("gamesman.game");
 			String hashname = getProperty("gamesman.hasher");
@@ -167,20 +178,26 @@ public class Configuration {
 	// To specify the bit size, use ':' followed by the number of possible
 	// states
 	private long initializeStoredFields() {
-		storedFields = new EnumMap<RecordFields, Integer>(RecordFields.class);
 		String fields = getProperty("record.fields", RecordFields.VALUE.name()
 				+ "," + RecordFields.REMOTENESS.name());
 		RecordFields field;
 		long totalStates = 1;
 		int states;
-		for (String fld : fields.split(",")) {
-			String[] splt = fld.split(":");
+		String[] splitFields = fields.split(",");
+		usedFields.clear();
+		storedFields = new int[splitFields.length];
+		for (int i = 0; i < fieldIndices.length; i++)
+			fieldIndices[i] = -1;
+		for (int i = 0; i < splitFields.length; i++) {
+			String[] splt = splitFields[i].split(":");
 			field = RecordFields.valueOf(splt[0]);
 			if (splt.length > 1)
 				states = Integer.parseInt(splt[1]);
 			else
 				states = field.defaultNumberOfStates();
-			storedFields.put(field, states);
+			usedFields.add(field);
+			storedFields[i] = states;
+			fieldIndices[field.ordinal()] = i;
 			totalStates *= states;
 		}
 		return totalStates;
@@ -263,8 +280,20 @@ public class Configuration {
 	 * @param sf
 	 *            EnumMap as described above
 	 */
-	public void setStoredFields(EnumMap<RecordFields, Integer> sf) {
-		storedFields = sf;
+	public void setStoredFields(EnumMap<RecordFields, Integer> fields) {
+		storedFields = new int[fields.size()];
+		usedFields.clear();
+		int i;
+		for (i = 0; i < fieldIndices.length; i++) {
+			fieldIndices[i] = -1;
+		}
+		i = 0;
+		for (Entry<RecordFields, Integer> e : fields.entrySet()) {
+			fieldIndices[e.getKey().ordinal()] = i;
+			storedFields[i] = e.getValue();
+			usedFields.add(e.getKey());
+			i++;
+		}
 	}
 
 	/**
@@ -358,11 +387,11 @@ public class Configuration {
 			out.writeUTF(g.getClass().getCanonicalName());
 			out.writeUTF(h.getClass().getCanonicalName());
 
-			out.writeInt(storedFields.size());
+			out.writeInt(storedFields.length);
 
-			for (Entry<RecordFields, Integer> e : storedFields.entrySet()) {
-				out.writeUTF(e.getKey().name());
-				out.writeLong(e.getValue());
+			for (RecordFields rf : usedFields) {
+				out.writeUTF(rf.name());
+				out.writeLong(getFieldStates(rf));
 			}
 
 			out.close();
@@ -391,7 +420,8 @@ public class Configuration {
 	}
 
 	public String toString() {
-		return "Config[" + props + "," + g + "," + h + "," + storedFields + "]";
+		return "Config[" + props + "," + g + "," + h + ","
+				+ Arrays.toString(storedFields) + "]";
 	}
 
 	/**
@@ -650,5 +680,21 @@ public class Configuration {
 		}
 		db.initialize(getProperty("gamesman.db.uri"), this);
 		return db;
+	}
+
+	public boolean containsField(RecordFields rf) {
+		return fieldIndices[rf.ordinal()] >= 0;
+	}
+
+	public int getFieldStates(RecordFields rf) {
+		return storedFields[getFieldIndex(rf)];
+	}
+
+	public int getFieldIndex(RecordFields rf) {
+		return fieldIndices[rf.ordinal()];
+	}
+
+	public int numFields() {
+		return storedFields.length;
 	}
 }

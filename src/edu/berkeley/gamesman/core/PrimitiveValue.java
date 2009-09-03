@@ -6,7 +6,7 @@ package edu.berkeley.gamesman.core;
  * @author Steven Schlansker
  */
 public enum PrimitiveValue {
-	//These must be in order so that PrimitiveValue.values()[x].value() == x
+	// These must be in order so that PrimitiveValue.values()[x].value() == x
 	/**
 	 * The next player to move will lose even playing perfectly
 	 */
@@ -26,6 +26,8 @@ public enum PrimitiveValue {
 
 	private int value;
 
+	public final static PrimitiveValue[] values = PrimitiveValue.values();
+
 	PrimitiveValue(int v) {
 		value = v;
 	}
@@ -42,19 +44,20 @@ public enum PrimitiveValue {
 	}
 
 	/**
-	 * @param otherValue The value to compare this one with
+	 * @param otherValue
+	 *            The value to compare this one with
 	 * @return Is true only if this PrimitiveValue is better than otherValue.
 	 *         Order of values from worst to best: Lose, Tie, Win, Undecided
 	 */
 	public boolean isPreferableTo(PrimitiveValue otherValue) {
 		return (value > otherValue.value);
 	}
-	
+
 	/**
 	 * @return The value of this move from the perspective of the other player.
 	 */
-	public PrimitiveValue previousMovesValue(){
-		switch(this){
+	public PrimitiveValue previousMovesValue() {
+		switch (this) {
 		case LOSE:
 			return WIN;
 		case TIE:

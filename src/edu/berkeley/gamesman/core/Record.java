@@ -9,17 +9,18 @@ import java.util.Map.Entry;
  * @author dnspies
  */
 public final class Record {
-	private final EnumMap<RecordFields, Integer> values;
+	private final Configuration conf;
 
-	private final EnumMap<RecordFields, Integer> numStates;
+	private final int[] values;
 
 	Record(Configuration conf, long state) {
-		numStates = conf.storedFields;
-		values = new EnumMap<RecordFields, Integer>(RecordFields.class);
+		this.conf = conf;
+		values = new int[conf.numFields()];
 		long remainingState = state;
-		for (Entry<RecordFields, Integer> e : numStates.entrySet()) {
-			int val = e.getValue();
-			this.values.put(e.getKey(), (int) (remainingState % val));
+		int i = 0;
+		for (RecordFields rf : conf.usedFields) {
+			int val = conf.getFieldStates(rf);
+			this.values[i++] = (int) (remainingState % val);
 			remainingState /= val;
 		}
 	}
@@ -32,11 +33,11 @@ public final class Record {
 	 *            ordered VALUE, REMOTENESS, SCORE
 	 */
 	public Record(Configuration conf, int... values) {
-		numStates = conf.storedFields;
-		this.values = new EnumMap<RecordFields, Integer>(RecordFields.class);
-		int i = 0;
-		for (Entry<RecordFields, Integer> e : numStates.entrySet())
-			this.values.put(e.getKey(), values[i++]);
+		this.conf = conf;
+		this.values = new int[conf.numFields()];
+		for (int i = 0; i < values.length; i++) {
+			this.values[i] = values[i];
+		}
 	}
 
 	/**
@@ -47,11 +48,15 @@ public final class Record {
 	 *            zero.
 	 */
 	public Record(Configuration conf, PrimitiveValue pVal) {
-		this.values = new EnumMap<RecordFields, Integer>(RecordFields.class);
-		numStates = conf.storedFields;
-		for (Entry<RecordFields, Integer> e : numStates.entrySet())
-			this.values.put(e.getKey(), 0);
-		this.values.put(RecordFields.VALUE, pVal.value());
+		this.conf = conf;
+		this.values = new int[conf.numFields()];
+		int i = 0;
+		for (RecordFields rf : conf.usedFields) {
+			if (rf.equals(RecordFields.VALUE))
+				this.values[i++] = pVal.value();
+			else
+				this.values[i++] = 0;
+		}
 	}
 
 	/**
@@ -61,8 +66,8 @@ public final class Record {
 	 *            The configuration object
 	 */
 	public Record(Configuration conf) {
-		numStates = conf.storedFields;
-		values = new EnumMap<RecordFields, Integer>(RecordFields.class);
+		this.conf = conf;
+		values = new int[conf.numFields()];
 	}
 
 	/**
@@ -72,11 +77,12 @@ public final class Record {
 	 *            The new value of the field
 	 */
 	public void set(RecordFields field, int value) {
-		values.put(field, value);
+		values[conf.getFieldIndex(field)] = value;
 	}
 
 	public void set(Record record) {
-		values.putAll(record.values);
+		for (int i = 0; i < values.length; i++)
+			values[i] = record.values[i];
 	}
 
 	/**
@@ -85,14 +91,14 @@ public final class Record {
 	 * @return The information encoded as a long
 	 */
 	public int get(RecordFields rf) {
-		return values.get(rf);
+		return values[conf.getFieldIndex(rf)];
 	}
 
 	/**
 	 * @return The primitive value of this position
 	 */
 	public PrimitiveValue get() {
-		return PrimitiveValue.values()[(int) get(RecordFields.VALUE)];
+		return PrimitiveValue.values[(get(RecordFields.VALUE))];
 	}
 
 	/**
@@ -101,9 +107,9 @@ public final class Record {
 	public long getState() {
 		long currentState = 0;
 		long multiplier = 1;
-		for (Entry<RecordFields, Integer> e : values.entrySet()) {
-			currentState += e.getValue() * multiplier;
-			multiplier *= numStates.get(e.getKey());
+		for (int i = 0; i < values.length; i++) {
+			currentState += values[i] * multiplier;
+			multiplier *= conf.storedFields[i];
 		}
 		return currentState;
 	}
@@ -114,7 +120,7 @@ public final class Record {
 	 */
 	public void previousPosition() {
 		set(RecordFields.VALUE, get().previousMovesValue().value());
-		if (values.containsKey(RecordFields.REMOTENESS))
+		if (conf.containsField(RecordFields.REMOTENESS))
 			set(RecordFields.REMOTENESS, get(RecordFields.REMOTENESS) + 1);
 	}
 
@@ -129,13 +135,20 @@ public final class Record {
 
 	@Override
 	public String toString() {
-		return values.toString();
+		String s = PrimitiveValue.values[values[conf
+				.getFieldIndex(RecordFields.VALUE)]].name();
+		if (conf.containsField(RecordFields.REMOTENESS))
+			return s + " in "
+					+ values[conf.getFieldIndex(RecordFields.REMOTENESS)];
+		else
+			return s;
 	}
 
 	private Record(Record record) {
-		this.values = new EnumMap<RecordFields, Integer>(RecordFields.class);
-		this.values.putAll(record.values);
-		numStates = record.numStates;
+		this.conf = record.conf;
+		this.values = new int[conf.numFields()];
+		for (int i = 0; i < values.length; i++)
+			values[i] = record.values[i];
 	}
 
 	@Override
@@ -145,18 +158,10 @@ public final class Record {
 
 	public void set(long state) {
 		long remainingState = state;
-		for (Entry<RecordFields, Integer> e : numStates.entrySet()) {
-			int val = e.getValue();
-			this.values.put(e.getKey(), (int) (remainingState % val));
+		for (int i = 0; i < values.length; i++) {
+			int val = conf.storedFields[i];
+			values[i] = (int) (remainingState % val);
 			remainingState /= val;
 		}
-	}
-
-	public void reset() {
-		values.clear();
-	}
-
-	public boolean contains(RecordFields rf) {
-		return values.containsKey(rf);
 	}
 }

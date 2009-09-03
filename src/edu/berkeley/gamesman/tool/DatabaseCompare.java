@@ -46,9 +46,8 @@ public class DatabaseCompare<S> {
 				.lastHash(); hash1++) {
 			long hash2 = g2.stateToHash(g1.hashToState(hash1));
 
-			Set<RecordFields> toCheck = EnumSet
-					.copyOf(c1.storedFields.keySet());
-			toCheck.retainAll(c2.storedFields.keySet());
+			Set<RecordFields> toCheck = EnumSet.copyOf(c1.usedFields);
+			toCheck.retainAll(c2.usedFields);
 
 			Record r1 = db1.getRecord(hash1);
 			Record r2 = db2.getRecord(hash2);
