@@ -41,24 +41,43 @@ public class Configuration {
 
 	private final int[] fieldIndices = new int[RecordFields.values().length];
 
+	/**
+	 * A list of all the RecordFields used in this configuration (in the same
+	 * order as stored fields)
+	 */
 	public final LinkedList<RecordFields> usedFields = new LinkedList<RecordFields>();
 
+	/**
+	 * 
+	 */
 	public final long totalStates;
 
-	public final BigInteger bigIntTotalStates;
+	protected final BigInteger bigIntTotalStates;
 
 	final BigInteger[] multipliers;
 
 	final long[] longMultipliers;
 
+	/**
+	 * The number of records contained in a RecordGroup
+	 */
 	public final int recordsPerGroup;
 
+	/**
+	 * The number of bytes in a RecordGroup
+	 */
 	public final int recordGroupByteLength;
 
-	public final boolean recordGroupUsesLong;
+	protected final boolean recordGroupUsesLong;
 
+	/**
+	 * The database associated with this configuration
+	 */
 	public Database db;
 
+	/**
+	 * The properties used to create this configuration
+	 */
 	public final Properties props;
 
 	/**
@@ -222,6 +241,8 @@ public class Configuration {
 	 *            The Game associated with this configuration.
 	 * @param newH
 	 *            The Hasher associated with this configuration.
+	 * @param prepare
+	 *            Whether to call prepare for the game being passed
 	 */
 	public void initialize(Game<?> newG, Hasher<?> newH, boolean prepare) {
 		g = newG;
@@ -238,6 +259,8 @@ public class Configuration {
 	 *            The Game associated with this configuration.
 	 * @param in_hashname
 	 *            The Hasher associated with this configuration.
+	 * @param prepare
+	 *            Whether to call prepare for the game being passed
 	 * @throws ClassNotFoundException
 	 *             Could not load either the hasher or game class
 	 */
@@ -261,6 +284,14 @@ public class Configuration {
 		}
 	}
 
+	/**
+	 * @param gamename
+	 *            The name of the game class
+	 * @param hashname
+	 *            The name of the hash class
+	 * @throws ClassNotFoundException
+	 *             If either class is not found
+	 */
 	public void initialize(String gamename, String hashname)
 			throws ClassNotFoundException {
 		initialize(gamename, hashname, true);
@@ -277,7 +308,7 @@ public class Configuration {
 	 * Specify which fields are to be saved by the database Each Field maps to
 	 * an integer representing the number of possible values for that field
 	 * 
-	 * @param sf
+	 * @param fields
 	 *            EnumMap as described above
 	 */
 	public void setStoredFields(EnumMap<RecordFields, Integer> fields) {
@@ -682,18 +713,36 @@ public class Configuration {
 		return db;
 	}
 
+	/**
+	 * @param rf
+	 *            The field
+	 * @return Whether or not this record configuration contains rf
+	 */
 	public boolean containsField(RecordFields rf) {
 		return fieldIndices[rf.ordinal()] >= 0;
 	}
 
+	/**
+	 * @param rf
+	 *            The field
+	 * @return The number of possible states for rf
+	 */
 	public int getFieldStates(RecordFields rf) {
 		return storedFields[getFieldIndex(rf)];
 	}
 
+	/**
+	 * @param rf
+	 *            The field
+	 * @return The index in a record array that corresponds to rf
+	 */
 	public int getFieldIndex(RecordFields rf) {
 		return fieldIndices[rf.ordinal()];
 	}
 
+	/**
+	 * @return The number of fields this configuration contains
+	 */
 	public int numFields() {
 		return storedFields.length;
 	}

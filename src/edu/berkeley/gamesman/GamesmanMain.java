@@ -13,7 +13,6 @@ import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Master;
 import edu.berkeley.gamesman.core.Solver;
-import edu.berkeley.gamesman.database.DatabaseCache;
 import edu.berkeley.gamesman.database.filer.DirectoryFilerClient;
 import edu.berkeley.gamesman.database.filer.DirectoryFilerServer;
 import edu.berkeley.gamesman.util.DebugFacility;

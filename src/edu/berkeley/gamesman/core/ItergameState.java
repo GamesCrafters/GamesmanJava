@@ -28,6 +28,9 @@ public final class ItergameState extends MutablePair<Integer, Long> {
 		this(0, 0);
 	}
 
+	/**
+	 * @param tier The tier
+	 */
 	public void setTier(int tier) {
 		car = tier;
 	}
@@ -39,6 +42,9 @@ public final class ItergameState extends MutablePair<Integer, Long> {
 		return car;
 	}
 
+	/**
+	 * @param hash The hash
+	 */
 	public void setHash(long hash) {
 		cdr = hash;
 	}

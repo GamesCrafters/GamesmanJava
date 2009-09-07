@@ -180,7 +180,16 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> implement
 	
 	public abstract int numberOfTiers();
 
+	/**
+	 * @return The maximum number of children for any position
+	 */
 	public abstract int maxChildren();
 
+	/**
+	 * Stores all the valid moves for this position in moves
+	 * 
+	 * @param moves An array to store to
+	 * @return The number of moves stored
+	 */
 	public abstract int validMoves(ItergameState[] moves);
 }

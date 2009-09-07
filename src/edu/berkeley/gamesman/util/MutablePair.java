@@ -43,6 +43,11 @@ public class MutablePair<A, B> implements Serializable {
 		cdr = dr;
 	}
 
+	/**
+	 * Constructs a mutable pair with the same intial values as pair
+	 * 
+	 * @param pair An unmutable pair
+	 */
 	public MutablePair(Pair<A, B> pair) {
 		car = pair.car;
 		cdr = pair.cdr;

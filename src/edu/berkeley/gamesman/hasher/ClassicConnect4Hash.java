@@ -1,7 +1,5 @@
 package edu.berkeley.gamesman.hasher;
 
-import java.math.BigInteger;
-
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.TieredHasher;
 import edu.berkeley.gamesman.game.connect4.C4Board;

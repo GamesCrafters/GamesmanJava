@@ -2,8 +2,6 @@ package edu.berkeley.gamesman.core;
 
 import java.util.Iterator;
 
-import edu.berkeley.gamesman.util.biginteger.BigInteger;
-
 /**
  * A Database is the abstract superclass of all data storage methods used in
  * Gamesman. Each particular Database is responsible for the persistent storage
@@ -41,6 +39,12 @@ public abstract class Database {
 		initialize(uri);
 	}
 
+	/**
+	 * Initializes as above, but when the confiration is already specified
+	 * 
+	 * @param uri
+	 *            The URI that the Database is associated with
+	 */
 	public abstract void initialize(String uri);
 
 	/**
@@ -85,7 +89,6 @@ public abstract class Database {
 	 *            The record number
 	 * @param r
 	 *            The record to store in
-	 * @return The stored Record
 	 */
 	public synchronized void getRecord(long recordIndex, Record r) {
 		long group = recordIndex / conf.recordsPerGroup;
@@ -94,6 +97,11 @@ public abstract class Database {
 		getRecordGroup(byteOffset).getRecord(num, r);
 	}
 
+	/**
+	 * @param recordIndex The index to look in
+	 * @param numRecords The number of records before hasNext returns false
+	 * @return An iterator starting at recordIndex over numRecords records in this database
+	 */
 	public Iterator<Record> getRecords(long recordIndex, int numRecords) {
 		long byteOffset = recordIndex / conf.recordsPerGroup
 				* conf.recordGroupByteLength;
@@ -122,6 +130,13 @@ public abstract class Database {
 		putRecordGroup(byteOffset, rg);
 	}
 
+	/**
+	 * Stores numRecords records from the records iterator in the database
+	 * 
+	 * @param recordIndex The index to look in
+	 * @param records An iterator starting at recordIndex over numRecords records
+	 * @param numRecords The number of records to go through
+ 	 */
 	public void putRecords(long recordIndex, RecordIterator records,
 			int numRecords) {
 		int preRecords = conf.recordsPerGroup
@@ -149,6 +164,11 @@ public abstract class Database {
 	 */
 	public abstract RecordGroup getRecordGroup(long loc);
 
+	/**
+	 * @param startLoc The location to start at
+	 * @param numGroups The number of groups to return
+	 * @return An iterator over numGroups RecordGroups from this database
+	 */
 	public Iterator<RecordGroup> getRecordGroups(long startLoc, int numGroups) {
 		throw new UnsupportedOperationException(
 				"getRecordGroups should be overridden");
@@ -162,6 +182,13 @@ public abstract class Database {
 	 */
 	public abstract void putRecordGroup(long loc, RecordGroup rg);
 
+	/**
+	 * Puts numGroups RecordGroups into this database starting at location loc (loc is measured in bytes).
+	 * 
+	 * @param loc The location to start at
+	 * @param it An iterator over at least numGroups RecordGroups
+	 * @param numGroups The number of groups to store
+	 */
 	public void putRecordGroups(long loc, Iterator<RecordGroup> it,
 			int numGroups) {
 		throw new UnsupportedOperationException(
@@ -182,7 +209,7 @@ public abstract class Database {
 
 		private Record[] records;
 
-		private int offset, stop;
+		private int stop;
 
 		private int index;
 
@@ -192,7 +219,6 @@ public abstract class Database {
 
 		public RecordGroupIterator(Record[] records, int offset, int length) {
 			this.records = records;
-			this.offset = offset;
 			this.stop = offset + length;
 			this.index = offset;
 		}
@@ -219,8 +245,6 @@ public abstract class Database {
 	}
 
 	private class RecordIterator implements Iterator<Record> {
-		private BigInteger currentGroup;
-
 		private final Record[] currentRecords;
 
 		private long nextRecord = 0;
@@ -261,6 +285,14 @@ public abstract class Database {
 
 	}
 
+	/**
+	 * Stores numRecords records from the records array in the database
+	 * 
+	 * @param recordIndex The index to look in
+	 * @param records An array containing records
+	 * @param offset The offset at which to start reading from the array
+	 * @param numRecords The number of records to go through
+ 	 */
 	public void putRecords(long recordIndex, Record[] records, int offset,
 			int numRecords) {
 		int preRecords = conf.recordsPerGroup

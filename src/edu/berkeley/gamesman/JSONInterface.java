@@ -16,7 +16,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.Map;
-import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -315,6 +314,8 @@ public class JSONInterface extends GamesmanApplication {
 		}
 
 		class RequestException extends Exception {
+			private static final long serialVersionUID = 4304664084577498297L;
+
 			public RequestException(String msg) {
 				super(msg);
 			}

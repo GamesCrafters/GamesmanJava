@@ -4,9 +4,21 @@ import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.RecordGroup;
 
+/**
+ * A testing database
+ * 
+ * @author dnspies
+ */
 public class RecordDatabase extends Database {
+	/**
+	 * When instantiated this variable is set to the instantiated RecordDatabase
+	 * so it can be called by a testing class later
+	 */
 	public static RecordDatabase rd;
 
+	/**
+	 * Sets rd to be this
+	 */
 	public RecordDatabase() {
 		rd = this;
 	}

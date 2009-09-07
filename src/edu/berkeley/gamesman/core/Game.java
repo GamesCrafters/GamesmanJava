@@ -213,9 +213,12 @@ public abstract class Game<State> {
 	 *         then score, then remoteness)
 	 */
 	public Record combine(Configuration conf, List<Record> vals) {
+		allVals.clear();
+		for (Record r:vals)
+			allVals.add(r);
 		valsBest.clear();
 		PrimitiveValue bestPrim = PrimitiveValue.LOSE;
-		for (Record val : vals) {
+		for (Record val : allVals) {
 			PrimitiveValue pv = val.get();
 			if (pv.isPreferableTo(bestPrim)) {
 				valsBest.clear();
@@ -271,6 +274,13 @@ public abstract class Game<State> {
 		return vals.get(0);
 	}
 
+	/**
+	 * @param conf The configuration object
+	 * @param recordArray An array of records
+	 * @param offset The offset to start reading from
+	 * @param len The number of records to read through
+	 * @return The record with the best possible outcome
+	 */
 	public Record combine(Configuration conf, Record[] recordArray, int offset,
 			int len) {
 		allVals.clear();

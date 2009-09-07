@@ -1,8 +1,5 @@
 package edu.berkeley.gamesman.core;
 
-import java.util.EnumMap;
-import java.util.Map.Entry;
-
 /**
  * Stores information about a game state
  * 
@@ -80,6 +77,12 @@ public final class Record {
 		values[conf.getFieldIndex(field)] = value;
 	}
 
+	/**
+	 * Sets the fields of this record to be the same as the passed record.
+	 * 
+	 * @param record
+	 *            Another record
+	 */
 	public void set(Record record) {
 		for (int i = 0; i < values.length; i++)
 			values[i] = record.values[i];
@@ -159,6 +162,12 @@ public final class Record {
 		return new Record(this);
 	}
 
+	/**
+	 * Derives all the fields from the passed long value
+	 * 
+	 * @param state
+	 *            The state to derive the fields from
+	 */
 	public void set(long state) {
 		long remainingState = state;
 		for (int i = 0; i < values.length; i++) {
@@ -168,6 +177,12 @@ public final class Record {
 		}
 	}
 
+	/**
+	 * @param conf
+	 *            a configuration object
+	 * @return Determines the size (in bytes) of a record with a given
+	 *         configuration object
+	 */
 	public static int byteSize(Configuration conf) {
 		return 12 + 4 * conf.numFields();
 	}

@@ -12,6 +12,7 @@ public interface Master {
 	 * @param conf The Game to solve
 	 * @param solver The Solver to use to solve it
 	 * @param database The Database to store information to
+	 * @param cached Whether to cache the database using DatabaseCache
 	 */
 	public void initialize(Configuration conf, Class<? extends Solver> solver, Class<? extends Database> database, boolean cached);
 	/**

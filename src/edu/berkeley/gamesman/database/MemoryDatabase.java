@@ -25,6 +25,9 @@ import edu.berkeley.gamesman.util.Util;
  */
 public class MemoryDatabase extends Database {
 	
+	/**
+	 * Set this variable to a MemoryDatabase when instantiated so it can be used by a testing class later.
+	 */
 	public static MemoryDatabase md;
 
 	/* Class Variables */

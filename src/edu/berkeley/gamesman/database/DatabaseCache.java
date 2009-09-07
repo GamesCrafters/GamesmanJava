@@ -56,7 +56,7 @@ public final class DatabaseCache extends Database {
 
 		public RecordGroup getGroup() {
 			if (changed)
-				rg.set(r);
+				rg.set(r,0);
 			return rg;
 		}
 

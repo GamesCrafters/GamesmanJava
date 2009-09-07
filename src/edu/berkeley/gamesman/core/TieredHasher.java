@@ -103,6 +103,12 @@ public abstract class TieredHasher<State> extends Hasher<State> {
 	 */
 	public abstract Pair<Integer,Long> tierIndexForState(State state);
 
+	/**
+	 * Convert a State into a mutable tier/index pair
+	 * Analogous to hash for a Tiered game
+	 * @param state The game state we have
+	 * @return a MutablePair with tier/offset enclosed
+	 */
 	public MutablePair<Integer, Long> mutableTierIndexForState(State state){
 		return new MutablePair<Integer, Long>(tierIndexForState(state));
 	}

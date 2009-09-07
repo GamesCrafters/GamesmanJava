@@ -26,6 +26,10 @@ public enum PrimitiveValue {
 
 	private int value;
 
+	/**
+	 * The same as PrimitiveValue.values(), but without needing to allocate new
+	 * space every time it's called
+	 */
 	public final static PrimitiveValue[] values = PrimitiveValue.values();
 
 	PrimitiveValue(int v) {

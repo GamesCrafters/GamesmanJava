@@ -1,6 +1,5 @@
 package edu.berkeley.gamesman.core;
 
-import java.math.BigInteger;
 import java.util.Iterator;
 
 import edu.berkeley.gamesman.util.Pair;

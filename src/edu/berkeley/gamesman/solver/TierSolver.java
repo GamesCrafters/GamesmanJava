@@ -30,6 +30,9 @@ public class TierSolver<T> extends Solver {
 
 	protected Configuration conf;
 
+	/**
+	 * The number of positions to go through between each update/reset
+	 */
 	public static final int STEP_SIZE = 10000;
 
 	@Override

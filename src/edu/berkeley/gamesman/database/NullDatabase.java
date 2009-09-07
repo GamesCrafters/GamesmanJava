@@ -40,8 +40,8 @@ public final class NullDatabase extends Database {
 	public Iterator<RecordGroup> getRecordGroups(long startLoc, int numGroups) {
 		return new NullRecordGroupIterator(numGroups);
 	}
-	
-	public class NullRecordGroupIterator implements Iterator<RecordGroup>{
+
+	private class NullRecordGroupIterator implements Iterator<RecordGroup>{
 		private int remainingGroups;
 		
 		private NullRecordGroupIterator(int len){

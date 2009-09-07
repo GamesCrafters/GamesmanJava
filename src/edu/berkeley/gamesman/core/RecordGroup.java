@@ -52,6 +52,14 @@ public class RecordGroup {
 			this.values = values;
 	}
 
+	/**
+	 * @param conf
+	 *            Creates a RecordGroup from the given configuration and records
+	 * @param recs
+	 *            The records array
+	 * @param offset
+	 *            The offset into the array. len = conf.recordsPerGroup
+	 */
 	public RecordGroup(Configuration conf, Record[] recs, int offset) {
 		this.conf = conf;
 		if (conf.recordGroupUsesLong) {
@@ -68,6 +76,12 @@ public class RecordGroup {
 		}
 	}
 
+	/**
+	 * @param conf
+	 *            The configuration object
+	 * @param recordIterator
+	 *            An iterator over the records to use to construct this group
+	 */
 	public RecordGroup(Configuration conf, Iterator<Record> recordIterator) {
 		this.conf = conf;
 		if (conf.recordGroupUsesLong) {
@@ -85,6 +99,12 @@ public class RecordGroup {
 		}
 	}
 
+	/**
+	 * Creates an empty RecordGroup to be set later
+	 * 
+	 * @param conf
+	 *            The configuration object
+	 */
 	public RecordGroup(Configuration conf) {
 		this.conf = conf;
 	}
@@ -105,6 +125,14 @@ public class RecordGroup {
 		return new Record(conf, val);
 	}
 
+	/**
+	 * Sets the records in this group to Records from recs
+	 * 
+	 * @param recs
+	 *            An array of records to use
+	 * @param offset
+	 *            The offset into the array
+	 */
 	public void getRecords(Record[] recs, int offset) {
 		if (conf.recordGroupUsesLong) {
 			long remainingValues = longValues;
@@ -181,6 +209,12 @@ public class RecordGroup {
 		r.set(val);
 	}
 
+	/**
+	 * Copies group to this RecordGroup
+	 * 
+	 * @param group
+	 *            The group to copy
+	 */
 	public void set(RecordGroup group) {
 		if (conf.recordGroupUsesLong)
 			longValues = group.longValues;
@@ -188,19 +222,35 @@ public class RecordGroup {
 			values = group.values;
 	}
 
-	public void set(Record[] recs) {
+	/**
+	 * Sets this RecordGroup to recs
+	 * 
+	 * @param recs
+	 *            The records to use
+	 * @param offset
+	 *            The offset into recs
+	 */
+	public void set(Record[] recs, int offset) {
 		if (conf.recordGroupUsesLong) {
 			this.longValues = 0;
 			for (int i = 0; i < conf.recordsPerGroup; i++)
-				longValues += recs[i].getState() * conf.longMultipliers[i];
+				longValues += recs[offset++].getState()
+						* conf.longMultipliers[i];
 		} else {
 			values = BigInteger.ZERO;
 			for (int i = 0; i < conf.recordsPerGroup; i++)
-				values = values.add(BigInteger.valueOf(recs[i].getState())
+				values = values.add(BigInteger.valueOf(
+						recs[offset++].getState())
 						.multiply(conf.multipliers[i]));
 		}
 	}
 
+	/**
+	 * Outputs the bytes from this RecordGroup into output
+	 * 
+	 * @param output
+	 *            A ByteBuffer to output to
+	 */
 	public void outputUnsignedBytes(ByteBuffer output) {
 		if (conf.recordGroupUsesLong) {
 			for (int i = (conf.recordGroupByteLength - 1) * 8; i >= 0; i -= 8)
@@ -209,6 +259,14 @@ public class RecordGroup {
 			values.outputUnsignedBytes(output, conf.recordGroupByteLength);
 	}
 
+	/**
+	 * Outputs the bytes from this RecordGroup into byteArray
+	 * 
+	 * @param byteArray
+	 *            The byte array to output to
+	 * @param offset
+	 *            The offset into byteArray
+	 */
 	public void toUnsignedByteArray(byte[] byteArray, int offset) {
 		if (conf.recordGroupUsesLong) {
 			long inValues = longValues;
@@ -221,6 +279,14 @@ public class RecordGroup {
 					conf.recordGroupByteLength);
 	}
 
+	/**
+	 * Outputs the bytes from this RecordGroup into output
+	 * 
+	 * @param output
+	 *            A DataOutput to output to
+	 * @throws IOException
+	 *             If output throws an IOException
+	 */
 	public void outputUnsignedBytes(DataOutput output) throws IOException {
 		if (conf.recordGroupUsesLong) {
 			for (int i = (conf.recordGroupByteLength - 1) * 8; i >= 0; i -= 8)
@@ -229,6 +295,14 @@ public class RecordGroup {
 			values.outputUnsignedBytes(output, conf.recordGroupByteLength);
 	}
 
+	/**
+	 * Outputs the bytes from this RecordGroup into output
+	 * 
+	 * @param output
+	 *            A MemoryDatabase to output to
+	 * @param offset
+	 *            The offset into the MemoryDatabase
+	 */
 	public void writeToUnsignedMemoryDatabase(MemoryDatabase output, long offset) {
 		if (conf.recordGroupUsesLong) {
 			long inValues = longValues;
@@ -241,6 +315,14 @@ public class RecordGroup {
 					conf.recordGroupByteLength);
 	}
 
+	/**
+	 * Outputs the bytes from this RecordGroup into output
+	 * 
+	 * @param output
+	 *            An OutputStream to output to
+	 * @throws IOException
+	 *             If output throws an IOException
+	 */
 	public void outputUnsignedBytes(OutputStream output) throws IOException {
 		if (conf.recordGroupUsesLong) {
 			for (int i = (conf.recordGroupByteLength - 1) * 8; i >= 0; i -= 8)
@@ -249,6 +331,12 @@ public class RecordGroup {
 			values.outputUnsignedBytes(output, conf.recordGroupByteLength);
 	}
 
+	/**
+	 * @param conf
+	 *            The configuration object
+	 * @return The number of bytes used by a RecordGroup object with this
+	 *         configuration
+	 */
 	public static int byteSize(Configuration conf) {
 		return 20 + (conf.recordGroupUsesLong ? 0
 				: (conf.recordGroupByteLength + 1));
