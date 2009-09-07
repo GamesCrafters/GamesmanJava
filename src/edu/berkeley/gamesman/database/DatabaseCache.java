@@ -2,7 +2,6 @@ package edu.berkeley.gamesman.database;
 
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.Random;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
@@ -56,7 +55,7 @@ public final class DatabaseCache extends Database {
 
 		public RecordGroup getGroup() {
 			if (changed)
-				rg.set(r,0);
+				rg.set(r, 0);
 			return rg;
 		}
 
@@ -68,17 +67,17 @@ public final class DatabaseCache extends Database {
 
 	private GroupHolder[][][] records; // index,n,offset
 
-	private final Random pageChooser = new Random();
-
 	private int indexBits, indices;
 
 	private int offsetBits, pageSize;
 
 	private int nWayAssociative;
 
-	private long[][] tags;
+	private long[][] tags, used;
 
-	private boolean[][] dirty, used;
+	private long[] current;
+
+	private boolean[][] dirty;
 
 	private long tag;
 
@@ -139,19 +138,26 @@ public final class DatabaseCache extends Database {
 	public Record getRecord(long recordIndex) {
 		setPoint(recordIndex);
 		int i;
+		long lowest = Long.MAX_VALUE;
+		int lowUsed = 0;
 		for (i = 0; i < nWayAssociative; i++) {
-			if (!used[index][i]) {
+			if (used[index][i] == 0) {
 				loadPage(i);
 				break;
-			} else if (tags[index][i] == tag)
+			} else if (tags[index][i] == tag) {
 				break;
+			} else if (used[index][i] < lowest) {
+				lowest = used[index][i];
+				lowUsed = i;
+			}
 		}
 		if (i >= nWayAssociative) {
-			i = pageChooser.nextInt(nWayAssociative);
+			i = lowUsed;
 			loadPage(i);
 		}
 		Record rec = new Record(conf);
 		records[index][i][offset].get(recordNum, rec);
+		used[index][i] = ++current[index];
 		return rec;
 	}
 
@@ -159,45 +165,58 @@ public final class DatabaseCache extends Database {
 	public void getRecord(long recordIndex, Record r) {
 		setPoint(recordIndex);
 		int i;
+		long lowest = Long.MAX_VALUE;
+		int lowUsed = 0;
 		for (i = 0; i < nWayAssociative; i++) {
-			if (!used[index][i]) {
+			if (used[index][i] == 0) {
 				loadPage(i);
 				break;
-			} else if (tags[index][i] == tag)
+			} else if (tags[index][i] == tag) {
 				break;
+			} else if (used[index][i] < lowest) {
+				lowest = used[index][i];
+				lowUsed = i;
+			}
 		}
 		if (i >= nWayAssociative) {
-			i = pageChooser.nextInt(nWayAssociative);
+			i = lowUsed;
 			loadPage(i);
 		}
 		records[index][i][offset].get(recordNum, r);
+		used[index][i] = ++current[index];
 	}
 
 	@Override
 	public void putRecord(long recordIndex, Record r) {
 		setPoint(recordIndex);
 		int i;
+		long lowest = Long.MAX_VALUE;
+		int lowUsed = 0;
 		for (i = 0; i < nWayAssociative; i++) {
-			if (!used[index][i]) {
+			if (used[index][i] == 0) {
 				loadPage(i);
 				break;
-			} else if (tags[index][i] == tag)
+			} else if (tags[index][i] == tag) {
 				break;
+			} else if (used[index][i] < lowest) {
+				lowest = used[index][i];
+				lowUsed = i;
+			}
 		}
 		if (i >= nWayAssociative) {
-			i = pageChooser.nextInt(nWayAssociative);
+			i = lowUsed;
 			loadPage(i);
 		}
 		records[index][i][offset].set(recordNum, r);
+		used[index][i] = ++current[index];
 		dirty[index][i] = true;
 	}
 
 	private void loadPage(int i) {
-		if (used[index][i] && dirty[index][i])
+		if (dirty[index][i])
 			writeBack(i);
 		tags[index][i] = tag;
 		dirty[index][i] = false;
-		used[index][i] = true;
 		long firstGroup = ((tag << indexBits) | index) << offsetBits;
 		Iterator<RecordGroup> it = db.getRecordGroups(firstGroup
 				* conf.recordGroupByteLength, pageSize);
@@ -224,7 +243,7 @@ public final class DatabaseCache extends Database {
 	public void flush() {
 		for (index = 0; index < indices; index++)
 			for (int i = 0; i < nWayAssociative; i++)
-				if (used[index][i] && dirty[index][i])
+				if (dirty[index][i])
 					writeBack(i);
 		db.flush();
 	}
@@ -260,9 +279,13 @@ public final class DatabaseCache extends Database {
 		records = new GroupHolder[indices][nWayAssociative][pageSize];
 		tags = new long[indices][nWayAssociative];
 		dirty = new boolean[indices][nWayAssociative];
-		used = new boolean[indices][nWayAssociative];
-		for (boolean[] u : used)
-			Arrays.fill(u, false);
+		used = new long[indices][nWayAssociative];
+		current = new long[indices];
+		Arrays.fill(current, 0);
+		for (long[] u : used)
+			Arrays.fill(u, 0);
+		for (boolean[] d : dirty)
+			Arrays.fill(d, false);
 		for (GroupHolder[][] pages : records) {
 			for (GroupHolder[] page : pages) {
 				for (int i = 0; i < page.length; i++)
