@@ -2,9 +2,7 @@ package edu.berkeley.gamesman.game.util;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 
 /**
  * @author DNSpies
@@ -143,7 +141,7 @@ public final class PieceRearranger implements Cloneable {
 	 */
 	public final long colorArrangements;
 
-	private final LinkedList<HashGroup> groups;
+	private final ArrayList<HashGroup> groups;
 
 	private final int numOs;
 
@@ -164,7 +162,7 @@ public final class PieceRearranger implements Cloneable {
 	 *            A character representation of the board (in 'X' 'O' and ' ')
 	 */
 	public PieceRearranger(final char[] s) {
-		groups = new LinkedList<HashGroup>();
+		groups = new ArrayList<HashGroup>();
 		HashPiece lastPiece = lowPiece;
 		HashGroup currentGroup = new HashGroup(lastPiece);
 		pieces = new ArrayList<HashPiece>(s.length);
@@ -214,7 +212,7 @@ public final class PieceRearranger implements Cloneable {
 	 *            The number of X's on the board
 	 */
 	public PieceRearranger(final char[] s, int os, int xs) {
-		groups = new LinkedList<HashGroup>();
+		groups = new ArrayList<HashGroup>();
 		HashPiece lastPiece = lowPiece;
 		HashGroup currentGroup = new HashGroup(lastPiece);
 		pieces = new ArrayList<HashPiece>(s.length);
@@ -327,20 +325,19 @@ public final class PieceRearranger implements Cloneable {
 	 */
 	public int getChildren(final char player, long[] children) {
 		long move = hash;
-		ListIterator<HashGroup> it = groups.listIterator(groups.size());
 		if (player == 'O') {
 			HashGroup g;
-			move += it.previous().addO;
+			move += groups.get(groups.size() - 1).addO;
 			for (int i = groups.size() - 2; i >= 0; i--) {
-				g = it.previous();
+				g = groups.get(i);
 				children[i] = move + g.lastPiece.nextO;
 				move += g.addO;
 			}
 		} else if (player == 'X') {
-			move += it.previous().addX;
+			move += groups.get(groups.size() - 1).addX;
 			for (int i = groups.size() - 2; i >= 0; i--) {
 				children[i] = move;
-				move += it.previous().addX;
+				move += groups.get(i).addX;
 			}
 		}
 		return groups.size() - 1;

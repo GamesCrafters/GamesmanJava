@@ -101,6 +101,8 @@ public class FileDatabase extends Database {
 	protected class RecordGroupByteIterator implements Iterator<RecordGroup> {
 		int onByte = 0;
 
+		RecordGroup rg = new RecordGroup(conf);
+
 		public boolean hasNext() {
 			return onByte < groupsLength;
 		}
@@ -108,7 +110,8 @@ public class FileDatabase extends Database {
 		public RecordGroup next() {
 			for (int i = 0; i < rawRecord.length; i++)
 				rawRecord[i] = groups[onByte++];
-			return new RecordGroup(conf, rawRecord);
+			rg.setValue(rawRecord);
+			return rg;
 		}
 
 		public void remove() {
