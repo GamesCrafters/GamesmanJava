@@ -214,7 +214,7 @@ public abstract class Game<State> {
 	 */
 	public Record combine(Configuration conf, List<Record> vals) {
 		allVals.clear();
-		for (Record r:vals)
+		for (Record r : vals)
 			allVals.add(r);
 		valsBest.clear();
 		PrimitiveValue bestPrim = PrimitiveValue.LOSE;
@@ -275,10 +275,14 @@ public abstract class Game<State> {
 	}
 
 	/**
-	 * @param conf The configuration object
-	 * @param recordArray An array of records
-	 * @param offset The offset to start reading from
-	 * @param len The number of records to read through
+	 * @param conf
+	 *            The configuration object
+	 * @param recordArray
+	 *            An array of records
+	 * @param offset
+	 *            The offset to start reading from
+	 * @param len
+	 *            The number of records to read through
 	 * @return The record with the best possible outcome
 	 */
 	public Record combine(Configuration conf, Record[] recordArray, int offset,
@@ -288,7 +292,8 @@ public abstract class Game<State> {
 			allVals.add(recordArray[offset++]);
 		valsBest.clear();
 		PrimitiveValue bestPrim = PrimitiveValue.LOSE;
-		for (Record val : allVals) {
+		for (int i = 0; i < allVals.size(); i++) {
+			Record val = allVals.get(i);
 			PrimitiveValue pv = val.get();
 			if (pv.isPreferableTo(bestPrim)) {
 				valsBest.clear();
@@ -301,7 +306,8 @@ public abstract class Game<State> {
 		if (conf.containsField(RecordFields.SCORE)) {
 			valsBestScore.clear();
 			long bestScore = Long.MIN_VALUE;
-			for (Record val : vals) {
+			for (int i = 0; i < vals.size(); i++) {
+				Record val = vals.get(i);
 				long score = val.get(RecordFields.SCORE);
 				if (score > bestScore) {
 					valsBestScore.clear();
@@ -316,7 +322,8 @@ public abstract class Game<State> {
 			if (bestPrim.equals(PrimitiveValue.LOSE)) {
 				valsBestRemoteness.clear();
 				long bestRemoteness = 0;
-				for (Record val : vals) {
+				for (int i = 0; i < vals.size(); i++) {
+					Record val = vals.get(i);
 					long remoteness = val.get(RecordFields.REMOTENESS);
 					if (remoteness > bestRemoteness) {
 						valsBestRemoteness.clear();
@@ -329,7 +336,8 @@ public abstract class Game<State> {
 			} else {
 				valsBestRemoteness.clear();
 				long bestRemoteness = Long.MAX_VALUE;
-				for (Record val : vals) {
+				for (int i = 0; i < vals.size(); i++) {
+					Record val = vals.get(i);
 					long remoteness = val.get(RecordFields.REMOTENESS);
 					if (remoteness < bestRemoteness) {
 						valsBestRemoteness.clear();
