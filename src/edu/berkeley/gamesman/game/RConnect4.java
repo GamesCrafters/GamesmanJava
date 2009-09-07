@@ -10,7 +10,6 @@ import edu.berkeley.gamesman.core.TieredIterGame;
 import edu.berkeley.gamesman.game.util.BitSetBoard;
 import edu.berkeley.gamesman.game.util.PieceRearranger;
 import edu.berkeley.gamesman.util.ExpCoefs;
-import edu.berkeley.gamesman.util.MutablePair;
 import edu.berkeley.gamesman.util.Pair;
 
 /**
@@ -27,7 +26,7 @@ public final class RConnect4 extends TieredIterGame {
 
 	private final int gameHeight, gameWidth, gameSize;
 
-	private final ArrayList<MutablePair<Integer, Integer>> pieces;
+	private final ArrayList<Place> pieces;
 
 	private final long[] multiplier;
 
@@ -45,6 +44,15 @@ public final class RConnect4 extends TieredIterGame {
 
 	private PieceRearranger iah;
 
+	private static final class Place {
+		private Place(int row, int col) {
+			this.row = row;
+			this.col = col;
+		}
+
+		private int row, col;
+	}
+
 	/**
 	 * @param conf
 	 *            The configuration object
@@ -59,7 +67,7 @@ public final class RConnect4 extends TieredIterGame {
 			for (int col = 0; col < gameWidth; col++)
 				indices[row][col] = -1;
 		gameSize = gameWidth * gameHeight;
-		pieces = new ArrayList<MutablePair<Integer, Integer>>(gameSize);
+		pieces = new ArrayList<Place>(gameSize);
 		moveArrangement = new long[gameWidth];
 		colHeights = new int[gameWidth];
 		bsb = new BitSetBoard(gameHeight, gameWidth);
@@ -117,7 +125,7 @@ public final class RConnect4 extends TieredIterGame {
 	private void nextPieceArrangement() {
 		pieceArrangement++;
 		int col = 0, row;
-		MutablePair<Integer, Integer> rowCol;
+		Place rowCol;
 		while (colHeights[col] == 0) {
 			col++;
 		}
@@ -138,8 +146,8 @@ public final class RConnect4 extends TieredIterGame {
 			for (row = 0; row < colHeights[i]; row++) {
 				indices[row][i] = pieceCount;
 				rowCol = pieces.get(pieceCount);
-				rowCol.car = row;
-				rowCol.cdr = i;
+				rowCol.row = row;
+				rowCol.col = i;
 				pieceCount++;
 			}
 			for (; row < gameHeight; row++)
@@ -148,8 +156,8 @@ public final class RConnect4 extends TieredIterGame {
 		for (row = 0; row < colHeights[col]; row++) {
 			indices[row][col] = pieceCount;
 			rowCol = pieces.get(pieceCount);
-			rowCol.car = row;
-			rowCol.cdr = col;
+			rowCol.row = row;
+			rowCol.col = col;
 			pieceCount++;
 		}
 		for (; row < gameHeight; row++)
@@ -178,10 +186,10 @@ public final class RConnect4 extends TieredIterGame {
 	}
 
 	private void changeBitSet(PieceRearranger.ChangedPieces cp) {
-		MutablePair<Integer, Integer> rowCol;
+		Place rowCol;
 		while (cp.hasNext()) {
 			rowCol = pieces.get(cp.next());
-			bsb.flipPiece(rowCol.car, rowCol.cdr);
+			bsb.flipPiece(rowCol.row, rowCol.col);
 		}
 	}
 
@@ -279,7 +287,7 @@ public final class RConnect4 extends TieredIterGame {
 				row = 0;
 			}
 			indices[row][col] = i;
-			pieces.add(new MutablePair<Integer, Integer>(row, col));
+			pieces.add(new Place(row, col));
 			bsb.addPiece(row, col, i < os ? 'O' : 'X');
 			rearrangeString.append('T');
 			pieceArrangement += ec.getCoef(col, i + 1);
@@ -337,8 +345,8 @@ public final class RConnect4 extends TieredIterGame {
 	private void setBSBfromIAH() {
 		bsb.clear();
 		for (int i = 0; i < pieces.size(); i++) {
-			MutablePair<Integer, Integer> rowCol = pieces.get(i);
-			bsb.addPiece(rowCol.car, rowCol.cdr, iah.get(i));
+			Place rowCol = pieces.get(i);
+			bsb.addPiece(rowCol.row, rowCol.col, iah.get(i));
 		}
 	}
 
