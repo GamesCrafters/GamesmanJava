@@ -220,9 +220,9 @@ public final class RConnect4 extends TieredIterGame {
 
 	@Override
 	public void setState(ItergameState pos) {
-		setNumPieces(pos.getTier());
+		setNumPieces(pos.tier);
 		long mult = iah.colorArrangements;
-		long hash = pos.getHash();
+		long hash = pos.hash;
 		setArrangement(hash / mult);
 		iah.setFromHash(hash % mult);
 		setBSBfromIAH();
@@ -381,9 +381,9 @@ public final class RConnect4 extends TieredIterGame {
 		for (int i = 0; i < lenChildren; i++) {
 			while (colHeights[col] == gameHeight)
 				col++;
-			moves[i].setTier(nextNumPieces);
-			moves[i].setHash(moveArrangement[col] * multiplier[nextNumPieces]
-					+ children[i]);
+			moves[i].tier = nextNumPieces;
+			moves[i].hash = moveArrangement[col] * multiplier[nextNumPieces]
+					+ children[i];
 			col++;
 		}
 		return lenChildren;

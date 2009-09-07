@@ -3,31 +3,33 @@ package edu.berkeley.gamesman.core;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import edu.berkeley.gamesman.util.MutablePair;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
 /**
  * @author DNSpies
  */
-public abstract class TieredIterGame extends TieredGame<ItergameState> implements Cloneable{
+public abstract class TieredIterGame extends TieredGame<ItergameState>
+		implements Cloneable {
 
 	/**
-	 * @param conf The configuration object
+	 * @param conf
+	 *            The configuration object
 	 */
 	public TieredIterGame(Configuration conf) {
 		super(conf);
 	}
 
 	@Override
-	public PrimitiveValue primitiveValue(ItergameState pos){
+	public PrimitiveValue primitiveValue(ItergameState pos) {
 		return unHashedClone(pos).primitiveValue();
 	}
 
 	/**
 	 * Assumes the given state.
 	 * 
-	 * @param pos The position to assume
+	 * @param pos
+	 *            The position to assume
 	 */
 	public abstract void setState(ItergameState pos);
 
@@ -36,7 +38,7 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> implement
 		c.setState(pos);
 		return c;
 	}
-	
+
 	/**
 	 * @return The "primitive value" of the current position.
 	 */
@@ -55,10 +57,10 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> implement
 	/**
 	 * @return Whether there is another position.
 	 */
-	public boolean hasNext(){
-		return hasNextHashInTier()||getTier()<numberOfTiers();
+	public boolean hasNext() {
+		return hasNextHashInTier() || getTier() < numberOfTiers();
 	}
-	
+
 	/**
 	 * @return The tier of this position
 	 */
@@ -67,37 +69,39 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> implement
 	/**
 	 * Cycle to the next position.
 	 */
-	public void next(){
-		if(hasNextHashInTier())
+	public void next() {
+		if (hasNextHashInTier())
 			nextHashInTier();
 		else
-			setNumPieces(getTier()+1);
+			setNumPieces(getTier() + 1);
 	}
-	
+
 	@Override
-	public String stateToString(ItergameState pos){
+	public String stateToString(ItergameState pos) {
 		return unHashedClone(pos).stateToString();
 	}
-	
+
 	/**
 	 * @return A string representation of this position.
 	 */
 	public abstract String stateToString();
-	
+
 	@Override
 	public ItergameState stringToState(String pos) {
 		TieredIterGame c = clone();
 		c.setFromString(pos);
 		return c.getState();
 	}
-	
+
 	/**
-	 * @param pos A string representing this position
+	 * @param pos
+	 *            A string representing this position
 	 */
 	public abstract void setFromString(String pos);
 
 	/**
 	 * Returns a state object for this position
+	 * 
 	 * @return The state of this position
 	 */
 	public abstract ItergameState getState();
@@ -106,28 +110,32 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> implement
 	public abstract TieredIterGame clone();
 
 	@Override
-	public String displayState(ItergameState pos){
+	public String displayState(ItergameState pos) {
 		return unHashedClone(pos).displayState();
 	}
-	
+
 	/**
-	 * @param tier The tier in question
+	 * @param tier
+	 *            The tier in question
 	 * @return The number of hashes in the tier
 	 */
-	public long numHashesForTier(int tier){
+	public long numHashesForTier(int tier) {
 		TieredIterGame s = clone();
 		s.setNumPieces(tier);
 		return s.numHashesForTier();
 	}
-	
+
 	/**
 	 * Sets this game to the given tier.
-	 * @param tier The tier to set to.
+	 * 
+	 * @param tier
+	 *            The tier to set to.
 	 */
 	public abstract void setNumPieces(int tier);
 
 	/**
 	 * Pretty-print's the current position
+	 * 
 	 * @return a string of the position
 	 */
 	public abstract String displayState();
@@ -148,10 +156,12 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> implement
 		}
 		return positions;
 	}
-	
+
 	/**
 	 * Sets this board to a starting position.
-	 * @param n The number position to set to
+	 * 
+	 * @param n
+	 *            The number position to set to
 	 */
 	public abstract void setStartingPosition(int n);
 
@@ -169,15 +179,14 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> implement
 	 * Cycles to the next hash in this tier
 	 */
 	public abstract void nextHashInTier();
-	
+
 	@Override
 	public long stateToHash(ItergameState pos) {
 		if (myHasher == null)
 			Util.fatalError("You must call prepare() before hashing!");
-		MutablePair<Integer, Long> p = myHasher.mutableTierIndexForState(pos);
-		return myHasher.hashOffsetForTier(p.car)+p.cdr;
+		return myHasher.hashOffsetForTier(pos.tier) + pos.hash;
 	}
-	
+
 	public abstract int numberOfTiers();
 
 	/**
@@ -188,7 +197,8 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> implement
 	/**
 	 * Stores all the valid moves for this position in moves
 	 * 
-	 * @param moves An array to store to
+	 * @param moves
+	 *            An array to store to
 	 * @return The number of moves stored
 	 */
 	public abstract int validMoves(ItergameState[] moves);
