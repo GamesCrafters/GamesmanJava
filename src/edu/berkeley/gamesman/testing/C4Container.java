@@ -101,7 +101,7 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 		jf.addKeyListener(c4c);
 		jf.setFocusable(true);
 		jf.requestFocus();
-		jf.setSize(375, 450);
+		jf.setSize(width * 100, height * 100+125);
 		jf.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		jf.setVisible(true);
 		jf.addWindowListener(c4c);
