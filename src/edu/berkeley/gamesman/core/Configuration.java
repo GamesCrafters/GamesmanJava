@@ -18,7 +18,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.Map.Entry;
 
-import edu.berkeley.gamesman.database.DatabaseCache;
 import edu.berkeley.gamesman.util.Util;
 import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
@@ -702,9 +701,8 @@ public class Configuration {
 			return db;
 		String[] dbType = getProperty("gamesman.database").split(":");
 		if (dbType.length > 1 && dbType[0].trim().equals("cached")) {
-			db = new DatabaseCache(Util.typedInstantiate(
-					"edu.berkeley.gamesman.database." + dbType[1],
-					Database.class));
+			db = Util.typedInstantiate("edu.berkeley.gamesman.database."
+					+ dbType[1], Database.class);
 		} else {
 			db = Util.typedInstantiate("edu.berkeley.gamesman.database."
 					+ dbType[0], Database.class);

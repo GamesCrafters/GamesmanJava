@@ -9,5 +9,5 @@ gamesman.db.uri = rLessfastdatabase5.db
 record.fields = VALUE:3
 record.compression = 90
 gamesman.db.nWayAssociative = 6
-gamesman.db.pageSize=2796202
-gamesman.db.cacheSize=16777216
+gamesman.db.pageSize=89478485
+gamesman.db.cacheSize=536870912
