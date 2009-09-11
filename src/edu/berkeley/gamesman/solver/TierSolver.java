@@ -33,7 +33,7 @@ public class TierSolver<T> extends Solver {
 	/**
 	 * The number of positions to go through between each update/reset
 	 */
-	public static final int STEP_SIZE = 10000;
+	public static final int STEP_SIZE = 10000000;
 
 	@Override
 	public WorkUnit prepareSolve(Configuration inconf, Game<Object> game) {
@@ -184,8 +184,6 @@ public class TierSolver<T> extends Solver {
 
 		private Task t;
 
-		private long lastUpdate = 0;
-
 		TierSolverUpdater() {
 			t = Task.beginTask("Tier solving \"" + myGame.describe() + "\"");
 			t.setTotal(myGame.lastHashValueForTier(myGame.numberOfTiers() - 1));
@@ -193,10 +191,8 @@ public class TierSolver<T> extends Solver {
 
 		synchronized void calculated(int howMuch) {
 			total += howMuch;
-			if (t != null
-					&& System.currentTimeMillis() - lastUpdate > STEP_SIZE) {
+			if (t != null) {
 				t.setProgress(total);
-				lastUpdate = System.currentTimeMillis();
 			}
 		}
 
