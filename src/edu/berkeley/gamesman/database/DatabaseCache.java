@@ -60,7 +60,7 @@ public final class DatabaseCache extends Database {
 		}
 
 		private static int byteSize(Configuration conf) {
-			return 14 + RecordGroup.byteSize(conf) + conf.recordsPerGroup * 4
+			return 18 + RecordGroup.byteSize(conf) + conf.recordsPerGroup * 4
 					+ conf.recordsPerGroup * Record.byteSize(conf);
 		}
 	}

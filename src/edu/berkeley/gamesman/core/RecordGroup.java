@@ -338,7 +338,7 @@ public class RecordGroup {
 	 *         configuration
 	 */
 	public static int byteSize(Configuration conf) {
-		return 20 + (conf.recordGroupUsesLong ? 0
-				: (conf.recordGroupByteLength + 1));
+		return 24 + (conf.recordGroupUsesLong ? 0
+				: ((conf.recordGroupByteLength / 4 + 1) * 4 + 8));
 	}
 }
