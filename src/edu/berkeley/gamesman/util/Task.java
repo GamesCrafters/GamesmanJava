@@ -1,7 +1,5 @@
 package edu.berkeley.gamesman.util;
 
-import java.math.BigInteger;
-
 /**
  * A Task is a method of relaying progress information back to the user.  It is created by the abstract TaskFactory 
  * and can represent progress bars, textual output, or even output to a website.  The lifecycle should involve creating
@@ -15,7 +13,7 @@ public abstract class Task {
 
 	private static TaskFactory factory;
 	
-	protected BigInteger completed,total;
+	protected long completed,total;
 	
 	protected Task(){}
 	
@@ -42,36 +40,21 @@ public abstract class Task {
 	public static void setTaskFactory(TaskFactory f){
 		factory = f;
 	}
-	
-	/**
-	 * Set the progress completed for the given Task.  This is an absolute value which should be 0 <= l <= Total
-	 * @param l The progress you have reached
-	 */
-	public void setProgress(long l){
-		setProgress(BigInteger.valueOf(l));
-	}
+
 	/**
 	 * Set the progress completed for the given Task.  This is an absolute value which should be 0 <= l <= Total
 	 * @param p The progress you have reached
 	 */
-	public void setProgress(BigInteger p){
-		completed = (p.compareTo(total) <= 0 ? p : total);
+	public void setProgress(long p){
+		completed = (p <= total ? p : total);
 		update();
-	}
-	
-	/**
-	 * Set the total progress possible for the given Task.
-	 * @param l The total number of work units that this task has
-	 */
-	public void setTotal(long l){
-		setTotal(BigInteger.valueOf(l));
 	}
 	
 	/**
 	 * Set the total progress possible for the given Task.
 	 * @param t The total number of work units that this task has
 	 */
-	public void setTotal(BigInteger t){
+	public void setTotal(long t){
 		total = t;
 		begin();
 	}

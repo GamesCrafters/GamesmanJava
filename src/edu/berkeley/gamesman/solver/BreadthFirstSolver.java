@@ -1,6 +1,5 @@
 package edu.berkeley.gamesman.solver;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -86,8 +85,8 @@ public class BreadthFirstSolver extends Solver {
 		}
 
 		public void conquer() {
-			BigInteger numPositionsInLevel = BigInteger.ZERO;
-			BigInteger numPositionsSeen = numPositionsInLevel;
+			long numPositionsInLevel = 0;
+			long numPositionsSeen = numPositionsInLevel;
 			int remoteness = lastTier;
 			Task solveTask = Task.beginTask(String.format("BFS solving \"%s\"",
 					game.describe()));
@@ -97,7 +96,7 @@ public class BreadthFirstSolver extends Solver {
 			Record childrec;
 			while (lastTier >= remoteness && remoteness < maxRemoteness) {
 				HashSet<Long> setValues = new HashSet<Long>();
-				numPositionsInLevel = BigInteger.ZERO;
+				numPositionsInLevel = 0;
 				for (long hash = firstHash; hash < lastHashPlusOne - 1; hash++) {
 					rec = database.getRecord(hash);
 					if (rec.get() != PrimitiveValue.UNDECIDED
@@ -117,15 +116,11 @@ public class BreadthFirstSolver extends Solver {
 										remoteness + 1);
 								// System.out.println("Setting child "+childhash+"="+childrec);
 								database.putRecord(childhash, childrec);
-								numPositionsInLevel = numPositionsInLevel
-										.add(BigInteger.ONE);
-								numPositionsSeen = numPositionsSeen
-										.add(BigInteger.ONE);
+								numPositionsInLevel++;
+								numPositionsSeen++;
 								setValues.add(childhash);
 								lastTier = remoteness + 1;
-								if (numPositionsSeen.remainder(
-										BigInteger.valueOf(100000)).equals(
-										BigInteger.ZERO)) {
+								if (numPositionsSeen%STEP_SIZE==0) {
 									solveTask.setProgress(numPositionsSeen);
 								}
 							} else {

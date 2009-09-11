@@ -6,6 +6,11 @@ package edu.berkeley.gamesman.core;
  * @author Steven Schlansker
  */
 public abstract class Solver {
+	
+	/**
+	 * The number of positions to go through between each update/reset
+	 */
+	public static final int STEP_SIZE = 10000000;
 
 	protected Database db;
 	

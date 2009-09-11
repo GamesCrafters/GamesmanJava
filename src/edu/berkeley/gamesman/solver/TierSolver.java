@@ -30,11 +30,6 @@ public class TierSolver<T> extends Solver {
 
 	protected Configuration conf;
 
-	/**
-	 * The number of positions to go through between each update/reset
-	 */
-	public static final int STEP_SIZE = 10000000;
-
 	@Override
 	public WorkUnit prepareSolve(Configuration inconf, Game<Object> game) {
 
