@@ -15,8 +15,6 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.commons.codec.binary.Base64;
-
 import edu.berkeley.gamesman.core.Game;
 
 /**
@@ -26,8 +24,6 @@ import edu.berkeley.gamesman.core.Game;
  * 
  */
 public final class Util {
-	
-	private static Base64 b64 = new Base64();
 
 	private Util() {}
 
@@ -324,26 +320,6 @@ public final class Util {
 	 */
 	public static String pstr(String s) {
 		return s.length() + s;
-	}
-
-	/**
-	 * Convenience Base-64 encoder
-	 * @param bytes The data
-	 * @return Base-64 representation of bytes
-	 */
-	public static String encodeBase64(byte[] bytes) {
-		//return Base64.encodeBytes(bytes,Base64.GZIP | Base64.DONT_BREAK_LINES);
-		return new String(b64.encode(bytes));
-	}
-
-	/**
-	 * Convenience Base-64 decoder
-	 * @param string The Base-64 to decode
-	 * @return Decoded byte array
-	 */
-	public static byte[] decodeBase64(String string) {
-		//return Base64.decode(string);
-		return b64.decode(string.getBytes());
 	}
 
 	/**

@@ -21,13 +21,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import edu.berkeley.gamesman.database.BlockDatabase;
-import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Database;
-import edu.berkeley.gamesman.core.Game;
-import edu.berkeley.gamesman.core.PrimitiveValue;
-import edu.berkeley.gamesman.core.Record;
-import edu.berkeley.gamesman.core.RecordFields;
+import edu.berkeley.gamesman.core.*;
+import edu.berkeley.gamesman.database.FileDatabase;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
@@ -60,7 +55,7 @@ public class JSONInterface extends GamesmanApplication {
 							"BlockDatabase"), Database.class);
 		} catch (ClassNotFoundException e) {
 			Util.warn("Can't load default database!", e);
-			this.dbClass = BlockDatabase.class;
+			this.dbClass = FileDatabase.class;
 		}
 		/*
 		 * try { db = Util.typedInstantiate(, Database.class); } catch

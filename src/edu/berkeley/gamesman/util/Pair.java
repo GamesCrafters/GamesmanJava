@@ -34,16 +34,6 @@ public class Pair<A,B> implements Serializable {
 		car = ar;
 		cdr = dr;
 	}
-	
-	/**
-	 * Constructs a pair with the same values as mp
-	 * 
-	 * @param mp A MutablePair
-	 */
-	public Pair(MutablePair<A,B> mp) {
-		car=mp.car;
-		cdr=mp.cdr;
-	}
 
 	@Override
 	public String toString(){

@@ -1,7 +1,5 @@
 package edu.berkeley.gamesman.core;
 
-import java.util.Iterator;
-
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -99,34 +97,4 @@ public abstract class TieredGame<State> extends Game<State> {
 		return lastHashValueForTier(numberOfTiers() - 1);
 	}
 
-	public Iterator<Integer> tierDependsOn(final int tier) {
-		if (tier >= numberOfTiers() - 1)
-			return new Iterator<Integer>() {
-				public boolean hasNext() {
-					return false;
-				}
-
-				public Integer next() {
-					return null;
-				}
-
-				public void remove() {
-				}
-			};
-		return new Iterator<Integer>() {
-			boolean seen = false;
-
-			public boolean hasNext() {
-				return !seen;
-			}
-
-			public Integer next() {
-				seen = true;
-				return tier + 1;
-			}
-
-			public void remove() {
-			}
-		};
-	}
 }

@@ -1,11 +1,6 @@
 package edu.berkeley.gamesman;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Properties;
 
 import edu.berkeley.gamesman.core.Configuration;
@@ -13,8 +8,6 @@ import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Master;
 import edu.berkeley.gamesman.core.Solver;
-import edu.berkeley.gamesman.database.filer.DirectoryFilerClient;
-import edu.berkeley.gamesman.database.filer.DirectoryFilerServer;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
@@ -175,97 +168,6 @@ public final class GamesmanMain extends GamesmanApplication {
 		System.out.println(gm.primitiveValue(gm.hashToState(val)));
 	}
 
-	/**
-	 * Launch a directory filer server
-	 */
-	public void executelaunchDirectoryFiler() {
-		if (conf.getProperty("rootDirectory") == null)
-			Util.fatalError("You must provide a root directory for the filer with -r or --rootDirectory");
-		if (conf.getProperty("secret") == null)
-			Util.fatalError("You must provide a shared secret to protect the server with -s or --secret");
-		
-		final DirectoryFilerServer serv;
-		try {
-			serv = new DirectoryFilerServer(conf.getProperty("rootDirectory"),
-				conf.getInteger("port", 4263),
-				conf.getProperty("secret"));
-		} catch (ClassNotFoundException e1) {
-			Util.fatalError("failed to load configuration", e1);
-			return;
-		}
-		
-		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable(){
-			public void run() {
-				serv.close();
-			}
-		}));
-		
-		serv.launchServer();
-	}
-
-	private enum directoryConnectCommands {
-		quit, halt, ls, open, close, read, write
-	}
-
-	/**
-	 * Give a simple shell interface to a remote directory filer server
-	 * @throws URISyntaxException The given URI is malformed
-	 */
-	public void executedirectoryConnect() throws URISyntaxException {
-		DirectoryFilerClient dfc = new DirectoryFilerClient(new URI(conf.getProperty("uri","gdfp://game@localhost:4263/")));
-
-		LineNumberReader input = new LineNumberReader(new InputStreamReader(
-				System.in));
-
-		String dbname = "";
-		Database cdb = null;
-		
-		try {
-			while (true) {
-				String line = "quit";
-				System.out.print(dbname+"> ");
-				line = input.readLine();
-
-				switch (directoryConnectCommands.valueOf(line)) {
-				case quit:
-					dfc.close();
-					return;
-				case halt:
-					dfc.halt();
-					dfc.close();
-					return;
-				case ls:
-					dfc.ls();
-					break;
-				case open:
-					System.out.print("open> ");
-					dbname = input.readLine();
-					cdb = dfc.openDatabase(dbname, null); //TODO: not null here!
-					break;
-				case close:
-					if(cdb == null) break;
-					cdb.close();
-					cdb = null;
-					dbname = "";
-					break;
-				case read:
-					System.out.print(dbname+" read> ");
-					System.out.println("Result: "+cdb.getRecord(Long.parseLong(input.readLine())));
-					break;
-				case write:
-					System.out.print(dbname+" write> ");
-					String loc = input.readLine();
-					System.out.print(dbname+" write "+loc+"> ");
-					line = input.readLine();
-		
-					//cdb.setValue(new BigInteger(loc), Record.parseRecord(conf,line)); TODO: fixme
-				}
-			}
-		} catch (IOException e) {
-			Util.fatalError("IO Error: " + e);
-		}
-	}
-	
 	//public void executetestRPC(){
 	//	new RPCTest();
 	//}
