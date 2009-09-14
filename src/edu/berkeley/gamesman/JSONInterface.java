@@ -52,7 +52,7 @@ public class JSONInterface extends GamesmanApplication {
 
 			this.dbClass = Util.typedForName("edu.berkeley.gamesman.database."
 					+ serverConf.getProperty("gamesman.database",
-							"BlockDatabase"), Database.class);
+							"FileDatabase"), Database.class);
 		} catch (ClassNotFoundException e) {
 			Util.warn("Can't load default database!", e);
 			this.dbClass = FileDatabase.class;
