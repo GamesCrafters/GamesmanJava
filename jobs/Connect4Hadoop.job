@@ -1,8 +1,0 @@
-gamesman.game = Connect4
-gamesman.game.width = 4
-gamesman.game.height = 4
-gamesman.game.pieces = 4
-gamesman.hasher = PerfectConnect4Hash
-gamesman.solver = TierSolver
-gamesman.database = RemoteDatabase
-gamesman.db.uri = gdfp://hihi@localhost:4263/pc4
