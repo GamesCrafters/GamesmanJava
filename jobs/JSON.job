@@ -1,4 +1,4 @@
-json.databasedirectory = file:///root/Gamescrafters/GamesmanJava/solved/
+json.databasedirectory = 
 
 # "json.unsolved.*" is the default configuration for unsolved games.
 # "json.fields.*" is the list of valid fields (in the database filename)
