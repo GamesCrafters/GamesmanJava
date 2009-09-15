@@ -17,7 +17,7 @@ import edu.berkeley.gamesman.util.Pair;
  * 
  * @author DNSpies
  */
-public final class RConnect4 extends TieredIterGame {
+public final class Connect4 extends TieredIterGame {
 	private final int[][] indices;
 
 	private final int[] colHeights;
@@ -57,7 +57,7 @@ public final class RConnect4 extends TieredIterGame {
 	 * @param conf
 	 *            The configuration object
 	 */
-	public RConnect4(Configuration conf) {
+	public Connect4(Configuration conf) {
 		super(conf);
 		gameWidth = conf.getInteger("gamesman.game.width", 7);
 		gameHeight = conf.getInteger("gamesman.game.height", 6);
@@ -80,8 +80,8 @@ public final class RConnect4 extends TieredIterGame {
 	}
 
 	@Override
-	public RConnect4 clone() {
-		RConnect4 other = new RConnect4(conf);
+	public Connect4 clone() {
+		Connect4 other = new Connect4(conf);
 		if (iah != null)
 			other.setFromString(stateToString());
 		return other;

@@ -10,7 +10,7 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.ItergameState;
 import edu.berkeley.gamesman.core.Record;
-import edu.berkeley.gamesman.game.RConnect4;
+import edu.berkeley.gamesman.game.Connect4;
 import edu.berkeley.gamesman.util.Pair;
 
 public class ConnectFour implements MouseListener {
@@ -30,7 +30,7 @@ public class ConnectFour implements MouseListener {
 
 	private DisplayFour df;
 
-	private RConnect4 cgame;
+	private Connect4 cgame;
 	
 	private Configuration conf;
 
@@ -57,7 +57,7 @@ public class ConnectFour implements MouseListener {
 		board = new char[gameHeight][gameWidth];
 		fd = conf.db;
 		df = disfour;
-		cgame = new RConnect4(conf);
+		cgame = new Connect4(conf);
 		cgame.prepare();
 		for (c = 0; c < gameWidth; c++) {
 			for (r = 0; r < gameHeight; r++) {

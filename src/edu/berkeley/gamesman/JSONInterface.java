@@ -1,21 +1,8 @@
 package edu.berkeley.gamesman;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.URI;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Properties;
-import java.util.Map;
+import java.io.*;
+import java.net.*;
+import java.util.*;
 
 import org.json.JSONArray;
 import org.json.JSONException;

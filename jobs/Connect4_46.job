@@ -1,10 +1,10 @@
-gamesman.game = RConnect4
+gamesman.game = Connect4
 gamesman.game.width = 4
-gamesman.game.height = 4
+gamesman.game.height = 6
 gamesman.game.pieces = 4
 gamesman.hasher = TieredItergameHasher
 gamesman.solver = TierItergameSolver
 gamesman.database = cached:FileDatabase
-gamesman.db.uri = fastdatabase4.db
-record.fields = VALUE:3,REMOTENESS:17
+gamesman.db.uri = database46.db
+record.fields = VALUE:3,REMOTENESS:25
 record.compression = 90
