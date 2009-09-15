@@ -134,7 +134,6 @@ public class FileDatabase extends Database {
 
 		boolean previouslyExisted;
 		try {
-			System.out.println(loc);
 			myFile = new File(loc);
 			previouslyExisted = myFile.exists();
 			fd = new RandomAccessFile(myFile, "rw");

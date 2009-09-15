@@ -31,7 +31,7 @@ public class ConnectFour implements MouseListener {
 	private DisplayFour df;
 
 	private Connect4 cgame;
-	
+
 	private Configuration conf;
 
 	Database fd;
@@ -46,10 +46,10 @@ public class ConnectFour implements MouseListener {
 		this(conf, disfour, false, true);
 	}
 
-	public ConnectFour(Configuration conf, DisplayFour disfour,
-			boolean cX, boolean cO) {
+	public ConnectFour(Configuration conf, DisplayFour disfour, boolean cX,
+			boolean cO) {
 		int c, r;
-		this.conf=conf;
+		this.conf = conf;
 		compX = cX;
 		compO = cO;
 		gameHeight = Integer.parseInt(conf.getProperty("gamesman.game.height"));
@@ -92,26 +92,40 @@ public class ConnectFour implements MouseListener {
 		paintThread.start();
 		paintThread = new Thread(df);
 		cgame.setFromString(arrToString(board));
+		System.out.println(fd.getRecord(cgame.stateToHash(cgame.getState())));
 		if (!win())
-			startCompMove();
+			new Thread() {
+				public void run() {
+					startCompMove();
+				}
+			}.start();
+
 	}
 
-	void startCompMove() {
+	synchronized void startCompMove() {
 		if (compTurn() && !win()) {
+			if (compO && compX)
+				try {
+					wait(500);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			cgame.setFromString(arrToString(board));
 			Collection<Pair<String, ItergameState>> moves = cgame.validMoves();
-			ArrayList<Pair<String, ItergameState>> listMoves = new ArrayList<Pair<String, ItergameState>>(moves.size());
+			ArrayList<Pair<String, ItergameState>> listMoves = new ArrayList<Pair<String, ItergameState>>(
+					moves.size());
 			listMoves.addAll(moves);
 			ArrayList<Record> records = new ArrayList<Record>(moves.size());
-			for (Pair<String, ItergameState> move : listMoves){
-				Record rec=fd.getRecord(cgame.stateToHash(move.cdr));
+			for (Pair<String, ItergameState> move : listMoves) {
+				Record rec = fd.getRecord(cgame.stateToHash(move.cdr));
 				rec.previousPosition();
 				records.add(rec);
 			}
-			Record bestRecord=cgame.combine(conf, records);
-			ArrayList<Pair<String, ItergameState>> bestMoves = new ArrayList<Pair<String, ItergameState>>(listMoves.size());
-			for (int i=0;i<records.size();i++){
-				if(records.get(i).equals(bestRecord))
+			Record bestRecord = cgame.combine(conf, records);
+			ArrayList<Pair<String, ItergameState>> bestMoves = new ArrayList<Pair<String, ItergameState>>(
+					listMoves.size());
+			for (int i = 0; i < records.size(); i++) {
+				if (records.get(i).equals(bestRecord))
 					bestMoves.add(listMoves.get(i));
 			}
 			makeMove(bestMoves.get(r.nextInt(bestMoves.size())).car.charAt(0) - '0');
