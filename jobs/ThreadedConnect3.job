@@ -5,5 +5,5 @@ connect4.pieces = 3
 gamesman.hasher = PerfectConnect4Hash
 gamesman.solver = TierSolver
 gamesman.db.uri = threadeddatabase3.db
-gamesman.database = BlockDatabase
+gamesman.database = cached:FileDatabase
 gamesman.threads = 8
