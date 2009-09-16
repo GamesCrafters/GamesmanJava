@@ -8,7 +8,7 @@ json.fields.rubik =
 json.unsolved.pyraminx = jobs/Pyraminx.job
 json.fields.pyraminx =
 
-json.unsolved.connect4 = jobs/Connect4.job
+json.unsolved.connect4 = jobs/Connect4_44.job
 json.fields.connect4 = width,height,pieces
 
 json.unsolved.pegsolitaire = jobs/TriangularPegSolitaire.job
