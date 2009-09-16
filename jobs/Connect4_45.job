@@ -5,6 +5,6 @@ gamesman.game.pieces = 4
 gamesman.hasher = TieredItergameHasher
 gamesman.solver = TierItergameSolver
 gamesman.database = cached:FileDatabase
-gamesman.db.uri = database54.db
+gamesman.db.uri = database45.db
 record.fields = VALUE:3,REMOTENESS:21
 record.compression = 90
