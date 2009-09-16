@@ -188,7 +188,7 @@ public class JSONInterface extends GamesmanApplication {
 									+ filename, e);
 				}
 				return config;
-			} else if (filename != null && new File(new URI(filename)).exists()) {
+			} else if (filename != null && new File(filename).exists()) {
 				System.out.println("Loading solved database " + filename + ".");
 				Database db = dbClass.getConstructor().newInstance();
 				db.initialize(filename, null);
