@@ -44,6 +44,8 @@ public final class Connect4 extends TieredIterGame {
 
 	private PieceRearranger iah;
 
+	private int[] groupSizes;
+
 	private static final class Place {
 		private Place(int row, int col) {
 			this.row = row;
@@ -77,6 +79,7 @@ public final class Connect4 extends TieredIterGame {
 		for (int i = 1; i <= gameSize; i++)
 			multiplier[i] = multiplier[i - 1] * i / ((i + 1) / 2);
 		children = new long[gameWidth];
+		groupSizes = new int[gameWidth];
 	}
 
 	@Override
@@ -169,17 +172,17 @@ public final class Connect4 extends TieredIterGame {
 			if (col == gameWidth)
 				hasNextPieceArrangement = false;
 		}
-		ArrayList<Integer> groupSizes = new ArrayList<Integer>(gameWidth);
+		int numMoves = 0;
 		int totSize = 0;
-		for (int colHeight : colHeights) {
-			if (colHeight == gameHeight)
-				totSize += colHeight;
+		for (int i=0;i<gameWidth;i++) {
+			if (colHeights[i] == gameHeight)
+				totSize += colHeights[i];
 			else {
-				groupSizes.add(totSize + colHeight);
+				groupSizes[numMoves++] = (totSize + colHeights[i]);
 				totSize = 0;
 			}
 		}
-		iah.setGroupSizes(groupSizes);
+		iah.setGroupSizes(groupSizes, numMoves);
 		iah.reset();
 		setMoveArrangements();
 		setBSBfromIAH();

@@ -99,13 +99,13 @@ public final class BitSetBoard extends Board2D {
 		switch (color) {
 		case 'X':
 			if (usesLong)
-				xPlayerLong = xPlayerLong | (1L << getBit(row, col));
+				xPlayerLong |= (1L << getBit(row, col));
 			else
 				xPlayer = xPlayer.setBit(getBit(row, col));
 			break;
 		case 'O':
 			if (usesLong)
-				oPlayerLong = oPlayerLong | (1L << getBit(row, col));
+				oPlayerLong |= (1L << getBit(row, col));
 			else
 				oPlayer = oPlayer.setBit(getBit(row, col));
 			break;
