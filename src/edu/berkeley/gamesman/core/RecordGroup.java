@@ -85,7 +85,7 @@ public class RecordGroup {
 	public RecordGroup(Configuration conf, Iterator<Record> recordIterator) {
 		this.conf = conf;
 		if (conf.recordGroupUsesLong) {
-			this.longValues = 0;
+			this.longValues = 0L;
 			for (int i = 0; i < conf.recordsPerGroup; i++)
 				longValues += recordIterator.next().getState()
 						* conf.longMultipliers[i];
@@ -183,7 +183,7 @@ public class RecordGroup {
 	 */
 	public void setValue(byte[] values) {
 		if (conf.recordGroupUsesLong) {
-			this.longValues = 0;
+			this.longValues = 0L;
 			for (int i = 0; i < conf.recordGroupByteLength; i++) {
 				longValues <<= 8;
 				longValues |= (values[i] & 255L);
@@ -232,7 +232,7 @@ public class RecordGroup {
 	 */
 	public void set(Record[] recs, int offset) {
 		if (conf.recordGroupUsesLong) {
-			this.longValues = 0;
+			this.longValues = 0L;
 			for (int i = 0; i < conf.recordsPerGroup; i++)
 				longValues += recs[offset++].getState()
 						* conf.longMultipliers[i];

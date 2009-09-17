@@ -58,8 +58,8 @@ public final class BitSetBoard extends Board2D {
 	public void flipPiece(int row, int col) {
 		int bit = getBit(row, col);
 		if (usesLong) {
-			xPlayerLong = xPlayerLong ^ (1 << bit);
-			oPlayerLong = oPlayerLong ^ (1 << bit);
+			xPlayerLong = xPlayerLong ^ (1L << bit);
+			oPlayerLong = oPlayerLong ^ (1L << bit);
 		} else {
 			xPlayer = xPlayer.flipBit(bit);
 			oPlayer = oPlayer.flipBit(bit);
@@ -77,8 +77,8 @@ public final class BitSetBoard extends Board2D {
 	public void removePiece(int row, int col) {
 		int bit = getBit(row, col);
 		if (usesLong) {
-			xPlayerLong = xPlayerLong & (-1L ^ (1 << bit));
-			oPlayerLong = oPlayerLong & (-1L ^ (1 << bit));
+			xPlayerLong = xPlayerLong & (-1L ^ (1L << bit));
+			oPlayerLong = oPlayerLong & (-1L ^ (1L << bit));
 		} else {
 			xPlayer = xPlayer.clearBit(bit);
 			oPlayer = oPlayer.clearBit(bit);
@@ -99,13 +99,13 @@ public final class BitSetBoard extends Board2D {
 		switch (color) {
 		case 'X':
 			if (usesLong)
-				xPlayerLong = xPlayerLong | (1 << getBit(row, col));
+				xPlayerLong = xPlayerLong | (1L << getBit(row, col));
 			else
 				xPlayer = xPlayer.setBit(getBit(row, col));
 			break;
 		case 'O':
 			if (usesLong)
-				oPlayerLong = oPlayerLong | (1 << getBit(row, col));
+				oPlayerLong = oPlayerLong | (1L << getBit(row, col));
 			else
 				oPlayer = oPlayer.setBit(getBit(row, col));
 			break;
