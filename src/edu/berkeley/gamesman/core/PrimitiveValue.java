@@ -70,7 +70,8 @@ public enum PrimitiveValue {
 			return UNDECIDED;
 		case WIN:
 			return LOSE;
+		default:
+			return UNDECIDED;
 		}
-		return UNDECIDED;
 	}
 }

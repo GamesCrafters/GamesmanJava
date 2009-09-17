@@ -31,6 +31,8 @@ public class FileDatabase extends Database {
 
 	protected long offset;
 
+	private RecordGroupByteIterator myIter = new RecordGroupByteIterator();
+
 	@Override
 	public synchronized void close() {
 		try {
@@ -71,8 +73,8 @@ public class FileDatabase extends Database {
 				groups = new byte[groupsLength];
 			fd.seek(loc + offset);
 			fd.read(groups, 0, groupsLength);
-			RecordGroupByteIterator rgi = new RecordGroupByteIterator();
-			return rgi;
+			myIter.reset();
+			return myIter;
 		} catch (IOException e) {
 			e.printStackTrace();
 			return null;
@@ -99,12 +101,20 @@ public class FileDatabase extends Database {
 	}
 
 	protected class RecordGroupByteIterator implements Iterator<RecordGroup> {
-		int onByte = 0;
+		int onByte;
 
-		RecordGroup rg = new RecordGroup(conf);
+		RecordGroup rg;
 
 		public boolean hasNext() {
 			return onByte < groupsLength;
+		}
+
+		private void reset() {
+			onByte = 0;
+		}
+
+		private void initialize() {
+			rg = new RecordGroup(conf);
 		}
 
 		public RecordGroup next() {
@@ -155,6 +165,7 @@ public class FileDatabase extends Database {
 			offset = fd.getFilePointer();
 			rawRecord = new byte[conf.recordGroupByteLength];
 			fd.setLength(offset + getByteSize());
+			myIter.initialize();
 		} catch (IOException e) {
 			e.printStackTrace();
 			Util.fatalError(e.toString());

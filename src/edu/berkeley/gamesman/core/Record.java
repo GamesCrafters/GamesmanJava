@@ -101,7 +101,7 @@ public final class Record {
 	 * @return The primitive value of this position
 	 */
 	public PrimitiveValue get() {
-		return PrimitiveValue.values[(get(RecordFields.VALUE))];
+		return PrimitiveValue.values[get(RecordFields.VALUE)];
 	}
 
 	/**
