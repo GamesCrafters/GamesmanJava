@@ -199,9 +199,9 @@ public final class BitSetBoard extends Board2D {
 			for (int row = height - 1; row >= 0; row--) {
 				str.append('|');
 				for (int col = 0; col < width; col++) {
-					if ((xPlayerLong & (1 << getBit(row, col))) > 0L)
+					if ((xPlayerLong & (1L << getBit(row, col))) > 0L)
 						str.append('X');
-					else if ((oPlayerLong & (1 << getBit(row, col))) > 0L)
+					else if ((oPlayerLong & (1L << getBit(row, col))) > 0L)
 						str.append('O');
 					else
 						str.append(' ');
