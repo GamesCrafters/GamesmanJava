@@ -124,13 +124,10 @@ public class TierSolver<T> extends Solver {
 			Pair<Long, Long> slice;
 			int arrived = 0;
 			while ((slice = getSlice(tier, index, game)) != null) {
-				System.out.println("Beginning to solve slice " + slice
-						+ " in thread " + index);
 				assert Util.debug(DebugFacility.THREADING,
 						"Beginning to solve slice " + slice + " in thread "
 								+ index);
 				solvePartialTier(conf, slice.car, slice.cdr, updater);
-				System.out.println("Thread " + index + " finished");
 				try {
 					arrived = barr.await();
 				} catch (InterruptedException e) {
