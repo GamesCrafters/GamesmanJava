@@ -46,11 +46,8 @@ public final class TierItergameSolver extends TierSolver<ItergameState> {
 				prim.set(RecordFields.VALUE, pv.value());
 				db.putRecord(current, prim);
 			}
-			if (current != end){
-				if(current==20)
-					System.out.println("Here");
+			if (current != end)
 				game.nextHashInTier();
-			}
 			current++;
 		}
 	}
