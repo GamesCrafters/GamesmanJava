@@ -60,8 +60,8 @@ public final class DatabaseCache extends Database {
 		}
 
 		private static int byteSize(Configuration conf) {
-			return 18 + RecordGroup.byteSize(conf) + conf.recordsPerGroup * 4
-					+ conf.recordsPerGroup * Record.byteSize(conf);
+			return 40 + RecordGroup.byteSize(conf) + (conf.recordsPerGroup + 1)
+					/ 2 * 8 + conf.recordsPerGroup * Record.byteSize(conf);
 		}
 	}
 
@@ -263,17 +263,18 @@ public final class DatabaseCache extends Database {
 			conf = db.getConfiguration();
 		}
 		int totalBytes = Integer.parseInt(conf.getProperty(
-				"gamesman.db.cacheSize", "1048576"));
+				"gamesman.db.cacheSize", "67108864"));
 		int groupHolderSize = GroupHolder.byteSize(conf);
-		int totalGroups = totalBytes / groupHolderSize;
 		int pageBytes = Integer.parseInt(conf.getProperty(
-				"gamesman.db.pageSize", "1024"));
-		pageSize = pageBytes / groupHolderSize;
+				"gamesman.db.pageSize", "16384"));
+		pageSize = pageBytes / (groupHolderSize + 4);
 		offsetBits = (int) (Math.log(pageSize) / Math.log(2));
 		pageSize = Math.max(1 << offsetBits, 1);
 		nWayAssociative = Integer.parseInt(conf.getProperty(
 				"gamesman.db.nWayAssociative", "4"));
-		indices = totalGroups / (nWayAssociative * pageSize);
+		indices = (totalBytes - 160)
+				/ (88 + 37 * nWayAssociative + (4 + groupHolderSize)
+						* nWayAssociative * pageSize);
 		indexBits = (int) (Math.log(indices) / Math.log(2));
 		indices = Math.max(1 << indexBits, 1);
 		records = new GroupHolder[indices][nWayAssociative][pageSize];
@@ -292,6 +293,22 @@ public final class DatabaseCache extends Database {
 					page[i] = new GroupHolder(conf);
 			}
 		}
+		int bytesUsed = 80; // Size of this class
+		bytesUsed += 4 * (16 + (indices + 1) / 2 * 8);
+		// Top level records, tags, used, dirty
+		bytesUsed += indices * (16 + (nWayAssociative + 1) / 2 * 8);
+		// Second level records
+		bytesUsed += indices * nWayAssociative * (16 + (pageSize + 1) / 2 * 8);
+		// Third level records
+		bytesUsed += indices * nWayAssociative * pageSize * groupHolderSize;
+		// The records themselves
+		bytesUsed += 2 * indices * (16 + nWayAssociative * 8);
+		// Second level tags, used
+		bytesUsed += indices * (16 + (nWayAssociative + 7) / 8 * 8);
+		// Second level dirty
+		bytesUsed += 16 + indices * 8;
+		// Top level current
+		System.out.println("Using " + bytesUsed + " bytes for cache");
 	}
 
 	@Override

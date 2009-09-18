@@ -339,6 +339,6 @@ public class RecordGroup {
 	 */
 	public static int byteSize(Configuration conf) {
 		return 24 + (conf.recordGroupUsesLong ? 0
-				: ((conf.recordGroupByteLength / 4 + 1) * 4 + 8));
+				: (56 + (conf.recordGroupByteLength + 7) / 8 * 8));
 	}
 }
