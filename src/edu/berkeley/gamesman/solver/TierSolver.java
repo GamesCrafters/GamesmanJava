@@ -6,45 +6,32 @@ import java.util.List;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
-import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Game;
-import edu.berkeley.gamesman.core.PrimitiveValue;
-import edu.berkeley.gamesman.core.Record;
-import edu.berkeley.gamesman.core.Solver;
-import edu.berkeley.gamesman.core.TieredGame;
-import edu.berkeley.gamesman.core.WorkUnit;
-import edu.berkeley.gamesman.util.DebugFacility;
-import edu.berkeley.gamesman.util.Pair;
-import edu.berkeley.gamesman.util.Task;
-import edu.berkeley.gamesman.util.Util;
+import edu.berkeley.gamesman.core.*;
+import edu.berkeley.gamesman.util.*;
 
 /**
  * TierSolver documentation stub
  * 
  * @author Steven Schlansker
- * @param <T> The state type for the game
+ * @param <T>
+ *            The state type for the game
  */
 public class TierSolver<T> extends Solver {
 
-	protected TieredGame<T> myGame;
-
-	protected Configuration conf;
-
 	@Override
-	public WorkUnit prepareSolve(Configuration inconf, Game<Object> game) {
+	public WorkUnit prepareSolve(Configuration conf, Game<Object> game) {
 
-		myGame = Util.checkedCast(game);
-		tier = myGame.numberOfTiers() - 1;
-		offset = myGame.hashOffsetForTier(tier);
-		updater = new TierSolverUpdater();
-		conf = inconf;
+		updater = new TierSolverUpdater(Util
+				.<TieredGame<T>, Game<Object>> checkedCast(game));
 
-		return new TierSolverWorkUnit();
+		return new TierSolverWorkUnit(conf, 0, false);
 	}
 
-	protected void solvePartialTier(TieredGame<T> game, long start, long end,
+	protected void solvePartialTier(Configuration conf, long start, long end,
 			TierSolverUpdater t) {
 		long current = start - 1;
+
+		TieredGame<T> game = Util.checkedCast(conf.getGame());
 
 		while (current < end) {
 			current++;
@@ -66,10 +53,10 @@ public class TierSolver<T> extends Solver {
 					vals.add(db.getRecord(game.stateToHash(child.cdr)));
 				}
 
-				Record newVal = game.combine(conf, vals);
+				Record newVal = game.combine(vals);
 				db.putRecord(current, newVal);
 			} else {
-				Record prim = new Record(conf, pv);
+				Record prim = game.newRecord(pv);
 				assert Util.debug(DebugFacility.SOLVER,
 						"Primitive value for state " + current + " is " + prim);
 				db.putRecord(current, prim);
@@ -80,95 +67,90 @@ public class TierSolver<T> extends Solver {
 
 	}
 
-	protected int nextIndex = 0;
+	private TierSolverUpdater updater;
 
-	protected TierSolverUpdater updater;
-
-	protected long offset;
-
-	protected CyclicBarrier barr;
-
-	protected int tier;
-
-	private boolean needs2Sync;
-
-	protected Pair<Long, Long> nextSlice() {
-		if (needs2Sync) {
-			assert Util.debug(DebugFacility.THREADING,
-					"Thread waiting to tier-sync");
-			try {
-				if (barr != null)
-					barr.await();
-			} catch (InterruptedException e) {
-				Util.fatalError(
-						"TierSolver thread was interrupted while waiting!", e);
-			} catch (BrokenBarrierException e) {
-				Thread.yield();
-				return nextSlice(); // Retry
-			}
+	private final Runnable flusher=new Runnable(){
+		public void run(){
+			db.flush();
+			barr.reset();
 		}
+	};
+	
+	private CyclicBarrier barr = new CyclicBarrier(1,flusher);
 
-		synchronized (this) {
-			if (tier < 0)
-				return null;
-			final long step = STEP_SIZE;
-			long ret = offset, end;
-			offset += step;
-			end = ret + step;
-			if (end >= myGame.lastHashValueForTier(tier)) {
-				end = myGame.lastHashValueForTier(tier);
-				tier--;
-				if (tier >= 0)
-					offset = myGame.hashOffsetForTier(tier);
-				needs2Sync = true;
-			}
-			return new Pair<Long, Long>(ret, end);
-		}
+	private int division = 1;
+
+	private synchronized Pair<Long, Long> getSlice(int tier, int index,
+			TieredGame<T> myGame) {
+		if (tier < 0)
+			return null;
+		long tierStart = myGame.hashOffsetForTier(tier);
+		long tierEnd = myGame.lastHashValueForTier(tier);
+		long start = (tierEnd - tierStart + 1) * index / division + tierStart;
+		long end = (tierEnd - tierStart + 1) * (index + 1) / division
+				+ tierStart - 1;
+		return new Pair<Long, Long>(start, end);
 	}
 
 	private final class TierSolverWorkUnit implements WorkUnit {
 
 		private int index;
 
-		TierSolverWorkUnit() {
+		private int tier;
+
+		private TieredGame<T> game;
+
+		private Configuration conf;
+
+		TierSolverWorkUnit(Configuration conf, int index, boolean clone) {
 
 			// if(!(g instanceof TieredGame))
 			// Util.fatalError("Attempted to use tiered solver on non-tiered
 			// game");
-			this.index = nextIndex++;
-			barr = new CyclicBarrier(nextIndex);
+			if (clone)
+				this.conf = conf.cloneAll();
+			else
+				this.conf = conf;
+			game = Util.checkedCast(conf.getGame());
+			this.tier = game.numberOfTiers() - 1;
+			this.index = index;
 		}
 
-		@SuppressWarnings("synthetic-access")
 		public void conquer() {
 			assert Util.debug(DebugFacility.SOLVER, "Started the solver... ("
 					+ index + ")");
 			Thread.currentThread().setName(
-					"Solver (" + index + "): " + myGame.toString());
-
+					"Solver (" + index + "): " + game.toString());
 			Pair<Long, Long> slice;
-			while ((slice = nextSlice()) != null) {
+			int arrived = 0;
+			while ((slice = getSlice(tier, index, game)) != null) {
+				System.out.println("Beginning to solve slice " + slice
+						+ " in thread " + index);
 				assert Util.debug(DebugFacility.THREADING,
 						"Beginning to solve slice " + slice + " in thread "
 								+ index);
-				solvePartialTier(myGame, slice.car, slice.cdr, updater);
-				db.flush();
-			}
-
-			synchronized (TierSolver.this) {
-				if (barr != null) {
-					updater.complete();
-					barr.reset();
-					barr = null;
+				solvePartialTier(conf, slice.car, slice.cdr, updater);
+				System.out.println("Thread " + index + " finished");
+				try {
+					arrived = barr.await();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				} catch (BrokenBarrierException e) {
+					e.printStackTrace();
 				}
+				tier--;
 			}
+			if (arrived == 0)
+				updater.complete();
 		}
 
 		public List<WorkUnit> divide(int num) {
 			ArrayList<WorkUnit> arr = new ArrayList<WorkUnit>(num);
+			division = num;
+			barr = new CyclicBarrier(num);
 			arr.add(this);
 			for (int i = 1; i < num; i++)
-				arr.add(new TierSolverWorkUnit());
+				arr.add(new TierSolverWorkUnit(conf, i, true));
 			return arr;
 		}
 	}
@@ -179,7 +161,7 @@ public class TierSolver<T> extends Solver {
 
 		private Task t;
 
-		TierSolverUpdater() {
+		TierSolverUpdater(TieredGame<T> myGame) {
 			t = Task.beginTask("Tier solving \"" + myGame.describe() + "\"");
 			t.setTotal(myGame.lastHashValueForTier(myGame.numberOfTiers() - 1));
 		}

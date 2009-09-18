@@ -205,14 +205,12 @@ public abstract class Game<State> {
 	}
 
 	/**
-	 * @param conf
-	 *            The configuration object
 	 * @param vals
 	 *            A collection of records
 	 * @return The "best" record in the collection (ordered by primitive value,
 	 *         then score, then remoteness)
 	 */
-	public Record combine(Configuration conf, List<Record> vals) {
+	public Record combine(List<Record> vals) {
 		allVals.clear();
 		for (Record r : vals)
 			allVals.add(r);
@@ -275,8 +273,6 @@ public abstract class Game<State> {
 	}
 
 	/**
-	 * @param conf
-	 *            The configuration object
 	 * @param recordArray
 	 *            An array of records
 	 * @param offset
@@ -285,8 +281,7 @@ public abstract class Game<State> {
 	 *            The number of records to read through
 	 * @return The record with the best possible outcome
 	 */
-	public Record combine(Configuration conf, Record[] recordArray, int offset,
-			int len) {
+	public Record combine(Record[] recordArray, int offset, int len) {
 		allVals.clear();
 		for (int i = 0; i < len; i++)
 			allVals.add(recordArray[offset++]);
@@ -350,5 +345,29 @@ public abstract class Game<State> {
 			}
 		}
 		return vals.get(0);
+	}
+
+	/**
+	 * @param pv
+	 *            The primitive value
+	 * @return A new record containing the given primitive value
+	 */
+	public Record newRecord(PrimitiveValue pv) {
+		return new Record(conf, pv);
+	}
+
+	/**
+	 * @return An empty new Record
+	 */
+	public Record newRecord() {
+		return new Record(conf);
+	}
+
+	/**
+	 * @param val The state index of this record
+	 * @return A new record with the given state
+	 */
+	public Record newRecord(long val) {
+		return new Record(conf, val);
 	}
 }

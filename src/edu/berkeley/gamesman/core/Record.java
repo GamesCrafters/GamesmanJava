@@ -10,7 +10,7 @@ public final class Record {
 
 	private final int[] values;
 
-	Record(Configuration conf, long state) {
+	protected Record(Configuration conf, long state) {
 		this.conf = conf;
 		values = new int[conf.numFields()];
 		long remainingState = state;
@@ -29,7 +29,7 @@ public final class Record {
 	 *            The values of each of the respective fields in this record
 	 *            ordered VALUE, REMOTENESS, SCORE
 	 */
-	public Record(Configuration conf, int... values) {
+	protected Record(Configuration conf, int... values) {
 		this.conf = conf;
 		this.values = new int[conf.numFields()];
 		for (int i = 0; i < values.length; i++) {
@@ -44,7 +44,7 @@ public final class Record {
 	 *            Just the primitive value. All other fields are initialized to
 	 *            zero.
 	 */
-	public Record(Configuration conf, PrimitiveValue pVal) {
+	protected Record(Configuration conf, PrimitiveValue pVal) {
 		this.conf = conf;
 		this.values = new int[conf.numFields()];
 		int i = 0;
@@ -62,7 +62,7 @@ public final class Record {
 	 * @param conf
 	 *            The configuration object
 	 */
-	public Record(Configuration conf) {
+	protected Record(Configuration conf) {
 		this.conf = conf;
 		values = new int[conf.numFields()];
 	}

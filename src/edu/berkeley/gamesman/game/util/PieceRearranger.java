@@ -420,7 +420,7 @@ public final class PieceRearranger implements Cloneable {
 	@Override
 	public String toString() {
 		StringBuilder str = new StringBuilder(pieces.size() + numGroups);
-		int i=0;
+		int i = 0;
 		HashGroup g = groups[i++];
 		while (g.lastPiece == lowPiece) {
 			str.append(' ');
@@ -470,6 +470,7 @@ public final class PieceRearranger implements Cloneable {
 		else
 			tryHash = 0;
 		int oCount = numOs;
+		hasNext = false;
 		for (int i = pieces.size() - 1; i >= 0; i--) {
 			if (hash >= tryHash) {
 				hash -= tryHash;
@@ -480,6 +481,7 @@ public final class PieceRearranger implements Cloneable {
 				if (openX > 0) {
 					openO = 1;
 					openX = 0;
+					hasNext = true;
 				} else
 					openO++;
 			} else {

@@ -82,7 +82,7 @@ public class FileDatabase extends Database {
 	}
 
 	@Override
-	public void putRecordGroups(long loc, Iterator<RecordGroup> recordGroups,
+	public synchronized void putRecordGroups(long loc, Iterator<RecordGroup> recordGroups,
 			int numGroups) {
 		try {
 			groupsLength = numGroups * conf.recordGroupByteLength;

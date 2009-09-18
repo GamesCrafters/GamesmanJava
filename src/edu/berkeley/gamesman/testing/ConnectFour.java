@@ -121,7 +121,7 @@ public class ConnectFour implements MouseListener {
 				rec.previousPosition();
 				records.add(rec);
 			}
-			Record bestRecord = cgame.combine(conf, records);
+			Record bestRecord = cgame.combine(records);
 			ArrayList<Pair<String, ItergameState>> bestMoves = new ArrayList<Pair<String, ItergameState>>(
 					listMoves.size());
 			for (int i = 0; i < records.size(); i++) {

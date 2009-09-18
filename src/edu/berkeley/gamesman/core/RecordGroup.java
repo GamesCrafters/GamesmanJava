@@ -122,7 +122,7 @@ public class RecordGroup {
 			val = values.divide(conf.multipliers[num]).mod(
 					conf.bigIntTotalStates).longValue();
 		}
-		return new Record(conf, val);
+		return conf.getGame().newRecord(val);
 	}
 
 	/**

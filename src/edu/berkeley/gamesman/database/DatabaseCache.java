@@ -7,13 +7,15 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.RecordGroup;
+import edu.berkeley.gamesman.util.DebugFacility;
+import edu.berkeley.gamesman.util.Util;
 
 /**
  * Caches records obtained from another database passed as an argument
  * 
  * @author dnspies
  */
-public final class DatabaseCache extends Database {
+public class DatabaseCache extends Database {
 	private static final class GroupHolder {
 		private RecordGroup rg;
 
@@ -27,7 +29,7 @@ public final class DatabaseCache extends Database {
 			rg = new RecordGroup(conf);
 			r = new Record[conf.recordsPerGroup];
 			for (int i = 0; i < conf.recordsPerGroup; i++)
-				r[i] = new Record(conf);
+				r[i] = conf.getGame().newRecord();
 		}
 
 		public void get(int recordNum, Record record) {
@@ -135,7 +137,7 @@ public final class DatabaseCache extends Database {
 	}
 
 	@Override
-	public Record getRecord(long recordIndex) {
+	public synchronized Record getRecord(long recordIndex) {
 		setPoint(recordIndex);
 		int i;
 		long lowest = Long.MAX_VALUE;
@@ -155,14 +157,14 @@ public final class DatabaseCache extends Database {
 			i = lowUsed;
 			loadPage(i);
 		}
-		Record rec = new Record(conf);
+		Record rec = conf.getGame().newRecord();
 		records[index][i][offset].get(recordNum, rec);
 		used[index][i] = ++current[index];
 		return rec;
 	}
 
 	@Override
-	public void getRecord(long recordIndex, Record r) {
+	public synchronized void getRecord(long recordIndex, Record r) {
 		setPoint(recordIndex);
 		int i;
 		long lowest = Long.MAX_VALUE;
@@ -187,7 +189,7 @@ public final class DatabaseCache extends Database {
 	}
 
 	@Override
-	public void putRecord(long recordIndex, Record r) {
+	public synchronized void putRecord(long recordIndex, Record r) {
 		setPoint(recordIndex);
 		int i;
 		long lowest = Long.MAX_VALUE;
@@ -212,9 +214,11 @@ public final class DatabaseCache extends Database {
 		dirty[index][i] = true;
 	}
 
-	private void loadPage(int i) {
+	private synchronized void loadPage(int i) {
 		if (dirty[index][i])
 			writeBack(i);
+		assert Util.debug(DebugFacility.DATABASE, "Loading "
+				+ ((tag << indexBits) | index));
 		tags[index][i] = tag;
 		dirty[index][i] = false;
 		long firstGroup = ((tag << indexBits) | index) << offsetBits;
@@ -224,8 +228,10 @@ public final class DatabaseCache extends Database {
 			records[index][i][off].setGroup(it.next());
 	}
 
-	private void writeBack(int i) {
+	private synchronized void writeBack(int i) {
 		long thisTag = tags[index][i];
+		assert Util.debug(DebugFacility.DATABASE, "Writing "
+				+ ((thisTag << indexBits) | index));
 		long firstRecordGroup = ((thisTag << indexBits) | index) << offsetBits;
 		groupIterator.reset(records[index][i]);
 		db.putRecordGroups(firstRecordGroup * conf.recordGroupByteLength,
@@ -240,7 +246,7 @@ public final class DatabaseCache extends Database {
 	}
 
 	@Override
-	public void flush() {
+	public synchronized void flush() {
 		for (index = 0; index < indices; index++)
 			for (int i = 0; i < nWayAssociative; i++)
 				if (dirty[index][i])

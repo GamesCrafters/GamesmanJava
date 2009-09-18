@@ -1,10 +1,10 @@
 package edu.berkeley.gamesman.solver;
 
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.ItergameState;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.RecordFields;
-import edu.berkeley.gamesman.core.TieredGame;
 import edu.berkeley.gamesman.core.TieredIterGame;
 import edu.berkeley.gamesman.util.Util;
 
@@ -13,15 +13,15 @@ import edu.berkeley.gamesman.util.Util;
  */
 public final class TierItergameSolver extends TierSolver<ItergameState> {
 	@Override
-	protected void solvePartialTier(TieredGame<ItergameState> tierGame,
-			long start, long end, TierSolverUpdater t) {
-		TieredIterGame game = Util.checkedCast(tierGame);
+	protected void solvePartialTier(Configuration conf, long start, long end,
+			TierSolverUpdater t) {
+		TieredIterGame game = Util.checkedCast(conf.getGame());
 		long current = start;
 		game.setState(game.hashToState(start));
 		Record[] vals = new Record[game.maxChildren()];
 		for (int i = 0; i < vals.length; i++)
-			vals[i] = new Record(conf);
-		Record prim = new Record(conf);
+			vals[i] = game.newRecord();
+		Record prim = game.newRecord();
 		ItergameState[] children = new ItergameState[game.maxChildren()];
 		boolean hasRemoteness = conf.containsField(RecordFields.REMOTENESS);
 		for (int i = 0; i < children.length; i++)
@@ -38,7 +38,7 @@ public final class TierItergameSolver extends TierSolver<ItergameState> {
 					db.getRecord(game.stateToHash(children[i]), r);
 					r.previousPosition();
 				}
-				Record newVal = game.combine(conf, vals, 0, len);
+				Record newVal = game.combine(vals, 0, len);
 				db.putRecord(current, newVal);
 			} else {
 				if (hasRemoteness)
@@ -46,8 +46,11 @@ public final class TierItergameSolver extends TierSolver<ItergameState> {
 				prim.set(RecordFields.VALUE, pv.value());
 				db.putRecord(current, prim);
 			}
-			if (current != end)
+			if (current != end){
+				if(current==20)
+					System.out.println("Here");
 				game.nextHashInTier();
+			}
 			current++;
 		}
 	}

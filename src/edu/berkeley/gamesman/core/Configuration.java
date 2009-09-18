@@ -744,4 +744,17 @@ public class Configuration {
 	public int numFields() {
 		return storedFields.length;
 	}
+
+	/**
+	 * @return A new identical configuration with clones of the game and hasher
+	 */
+	public Configuration cloneAll() {
+		try {
+			Configuration newConf = new Configuration(props, false);
+			return newConf;
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 }

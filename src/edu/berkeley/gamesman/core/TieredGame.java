@@ -96,5 +96,4 @@ public abstract class TieredGame<State> extends Game<State> {
 	public final long lastHash() {
 		return lastHashValueForTier(numberOfTiers() - 1);
 	}
-
 }

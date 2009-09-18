@@ -23,8 +23,10 @@ import edu.berkeley.gamesman.util.Util;
  * memory and solves it with a graph search.
  * 
  * @author Steven Schlansker
+ * @param <T>
+ *            The game state
  */
-public class TopDownSolver extends Solver {
+public class TopDownSolver<T> extends Solver {
 
 	Configuration conf;
 
@@ -34,17 +36,17 @@ public class TopDownSolver extends Solver {
 	public WorkUnit prepareSolve(Configuration config, Game<Object> game) {
 		conf = config;
 		long hashSpace = game.lastHash() + 1;
-		Record defaultRecord = new Record(conf, PrimitiveValue.UNDECIDED);
+		Record defaultRecord = game.newRecord(PrimitiveValue.UNDECIDED);
 		for (long index = 0; index < hashSpace; index++) {
 			db.putRecord(index, defaultRecord);
 		}
 		db.flush();
-		TopDownSolverWorkUnit<Object> wu = new TopDownSolverWorkUnit<Object>(
-				game, db);
+		TopDownSolverWorkUnit wu = new TopDownSolverWorkUnit(Util
+				.<Game<T>, Game<Object>> checkedCast(game), db);
 		return wu;
 	}
 
-	class TopDownSolverWorkUnit<T> implements WorkUnit {
+	class TopDownSolverWorkUnit implements WorkUnit {
 
 		final private Game<T> game;
 
@@ -118,10 +120,10 @@ public class TopDownSolver extends Solver {
 					assert Util.debug(DebugFacility.SOLVER,
 							"Getting primitive value for state "
 									+ game.stateToString(state) + ": " + prim);
-					next = new Record(conf, prim);
+					next = game.newRecord(prim);
 					next.set(RecordFields.SCORE, game.primitiveScore(state));
 				} else {
-					next = game.combine(conf, recs);
+					next = game.combine(recs);
 					int remoteness = (int) next.get(RecordFields.REMOTENESS);
 					if (remoteness > maxRemoteness) {
 						System.out.println("Found remoteness: " + remoteness);

@@ -31,7 +31,7 @@ public class RecordDatabase extends Database {
 	}
 
 	@Override
-	public void putRecord(long loc, Record r) {
+	public synchronized void putRecord(long loc, Record r) {
 		recordArray[(int) loc] = r.clone();
 	}
 

@@ -26,8 +26,9 @@ import edu.berkeley.gamesman.util.Util;
  * is reversible.
  * 
  * @author Patrick Horn (with Jeremy Fleischman watching)
+ * @param <T> The game state
  */
-public class BreadthFirstSolver extends Solver {
+public class BreadthFirstSolver<T> extends Solver {
 
 	Configuration conf;
 
@@ -47,13 +48,13 @@ public class BreadthFirstSolver extends Solver {
 				Integer.MAX_VALUE);
 		maxHash = game.lastHash();
 		hashSpace = maxHash + 1;
-		Record defaultRecord = new Record(conf, PrimitiveValue.UNDECIDED);
+		Record defaultRecord = game.newRecord(PrimitiveValue.UNDECIDED);
 		for (long index = 0; index < hashSpace; index++)
 			db.putRecord(index, defaultRecord);
-		return new BreadthFirstWorkUnit<Object>(game, db, maxRemoteness);
+		return new BreadthFirstWorkUnit(Util.<Game<T>,Game<Object>>checkedCast(game), db, maxRemoteness);
 	}
 
-	class BreadthFirstWorkUnit<T> implements WorkUnit {
+	class BreadthFirstWorkUnit implements WorkUnit {
 
 		final private Game<T> game;
 
@@ -75,7 +76,7 @@ public class BreadthFirstSolver extends Solver {
 		}
 
 		// For divide()
-		private BreadthFirstWorkUnit(BreadthFirstWorkUnit<T> copy,
+		private BreadthFirstWorkUnit(BreadthFirstWorkUnit copy,
 				long firstHash, long lastHashPlusOne) {
 			game = copy.game;
 			database = copy.database;
@@ -154,7 +155,7 @@ public class BreadthFirstSolver extends Solver {
 			for (T s : game.startingPositions()) {
 				long hash = game.stateToHash(s);
 				PrimitiveValue win = game.primitiveValue(s);
-				Record rec = new Record(conf, win);
+				Record rec = game.newRecord(win);
 				database.putRecord(hash, rec);
 				for (Pair<String, T> child : game.validMoves(s)) {
 					long childhash = game.stateToHash(child.cdr);
@@ -162,7 +163,7 @@ public class BreadthFirstSolver extends Solver {
 					// so to count numPositionsOne correctly, we ignore those
 					// duplicates
 					if (database.getRecord(childhash).get() == PrimitiveValue.UNDECIDED) {
-						Record childrec = new Record(conf, win);
+						Record childrec = game.newRecord(win);
 						childrec.set(RecordFields.REMOTENESS, 1);
 						database.putRecord(childhash, childrec);
 						numPositionsOne++;
@@ -184,13 +185,13 @@ public class BreadthFirstSolver extends Solver {
 			if (num < hashSpace) {
 				for (int i = 0; i < num - 1; i++) {
 					long endHash = currentHash + hashIncrement;
-					arr.add(new BreadthFirstWorkUnit<T>(this, currentHash,
+					arr.add(new BreadthFirstWorkUnit(this, currentHash,
 							endHash));
 					currentHash = endHash;
 				}
 			}
 			// add the last one separately in case of rounding errors.
-			arr.add(new BreadthFirstWorkUnit<T>(this, currentHash, hashSpace));
+			arr.add(new BreadthFirstWorkUnit(this, currentHash, hashSpace));
 			barr = new CyclicBarrier(arr.size());
 			return arr;
 		}

@@ -75,7 +75,7 @@ public abstract class Database {
 	 *            The record number
 	 * @return The stored Record
 	 */
-	public synchronized Record getRecord(long recordIndex) {
+	public Record getRecord(long recordIndex) {
 		long group = recordIndex / conf.recordsPerGroup;
 		int num = (int) (recordIndex % conf.recordsPerGroup);
 		long byteOffset = group * conf.recordGroupByteLength;
@@ -90,7 +90,7 @@ public abstract class Database {
 	 * @param r
 	 *            The record to store in
 	 */
-	public synchronized void getRecord(long recordIndex, Record r) {
+	public void getRecord(long recordIndex, Record r) {
 		long group = recordIndex / conf.recordsPerGroup;
 		int num = (int) (recordIndex % conf.recordsPerGroup);
 		long byteOffset = group * conf.recordGroupByteLength;
@@ -98,9 +98,12 @@ public abstract class Database {
 	}
 
 	/**
-	 * @param recordIndex The index to look in
-	 * @param numRecords The number of records before hasNext returns false
-	 * @return An iterator starting at recordIndex over numRecords records in this database
+	 * @param recordIndex
+	 *            The index to look in
+	 * @param numRecords
+	 *            The number of records before hasNext returns false
+	 * @return An iterator starting at recordIndex over numRecords records in
+	 *         this database
 	 */
 	public Iterator<Record> getRecords(long recordIndex, int numRecords) {
 		long byteOffset = recordIndex / conf.recordsPerGroup
@@ -121,7 +124,7 @@ public abstract class Database {
 	 * @param r
 	 *            The Record to store
 	 */
-	public synchronized void putRecord(long recordIndex, Record r) {
+	public void putRecord(long recordIndex, Record r) {
 		int num = (int) (recordIndex % conf.recordsPerGroup);
 		long byteOffset = recordIndex / conf.recordsPerGroup
 				* conf.recordGroupByteLength;
@@ -133,12 +136,15 @@ public abstract class Database {
 	/**
 	 * Stores numRecords records from the records iterator in the database
 	 * 
-	 * @param recordIndex The index to look in
-	 * @param records An iterator starting at recordIndex over numRecords records
-	 * @param numRecords The number of records to go through
- 	 */
-	public void putRecords(long recordIndex, RecordIterator records,
-			int numRecords) {
+	 * @param recordIndex
+	 *            The index to look in
+	 * @param records
+	 *            An iterator starting at recordIndex over numRecords records
+	 * @param numRecords
+	 *            The number of records to go through
+	 */
+	public synchronized void putRecords(long recordIndex,
+			RecordIterator records, int numRecords) {
 		int preRecords = conf.recordsPerGroup
 				- ((int) ((recordIndex - 1) % conf.recordsPerGroup) + 1);
 		int recordGroups = (numRecords - preRecords) / conf.recordsPerGroup;
@@ -165,8 +171,10 @@ public abstract class Database {
 	public abstract RecordGroup getRecordGroup(long loc);
 
 	/**
-	 * @param startLoc The location to start at
-	 * @param numGroups The number of groups to return
+	 * @param startLoc
+	 *            The location to start at
+	 * @param numGroups
+	 *            The number of groups to return
 	 * @return An iterator over numGroups RecordGroups from this database
 	 */
 	public Iterator<RecordGroup> getRecordGroups(long startLoc, int numGroups) {
@@ -183,11 +191,15 @@ public abstract class Database {
 	public abstract void putRecordGroup(long loc, RecordGroup rg);
 
 	/**
-	 * Puts numGroups RecordGroups into this database starting at location loc (loc is measured in bytes).
+	 * Puts numGroups RecordGroups into this database starting at location loc
+	 * (loc is measured in bytes).
 	 * 
-	 * @param loc The location to start at
-	 * @param it An iterator over at least numGroups RecordGroups
-	 * @param numGroups The number of groups to store
+	 * @param loc
+	 *            The location to start at
+	 * @param it
+	 *            An iterator over at least numGroups RecordGroups
+	 * @param numGroups
+	 *            The number of groups to store
 	 */
 	public void putRecordGroups(long loc, Iterator<RecordGroup> it,
 			int numGroups) {
@@ -261,7 +273,7 @@ public abstract class Database {
 			this.numRecords = numRecords + preRecords;
 			currentRecords = new Record[conf.recordsPerGroup];
 			for (int i = 0; i < conf.recordsPerGroup; i++)
-				currentRecords[i] = new Record(conf);
+				currentRecords[i] = conf.getGame().newRecord();
 			index = conf.recordsPerGroup;
 			for (int i = 0; i < preRecords; i++)
 				next();
@@ -288,13 +300,17 @@ public abstract class Database {
 	/**
 	 * Stores numRecords records from the records array in the database
 	 * 
-	 * @param recordIndex The index to look in
-	 * @param records An array containing records
-	 * @param offset The offset at which to start reading from the array
-	 * @param numRecords The number of records to go through
- 	 */
-	public void putRecords(long recordIndex, Record[] records, int offset,
-			int numRecords) {
+	 * @param recordIndex
+	 *            The index to look in
+	 * @param records
+	 *            An array containing records
+	 * @param offset
+	 *            The offset at which to start reading from the array
+	 * @param numRecords
+	 *            The number of records to go through
+	 */
+	public synchronized void putRecords(long recordIndex, Record[] records,
+			int offset, int numRecords) {
 		int preRecords = conf.recordsPerGroup
 				- ((int) ((recordIndex - 1) % conf.recordsPerGroup) + 1);
 		int recordGroups = (numRecords - preRecords) / conf.recordsPerGroup;

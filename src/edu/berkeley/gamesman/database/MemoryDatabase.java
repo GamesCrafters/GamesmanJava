@@ -49,7 +49,7 @@ public class MemoryDatabase extends Database {
 	}
 
 	@Override
-	public RecordGroup getRecordGroup(long loc) {
+	public synchronized RecordGroup getRecordGroup(long loc) {
 		for (int i = 0; i < conf.recordGroupByteLength; i++) {
 			rawRecord[i] = getByte(loc++);
 		}
@@ -101,11 +101,11 @@ public class MemoryDatabase extends Database {
 	}
 
 	@Override
-	public void putRecordGroup(long loc, RecordGroup value) {
+	public synchronized void putRecordGroup(long loc, RecordGroup value) {
 		value.writeToUnsignedMemoryDatabase(this, loc);
 	}
 
-	public void putRecordGroups(long loc, Iterator<RecordGroup> it,
+	public synchronized void putRecordGroups(long loc, Iterator<RecordGroup> it,
 			int numGroups) {
 		for (int i = 0; i < numGroups; i++) {
 			putRecordGroup(loc, it.next());
