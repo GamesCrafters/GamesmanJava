@@ -285,16 +285,6 @@ class BitRearranger {
 		}
 		return permutation;
 	}
-
-	private String toBits(int n) {
-		String bits = "0b";
-		for (int i = oCount + iCount - 1; i >= 0; i--) {
-			int bit = n >> i;
-			n -= bit << i;
-			bits += "" + bit;
-		}
-		return bits;
-	}
 }
 
 class SquareOneState {

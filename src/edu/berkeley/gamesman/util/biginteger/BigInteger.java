@@ -72,7 +72,6 @@ import edu.berkeley.gamesman.database.MemoryDatabase;
  * <CODE>NullPointerException</CODE> when passed a null object reference for any
  * input parameter.
  * 
- * @see BigDecimal
  * @version 1.75, 06/28/06
  * @author Josh Bloch
  * @author Michael McCloskey
@@ -86,7 +85,6 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
 	 * This is necessary to ensures that there is exactly one representation for
 	 * each BigInteger value.
 	 * 
-	 * @serial
 	 */
 	int signum;
 
@@ -130,16 +128,6 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
 	 * @see #getLowestSetBit
 	 */
 	private int lowestSetBit = -2;
-
-	/**
-	 * The index of the lowest-order byte in the magnitude of this BigInteger
-	 * that contains a nonzero byte, or -2 (either value is acceptable). The
-	 * least significant byte has int-number 0, the next byte in order of
-	 * increasing significance has byte-number 1, and so forth.
-	 * 
-	 * @serial
-	 */
-	private int firstNonzeroByteNum = -2;
 
 	/**
 	 * The index of the lowest-order int in the magnitude of this BigInteger
@@ -928,15 +916,6 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
 	private BigInteger(int[] magnitude, int signum) {
 		this.signum = (magnitude.length == 0 ? 0 : signum);
 		this.mag = magnitude;
-	}
-
-	/**
-	 * This private constructor is for internal use and assumes that its
-	 * arguments are correct.
-	 */
-	private BigInteger(byte[] magnitude, int signum) {
-		this.signum = (magnitude.length == 0 ? 0 : signum);
-		this.mag = stripLeadingZeroBytes(magnitude);
 	}
 
 	/**
@@ -2745,6 +2724,11 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
 		return byteArray;
 	}
 
+	/**
+	 * @param byteArray An array to write to
+	 * @param offset The offset into the array
+	 * @param len The number of bytes to write
+	 */
 	public void toUnsignedByteArray(byte[] byteArray, int offset, int len) {
 		for (int i = len - 1, bytesCopied = 4, nextInt = 0, intIndex = 0; i >= 0; i--) {
 			if (bytesCopied == 4) {
@@ -2758,6 +2742,11 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
 		}
 	}
 
+	/**
+	 * @param output A memory database
+	 * @param offset The offset into the database
+	 * @param len The number of bytes to write
+	 */
 	public void writeToUnsignedMemoryDatabase(MemoryDatabase output,
 			long offset, int len) {
 		for (int i = len - 1, bytesCopied = 4, nextInt = 0, intIndex = 0; i >= 0; i--) {
@@ -2772,6 +2761,11 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
 		}
 	}
 
+	/**
+	 * @param output An output stream to write to
+	 * @param len The number of bytes to write
+	 * @throws IOException If output throws an IOException
+	 */
 	public void outputUnsignedBytes(OutputStream output, int len)
 			throws IOException {
 		for (int i = len, byteIndex = 8 * (len % 4), intIndex = len / 4, nextInt = getInt(intIndex); i > 0; i--) {
@@ -2784,6 +2778,10 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
 		}
 	}
 
+	/**
+	 * @param output A ByteBuffer to write to
+	 * @param len The number of bytes to write
+	 */
 	public void outputUnsignedBytes(ByteBuffer output, int len) {
 		for (int i = len, byteIndex = 8 * (len % 4), intIndex = len / 4, nextInt = getInt(intIndex); i > 0; i--) {
 			if (byteIndex == 0) {
@@ -2795,6 +2793,11 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
 		}
 	}
 
+	/**
+	 * @param output A DataOutput to write to
+	 * @param len The number of bytes to write
+	 * @throws IOException If output throws an IOException
+	 */
 	public void outputUnsignedBytes(DataOutput output, int len)
 			throws IOException {
 		for (int i = len, byteIndex = 8 * (len % 4), intIndex = len / 4, nextInt = getInt(intIndex); i > 0; i--) {
@@ -2891,7 +2894,6 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
 	 * Returns a copy of the input array stripped of any leading zero bytes.
 	 */
 	private static int[] stripLeadingZeroInts(int val[]) {
-		int byteLength = val.length;
 		int keep;
 
 		// Find first nonzero byte
@@ -2910,7 +2912,6 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
 	 * source is trusted the copying may be skipped.
 	 */
 	private static int[] trustedStripLeadingZeroInts(int val[]) {
-		int byteLength = val.length;
 		int keep;
 
 		// Find first nonzero byte
@@ -3100,11 +3101,6 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
 		return bitLength() / 32 + 1;
 	}
 
-	/* Returns sign bit */
-	private int signBit() {
-		return (signum < 0 ? 1 : 0);
-	}
-
 	/* Returns an int of sign bits */
 	private int signInt() {
 		return (int) (signum < 0 ? -1 : 0);
@@ -3210,7 +3206,7 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
 
 		// Set "cached computation" fields to their initial values
 		bitCount = bitLength = -1;
-		lowestSetBit = firstNonzeroByteNum = firstNonzeroIntNum = -2;
+		lowestSetBit = firstNonzeroIntNum = -2;
 
 		// Calculate mag field from magnitude and discard magnitude
 		mag = stripLeadingZeroBytes(magnitude);

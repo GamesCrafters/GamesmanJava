@@ -13,7 +13,12 @@ import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.game.Connect4;
 import edu.berkeley.gamesman.util.Pair;
 
-public class ConnectFour implements MouseListener {
+/**
+ * The internal board used for the testing class
+ * 
+ * @author dnspies
+ */
+class ConnectFour implements MouseListener {
 	final char[][] board;
 
 	private int[] columnHeight = new int[7];
@@ -32,8 +37,6 @@ public class ConnectFour implements MouseListener {
 
 	private Connect4 cgame;
 
-	private Configuration conf;
-
 	Database fd;
 
 	private static Random r = new Random();
@@ -42,14 +45,23 @@ public class ConnectFour implements MouseListener {
 
 	final int gameHeight;
 
+	/**
+	 * @param conf The configuration object
+	 * @param disfour The display board
+	 */
 	public ConnectFour(Configuration conf, DisplayFour disfour) {
 		this(conf, disfour, false, true);
 	}
 
+	/**
+	 * @param conf The configuration object
+	 * @param disfour The displayBoard
+	 * @param cX Does the computer play as Red?
+	 * @param cO Does the computer play as Black?
+	 */
 	public ConnectFour(Configuration conf, DisplayFour disfour, boolean cX,
 			boolean cO) {
 		int c, r;
-		this.conf = conf;
 		compX = cX;
 		compO = cO;
 		gameHeight = Integer.parseInt(conf.getProperty("gamesman.game.height"));
@@ -214,6 +226,9 @@ public class ConnectFour implements MouseListener {
 	public void mouseExited(MouseEvent me) {
 	}
 
+	/**
+	 * @return The displayed board
+	 */
 	public DisplayFour getDisplay() {
 		return df;
 	}

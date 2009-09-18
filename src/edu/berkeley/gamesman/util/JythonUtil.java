@@ -5,7 +5,6 @@ import org.python.core.PyString;
 import org.python.core.__builtin__;
 import org.python.core.PyModule;
 import org.python.core.PyObject;
-import org.python.util.InteractiveConsole;
 import org.python.util.PythonInterpreter;
 
 /**
@@ -51,7 +50,7 @@ public class JythonUtil {
 			throw new ClassNotFoundException("Module "+module+" has no class named "+className);
 		}
 		Object pythonClass = myclass.__tojava__(Class.class);
-		if (pythonClass != null && pythonClass instanceof Class) {
+		if (pythonClass != null && pythonClass instanceof Class<?>) {
 			Class<? extends T> castedPythonClass = ((Class<?>)pythonClass).asSubclass(baseClass);
 			return castedPythonClass;
 		} else {

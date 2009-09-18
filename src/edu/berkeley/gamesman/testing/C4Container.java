@@ -13,8 +13,14 @@ import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.database.RecordDatabase;
 import edu.berkeley.gamesman.util.Util;
 
+/**
+ * A testing class for playing against a perfect play database
+ * @author dnspies
+ */
 public class C4Container extends JPanel implements ActionListener, KeyListener,
 		WindowListener {
+	private static final long serialVersionUID = -8073360248394686305L;
+
 	ConnectFour game;
 
 	private Configuration conf;
@@ -23,6 +29,9 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 
 	JRadioButton oButton;
 
+	/**
+	 * @param conf The configuration object
+	 */
 	public C4Container(Configuration conf) {
 		super();
 		this.conf = conf;
@@ -68,8 +77,10 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 		game = cf;
 	}
 
-	public static void main(String[] args) throws InstantiationException,
-			IllegalAccessException {
+	/**
+	 * @param args The job file
+	 */
+	public static void main(String[] args){
 		if (args.length != 1) {
 			Util.fatalError("Please specify a jobfile as the only argument");
 		}

@@ -5,14 +5,14 @@ import java.awt.GridLayout;
 
 import javax.swing.JPanel;
 
-public class DisplayFour extends JPanel implements Runnable {
+class DisplayFour extends JPanel implements Runnable {
 	private final static long serialVersionUID = 2;
 	private char[][] board;
 	private final int gameHeight;
 	private final int gameWidth;
 	Slot[][] slots;
 
-	public DisplayFour(int height, int width) {
+	DisplayFour(int height, int width) {
 		int col, row;
 		gameHeight = height;
 		gameWidth = width;

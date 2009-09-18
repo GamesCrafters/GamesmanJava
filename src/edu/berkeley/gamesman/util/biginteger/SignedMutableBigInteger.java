@@ -112,6 +112,7 @@ class SignedMutableBigInteger extends MutableBigInteger {
     /**
      * Print out the first intLen ints of this MutableBigInteger's value
      * array starting at offset.
+     * @return A string representation of this SignedMutableBigInteger
      */
     public String toString() {
         BigInteger b = new BigInteger(this, sign);
