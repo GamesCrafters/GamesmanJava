@@ -3,10 +3,10 @@ package edu.berkeley.gamesman.database;
 import java.util.Arrays;
 import java.util.Iterator;
 
-import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.RecordGroup;
+import edu.berkeley.gamesman.database.util.Page;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
@@ -16,60 +16,8 @@ import edu.berkeley.gamesman.util.Util;
  * @author dnspies
  */
 public class DatabaseCache extends Database {
-	private static final class GroupHolder {
-		private RecordGroup rg;
 
-		private Record[] r;
-
-		private boolean called;
-
-		private boolean changed;
-
-		public GroupHolder(Configuration conf) {
-			rg = new RecordGroup(conf);
-			r = new Record[conf.recordsPerGroup];
-			for (int i = 0; i < conf.recordsPerGroup; i++)
-				r[i] = conf.getGame().newRecord();
-		}
-
-		public void get(int recordNum, Record record) {
-			if (!called) {
-				called = true;
-				rg.getRecords(r, 0);
-			}
-			record.set(r[recordNum]);
-		}
-
-		public void set(int recordNum, Record record) {
-			if (!called) {
-				called = true;
-				rg.getRecords(r, 0);
-			}
-			changed = true;
-			r[recordNum].set(record);
-		}
-
-		public void setGroup(RecordGroup group) {
-			rg.set(group);
-			called = false;
-			changed = false;
-		}
-
-		public RecordGroup getGroup() {
-			if (changed){
-				rg.set(r, 0);
-				changed=false;
-			}
-			return rg;
-		}
-
-		private static int byteSize(Configuration conf) {
-			return 40 + RecordGroup.byteSize(conf) + (conf.recordsPerGroup + 1)
-					/ 2 * 8 + conf.recordsPerGroup * Record.byteSize(conf);
-		}
-	}
-
-	private GroupHolder[][][] records; // index,n,offset
+	private Page[][] records; // index,n,offset
 
 	private int indexBits, indices;
 
@@ -84,33 +32,6 @@ public class DatabaseCache extends Database {
 	private boolean[][] dirty;
 
 	private final Database db;
-
-	private final CachedbGroupIterator groupIterator = new CachedbGroupIterator();
-
-	private static final class CachedbGroupIterator implements
-			Iterator<RecordGroup> {
-
-		private int i;
-
-		private GroupHolder[] groups;
-
-		private void reset(GroupHolder[] groups) {
-			this.groups = groups;
-			i = 0;
-		}
-
-		public boolean hasNext() {
-			return i < groups.length;
-		}
-
-		public RecordGroup next() {
-			return groups[i++].getGroup();
-		}
-
-		public void remove() {
-			throw new UnsupportedOperationException("remove not supported here");
-		}
-	};
 
 	/**
 	 * @param db
@@ -151,7 +72,7 @@ public class DatabaseCache extends Database {
 		boolean failedCheck;
 		synchronized (records[index][i]) {
 			if (tags[index][i] == tag) {
-				records[index][i][offset].get(recordNum, rec);
+				records[index][i].get(offset, recordNum, rec);
 				used[index][i] = ++current[index];
 				failedCheck = false;
 			} else
@@ -193,7 +114,7 @@ public class DatabaseCache extends Database {
 		boolean failedCheck;
 		synchronized (records[index][i]) {
 			if (tags[index][i] == tag) {
-				records[index][i][offset].get(recordNum, r);
+				records[index][i].get(offset, recordNum, r);
 				used[index][i] = ++current[index];
 				failedCheck = false;
 			} else
@@ -233,7 +154,7 @@ public class DatabaseCache extends Database {
 		boolean failedCheck;
 		synchronized (records[index][i]) {
 			if (tags[index][i] == tag) {
-				records[index][i][offset].set(recordNum, r);
+				records[index][i].set(offset, recordNum, r);
 				used[index][i] = ++current[index];
 				dirty[index][i] = true;
 				failedCheck = false;
@@ -258,7 +179,7 @@ public class DatabaseCache extends Database {
 				Iterator<RecordGroup> it = db.getRecordGroups(firstGroup
 						* conf.recordGroupByteLength, pageSize);
 				for (int off = 0; off < pageSize; off++)
-					records[index][i][off].setGroup(it.next());
+					records[index][i].setGroup(off, it.next());
 			}
 		}
 	}
@@ -269,9 +190,9 @@ public class DatabaseCache extends Database {
 					+ ((tag << indexBits) | index));
 			long firstRecordGroup = ((tag << indexBits) | index) << offsetBits;
 			synchronized (db) {
-				groupIterator.reset(records[index][i]);
 				db.putRecordGroups(firstRecordGroup
-						* conf.recordGroupByteLength, groupIterator, pageSize);
+						* conf.recordGroupByteLength, records[index][i]
+						.iterator(), pageSize);
 			}
 			dirty[index][i] = false;
 		}
@@ -312,7 +233,7 @@ public class DatabaseCache extends Database {
 		}
 		int totalBytes = Integer.parseInt(conf.getProperty(
 				"gamesman.db.cacheSize", "67108864"));
-		int groupHolderSize = GroupHolder.byteSize(conf);
+		int groupHolderSize = Page.groupHolderByteSize(conf);
 		int pageBytes = Integer.parseInt(conf.getProperty(
 				"gamesman.db.pageSize", "16384"));
 		pageSize = pageBytes / (groupHolderSize + 4);
@@ -325,7 +246,7 @@ public class DatabaseCache extends Database {
 						* nWayAssociative * pageSize);
 		indexBits = (int) (Math.log(indices) / Math.log(2));
 		indices = Math.max(1 << indexBits, 1);
-		records = new GroupHolder[indices][nWayAssociative][pageSize];
+		records = new Page[indices][nWayAssociative];
 		tags = new long[indices][nWayAssociative];
 		dirty = new boolean[indices][nWayAssociative];
 		used = new long[indices][nWayAssociative];
@@ -335,10 +256,9 @@ public class DatabaseCache extends Database {
 			Arrays.fill(u, 0);
 		for (boolean[] d : dirty)
 			Arrays.fill(d, false);
-		for (GroupHolder[][] pages : records) {
-			for (GroupHolder[] page : pages) {
-				for (int i = 0; i < page.length; i++)
-					page[i] = new GroupHolder(conf);
+		for (Page[] pages : records) {
+			for (int i = 0; i < pages.length; i++) {
+				pages[i] = new Page(conf, pageSize);
 			}
 		}
 		int bytesUsed = 80; // Size of this class
