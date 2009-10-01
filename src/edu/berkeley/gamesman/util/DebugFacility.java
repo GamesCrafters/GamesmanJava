@@ -27,7 +27,7 @@ public enum DebugFacility {
 	/**
 	 * Debug facility for Databases
 	 */
-	DATABASE("edu.berkeley.gamesman.database"),
+	DATABASE("edu.berkeley.gamesman.database","edu.berkeley.gamesman.database.util"),
 	/**
 	 * Debug facility for the Filer classes
 	 */

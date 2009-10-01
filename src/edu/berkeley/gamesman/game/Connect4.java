@@ -276,7 +276,6 @@ public final class Connect4 extends TieredIterGame {
 		hasNextPieceArrangement = false;
 		int os = numPieces / 2;
 		pieces.clear();
-		bsb.clear();
 		for (int i = 0; i < numPieces; i++) {
 			while (row >= colHeights[col]) {
 				if (colHeights[col] < gameHeight) {
@@ -291,7 +290,6 @@ public final class Connect4 extends TieredIterGame {
 			}
 			indices[row][col] = i;
 			pieces.add(new Place(row, col));
-			bsb.addPiece(row, col, i < os ? 'O' : 'X');
 			rearrangeString.append('T');
 			pieceArrangement += ec.getCoef(col, i + 1);
 			row++;

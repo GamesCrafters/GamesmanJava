@@ -184,6 +184,6 @@ public final class Record {
 	 *         configuration object
 	 */
 	public static int byteSize(Configuration conf) {
-		return 32 + (conf.numFields() + 1) / 2 * 8;
+		return 16 + (12 + conf.numFields() * 4 + 7) / 8 * 8;
 	}
 }

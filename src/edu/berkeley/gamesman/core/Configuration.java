@@ -67,7 +67,7 @@ public class Configuration {
 	 */
 	public final int recordGroupByteLength;
 
-	protected final boolean recordGroupUsesLong;
+	public final boolean recordGroupUsesLong;
 
 	/**
 	 * The database associated with this configuration

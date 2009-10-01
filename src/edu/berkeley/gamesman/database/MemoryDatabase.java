@@ -5,7 +5,9 @@ import java.util.Iterator;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.RecordGroup;
 import edu.berkeley.gamesman.util.DebugFacility;
+import edu.berkeley.gamesman.util.LongIterator;
 import edu.berkeley.gamesman.util.Util;
+import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 /**
  * Test DataBase for GamesCrafters Java. Right now it just writes BigIntegers to
@@ -24,9 +26,10 @@ import edu.berkeley.gamesman.util.Util;
  *          1.0 - Initial (working) Version.
  */
 public class MemoryDatabase extends Database {
-	
+
 	/**
-	 * Set this variable to a MemoryDatabase when instantiated so it can be used by a testing class later.
+	 * Set this variable to a MemoryDatabase when instantiated so it can be used
+	 * by a testing class later.
 	 */
 	public static MemoryDatabase md;
 
@@ -45,21 +48,29 @@ public class MemoryDatabase extends Database {
 	 * @author Alex Trofimov
 	 */
 	public MemoryDatabase() {
-		md=this;
+		md = this;
 	}
 
 	@Override
-	public synchronized RecordGroup getRecordGroup(long loc) {
+	public synchronized long getLongRecordGroup(long loc) {
 		for (int i = 0; i < conf.recordGroupByteLength; i++) {
 			rawRecord[i] = getByte(loc++);
 		}
-		return new RecordGroup(conf, rawRecord);
+		return RecordGroup.longRecordGroup(conf, rawRecord);
 	}
 
 	@Override
-	public Iterator<RecordGroup> getRecordGroups(final long loc,
+	public synchronized BigInteger getBigIntRecordGroup(long loc) {
+		for (int i = 0; i < conf.recordGroupByteLength; i++) {
+			rawRecord[i] = getByte(loc++);
+		}
+		return RecordGroup.bigIntRecordGroup(conf, rawRecord);
+	}
+
+	@Override
+	public Iterator<BigInteger> getBigIntRecordGroups(final long loc,
 			final int numGroups) {
-		return new Iterator<RecordGroup>() {
+		return new Iterator<BigInteger>() {
 			private long location = loc;
 
 			private int groupNumber = 0;
@@ -68,8 +79,8 @@ public class MemoryDatabase extends Database {
 				return groupNumber < numGroups;
 			}
 
-			public RecordGroup next() {
-				RecordGroup rg = getRecordGroup(location);
+			public BigInteger next() {
+				BigInteger rg = getBigIntRecordGroup(location);
 				location += conf.recordGroupByteLength;
 				groupNumber++;
 				return rg;
@@ -78,6 +89,26 @@ public class MemoryDatabase extends Database {
 			public void remove() {
 				throw new UnsupportedOperationException(
 						"remove() not implemented");
+			}
+		};
+	}
+
+	@Override
+	public LongIterator getLongRecordGroups(final long loc, final int numGroups) {
+		return new LongIterator() {
+			private long location = loc;
+
+			private int groupNumber = 0;
+
+			public boolean hasNext() {
+				return groupNumber < numGroups;
+			}
+
+			public long next() {
+				long rg = getLongRecordGroup(location);
+				location += conf.recordGroupByteLength;
+				groupNumber++;
+				return rg;
 			}
 		};
 	}
@@ -101,11 +132,26 @@ public class MemoryDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void putRecordGroup(long loc, RecordGroup value) {
-		value.writeToUnsignedMemoryDatabase(this, loc);
+	public synchronized void putRecordGroup(long loc, long value) {
+		RecordGroup.writeToUnsignedMemoryDatabase(conf, value, this, loc);
 	}
 
-	public synchronized void putRecordGroups(long loc, Iterator<RecordGroup> it,
+	@Override
+	public synchronized void putRecordGroup(long loc, BigInteger value) {
+		RecordGroup.writeToUnsignedMemoryDatabase(conf, value, this, loc);
+	}
+
+	@Override
+	public synchronized void putRecordGroups(long loc, LongIterator it,
+			int numGroups) {
+		for (int i = 0; i < numGroups; i++) {
+			putRecordGroup(loc, it.next());
+			loc += conf.recordGroupByteLength;
+		}
+	}
+
+	@Override
+	public synchronized void putRecordGroups(long loc, Iterator<BigInteger> it,
 			int numGroups) {
 		for (int i = 0; i < numGroups; i++) {
 			putRecordGroup(loc, it.next());

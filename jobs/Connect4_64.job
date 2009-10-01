@@ -11,3 +11,5 @@ record.compression = 90
 gamesman.db.nWayAssociative = 7
 gamesman.db.pageSize=153391689
 gamesman.db.cacheSize=1073741824
+gamesman.debug.THREADING=true
+gamesman.debug.DATABASE=true

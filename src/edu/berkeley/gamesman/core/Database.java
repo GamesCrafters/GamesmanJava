@@ -2,6 +2,9 @@ package edu.berkeley.gamesman.core;
 
 import java.util.Iterator;
 
+import edu.berkeley.gamesman.util.LongIterator;
+import edu.berkeley.gamesman.util.biginteger.BigInteger;
+
 /**
  * A Database is the abstract superclass of all data storage methods used in
  * Gamesman. Each particular Database is responsible for the persistent storage
@@ -79,7 +82,12 @@ public abstract class Database {
 		long group = recordIndex / conf.recordsPerGroup;
 		int num = (int) (recordIndex % conf.recordsPerGroup);
 		long byteOffset = group * conf.recordGroupByteLength;
-		return getRecordGroup(byteOffset).getRecord(num);
+		if (conf.recordGroupUsesLong)
+			return RecordGroup.getRecord(conf, getLongRecordGroup(byteOffset),
+					num);
+		else
+			return RecordGroup.getRecord(conf,
+					getBigIntRecordGroup(byteOffset), num);
 	}
 
 	/**
@@ -94,7 +102,11 @@ public abstract class Database {
 		long group = recordIndex / conf.recordsPerGroup;
 		int num = (int) (recordIndex % conf.recordsPerGroup);
 		long byteOffset = group * conf.recordGroupByteLength;
-		getRecordGroup(byteOffset).getRecord(num, r);
+		if (conf.recordGroupUsesLong)
+			RecordGroup.getRecord(conf, getLongRecordGroup(byteOffset), num, r);
+		else
+			RecordGroup.getRecord(conf, getBigIntRecordGroup(byteOffset), num,
+					r);
 	}
 
 	/**
@@ -111,8 +123,13 @@ public abstract class Database {
 		int preRecords = (int) (recordIndex % conf.recordsPerGroup);
 		int recordGroups = (numRecords + preRecords - 1) / conf.recordsPerGroup
 				+ 1;
-		RecordIterator ri = new RecordIterator(getRecordGroups(byteOffset,
-				recordGroups), preRecords, numRecords);
+		RecordIterator ri;
+		if (conf.recordGroupUsesLong)
+			ri = new RecordIterator(getLongRecordGroups(byteOffset,
+					recordGroups), preRecords, numRecords);
+		else
+			ri = new RecordIterator(getBigIntRecordGroups(byteOffset,
+					recordGroups), preRecords, numRecords);
 		return ri;
 	}
 
@@ -128,9 +145,15 @@ public abstract class Database {
 		int num = (int) (recordIndex % conf.recordsPerGroup);
 		long byteOffset = recordIndex / conf.recordsPerGroup
 				* conf.recordGroupByteLength;
-		RecordGroup rg = getRecordGroup(byteOffset);
-		rg.setRecord(num, r);
-		putRecordGroup(byteOffset, rg);
+		if (conf.recordGroupUsesLong) {
+			long rg = getLongRecordGroup(byteOffset);
+			rg = RecordGroup.setRecord(conf, rg, num, r);
+			putRecordGroup(byteOffset, rg);
+		} else {
+			BigInteger rg = getBigIntRecordGroup(byteOffset);
+			rg = RecordGroup.setRecord(conf, rg, num, r);
+			putRecordGroup(byteOffset, rg);
+		}
 	}
 
 	/**
@@ -153,10 +176,18 @@ public abstract class Database {
 		for (int i = 0; i < preRecords; i++) {
 			putRecord(recordIndex++, records.next());
 		}
-		RecordGroupIterator rgi = new RecordGroupIterator(records);
-		long groupByteOffset = recordIndex / conf.recordsPerGroup
-				* conf.recordGroupByteLength;
-		putRecordGroups(groupByteOffset, rgi, recordGroups);
+		if (conf.recordGroupUsesLong) {
+			LongRecordGroupIterator rgi = new LongRecordGroupIterator(records);
+			long groupByteOffset = recordIndex / conf.recordsPerGroup
+					* conf.recordGroupByteLength;
+			putRecordGroups(groupByteOffset, rgi, recordGroups);
+		} else {
+			BigIntRecordGroupIterator rgi = new BigIntRecordGroupIterator(
+					records);
+			long groupByteOffset = recordIndex / conf.recordsPerGroup
+					* conf.recordGroupByteLength;
+			putRecordGroups(groupByteOffset, rgi, recordGroups);
+		}
 		recordIndex += mainRecords;
 		for (int i = 0; i < postRecords; i++) {
 			putRecord(recordIndex++, records.next());
@@ -168,7 +199,9 @@ public abstract class Database {
 	 *            The index of the byte the group begins on
 	 * @return The group beginning at loc
 	 */
-	public abstract RecordGroup getRecordGroup(long loc);
+	public abstract long getLongRecordGroup(long loc);
+
+	public abstract BigInteger getBigIntRecordGroup(long loc);
 
 	/**
 	 * @param startLoc
@@ -177,7 +210,20 @@ public abstract class Database {
 	 *            The number of groups to return
 	 * @return An iterator over numGroups RecordGroups from this database
 	 */
-	public Iterator<RecordGroup> getRecordGroups(long startLoc, int numGroups) {
+	public Iterator<BigInteger> getBigIntRecordGroups(long startLoc,
+			int numGroups) {
+		throw new UnsupportedOperationException(
+				"getRecordGroups should be overridden");
+	}
+
+	/**
+	 * @param startLoc
+	 *            The location to start at
+	 * @param numGroups
+	 *            The number of groups to return
+	 * @return An iterator over numGroups RecordGroups from this database
+	 */
+	public LongIterator getLongRecordGroups(long startLoc, int numGroups) {
 		throw new UnsupportedOperationException(
 				"getRecordGroups should be overridden");
 	}
@@ -188,7 +234,9 @@ public abstract class Database {
 	 * @param rg
 	 *            The record group to store
 	 */
-	public abstract void putRecordGroup(long loc, RecordGroup rg);
+	public abstract void putRecordGroup(long loc, long rg);
+
+	public abstract void putRecordGroup(long loc, BigInteger rg);
 
 	/**
 	 * Puts numGroups RecordGroups into this database starting at location loc
@@ -201,8 +249,23 @@ public abstract class Database {
 	 * @param numGroups
 	 *            The number of groups to store
 	 */
-	public void putRecordGroups(long loc, Iterator<RecordGroup> it,
-			int numGroups) {
+	public void putRecordGroups(long loc, LongIterator it, int numGroups) {
+		throw new UnsupportedOperationException(
+				"putRecordGroups should be overridden");
+	}
+
+	/**
+	 * Puts numGroups RecordGroups into this database starting at location loc
+	 * (loc is measured in bytes).
+	 * 
+	 * @param loc
+	 *            The location to start at
+	 * @param it
+	 *            An iterator over at least numGroups RecordGroups
+	 * @param numGroups
+	 *            The number of groups to store
+	 */
+	public void putRecordGroups(long loc, Iterator<BigInteger> it, int numGroups) {
 		throw new UnsupportedOperationException(
 				"putRecordGroups should be overridden");
 	}
@@ -216,7 +279,7 @@ public abstract class Database {
 				* conf.recordGroupByteLength;
 	}
 
-	private class RecordGroupIterator implements Iterator<RecordGroup> {
+	private class LongRecordGroupIterator implements LongIterator {
 		private Iterator<Record> recordIterator;
 
 		private Record[] records;
@@ -225,11 +288,11 @@ public abstract class Database {
 
 		private int index;
 
-		private RecordGroupIterator(Iterator<Record> recordIterator) {
+		private LongRecordGroupIterator(Iterator<Record> recordIterator) {
 			this.recordIterator = recordIterator;
 		}
 
-		public RecordGroupIterator(Record[] records, int offset, int length) {
+		public LongRecordGroupIterator(Record[] records, int offset, int length) {
 			this.records = records;
 			this.stop = offset + length;
 			this.index = offset;
@@ -242,13 +305,55 @@ public abstract class Database {
 				return recordIterator.hasNext();
 		}
 
-		public RecordGroup next() {
+		public long next() {
 			if (recordIterator == null) {
-				RecordGroup rg = new RecordGroup(conf, records, index);
+				long rg = RecordGroup.longRecordGroup(conf, records, index);
 				index += conf.recordsPerGroup;
 				return rg;
 			} else
-				return new RecordGroup(conf, recordIterator);
+				return RecordGroup.longRecordGroup(conf, recordIterator);
+		}
+
+		public void remove() {
+			throw new UnsupportedOperationException("remove() not supported");
+		}
+	}
+
+	private class BigIntRecordGroupIterator implements Iterator<BigInteger> {
+		private Iterator<Record> recordIterator;
+
+		private Record[] records;
+
+		private int stop;
+
+		private int index;
+
+		private BigIntRecordGroupIterator(Iterator<Record> recordIterator) {
+			this.recordIterator = recordIterator;
+		}
+
+		public BigIntRecordGroupIterator(Record[] records, int offset,
+				int length) {
+			this.records = records;
+			this.stop = offset + length;
+			this.index = offset;
+		}
+
+		public boolean hasNext() {
+			if (recordIterator == null)
+				return index < stop;
+			else
+				return recordIterator.hasNext();
+		}
+
+		public BigInteger next() {
+			if (recordIterator == null) {
+				BigInteger rg = RecordGroup.bigIntRecordGroup(conf, records,
+						index);
+				index += conf.recordsPerGroup;
+				return rg;
+			} else
+				return RecordGroup.bigIntRecordGroup(conf, recordIterator);
 		}
 
 		public void remove() {
@@ -265,11 +370,25 @@ public abstract class Database {
 
 		int index;
 
-		private Iterator<RecordGroup> recordGroups;
+		private LongIterator longRecordGroups;
 
-		private RecordIterator(Iterator<RecordGroup> recordGroups,
+		private Iterator<BigInteger> recordGroups;
+
+		private RecordIterator(Iterator<BigInteger> recordGroups,
 				int preRecords, long numRecords) {
 			this.recordGroups = recordGroups;
+			this.numRecords = numRecords + preRecords;
+			currentRecords = new Record[conf.recordsPerGroup];
+			for (int i = 0; i < conf.recordsPerGroup; i++)
+				currentRecords[i] = conf.getGame().newRecord();
+			index = conf.recordsPerGroup;
+			for (int i = 0; i < preRecords; i++)
+				next();
+		}
+
+		private RecordIterator(LongIterator recordGroups, int preRecords,
+				long numRecords) {
+			this.longRecordGroups = recordGroups;
 			this.numRecords = numRecords + preRecords;
 			currentRecords = new Record[conf.recordsPerGroup];
 			for (int i = 0; i < conf.recordsPerGroup; i++)
@@ -285,7 +404,12 @@ public abstract class Database {
 
 		public Record next() {
 			if (index >= conf.recordsPerGroup) {
-				recordGroups.next().getRecords(currentRecords, 0);
+				if (conf.recordGroupUsesLong)
+					RecordGroup.getRecords(conf, longRecordGroups.next(),
+							currentRecords, 0);
+				else
+					RecordGroup.getRecords(conf, recordGroups.next(),
+							currentRecords, 0);
 				index = 0;
 			}
 			return currentRecords[index++].clone();
@@ -319,11 +443,17 @@ public abstract class Database {
 		for (int i = 0; i < preRecords; i++) {
 			putRecord(recordIndex++, records[offset++]);
 		}
-		RecordGroupIterator rgi = new RecordGroupIterator(records, offset,
-				numRecords);
 		long groupByteOffset = recordIndex / conf.recordsPerGroup
 				* conf.recordGroupByteLength;
-		putRecordGroups(groupByteOffset, rgi, recordGroups);
+		if (conf.recordGroupUsesLong) {
+			LongRecordGroupIterator rgi = new LongRecordGroupIterator(records,
+					offset, numRecords);
+			putRecordGroups(groupByteOffset, rgi, recordGroups);
+		} else {
+			BigIntRecordGroupIterator rgi = new BigIntRecordGroupIterator(
+					records, offset, numRecords);
+			putRecordGroups(groupByteOffset, rgi, recordGroups);
+		}
 		recordIndex += mainRecords;
 		offset += mainRecords;
 		for (int i = 0; i < postRecords; i++) {

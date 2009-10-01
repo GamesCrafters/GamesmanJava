@@ -8,7 +8,9 @@ import java.util.Iterator;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.RecordGroup;
+import edu.berkeley.gamesman.util.LongIterator;
 import edu.berkeley.gamesman.util.Util;
+import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 /**
  * The FileDatabase is a database designed to write directly to a local file.
@@ -31,8 +33,6 @@ public class FileDatabase extends Database {
 
 	protected long offset;
 
-	private RecordGroupByteIterator myIter = new RecordGroupByteIterator();
-
 	@Override
 	public synchronized void close() {
 		try {
@@ -53,11 +53,24 @@ public class FileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized RecordGroup getRecordGroup(long loc) {
+	public synchronized long getLongRecordGroup(long loc) {
 		try {
 			fd.seek(loc + offset);
 			fd.read(rawRecord);
-			RecordGroup v = new RecordGroup(conf, rawRecord);
+			long v = RecordGroup.longRecordGroup(conf, rawRecord);
+			return v;
+		} catch (IOException e) {
+			Util.fatalError("IO Error: " + e);
+		}
+		return 0L;
+	}
+
+	@Override
+	public synchronized BigInteger getBigIntRecordGroup(long loc) {
+		try {
+			fd.seek(loc + offset);
+			fd.read(rawRecord);
+			BigInteger v = RecordGroup.bigIntRecordGroup(conf, rawRecord);
 			return v;
 		} catch (IOException e) {
 			Util.fatalError("IO Error: " + e);
@@ -66,15 +79,14 @@ public class FileDatabase extends Database {
 	}
 
 	@Override
-	public Iterator<RecordGroup> getRecordGroups(long loc, int numGroups) {
+	public LongIterator getLongRecordGroups(long loc, int numGroups) {
 		try {
 			groupsLength = numGroups * conf.recordGroupByteLength;
 			if (groups == null || groups.length < groupsLength)
 				groups = new byte[groupsLength];
 			fd.seek(loc + offset);
 			fd.read(groups, 0, groupsLength);
-			myIter.reset();
-			return myIter;
+			return new LongRecordGroupByteIterator();
 		} catch (IOException e) {
 			e.printStackTrace();
 			return null;
@@ -82,15 +94,16 @@ public class FileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void putRecordGroups(long loc, Iterator<RecordGroup> recordGroups,
-			int numGroups) {
+	public synchronized void putRecordGroups(long loc,
+			LongIterator recordGroups, int numGroups) {
 		try {
 			groupsLength = numGroups * conf.recordGroupByteLength;
 			if (groups == null || groups.length < groupsLength)
 				groups = new byte[groupsLength];
 			int onByte = 0;
 			for (int i = 0; i < numGroups; i++) {
-				recordGroups.next().toUnsignedByteArray(groups, onByte);
+				RecordGroup.toUnsignedByteArray(conf, recordGroups.next(),
+						groups, onByte);
 				onByte += conf.recordGroupByteLength;
 			}
 			fd.seek(loc + offset);
@@ -100,40 +113,74 @@ public class FileDatabase extends Database {
 		}
 	}
 
-	protected class RecordGroupByteIterator implements Iterator<RecordGroup> {
-		int onByte;
+	@Override
+	public synchronized void putRecordGroups(long loc,
+			Iterator<BigInteger> recordGroups, int numGroups) {
+		try {
+			groupsLength = numGroups * conf.recordGroupByteLength;
+			if (groups == null || groups.length < groupsLength)
+				groups = new byte[groupsLength];
+			int onByte = 0;
+			for (int i = 0; i < numGroups; i++) {
+				RecordGroup.toUnsignedByteArray(conf, recordGroups.next(),
+						groups, onByte);
+				onByte += conf.recordGroupByteLength;
+			}
+			fd.seek(loc + offset);
+			fd.write(groups, 0, groupsLength);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
-		RecordGroup rg;
+	protected class LongRecordGroupByteIterator implements LongIterator {
+		int onByte = 0;
 
 		public boolean hasNext() {
 			return onByte < groupsLength;
 		}
 
-		private void reset() {
-			onByte = 0;
-		}
-
-		private void initialize() {
-			rg = new RecordGroup(conf);
-		}
-
-		public RecordGroup next() {
+		public long next() {
 			for (int i = 0; i < rawRecord.length; i++)
 				rawRecord[i] = groups[onByte++];
-			rg.setValue(rawRecord);
-			return rg;
+			return RecordGroup.longRecordGroup(conf, rawRecord);
+		}
+	}
+
+	protected class BigIntRecordGroupByteIterator implements
+			Iterator<BigInteger> {
+		int onByte = 0;
+
+		public boolean hasNext() {
+			return onByte < groupsLength;
+		}
+
+		public BigInteger next() {
+			for (int i = 0; i < rawRecord.length; i++)
+				rawRecord[i] = groups[onByte++];
+			return RecordGroup.bigIntRecordGroup(conf, rawRecord);
 		}
 
 		public void remove() {
-			throw new UnsupportedOperationException("remove() not supported");
+			throw new UnsupportedOperationException();
 		}
 	}
 
 	@Override
-	public synchronized void putRecordGroup(long loc, RecordGroup value) {
+	public synchronized void putRecordGroup(long loc, long value) {
 		try {
 			fd.seek(loc + offset);
-			value.outputUnsignedBytes(fd);
+			RecordGroup.outputUnsignedBytes(conf, value, fd);
+		} catch (IOException e) {
+			Util.fatalError("IO Error: " + e);
+		}
+	}
+
+	@Override
+	public synchronized void putRecordGroup(long loc, BigInteger value) {
+		try {
+			fd.seek(loc + offset);
+			RecordGroup.outputUnsignedBytes(conf, value, fd);
 		} catch (IOException e) {
 			Util.fatalError("IO Error: " + e);
 		}
@@ -165,7 +212,6 @@ public class FileDatabase extends Database {
 			offset = fd.getFilePointer();
 			rawRecord = new byte[conf.recordGroupByteLength];
 			fd.setLength(offset + getByteSize());
-			myIter.initialize();
 		} catch (IOException e) {
 			e.printStackTrace();
 			Util.fatalError(e.toString());

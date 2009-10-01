@@ -2,7 +2,7 @@ package edu.berkeley.gamesman.database;
 
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Record;
-import edu.berkeley.gamesman.core.RecordGroup;
+import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 /**
  * A testing database
@@ -44,7 +44,12 @@ public class RecordDatabase extends Database {
 	}
 
 	@Override
-	public RecordGroup getRecordGroup(long loc) {
+	public long getLongRecordGroup(long loc) {
+		return 0L;
+	}
+
+	@Override
+	public BigInteger getBigIntRecordGroup(long loc) {
 		return null;
 	}
 
@@ -54,7 +59,11 @@ public class RecordDatabase extends Database {
 	}
 
 	@Override
-	public void putRecordGroup(long loc, RecordGroup rg) {
+	public void putRecordGroup(long loc, BigInteger rg) {
+	}
+
+	@Override
+	public void putRecordGroup(long loc, long rg) {
 	}
 
 }
