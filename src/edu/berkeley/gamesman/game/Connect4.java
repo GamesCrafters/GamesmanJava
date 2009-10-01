@@ -32,6 +32,8 @@ public final class Connect4 extends TieredIterGame {
 
 	private final long[] moveArrangement;
 
+	public final int[] openColumn;
+
 	private final long[] children;
 
 	private final BitSetBoard bsb;
@@ -79,6 +81,7 @@ public final class Connect4 extends TieredIterGame {
 		for (int i = 1; i <= gameSize; i++)
 			multiplier[i] = multiplier[i - 1] * i / ((i + 1) / 2);
 		children = new long[gameWidth];
+		openColumn = new int[gameWidth];
 		groupSizes = new int[gameWidth];
 	}
 
@@ -174,11 +177,13 @@ public final class Connect4 extends TieredIterGame {
 		}
 		int numMoves = 0;
 		int totSize = 0;
-		for (int i=0;i<gameWidth;i++) {
+		for (int i = 0; i < gameWidth; i++) {
 			if (colHeights[i] == gameHeight)
 				totSize += colHeights[i];
 			else {
-				groupSizes[numMoves++] = (totSize + colHeights[i]);
+				openColumn[numMoves] = i;
+				groupSizes[numMoves] = (totSize + colHeights[i]);
+				numMoves++;
 				totSize = 0;
 			}
 		}
@@ -273,6 +278,7 @@ public final class Connect4 extends TieredIterGame {
 		int col = 0, row = 0;
 		StringBuilder rearrangeString = new StringBuilder(numPieces + gameWidth);
 		pieceArrangement = 0;
+		int numMoves = 0;
 		hasNextPieceArrangement = false;
 		int os = numPieces / 2;
 		pieces.clear();
@@ -284,6 +290,7 @@ public final class Connect4 extends TieredIterGame {
 					rearrangeString.append(' ');
 					for (; row < gameHeight; row++)
 						indices[row][col] = -1;
+					openColumn[numMoves++] = col;
 				}
 				col++;
 				row = 0;
@@ -294,10 +301,14 @@ public final class Connect4 extends TieredIterGame {
 			pieceArrangement += ec.getCoef(col, i + 1);
 			row++;
 		}
-		if (colHeights[col] < gameHeight)
+		if (colHeights[col] < gameHeight) {
 			rearrangeString.append(' ');
-		for (col++; col < gameWidth; col++)
+			openColumn[numMoves++] = col;
+		}
+		for (col++; col < gameWidth; col++) {
 			rearrangeString.append(' ');
+			openColumn[numMoves++] = col;
+		}
 		setMoveArrangements();
 		iah = new PieceRearranger(rearrangeString.toString(), os, numPieces
 				- os);

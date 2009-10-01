@@ -171,7 +171,7 @@ public class DatabaseCache extends Database {
 			assert Util.debug(DebugFacility.DATABASE, "Loading "
 					+ ((tag << indexBits) | index));
 			records[index][i].loadPage(db,
-					((tag << indexBits) | index) << offsetBits);
+					((tag << indexBits) | index) << offsetBits, pageSize);
 		}
 	}
 
@@ -243,17 +243,17 @@ public class DatabaseCache extends Database {
 		int bytesUsed = 48; // Size of this class
 		bytesUsed += 3 * (12 + indices * 4 + 7) / 8 * 8;
 		bytesUsed += indices * (12 + nWayAssociative * 4 + 7) / 8 * 8;
-		bytesUsed += indices * nWayAssociative * LocalizedPage.byteSize(conf, pageSize);
+		bytesUsed += indices * nWayAssociative
+				* LocalizedPage.byteSize(conf, pageSize);
 		bytesUsed += 2 * indices * (12 + nWayAssociative * 8 + 7) / 8 * 8;
 		bytesUsed += (12 + indices * 8 + 7) / 8 * 8;
 		System.out.println("Using " + bytesUsed + " bytes for cache");
-		Util.debug(DebugFacility.DATABASE, "Pages contain " + pageSize
+		assert Util.debug(DebugFacility.DATABASE, "Pages contain " + pageSize
 				+ " record groups");
-		Util.debug(DebugFacility.DATABASE, "There are " + indices
+		assert Util.debug(DebugFacility.DATABASE, "There are " + indices
 				+ " indices each " + nWayAssociative + "-way associative");
-		Util
-				.debug(DebugFacility.DATABASE, nWayAssociative * indices
-						+ " pages");
+		assert Util.debug(DebugFacility.DATABASE, nWayAssociative * indices
+				+ " pages");
 	}
 
 	@Override

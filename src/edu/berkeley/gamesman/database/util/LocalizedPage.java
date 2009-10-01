@@ -14,6 +14,8 @@ public class LocalizedPage {
 
 	private final BigInteger[] bigIntGroups;
 
+	public int numGroups;
+
 	private final Record[][] rawRecords;
 
 	private long[] used;
@@ -24,7 +26,7 @@ public class LocalizedPage {
 
 	private int[] lastIndex;
 
-	private long firstGroup;
+	public long firstGroup;
 
 	private boolean dirty = false;
 
@@ -62,6 +64,7 @@ public class LocalizedPage {
 
 	public LocalizedPage(Configuration conf, int pageSize, int groupsRemembered) {
 		this.conf = conf;
+		numGroups = pageSize;
 		if (conf.recordGroupUsesLong) {
 			longGroups = new long[pageSize];
 			bigIntGroups = null;
@@ -80,6 +83,7 @@ public class LocalizedPage {
 			lastIndex[n] = -1;
 			rawChanged[n] = false;
 		}
+		firstGroup = -numGroups;
 	}
 
 	public void get(int offset, int recordNum, Record rec) {
@@ -193,34 +197,31 @@ public class LocalizedPage {
 		return dirty;
 	}
 
-	public synchronized void loadPage(Database db, long firstGroup) {
-		synchronized (db) {
-			this.firstGroup = firstGroup;
-			if (conf.recordGroupUsesLong) {
-				LongIterator it = db.getLongRecordGroups(firstGroup
-						* conf.recordGroupByteLength, (int) Math.min(
-						longGroups.length, conf.getHasher().numHashes()
-								- firstGroup));
-				for (int off = 0; off < longGroups.length; off++)
-					setGroup(off, it.next());
-			} else {
-				Iterator<BigInteger> it = db.getBigIntRecordGroups(firstGroup
-						* conf.recordGroupByteLength, (int) Math.min(
-						bigIntGroups.length, conf.getHasher().numHashes()
-								- firstGroup));
-				for (int off = 0; off < bigIntGroups.length; off++)
-					setGroup(off, it.next());
-			}
-			dirty = false;
-			for (int i = 0; i < rawRecords.length; i++) {
-				used[i] = 0;
-				lastIndex[i] = -1;
-				rawChanged[i] = false;
-			}
+	public void loadPage(Database db, long firstGroup, int numGroups) {
+		this.numGroups = numGroups;
+		this.firstGroup = firstGroup;
+		if (conf.recordGroupUsesLong) {
+			LongIterator it = db.getLongRecordGroups(firstGroup
+					* conf.recordGroupByteLength, (int) Math.min(numGroups,
+					conf.getHasher().numHashes() - firstGroup));
+			for (int off = 0; off < numGroups; off++)
+				setGroup(off, it.next());
+		} else {
+			Iterator<BigInteger> it = db.getBigIntRecordGroups(firstGroup
+					* conf.recordGroupByteLength, (int) Math.min(numGroups,
+					conf.getHasher().numHashes() - firstGroup));
+			for (int off = 0; off < numGroups; off++)
+				setGroup(off, it.next());
+		}
+		dirty = false;
+		for (int i = 0; i < rawRecords.length; i++) {
+			used[i] = 0;
+			lastIndex[i] = -1;
+			rawChanged[i] = false;
 		}
 	}
 
-	public synchronized void writeBack(Database db) {
+	public void writeBack(Database db) {
 		for (int i = 0; i < rawRecords.length; i++) {
 			if (rawChanged[i])
 				if (conf.recordGroupUsesLong)
@@ -230,17 +231,16 @@ public class LocalizedPage {
 					bigIntGroups[lastIndex[i]] = RecordGroup.bigIntRecordGroup(
 							conf, rawRecords[i], 0);
 		}
-		synchronized (db) {
-			if (conf.recordGroupUsesLong)
-				db.putRecordGroups(firstGroup * conf.recordGroupByteLength,
-						longIterator(), (int) Math.min(longGroups.length, conf
-								.getHasher().numHashes()
-								+ 1 - firstGroup));
-			else
-				db.putRecordGroups(firstGroup * conf.recordGroupByteLength,
-						bigIntIterator(), (int) Math.min(bigIntGroups.length,
-								conf.getHasher().numHashes() + 1 - firstGroup));
-		}
+		if (conf.recordGroupUsesLong)
+			db.putRecordGroups(firstGroup * conf.recordGroupByteLength,
+					longIterator(), (int) Math.min(numGroups, conf.getHasher()
+							.numHashes()
+							+ 1 - firstGroup));
+		else
+			db.putRecordGroups(firstGroup * conf.recordGroupByteLength,
+					bigIntIterator(), (int) Math.min(numGroups, conf
+							.getHasher().numHashes()
+							+ 1 - firstGroup));
 		dirty = false;
 	}
 
@@ -263,5 +263,23 @@ public class LocalizedPage {
 			return numBytes
 					/ ((32 + (12 + conf.recordGroupByteLength + 8) / 4 + 1) * 8);
 		}
+	}
+
+	public boolean containsGroup(long hashGroup) {
+		long dif = hashGroup - firstGroup;
+		return dif >= 0 && dif < numGroups;
+	}
+
+	public void putRecord(long hashGroup, int num, Record r) {
+		set((int) (hashGroup - firstGroup), num, r);
+	}
+
+	public void putRecord(long hash, Record r) {
+		set((int) (hash / conf.recordsPerGroup - firstGroup),
+				(int) (hash % conf.recordsPerGroup), r);
+	}
+
+	public void getRecord(long hashGroup, int num, Record r) {
+		get((int) (hashGroup - firstGroup), num, r);
 	}
 }

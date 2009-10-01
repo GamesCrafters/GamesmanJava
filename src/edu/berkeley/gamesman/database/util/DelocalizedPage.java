@@ -12,9 +12,11 @@ import edu.berkeley.gamesman.util.biginteger.BigInteger;
 public class DelocalizedPage {
 	private final long[] longGroups;
 
+	public int numGroups;
+
 	private final BigInteger[] bigIntGroups;
 
-	private long firstGroup;
+	public long firstGroup;
 
 	private boolean dirty = false;
 
@@ -25,7 +27,7 @@ public class DelocalizedPage {
 		private int i = 0;
 
 		public boolean hasNext() {
-			return i < longGroups.length;
+			return i < numGroups;
 		}
 
 		public long next() {
@@ -38,7 +40,7 @@ public class DelocalizedPage {
 		private int i = 0;
 
 		public boolean hasNext() {
-			return i < bigIntGroups.length;
+			return i < numGroups;
 		}
 
 		public BigInteger next() {
@@ -59,6 +61,8 @@ public class DelocalizedPage {
 			bigIntGroups = new BigInteger[pageSize];
 			longGroups = null;
 		}
+		numGroups = pageSize;
+		firstGroup = -numGroups;
 	}
 
 	public void get(int offset, int recordNum, Record rec) {
@@ -100,33 +104,38 @@ public class DelocalizedPage {
 		return dirty;
 	}
 
-	public synchronized void loadPage(Database db, long firstGroup) {
-		synchronized (db) {
-			this.firstGroup = firstGroup;
-			if (conf.recordGroupUsesLong) {
+	public void loadPage(Database db, long firstGroup, int numGroups) {
+		this.firstGroup = firstGroup;
+		this.numGroups = numGroups;
+		if (conf.recordGroupUsesLong) {
+			synchronized (db) {
 				LongIterator it = db.getLongRecordGroups(firstGroup
-						* conf.recordGroupByteLength, longGroups.length);
-				for (int off = 0; off < longGroups.length; off++)
-					setGroup(off, it.next());
-			} else {
-				Iterator<BigInteger> it = db.getBigIntRecordGroups(firstGroup
-						* conf.recordGroupByteLength, bigIntGroups.length);
-				for (int off = 0; off < bigIntGroups.length; off++)
+						* conf.recordGroupByteLength, numGroups);
+				for (int off = 0; off < numGroups; off++)
 					setGroup(off, it.next());
 			}
-			dirty = false;
+		} else {
+			synchronized (db) {
+				Iterator<BigInteger> it = db.getBigIntRecordGroups(firstGroup
+						* conf.recordGroupByteLength, numGroups);
+				for (int off = 0; off < numGroups; off++)
+					setGroup(off, it.next());
+			}
 		}
+		dirty = false;
 	}
 
-	public synchronized void writeBack(Database db) {
-		synchronized (db) {
-			if (conf.recordGroupUsesLong)
+	public void writeBack(Database db) {
+		if (conf.recordGroupUsesLong)
+			synchronized (db) {
 				db.putRecordGroups(firstGroup * conf.recordGroupByteLength,
-						longIterator(), longGroups.length);
-			else
+						longIterator(), numGroups);
+			}
+		else
+			synchronized (db) {
 				db.putRecordGroups(firstGroup * conf.recordGroupByteLength,
-						bigIntIterator(), bigIntGroups.length);
-		}
+						bigIntIterator(), numGroups);
+			}
 		dirty = false;
 	}
 
@@ -149,5 +158,14 @@ public class DelocalizedPage {
 			return numBytes
 					/ ((32 + (12 + conf.recordGroupByteLength + 8) / 4 + 1) * 8);
 		}
+	}
+
+	public boolean containsGroup(long hashGroup) {
+		long dif = hashGroup - firstGroup;
+		return dif >= 0 && dif < numGroups;
+	}
+
+	public void getRecord(long hashGroup, int num, Record r) {
+		get((int) (hashGroup - firstGroup), num, r);
 	}
 }
