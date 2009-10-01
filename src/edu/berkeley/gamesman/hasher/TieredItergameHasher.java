@@ -45,4 +45,9 @@ public final class TieredItergameHasher extends TieredHasher<ItergameState> {
 		return null;
 	}
 
+	@Override
+	public long numHashes() {
+		return conf.getGame().lastHash() + 1;
+	}
+
 }

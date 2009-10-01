@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Record;
-import edu.berkeley.gamesman.database.util.Page;
+import edu.berkeley.gamesman.database.util.LocalizedPage;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 import edu.berkeley.gamesman.util.biginteger.BigInteger;
@@ -16,7 +16,7 @@ import edu.berkeley.gamesman.util.biginteger.BigInteger;
  */
 public class DatabaseCache extends Database {
 
-	private Page[][] records;
+	private LocalizedPage[][] records;
 
 	private int indexBits, indices;
 
@@ -219,30 +219,30 @@ public class DatabaseCache extends Database {
 		}
 		int totalBytes = conf.getInteger("gamesman.db.cacheSize", 67108864);
 		int pageBytes = conf.getInteger("gamesman.db.pageSize", 16384);
-		pageSize = Page.numGroups(conf, pageBytes);
+		pageSize = LocalizedPage.numGroups(conf, pageBytes);
 		offsetBits = (int) (Math.log(pageSize) / Math.log(2));
 		pageSize = 1 << offsetBits;
 		nWayAssociative = conf.getInteger("gamesman.db.nWayAssociative", 4);
-		pageBytes = Page.byteSize(conf, pageSize);
+		pageBytes = LocalizedPage.byteSize(conf, pageSize);
 		indices = totalBytes / (pageBytes * nWayAssociative);
 		indexBits = (int) (Math.log(indices) / Math.log(2));
 		indices = 1 << indexBits;
-		records = new Page[indices][nWayAssociative];
+		records = new LocalizedPage[indices][nWayAssociative];
 		tags = new long[indices][nWayAssociative];
 		used = new long[indices][nWayAssociative];
 		current = new long[indices];
 		Arrays.fill(current, 0);
 		for (long[] u : used)
 			Arrays.fill(u, 0);
-		for (Page[] pages : records) {
+		for (LocalizedPage[] pages : records) {
 			for (int i = 0; i < pages.length; i++) {
-				pages[i] = new Page(conf, pageSize, nWayAssociative);
+				pages[i] = new LocalizedPage(conf, pageSize, nWayAssociative);
 			}
 		}
 		int bytesUsed = 48; // Size of this class
 		bytesUsed += 3 * (12 + indices * 4 + 7) / 8 * 8;
 		bytesUsed += indices * (12 + nWayAssociative * 4 + 7) / 8 * 8;
-		bytesUsed += indices * nWayAssociative * Page.byteSize(conf, pageSize);
+		bytesUsed += indices * nWayAssociative * LocalizedPage.byteSize(conf, pageSize);
 		bytesUsed += 2 * indices * (12 + nWayAssociative * 8 + 7) / 8 * 8;
 		bytesUsed += (12 + indices * 8 + 7) / 8 * 8;
 		System.out.println("Using " + bytesUsed + " bytes for cache");

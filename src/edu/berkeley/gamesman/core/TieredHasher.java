@@ -34,12 +34,6 @@ public abstract class TieredHasher<State> extends Hasher<State> {
 	}
 
 	@Override
-	public long maxHash() {
-		Util.fatalError("Not implemented"); // TODO
-		return 0;
-	}
-
-	@Override
 	public State unhash(long hash) {
 		Util.fatalError("Not implemented"); // TODO
 		return null;

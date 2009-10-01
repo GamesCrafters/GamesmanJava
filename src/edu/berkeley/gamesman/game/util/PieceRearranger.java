@@ -1,7 +1,5 @@
 package edu.berkeley.gamesman.game.util;
 
-import java.util.ArrayList;
-
 /**
  * @author DNSpies
  */
@@ -157,7 +155,9 @@ public final class PieceRearranger implements Cloneable {
 
 	private boolean hasNext;
 
-	private final ArrayList<HashPiece> pieces;
+	private HashPiece[] pieces;
+
+	private int piecesLength;
 
 	private final HashPiece lowPiece = new HashPiece(-1, 0, 0, 'O', null);
 
@@ -172,7 +172,8 @@ public final class PieceRearranger implements Cloneable {
 		numGroups = 0;
 		HashPiece lastPiece = lowPiece;
 		HashGroup currentGroup = new HashGroup(lastPiece);
-		pieces = new ArrayList<HashPiece>(s.length);
+		pieces = new HashPiece[s.length];
+		piecesLength = 0;
 		int numOs = 0;
 		boolean onFX = true, onFO = true;
 		for (int i = 0; i < s.length; i++) {
@@ -186,7 +187,7 @@ public final class PieceRearranger implements Cloneable {
 						openO++;
 					}
 					numOs++;
-					lastPiece = new HashPiece(pieces.size(), numOs,
+					lastPiece = new HashPiece(piecesLength, numOs,
 							lastPiece.nextO, 'O', currentGroup);
 					hash += lastPiece.hash;
 					currentGroup.addPiece(lastPiece);
@@ -195,13 +196,13 @@ public final class PieceRearranger implements Cloneable {
 						openX++;
 					else
 						onFO = false;
-					lastPiece = new HashPiece(pieces.size(), numOs,
+					lastPiece = new HashPiece(piecesLength, numOs,
 							lastPiece.nextX, 'X', currentGroup);
 					currentGroup.addPiece(lastPiece);
 				} else
 					new Exception("Bad String: " + String.valueOf(s))
 							.printStackTrace();
-				pieces.add(lastPiece);
+				pieces[piecesLength++] = lastPiece;
 			}
 		}
 		hasNext = !onFO;
@@ -223,7 +224,7 @@ public final class PieceRearranger implements Cloneable {
 		numGroups = 0;
 		HashPiece lastPiece = lowPiece;
 		HashGroup currentGroup = new HashGroup(lastPiece);
-		pieces = new ArrayList<HashPiece>(s.length);
+		pieces = new HashPiece[s.length];
 		int numOs = 0;
 		for (int i = 0; i < s.length; i++) {
 			if (s[i] == ' ') {
@@ -232,15 +233,15 @@ public final class PieceRearranger implements Cloneable {
 			} else {
 				if (numOs < os) {
 					numOs++;
-					lastPiece = new HashPiece(pieces.size(), numOs,
+					lastPiece = new HashPiece(piecesLength, numOs,
 							lastPiece.nextO, 'O', currentGroup);
 					currentGroup.addPiece(lastPiece);
 				} else {
-					lastPiece = new HashPiece(pieces.size(), numOs,
+					lastPiece = new HashPiece(piecesLength, numOs,
 							lastPiece.nextX, 'X', currentGroup);
 					currentGroup.addPiece(lastPiece);
 				}
-				pieces.add(lastPiece);
+				pieces[piecesLength++] = lastPiece;
 			}
 		}
 		groups[numGroups++] = currentGroup;
@@ -257,19 +258,19 @@ public final class PieceRearranger implements Cloneable {
 	public void reset() {
 		int i;
 		for (i = 0; i < numOs; i++)
-			pieces.get(i).set(i, 0, 'O');
+			pieces[i].set(i, 0, 'O');
 		HashPiece lastPiece;
 		if (numOs > 0)
-			lastPiece = pieces.get(numOs - 1);
+			lastPiece = pieces[numOs - 1];
 		else
 			lastPiece = lowPiece;
-		for (; i < pieces.size(); i++) {
-			pieces.get(i).set(numOs, lastPiece.nextX, 'X');
-			lastPiece = pieces.get(i);
+		for (; i < piecesLength; i++) {
+			pieces[i].set(numOs, lastPiece.nextX, 'X');
+			lastPiece = pieces[i];
 		}
 		openO = numOs;
 		openX = 0;
-		hasNext = pieces.size() > numOs && numOs > 0;
+		hasNext = piecesLength > numOs && numOs > 0;
 		hash = 0;
 	}
 
@@ -292,7 +293,7 @@ public final class PieceRearranger implements Cloneable {
 			else
 				groups[i].reset(lastPiece);
 			for (totSize += groupSizes[i]; k < totSize; k++) {
-				lastPiece = pieces.get(k);
+				lastPiece = pieces[k];
 				lastPiece.group = groups[i];
 				groups[i].addPiece(lastPiece);
 			}
@@ -301,8 +302,8 @@ public final class PieceRearranger implements Cloneable {
 			groups[numMoves] = new HashGroup(lastPiece);
 		else
 			groups[numMoves].reset(lastPiece);
-		for (; k < pieces.size(); k++) {
-			lastPiece = pieces.get(k);
+		for (; k < piecesLength; k++) {
+			lastPiece = pieces[k];
 			lastPiece.group = groups[numMoves];
 			groups[numMoves].addPiece(lastPiece);
 		}
@@ -381,27 +382,26 @@ public final class PieceRearranger implements Cloneable {
 		int i;
 		if (openX > 0 && newOpenO > 0) {
 			for (i = 0; i < newOpenO; i++)
-				pieces.get(i).set(i + 1, 0, 'O');
+				pieces[i].set(i + 1, 0, 'O');
 			for (i = newOpenO; i < totalOpen; i++)
-				pieces.get(i).set(newOpenO, pieces.get(i - 1).nextX, 'X');
+				pieces[i].set(newOpenO, pieces[i - 1].nextX, 'X');
 		}
-		long firstXHash = (totalOpen == 0 ? 1 : pieces.get(totalOpen - 1).nextX);
-		pieces.get(totalOpen).set(newOpenO, firstXHash, 'X');
-		pieces.get(totalOpen + 1).set(newOpenO + 1,
-				pieces.get(totalOpen).nextO, 'O');
+		long firstXHash = (totalOpen == 0 ? 1 : pieces[totalOpen - 1].nextX);
+		pieces[totalOpen].set(newOpenO, firstXHash, 'X');
+		pieces[totalOpen + 1].set(newOpenO + 1, pieces[totalOpen].nextO, 'O');
 		if (newOpenO > 0) {
 			openX = 0;
 			openO = newOpenO;
 		} else {
 			openX++;
 			i = totalOpen + 1;
-			for (i = totalOpen + 2; i < pieces.size(); i++) {
-				if (pieces.get(i).player == 'O')
+			for (i = totalOpen + 2; i < piecesLength; i++) {
+				if (pieces[i].player == 'O')
 					openO++;
 				else
 					break;
 			}
-			if (i == pieces.size())
+			if (i == piecesLength)
 				hasNext = false;
 		}
 		hash++;
@@ -414,12 +414,12 @@ public final class PieceRearranger implements Cloneable {
 	 * @return The character of the piece.
 	 */
 	public char get(final int piece) {
-		return pieces.get(piece).player;
+		return pieces[piece].player;
 	}
 
 	@Override
 	public String toString() {
-		StringBuilder str = new StringBuilder(pieces.size() + numGroups);
+		StringBuilder str = new StringBuilder(piecesLength + numGroups);
 		int i = 0;
 		HashGroup g = groups[i++];
 		while (g.lastPiece == lowPiece) {
@@ -464,17 +464,16 @@ public final class PieceRearranger implements Cloneable {
 		openO = 0;
 		openX = 0;
 		long tryHash;
-		if (pieces.size() > 0)
-			tryHash = colorArrangements * (pieces.size() - numOs)
-					/ pieces.size();
+		if (piecesLength > 0)
+			tryHash = colorArrangements * (piecesLength - numOs) / piecesLength;
 		else
 			tryHash = 0;
 		int oCount = numOs;
 		hasNext = false;
-		for (int i = pieces.size() - 1; i >= 0; i--) {
+		for (int i = piecesLength - 1; i >= 0; i--) {
 			if (hash >= tryHash) {
 				hash -= tryHash;
-				pieces.get(i).set(oCount, tryHash, 'O');
+				pieces[i].set(oCount, tryHash, 'O');
 				if (i > 0)
 					tryHash = tryHash * oCount / i;
 				oCount--;
@@ -485,7 +484,7 @@ public final class PieceRearranger implements Cloneable {
 				} else
 					openO++;
 			} else {
-				pieces.get(i).set(oCount, tryHash, 'X');
+				pieces[i].set(oCount, tryHash, 'X');
 				if (i > 0)
 					tryHash = tryHash * (i - oCount) / i;
 				openX++;

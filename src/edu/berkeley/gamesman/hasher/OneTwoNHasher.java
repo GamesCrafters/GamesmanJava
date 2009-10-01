@@ -16,7 +16,8 @@ public class OneTwoNHasher extends TieredHasher<Integer> {
 	/**
 	 * Default constructor
 	 * 
-	 * @param conf the configuration
+	 * @param conf
+	 *            the configuration
 	 */
 	public OneTwoNHasher(Configuration conf) {
 		super(conf);
@@ -49,5 +50,10 @@ public class OneTwoNHasher extends TieredHasher<Integer> {
 	@Override
 	public String describe() {
 		return "OTNH";
+	}
+
+	@Override
+	public long numHashes() {
+		return game.numberOfTiers();
 	}
 }

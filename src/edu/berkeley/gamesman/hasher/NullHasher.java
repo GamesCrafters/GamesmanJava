@@ -28,7 +28,7 @@ public class NullHasher extends Hasher<Object> {
 	}
 
 	@Override
-	public long maxHash() {
+	public long numHashes() {
 		return 0;
 	}
 

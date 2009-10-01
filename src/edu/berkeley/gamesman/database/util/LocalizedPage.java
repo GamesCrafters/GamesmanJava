@@ -9,7 +9,7 @@ import edu.berkeley.gamesman.core.RecordGroup;
 import edu.berkeley.gamesman.util.LongIterator;
 import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
-public class Page {
+public class LocalizedPage {
 	private final long[] longGroups;
 
 	private final BigInteger[] bigIntGroups;
@@ -60,7 +60,7 @@ public class Page {
 		}
 	}
 
-	public Page(Configuration conf, int pageSize, int groupsRemembered) {
+	public LocalizedPage(Configuration conf, int pageSize, int groupsRemembered) {
 		this.conf = conf;
 		if (conf.recordGroupUsesLong) {
 			longGroups = new long[pageSize];
@@ -162,17 +162,22 @@ public class Page {
 
 	public void setGroup(int offset, long group) {
 		longGroups[offset] = group;
-		for (int i = 0; i < rawRecords.length; i++)
-			if (lastIndex[i] == offset)
+		for (int i = 0; i < rawRecords.length; i++) {
+			if (lastIndex[i] == offset) {
 				RecordGroup.getRecords(conf, group, rawRecords[i], 0);
+				rawChanged[i] = false;
+			}
+		}
 		dirty = true;
 	}
 
 	public void setGroup(int offset, BigInteger group) {
 		bigIntGroups[offset] = group;
 		for (int i = 0; i < rawRecords.length; i++)
-			if (lastIndex[i] == offset)
+			if (lastIndex[i] == offset) {
 				RecordGroup.getRecords(conf, group, rawRecords[i], 0);
+				rawChanged[i] = false;
+			}
 		dirty = true;
 	}
 
@@ -193,12 +198,16 @@ public class Page {
 			this.firstGroup = firstGroup;
 			if (conf.recordGroupUsesLong) {
 				LongIterator it = db.getLongRecordGroups(firstGroup
-						* conf.recordGroupByteLength, longGroups.length);
+						* conf.recordGroupByteLength, (int) Math.min(
+						longGroups.length, conf.getHasher().numHashes()
+								- firstGroup));
 				for (int off = 0; off < longGroups.length; off++)
 					setGroup(off, it.next());
 			} else {
 				Iterator<BigInteger> it = db.getBigIntRecordGroups(firstGroup
-						* conf.recordGroupByteLength, bigIntGroups.length);
+						* conf.recordGroupByteLength, (int) Math.min(
+						bigIntGroups.length, conf.getHasher().numHashes()
+								- firstGroup));
 				for (int off = 0; off < bigIntGroups.length; off++)
 					setGroup(off, it.next());
 			}
@@ -215,48 +224,43 @@ public class Page {
 		for (int i = 0; i < rawRecords.length; i++) {
 			if (rawChanged[i])
 				if (conf.recordGroupUsesLong)
-					longGroups[i] = RecordGroup.longRecordGroup(conf,
-							rawRecords[i], 0);
+					longGroups[lastIndex[i]] = RecordGroup.longRecordGroup(
+							conf, rawRecords[i], 0);
 				else
-					bigIntGroups[i] = RecordGroup.bigIntRecordGroup(conf,
-							rawRecords[i], 0);
+					bigIntGroups[lastIndex[i]] = RecordGroup.bigIntRecordGroup(
+							conf, rawRecords[i], 0);
 		}
 		synchronized (db) {
 			if (conf.recordGroupUsesLong)
 				db.putRecordGroups(firstGroup * conf.recordGroupByteLength,
-						longIterator(), longGroups.length);
+						longIterator(), (int) Math.min(longGroups.length, conf
+								.getHasher().numHashes()
+								+ 1 - firstGroup));
 			else
 				db.putRecordGroups(firstGroup * conf.recordGroupByteLength,
-						bigIntIterator(), bigIntGroups.length);
+						bigIntIterator(), (int) Math.min(bigIntGroups.length,
+								conf.getHasher().numHashes() + 1 - firstGroup));
 		}
 		dirty = false;
 	}
 
 	public static int byteSize(Configuration conf, int numGroups) {
-		int myBytes = 48;
-		myBytes += (12 + conf.recordsPerGroup * 4 + 7) / 8 * 8;
-		myBytes += conf.recordsPerGroup * Record.byteSize(conf);
+		int myBytes;
 		if (conf.recordGroupUsesLong)
-			myBytes += (12 + 8 * numGroups + 7) / 8 * 8;
+			myBytes = (12 + 8 * numGroups + 7) / 8 * 8;
 		else {
-			myBytes += (12 + 4 * numGroups + 7) / 8 * 8;
-			myBytes += (32 + (12 + conf.recordGroupByteLength + 8) / 8 * 8)
+			myBytes = (12 + 4 * numGroups + 7) / 8 * 8
+					+ (32 + (12 + conf.recordGroupByteLength + 8) / 8 * 8)
 					* numGroups;
 		}
 		return myBytes;
 	}
 
 	public static int numGroups(Configuration conf, int numBytes) {
-		int divider = numBytes;
-		divider -= 48;
-		divider -= (12 + conf.recordsPerGroup * 4 + 7) / 8 * 8;
-		divider -= conf.recordsPerGroup * Record.byteSize(conf);
 		if (conf.recordGroupUsesLong) {
-			divider -= 16;
-			return (divider / 8 * 8 - 3) / 8;
+			return (numBytes / 8 * 8 - 19) / 8;
 		} else {
-			divider -= 16;
-			return divider
+			return numBytes
 					/ ((32 + (12 + conf.recordGroupByteLength + 8) / 4 + 1) * 8);
 		}
 	}

@@ -39,7 +39,7 @@ public abstract class Hasher<Board> {
 	 * @return Maximum hash that the Hasher could return via a call to hash()
 	 * @see Hasher#hash(Object)
 	 */
-	public abstract long maxHash();
+	public abstract long numHashes();
 	
 	/**
 	 * @return a String that uniquely identifies this Hasher (including valid pieces if appropriate, etc)

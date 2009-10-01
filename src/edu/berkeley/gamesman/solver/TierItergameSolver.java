@@ -15,8 +15,6 @@ public final class TierItergameSolver extends TierSolver<ItergameState> {
 	@Override
 	protected void solvePartialTier(Configuration conf, long start, long end,
 			TierSolverUpdater t) {
-		if (start == 0)
-			System.out.println("here");
 		TieredIterGame game = Util.checkedCast(conf.getGame());
 		long current = start;
 		game.setState(game.hashToState(start));

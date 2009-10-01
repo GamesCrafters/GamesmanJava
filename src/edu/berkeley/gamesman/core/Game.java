@@ -1,6 +1,5 @@
 package edu.berkeley.gamesman.core;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -19,13 +18,11 @@ public abstract class Game<State> {
 
 	protected final Configuration conf;
 
-	private final ArrayList<Record> allVals = new ArrayList<Record>();
+	private Record[] valsBest = new Record[1];
 
-	private final ArrayList<Record> valsBest = new ArrayList<Record>();
+	private Record[] valsBestScore = new Record[1];
 
-	private final ArrayList<Record> valsBestScore = new ArrayList<Record>();
-
-	private final ArrayList<Record> valsBestRemoteness = new ArrayList<Record>();
+	private Record[] valsBestRemoteness = new Record[1];
 
 	@SuppressWarnings("unused")
 	private Game() {
@@ -211,65 +208,91 @@ public abstract class Game<State> {
 	 *         then score, then remoteness)
 	 */
 	public Record combine(List<Record> vals) {
-		allVals.clear();
-		for (Record r : vals)
-			allVals.add(r);
-		valsBest.clear();
+		int size = 0;
 		PrimitiveValue bestPrim = PrimitiveValue.LOSE;
-		for (Record val : allVals) {
+		for (Record val : vals) {
 			PrimitiveValue pv = val.get();
 			if (pv.isPreferableTo(bestPrim)) {
-				valsBest.clear();
-				valsBest.add(val);
+				size = 1;
+				valsBest[0] = val;
 				bestPrim = pv;
-			} else if (pv.equals(bestPrim))
-				valsBest.add(val);
-		}
-		vals = valsBest;
-		if (conf.containsField(RecordFields.SCORE)) {
-			valsBestScore.clear();
-			int bestScore = Integer.MIN_VALUE;
-			for (Record val : vals) {
-				int score = val.get(RecordFields.SCORE);
-				if (score > bestScore) {
-					valsBestScore.clear();
-					valsBestScore.add(val);
-					bestScore = score;
-				} else if (score == bestScore)
-					valsBestScore.add(val);
+			} else if (pv.equals(bestPrim)) {
+				if (valsBest.length <= size) {
+					Record[] temp = valsBest;
+					valsBest = new Record[size + 1];
+					for (int c = 0; c < temp.length; c++)
+						valsBest[c] = temp[c];
+				}
+				valsBest[size++] = val;
 			}
-			vals = valsBestScore;
+		}
+		Record[] arrVals = valsBest;
+		int lastSize;
+		if (conf.containsField(RecordFields.SCORE)) {
+			lastSize = size;
+			size = 0;
+			int bestScore = Integer.MIN_VALUE;
+			for (int i = 0; i < lastSize; i++) {
+				int score = arrVals[i].get(RecordFields.SCORE);
+				if (score > bestScore) {
+					size = 1;
+					valsBestScore[0] = arrVals[i];
+					bestScore = score;
+				} else if (score == bestScore) {
+					if (valsBestScore.length <= size) {
+						Record[] temp = valsBestScore;
+						valsBestScore = new Record[size + 1];
+						for (int c = 0; c < temp.length; c++)
+							valsBestScore[c] = temp[c];
+					}
+					valsBestScore[size++] = arrVals[i];
+				}
+			}
+			arrVals = valsBestScore;
 		}
 		if (conf.containsField(RecordFields.REMOTENESS)) {
+			lastSize = size;
+			size = 0;
 			if (bestPrim.equals(PrimitiveValue.LOSE)) {
-				valsBestRemoteness.clear();
 				int bestRemoteness = 0;
-				for (Record val : vals) {
-					int remoteness = val.get(RecordFields.REMOTENESS);
+				for (int i = 0; i < lastSize; i++) {
+					int remoteness = arrVals[i].get(RecordFields.REMOTENESS);
 					if (remoteness > bestRemoteness) {
-						valsBestRemoteness.clear();
-						valsBestRemoteness.add(val);
+						size = 1;
+						valsBestRemoteness[0] = arrVals[i];
 						bestRemoteness = remoteness;
-					} else if (remoteness == bestRemoteness)
-						valsBestRemoteness.add(val);
+					} else if (remoteness == bestRemoteness) {
+						if (valsBestRemoteness.length <= size) {
+							Record[] temp = valsBestRemoteness;
+							valsBestRemoteness = new Record[size + 1];
+							for (int c = 0; c < temp.length; c++)
+								valsBestRemoteness[c] = temp[c];
+						}
+						valsBestRemoteness[size++] = arrVals[i];
+					}
 				}
-				vals = valsBestRemoteness;
 			} else {
-				valsBestRemoteness.clear();
 				int bestRemoteness = Integer.MAX_VALUE;
-				for (Record val : vals) {
-					int remoteness = val.get(RecordFields.REMOTENESS);
+				for (int i = 0; i < lastSize; i++) {
+					int remoteness = arrVals[i].get(RecordFields.REMOTENESS);
 					if (remoteness < bestRemoteness) {
-						valsBestRemoteness.clear();
-						valsBestRemoteness.add(val);
+						size = 1;
+						valsBestRemoteness[0] = arrVals[i];
 						bestRemoteness = remoteness;
-					} else if (remoteness == bestRemoteness)
-						valsBestRemoteness.add(val);
+					} else if (remoteness == bestRemoteness) {
+						if (valsBestRemoteness.length <= size) {
+							Record[] temp = valsBestRemoteness;
+							valsBestRemoteness = new Record[size + 1];
+							for (int c = 0; c < temp.length; c++)
+								valsBestRemoteness[c] = temp[c];
+						}
+						valsBestRemoteness[size++] = arrVals[i];
+					}
 				}
-				vals = valsBestRemoteness;
 			}
+			arrVals = valsBestRemoteness;
 		}
-		return vals.get(0);
+		return arrVals[0];
 	}
 
 	/**
@@ -282,69 +305,91 @@ public abstract class Game<State> {
 	 * @return The record with the best possible outcome
 	 */
 	public Record combine(Record[] recordArray, int offset, int len) {
-		allVals.clear();
-		for (int i = 0; i < len; i++)
-			allVals.add(recordArray[offset++]);
-		valsBest.clear();
+		int size = 0;
 		PrimitiveValue bestPrim = PrimitiveValue.LOSE;
-		for (int i = 0; i < allVals.size(); i++) {
-			Record val = allVals.get(i);
-			PrimitiveValue pv = val.get();
+		for (int i = 0; i < len; i++) {
+			PrimitiveValue pv = recordArray[i].get();
 			if (pv.isPreferableTo(bestPrim)) {
-				valsBest.clear();
-				valsBest.add(val);
+				size = 1;
+				valsBest[0] = recordArray[i];
 				bestPrim = pv;
-			} else if (pv.equals(bestPrim))
-				valsBest.add(val);
-		}
-		ArrayList<Record> vals = valsBest;
-		if (conf.containsField(RecordFields.SCORE)) {
-			valsBestScore.clear();
-			int bestScore = Integer.MIN_VALUE;
-			for (int i = 0; i < vals.size(); i++) {
-				Record val = vals.get(i);
-				int score = val.get(RecordFields.SCORE);
-				if (score > bestScore) {
-					valsBestScore.clear();
-					valsBestScore.add(val);
-					bestScore = score;
-				} else if (score == bestScore)
-					valsBestScore.add(val);
+			} else if (pv.equals(bestPrim)) {
+				if (valsBest.length <= size) {
+					Record[] temp = valsBest;
+					valsBest = new Record[size + 1];
+					for (int c = 0; c < temp.length; c++)
+						valsBest[c] = temp[c];
+				}
+				valsBest[size++] = recordArray[i];
 			}
-			vals = valsBestScore;
+		}
+		Record[] arrVals = valsBest;
+		int lastSize;
+		if (conf.containsField(RecordFields.SCORE)) {
+			lastSize = size;
+			size = 0;
+			int bestScore = Integer.MIN_VALUE;
+			for (int i = 0; i < lastSize; i++) {
+				int score = arrVals[i].get(RecordFields.SCORE);
+				if (score > bestScore) {
+					size = 1;
+					valsBestScore[0] = arrVals[i];
+					bestScore = score;
+				} else if (score == bestScore) {
+					if (valsBestScore.length <= size) {
+						Record[] temp = valsBestScore;
+						valsBestScore = new Record[size + 1];
+						for (int c = 0; c < temp.length; c++)
+							valsBestScore[c] = temp[c];
+					}
+					valsBestScore[size++] = arrVals[i];
+				}
+			}
+			arrVals = valsBestScore;
 		}
 		if (conf.containsField(RecordFields.REMOTENESS)) {
+			lastSize = size;
+			size = 0;
 			if (bestPrim.equals(PrimitiveValue.LOSE)) {
-				valsBestRemoteness.clear();
 				int bestRemoteness = 0;
-				for (int i = 0; i < vals.size(); i++) {
-					Record val = vals.get(i);
-					int remoteness = val.get(RecordFields.REMOTENESS);
+				for (int i = 0; i < lastSize; i++) {
+					int remoteness = arrVals[i].get(RecordFields.REMOTENESS);
 					if (remoteness > bestRemoteness) {
-						valsBestRemoteness.clear();
-						valsBestRemoteness.add(val);
+						size = 1;
+						valsBestRemoteness[0] = arrVals[i];
 						bestRemoteness = remoteness;
-					} else if (remoteness == bestRemoteness)
-						valsBestRemoteness.add(val);
+					} else if (remoteness == bestRemoteness) {
+						if (valsBestRemoteness.length <= size) {
+							Record[] temp = valsBestRemoteness;
+							valsBestRemoteness = new Record[size + 1];
+							for (int c = 0; c < temp.length; c++)
+								valsBestRemoteness[c] = temp[c];
+						}
+						valsBestRemoteness[size++] = arrVals[i];
+					}
 				}
-				vals = valsBestRemoteness;
 			} else {
-				valsBestRemoteness.clear();
 				int bestRemoteness = Integer.MAX_VALUE;
-				for (int i = 0; i < vals.size(); i++) {
-					Record val = vals.get(i);
-					int remoteness = val.get(RecordFields.REMOTENESS);
+				for (int i = 0; i < lastSize; i++) {
+					int remoteness = arrVals[i].get(RecordFields.REMOTENESS);
 					if (remoteness < bestRemoteness) {
-						valsBestRemoteness.clear();
-						valsBestRemoteness.add(val);
+						size = 1;
+						valsBestRemoteness[0] = arrVals[i];
 						bestRemoteness = remoteness;
-					} else if (remoteness == bestRemoteness)
-						valsBestRemoteness.add(val);
+					} else if (remoteness == bestRemoteness) {
+						if (valsBestRemoteness.length <= size) {
+							Record[] temp = valsBestRemoteness;
+							valsBestRemoteness = new Record[size + 1];
+							for (int c = 0; c < temp.length; c++)
+								valsBestRemoteness[c] = temp[c];
+						}
+						valsBestRemoteness[size++] = arrVals[i];
+					}
 				}
-				vals = valsBestRemoteness;
 			}
+			arrVals = valsBestRemoteness;
 		}
-		return vals.get(0);
+		return arrVals[0];
 	}
 
 	/**
@@ -364,7 +409,8 @@ public abstract class Game<State> {
 	}
 
 	/**
-	 * @param val The state index of this record
+	 * @param val
+	 *            The state index of this record
 	 * @return A new record with the given state
 	 */
 	public Record newRecord(long val) {
