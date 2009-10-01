@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Record;
+import edu.berkeley.gamesman.database.util.DelocalizedPage;
 import edu.berkeley.gamesman.database.util.LocalizedPage;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
@@ -16,7 +17,7 @@ import edu.berkeley.gamesman.util.biginteger.BigInteger;
  */
 public class DatabaseCache extends Database {
 
-	private LocalizedPage[][] records;
+	private DelocalizedPage[][] records;
 
 	private int indexBits, indices;
 
@@ -227,16 +228,16 @@ public class DatabaseCache extends Database {
 		indices = totalBytes / (pageBytes * nWayAssociative);
 		indexBits = (int) (Math.log(indices) / Math.log(2));
 		indices = 1 << indexBits;
-		records = new LocalizedPage[indices][nWayAssociative];
+		records = new DelocalizedPage[indices][nWayAssociative];
 		tags = new long[indices][nWayAssociative];
 		used = new long[indices][nWayAssociative];
 		current = new long[indices];
 		Arrays.fill(current, 0);
 		for (long[] u : used)
 			Arrays.fill(u, 0);
-		for (LocalizedPage[] pages : records) {
+		for (DelocalizedPage[] pages : records) {
 			for (int i = 0; i < pages.length; i++) {
-				pages[i] = new LocalizedPage(conf, pageSize, nWayAssociative);
+				pages[i] = new DelocalizedPage(conf, pageSize);
 			}
 		}
 		int bytesUsed = 48; // Size of this class
