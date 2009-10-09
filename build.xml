@@ -12,24 +12,6 @@
     <property name="source" value="1.5"/>
     <path id="gamesman-java.classpath">
         <pathelement location="bin"/>
-        <pathelement location="lib/commons-cli-2.0-SNAPSHOT.jar"/>
-        <pathelement location="lib/commons-codec-1.3.jar"/>
-        <pathelement location="lib/commons-httpclient-3.0.1.jar"/>
-        <pathelement location="lib/commons-logging-1.0.4.jar"/>
-        <pathelement location="lib/commons-logging-api-1.0.4.jar"/>
-        <pathelement location="lib/commons-net-1.4.1.jar"/>
-        <pathelement location="lib/hadoop-0.18.2-core.jar"/>
-        <pathelement location="lib/hadoop-0.18.2-tools.jar"/>
-        <pathelement location="lib/jets3t-0.6.0.jar"/>
-        <pathelement location="lib/jetty-5.1.4.jar"/>
-        <pathelement location="lib/junit-3.8.1.jar"/>
-        <pathelement location="lib/kfs-0.1.3.jar"/>
-        <pathelement location="lib/log4j-1.2.15.jar"/>
-        <pathelement location="lib/oro-2.0.8.jar"/>
-        <pathelement location="lib/servlet-api.jar"/>
-        <pathelement location="lib/slf4j-api-1.4.3.jar"/>
-        <pathelement location="lib/slf4j-log4j12-1.4.3.jar"/>
-        <pathelement location="lib/xmlenc-0.52.jar"/>
         <pathelement location="lib/jline-0.9.94.jar"/>
         <pathelement location="lib/jython.jar"/>
         <pathelement location="lib/org-json.jar"/>
