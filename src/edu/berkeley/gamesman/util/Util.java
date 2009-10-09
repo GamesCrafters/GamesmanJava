@@ -380,6 +380,7 @@ public final class Util {
 	 *            the array it is stored in
 	 * @return the object stored
 	 */
+        @SuppressWarnings("unchecked")
 	public static <T> T deserialize(byte[] bytes) {
 		ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
 		ObjectInputStream ois;
@@ -387,7 +388,9 @@ public final class Util {
 			ois = new ObjectInputStream(bais); // TODO why is this broken on
 												// nyc?
 			// return checkedCast(ois.readObject());
-			return checkedCast(ois.readObject());
+			return (T)checkedCast(ois.readObject());
+		} catch (ClassCastException e) {
+			Util.fatalError("Could not deserialize object", e);
 		} catch (Exception e) {
 			Util.fatalError("Could not deserialize object", e);
 		}

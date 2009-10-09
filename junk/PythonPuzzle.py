@@ -1,5 +1,5 @@
 from edu.berkeley.gamesman.core import Game,PrimitiveValue,Record,RecordFields,Configuration
-from edu.berkeley.gamesman.database import BlockDatabase
+from edu.berkeley.gamesman.database import FileDatabase
 from edu.berkeley.gamesman.master import LocalMaster
 from edu.berkeley.gamesman.solver import TopDownSolver, BreadthFirstSolver
 from edu.berkeley.gamesman.util import Util, Pair, DebugFacility
