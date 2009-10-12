@@ -313,6 +313,10 @@ public abstract class Database {
 			} else
 				return RecordGroup.longRecordGroup(conf, recordIterator);
 		}
+
+		public void remove() {
+			throw new UnsupportedOperationException("remove() not supported");
+		}
 	}
 
 	private class BigIntRecordGroupIterator implements Iterator<BigInteger> {

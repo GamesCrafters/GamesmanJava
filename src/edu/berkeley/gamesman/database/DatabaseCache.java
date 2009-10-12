@@ -29,6 +29,8 @@ public class DatabaseCache extends Database {
 
 	private long[] current;
 
+	private long maxGroups;
+
 	private final Database db;
 
 	/**
@@ -163,16 +165,20 @@ public class DatabaseCache extends Database {
 	}
 
 	private void loadPage(long tag, int index, int i) {
-		synchronized (records[index][i]) {
+//		synchronized (records[index][i]) {
 			if (records[index][i].isDirty()) {
 				writeBack(index, i);
 			}
 			tags[index][i] = tag;
-			assert Util.debug(DebugFacility.DATABASE, "Loading "
-					+ ((tag << indexBits) | index));
-			records[index][i].loadPage(db,
-					((tag << indexBits) | index) << offsetBits, pageSize);
-		}
+			long pageNum = (tag << indexBits) | index;
+			assert Util.debug(DebugFacility.DATABASE, "Loading " + pageNum);
+			long firstGroup = pageNum << offsetBits;
+			if (firstGroup + pageSize > maxGroups)
+				records[index][i].loadPage(db, firstGroup,
+						(int) (maxGroups - firstGroup));
+			else
+				records[index][i].loadPage(db, firstGroup, pageSize);
+//		}
 	}
 
 	private void writeBack(int index, int i) {
@@ -254,6 +260,8 @@ public class DatabaseCache extends Database {
 				+ " indices each " + nWayAssociative + "-way associative");
 		assert Util.debug(DebugFacility.DATABASE, nWayAssociative * indices
 				+ " pages");
+		maxGroups = (conf.getHasher().numHashes() + conf.recordsPerGroup - 1)
+				/ conf.recordsPerGroup;
 	}
 
 	@Override

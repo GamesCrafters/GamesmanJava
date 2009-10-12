@@ -1,6 +1,8 @@
 package edu.berkeley.gamesman.core;
 
-import java.io.*;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 
@@ -24,16 +26,6 @@ public abstract class RecordGroup {
 		for (int i = 0; i < conf.recordGroupByteLength; i++) {
 			longValues <<= 8;
 			longValues |= (values[i] & 255L);
-		}
-		return longValues;
-	}
-
-	public static long longRecordGroup(Configuration conf, DataInput in)
-			throws IOException {
-		long longValues = 0;
-		for (int i = 0; i < conf.recordGroupByteLength; i++) {
-			longValues <<= 8;
-			longValues |= (in.readByte() & 255L);
 		}
 		return longValues;
 	}
