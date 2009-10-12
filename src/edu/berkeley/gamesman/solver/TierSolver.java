@@ -69,26 +69,43 @@ public class TierSolver<T> extends Solver {
 
 	private TierSolverUpdater updater;
 
-	private final Runnable flusher=new Runnable(){
-		public void run(){
+	private final Runnable flusher = new Runnable() {
+		public void run() {
 			db.flush();
 			barr.reset();
 		}
 	};
-	
-	private CyclicBarrier barr = new CyclicBarrier(1,flusher);
+
+	private CyclicBarrier barr = new CyclicBarrier(1, flusher);
 
 	private int division = 1;
 
 	private synchronized Pair<Long, Long> getSlice(int tier, int index,
-			TieredGame<T> myGame) {
+			Configuration conf) {
 		if (tier < 0)
 			return null;
+		TieredGame<T> myGame = Util.checkedCast(conf.getGame());
 		long tierStart = myGame.hashOffsetForTier(tier);
 		long tierEnd = myGame.lastHashValueForTier(tier);
-		long start = (tierEnd - tierStart + 1) * index / division + tierStart;
-		long end = (tierEnd - tierStart + 1) * (index + 1) / division
-				+ tierStart - 1;
+		long start, end;
+		if (tierEnd - tierStart < division * conf.recordsPerGroup)
+			if (index == 0)
+				return new Pair<Long, Long>(tierStart, tierEnd);
+			else
+				return new Pair<Long, Long>(0L, -1L);
+		if (index == 0)
+			start = tierStart;
+		else {
+			start = (tierEnd - tierStart + 1) * index / division + tierStart;
+			start -= start % conf.recordsPerGroup;
+		}
+		if (index == division - 1)
+			end = tierEnd;
+		else {
+			end = (tierEnd - tierStart + 1) * (index + 1) / division
+					+ tierStart - 1;
+			end -= (end + 1) % conf.recordsPerGroup;
+		}
 		return new Pair<Long, Long>(start, end);
 	}
 
@@ -130,9 +147,10 @@ public class TierSolver<T> extends Solver {
 			} catch (BrokenBarrierException e1) {
 				e1.printStackTrace();
 			}
-			while ((slice = getSlice(tier, index, game)) != null) {
+			while ((slice = getSlice(tier, index, conf)) != null) {
 				assert Util.debug(DebugFacility.THREADING,
-						"Beginning to solve slice " + slice + " for tier "+tier);
+						"Beginning to solve slice " + slice + " for tier "
+								+ tier);
 				solvePartialTier(conf, slice.car, slice.cdr, updater);
 				assert Util.debug(DebugFacility.THREADING, "Finished Slice");
 				try {

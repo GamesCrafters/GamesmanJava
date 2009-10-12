@@ -11,6 +11,8 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 	@Override
 	protected void solvePartialTier(Configuration conf, long start, long end,
 			TierSolverUpdater t) {
+		if (end < start)
+			return;
 		Connect4 game = Util.checkedCast(conf.getGame());
 		long current = start;
 		long currentGroup = current / conf.recordsPerGroup;
