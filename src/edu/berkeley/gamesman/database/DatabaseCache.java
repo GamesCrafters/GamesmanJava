@@ -165,7 +165,7 @@ public class DatabaseCache extends Database {
 	}
 
 	private void loadPage(long tag, int index, int i) {
-//		synchronized (records[index][i]) {
+		synchronized (records[index][i]) {
 			if (records[index][i].isDirty()) {
 				writeBack(index, i);
 			}
@@ -178,7 +178,7 @@ public class DatabaseCache extends Database {
 						(int) (maxGroups - firstGroup));
 			else
 				records[index][i].loadPage(db, firstGroup, pageSize);
-//		}
+		}
 	}
 
 	private void writeBack(int index, int i) {
