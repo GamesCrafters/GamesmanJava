@@ -25,13 +25,11 @@ public class FileDatabase extends Database {
 
 	protected RandomAccessFile fd;
 
-	protected byte[] rawRecord;
-
-	protected byte[] groups;
-
 	protected int groupsLength;
 
 	protected long offset;
+
+	protected byte[] rawRecord;
 
 	@Override
 	public synchronized void close() {
@@ -56,8 +54,7 @@ public class FileDatabase extends Database {
 	public synchronized long getLongRecordGroup(long loc) {
 		try {
 			fd.seek(loc + offset);
-			fd.read(rawRecord);
-			long v = RecordGroup.longRecordGroup(conf, rawRecord);
+			long v = RecordGroup.longRecordGroup(conf, fd);
 			return v;
 		} catch (IOException e) {
 			Util.fatalError("IO Error: " + e);
@@ -69,6 +66,8 @@ public class FileDatabase extends Database {
 	public synchronized BigInteger getBigIntRecordGroup(long loc) {
 		try {
 			fd.seek(loc + offset);
+			if (rawRecord == null)
+				rawRecord = new byte[conf.recordGroupByteLength];
 			fd.read(rawRecord);
 			BigInteger v = RecordGroup.bigIntRecordGroup(conf, rawRecord);
 			return v;
@@ -81,11 +80,7 @@ public class FileDatabase extends Database {
 	@Override
 	public LongIterator getLongRecordGroups(long loc, int numGroups) {
 		try {
-			groupsLength = numGroups * conf.recordGroupByteLength;
-			if (groups == null || groups.length < groupsLength)
-				groups = new byte[groupsLength];
 			fd.seek(loc + offset);
-			fd.read(groups, 0, groupsLength);
 			return new LongRecordGroupByteIterator();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -97,17 +92,9 @@ public class FileDatabase extends Database {
 	public synchronized void putRecordGroups(long loc,
 			LongIterator recordGroups, int numGroups) {
 		try {
-			groupsLength = numGroups * conf.recordGroupByteLength;
-			if (groups == null || groups.length < groupsLength)
-				groups = new byte[groupsLength];
-			int onByte = 0;
-			for (int i = 0; i < numGroups; i++) {
-				RecordGroup.toUnsignedByteArray(conf, recordGroups.next(),
-						groups, onByte);
-				onByte += conf.recordGroupByteLength;
-			}
 			fd.seek(loc + offset);
-			fd.write(groups, 0, groupsLength);
+			for (int i = 0; i < numGroups; i++)
+				RecordGroup.outputUnsignedBytes(conf, recordGroups.next(), fd);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -117,17 +104,9 @@ public class FileDatabase extends Database {
 	public synchronized void putRecordGroups(long loc,
 			Iterator<BigInteger> recordGroups, int numGroups) {
 		try {
-			groupsLength = numGroups * conf.recordGroupByteLength;
-			if (groups == null || groups.length < groupsLength)
-				groups = new byte[groupsLength];
-			int onByte = 0;
-			for (int i = 0; i < numGroups; i++) {
-				RecordGroup.toUnsignedByteArray(conf, recordGroups.next(),
-						groups, onByte);
-				onByte += conf.recordGroupByteLength;
-			}
 			fd.seek(loc + offset);
-			fd.write(groups, 0, groupsLength);
+			for (int i = 0; i < numGroups; i++)
+				RecordGroup.outputUnsignedBytes(conf, recordGroups.next(), fd);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -141,9 +120,12 @@ public class FileDatabase extends Database {
 		}
 
 		public long next() {
-			for (int i = 0; i < rawRecord.length; i++)
-				rawRecord[i] = groups[onByte++];
-			return RecordGroup.longRecordGroup(conf, rawRecord);
+			try {
+				return RecordGroup.longRecordGroup(conf, fd);
+			} catch (IOException e) {
+				Util.fatalError("IO Error", e);
+				return 0L;
+			}
 		}
 	}
 
@@ -156,9 +138,15 @@ public class FileDatabase extends Database {
 		}
 
 		public BigInteger next() {
-			for (int i = 0; i < rawRecord.length; i++)
-				rawRecord[i] = groups[onByte++];
-			return RecordGroup.bigIntRecordGroup(conf, rawRecord);
+			try {
+				if (rawRecord == null)
+					rawRecord = new byte[conf.recordGroupByteLength];
+				fd.read(rawRecord);
+				return RecordGroup.bigIntRecordGroup(conf, rawRecord);
+			} catch (IOException e) {
+				Util.fatalError("IO Error", e);
+				return null;
+			}
 		}
 
 		public void remove() {
@@ -188,7 +176,6 @@ public class FileDatabase extends Database {
 
 	@Override
 	public synchronized void initialize(String loc) {
-
 		boolean previouslyExisted;
 		try {
 			myFile = new File(loc);
@@ -210,7 +197,6 @@ public class FileDatabase extends Database {
 				fd.write(b);
 			}
 			offset = fd.getFilePointer();
-			rawRecord = new byte[conf.recordGroupByteLength];
 			fd.setLength(offset + getByteSize());
 		} catch (IOException e) {
 			e.printStackTrace();
