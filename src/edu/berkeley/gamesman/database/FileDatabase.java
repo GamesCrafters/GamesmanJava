@@ -94,6 +94,22 @@ public class FileDatabase extends Database {
 	}
 
 	@Override
+	public synchronized Iterator<BigInteger> getBigIntRecordGroups(long loc,
+			int numGroups) {
+		try {
+			groupsLength = numGroups * conf.recordGroupByteLength;
+			if (groups == null || groups.length < groupsLength)
+				groups = new byte[groupsLength];
+			fd.seek(loc + offset);
+			fd.read(groups, 0, groupsLength);
+			return new BigIntRecordGroupByteIterator();
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	@Override
 	public synchronized void putRecordGroups(long loc,
 			LongIterator recordGroups, int numGroups) {
 		try {
