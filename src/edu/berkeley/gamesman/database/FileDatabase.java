@@ -79,7 +79,7 @@ public class FileDatabase extends Database {
 	}
 
 	@Override
-	public LongIterator getLongRecordGroups(long loc, int numGroups) {
+	public synchronized LongIterator getLongRecordGroups(long loc, int numGroups) {
 		try {
 			groupsLength = numGroups * conf.recordGroupByteLength;
 			if (groups == null || groups.length < groupsLength)
