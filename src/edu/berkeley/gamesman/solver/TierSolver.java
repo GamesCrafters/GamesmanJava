@@ -30,8 +30,6 @@ public class TierSolver<T> extends Solver {
 
 	protected TieredGame<T> myGame;
 
-	protected Configuration conf;
-
 	/**
 	 * The number of positions to go through between each update/reset
 	 */
@@ -44,9 +42,8 @@ public class TierSolver<T> extends Solver {
 		tier = myGame.numberOfTiers() - 1;
 		offset = myGame.hashOffsetForTier(tier);
 		updater = new TierSolverUpdater();
-		conf = inconf;
 
-		return new TierSolverWorkUnit();
+		return new TierSolverWorkUnit(inconf);
 	}
 
 	protected void solvePartialTier(Configuration conf, long start, long end,
@@ -101,47 +98,61 @@ public class TierSolver<T> extends Solver {
 	private final Runnable flusher = new Runnable() {
 		public void run() {
 			db.flush();
-			barr.reset();
+			needs2Sync = false;
 			if (tier == -1)
 				updater.complete();
+			else
+				needs2Reset = true;
 		}
 	};
 
 	protected int tier;
 
-	private boolean needs2Sync;
+	private boolean needs2Sync = false;
 
-	protected Pair<Long, Long> nextSlice() {
-		if (needs2Sync) {
-			assert Util.debug(DebugFacility.THREADING,
-					"Thread waiting to tier-sync");
-			try {
-				if (barr != null)
-					barr.await();
-			} catch (InterruptedException e) {
-				Util.fatalError(
-						"TierSolver thread was interrupted while waiting!", e);
-			} catch (BrokenBarrierException e) {
-				Util.fatalError("Barrier Broken", e);
-			}
-		}
+	private boolean needs2Reset = false;
 
-		synchronized (this) {
-			if (tier < 0)
-				return null;
-			final long step = stepSize;
-			long ret = offset, end;
-			offset += step;
-			offset -= offset % conf.recordsPerGroup;
-			end = offset - 1;
-			if (end >= myGame.lastHashValueForTier(tier)) {
-				end = myGame.lastHashValueForTier(tier);
-				tier--;
-				if (tier >= 0)
-					offset = myGame.hashOffsetForTier(tier);
-				needs2Sync = true;
+	protected Pair<Long, Long> nextSlice(Configuration conf) {
+		while (true) {
+			if (needs2Sync) {
+				assert Util.debug(DebugFacility.THREADING,
+						"Thread waiting to tier-sync");
+				try {
+					if (barr != null) {
+						barr.await();
+						synchronized (this) {
+							if (needs2Reset) {
+								needs2Reset = false;
+								barr.reset();
+							}
+						}
+					}
+				} catch (InterruptedException e) {
+					Util.fatalError(
+							"TierSolver thread was interrupted while waiting!",
+							e);
+				} catch (BrokenBarrierException e) {
+					Util.fatalError("Barrier Broken", e);
+				}
 			}
-			return new Pair<Long, Long>(ret, end);
+			synchronized (this) {
+				if (!needs2Sync) {
+					if (tier < 0)
+						return null;
+					long ret = offset, end;
+					offset += stepSize;
+					offset -= offset % conf.recordsPerGroup;
+					end = offset - 1;
+					if (end >= myGame.lastHashValueForTier(tier)) {
+						end = myGame.lastHashValueForTier(tier);
+						tier--;
+						if (tier >= 0)
+							offset = myGame.hashOffsetForTier(tier);
+						needs2Sync = true;
+					}
+					return new Pair<Long, Long>(ret, end);
+				}
+			}
 		}
 	}
 
@@ -149,11 +160,10 @@ public class TierSolver<T> extends Solver {
 
 		private int index;
 
-		TierSolverWorkUnit() {
+		Configuration conf;
 
-			// if(!(g instanceof TieredGame))
-			// Util.fatalError("Attempted to use tiered solver on non-tiered
-			// game");
+		TierSolverWorkUnit(Configuration conf) {
+			this.conf = conf;
 			this.index = nextIndex++;
 		}
 
@@ -165,10 +175,10 @@ public class TierSolver<T> extends Solver {
 					"Solver (" + index + "): " + myGame.toString());
 
 			Pair<Long, Long> slice;
-			while ((slice = nextSlice()) != null) {
+			while ((slice = nextSlice(conf)) != null) {
 				assert Util.debug(DebugFacility.THREADING,
 						"Beginning to solve slice " + slice + " in thread "
-								+ index);
+								+ index + " for tier " + tier);
 				solvePartialTier(conf, slice.car, slice.cdr, updater);
 			}
 
@@ -185,7 +195,7 @@ public class TierSolver<T> extends Solver {
 			ArrayList<WorkUnit> arr = new ArrayList<WorkUnit>(num);
 			arr.add(this);
 			for (int i = 1; i < num; i++)
-				arr.add(new TierSolverWorkUnit());
+				arr.add(new TierSolverWorkUnit(conf.cloneAll()));
 			barr = new CyclicBarrier(num, flusher);
 			return arr;
 		}
