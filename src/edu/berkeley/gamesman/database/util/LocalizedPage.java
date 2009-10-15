@@ -200,18 +200,20 @@ public class LocalizedPage {
 	public void loadPage(Database db, long firstGroup, int numGroups) {
 		this.numGroups = numGroups;
 		this.firstGroup = firstGroup;
-		if (conf.recordGroupUsesLong) {
-			LongIterator it = db.getLongRecordGroups(firstGroup
-					* conf.recordGroupByteLength, (int) Math.min(numGroups,
-					conf.getHasher().numHashes() - firstGroup));
-			for (int off = 0; off < numGroups; off++)
-				setGroup(off, it.next());
-		} else {
-			Iterator<BigInteger> it = db.getBigIntRecordGroups(firstGroup
-					* conf.recordGroupByteLength, (int) Math.min(numGroups,
-					conf.getHasher().numHashes() - firstGroup));
-			for (int off = 0; off < numGroups; off++)
-				setGroup(off, it.next());
+		synchronized (db) {
+			if (conf.recordGroupUsesLong) {
+				LongIterator it = db.getLongRecordGroups(firstGroup
+						* conf.recordGroupByteLength, (int) Math.min(numGroups,
+						conf.getHasher().numHashes() - firstGroup));
+				for (int off = 0; off < numGroups; off++)
+					setGroup(off, it.next());
+			} else {
+				Iterator<BigInteger> it = db.getBigIntRecordGroups(firstGroup
+						* conf.recordGroupByteLength, (int) Math.min(numGroups,
+						conf.getHasher().numHashes() - firstGroup));
+				for (int off = 0; off < numGroups; off++)
+					setGroup(off, it.next());
+			}
 		}
 		dirty = false;
 		for (int i = 0; i < rawRecords.length; i++) {
@@ -231,16 +233,18 @@ public class LocalizedPage {
 					bigIntGroups[lastIndex[i]] = RecordGroup.bigIntRecordGroup(
 							conf, rawRecords[i], 0);
 		}
-		if (conf.recordGroupUsesLong)
-			db.putRecordGroups(firstGroup * conf.recordGroupByteLength,
-					longIterator(), (int) Math.min(numGroups, conf.getHasher()
-							.numHashes()
-							+ 1 - firstGroup));
-		else
-			db.putRecordGroups(firstGroup * conf.recordGroupByteLength,
-					bigIntIterator(), (int) Math.min(numGroups, conf
-							.getHasher().numHashes()
-							+ 1 - firstGroup));
+		synchronized (db) {
+			if (conf.recordGroupUsesLong)
+				db.putRecordGroups(firstGroup * conf.recordGroupByteLength,
+						longIterator(), (int) Math.min(numGroups, conf
+								.getHasher().numHashes()
+								+ 1 - firstGroup));
+			else
+				db.putRecordGroups(firstGroup * conf.recordGroupByteLength,
+						bigIntIterator(), (int) Math.min(numGroups, conf
+								.getHasher().numHashes()
+								+ 1 - firstGroup));
+		}
 		dirty = false;
 	}
 

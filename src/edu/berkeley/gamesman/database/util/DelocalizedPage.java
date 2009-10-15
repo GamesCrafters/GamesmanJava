@@ -107,15 +107,13 @@ public class DelocalizedPage {
 	public void loadPage(Database db, long firstGroup, int numGroups) {
 		this.firstGroup = firstGroup;
 		this.numGroups = numGroups;
-		if (conf.recordGroupUsesLong) {
-			synchronized (db) {
+		synchronized (db) {
+			if (conf.recordGroupUsesLong) {
 				LongIterator it = db.getLongRecordGroups(firstGroup
 						* conf.recordGroupByteLength, numGroups);
 				for (int off = 0; off < numGroups; off++)
 					setGroup(off, it.next());
-			}
-		} else {
-			synchronized (db) {
+			} else {
 				Iterator<BigInteger> it = db.getBigIntRecordGroups(firstGroup
 						* conf.recordGroupByteLength, numGroups);
 				for (int off = 0; off < numGroups; off++)
@@ -126,16 +124,14 @@ public class DelocalizedPage {
 	}
 
 	public void writeBack(Database db) {
-		if (conf.recordGroupUsesLong)
-			synchronized (db) {
+		synchronized (db) {
+			if (conf.recordGroupUsesLong)
 				db.putRecordGroups(firstGroup * conf.recordGroupByteLength,
 						longIterator(), numGroups);
-			}
-		else
-			synchronized (db) {
+			else
 				db.putRecordGroups(firstGroup * conf.recordGroupByteLength,
 						bigIntIterator(), numGroups);
-			}
+		}
 		dirty = false;
 	}
 
