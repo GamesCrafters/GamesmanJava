@@ -27,8 +27,8 @@ public final class TierItergameSolver extends TierSolver<ItergameState> {
 		for (int i = 0; i < children.length; i++)
 			children[i] = new ItergameState();
 		while (current <= end) {
-			if (current % STEP_SIZE == 0)
-				t.calculated(STEP_SIZE);
+			if (current % stepSize == 0)
+				t.calculated(stepSize);
 			PrimitiveValue pv = game.primitiveValue();
 			if (pv.equals(PrimitiveValue.UNDECIDED)) {
 				int len = game.validMoves(children);

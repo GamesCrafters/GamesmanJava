@@ -200,7 +200,7 @@ public class LocalizedPage {
 	public void loadPage(Database db, long firstGroup, int numGroups) {
 		this.numGroups = numGroups;
 		this.firstGroup = firstGroup;
-		synchronized (db) {
+//		synchronized (db) {
 			if (conf.recordGroupUsesLong) {
 				LongIterator it = db.getLongRecordGroups(firstGroup
 						* conf.recordGroupByteLength, (int) Math.min(numGroups,
@@ -214,7 +214,7 @@ public class LocalizedPage {
 				for (int off = 0; off < numGroups; off++)
 					setGroup(off, it.next());
 			}
-		}
+//		}
 		dirty = false;
 		for (int i = 0; i < rawRecords.length; i++) {
 			used[i] = 0;

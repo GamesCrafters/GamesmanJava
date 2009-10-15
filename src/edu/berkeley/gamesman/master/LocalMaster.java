@@ -59,7 +59,7 @@ public final class LocalMaster implements Master, TaskFactory {
 
 		database.initialize(conf.getProperty("gamesman.db.uri"), inconf);
 
-		solver.initialize(database);
+		solver.initialize(conf);
 
 		assert Util
 				.debug(DebugFacility.MASTER, "Done initializing LocalMaster");
