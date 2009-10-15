@@ -167,7 +167,6 @@ public class TierSolver<T> extends Solver {
 			this.index = nextIndex++;
 		}
 
-		@SuppressWarnings("synthetic-access")
 		public void conquer() {
 			assert Util.debug(DebugFacility.SOLVER, "Started the solver... ("
 					+ index + ")");
@@ -175,11 +174,13 @@ public class TierSolver<T> extends Solver {
 					"Solver (" + index + "): " + myGame.toString());
 
 			Pair<Long, Long> slice;
+			int lastTier = tier;
 			while ((slice = nextSlice(conf)) != null) {
 				assert Util.debug(DebugFacility.THREADING,
 						"Beginning to solve slice " + slice + " in thread "
-								+ index + " for tier " + tier);
+								+ index + " for tier " + lastTier);
 				solvePartialTier(conf, slice.car, slice.cdr, updater);
+				lastTier = tier;
 			}
 
 			try {
