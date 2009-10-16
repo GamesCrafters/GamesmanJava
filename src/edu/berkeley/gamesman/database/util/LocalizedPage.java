@@ -10,9 +10,9 @@ import edu.berkeley.gamesman.util.LongIterator;
 import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 public class LocalizedPage {
-	private final long[] longGroups;
+	private long[] longGroups;
 
-	private final BigInteger[] bigIntGroups;
+	private BigInteger[] bigIntGroups;
 
 	public int numGroups;
 
@@ -62,16 +62,9 @@ public class LocalizedPage {
 		}
 	}
 
-	public LocalizedPage(Configuration conf, int pageSize, int groupsRemembered) {
+	public LocalizedPage(Configuration conf, int groupsRemembered) {
 		this.conf = conf;
-		numGroups = pageSize;
-		if (conf.recordGroupUsesLong) {
-			longGroups = new long[pageSize];
-			bigIntGroups = null;
-		} else {
-			bigIntGroups = new BigInteger[pageSize];
-			longGroups = null;
-		}
+		numGroups = 0;
 		rawRecords = new Record[groupsRemembered][conf.recordsPerGroup];
 		used = new long[groupsRemembered];
 		lastIndex = new int[groupsRemembered];
@@ -200,21 +193,26 @@ public class LocalizedPage {
 	public void loadPage(Database db, long firstGroup, int numGroups) {
 		this.numGroups = numGroups;
 		this.firstGroup = firstGroup;
-//		synchronized (db) {
+		synchronized (db) {
 			if (conf.recordGroupUsesLong) {
+				if (longGroups == null || longGroups.length < numGroups)
+					longGroups = new long[numGroups];
 				LongIterator it = db.getLongRecordGroups(firstGroup
 						* conf.recordGroupByteLength, (int) Math.min(numGroups,
 						conf.getHasher().numHashes() - firstGroup));
 				for (int off = 0; off < numGroups; off++)
 					setGroup(off, it.next());
 			} else {
+				if (bigIntGroups == null || bigIntGroups.length < numGroups) {
+					bigIntGroups = new BigInteger[numGroups];
+				}
 				Iterator<BigInteger> it = db.getBigIntRecordGroups(firstGroup
 						* conf.recordGroupByteLength, (int) Math.min(numGroups,
 						conf.getHasher().numHashes() - firstGroup));
 				for (int off = 0; off < numGroups; off++)
 					setGroup(off, it.next());
 			}
-//		}
+		}
 		dirty = false;
 		for (int i = 0; i < rawRecords.length; i++) {
 			used[i] = 0;

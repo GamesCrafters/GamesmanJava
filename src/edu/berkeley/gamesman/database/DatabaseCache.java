@@ -243,7 +243,7 @@ public class DatabaseCache extends Database {
 			Arrays.fill(u, 0);
 		for (DelocalizedPage[] pages : records) {
 			for (int i = 0; i < pages.length; i++) {
-				pages[i] = new DelocalizedPage(conf, pageSize);
+				pages[i] = new DelocalizedPage(conf);
 			}
 		}
 		int bytesUsed = 48; // Size of this class

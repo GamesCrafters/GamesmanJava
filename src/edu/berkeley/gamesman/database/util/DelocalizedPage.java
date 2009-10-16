@@ -10,11 +10,11 @@ import edu.berkeley.gamesman.util.LongIterator;
 import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 public class DelocalizedPage {
-	private final long[] longGroups;
+	private long[] longGroups;
 
 	public int numGroups;
 
-	private final BigInteger[] bigIntGroups;
+	private BigInteger[] bigIntGroups;
 
 	public long firstGroup;
 
@@ -52,17 +52,9 @@ public class DelocalizedPage {
 		}
 	}
 
-	public DelocalizedPage(Configuration conf, int pageSize) {
+	public DelocalizedPage(Configuration conf) {
+		numGroups = 0;
 		this.conf = conf;
-		if (conf.recordGroupUsesLong) {
-			longGroups = new long[pageSize];
-			bigIntGroups = null;
-		} else {
-			bigIntGroups = new BigInteger[pageSize];
-			longGroups = null;
-		}
-		numGroups = pageSize;
-		firstGroup = -numGroups;
 	}
 
 	public void get(int offset, int recordNum, Record rec) {
@@ -109,11 +101,15 @@ public class DelocalizedPage {
 		this.numGroups = numGroups;
 		synchronized (db) {
 			if (conf.recordGroupUsesLong) {
+				if (longGroups == null || longGroups.length < numGroups)
+					longGroups = new long[numGroups];
 				LongIterator it = db.getLongRecordGroups(firstGroup
 						* conf.recordGroupByteLength, numGroups);
 				for (int off = 0; off < numGroups; off++)
 					setGroup(off, it.next());
 			} else {
+				if (bigIntGroups == null || bigIntGroups.length < numGroups)
+					bigIntGroups = new BigInteger[numGroups];
 				Iterator<BigInteger> it = db.getBigIntRecordGroups(firstGroup
 						* conf.recordGroupByteLength, numGroups);
 				for (int off = 0; off < numGroups; off++)

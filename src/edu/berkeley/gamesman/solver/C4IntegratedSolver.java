@@ -28,14 +28,14 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 				100000 / childPages.length);
 		int pageSize = DelocalizedPage.numGroups(conf, pageBytes);
 		int writeLen = (int) (end / conf.recordsPerGroup - currentGroup + 1);
-		LocalizedPage writePage = new LocalizedPage(conf, writeLen, 1);
+		LocalizedPage writePage = new LocalizedPage(conf, 1);
 		assert Util.debug(DebugFacility.SOLVER, "Loading " + currentGroup
 				+ " - " + (currentGroup + writeLen - 1) + " for write");
 		writePage.loadPage(db, currentGroup, writeLen);
 		boolean hasRemoteness = conf.containsField(RecordFields.REMOTENESS);
 		for (int i = 0; i < children.length; i++) {
 			children[i] = new ItergameState();
-			childPages[i] = new DelocalizedPage(conf, pageSize);
+			childPages[i] = new DelocalizedPage(conf);
 		}
 		while (current <= end) {
 			if (current % STEP_SIZE == 0)
