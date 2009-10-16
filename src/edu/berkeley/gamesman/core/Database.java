@@ -374,8 +374,7 @@ public abstract class Database {
 		}
 	}
 
-	private class BigIntRecordGroupByteIterator implements
-			Iterator<BigInteger> {
+	private class BigIntRecordGroupByteIterator implements Iterator<BigInteger> {
 		private int onByte = 0;
 
 		private int groupCount = 0;
@@ -588,19 +587,69 @@ public abstract class Database {
 		putBytes(loc, groups, 0, groupsLength);
 	}
 
+	/**
+	 * Seek to this location and write len bytes from an array into the database
+	 * 
+	 * @param loc
+	 *            The location to seek to
+	 * @param arr
+	 *            An array to read from
+	 * @param off
+	 *            The offset into the array
+	 * @param len
+	 *            The number of bytes to write
+	 */
 	public synchronized void putBytes(long loc, byte[] arr, int off, int len) {
 		seek(loc);
 		putBytes(arr, off, len);
 	}
 
+	/**
+	 * Seek to this location and read len bytes from the database into an array
+	 * 
+	 * @param loc
+	 *            The location to seek to
+	 * @param arr
+	 *            The array to write to
+	 * @param off
+	 *            The offset into the array
+	 * @param len
+	 *            The number of bytes to read
+	 */
 	public synchronized void getBytes(long loc, byte[] arr, int off, int len) {
 		seek(loc);
 		getBytes(arr, off, len);
 	}
 
+	/**
+	 * Seek to this location in the database
+	 * 
+	 * @param loc
+	 *            The location to seek to
+	 */
 	public abstract void seek(long loc);
 
+	/**
+	 * Writes len bytes from the array into the database
+	 * 
+	 * @param arr
+	 *            An array to read from
+	 * @param off
+	 *            The offset into the array
+	 * @param len
+	 *            The number of bytes to write
+	 */
 	public abstract void putBytes(byte[] arr, int off, int len);
 
+	/**
+	 * Reads len bytes from the database into an array
+	 * 
+	 * @param arr
+	 *            An array to write to
+	 * @param off
+	 *            The offset into the array
+	 * @param len
+	 *            The number of bytes to read
+	 */
 	public abstract void getBytes(byte[] arr, int off, int len);
 }

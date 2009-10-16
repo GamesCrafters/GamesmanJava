@@ -13,8 +13,6 @@ import java.util.Random;
 import java.io.*;
 import java.nio.ByteBuffer;
 
-import edu.berkeley.gamesman.database.MemoryDatabase;
-
 /**
  * Immutable arbitrary-precision integers. All operations behave as if
  * BigIntegers were represented in two's-complement notation (like Java's
@@ -980,6 +978,29 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
 		}
 	}
 
+	/**
+	 * Translates the sign-magnitude representation of a BigInteger into a
+	 * BigInteger. The sign is represented as an integer signum value: -1 for
+	 * negative, 0 for zero, or 1 for positive. The magnitude is a byte array in
+	 * <i>big-endian</i> byte-order: the most significant byte is in the zeroth
+	 * element. A zero-length magnitude array is permissible, and will result
+	 * inin a BigInteger value of 0, whether signum is -1, 0 or 1.
+	 * 
+	 * @param signum
+	 *            signum of the number (-1 for negative, 0 for zero, 1 for
+	 *            positive).
+	 * @param magnitude
+	 *            big-endian binary representation of the magnitude of the
+	 *            number.
+	 * @param offset
+	 *            The offset into magnitude
+	 * @param len
+	 *            The number of bytes to use from magnitude
+	 * @throws NumberFormatException
+	 *             <tt>signum</tt> is not one of the three legal values (-1, 0,
+	 *             and 1), or <tt>signum</tt> is 0 and <tt>magnitude</tt>
+	 *             contains one or more non-zero bytes.
+	 */
 	public BigInteger(int signum, byte[] magnitude, int offset, int len) {
 		this.mag = stripLeadingZeroBytes(magnitude, offset, len);
 

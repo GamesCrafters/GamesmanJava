@@ -1,12 +1,17 @@
 package edu.berkeley.gamesman.solver;
 
 import edu.berkeley.gamesman.core.*;
-import edu.berkeley.gamesman.database.util.DelocalizedPage;
+import edu.berkeley.gamesman.database.util.Page;
 import edu.berkeley.gamesman.database.util.LocalizedPage;
 import edu.berkeley.gamesman.game.Connect4;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
+/**
+ * Solves Connect 4 using the most efficient possible cache and cache settings
+ * 
+ * @author dnspies
+ */
 public class C4IntegratedSolver extends TierSolver<ItergameState> {
 	@Override
 	protected void solvePartialTier(Configuration conf, long start, long end,
@@ -23,7 +28,7 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 			vals[i] = game.newRecord();
 		Record prim = game.newRecord();
 		ItergameState[] children = new ItergameState[game.maxChildren()];
-		DelocalizedPage[] childPages = new DelocalizedPage[game.maxChildren()];
+		Page[] childPages = new Page[game.maxChildren()];
 		int pageBytes = conf.getInteger("gamesman.db.pageSize",
 				100000 / childPages.length);
 		int pageSize = pageBytes / conf.recordGroupByteLength;
@@ -35,7 +40,7 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 		boolean hasRemoteness = conf.containsField(RecordFields.REMOTENESS);
 		for (int i = 0; i < children.length; i++) {
 			children[i] = new ItergameState();
-			childPages[i] = new DelocalizedPage(conf);
+			childPages[i] = new Page(conf);
 		}
 		while (current <= end) {
 			if (current % STEP_SIZE == 0)

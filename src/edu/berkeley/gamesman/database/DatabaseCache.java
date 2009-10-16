@@ -4,8 +4,7 @@ import java.util.Arrays;
 
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Record;
-import edu.berkeley.gamesman.database.util.DelocalizedPage;
-import edu.berkeley.gamesman.database.util.LocalizedPage;
+import edu.berkeley.gamesman.database.util.Page;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
@@ -16,7 +15,7 @@ import edu.berkeley.gamesman.util.Util;
  */
 public final class DatabaseCache extends Database {
 
-	private DelocalizedPage[][] records;
+	private Page[][] records;
 
 	private int indexBits, indices;
 
@@ -211,34 +210,28 @@ public final class DatabaseCache extends Database {
 		}
 		int totalBytes = conf.getInteger("gamesman.db.cacheSize", 67108864);
 		int pageBytes = conf.getInteger("gamesman.db.pageSize", 16384);
-		pageSize = LocalizedPage.numGroups(conf, pageBytes);
+		pageSize = pageBytes / conf.recordGroupByteLength;
 		offsetBits = (int) (Math.log(pageSize) / Math.log(2));
 		pageSize = 1 << offsetBits;
 		nWayAssociative = conf.getInteger("gamesman.db.nWayAssociative", 4);
-		pageBytes = LocalizedPage.byteSize(conf, pageSize);
+		pageBytes = pageSize * conf.recordGroupByteLength;
 		indices = totalBytes / (pageBytes * nWayAssociative);
 		indexBits = (int) (Math.log(indices) / Math.log(2));
 		indices = 1 << indexBits;
-		records = new DelocalizedPage[indices][nWayAssociative];
+		records = new Page[indices][nWayAssociative];
 		tags = new long[indices][nWayAssociative];
 		used = new long[indices][nWayAssociative];
 		current = new long[indices];
 		Arrays.fill(current, 0);
 		for (long[] u : used)
 			Arrays.fill(u, 0);
-		for (DelocalizedPage[] pages : records) {
+		for (Page[] pages : records) {
 			for (int i = 0; i < pages.length; i++) {
-				pages[i] = new DelocalizedPage(conf);
+				pages[i] = new Page(conf);
 			}
 		}
-		int bytesUsed = 48; // Size of this class
-		bytesUsed += 3 * (12 + indices * 4 + 7) / 8 * 8;
-		bytesUsed += indices * (12 + nWayAssociative * 4 + 7) / 8 * 8;
-		bytesUsed += indices * nWayAssociative
-				* LocalizedPage.byteSize(conf, pageSize);
-		bytesUsed += 2 * indices * (12 + nWayAssociative * 8 + 7) / 8 * 8;
-		bytesUsed += (12 + indices * 8 + 7) / 8 * 8;
-		System.out.println("Using " + bytesUsed + " bytes for cache");
+		System.out.println("Using " + indices * nWayAssociative * pageBytes
+				+ " bytes for cache");
 		assert Util.debug(DebugFacility.DATABASE, "Pages contain " + pageSize
 				+ " record groups");
 		assert Util.debug(DebugFacility.DATABASE, "There are " + indices

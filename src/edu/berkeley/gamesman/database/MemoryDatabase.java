@@ -40,7 +40,7 @@ public class MemoryDatabase extends Database {
 
 	// and not closed.
 
-	public int nextPlace = 0;
+	private int nextPlace = 0;
 
 	/**
 	 * Null Constructor, used primarily for testing. It doesn't set anything

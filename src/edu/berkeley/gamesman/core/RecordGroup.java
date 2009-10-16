@@ -21,6 +21,7 @@ public abstract class RecordGroup {
 	 *            The byte representation of this RecordGroup
 	 * @param offset
 	 *            The offset at which to start reading
+	 * @return A long representing the created RecordGroup
 	 */
 	public static long longRecordGroup(Configuration conf, byte[] values,
 			int offset) {
@@ -32,6 +33,15 @@ public abstract class RecordGroup {
 		return longValues;
 	}
 
+	/**
+	 * @param conf
+	 *            The configuration object.
+	 * @param values
+	 *            The byte representation of this RecordGroup
+	 * @param offset
+	 *            The offset at which to start reading
+	 * @return A BigInteger representing the created RecordGroup
+	 */
 	public static BigInteger bigIntRecordGroup(Configuration conf,
 			byte[] values, int offset) {
 		return new BigInteger(1, values, offset, conf.recordGroupByteLength);
@@ -44,6 +54,7 @@ public abstract class RecordGroup {
 	 *            The records array
 	 * @param offset
 	 *            The offset into the array. len = conf.recordsPerGroup
+	 * @return A long representing the created RecordGroup
 	 */
 	public static long longRecordGroup(Configuration conf, Record[] recs,
 			int offset) {
@@ -53,6 +64,15 @@ public abstract class RecordGroup {
 		return longValues;
 	}
 
+	/**
+	 * @param conf
+	 *            Creates a RecordGroup from the given configuration and records
+	 * @param recs
+	 *            The records array
+	 * @param offset
+	 *            The offset into the array. len = conf.recordsPerGroup
+	 * @return A BigInteger representing the created RecordGroup
+	 */
 	public static BigInteger bigIntRecordGroup(Configuration conf,
 			Record[] recs, int offset) {
 		BigInteger values = BigInteger.ZERO;
@@ -67,6 +87,7 @@ public abstract class RecordGroup {
 	 *            The configuration object
 	 * @param recordIterator
 	 *            An iterator over the records to use to construct this group
+	 * @return A long representing the created RecordGroup
 	 */
 	public static long longRecordGroup(Configuration conf,
 			Iterator<Record> recordIterator) {
@@ -77,6 +98,13 @@ public abstract class RecordGroup {
 		return longValues;
 	}
 
+	/**
+	 * @param conf
+	 *            The configuration object
+	 * @param recordIterator
+	 *            An iterator over the records to use to construct this group
+	 * @return A BigInteger representing the created RecordGroup
+	 */
 	public static BigInteger bigIntRecordGroup(Configuration conf,
 			Iterator<Record> recordIterator) {
 		BigInteger values = BigInteger.ZERO;
@@ -89,6 +117,10 @@ public abstract class RecordGroup {
 	}
 
 	/**
+	 * @param conf
+	 *            The configuration object
+	 * @param recordGroup
+	 *            The Record Group
 	 * @param num
 	 *            The index of the desired record
 	 * @return The record
@@ -99,6 +131,15 @@ public abstract class RecordGroup {
 				recordGroup / conf.longMultipliers[num] % conf.totalStates);
 	}
 
+	/**
+	 * @param conf
+	 *            The configuration object
+	 * @param recordGroup
+	 *            The Record Group
+	 * @param num
+	 *            The index of the desired record
+	 * @return The record
+	 */
 	public static Record getRecord(Configuration conf, BigInteger recordGroup,
 			int num) {
 		return conf.getGame().newRecord(
@@ -109,6 +150,10 @@ public abstract class RecordGroup {
 	/**
 	 * Sets the records in this group to Records from recs
 	 * 
+	 * @param conf
+	 *            The configuration object
+	 * @param recordGroup
+	 *            The Record Group
 	 * @param recs
 	 *            An array of records to use
 	 * @param offset
@@ -123,6 +168,18 @@ public abstract class RecordGroup {
 		}
 	}
 
+	/**
+	 * Sets the records in this group to Records from recs
+	 * 
+	 * @param conf
+	 *            The configuration object
+	 * @param recordGroup
+	 *            The Record Group
+	 * @param recs
+	 *            An array of records to use
+	 * @param offset
+	 *            The offset into the array
+	 */
 	public static void getRecords(Configuration conf, BigInteger recordGroup,
 			Record[] recs, int offset) {
 		for (int i = 0; i < conf.recordsPerGroup; i++) {
@@ -135,10 +192,15 @@ public abstract class RecordGroup {
 	/**
 	 * Changes a single record in the group.
 	 * 
+	 * @param conf
+	 *            The configuration object
+	 * @param recordGroup
+	 *            The Record Group
 	 * @param num
 	 *            The record to change
 	 * @param r
 	 *            The values to change it to
+	 * @return The resulting Record Group
 	 */
 	public static long setRecord(Configuration conf, long recordGroup, int num,
 			Record r) {
@@ -150,6 +212,19 @@ public abstract class RecordGroup {
 		return recordGroup;
 	}
 
+	/**
+	 * Changes a single record in the group.
+	 * 
+	 * @param conf
+	 *            The configuration object
+	 * @param recordGroup
+	 *            The Record Group
+	 * @param num
+	 *            The record to change
+	 * @param r
+	 *            The values to change it to
+	 * @return The resulting Record Group
+	 */
 	public static BigInteger setRecord(Configuration conf,
 			BigInteger recordGroup, int num, Record r) {
 		BigInteger multiplier = conf.multipliers[num];
@@ -161,6 +236,10 @@ public abstract class RecordGroup {
 	}
 
 	/**
+	 * @param conf
+	 *            The configuration object
+	 * @param recordGroup
+	 *            The Record Group
 	 * @param num
 	 *            The index of the desired record
 	 * @param r
@@ -171,6 +250,16 @@ public abstract class RecordGroup {
 		r.set(recordGroup / conf.longMultipliers[num] % conf.totalStates);
 	}
 
+	/**
+	 * @param conf
+	 *            The configuration object
+	 * @param recordGroup
+	 *            The Record Group
+	 * @param num
+	 *            The index of the desired record
+	 * @param r
+	 *            The Record to store in.
+	 */
 	public static void getRecord(Configuration conf, BigInteger recordGroup,
 			int num, Record r) {
 		r.set(recordGroup.divide(conf.multipliers[num]).mod(
@@ -179,6 +268,11 @@ public abstract class RecordGroup {
 
 	/**
 	 * Outputs the bytes from this RecordGroup into output
+	 * 
+	 * @param conf
+	 *            The configuration object
+	 * @param recordGroup
+	 *            The Record Group
 	 * 
 	 * @param output
 	 *            A ByteBuffer to output to
@@ -189,6 +283,17 @@ public abstract class RecordGroup {
 			output.put((byte) (recordGroup >>> i));
 	}
 
+	/**
+	 * Outputs the bytes from this RecordGroup into output
+	 * 
+	 * @param conf
+	 *            The configuration object
+	 * @param recordGroup
+	 *            The Record Group
+	 * 
+	 * @param output
+	 *            A ByteBuffer to output to
+	 */
 	public static void outputUnsignedBytes(Configuration conf,
 			BigInteger recordGroup, ByteBuffer output) {
 		recordGroup.outputUnsignedBytes(output, conf.recordGroupByteLength);
@@ -197,6 +302,10 @@ public abstract class RecordGroup {
 	/**
 	 * Outputs the bytes from this RecordGroup into byteArray
 	 * 
+	 * @param conf
+	 *            The configuration object
+	 * @param recordGroup
+	 *            The Record Group
 	 * @param byteArray
 	 *            The byte array to output to
 	 * @param offset
@@ -210,6 +319,18 @@ public abstract class RecordGroup {
 		}
 	}
 
+	/**
+	 * Outputs the bytes from this RecordGroup into byteArray
+	 * 
+	 * @param conf
+	 *            The configuration object
+	 * @param recordGroup
+	 *            The Record Group
+	 * @param byteArray
+	 *            The byte array to output to
+	 * @param offset
+	 *            The offset into byteArray
+	 */
 	public static void toUnsignedByteArray(Configuration conf,
 			BigInteger recordGroup, byte[] byteArray, int offset) {
 		recordGroup.toUnsignedByteArray(byteArray, offset,
@@ -219,6 +340,10 @@ public abstract class RecordGroup {
 	/**
 	 * Outputs the bytes from this RecordGroup into output
 	 * 
+	 * @param conf
+	 *            The configuration object
+	 * @param recordGroup
+	 *            The Record Group
 	 * @param output
 	 *            A DataOutput to output to
 	 * @throws IOException
@@ -230,6 +355,18 @@ public abstract class RecordGroup {
 			output.write((int) (recordGroup >>> i));
 	}
 
+	/**
+	 * Outputs the bytes from this RecordGroup into output
+	 * 
+	 * @param conf
+	 *            The configuration object
+	 * @param recordGroup
+	 *            The Record Group
+	 * @param output
+	 *            A DataOutput to output to
+	 * @throws IOException
+	 *             If output throws an IOException
+	 */
 	public static void outputUnsignedBytes(Configuration conf,
 			BigInteger recordGroup, DataOutput output) throws IOException {
 		recordGroup.outputUnsignedBytes(output, conf.recordGroupByteLength);
@@ -238,6 +375,10 @@ public abstract class RecordGroup {
 	/**
 	 * Outputs the bytes from this RecordGroup into output
 	 * 
+	 * @param conf
+	 *            The configuration object
+	 * @param recordGroup
+	 *            The Record Group
 	 * @param output
 	 *            An OutputStream to output to
 	 * @throws IOException
@@ -249,6 +390,18 @@ public abstract class RecordGroup {
 			output.write((int) (recordGroup >>> i));
 	}
 
+	/**
+	 * Outputs the bytes from this RecordGroup into output
+	 * 
+	 * @param conf
+	 *            The configuration object
+	 * @param recordGroup
+	 *            The Record Group
+	 * @param output
+	 *            An OutputStream to output to
+	 * @throws IOException
+	 *             If output throws an IOException
+	 */
 	public static void outputUnsignedBytes(Configuration conf,
 			BigInteger recordGroup, OutputStream output) throws IOException {
 		recordGroup.outputUnsignedBytes(output, conf.recordGroupByteLength);

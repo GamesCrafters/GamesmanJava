@@ -67,6 +67,10 @@ public class Configuration {
 	 */
 	public final int recordGroupByteLength;
 
+	/**
+	 * Whether the record group size is small enough to fit in a long. If this
+	 * is not true, solving is slowed immensely
+	 */
 	public final boolean recordGroupUsesLong;
 
 	/**

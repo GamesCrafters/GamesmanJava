@@ -32,6 +32,9 @@ public final class Connect4 extends TieredIterGame {
 
 	private final long[] moveArrangement;
 
+	/**
+	 * A list of the columns which are not full
+	 */
 	public final int[] openColumn;
 
 	private final long[] children;
