@@ -16,6 +16,10 @@ public abstract class Database {
 
 	protected Configuration conf;
 
+	private byte[] groups;
+
+	private int maxBytes;
+
 	/**
 	 * Initialize a Database given a URI and a Configuration. This method may
 	 * either open an existing database or create a new one. If a new one is
@@ -39,6 +43,7 @@ public abstract class Database {
 	 */
 	public final void initialize(String uri, Configuration config) {
 		conf = config;
+		maxBytes = 1024 - 1024 % conf.recordGroupByteLength;
 		initialize(uri);
 	}
 
@@ -199,33 +204,59 @@ public abstract class Database {
 	 *            The index of the byte the group begins on
 	 * @return The group beginning at loc
 	 */
-	public abstract long getLongRecordGroup(long loc);
-
-	public abstract BigInteger getBigIntRecordGroup(long loc);
-
-	/**
-	 * @param startLoc
-	 *            The location to start at
-	 * @param numGroups
-	 *            The number of groups to return
-	 * @return An iterator over numGroups RecordGroups from this database
-	 */
-	public Iterator<BigInteger> getBigIntRecordGroups(long startLoc,
-			int numGroups) {
-		throw new UnsupportedOperationException(
-				"getRecordGroups should be overridden");
+	public synchronized long getLongRecordGroup(long loc) {
+		int groupsLength = conf.recordGroupByteLength;
+		if (groups == null || groups.length < groupsLength)
+			groups = new byte[groupsLength];
+		getBytes(loc, groups, 0, groupsLength);
+		long v = RecordGroup.longRecordGroup(conf, groups, 0);
+		return v;
 	}
 
 	/**
-	 * @param startLoc
+	 * @param loc
+	 *            The index of the byte the group begins on
+	 * @return The group beginning at loc
+	 */
+	public synchronized BigInteger getBigIntRecordGroup(long loc) {
+		int groupsLength = conf.recordGroupByteLength;
+		if (groups == null || groups.length < groupsLength)
+			groups = new byte[groupsLength];
+		getBytes(loc, groups, 0, groupsLength);
+		BigInteger v = RecordGroup.bigIntRecordGroup(conf, groups, 0);
+		return v;
+	}
+
+	/**
+	 * @param loc
 	 *            The location to start at
 	 * @param numGroups
 	 *            The number of groups to return
 	 * @return An iterator over numGroups RecordGroups from this database
 	 */
-	public LongIterator getLongRecordGroups(long startLoc, int numGroups) {
-		throw new UnsupportedOperationException(
-				"getRecordGroups should be overridden");
+	public synchronized Iterator<BigInteger> getBigIntRecordGroups(long loc,
+			int numGroups) {
+		int groupsLength = Math.min(maxBytes, numGroups
+				* conf.recordGroupByteLength);
+		if (groups == null || groups.length < groupsLength)
+			groups = new byte[groupsLength];
+		return new BigIntRecordGroupByteIterator(numGroups);
+	}
+
+	/**
+	 * @param loc
+	 *            The location to start at
+	 * @param numGroups
+	 *            The number of groups to return
+	 * @return An iterator over numGroups RecordGroups from this database
+	 */
+	public LongIterator getLongRecordGroups(long loc, int numGroups) {
+		int groupsLength = Math.min(maxBytes, numGroups
+				* conf.recordGroupByteLength);
+		if (groups == null || groups.length < groupsLength)
+			groups = new byte[groupsLength];
+		getBytes(loc, groups, 0, groupsLength);
+		return new LongRecordGroupByteIterator(numGroups);
 	}
 
 	/**
@@ -234,40 +265,26 @@ public abstract class Database {
 	 * @param rg
 	 *            The record group to store
 	 */
-	public abstract void putRecordGroup(long loc, long rg);
-
-	public abstract void putRecordGroup(long loc, BigInteger rg);
-
-	/**
-	 * Puts numGroups RecordGroups into this database starting at location loc
-	 * (loc is measured in bytes).
-	 * 
-	 * @param loc
-	 *            The location to start at
-	 * @param it
-	 *            An iterator over at least numGroups RecordGroups
-	 * @param numGroups
-	 *            The number of groups to store
-	 */
-	public void putRecordGroups(long loc, LongIterator it, int numGroups) {
-		throw new UnsupportedOperationException(
-				"putRecordGroups should be overridden");
+	public void putRecordGroup(long loc, long rg) {
+		int groupsLength = conf.recordGroupByteLength;
+		if (groups == null || groups.length < groupsLength)
+			groups = new byte[groupsLength];
+		RecordGroup.toUnsignedByteArray(conf, rg, groups, 0);
+		putBytes(loc, groups, 0, groupsLength);
 	}
 
 	/**
-	 * Puts numGroups RecordGroups into this database starting at location loc
-	 * (loc is measured in bytes).
-	 * 
 	 * @param loc
-	 *            The location to start at
-	 * @param it
-	 *            An iterator over at least numGroups RecordGroups
-	 * @param numGroups
-	 *            The number of groups to store
+	 *            The index of the byte the group begins on
+	 * @param rg
+	 *            The record group to store
 	 */
-	public void putRecordGroups(long loc, Iterator<BigInteger> it, int numGroups) {
-		throw new UnsupportedOperationException(
-				"putRecordGroups should be overridden");
+	public void putRecordGroup(long loc, BigInteger rg) {
+		int groupsLength = conf.recordGroupByteLength;
+		if (groups == null || groups.length < groupsLength)
+			groups = new byte[groupsLength];
+		RecordGroup.toUnsignedByteArray(conf, rg, groups, 0);
+		putBytes(loc, groups, 0, groupsLength);
 	}
 
 	/**
@@ -292,7 +309,7 @@ public abstract class Database {
 			this.recordIterator = recordIterator;
 		}
 
-		public LongRecordGroupIterator(Record[] records, int offset, int length) {
+		private LongRecordGroupIterator(Record[] records, int offset, int length) {
 			this.records = records;
 			this.stop = offset + length;
 			this.index = offset;
@@ -312,10 +329,6 @@ public abstract class Database {
 				return rg;
 			} else
 				return RecordGroup.longRecordGroup(conf, recordIterator);
-		}
-
-		public void remove() {
-			throw new UnsupportedOperationException("remove() not supported");
 		}
 	}
 
@@ -361,6 +374,70 @@ public abstract class Database {
 		}
 	}
 
+	private class BigIntRecordGroupByteIterator implements
+			Iterator<BigInteger> {
+		private int onByte = 0;
+
+		private int groupCount = 0;
+
+		private int totalGroups;
+
+		private BigIntRecordGroupByteIterator(int numGroups) {
+			totalGroups = numGroups;
+		}
+
+		public boolean hasNext() {
+			return groupCount < totalGroups;
+		}
+
+		public BigInteger next() {
+			if (onByte == maxBytes) {
+				int nextBytes = Math.min((totalGroups - groupCount)
+						* conf.recordGroupByteLength, maxBytes);
+				getBytes(groups, 0, nextBytes);
+				onByte = 0;
+			}
+			BigInteger result = RecordGroup.bigIntRecordGroup(conf, groups,
+					onByte);
+			onByte += conf.recordGroupByteLength;
+			++groupCount;
+			return result;
+		}
+
+		public void remove() {
+			throw new UnsupportedOperationException();
+		}
+	}
+
+	private class LongRecordGroupByteIterator implements LongIterator {
+		private int onByte = 0;
+
+		private int groupCount = 0;
+
+		private int totalGroups;
+
+		private LongRecordGroupByteIterator(int numGroups) {
+			totalGroups = numGroups;
+		}
+
+		public boolean hasNext() {
+			return groupCount < totalGroups;
+		}
+
+		public long next() {
+			if (onByte == maxBytes) {
+				int nextBytes = Math.min((totalGroups - groupCount)
+						* conf.recordGroupByteLength, maxBytes);
+				getBytes(groups, 0, nextBytes);
+				onByte = 0;
+			}
+			long result = RecordGroup.longRecordGroup(conf, groups, onByte);
+			onByte += conf.recordGroupByteLength;
+			++groupCount;
+			return result;
+		}
+	}
+
 	private class RecordIterator implements Iterator<Record> {
 		private final Record[] currentRecords;
 
@@ -368,7 +445,7 @@ public abstract class Database {
 
 		private final long numRecords;
 
-		int index;
+		private int index;
 
 		private LongIterator longRecordGroups;
 
@@ -460,4 +537,70 @@ public abstract class Database {
 			putRecord(recordIndex++, records[offset++]);
 		}
 	}
+
+	/**
+	 * Puts numGroups RecordGroups into this database starting at location loc
+	 * (loc is measured in bytes).
+	 * 
+	 * @param loc
+	 *            The location to start at
+	 * @param recordGroups
+	 *            An iterator over at least numGroups RecordGroups
+	 * @param numGroups
+	 *            The number of groups to store
+	 */
+	public synchronized void putRecordGroups(long loc,
+			LongIterator recordGroups, int numGroups) {
+		int groupsLength = numGroups * conf.recordGroupByteLength;
+		if (groups == null || groups.length < groupsLength)
+			groups = new byte[groupsLength];
+		int onByte = 0;
+		for (int i = 0; i < numGroups; i++) {
+			RecordGroup.toUnsignedByteArray(conf, recordGroups.next(), groups,
+					onByte);
+			onByte += conf.recordGroupByteLength;
+		}
+		putBytes(loc, groups, 0, groupsLength);
+	}
+
+	/**
+	 * Puts numGroups RecordGroups into this database starting at location loc
+	 * (loc is measured in bytes).
+	 * 
+	 * @param loc
+	 *            The location to start at
+	 * @param recordGroups
+	 *            An iterator over at least numGroups RecordGroups
+	 * @param numGroups
+	 *            The number of groups to store
+	 */
+	public synchronized void putRecordGroups(long loc,
+			Iterator<BigInteger> recordGroups, int numGroups) {
+		int groupsLength = numGroups * conf.recordGroupByteLength;
+		if (groups == null || groups.length < groupsLength)
+			groups = new byte[groupsLength];
+		int onByte = 0;
+		for (int i = 0; i < numGroups; i++) {
+			RecordGroup.toUnsignedByteArray(conf, recordGroups.next(), groups,
+					onByte);
+			onByte += conf.recordGroupByteLength;
+		}
+		putBytes(loc, groups, 0, groupsLength);
+	}
+
+	public synchronized void putBytes(long loc, byte[] arr, int off, int len) {
+		seek(loc);
+		putBytes(arr, off, len);
+	}
+
+	public synchronized void getBytes(long loc, byte[] arr, int off, int len) {
+		seek(loc);
+		getBytes(arr, off, len);
+	}
+
+	public abstract void seek(long loc);
+
+	public abstract void putBytes(byte[] arr, int off, int len);
+
+	public abstract void getBytes(byte[] arr, int off, int len);
 }

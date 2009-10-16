@@ -6,7 +6,6 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 
-import edu.berkeley.gamesman.database.MemoryDatabase;
 import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 /**
@@ -20,18 +19,22 @@ public abstract class RecordGroup {
 	 *            The configuration object.
 	 * @param values
 	 *            The byte representation of this RecordGroup
+	 * @param offset
+	 *            The offset at which to start reading
 	 */
-	public static long longRecordGroup(Configuration conf, byte[] values) {
+	public static long longRecordGroup(Configuration conf, byte[] values,
+			int offset) {
 		long longValues = 0;
 		for (int i = 0; i < conf.recordGroupByteLength; i++) {
 			longValues <<= 8;
-			longValues |= (values[i] & 255L);
+			longValues |= (values[offset++] & 255L);
 		}
 		return longValues;
 	}
 
-	public static BigInteger bigIntRecordGroup(Configuration conf, byte[] values) {
-		return new BigInteger(1, values);
+	public static BigInteger bigIntRecordGroup(Configuration conf,
+			byte[] values, int offset) {
+		return new BigInteger(1, values, offset, conf.recordGroupByteLength);
 	}
 
 	/**
@@ -230,28 +233,6 @@ public abstract class RecordGroup {
 	public static void outputUnsignedBytes(Configuration conf,
 			BigInteger recordGroup, DataOutput output) throws IOException {
 		recordGroup.outputUnsignedBytes(output, conf.recordGroupByteLength);
-	}
-
-	/**
-	 * Outputs the bytes from this RecordGroup into output
-	 * 
-	 * @param output
-	 *            A MemoryDatabase to output to
-	 * @param offset
-	 *            The offset into the MemoryDatabase
-	 */
-	public static void writeToUnsignedMemoryDatabase(Configuration conf,
-			long recordGroup, MemoryDatabase output, long offset) {
-		for (long i = offset + conf.recordGroupByteLength - 1; i >= offset; i--) {
-			output.putByte(i, (byte) recordGroup);
-			recordGroup >>>= 8;
-		}
-	}
-
-	public static void writeToUnsignedMemoryDatabase(Configuration conf,
-			BigInteger recordGroup, MemoryDatabase output, long offset) {
-		recordGroup.writeToUnsignedMemoryDatabase(output, offset,
-				conf.recordGroupByteLength);
 	}
 
 	/**

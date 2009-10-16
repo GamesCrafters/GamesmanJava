@@ -980,6 +980,21 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
 		}
 	}
 
+	public BigInteger(int signum, byte[] magnitude, int offset, int len) {
+		this.mag = stripLeadingZeroBytes(magnitude, offset, len);
+
+		if (signum < -1 || signum > 1)
+			throw (new NumberFormatException("Invalid signum value"));
+
+		if (this.mag.length == 0) {
+			this.signum = 0;
+		} else {
+			if (signum == 0)
+				throw (new NumberFormatException("signum-magnitude mismatch"));
+			this.signum = signum;
+		}
+	}
+
 	/**
 	 * Returns a BigInteger with the given two's complement representation.
 	 * Assumes that the input array will not be modified (the returned
@@ -2725,9 +2740,12 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
 	}
 
 	/**
-	 * @param byteArray An array to write to
-	 * @param offset The offset into the array
-	 * @param len The number of bytes to write
+	 * @param byteArray
+	 *            An array to write to
+	 * @param offset
+	 *            The offset into the array
+	 * @param len
+	 *            The number of bytes to write
 	 */
 	public void toUnsignedByteArray(byte[] byteArray, int offset, int len) {
 		for (int i = len - 1, bytesCopied = 4, nextInt = 0, intIndex = 0; i >= 0; i--) {
@@ -2743,28 +2761,12 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
 	}
 
 	/**
-	 * @param output A memory database
-	 * @param offset The offset into the database
-	 * @param len The number of bytes to write
-	 */
-	public void writeToUnsignedMemoryDatabase(MemoryDatabase output,
-			long offset, int len) {
-		for (int i = len - 1, bytesCopied = 4, nextInt = 0, intIndex = 0; i >= 0; i--) {
-			if (bytesCopied == 4) {
-				nextInt = getInt(intIndex++);
-				bytesCopied = 1;
-			} else {
-				nextInt >>>= 8;
-				bytesCopied++;
-			}
-			output.putByte(i + offset, (byte) nextInt);
-		}
-	}
-
-	/**
-	 * @param output An output stream to write to
-	 * @param len The number of bytes to write
-	 * @throws IOException If output throws an IOException
+	 * @param output
+	 *            An output stream to write to
+	 * @param len
+	 *            The number of bytes to write
+	 * @throws IOException
+	 *             If output throws an IOException
 	 */
 	public void outputUnsignedBytes(OutputStream output, int len)
 			throws IOException {
@@ -2779,8 +2781,10 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
 	}
 
 	/**
-	 * @param output A ByteBuffer to write to
-	 * @param len The number of bytes to write
+	 * @param output
+	 *            A ByteBuffer to write to
+	 * @param len
+	 *            The number of bytes to write
 	 */
 	public void outputUnsignedBytes(ByteBuffer output, int len) {
 		for (int i = len, byteIndex = 8 * (len % 4), intIndex = len / 4, nextInt = getInt(intIndex); i > 0; i--) {
@@ -2794,9 +2798,12 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
 	}
 
 	/**
-	 * @param output A DataOutput to write to
-	 * @param len The number of bytes to write
-	 * @throws IOException If output throws an IOException
+	 * @param output
+	 *            A DataOutput to write to
+	 * @param len
+	 *            The number of bytes to write
+	 * @throws IOException
+	 *             If output throws an IOException
 	 */
 	public void outputUnsignedBytes(DataOutput output, int len)
 			throws IOException {
@@ -2949,6 +2956,31 @@ public class BigInteger extends Number implements Comparable<BigInteger> {
 			int bytesToTransfer = Math.min(3, bytesRemaining);
 			for (int j = 8; j <= 8 * bytesToTransfer; j += 8)
 				result[i] |= ((a[b--] & 0xff) << j);
+		}
+		return result;
+	}
+
+	/**
+	 * Returns a copy of the input array stripped of any leading zero bytes.
+	 */
+	private static int[] stripLeadingZeroBytes(byte a[], int offset, int len) {
+		int byteLength = len;
+		int keep;
+
+		// Find first nonzero byte
+		for (keep = 0; keep < len && a[offset + keep] == 0; keep++)
+			;
+
+		// Allocate new array and copy relevant part of input array
+		int intLength = ((byteLength - keep) + 3) / 4;
+		int[] result = new int[intLength];
+		int b = byteLength - 1;
+		for (int i = intLength - 1; i >= 0; i--) {
+			result[i] = a[offset + (b--)] & 0xff;
+			int bytesRemaining = b - keep + 1;
+			int bytesToTransfer = Math.min(3, bytesRemaining);
+			for (int j = 8; j <= 8 * bytesToTransfer; j += 8)
+				result[i] |= ((a[offset + (b--)] & 0xff) << j);
 		}
 		return result;
 	}

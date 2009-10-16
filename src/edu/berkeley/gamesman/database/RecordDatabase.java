@@ -2,7 +2,6 @@ package edu.berkeley.gamesman.database;
 
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Record;
-import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 /**
  * A testing database
@@ -44,26 +43,22 @@ public class RecordDatabase extends Database {
 	}
 
 	@Override
-	public long getLongRecordGroup(long loc) {
-		return 0L;
-	}
-
-	@Override
-	public BigInteger getBigIntRecordGroup(long loc) {
-		return null;
-	}
-
-	@Override
 	public void initialize(String uri) {
 		recordArray = new Record[(int) (conf.getGame().lastHash()) + 1];
 	}
 
 	@Override
-	public void putRecordGroup(long loc, BigInteger rg) {
+	public void getBytes(byte[] arr, int off, int len) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void putRecordGroup(long loc, long rg) {
+	public void putBytes(byte[] arr, int off, int len) {
+		throw new UnsupportedOperationException();
 	}
 
+	@Override
+	public void seek(long loc) {
+		throw new UnsupportedOperationException();
+	}
 }

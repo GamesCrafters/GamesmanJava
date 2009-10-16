@@ -8,14 +8,13 @@ import edu.berkeley.gamesman.database.util.DelocalizedPage;
 import edu.berkeley.gamesman.database.util.LocalizedPage;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
-import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 /**
  * Caches records obtained from another database passed as an argument
  * 
  * @author dnspies
  */
-public class DatabaseCache extends Database {
+public final class DatabaseCache extends Database {
 
 	private DelocalizedPage[][] records;
 
@@ -199,21 +198,7 @@ public class DatabaseCache extends Database {
 			for (int i = 0; i < nWayAssociative; i++)
 				if (records[index][i].isDirty())
 					writeBack(index, i);
-		synchronized (db) {
-			db.flush();
-		}
-	}
-
-	@Override
-	public long getLongRecordGroup(long loc) {
-		throw new UnsupportedOperationException(
-				"DatabaseCache does not operate on the group level");
-	}
-
-	@Override
-	public BigInteger getBigIntRecordGroup(long loc) {
-		throw new UnsupportedOperationException(
-				"DatabaseCache does not operate on the group level");
+		db.flush();
 	}
 
 	@Override
@@ -265,14 +250,17 @@ public class DatabaseCache extends Database {
 	}
 
 	@Override
-	public void putRecordGroup(long loc, long rg) {
-		throw new UnsupportedOperationException(
-				"DatabaseCache does not operate on the group level");
+	public void getBytes(byte[] arr, int off, int len) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void putRecordGroup(long loc, BigInteger rg) {
-		throw new UnsupportedOperationException(
-				"DatabaseCache does not operate on the group level");
+	public void putBytes(byte[] arr, int off, int len) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void seek(long loc) {
+		throw new UnsupportedOperationException();
 	}
 }

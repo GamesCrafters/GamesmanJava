@@ -36,11 +36,11 @@ public class MemoryDatabase extends Database {
 	/* Class Variables */
 	private byte[] memoryStorage; // byte array to store the data
 
-	protected byte[] rawRecord;
-
 	protected boolean open; // whether this database is initialized
 
 	// and not closed.
+
+	public int nextPlace = 0;
 
 	/**
 	 * Null Constructor, used primarily for testing. It doesn't set anything
@@ -53,18 +53,12 @@ public class MemoryDatabase extends Database {
 
 	@Override
 	public synchronized long getLongRecordGroup(long loc) {
-		for (int i = 0; i < conf.recordGroupByteLength; i++) {
-			rawRecord[i] = getByte(loc++);
-		}
-		return RecordGroup.longRecordGroup(conf, rawRecord);
+		return RecordGroup.longRecordGroup(conf, memoryStorage, (int) loc);
 	}
 
 	@Override
 	public synchronized BigInteger getBigIntRecordGroup(long loc) {
-		for (int i = 0; i < conf.recordGroupByteLength; i++) {
-			rawRecord[i] = getByte(loc++);
-		}
-		return RecordGroup.bigIntRecordGroup(conf, rawRecord);
+		return RecordGroup.bigIntRecordGroup(conf, memoryStorage, (int) loc);
 	}
 
 	@Override
@@ -128,17 +122,16 @@ public class MemoryDatabase extends Database {
 		System.out.println(getByteSize());
 		this.memoryStorage = new byte[(int) getByteSize()];
 		this.open = true;
-		rawRecord = new byte[conf.recordGroupByteLength];
 	}
 
 	@Override
 	public synchronized void putRecordGroup(long loc, long value) {
-		RecordGroup.writeToUnsignedMemoryDatabase(conf, value, this, loc);
+		RecordGroup.toUnsignedByteArray(conf, value, memoryStorage, (int) loc);
 	}
 
 	@Override
 	public synchronized void putRecordGroup(long loc, BigInteger value) {
-		RecordGroup.writeToUnsignedMemoryDatabase(conf, value, this, loc);
+		RecordGroup.toUnsignedByteArray(conf, value, memoryStorage, (int) loc);
 	}
 
 	@Override
@@ -173,28 +166,20 @@ public class MemoryDatabase extends Database {
 				"Closing Memory DataBase. Does Nothing.");
 	}
 
-	/**
-	 * Get a byte from the database.
-	 * 
-	 * @author Alex Trofimov
-	 * @param index
-	 *            sequential number of this byte in DB.
-	 * @return - one byte at specified byte index.
-	 */
-	protected byte getByte(long index) {
-		return this.memoryStorage[(int) index];
+	@Override
+	public void getBytes(byte[] arr, int off, int len) {
+		for (int i = 0; i < len; i++)
+			arr[off++] = memoryStorage[nextPlace++];
 	}
 
-	/**
-	 * Write a byte into the database. Assumes that space is already allocated.
-	 * 
-	 * @author Alex Trofimov
-	 * @param index
-	 *            sequential number of byte in DB.
-	 * @param data
-	 *            byte that needs to be written.
-	 */
-	public synchronized void putByte(long index, byte data) {
-		this.memoryStorage[(int) index] = data;
+	@Override
+	public void putBytes(byte[] arr, int off, int len) {
+		for (int i = 0; i < len; i++)
+			memoryStorage[nextPlace++] = arr[off++];
+	}
+
+	@Override
+	public void seek(long loc) {
+		nextPlace = (int) loc;
 	}
 }

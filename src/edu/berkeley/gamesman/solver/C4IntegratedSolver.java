@@ -26,7 +26,7 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 		DelocalizedPage[] childPages = new DelocalizedPage[game.maxChildren()];
 		int pageBytes = conf.getInteger("gamesman.db.pageSize",
 				100000 / childPages.length);
-		int pageSize = DelocalizedPage.numGroups(conf, pageBytes);
+		int pageSize = pageBytes / conf.recordGroupByteLength;
 		int writeLen = (int) (end / conf.recordsPerGroup - currentGroup + 1);
 		LocalizedPage writePage = new LocalizedPage(conf, 1);
 		assert Util.debug(DebugFacility.SOLVER, "Loading " + currentGroup

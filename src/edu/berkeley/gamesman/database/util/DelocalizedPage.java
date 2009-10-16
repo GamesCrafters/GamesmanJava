@@ -10,11 +10,9 @@ import edu.berkeley.gamesman.util.LongIterator;
 import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 public class DelocalizedPage {
-	private long[] longGroups;
+	private byte[] groups;
 
-	public int numGroups;
-
-	private BigInteger[] bigIntGroups;
+	public int numGroups = 0;
 
 	public long firstGroup;
 
@@ -31,7 +29,9 @@ public class DelocalizedPage {
 		}
 
 		public long next() {
-			return longGroups[i++];
+			long result = RecordGroup.longRecordGroup(conf, groups, i);
+			i += conf.recordGroupByteLength;
+			return result;
 		}
 	}
 
@@ -44,7 +44,9 @@ public class DelocalizedPage {
 		}
 
 		public BigInteger next() {
-			return bigIntGroups[i++];
+			BigInteger result = RecordGroup.bigIntRecordGroup(conf, groups, i);
+			i += conf.recordGroupByteLength;
+			return result;
 		}
 
 		public void remove() {
@@ -57,30 +59,43 @@ public class DelocalizedPage {
 		this.conf = conf;
 	}
 
-	public void get(int offset, int recordNum, Record rec) {
+	public void get(int groupNum, int recordNum, Record rec) {
 		if (conf.recordGroupUsesLong)
-			RecordGroup.getRecord(conf, longGroups[offset], recordNum, rec);
+			RecordGroup.getRecord(conf, getLongGroup(groupNum), recordNum, rec);
 		else
-			RecordGroup.getRecord(conf, bigIntGroups[offset], recordNum, rec);
+			RecordGroup.getRecord(conf, getBigIntGroup(groupNum), recordNum,
+					rec);
 	}
 
-	public void set(int offset, int recordNum, Record rec) {
+	public void set(int groupNum, int recordNum, Record rec) {
 		if (conf.recordGroupUsesLong)
-			longGroups[offset] = RecordGroup.setRecord(conf,
-					longGroups[offset], recordNum, rec);
+			setGroup(groupNum, RecordGroup.setRecord(conf,
+					getLongGroup(groupNum), recordNum, rec));
 		else
-			bigIntGroups[offset] = RecordGroup.setRecord(conf,
-					bigIntGroups[offset], recordNum, rec);
+			setGroup(groupNum, RecordGroup.setRecord(conf,
+					getBigIntGroup(groupNum), recordNum, rec));
 		dirty = true;
 	}
 
-	public void setGroup(int offset, long group) {
-		longGroups[offset] = group;
+	public void setGroup(int groupNum, long group) {
+		RecordGroup.toUnsignedByteArray(conf, group, groups, groupNum
+				* conf.recordGroupByteLength);
 		dirty = true;
 	}
 
-	public void setGroup(int offset, BigInteger group) {
-		bigIntGroups[offset] = group;
+	public long getLongGroup(int groupNum) {
+		return RecordGroup.longRecordGroup(conf, groups, groupNum
+				* conf.recordGroupByteLength);
+	}
+
+	public BigInteger getBigIntGroup(int groupNum) {
+		return RecordGroup.bigIntRecordGroup(conf, groups, groupNum
+				* conf.recordGroupByteLength);
+	}
+
+	public void setGroup(int groupNum, BigInteger group) {
+		RecordGroup.toUnsignedByteArray(conf, group, groups, groupNum
+				* conf.recordGroupByteLength);
 		dirty = true;
 	}
 
@@ -99,57 +114,19 @@ public class DelocalizedPage {
 	public void loadPage(Database db, long firstGroup, int numGroups) {
 		this.firstGroup = firstGroup;
 		this.numGroups = numGroups;
-		synchronized (db) {
-			if (conf.recordGroupUsesLong) {
-				if (longGroups == null || longGroups.length < numGroups)
-					longGroups = new long[numGroups];
-				LongIterator it = db.getLongRecordGroups(firstGroup
-						* conf.recordGroupByteLength, numGroups);
-				for (int off = 0; off < numGroups; off++)
-					setGroup(off, it.next());
-			} else {
-				if (bigIntGroups == null || bigIntGroups.length < numGroups)
-					bigIntGroups = new BigInteger[numGroups];
-				Iterator<BigInteger> it = db.getBigIntRecordGroups(firstGroup
-						* conf.recordGroupByteLength, numGroups);
-				for (int off = 0; off < numGroups; off++)
-					setGroup(off, it.next());
-			}
-		}
+		int arrSize = numGroups * conf.recordGroupByteLength;
+		if (groups == null || groups.length < arrSize)
+			groups = new byte[arrSize];
+		db.getBytes(firstGroup * conf.recordGroupByteLength, groups, 0,
+						arrSize);
 		dirty = false;
 	}
 
 	public void writeBack(Database db) {
-		synchronized (db) {
-			if (conf.recordGroupUsesLong)
-				db.putRecordGroups(firstGroup * conf.recordGroupByteLength,
-						longIterator(), numGroups);
-			else
-				db.putRecordGroups(firstGroup * conf.recordGroupByteLength,
-						bigIntIterator(), numGroups);
-		}
+		int arrSize = numGroups * conf.recordGroupByteLength;
+		db.putBytes(firstGroup * conf.recordGroupByteLength, groups, 0,
+						arrSize);
 		dirty = false;
-	}
-
-	public static int byteSize(Configuration conf, int numGroups) {
-		int myBytes;
-		if (conf.recordGroupUsesLong)
-			myBytes = (12 + 8 * numGroups + 7) / 8 * 8;
-		else {
-			myBytes = (12 + 4 * numGroups + 7) / 8 * 8
-					+ (32 + (12 + conf.recordGroupByteLength + 8) / 8 * 8)
-					* numGroups;
-		}
-		return myBytes;
-	}
-
-	public static int numGroups(Configuration conf, int numBytes) {
-		if (conf.recordGroupUsesLong) {
-			return (numBytes / 8 * 8 - 19) / 8;
-		} else {
-			return numBytes
-					/ ((32 + (12 + conf.recordGroupByteLength + 8) / 4 + 1) * 8);
-		}
 	}
 
 	public boolean containsGroup(long hashGroup) {
