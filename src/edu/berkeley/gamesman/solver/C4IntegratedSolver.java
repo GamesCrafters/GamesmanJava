@@ -38,8 +38,8 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 			childPages[i] = new DelocalizedPage(conf, pageSize);
 		}
 		while (current <= end) {
-			if (current % stepSize == 0)
-				t.calculated(stepSize);
+			if (current % STEP_SIZE == 0)
+				t.calculated(STEP_SIZE);
 			PrimitiveValue pv = game.primitiveValue();
 			if (pv.equals(PrimitiveValue.UNDECIDED)) {
 				int len = game.validMoves(children);

@@ -33,14 +33,15 @@ public class TierSolver<T> extends Solver {
 	/**
 	 * The number of positions to go through between each update/reset
 	 */
-	protected int stepSize;
+	private int tierSplit;
+
+	private int count;
 
 	@Override
 	public WorkUnit prepareSolve(Configuration inconf, Game<Object> game) {
 
 		myGame = Util.checkedCast(game);
 		tier = myGame.numberOfTiers() - 1;
-		offset = myGame.hashOffsetForTier(tier);
 		updater = new TierSolverUpdater();
 
 		return new TierSolverWorkUnit(inconf);
@@ -54,8 +55,8 @@ public class TierSolver<T> extends Solver {
 		while (current < end) {
 			current++;
 
-			if (current % stepSize == 0)
-				t.calculated(stepSize);
+			if (current % STEP_SIZE == 0)
+				t.calculated(STEP_SIZE);
 
 			T state = game.hashToState(current);
 
@@ -90,8 +91,6 @@ public class TierSolver<T> extends Solver {
 	protected int nextIndex = 0;
 
 	protected TierSolverUpdater updater;
-
-	protected long offset;
 
 	protected CyclicBarrier barr;
 
@@ -139,18 +138,27 @@ public class TierSolver<T> extends Solver {
 				if (!needs2Sync) {
 					if (tier < 0)
 						return null;
-					long ret = offset, end;
-					offset += stepSize;
-					offset -= offset % conf.recordsPerGroup;
-					end = offset - 1;
-					if (end >= myGame.lastHashValueForTier(tier)) {
-						end = myGame.lastHashValueForTier(tier);
+					long tierStart = myGame.hashOffsetForTier(tier);
+					long tierSize = myGame.lastHashValueForTier(tier) + 1
+							- tierStart;
+					int tierSplit = (int) Math.min(this.tierSplit, Math.max(
+							tierSize / conf.recordsPerGroup, 1));
+					long start = tierStart + tierSize * count / tierSplit;
+					long adjustStart = start - start % conf.recordsPerGroup;
+					long end = tierStart + tierSize * (count + 1) / tierSplit;
+					long adjustEnd = end - end % conf.recordsPerGroup;
+					if (count > 0)
+						start = adjustStart;
+					if (count < tierSplit - 1) {
+						end = adjustEnd;
+						++count;
+					} else {
+						count = 0;
 						tier--;
-						if (tier >= 0)
-							offset = myGame.hashOffsetForTier(tier);
 						needs2Sync = true;
 					}
-					return new Pair<Long, Long>(ret, end);
+					--end;
+					return new Pair<Long, Long>(start, end);
 				}
 			}
 		}
@@ -177,9 +185,11 @@ public class TierSolver<T> extends Solver {
 			int lastTier = tier;
 			while ((slice = nextSlice(conf)) != null) {
 				assert Util.debug(DebugFacility.THREADING,
-						"Beginning to solve slice " + slice + " in thread "
-								+ index + " for tier " + lastTier);
-				solvePartialTier(conf, slice.car, slice.cdr, updater);
+						"Beginning to solve slice " + slice + " at count "
+								+ count + " for tier " + lastTier);
+				if (slice.car <= slice.cdr) {
+					solvePartialTier(conf, slice.car, slice.cdr, updater);
+				}
 				lastTier = tier;
 			}
 
@@ -230,6 +240,7 @@ public class TierSolver<T> extends Solver {
 	@Override
 	public void initialize(Configuration conf) {
 		super.initialize(conf);
-		stepSize = conf.getInteger("gamesman.stepSize", 10000000);
+		tierSplit = conf.getInteger("gamesman.tierSplit", conf.getInteger(
+				"gamesman.threads", 1));
 	}
 }
