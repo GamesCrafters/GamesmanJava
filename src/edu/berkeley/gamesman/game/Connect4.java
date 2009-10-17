@@ -1,7 +1,6 @@
 package edu.berkeley.gamesman.game;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.*;
@@ -432,8 +431,10 @@ public final class Connect4 extends TieredIterGame {
 		char nextPiece = pieces.size() % 2 == 1 ? 'O' : 'X';
 		int easyChildren = iah.getChildren(nextPiece, children);
 		int nextNumPieces = pieces.size() + 1;
-		int col = 0;
-		int[] oldHeights = Arrays.copyOf(colHeights, gameWidth);
+		int col;
+		int[] oldHeights = new int[gameWidth];
+		for (col = 0; col < gameWidth; col++)
+			oldHeights[col] = colHeights[col];
 		PieceRearranger oldArranger = iah;
 		for (col = 0; col < gameWidth && colHeights[col] >= gameHeight; ++col) {
 			int group = setToLastWithOpen(col);
@@ -472,7 +473,9 @@ public final class Connect4 extends TieredIterGame {
 
 	private int setToLastWithOpen(int col) {
 		int i, piecesCount = 0;
-		int[] newHeights = Arrays.copyOf(colHeights, gameWidth);
+		int[] newHeights = new int[gameWidth];
+		for (i = 0; i < gameWidth; i++)
+			newHeights[i] = colHeights[i];
 		for (i = 0; i < col; ++i)
 			piecesCount += colHeights[i];
 		if (piecesCount >= col * gameHeight) {
