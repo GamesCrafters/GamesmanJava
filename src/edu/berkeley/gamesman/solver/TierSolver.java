@@ -162,7 +162,7 @@ public class TierSolver<T> extends Solver {
 					assert Util.debug(DebugFacility.THREADING,
 							"Beginning to solve slice "
 									+ slice
-									+ "for count "
+									+ " for count "
 									+ (needs2Sync ? (tierSplit - 1)
 											: (count - 1)) + " in tier "
 									+ (tier + (needs2Sync ? 1 : 0)));
