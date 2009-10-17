@@ -158,7 +158,15 @@ public class TierSolver<T> extends Solver {
 						needs2Sync = true;
 					}
 					--end;
-					return new Pair<Long, Long>(start, end);
+					Pair<Long, Long> slice = new Pair<Long, Long>(start, end);
+					assert Util.debug(DebugFacility.THREADING,
+							"Beginning to solve slice "
+									+ slice
+									+ "for count "
+									+ (needs2Sync ? (tierSplit - 1)
+											: (count - 1)) + " in tier "
+									+ (tier + (needs2Sync ? 1 : 0)));
+					return slice;
 				}
 			}
 		}
@@ -180,17 +188,11 @@ public class TierSolver<T> extends Solver {
 					+ index + ")");
 			Thread.currentThread().setName(
 					"Solver (" + index + "): " + myGame.toString());
-
 			Pair<Long, Long> slice;
-			int lastTier = tier;
 			while ((slice = nextSlice(conf)) != null) {
-				assert Util.debug(DebugFacility.THREADING,
-						"Beginning to solve slice " + slice + " at count "
-								+ count + " for tier " + lastTier);
 				if (slice.car <= slice.cdr) {
 					solvePartialTier(conf, slice.car, slice.cdr, updater);
 				}
-				lastTier = tier;
 			}
 
 			try {

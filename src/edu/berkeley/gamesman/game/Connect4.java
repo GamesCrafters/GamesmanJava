@@ -531,8 +531,7 @@ public final class Connect4 extends TieredIterGame {
 
 	@Override
 	public String describe() {
-		return String.format("%dx%d RConnect %d", gameWidth, gameHeight,
-				piecesToWin);
+		return toString();
 	}
 
 	@Override
@@ -545,4 +544,7 @@ public final class Connect4 extends TieredIterGame {
 		return gameWidth;
 	}
 
+	public String toString() {
+		return gameWidth + "x" + gameHeight + " Connect " + piecesToWin;
+	}
 }
