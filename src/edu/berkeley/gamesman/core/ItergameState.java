@@ -34,4 +34,9 @@ public final class ItergameState {
 	public ItergameState() {
 		this(0, 0);
 	}
+
+	@Override
+	public String toString() {
+		return tier + "." + hash;
+	}
 }

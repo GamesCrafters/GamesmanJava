@@ -1,16 +1,15 @@
 package edu.berkeley.gamesman.game;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 
-import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.ItergameState;
-import edu.berkeley.gamesman.core.PrimitiveValue;
-import edu.berkeley.gamesman.core.TieredIterGame;
+import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.game.util.BitSetBoard;
 import edu.berkeley.gamesman.game.util.PieceRearranger;
 import edu.berkeley.gamesman.util.ExpCoefs;
 import edu.berkeley.gamesman.util.Pair;
+import edu.berkeley.gamesman.util.Util;
 
 /**
  * Implementation of Connect 4 using the general IterArrangerHasher
@@ -50,6 +49,8 @@ public final class Connect4 extends TieredIterGame {
 	private PieceRearranger iah;
 
 	private int[] groupSizes;
+
+	private int numMoves;
 
 	private static final class Place {
 		private Place(int row, int col) {
@@ -178,7 +179,7 @@ public final class Connect4 extends TieredIterGame {
 			if (col == gameWidth)
 				hasNextPieceArrangement = false;
 		}
-		int numMoves = 0;
+		numMoves = 0;
 		int totSize = 0;
 		for (int i = 0; i < gameWidth; i++) {
 			if (colHeights[i] == gameHeight)
@@ -281,7 +282,8 @@ public final class Connect4 extends TieredIterGame {
 		int col = 0, row = 0;
 		StringBuilder rearrangeString = new StringBuilder(numPieces + gameWidth);
 		pieceArrangement = 0;
-		int numMoves = 0;
+		numMoves = 0;
+		groupSizes[0] = 0;
 		hasNextPieceArrangement = false;
 		int os = numPieces / 2;
 		pieces.clear();
@@ -293,8 +295,13 @@ public final class Connect4 extends TieredIterGame {
 					rearrangeString.append(' ');
 					for (; row < gameHeight; row++)
 						indices[row][col] = -1;
-					openColumn[numMoves++] = col;
-				}
+					openColumn[numMoves] = col;
+					groupSizes[numMoves] += colHeights[col];
+					numMoves++;
+					if (numMoves < gameWidth)
+						groupSizes[numMoves] = 0;
+				} else
+					groupSizes[numMoves] += gameHeight;
 				col++;
 				row = 0;
 			}
@@ -306,11 +313,15 @@ public final class Connect4 extends TieredIterGame {
 		}
 		if (colHeights[col] < gameHeight) {
 			rearrangeString.append(' ');
-			openColumn[numMoves++] = col;
+			openColumn[numMoves] = col;
+			groupSizes[numMoves] += colHeights[col];
+			numMoves++;
 		}
 		for (col++; col < gameWidth; col++) {
 			rearrangeString.append(' ');
-			openColumn[numMoves++] = col;
+			openColumn[numMoves] = col;
+			groupSizes[numMoves] = 0;
+			numMoves++;
 		}
 		setMoveArrangements();
 		iah = new PieceRearranger(rearrangeString.toString(), os, numPieces
@@ -410,6 +421,109 @@ public final class Connect4 extends TieredIterGame {
 			col++;
 		}
 		return lenChildren;
+	}
+
+	/**
+	 * @param moves
+	 *            Returns the value of the last time of move was possible in
+	 *            each column
+	 */
+	public void lastMoves(ItergameState[] moves) {
+		char nextPiece = pieces.size() % 2 == 1 ? 'O' : 'X';
+		int easyChildren = iah.getChildren(nextPiece, children);
+		int nextNumPieces = pieces.size() + 1;
+		int col = 0;
+		int[] oldHeights = Arrays.copyOf(colHeights, gameWidth);
+		PieceRearranger oldArranger = iah;
+		for (col = 0; col < gameWidth && colHeights[col] >= gameHeight; ++col) {
+			int group = setToLastWithOpen(col);
+			if (group >= 0) {
+				moves[col].tier = nextNumPieces;
+				moves[col].hash = moveArrangement[col]
+						* multiplier[nextNumPieces]
+						+ iah.getChild(nextPiece, group);
+				setColHeights(pieces.size(), oldHeights);
+			} else {
+				moves[col].tier = 0;
+				moves[col].hash = 0L;
+			}
+		}
+		for (int i = 0; i < easyChildren; i++) {
+			moves[col].tier = nextNumPieces;
+			moves[col].hash = moveArrangement[col] * multiplier[nextNumPieces]
+					+ children[i];
+			for (++col; col < gameWidth && colHeights[col] >= gameHeight; ++col) {
+				int group = setToLastWithOpen(col);
+				if (group >= 0) {
+					moves[col].tier = nextNumPieces;
+					moves[col].hash = moveArrangement[col]
+							* multiplier[nextNumPieces]
+							+ iah.getChild(nextPiece, group);
+					setColHeights(pieces.size(), oldHeights);
+				} else {
+					moves[col].tier = 0;
+					moves[col].hash = 0L;
+				}
+			}
+		}
+		iah = oldArranger;
+		setBSBfromIAH();
+	}
+
+	private int setToLastWithOpen(int col) {
+		int i, piecesCount = 0;
+		int[] newHeights = Arrays.copyOf(colHeights, gameWidth);
+		for (i = 0; i < col; ++i)
+			piecesCount += colHeights[i];
+		if (piecesCount >= col * gameHeight) {
+			piecesCount += gameHeight;
+			++i;
+			int tooMuch = piecesCount - 1;
+			while (i < gameWidth && piecesCount >= tooMuch) {
+				piecesCount += colHeights[i++];
+				tooMuch += gameHeight;
+			}
+			if (i >= gameWidth)
+				return -1;
+			while (i < gameWidth && colHeights[i] <= 0)
+				++i;
+			if (i >= gameWidth)
+				return -1;
+		}
+		++piecesCount;
+		--newHeights[i];
+		for (--i; i >= 0; --i) {
+			newHeights[i] = Math.min(piecesCount, gameHeight);
+			piecesCount -= newHeights[i];
+		}
+		if (newHeights[col] >= gameHeight) {
+			for (i = 0; i < col; i++)
+				piecesCount += newHeights[i];
+			if (piecesCount >= col * gameHeight) {
+				Util.fatalError("There should be space");
+				return -1;
+			}
+			++piecesCount;
+			--newHeights[col];
+			for (--i; i >= 0; --i) {
+				newHeights[i] = Math.min(piecesCount, gameHeight);
+				piecesCount -= newHeights[i];
+			}
+		}
+		setColHeights(pieces.size(), newHeights);
+		iah.setToEnd();
+		setBSBfromIAH();
+		for (i = 0; i < numMoves; i++) {
+			if (openColumn[i] == col)
+				break;
+		}
+		return i;
+	}
+
+	private void setColHeights(int numPieces, int[] newHeights) {
+		for (int col = 0; col < gameWidth; col++)
+			colHeights[col] = newHeights[col];
+		setToColHeights(numPieces);
 	}
 
 	@Override

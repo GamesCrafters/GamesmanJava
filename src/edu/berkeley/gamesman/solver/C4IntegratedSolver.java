@@ -22,26 +22,32 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 		long current = start;
 		long currentGroup = current / conf.recordsPerGroup;
 		int currentNum = (int) (current % conf.recordsPerGroup);
-		game.setState(game.hashToState(start));
 		Record[] vals = new Record[game.maxChildren()];
 		for (int i = 0; i < vals.length; i++)
 			vals[i] = game.newRecord();
 		Record prim = game.newRecord();
-		ItergameState[] children = new ItergameState[game.maxChildren()];
+		ItergameState[] children = null;
+		long[] ends = null;
 		Page[] childPages = new Page[game.maxChildren()];
-		int pageBytes = conf.getInteger("gamesman.db.pageSize",
-				100000 / childPages.length);
-		int pageSize = pageBytes / conf.recordGroupByteLength;
 		int writeLen = (int) (end / conf.recordsPerGroup - currentGroup + 1);
 		LocalizedPage writePage = new LocalizedPage(conf, 1);
 		assert Util.debug(DebugFacility.SOLVER, "Loading " + currentGroup
 				+ " - " + (currentGroup + writeLen - 1) + " for write");
 		writePage.loadPage(db, currentGroup, writeLen);
 		boolean hasRemoteness = conf.containsField(RecordFields.REMOTENESS);
-		for (int i = 0; i < children.length; i++) {
-			children[i] = new ItergameState();
-			childPages[i] = new Page(conf);
+		game.setState(game.hashToState(end));
+		if (game.getTier() < game.numberOfTiers() - 1) {
+			children = new ItergameState[game.maxChildren()];
+			for (int i = 0; i < children.length; i++) {
+				children[i] = new ItergameState();
+			}
+			game.lastMoves(children);
+			ends = new long[children.length];
+			for (int i = 0; i < ends.length; i++)
+				ends[i] = (game.stateToHash(children[i]) + conf.recordsPerGroup - 1)
+						/ conf.recordsPerGroup;
 		}
+		game.setState(game.hashToState(start));
 		while (current <= end) {
 			if (current % STEP_SIZE == 0)
 				t.calculated(STEP_SIZE);
@@ -53,20 +59,12 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 					r = vals[i];
 					long hash = game.stateToHash(children[i]);
 					long hashGroup = hash / conf.recordsPerGroup;
-					if (!childPages[game.openColumn[i]]
-							.containsGroup(hashGroup)) {
-						long afterHashGroup = game
-								.lastHashValueForTier(children[i].tier)
-								/ conf.recordsPerGroup + 1L;
-						int loadSize = pageSize;
-						if (hashGroup + pageSize > afterHashGroup)
-							loadSize = (int) (afterHashGroup - hashGroup);
-						assert Util.debug(DebugFacility.SOLVER, "Loading "
-								+ hashGroup + " - "
-								+ (hashGroup + loadSize - 1) + " for column "
-								+ game.openColumn[i]);
+					if (childPages[game.openColumn[i]] == null) {
+						childPages[game.openColumn[i]] = new Page(conf);
+						int numGroups = (int) (ends[game.openColumn[i]]
+								- hashGroup + 1);
 						childPages[game.openColumn[i]].loadPage(db, hashGroup,
-								loadSize);
+								numGroups);
 					}
 					childPages[game.openColumn[i]].getRecord(hashGroup,
 							(int) (hash % conf.recordsPerGroup), r);
