@@ -8,5 +8,4 @@ gamesman.database = FileDatabase
 gamesman.db.uri = database64.db
 record.fields = VALUE:3,REMOTENESS:25
 record.compression = 90
-gamesman.db.pageSize=100000000
 gamesman.debug.THREADING=true
