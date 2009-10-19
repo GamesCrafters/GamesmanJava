@@ -207,4 +207,55 @@ public class Page {
 	public void putRecord(long hashGroup, int num, Record r) {
 		set((int) (hashGroup - firstGroup), num, r);
 	}
+
+	/**
+	 * Extends this page to include all groups up through hashGroup
+	 * 
+	 * @param db
+	 *            The database
+	 * @param hashGroup
+	 *            The group to extend up to (inclusive)
+	 */
+	public void extendUp(Database db, long hashGroup) {
+		long first = firstGroup + numGroups;
+		int numAdd = (int) (hashGroup - first + 1);
+		int totGroups = numGroups + numAdd;
+		int oldSize = numGroups * conf.recordGroupByteLength;
+		int remainSize = numAdd * conf.recordGroupByteLength;
+		int arrSize = totGroups * conf.recordGroupByteLength;
+		if (groups == null || groups.length < arrSize) {
+			byte[] newGroups = new byte[arrSize];
+			for (int i = 0; i < oldSize; i++) {
+				newGroups[i] = groups[i];
+			}
+			groups = newGroups;
+		}
+		db.getBytes(first * conf.recordGroupByteLength, groups, oldSize,
+				remainSize);
+		numGroups = totGroups;
+	}
+
+	/**
+	 * Extends this page to include the other Page
+	 * 
+	 * @param p
+	 *            The other page
+	 */
+	public void extendUp(Page p) {
+		int numAdd = p.numGroups;
+		int totGroups = numGroups + numAdd;
+		int oldSize = numGroups * conf.recordGroupByteLength;
+		int remainSize = numAdd * conf.recordGroupByteLength;
+		int arrSize = totGroups * conf.recordGroupByteLength;
+		if (groups == null || groups.length < arrSize) {
+			byte[] newGroups = new byte[arrSize];
+			for (int i = 0; i < oldSize; i++) {
+				newGroups[i] = groups[i];
+			}
+			groups = newGroups;
+		}
+		for (int i = 0; i < remainSize; i++)
+			groups[i + oldSize] = p.groups[i];
+		numGroups = totGroups;
+	}
 }

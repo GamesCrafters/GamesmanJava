@@ -1,9 +1,6 @@
 package edu.berkeley.gamesman.database.util;
 
-import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Database;
-import edu.berkeley.gamesman.core.Record;
-import edu.berkeley.gamesman.core.RecordGroup;
+import edu.berkeley.gamesman.core.*;
 
 /**
  * A page that keeps track of the individual records extracted from the last few
@@ -13,7 +10,7 @@ import edu.berkeley.gamesman.core.RecordGroup;
  * @author dnspies
  */
 public class LocalizedPage extends Page {
-	private final Record[][] rawRecords;
+	private Record[][] rawRecords;
 
 	private long[] used;
 
@@ -144,5 +141,31 @@ public class LocalizedPage extends Page {
 			}
 		}
 		super.writeBack(db);
+	}
+
+	@Override
+	public void extendUp(Page p) {
+		if (p instanceof LocalizedPage) {
+			LocalizedPage lp = (LocalizedPage) p;
+			used = new long[used.length + lp.used.length];
+			for (int i = 0; i < used.length; i++)
+				used[i] = 0L;
+			lastUsed = 0L;
+			Record[][] newRaws = new Record[rawRecords.length
+					+ lp.rawRecords.length][conf.recordGroupByteLength];
+			int[] newLastIndex = new int[lastIndex.length + lp.lastIndex.length];
+			for (int i = 0; i < rawRecords.length; i++) {
+				newRaws[i] = rawRecords[i];
+				newLastIndex[i] = lastIndex[i];
+			}
+			for (int i = 0; i < lp.rawRecords.length; i++) {
+				newRaws[i + rawRecords.length] = lp.rawRecords[i];
+				newLastIndex[i + lastIndex.length] = lp.lastIndex[i]
+						+ numGroups;
+			}
+			rawRecords = newRaws;
+			lastIndex = newLastIndex;
+		}
+		super.extendUp(p);
 	}
 }

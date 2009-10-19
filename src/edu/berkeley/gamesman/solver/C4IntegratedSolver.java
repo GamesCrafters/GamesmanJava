@@ -28,7 +28,9 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 		Record prim = game.newRecord();
 		ItergameState[] children = null;
 		long[] ends = null;
+		int numPages = 0;
 		Page[] childPages = new Page[game.maxChildren()];
+		int[] whichPage = new int[game.maxChildren()];
 		int writeLen = (int) (end / conf.recordsPerGroup - currentGroup + 1);
 		LocalizedPage writePage = new LocalizedPage(conf, 1);
 		assert Util.debug(DebugFacility.SOLVER, "Loading " + currentGroup
@@ -43,9 +45,11 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 			}
 			game.lastMoves(children);
 			ends = new long[children.length];
-			for (int i = 0; i < ends.length; i++)
+			for (int i = 0; i < ends.length; i++) {
+				whichPage[i] = -1;
 				ends[i] = (game.stateToHash(children[i]) + conf.recordsPerGroup - 1)
 						/ conf.recordsPerGroup;
+			}
 		}
 		game.setState(game.hashToState(start));
 		while (current <= end) {
@@ -59,15 +63,16 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 					r = vals[i];
 					long hash = game.stateToHash(children[i]);
 					long hashGroup = hash / conf.recordsPerGroup;
-					if (childPages[game.openColumn[i]] == null) {
-						childPages[game.openColumn[i]] = new Page(conf);
+					if (whichPage[game.openColumn[i]] == -1) {
+						whichPage[game.openColumn[i]] = numPages;
+						childPages[numPages] = new Page(conf);
 						int numGroups = (int) (ends[game.openColumn[i]]
 								- hashGroup + 1);
-						childPages[game.openColumn[i]].loadPage(db, hashGroup,
-								numGroups);
+						childPages[numPages].loadPage(db, hashGroup, numGroups);
+						++numPages;
 					}
-					childPages[game.openColumn[i]].getRecord(hashGroup,
-							(int) (hash % conf.recordsPerGroup), r);
+					childPages[whichPage[game.openColumn[i]]].getRecord(
+							hashGroup, (int) (hash % conf.recordsPerGroup), r);
 					r.previousPosition();
 				}
 				Record newVal = game.combine(vals, 0, len);
