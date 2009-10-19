@@ -254,7 +254,7 @@ public class JSONInterface extends GamesmanApplication {
 		}
 
 		private <T> void fillJSONFields(Configuration conf, JSONObject entry,
-				T state) throws JSONException {
+				T state, boolean isChildState) throws JSONException {
 			Collection<RecordFields> storedFields = conf.usedFields;
 			Database db = conf.db;
 			Record rec = null;
@@ -266,7 +266,7 @@ public class JSONInterface extends GamesmanApplication {
 				for (RecordFields f : storedFields) {
 					if (f == RecordFields.VALUE) {
 						PrimitiveValue pv = rec.get();
-						if (g.getPlayerCount() != 0) {
+						if (g.getPlayerCount() > 1 && isChildState) {
 							if (pv == PrimitiveValue.WIN)
 								pv = PrimitiveValue.LOSE;
 							else if (pv == PrimitiveValue.LOSE)
@@ -281,10 +281,12 @@ public class JSONInterface extends GamesmanApplication {
 			} else {
 				PrimitiveValue pv = g.primitiveValue(state);
 				if (pv != PrimitiveValue.UNDECIDED) {
-					if (pv == PrimitiveValue.WIN)
-						pv = PrimitiveValue.LOSE;
-					else if (pv == PrimitiveValue.LOSE)
-						pv = PrimitiveValue.WIN;
+					if (g.getPlayerCount() > 1 && isChildState) {
+						if (pv == PrimitiveValue.WIN)
+							pv = PrimitiveValue.LOSE;
+						else if (pv == PrimitiveValue.LOSE)
+							pv = PrimitiveValue.WIN;
+					}
 					entry.put("value", pv.name().toLowerCase());
 				}
 				int score = g.primitiveScore(state);
@@ -401,7 +403,7 @@ public class JSONInterface extends GamesmanApplication {
 					for (Pair<String, T> next : g.validMoves(state)) {
 						JSONObject entry = new JSONObject();
 						entry.put("move", next.car);
-						fillJSONFields(config, entry, next.cdr);
+						fillJSONFields(config, entry, next.cdr, true);
 						responseArray.put(entry);
 					}
 				}
@@ -414,7 +416,7 @@ public class JSONInterface extends GamesmanApplication {
 				}
 				T state = g.stringToState(board);
 				JSONObject entry = new JSONObject();
-				fillJSONFields(config, entry, state);
+				fillJSONFields(config, entry, state, false);
 				response.put("response", entry);
 				response.put("status", "ok");
 			}
