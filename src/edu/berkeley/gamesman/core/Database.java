@@ -43,8 +43,8 @@ public abstract class Database {
 	 */
 	public final void initialize(String uri, Configuration config) {
 		conf = config;
-		maxBytes = 1024 - 1024 % conf.recordGroupByteLength;
 		initialize(uri);
+		maxBytes = 1024 - 1024 % conf.recordGroupByteLength;
 	}
 
 	/**
