@@ -64,40 +64,59 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 					long hash = game.stateToHash(children[i]);
 					long hashGroup = hash / conf.recordsPerGroup;
 					int startPlace = -1, endPlace = -1;
-					IF_DNE: if (whichPage[game.openColumn[i]] == -1) {
+					int col = game.openColumn[i];
+					IF_DNE: if (whichPage[col] == -1) {
 						for (int c = 0; c < numPages; c++)
 							if (childPages[c].containsGroup(hashGroup)) {
-								if (childPages[c]
-										.containsGroup(ends[game.openColumn[i]])) {
-									whichPage[game.openColumn[i]] = c;
+								if (childPages[c].containsGroup(ends[col])) {
+									whichPage[col] = c;
 									break IF_DNE;
 								} else
 									startPlace = c;
-							} else if (childPages[c]
-									.containsGroup(ends[game.openColumn[i]])) {
+							} else if (childPages[c].containsGroup(ends[col])) {
 								endPlace = c;
 							}
 						if (startPlace == -1 && endPlace == -1) {
-							whichPage[game.openColumn[i]] = numPages;
+							assert Util.debug(DebugFacility.SOLVER, "Loading "
+									+ hashGroup + "-" + ends[col]
+									+ " for column " + col);
+							whichPage[col] = numPages;
 							childPages[numPages] = new Page(conf);
-							int numGroups = (int) (ends[game.openColumn[i]]
-									- hashGroup + 1);
+							int numGroups = (int) (ends[col] - hashGroup + 1);
 							childPages[numPages].loadPage(db, hashGroup,
 									numGroups);
 							++numPages;
 						} else if (endPlace == -1) {
-							childPages[startPlace].extendUp(db,
-									ends[game.openColumn[i]]);
-							whichPage[game.openColumn[i]] = startPlace;
+							Page bottomPage = childPages[startPlace];
+							assert Util
+									.debug(
+											DebugFacility.SOLVER,
+											"Loading "
+													+ (bottomPage.firstGroup + bottomPage.numGroups)
+													+ "-" + ends[col]
+													+ " for column " + col);
+							bottomPage.extendUp(db, ends[col]);
+							whichPage[col] = startPlace;
 						} else if (startPlace == -1) {
-							childPages[endPlace].extendDown(db, hashGroup);
-							whichPage[game.openColumn[i]] = endPlace;
+							Page topPage = childPages[endPlace];
+							assert Util.debug(DebugFacility.SOLVER, "Loading "
+									+ hashGroup + "-"
+									+ (topPage.firstGroup - 1L)
+									+ " for column " + col);
+							topPage.extendDown(db, hashGroup);
+							whichPage[col] = endPlace;
 						} else {
-							childPages[startPlace].extendUp(db,
-									childPages[endPlace].firstGroup - 1);
-							childPages[startPlace]
-									.extendUp(childPages[endPlace]);
-							whichPage[game.openColumn[i]] = startPlace;
+							Page bottomPage = childPages[startPlace], topPage = childPages[endPlace];
+							assert Util
+									.debug(
+											DebugFacility.SOLVER,
+											"Loading "
+													+ (bottomPage.firstGroup + bottomPage.numGroups)
+													+ "-"
+													+ (topPage.firstGroup - 1L)
+													+ " for column " + col);
+							bottomPage.extendUp(db, topPage);
+							whichPage[col] = startPlace;
 							for (int c = 0; c < numPages; c++) {
 								if (whichPage[c] == endPlace) {
 									whichPage[c] = startPlace;

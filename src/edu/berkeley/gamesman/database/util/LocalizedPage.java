@@ -144,7 +144,7 @@ public class LocalizedPage extends Page {
 	}
 
 	@Override
-	public void extendUp(Page p) {
+	public void extendUp(Database db, Page p) {
 		if (p instanceof LocalizedPage) {
 			LocalizedPage lp = (LocalizedPage) p;
 			used = new long[used.length + lp.used.length];
@@ -158,14 +158,15 @@ public class LocalizedPage extends Page {
 				newRaws[i] = rawRecords[i];
 				newLastIndex[i] = lastIndex[i];
 			}
+			int beneathLp = (int) (lp.firstGroup - firstGroup);
 			for (int i = 0; i < lp.rawRecords.length; i++) {
 				newRaws[i + rawRecords.length] = lp.rawRecords[i];
 				newLastIndex[i + lastIndex.length] = lp.lastIndex[i]
-						+ numGroups;
+						+ beneathLp;
 			}
 			rawRecords = newRaws;
 			lastIndex = newLastIndex;
 		}
-		super.extendUp(p);
+		super.extendUp(db, p);
 	}
 }

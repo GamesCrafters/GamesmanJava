@@ -4,7 +4,6 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.RecordGroup;
-import edu.berkeley.gamesman.util.Util;
 import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 /**
@@ -224,7 +223,7 @@ public class Page {
 		int oldSize = numGroups * conf.recordGroupByteLength;
 		int remainSize = numAdd * conf.recordGroupByteLength;
 		int arrSize = totGroups * conf.recordGroupByteLength;
-		if (groups == null || groups.length < arrSize) {
+		if (groups.length < arrSize) {
 			byte[] newGroups = new byte[arrSize];
 			for (int i = 0; i < oldSize; i++) {
 				newGroups[i] = groups[i];
@@ -233,33 +232,6 @@ public class Page {
 		}
 		db.getBytes(first * conf.recordGroupByteLength, groups, oldSize,
 				remainSize);
-		numGroups = totGroups;
-	}
-
-	/**
-	 * Extends this page up to include the other Page
-	 * 
-	 * @param p
-	 *            The other page
-	 */
-	public void extendUp(Page p) {
-		if (firstGroup + numGroups != p.firstGroup) {
-			Util.fatalError("Pages must be sequential");
-		}
-		int numAdd = p.numGroups;
-		int totGroups = numGroups + numAdd;
-		int oldSize = numGroups * conf.recordGroupByteLength;
-		int remainSize = numAdd * conf.recordGroupByteLength;
-		int arrSize = totGroups * conf.recordGroupByteLength;
-		if (groups == null || groups.length < arrSize) {
-			byte[] newGroups = new byte[arrSize];
-			for (int i = 0; i < oldSize; i++) {
-				newGroups[i] = groups[i];
-			}
-			groups = newGroups;
-		}
-		for (int i = 0; i < remainSize; i++)
-			groups[i + oldSize] = p.groups[i];
 		numGroups = totGroups;
 	}
 
@@ -277,7 +249,7 @@ public class Page {
 		int oldSize = numGroups * conf.recordGroupByteLength;
 		int remainSize = numAdd * conf.recordGroupByteLength;
 		int arrSize = totGroups * conf.recordGroupByteLength;
-		if (groups == null || groups.length < arrSize) {
+		if (groups.length < arrSize) {
 			byte[] newGroups = new byte[arrSize];
 			for (int i = 0; i < oldSize; i++) {
 				newGroups[i + remainSize] = groups[i];
@@ -292,5 +264,32 @@ public class Page {
 				remainSize);
 		numGroups = totGroups;
 		firstGroup = hashGroup;
+	}
+
+	/**
+	 * Extends this page to include the other page
+	 * 
+	 * @param db
+	 *            The database to draw the intervening records from
+	 * @param p
+	 *            The other page
+	 */
+	public void extendUp(Database db, Page p) {
+		int oldSize = numGroups * conf.recordGroupByteLength;
+		int arrSize = p.numGroups + (int) (p.firstGroup - firstGroup);
+		if (groups.length < arrSize) {
+			byte[] newGroups = new byte[arrSize];
+			for (int i = 0; i < oldSize; i++)
+				newGroups[i] = groups[i];
+			groups = newGroups;
+		}
+		extendUp(db, p.firstGroup - 1L);
+		int numAdd = p.numGroups;
+		int totGroups = numGroups + numAdd;
+		oldSize = numGroups * conf.recordGroupByteLength;
+		int remainSize = numAdd * conf.recordGroupByteLength;
+		for (int i = 0; i < remainSize; i++)
+			groups[i + oldSize] = p.groups[i];
+		numGroups = totGroups;
 	}
 }
