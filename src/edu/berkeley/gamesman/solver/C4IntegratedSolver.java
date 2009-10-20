@@ -102,7 +102,6 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 								if (whichPage[c] == endPlace) {
 									whichPage[c] = startPlace;
 									childPages[endPlace] = null;
-									System.gc();
 								}
 							}
 						}
