@@ -98,6 +98,13 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 							childPages[startPlace]
 									.extendUp(childPages[endPlace]);
 							whichPage[game.openColumn[i]] = startPlace;
+							for (int c = 0; c < numPages; c++) {
+								if (whichPage[c] == endPlace) {
+									whichPage[c] = startPlace;
+									childPages[endPlace] = null;
+									System.gc();
+								}
+							}
 						}
 					}
 					childPages[whichPage[game.openColumn[i]]].getRecord(
