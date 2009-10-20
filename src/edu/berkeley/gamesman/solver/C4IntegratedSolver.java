@@ -63,13 +63,42 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 					r = vals[i];
 					long hash = game.stateToHash(children[i]);
 					long hashGroup = hash / conf.recordsPerGroup;
-					if (whichPage[game.openColumn[i]] == -1) {
-						whichPage[game.openColumn[i]] = numPages;
-						childPages[numPages] = new Page(conf);
-						int numGroups = (int) (ends[game.openColumn[i]]
-								- hashGroup + 1);
-						childPages[numPages].loadPage(db, hashGroup, numGroups);
-						++numPages;
+					int startPlace = -1, endPlace = -1;
+					IF_DNE: if (whichPage[game.openColumn[i]] == -1) {
+						for (int c = 0; c < numPages; c++)
+							if (childPages[c].containsGroup(hashGroup)) {
+								if (childPages[c]
+										.containsGroup(ends[game.openColumn[i]])) {
+									whichPage[game.openColumn[i]] = c;
+									break IF_DNE;
+								} else
+									startPlace = c;
+							} else if (childPages[c]
+									.containsGroup(ends[game.openColumn[i]])) {
+								endPlace = c;
+							}
+						if (startPlace == -1 && endPlace == -1) {
+							whichPage[game.openColumn[i]] = numPages;
+							childPages[numPages] = new Page(conf);
+							int numGroups = (int) (ends[game.openColumn[i]]
+									- hashGroup + 1);
+							childPages[numPages].loadPage(db, hashGroup,
+									numGroups);
+							++numPages;
+						} else if (endPlace == -1) {
+							childPages[startPlace].extendUp(db,
+									ends[game.openColumn[i]]);
+							whichPage[game.openColumn[i]] = startPlace;
+						} else if (startPlace == -1) {
+							childPages[endPlace].extendDown(db, hashGroup);
+							whichPage[game.openColumn[i]] = endPlace;
+						} else {
+							childPages[startPlace].extendUp(db,
+									childPages[endPlace].firstGroup - 1);
+							childPages[startPlace]
+									.extendUp(childPages[endPlace]);
+							whichPage[game.openColumn[i]] = startPlace;
+						}
 					}
 					childPages[whichPage[game.openColumn[i]]].getRecord(
 							hashGroup, (int) (hash % conf.recordsPerGroup), r);

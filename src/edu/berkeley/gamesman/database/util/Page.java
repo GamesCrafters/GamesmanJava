@@ -4,6 +4,7 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.RecordGroup;
+import edu.berkeley.gamesman.util.Util;
 import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 /**
@@ -236,12 +237,15 @@ public class Page {
 	}
 
 	/**
-	 * Extends this page to include the other Page
+	 * Extends this page up to include the other Page
 	 * 
 	 * @param p
 	 *            The other page
 	 */
 	public void extendUp(Page p) {
+		if (firstGroup + numGroups != p.firstGroup) {
+			Util.fatalError("Pages must be sequential");
+		}
 		int numAdd = p.numGroups;
 		int totGroups = numGroups + numAdd;
 		int oldSize = numGroups * conf.recordGroupByteLength;
@@ -257,5 +261,36 @@ public class Page {
 		for (int i = 0; i < remainSize; i++)
 			groups[i + oldSize] = p.groups[i];
 		numGroups = totGroups;
+	}
+
+	/**
+	 * Extends this page to include all groups down through hashGroup
+	 * 
+	 * @param db
+	 *            The database
+	 * @param hashGroup
+	 *            The group to extend down to (inclusive)
+	 */
+	public void extendDown(Database db, long hashGroup) {
+		int numAdd = (int) (firstGroup - hashGroup);
+		int totGroups = numGroups + numAdd;
+		int oldSize = numGroups * conf.recordGroupByteLength;
+		int remainSize = numAdd * conf.recordGroupByteLength;
+		int arrSize = totGroups * conf.recordGroupByteLength;
+		if (groups == null || groups.length < arrSize) {
+			byte[] newGroups = new byte[arrSize];
+			for (int i = 0; i < oldSize; i++) {
+				newGroups[i + remainSize] = groups[i];
+			}
+			groups = newGroups;
+		} else {
+			for (int i = oldSize - 1; i >= 0; i--) {
+				groups[i + remainSize] = groups[i];
+			}
+		}
+		db.getBytes(hashGroup * conf.recordGroupByteLength, groups, 0,
+				remainSize);
+		numGroups = totGroups;
+		firstGroup = hashGroup;
 	}
 }
