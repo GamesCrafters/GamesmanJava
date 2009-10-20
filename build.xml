@@ -15,6 +15,7 @@
         <pathelement location="lib/jline-0.9.94.jar"/>
         <pathelement location="lib/jython.jar"/>
         <pathelement location="lib/org-json.jar"/>
+        <pathelement location="${env.HADOOP_HOME}/hadoop-0.20.1-core.jar"/>
     </path>
     <target name="init">
         <mkdir dir="bin"/>
@@ -32,6 +33,13 @@
         <echo message="${ant.project.name}: ${ant.file}"/>
         <javac debug="true" debuglevel="${debuglevel}" destdir="bin" source="${source}" target="${target}">
             <src path="src"/>
+            <classpath refid="gamesman-java.classpath"/>
+        </javac>
+    </target>
+    <target depends="build-project" name="hadoop">
+        <echo message="HADOOP_HOME IS ${env.HADOOP_HOME}"/>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="bin" source="${source}" target="${target}">
+            <src path="hadoop-src"/>
             <classpath refid="gamesman-java.classpath"/>
         </javac>
     </target>
