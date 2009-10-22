@@ -171,16 +171,6 @@ public class Page {
 	}
 
 	/**
-	 * @param hashGroup
-	 *            The group
-	 * @return whether this page contains the group at absolute index hashGroup
-	 */
-	public boolean containsGroup(long hashGroup) {
-		long dif = hashGroup - firstGroup;
-		return dif >= 0 && dif < numGroups;
-	}
-
-	/**
 	 * Retrieves a record from this page and writes it to r
 	 * 
 	 * @param hashGroup
@@ -219,20 +209,13 @@ public class Page {
 	public void extendUp(Database db, long hashGroup) {
 		long first = firstGroup + numGroups;
 		int numAdd = (int) (hashGroup - first + 1);
-		int totGroups = numGroups + numAdd;
+		int neededGroups = numGroups + numAdd;
 		int oldSize = numGroups * conf.recordGroupByteLength;
 		int remainSize = numAdd * conf.recordGroupByteLength;
-		int arrSize = totGroups * conf.recordGroupByteLength;
-		if (groups.length < arrSize) {
-			byte[] newGroups = new byte[arrSize];
-			for (int i = 0; i < oldSize; i++) {
-				newGroups[i] = groups[i];
-			}
-			groups = newGroups;
-		}
+		ensureCapacity(neededGroups);
 		db.getBytes(first * conf.recordGroupByteLength, groups, oldSize,
 				remainSize);
-		numGroups = totGroups;
+		numGroups = neededGroups;
 	}
 
 	/**
@@ -244,11 +227,29 @@ public class Page {
 	 *            The group to extend down to (inclusive)
 	 */
 	public void extendDown(Database db, long hashGroup) {
+		extendDown(db, hashGroup, -1);
+	}
+
+	/**
+	 * Extends this page to include all groups down through hashGroup
+	 * 
+	 * @param db
+	 *            The database
+	 * @param hashGroup
+	 *            The group to extend down to (inclusive)
+	 * @param neededGroups
+	 *            The new minimum number of groups on the page
+	 */
+	public void extendDown(Database db, long hashGroup, int neededGroups) {
 		int numAdd = (int) (firstGroup - hashGroup);
 		int totGroups = numGroups + numAdd;
 		int oldSize = numGroups * conf.recordGroupByteLength;
 		int remainSize = numAdd * conf.recordGroupByteLength;
-		int arrSize = totGroups * conf.recordGroupByteLength;
+		int arrSize;
+		if (neededGroups < 0)
+			arrSize = oldSize + remainSize;
+		else
+			arrSize = neededGroups * conf.recordGroupByteLength;
 		if (groups.length < arrSize) {
 			byte[] newGroups = new byte[arrSize];
 			for (int i = 0; i < oldSize; i++) {
@@ -275,21 +276,34 @@ public class Page {
 	 *            The other page
 	 */
 	public void extendUp(Database db, Page p) {
-		int oldSize = numGroups * conf.recordGroupByteLength;
-		int arrSize = p.numGroups + (int) (p.firstGroup - firstGroup);
-		if (groups.length < arrSize) {
-			byte[] newGroups = new byte[arrSize];
-			for (int i = 0; i < oldSize; i++)
-				newGroups[i] = groups[i];
-			groups = newGroups;
-		}
+		int neededGroups = p.numGroups + (int) (p.firstGroup - firstGroup);
+		ensureCapacity(neededGroups);
 		extendUp(db, p.firstGroup - 1L);
 		int numAdd = p.numGroups;
 		int totGroups = numGroups + numAdd;
-		oldSize = numGroups * conf.recordGroupByteLength;
+		int oldSize = numGroups * conf.recordGroupByteLength;
 		int remainSize = numAdd * conf.recordGroupByteLength;
 		for (int i = 0; i < remainSize; i++)
 			groups[i + oldSize] = p.groups[i];
 		numGroups = totGroups;
+	}
+
+	/**
+	 * @param neededGroups
+	 *            The size
+	 * @return Whether the page needed to be modified
+	 */
+	public boolean ensureCapacity(int neededGroups) {
+		int arrSize = neededGroups * conf.recordGroupByteLength;
+		if (groups.length < arrSize) {
+			int oldSize = numGroups * conf.recordGroupByteLength;
+			byte[] newGroups = new byte[arrSize];
+			for (int i = 0; i < oldSize; i++) {
+				newGroups[i] = groups[i];
+			}
+			groups = newGroups;
+			return true;
+		} else
+			return false;
 	}
 }

@@ -1,5 +1,7 @@
 package edu.berkeley.gamesman.solver;
 
+import java.util.ArrayList;
+
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.database.util.Page;
 import edu.berkeley.gamesman.database.util.LocalizedPage;
@@ -63,66 +65,69 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 					r = vals[i];
 					long hash = game.stateToHash(children[i]);
 					long hashGroup = hash / conf.recordsPerGroup;
-					int startPlace = -1, endPlace = -1;
 					int col = game.openColumn[i];
-					IF_DNE: if (whichPage[col] == -1) {
-						for (int c = 0; c < numPages; c++)
-							if (childPages[c].containsGroup(hashGroup)) {
-								if (childPages[c].containsGroup(ends[col])) {
-									whichPage[col] = c;
-									break IF_DNE;
-								} else
-									startPlace = c;
-							} else if (childPages[c].containsGroup(ends[col])) {
-								endPlace = c;
-							}
-						if (startPlace == -1 && endPlace == -1) {
-							assert Util.debug(DebugFacility.SOLVER, "Loading "
-									+ hashGroup + "-" + ends[col]
-									+ " for column " + col);
-							whichPage[col] = numPages;
-							childPages[numPages] = new Page(conf);
-							int numGroups = (int) (ends[col] - hashGroup + 1);
-							childPages[numPages].loadPage(db, hashGroup,
-									numGroups);
-							++numPages;
-						} else if (endPlace == -1) {
-							Page bottomPage = childPages[startPlace];
-							assert Util
-									.debug(
-											DebugFacility.SOLVER,
-											"Loading "
-													+ (bottomPage.firstGroup + bottomPage.numGroups)
-													+ "-" + ends[col]
-													+ " for column " + col);
-							bottomPage.extendUp(db, ends[col]);
-							whichPage[col] = startPlace;
-						} else if (startPlace == -1) {
-							Page topPage = childPages[endPlace];
-							assert Util.debug(DebugFacility.SOLVER, "Loading "
-									+ hashGroup + "-"
-									+ (topPage.firstGroup - 1L)
-									+ " for column " + col);
-							topPage.extendDown(db, hashGroup);
-							whichPage[col] = endPlace;
-						} else {
-							Page bottomPage = childPages[startPlace], topPage = childPages[endPlace];
-							assert Util
-									.debug(
-											DebugFacility.SOLVER,
-											"Loading "
-													+ (bottomPage.firstGroup + bottomPage.numGroups)
-													+ "-"
-													+ (topPage.firstGroup - 1L)
-													+ " for column " + col);
-							bottomPage.extendUp(db, topPage);
-							whichPage[col] = startPlace;
-							for (int c = 0; c < numPages; c++) {
-								if (whichPage[c] == endPlace) {
-									whichPage[c] = startPlace;
-									childPages[endPlace] = null;
+					if (whichPage[col] == -1) {
+						long pageStart = hashGroup, pageEnd = ends[col];
+						int lowPage = -1;
+						ArrayList<Page> pageList = new ArrayList<Page>(game
+								.maxChildren());
+						for (int c = 0; c < numPages; c++) {
+							if (childPages[c] == null)
+								continue;
+							long firstGroup = childPages[c].firstGroup;
+							long lastGroup = firstGroup
+									+ childPages[c].numGroups - 1;
+							if (firstGroup <= pageEnd && lastGroup >= pageStart) {
+								if (lastGroup > pageEnd)
+									pageEnd = lastGroup;
+								if (lowPage == -1
+										|| firstGroup < childPages[lowPage].firstGroup) {
+									if (lowPage >= 0) {
+										pageList.add(childPages[lowPage]);
+										childPages[lowPage] = null;
+									}
+									lowPage = c;
+								} else {
+									pageList.add(childPages[c]);
+									childPages[c] = null;
 								}
 							}
+						}
+						if (lowPage == -1) {
+							childPages[numPages] = new Page(conf);
+							childPages[numPages].loadPage(db, pageStart,
+									(int) (pageEnd - pageStart) + 1);
+							lowPage = numPages;
+							++numPages;
+						}
+						Page thePage = childPages[lowPage];
+						if (thePage.firstGroup <= pageStart) {
+							pageStart = thePage.firstGroup;
+							thePage
+									.ensureCapacity((int) (pageEnd - pageStart) + 1);
+						} else {
+							thePage.extendDown(db, hashGroup,
+									(int) (pageEnd - pageStart) + 1);
+						}
+						long min = pageEnd + 1;
+						while (!pageList.isEmpty()) {
+							Page nextPage = null;
+							for (Page p : pageList) {
+								if (p.firstGroup < min) {
+									nextPage = p;
+									min = p.firstGroup;
+								}
+							}
+							pageList.remove(nextPage);
+							thePage.extendUp(db, nextPage);
+						}
+						if (thePage.firstGroup + thePage.numGroups <= pageEnd)
+							thePage.extendUp(db, pageEnd);
+						whichPage[col] = lowPage;
+						for (int c = 0; c < whichPage.length; c++) {
+							if (whichPage[c] >= 0
+									&& childPages[whichPage[c]] == null)
+								whichPage[c] = lowPage;
 						}
 					}
 					childPages[whichPage[game.openColumn[i]]].getRecord(

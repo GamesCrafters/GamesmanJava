@@ -33,8 +33,9 @@ public class TopDownSolver<T> extends Solver {
 	// Game<Object> g;
 
 	@Override
-	public WorkUnit prepareSolve(Configuration config, Game<Object> game) {
+	public WorkUnit prepareSolve(Configuration config) {
 		conf = config;
+		Game<?> game = config.getGame();
 		long hashSpace = game.lastHash() + 1;
 		Record defaultRecord = game.newRecord(PrimitiveValue.UNDECIDED);
 		for (long index = 0; index < hashSpace; index++) {
@@ -42,7 +43,7 @@ public class TopDownSolver<T> extends Solver {
 		}
 		db.flush();
 		TopDownSolverWorkUnit wu = new TopDownSolverWorkUnit(Util
-				.<Game<T>, Game<Object>> checkedCast(game), db);
+				.<Game<T>, Game<?>> checkedCast(game), db);
 		return wu;
 	}
 

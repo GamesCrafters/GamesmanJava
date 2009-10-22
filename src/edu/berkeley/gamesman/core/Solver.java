@@ -36,7 +36,6 @@ public abstract class Solver {
 	 * @return a WorkUnit that has enough information to solve the game in its
 	 *         entirety.
 	 */
-	public abstract WorkUnit prepareSolve(Configuration config,
-			Game<Object> game);
+	public abstract WorkUnit prepareSolve(Configuration config);
 
 }

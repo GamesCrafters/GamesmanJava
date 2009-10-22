@@ -26,7 +26,8 @@ import edu.berkeley.gamesman.util.Util;
  * is reversible.
  * 
  * @author Patrick Horn (with Jeremy Fleischman watching)
- * @param <T> The game state
+ * @param <T>
+ *            The game state
  */
 public class BreadthFirstSolver<T> extends Solver {
 
@@ -42,8 +43,9 @@ public class BreadthFirstSolver<T> extends Solver {
 	volatile int lastTier = 0;
 
 	@Override
-	public WorkUnit prepareSolve(Configuration config, Game<Object> game) {
+	public WorkUnit prepareSolve(Configuration config) {
 		conf = config;
+		Game<?> game = config.getGame();
 		int maxRemoteness = conf.getInteger("gamesman.solver.maxRemoteness",
 				Integer.MAX_VALUE);
 		maxHash = game.lastHash();
@@ -51,7 +53,8 @@ public class BreadthFirstSolver<T> extends Solver {
 		Record defaultRecord = game.newRecord(PrimitiveValue.UNDECIDED);
 		for (long index = 0; index < hashSpace; index++)
 			db.putRecord(index, defaultRecord);
-		return new BreadthFirstWorkUnit(Util.<Game<T>,Game<Object>>checkedCast(game), db, maxRemoteness);
+		return new BreadthFirstWorkUnit(Util
+				.<Game<T>, Game<?>> checkedCast(game), db, maxRemoteness);
 	}
 
 	class BreadthFirstWorkUnit implements WorkUnit {
@@ -76,8 +79,8 @@ public class BreadthFirstSolver<T> extends Solver {
 		}
 
 		// For divide()
-		private BreadthFirstWorkUnit(BreadthFirstWorkUnit copy,
-				long firstHash, long lastHashPlusOne) {
+		private BreadthFirstWorkUnit(BreadthFirstWorkUnit copy, long firstHash,
+				long lastHashPlusOne) {
 			game = copy.game;
 			database = copy.database;
 			maxRemoteness = copy.maxRemoteness;
@@ -121,7 +124,7 @@ public class BreadthFirstSolver<T> extends Solver {
 								numPositionsSeen++;
 								setValues.add(childhash);
 								lastTier = remoteness + 1;
-								if (numPositionsSeen%STEP_SIZE==0) {
+								if (numPositionsSeen % STEP_SIZE == 0) {
 									solveTask.setProgress(numPositionsSeen);
 								}
 							} else {
@@ -185,8 +188,9 @@ public class BreadthFirstSolver<T> extends Solver {
 			if (num < hashSpace) {
 				for (int i = 0; i < num - 1; i++) {
 					long endHash = currentHash + hashIncrement;
-					arr.add(new BreadthFirstWorkUnit(this, currentHash,
-							endHash));
+					arr
+							.add(new BreadthFirstWorkUnit(this, currentHash,
+									endHash));
 					currentHash = endHash;
 				}
 			}

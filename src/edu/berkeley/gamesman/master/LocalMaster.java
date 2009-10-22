@@ -69,7 +69,7 @@ public final class LocalMaster implements Master, TaskFactory {
 		int threads = conf.getInteger("gamesman.threads", 1);
 		assert Util.debug(DebugFacility.MASTER, "Launching " + threads
 				+ " threads...");
-		List<WorkUnit> list = solver.prepareSolve(conf, game).divide(threads);
+		List<WorkUnit> list = solver.prepareSolve(conf).divide(threads);
 
 		ArrayList<Thread> myThreads = new ArrayList<Thread>();
 
