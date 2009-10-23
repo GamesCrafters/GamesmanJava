@@ -13,7 +13,9 @@ public abstract class Solver {
 	 */
 	public static final int STEP_SIZE = 10000000;
 
-	protected Database db;
+	protected Database readDb;
+
+	protected Database writeDb;
 
 	/**
 	 * Set the Database to use for this solver
@@ -22,7 +24,8 @@ public abstract class Solver {
 	 *            The configuration object
 	 */
 	public void initialize(Configuration conf) {
-		this.db = conf.db;
+		readDb = conf.db;
+		writeDb = conf.db;
 	}
 
 	/**
@@ -31,8 +34,6 @@ public abstract class Solver {
 	 * 
 	 * @param config
 	 *            The configuration used for this solve
-	 * @param game
-	 *            The Game to solve
 	 * @return a WorkUnit that has enough information to solve the game in its
 	 *         entirety.
 	 */

@@ -7,7 +7,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
@@ -39,11 +38,11 @@ public class TopDownSolver<T> extends Solver {
 		long hashSpace = game.lastHash() + 1;
 		Record defaultRecord = game.newRecord(PrimitiveValue.UNDECIDED);
 		for (long index = 0; index < hashSpace; index++) {
-			db.putRecord(index, defaultRecord);
+			writeDb.putRecord(index, defaultRecord);
 		}
-		db.flush();
+		writeDb.flush();
 		TopDownSolverWorkUnit wu = new TopDownSolverWorkUnit(Util
-				.<Game<T>, Game<?>> checkedCast(game), db);
+				.<Game<T>, Game<?>> checkedCast(game));
 		return wu;
 	}
 
@@ -51,11 +50,8 @@ public class TopDownSolver<T> extends Solver {
 
 		final private Game<T> game;
 
-		final private Database database;
-
-		public TopDownSolverWorkUnit(Game<T> g, Database db) {
+		public TopDownSolverWorkUnit(Game<T> g) {
 			game = g;
-			this.database = db;
 		}
 
 		public void conquer() {
@@ -91,7 +87,7 @@ public class TopDownSolver<T> extends Solver {
 					long loc = game.stateToHash(child.cdr);
 					Record r;
 
-					r = database.getRecord(loc);
+					r = readDb.getRecord(loc);
 					if (r.get(RecordFields.VALUE) == PrimitiveValue.UNDECIDED
 							.value()) {
 						assert Util.debug(DebugFacility.SOLVER,
@@ -134,7 +130,7 @@ public class TopDownSolver<T> extends Solver {
 							+ " => " + next + "; children size = "
 							+ children.size());
 				}
-				database.putRecord(loc, next);
+				writeDb.putRecord(loc, next);
 				assert Util.debug(DebugFacility.SOLVER, "Solved state \n"
 						+ game.displayState(state) + " to " + next);
 			}

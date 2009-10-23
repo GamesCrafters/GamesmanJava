@@ -169,4 +169,13 @@ public class LocalizedPage extends Page {
 		}
 		super.extendUp(db, p);
 	}
+
+	public void loadPage(long firstGroup, int numGroups) {
+		super.loadPage(firstGroup, numGroups);
+		for (int i = 0; i < rawRecords.length; i++) {
+			used[i] = 0L;
+			lastIndex[i] = -1;
+			rawChanged[i] = false;
+		}
+	}
 }

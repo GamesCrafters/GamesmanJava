@@ -145,14 +145,9 @@ public class Page {
 	 *            The number of groups to load
 	 */
 	public void loadPage(Database db, long firstGroup, int numGroups) {
-		this.firstGroup = firstGroup;
-		this.numGroups = numGroups;
-		int arrSize = numGroups * conf.recordGroupByteLength;
-		if (groups == null || groups.length < arrSize)
-			groups = new byte[arrSize];
-		db
-				.getBytes(firstGroup * conf.recordGroupByteLength, groups, 0,
-						arrSize);
+		loadPage(firstGroup, numGroups);
+		db.getBytes(firstGroup * conf.recordGroupByteLength, groups, 0,
+				numGroups * conf.recordGroupByteLength);
 		dirty = false;
 	}
 
@@ -295,7 +290,12 @@ public class Page {
 	 */
 	public boolean ensureCapacity(int neededGroups) {
 		int arrSize = neededGroups * conf.recordGroupByteLength;
-		if (groups.length < arrSize) {
+		if (neededGroups == 0)
+			return false;
+		else if (groups == null) {
+			groups = new byte[arrSize];
+			return true;
+		} else if (groups.length < arrSize) {
 			int oldSize = numGroups * conf.recordGroupByteLength;
 			byte[] newGroups = new byte[arrSize];
 			for (int i = 0; i < oldSize; i++) {
@@ -305,5 +305,21 @@ public class Page {
 			return true;
 		} else
 			return false;
+	}
+
+	/**
+	 * Loads zero groups into this page (Should only be used if every group on
+	 * the page is going to be written)
+	 * 
+	 * @param firstGroup
+	 *            The first group to load
+	 * @param numGroups
+	 *            The number of groups to load
+	 */
+	public void loadPage(long firstGroup, int numGroups) {
+		this.firstGroup = firstGroup;
+		this.numGroups = numGroups;
+		ensureCapacity(numGroups);
+		dirty = true;
 	}
 }

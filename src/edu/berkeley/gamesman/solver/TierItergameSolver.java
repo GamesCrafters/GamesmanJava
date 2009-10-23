@@ -35,16 +35,16 @@ public final class TierItergameSolver extends TierSolver<ItergameState> {
 				Record r;
 				for (int i = 0; i < len; i++) {
 					r = vals[i];
-					db.getRecord(game.stateToHash(children[i]), r);
+					readDb.getRecord(game.stateToHash(children[i]), r);
 					r.previousPosition();
 				}
 				Record newVal = game.combine(vals, 0, len);
-				db.putRecord(current, newVal);
+				writeDb.putRecord(current, newVal);
 			} else {
 				if (hasRemoteness)
 					prim.set(RecordFields.REMOTENESS, 0);
 				prim.set(RecordFields.VALUE, pv.value());
-				db.putRecord(current, prim);
+				readDb.putRecord(current, prim);
 			}
 			if (current != end)
 				game.nextHashInTier();

@@ -64,18 +64,18 @@ public class TierSolver<T> extends Solver {
 				Collection<Pair<String, T>> children = game.validMoves(state);
 				ArrayList<Record> vals = new ArrayList<Record>(children.size());
 				for (Pair<String, T> child : children) {
-					vals.add(db.getRecord(game.stateToHash(child.cdr)));
+					vals.add(readDb.getRecord(game.stateToHash(child.cdr)));
 				}
 				Record[] theVals = new Record[vals.size()];
 				Record newVal = game.combine(vals.toArray(theVals), 0,
 						theVals.length);
-				db.putRecord(current, newVal);
+				writeDb.putRecord(current, newVal);
 			} else {
 				Record prim = game.newRecord();
 				prim.set(RecordFields.VALUE, pv.value());
 				assert Util.debug(DebugFacility.SOLVER,
 						"Primitive value for state " + current + " is " + prim);
-				db.putRecord(current, prim);
+				writeDb.putRecord(current, prim);
 			}
 		}
 		assert Util.debug(DebugFacility.THREADING,
@@ -91,7 +91,8 @@ public class TierSolver<T> extends Solver {
 
 	private final Runnable flusher = new Runnable() {
 		public void run() {
-			db.flush();
+			writeDb.flush();
+			--tier;
 			needs2Sync = false;
 			if (tier == -1)
 				updater.complete();
@@ -154,7 +155,6 @@ public class TierSolver<T> extends Solver {
 						++count;
 					} else {
 						count = 0;
-						tier--;
 						needs2Sync = true;
 					}
 					--end;
@@ -162,8 +162,7 @@ public class TierSolver<T> extends Solver {
 					assert Util.debug(DebugFacility.THREADING,
 							"Beginning to solve slice " + slice + " for count "
 									+ (needs2Sync ? (split - 1) : (count - 1))
-									+ " in tier "
-									+ (tier + (needs2Sync ? 1 : 0)));
+									+ " in tier " + tier);
 					return slice;
 				}
 			}
@@ -247,11 +246,20 @@ public class TierSolver<T> extends Solver {
 				"gamesman.threads", 1));
 	}
 
+	/**
+	 * @param conf
+	 *            The configuration object
+	 * @param tier
+	 *            The tier to solve
+	 * @param solveSpace
+	 *            The range in the given tier to solve
+	 * @return A WorkUnit for solving solveSpace
+	 */
 	public WorkUnit prepareSolve(Configuration conf, int tier,
 			Pair<Long, Long> solveSpace) {
 		myGame = Util.checkedCast(conf.getGame());
-		tier = myGame.numberOfTiers() - 1;
 		updater = new TierSolverUpdater();
+		this.tier = tier;
 		bottom = solveSpace.car;
 		top = solveSpace.cdr;
 		hadooping = true;
