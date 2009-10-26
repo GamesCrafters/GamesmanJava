@@ -36,12 +36,12 @@ public class FileDatabase extends Database {
 
 	@Override
 	public synchronized void flush() {
-		try {
-			fd.getFD().sync();
-			fd.getChannel().force(true);
-		} catch (IOException e) {
-			Util.fatalError("Error while writing to database: " + e);
-		}
+//		try {
+//			fd.getFD().sync();
+//			fd.getChannel().force(true);
+//		} catch (IOException e) {
+//			Util.fatalError("Error while writing to database: " + e);
+//		}
 	}
 
 	public synchronized void seek(long loc) {

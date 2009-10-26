@@ -77,25 +77,24 @@ public abstract class Database {
 	}
 
 	/**
-	 * Notifies the database that a thread has begun writing.
-	 * The solver will write to this range of records, and will be
-	 * writing sequentially witin this range until recordEnd-1.
+	 * Notifies the database that a thread has begun writing. The solver will
+	 * write to this range of records, and will be writing sequentially witin
+	 * this range until recordEnd-1.
+	 * 
 	 * @param tier
 	 *            Which tier this task belongs to (if solving all tiers at once)
-	 * @param task
-	 *            An identifier for this task. Use '0' if the solver is
-	 *            not split.
 	 * @param recordStart
 	 *            The first record that will be written. Must be group-aligned.
 	 * @param recordEnd
-	 *            The last record that will be written. Must be group-aligned.
+	 *            1 plus lastRecord
+	 * @return A database that I can write this chunk to
 	 */
-	public void beginWrite(int tier, long task, long recordStart, long recordEnd) {
-		
+	public Database beginWrite(int tier, long recordStart, long recordEnd) {
+		return this;
 	}
 
-	public void endWrite(int tier, long task) {
-		
+	public void endWrite(int tier, Database db, long recordStart, long recordEnd) {
+		//Hi
 	}
 
 	/**

@@ -1,6 +1,7 @@
 package edu.berkeley.gamesman.solver;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.ItergameState;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
@@ -14,7 +15,7 @@ import edu.berkeley.gamesman.util.Util;
 public final class TierItergameSolver extends TierSolver<ItergameState> {
 	@Override
 	protected void solvePartialTier(Configuration conf, long start, long end,
-			TierSolverUpdater t) {
+			TierSolverUpdater t, Database inRead, Database inWrite) {
 		TieredIterGame game = Util.checkedCast(conf.getGame());
 		long current = start;
 		game.setState(game.hashToState(start));
@@ -35,16 +36,16 @@ public final class TierItergameSolver extends TierSolver<ItergameState> {
 				Record r;
 				for (int i = 0; i < len; i++) {
 					r = vals[i];
-					readDb.getRecord(game.stateToHash(children[i]), r);
+					inRead.getRecord(game.stateToHash(children[i]), r);
 					r.previousPosition();
 				}
 				Record newVal = game.combine(vals, 0, len);
-				writeDb.putRecord(current, newVal);
+				inWrite.putRecord(current, newVal);
 			} else {
 				if (hasRemoteness)
 					prim.set(RecordFields.REMOTENESS, 0);
 				prim.set(RecordFields.VALUE, pv.value());
-				readDb.putRecord(current, prim);
+				inRead.putRecord(current, prim);
 			}
 			if (current != end)
 				game.nextHashInTier();

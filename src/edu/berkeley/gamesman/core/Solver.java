@@ -43,41 +43,4 @@ public abstract class Solver {
 	 * to solve the game.
 	 */
 	public abstract WorkUnit prepareSolve(Configuration config);
-
-	/**
-	 * Prepare to solve a game and encapsulate all relevant information into a
-	 * WorkUnit for later execution by a Master
-	 * 
-	 * @param config
-	 *            The configuration used for this solve.
-	 *            Uses config.getGame() to determine which game to solve.
-	 * @param thisTier
-	 *            Which tier in the solve process. Defaults to Game.numberOfTiers() - 1.
-	 * @param startTask
-	 *            Which task in the sequence to start solving. May not be negative.
-	 * @param endTask
-	 *            1 + the last task number to solve. If -1, solves all tiers until
-	 *            finished. If equal to numberOfTasksForTier(thisTier), solves only
-	 *            this single tier.
-	 *
-	 * @return See prepareSolve(Configuration, Game).
-	 *
-	 * @note: A task can be used to resume the solver state from a given point,
-	 * or to solve only part of the database in the case of a parallel solve.
-	 * Do not 
-	 */
-	@SuppressWarnings("unchecked")
-	public WorkUnit prepareSolve(Configuration config,
-			int thistier,
-			long startTask,
-			long endTask) {
-		// Throws an exception if config.getGame() is not a subclass of Object
-		return this.prepareSolve(config);
-	}
-
-	public long numberOfTasksForTier(
-			Configuration conf,
-			int tierNum) {
-		return 1;
-	}
 }

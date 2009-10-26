@@ -43,7 +43,7 @@ public class TierSolver<T> extends Solver {
 	}
 
 	protected void solvePartialTier(Configuration conf, long start, long end,
-			TierSolverUpdater t) {
+			TierSolverUpdater t, Database inRead, Database inWrite) {
 		long current = start - 1;
 		TieredGame<T> game = Util.checkedCast(conf.getGame());
 
@@ -64,18 +64,18 @@ public class TierSolver<T> extends Solver {
 				Collection<Pair<String, T>> children = game.validMoves(state);
 				ArrayList<Record> vals = new ArrayList<Record>(children.size());
 				for (Pair<String, T> child : children) {
-					vals.add(readDb.getRecord(game.stateToHash(child.cdr)));
+					vals.add(inRead.getRecord(game.stateToHash(child.cdr)));
 				}
 				Record[] theVals = new Record[vals.size()];
 				Record newVal = game.combine(vals.toArray(theVals), 0,
 						theVals.length);
-				writeDb.putRecord(current, newVal);
+				inWrite.putRecord(current, newVal);
 			} else {
 				Record prim = game.newRecord();
 				prim.set(RecordFields.VALUE, pv.value());
 				assert Util.debug(DebugFacility.SOLVER,
 						"Primitive value for state " + current + " is " + prim);
-				writeDb.putRecord(current, prim);
+				inWrite.putRecord(current, prim);
 			}
 		}
 		assert Util.debug(DebugFacility.THREADING,
@@ -91,7 +91,8 @@ public class TierSolver<T> extends Solver {
 
 	private final Runnable flusher = new Runnable() {
 		public void run() {
-			writeDb.flush();
+			if (writeDb != null)
+				writeDb.flush();
 			--tier;
 			needs2Sync = false;
 			if (tier == -1)
@@ -139,9 +140,9 @@ public class TierSolver<T> extends Solver {
 						return null;
 					long fullStart = hadooping ? bottom : myGame
 							.hashOffsetForTier(tier);
-					long fullSize = hadooping ? top : myGame
-							.lastHashValueForTier(tier)
-							+ 1 - fullStart;
+					long fullSize = (hadooping ? top : myGame
+							.lastHashValueForTier(tier))
+							- fullStart;
 					int split = (int) Math.min(this.split, Math.max(fullSize
 							/ conf.recordsPerGroup, 1));
 					long start = fullStart + fullSize * count / split;
@@ -157,7 +158,6 @@ public class TierSolver<T> extends Solver {
 						count = 0;
 						needs2Sync = true;
 					}
-					--end;
 					Pair<Long, Long> slice = new Pair<Long, Long>(start, end);
 					assert Util.debug(DebugFacility.THREADING,
 							"Beginning to solve slice " + slice + " for count "
@@ -188,7 +188,16 @@ public class TierSolver<T> extends Solver {
 			Pair<Long, Long> slice;
 			while ((slice = nextSlice(conf)) != null) {
 				if (slice.car <= slice.cdr) {
-					solvePartialTier(conf, slice.car, slice.cdr, updater);
+					if (hadooping) {
+						Database myWrite = writeDb.beginWrite(tier, slice.car,
+								slice.cdr + 1);
+						solvePartialTier(conf, slice.car, slice.cdr, updater,
+								readDb, myWrite);
+						writeDb.endWrite(tier, myWrite, slice.car,
+								slice.cdr + 1);
+					} else
+						solvePartialTier(conf, slice.car, slice.cdr, updater,
+								readDb, writeDb);
 				}
 			}
 			if (barr != null)
@@ -250,18 +259,20 @@ public class TierSolver<T> extends Solver {
 	 * @param conf
 	 *            The configuration object
 	 * @param tier
+	 *            The tier
+	 * @param startHash
 	 *            The tier to solve
-	 * @param solveSpace
+	 * @param endHash
 	 *            The range in the given tier to solve
 	 * @return A WorkUnit for solving solveSpace
 	 */
-	public WorkUnit prepareSolve(Configuration conf, int tier,
-			Pair<Long, Long> solveSpace) {
+	public WorkUnit prepareSolve(Configuration conf, int tier, long startHash,
+			long endHash) {
 		myGame = Util.checkedCast(conf.getGame());
 		updater = new TierSolverUpdater();
 		this.tier = tier;
-		bottom = solveSpace.car;
-		top = solveSpace.cdr;
+		bottom = startHash;
+		top = endHash;
 		hadooping = true;
 		return new TierSolverWorkUnit(conf);
 	}

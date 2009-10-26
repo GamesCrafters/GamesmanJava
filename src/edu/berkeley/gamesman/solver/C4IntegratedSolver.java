@@ -17,7 +17,7 @@ import edu.berkeley.gamesman.util.Util;
 public class C4IntegratedSolver extends TierSolver<ItergameState> {
 	@Override
 	protected void solvePartialTier(Configuration conf, long start, long end,
-			TierSolverUpdater t) {
+			TierSolverUpdater t, Database inRead, Database inWrite) {
 		if (end < start)
 			return;
 		Connect4 game = Util.checkedCast(conf.getGame());
@@ -37,14 +37,16 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 		int writeLen = (int) (endGroup - currentGroup + 1);
 		LocalizedPage writePage = new LocalizedPage(conf, 1);
 		writePage.loadPage(currentGroup, writeLen);
+		if (tier == 1)
+			System.out.println("Hi");
 		if (game.lastHashValueForTier(tier) == end
 				&& (end + 1L) % conf.recordsPerGroup > 0) {
 			if (conf.recordGroupUsesLong)
-				writePage.setGroup(writeLen - 1, readDb
+				writePage.setGroup(writeLen - 1, inRead
 						.getLongRecordGroup(endGroup
 								* conf.recordGroupByteLength));
 			else
-				writePage.setGroup(writeLen - 1, readDb
+				writePage.setGroup(writeLen - 1, inRead
 						.getBigIntRecordGroup(endGroup
 								* conf.recordGroupByteLength));
 		}
@@ -107,7 +109,7 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 						}
 						if (lowPage == -1) {
 							childPages[numPages] = new Page(conf);
-							childPages[numPages].loadPage(readDb, pageStart,
+							childPages[numPages].loadPage(inRead, pageStart,
 									(int) (pageEnd - pageStart) + 1);
 							lowPage = numPages;
 							++numPages;
@@ -118,7 +120,7 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 							thePage
 									.ensureCapacity((int) (pageEnd - pageStart) + 1);
 						} else {
-							thePage.extendDown(readDb, hashGroup,
+							thePage.extendDown(inRead, hashGroup,
 									(int) (pageEnd - pageStart) + 1);
 						}
 						long min = pageEnd + 1;
@@ -131,10 +133,10 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 								}
 							}
 							pageList.remove(nextPage);
-							thePage.extendUp(readDb, nextPage);
+							thePage.extendUp(inRead, nextPage);
 						}
 						if (thePage.firstGroup + thePage.numGroups <= pageEnd)
-							thePage.extendUp(readDb, pageEnd);
+							thePage.extendUp(inRead, pageEnd);
 						whichPage[col] = lowPage;
 						for (int c = 0; c < whichPage.length; c++) {
 							if (whichPage[c] >= 0
@@ -166,6 +168,6 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 		assert Util.debug(DebugFacility.SOLVER, "Writing "
 				+ writePage.firstGroup + " - "
 				+ (writePage.firstGroup + writePage.numGroups - 1));
-		writePage.writeBack(writeDb);
+		writePage.writeBack(inWrite);
 	}
 }
