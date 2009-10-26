@@ -140,8 +140,8 @@ public class TierSolver<T> extends Solver {
 						return null;
 					long fullStart = hadooping ? bottom : myGame
 							.hashOffsetForTier(tier);
-					long fullSize = (hadooping ? top : myGame
-							.lastHashValueForTier(tier))
+					long fullSize = (hadooping ? top : (myGame
+							.lastHashValueForTier(tier) + 1L))
 							- fullStart;
 					int split = (int) Math.min(this.split, Math.max(fullSize
 							/ conf.recordsPerGroup, 1));
@@ -158,6 +158,7 @@ public class TierSolver<T> extends Solver {
 						count = 0;
 						needs2Sync = true;
 					}
+					--end;
 					Pair<Long, Long> slice = new Pair<Long, Long>(start, end);
 					assert Util.debug(DebugFacility.THREADING,
 							"Beginning to solve slice " + slice + " for count "
