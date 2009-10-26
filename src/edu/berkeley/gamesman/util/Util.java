@@ -56,6 +56,14 @@ public final class Util {
 		private static final long serialVersionUID = -4160479272744795242L;
 	}
 
+	public static byte[] decodeBase64(String in) {
+		return Base64.decode(in);
+	} 
+
+	public static String encodeBase64(byte[]in) {
+		return Base64.encodeBytes(in);
+	} 
+
 	/**
 	 * Throws a fatal Error if a required condition is not satisfied
 	 * 
