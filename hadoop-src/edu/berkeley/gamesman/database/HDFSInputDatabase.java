@@ -2,11 +2,9 @@ package edu.berkeley.gamesman.database;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.RecordGroup;
 import edu.berkeley.gamesman.util.LongIterator;
 import edu.berkeley.gamesman.util.Util;
@@ -14,7 +12,6 @@ import edu.berkeley.gamesman.hadoop.TierMap;
 import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 import java.util.Iterator;
-import java.io.EOFException;
 import java.io.IOException;
 
 /**
@@ -98,7 +95,7 @@ public class HDFSInputDatabase extends TierMap.MapReduceDatabase {
 	}
 
 	@Override
-	public synchronized void getBytes(long loc, byte[] arr, int off, int len) {
+	public void getBytes(long loc, byte[] arr, int off, int len) {
 		try {
 			fd.readFully(loc, arr, off, len);
 		} catch (IOException e) {

@@ -6,14 +6,11 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
-
-import edu.berkeley.gamesman.util.Util;
 
 /**
  * A SequenceInputFormat is a Hadoop input format.
@@ -22,14 +19,8 @@ import edu.berkeley.gamesman.util.Util;
  * format just throws numbers into the system
  * @author Steven Schlansker
  */
+@SuppressWarnings("deprecation")
 public class SequenceInputFormat implements InputFormat<LongWritable, LongWritable> {
-
-	/**
-	 * Empty constructor
-	 */
-	public SequenceInputFormat() {
-	}
-	
 	public RecordReader<LongWritable, LongWritable> getRecordReader(
 			InputSplit split, JobConf conf, Reporter rep) throws IOException {
 		return new SequenceReader((SequenceSplit)split);
@@ -56,13 +47,10 @@ public class SequenceInputFormat implements InputFormat<LongWritable, LongWritab
 		
 		return splits;
 	}
-
-	public void validateInput(JobConf conf) throws IOException {
-		// Nothing to do here...for now :-p
-	}
 	
 }
 
+@SuppressWarnings("deprecation")
 class SequenceSplit implements InputSplit {
 
 	long s,l, incr;

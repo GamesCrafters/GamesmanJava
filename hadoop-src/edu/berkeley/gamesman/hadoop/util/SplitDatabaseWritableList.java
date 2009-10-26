@@ -7,8 +7,6 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.Writable;
 
-import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Record;
 import java.util.List;
 import java.util.ArrayList;
 

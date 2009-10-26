@@ -1,12 +1,9 @@
 package edu.berkeley.gamesman.database;
 
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 
-import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.RecordGroup;
 import edu.berkeley.gamesman.util.LongIterator;
 import edu.berkeley.gamesman.hadoop.TierMap;
@@ -14,7 +11,6 @@ import edu.berkeley.gamesman.util.Util;
 import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 import java.util.Iterator;
-import java.io.EOFException;
 import java.io.IOException;
 
 /**
@@ -95,7 +91,7 @@ public class HDFSOutputDatabase extends TierMap.MapReduceDatabase {
 	}
 
 	@Override
-	public synchronized void putBytes(byte[] arr, int off, int len) {
+	public void putBytes(byte[] arr, int off, int len) {
 		try {
 			fd.write(arr, off, len);
 		} catch (IOException e) {
@@ -104,7 +100,7 @@ public class HDFSOutputDatabase extends TierMap.MapReduceDatabase {
 	}
 
 	@Override
-	public synchronized void putRecordGroups(long loc,
+	public void putRecordGroups(long loc,
 			LongIterator recordGroups, int numGroups) {
 		try {
 			groupsLength = numGroups * conf.recordGroupByteLength;
@@ -124,7 +120,7 @@ public class HDFSOutputDatabase extends TierMap.MapReduceDatabase {
 	}
 
 	@Override
-	public synchronized void putRecordGroups(long loc,
+	public void putRecordGroups(long loc,
 			Iterator<BigInteger> recordGroups, int numGroups) {
 		try {
 			groupsLength = numGroups * conf.recordGroupByteLength;
@@ -144,7 +140,7 @@ public class HDFSOutputDatabase extends TierMap.MapReduceDatabase {
 	}
 
 	@Override
-	public synchronized void putRecordGroup(long loc, long value) {
+	public void putRecordGroup(long loc, long value) {
 		try {
 			assert (loc + offset == fd.getPos());
 			RecordGroup.outputUnsignedBytes(conf, value, (java.io.DataOutput)fd);
@@ -154,7 +150,7 @@ public class HDFSOutputDatabase extends TierMap.MapReduceDatabase {
 	}
 
 	@Override
-	public synchronized void putRecordGroup(long loc, BigInteger value) {
+	public void putRecordGroup(long loc, BigInteger value) {
 		try {
 			assert (loc + offset == fd.getPos());
 			RecordGroup.outputUnsignedBytes(conf, value, (java.io.DataOutput)fd);
@@ -164,7 +160,7 @@ public class HDFSOutputDatabase extends TierMap.MapReduceDatabase {
 	}
 
 	@Override
-	public synchronized void initialize(String loc) {
+	public void initialize(String loc) {
 		boolean previouslyExisted;
 		try {
 			myFile = new Path(loc);
