@@ -151,6 +151,10 @@ public final class LocalMaster implements Master, TaskFactory {
 		return new LocalMasterTextTask(name);
 	}
 
+	public Solver getSolver() {
+		return solver;
+	}
+
 	/**
 	 * @return the game
 	 */
