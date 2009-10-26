@@ -29,8 +29,10 @@ public class HadoopDatabase extends Database {
 
 	protected FileSystem fs;
 
-	public HadoopDatabase(FileSystem fs, Configuration conf) {
-		this.conf = conf;
+	public HadoopDatabase() {
+	}
+
+	public HadoopDatabase(FileSystem fs) {
 		this.fs = fs;
 	}
 
@@ -101,10 +103,10 @@ public class HadoopDatabase extends Database {
 		String[] filenames = loc.split(">");
 		String inputLoc = filenames[0];
 		String outputLoc = filenames[1];
-		previousTier = new HadoopSplitDatabase(fs, conf);
-		previousTier.initialize(inputLoc);
-		output = new HDFSOutputDatabase(fs, conf);
-		output.initialize(outputLoc);
+		previousTier = new HadoopDatabase(fs);
+		previousTier.initialize(inputLoc, conf);
+		output = new HDFSOutputDatabase(fs);
+		output.initialize(outputLoc, conf);
 	}
 
 	@Override

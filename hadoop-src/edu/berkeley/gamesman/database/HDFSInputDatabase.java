@@ -10,6 +10,7 @@ import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.RecordGroup;
 import edu.berkeley.gamesman.util.LongIterator;
 import edu.berkeley.gamesman.util.Util;
+import edu.berkeley.gamesman.hadoop.TierMap;
 import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 import java.util.Iterator;
@@ -23,7 +24,7 @@ import java.io.IOException;
  * 
  * @author Steven Schlansker
  */
-public class HDFSInputDatabase extends Database {
+public class HDFSInputDatabase extends TierMap.MapReduceDatabase {
 
 	protected Path myFile;
 
@@ -37,7 +38,8 @@ public class HDFSInputDatabase extends Database {
 
 	protected long offset;
 
-	protected FileSystem fs;
+	HDFSInputDatabase() {}
+	HDFSInputDatabase(FileSystem fs) {super(fs);}
 
 	public HDFSInputDatabase(FileSystem fs, Configuration conf) {
 		this.conf = conf;
