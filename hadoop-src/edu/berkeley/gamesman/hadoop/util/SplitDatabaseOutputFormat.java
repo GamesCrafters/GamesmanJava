@@ -12,6 +12,15 @@ import org.apache.hadoop.mapred.RecordWriter;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.util.Progressable;
 
+/**
+ * SplitDatabaseOutputFormat writes a list of databases to a file.
+ * This class doesn't do anything out of the ordinary, and basically calls
+ * SplitDatabaseWritableList.write().
+ * 
+ * @see SplitDatabaseWritableList
+ * @author Patrick Horn
+ */
+@SuppressWarnings("deprecation")
 public class SplitDatabaseOutputFormat implements
 		OutputFormat<IntWritable, SplitDatabaseWritableList> {
 	public RecordWriter<IntWritable, SplitDatabaseWritableList> getRecordWriter(

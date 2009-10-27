@@ -10,14 +10,23 @@ import edu.berkeley.gamesman.util.LongIterator;
 import edu.berkeley.gamesman.util.Util;
 import edu.berkeley.gamesman.util.biginteger.BigInteger;
 import edu.berkeley.gamesman.hadoop.TierMap;
-import java.util.NavigableMap;
+import java.util.SortedMap;
 import java.util.TreeMap;
-import edu.berkeley.gamesman.util.Pair;
 import java.util.Map;
 import java.util.HashMap;
 import java.io.EOFException;
 import java.io.IOException;
 
+/**
+ * HadoopSplitDatabase contains a NavigableMap of read databases, sorted by
+ * a range of hash values, so that it is possible to read from a previous
+ * tier without combining all the mini-databases.
+ * 
+ * For writing databases, it uses beginWrite() and endWrite() in order to
+ * create a mini-database only used for one thread of the solve.
+ * 
+ * @author Steven Schlansker
+ */
 public class HadoopSplitDatabase extends TierMap.MapReduceDatabase {
 
 	HadoopSplitDatabase() {
@@ -45,8 +54,8 @@ public class HadoopSplitDatabase extends TierMap.MapReduceDatabase {
 							+ " in split database " + splitfilename);
 				}
 				String filename = fd.readUTF();
-				Database db = new HDFSInputDatabase(fs, conf);
-				db.initialize(inputFilenameBase + filename);
+				Database db = new HDFSInputDatabase(fs);
+				db.initialize(inputFilenameBase + filename, conf);
 				databaseTree.put(start, db);
 				databaseEnd.put(start, start + len);
 			}
@@ -71,18 +80,20 @@ public class HadoopSplitDatabase extends TierMap.MapReduceDatabase {
 
 	String inputFilenameBase;
 
-	private NavigableMap<Long, Database> databaseTree;
+	private SortedMap<Long, Database> databaseTree;
 
 	private Map<Long, Long> databaseEnd;
 
-	public final Database getDatabaseFor(long loc) {
-		return databaseTree.get(databaseTree.floorKey(loc));
+	protected final Long getDatabaseKeyFor(long loc) {
+		return databaseTree.headMap(loc).firstKey();
+	}
+
+	protected final Database getDatabaseFor(long loc) {
+		return databaseTree.get(getDatabaseKeyFor(loc));
 	}
 
 	@Override
 	public Database beginWrite(int tier, long startRecord, long stopRecord) {
-		Pair<Integer, Long> tierTaskPair = new Pair<Integer, Long>(tier,
-				startRecord);
 		HDFSOutputDatabase db = new HDFSOutputDatabase(fs);
 		String name = new Path(outputFilenameBase, tier + ".hdb." + startRecord)
 				.toString();
@@ -143,7 +154,7 @@ public class HadoopSplitDatabase extends TierMap.MapReduceDatabase {
 	public void getBytes(long loc, byte[] arr, int offset,
 			int length) {
 		while (length > 0) {
-			long currentDbStart = databaseTree.floorKey(loc);
+			long currentDbStart = getDatabaseKeyFor(loc);
 			long currentDbEnd = databaseEnd.get(loc);
 			Database db = databaseTree.get(currentDbStart);
 			int amtRead;
@@ -185,17 +196,13 @@ public class HadoopSplitDatabase extends TierMap.MapReduceDatabase {
 
 			public long next() {
 				if (loc >= this.currentDbEnd) {
-					currentDbStart = databaseTree.floorKey(loc);
+					currentDbStart = getDatabaseKeyFor(loc);
 					currentDbEnd = databaseEnd.get(loc);
-					Database db = databaseTree.get(currentDbStart);
+					db = databaseTree.get(currentDbStart);
 				}
 				long recordGroup = db.getLongRecordGroup(loc);
 				loc++;
 				return recordGroup;
-			}
-
-			public void remove() {
-				throw new RuntimeException("Cannot remove from HadoopDatabase");
 			}
 		};
 	}

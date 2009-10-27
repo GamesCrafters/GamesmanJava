@@ -6,6 +6,13 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.Writable;
 
+/**
+ * SplitDatabaseOutputFormat represents a series of hashes and the corresponding
+ * database filename. This is used as the output to Map and the input to Reduce.
+ * 
+ * @see SplitDatabaseWritableList
+ * @author Patrick Horn
+ */
 public class SplitDatabaseWritable implements Writable {
 	String filename;
 	long start;

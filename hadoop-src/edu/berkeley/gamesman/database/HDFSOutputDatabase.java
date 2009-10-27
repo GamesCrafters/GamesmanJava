@@ -14,9 +14,13 @@ import java.util.Iterator;
 import java.io.IOException;
 
 /**
- * The FileDatabase is a database designed to write directly to a local file.
- * The file format is not well defined at the moment, perhaps this should be
- * changed later.
+ * The HDFSOutputDatabase is a database designed to write directly to a remote file.
+ * 
+ * This database only implements the sequential writes, so you must have one
+ * HDFSOutputDatabase for each concurrent writing process at a time.
+ * 
+ * Create an HDFSOuptutDatabase by calling HadoopSplitDatabase.beginWrite()
+ * and close/add to the reduce queue using HadoopSplitDatabase.endWrite()
  * 
  * @author Steven Schlansker
  */
@@ -76,6 +80,9 @@ public class HDFSOutputDatabase extends TierMap.MapReduceDatabase {
 		throw new RuntimeException("getBytes called in write-only database for len "+len);
 	}
 
+	/**
+	 * @return the current file pointer of the sequential write database.
+	 */
 	public final long getPosition() {
 		try {
 			return fd.getPos();
@@ -161,10 +168,12 @@ public class HDFSOutputDatabase extends TierMap.MapReduceDatabase {
 
 	@Override
 	public void initialize(String loc) {
-		boolean previouslyExisted;
 		try {
 			myFile = new Path(loc);
-			previouslyExisted = fs.exists(myFile);
+			boolean previouslyExisted = fs.exists(myFile);
+			if (previouslyExisted) {
+				Util.fatalError("Not overwriting existing output file "+myFile);
+			}
 			if (conf == null) {
 				Util.fatalError("No configuration, but the database is to be created");
 			}

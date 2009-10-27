@@ -10,6 +10,14 @@ import org.apache.hadoop.io.Writable;
 import java.util.List;
 import java.util.ArrayList;
 
+/**
+ * SplitDatabaseWritableList is the list of all databases for a given tier,
+ * and is a copy of the input iterator given to reduce().
+ * 
+ * @see SplitDatabaseOutputFormat
+ * @see SplitDatabaseWritable
+ * @author Patrick Horn
+ */
 public class SplitDatabaseWritableList implements Writable{
 	private List<SplitDatabaseWritable> list;
 	int tier;

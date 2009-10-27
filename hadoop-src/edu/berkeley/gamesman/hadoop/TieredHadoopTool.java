@@ -14,6 +14,15 @@ import edu.berkeley.gamesman.hadoop.util.*;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
+/**
+ * The TieredHadoopTool is the code that runs on the master node. It loops over
+ * all tiers, and for each tier, it sets "tier" in the JobConf.
+ * Then, it uses SequenceInputFormat to subdivide the hash space into a set of
+ * inputs for each mapper. 
+ * 
+ * @author Patrick Horn
+ */
+@SuppressWarnings("deprecation")
 public class TieredHadoopTool extends Configured implements Tool {
 	edu.berkeley.gamesman.core.Configuration myConf;
 
@@ -26,7 +35,6 @@ public class TieredHadoopTool extends Configured implements Tool {
 
 		conf.set("configuration_data", args[0]);
 		conf.setStrings("args", args);
-		String solverName = myConf.getProperty("gamesman.solver");
 
 		// Determine last index
 		TieredGame<?> g = Util.checkedCast(myConf.getGame());
@@ -40,7 +48,6 @@ public class TieredHadoopTool extends Configured implements Tool {
 	}
 
 	private void processRun(Configuration conf, int tier) throws IOException {
-		Game<?> g = myConf.getGame();
 		TieredHasher<?> h = Util.checkedCast(myConf.getHasher());
 		long firstHash = h.hashOffsetForTier(tier);
 		long endHash = h.lastHashValueForTier(tier) + 1;

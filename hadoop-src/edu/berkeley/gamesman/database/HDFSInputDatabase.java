@@ -15,9 +15,10 @@ import java.util.Iterator;
 import java.io.IOException;
 
 /**
- * The FileDatabase is a database designed to write directly to a local file.
- * The file format is not well defined at the moment, perhaps this should be
- * changed later.
+ * The HDFSInputDatabase is a database designed to read directly from a remote file.
+ * 
+ * This database only implements the seek-less read() functions, so allows for random
+ * access across all threads. Still, it is better to cache the database.
  * 
  * @author Steven Schlansker
  */
@@ -37,11 +38,6 @@ public class HDFSInputDatabase extends TierMap.MapReduceDatabase {
 
 	HDFSInputDatabase() {}
 	HDFSInputDatabase(FileSystem fs) {super(fs);}
-
-	public HDFSInputDatabase(FileSystem fs, Configuration conf) {
-		this.conf = conf;
-		this.fs = fs;
-	}
 
 	@Override
 	public synchronized void close() {

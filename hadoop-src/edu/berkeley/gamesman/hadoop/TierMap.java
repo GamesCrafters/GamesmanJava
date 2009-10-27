@@ -19,25 +19,60 @@ import edu.berkeley.gamesman.solver.TierSolver;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
+/**
+ * The Mapper in the hadoop solver. Maps a set of ranges to databases that contain
+ * each range. The set of ranges is further divided up into WorkUnits that are
+ * used in each thread (WorkUnit.divide(), WorkUnit.conquer()
+ *
+ * @param <S> The state that the Game holds as it is being solved.
+ * 
+ * @author Patrick Horn
+ */
+@SuppressWarnings("deprecation")
 public class TierMap<S> implements
 		Mapper<LongWritable, LongWritable, LongWritable, SplitDatabaseWritable> {
 
+	/**
+	 * MapReduceDatabase abstract parent for children 
+	 *
+	 */
 	public static abstract class MapReduceDatabase extends Database {
+		/**
+		 * Default constructor, so this can be instantiated from a class name.
+		 */
 		public MapReduceDatabase() {
 		}
 
+		/**
+		 * Convenience constructor. Equivalent to calling setFilesystem
+		 * @param fs Reference to hadoop FileSystem.
+		 */
 		public MapReduceDatabase(FileSystem fs) {
 			this.fs = fs;
 		}
 
+		/**
+		 * All hadoop classes that need to access the disk need a FileSystem instance.
+		 * Must be set before the database is used.
+		 * @param fs The hadoop filesystem.
+		 */
 		public void setFilesystem(FileSystem fs) {
 			this.fs = fs;
 		}
 
-		void setDelegate(TierMap tmr) {
+		/**
+		 * Called by the mapper to allow the database to communicate via
+		 * TierMap.started() and TierMap.finished().
+		 * @param tmr TierMap instance.
+		 */
+		void setDelegate(TierMap<?> tmr) {
 			this.delegate = tmr;
 		}
 
+		/**
+		 * Called by the mapper to tell the database where to dump output files.
+		 * @param dir FileOutputFormat.getWorkOutputPath(jobconf));
+		 */
 		public void setOutputDirectory(Path dir) {
 			outputFilenameBase = dir;
 			// dir contains a trailing slash
@@ -54,7 +89,7 @@ public class TierMap<S> implements
 
 	protected Hasher<S> hasher;
 
-	protected TierSolver solver;
+	protected TierSolver<S> solver;
 
 	protected MapReduceDatabase db;
 
@@ -64,9 +99,9 @@ public class TierMap<S> implements
 
 	private OutputCollector<LongWritable, SplitDatabaseWritable> outRec;
 
-	public static Configuration config;
+	private Configuration config;
 
-	public static JobConf jobconf;
+	private JobConf jobconf;
 
 	public void configure(JobConf conf) {
 		// Class<TieredGame<Object>> gc = null;
@@ -99,8 +134,8 @@ public class TierMap<S> implements
 		game = Util.checkedCast(config.getGame());
 		hasher = Util.checkedCast(config.getHasher());
 		try {
-			solver = Util.typedInstantiate(base + "solver."
-					+ config.getProperty("gamesman.solver"), TierSolver.class);
+			solver = Util.checkedCast(Util.typedInstantiate(base + "solver."
+					+ config.getProperty("gamesman.solver"), TierSolver.class));
 		} catch (ClassNotFoundException e) {
 			Util.fatalError("failed to load configuration class!", e);
 			return;
@@ -149,12 +184,27 @@ public class TierMap<S> implements
 		assert Util.debug(DebugFacility.MASTER, "Finished master run");
 	}
 
+	/** Called by the HadoopSplitDatabase when a child database is opened.
+	 *  Currently, just writes to the log.
+	 * 
+	 * @param tier Tier number (constant for whole Mapper)
+	 * @param filename Database filename that was just closed.
+	 * @param startRecord First record in database
+	 * @param stopRecord 1 + Last record in database.
+	 */
 	public void started(int tier, String filename, long startRecord,
 			long stopRecord) {
 		reporter.setStatus("Started " + tier + " [" + startRecord + "-"
 				+ stopRecord + "]");
 	}
 
+	/** Called by the HadoopSplitDatabase when a child database file is closed
+	 * 
+	 * @param tier Tier number (constant for whole Mapper)
+	 * @param filename Database filename that was just closed.
+	 * @param startRecord First record in database
+	 * @param stopRecord 1 + Last record in database.
+	 */
 	public void finished(int tier, String filename, long startRecord,
 			long stopRecord) {
 		reporter.progress();
