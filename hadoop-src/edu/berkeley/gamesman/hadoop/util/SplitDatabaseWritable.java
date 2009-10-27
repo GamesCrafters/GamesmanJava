@@ -19,10 +19,19 @@ public class SplitDatabaseWritable implements Writable {
 	long end;
 	int tier;
 
+	/**
+	 * Default constructor, given tier.
+	 * @param tier Which tier in the solving process. Used to determine directory name.
+	 */
 	public SplitDatabaseWritable(int tier) {
 		this.tier = tier;
 	}
 
+	/**
+	 * @param filename Filename of the newly written database.
+	 * @param startRecord First record in database.
+	 * @param stopRecord 1 + Last record in database
+	 */
 	public void set(String filename, long startRecord, long stopRecord) {
 		this.filename = filename;
 		this.start = startRecord;
@@ -43,22 +52,37 @@ public class SplitDatabaseWritable implements Writable {
                 out.writeInt(getLength());
 	}
 
+	/**
+	 * @return tier number for this database.
+	 */
 	public int getTier() {
 		return tier;
 	}
 
-        public String getFilename(){
-                return filename;
-        }
+	/**
+	 * @return database filename
+	 */
+	public String getFilename(){
+		return filename;
+	}
 
+	/**
+	 * @return first record in DB.
+	 */
 	public long getStart() {
 		return start;
 	}
 
+	/**
+	 * @return 1 + last record in DB.
+	 */
 	public long getEnd() {
 		return end;
 	}
 
+	/**
+	 * @return getEnd() - getStart(), cast to int.
+	 */
 	public int getLength() {
        		if ((end-start) > 1000000000 || end <= start) {
 			System.out.println("Error: file "+filename+" goes from "+start+" to "+end);
@@ -66,9 +90,9 @@ public class SplitDatabaseWritable implements Writable {
 		return (int)(end-start);
 	}
 
-        public String toString(){
-                return filename+"["+start+":"+end+"]";
-        }
+	public String toString(){
+		return filename+"["+start+":"+end+"]";
+	}
 
 }
 

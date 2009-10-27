@@ -22,13 +22,18 @@ public class SplitDatabaseWritableList implements Writable{
 	private List<SplitDatabaseWritable> list;
 	int tier;
 
-	public SplitDatabaseWritableList() {
+	/**
+	 * Constructor, takes the tier number.
+	 * @param tier The tier that this database list represents.
+	 */
+	public SplitDatabaseWritableList(int tier) {
 		list = new ArrayList<SplitDatabaseWritable>();
-	}
-
-	public void setTier(int tier) {
 		this.tier = tier;
 	}
+
+	/**
+	 * @param w Another database to add to set. Doesn't need to be in order.
+	 */
 	public void addDatabase(SplitDatabaseWritable w) {
 		list.add(w);
 	}

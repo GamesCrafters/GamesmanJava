@@ -51,7 +51,7 @@ public class TieredHadoopTool extends Configured implements Tool {
 		TieredHasher<?> h = Util.checkedCast(myConf.getHasher());
 		long firstHash = h.hashOffsetForTier(tier);
 		long endHash = h.lastHashValueForTier(tier) + 1;
-		long incr = 1000;
+		int incr = myConf.getInteger("gamesman.hadoop.incr", 1000);
 
 		JobConf job = new JobConf(conf, TierMap.class);
 
@@ -60,6 +60,9 @@ public class TieredHadoopTool extends Configured implements Tool {
 		job.setOutputKeyClass(IntWritable.class);
 		job.setOutputValueClass(SplitDatabaseWritableList.class);
 
+		job.set("first", Long.toString(firstHash));
+		job.set("end", Long.toString(endHash));
+		job.set("incr", Integer.toString(incr));
 		job.set("tier", Integer.toString(tier));
 
 		job.setJobName("Tier Map-Reduce");
@@ -69,7 +72,7 @@ public class TieredHadoopTool extends Configured implements Tool {
 		FileOutputFormat.setOutputPath(job, new Path(String.format(
 				"tier%02d/tier.hdb", tier)));
 		job.setMapperClass(TierMap.class);
-		job.setNumMapTasks(myConf.getInteger("gamesman.hadoop.split", 60));
+		job.setNumMapTasks(myConf.getInteger("gamesman.hadoop.numMappers", 60));
 		job.setNumReduceTasks(1);
 		job.setReducerClass(SplitDatabaseReduce.class);
 

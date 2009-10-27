@@ -30,6 +30,8 @@ public class SequenceInputFormat implements InputFormat<LongWritable, LongWritab
 		long cur = Long.parseLong(conf.get("first"));
 		long end = Long.parseLong(conf.get("end"));
 		long incr = Long.parseLong(conf.get("incr"));
+
+		long Do_Something_Smart_Here = incr;
 		
 		SequenceSplit[] splits = new SequenceSplit[numSplits];
 		

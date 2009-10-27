@@ -25,8 +25,7 @@ import edu.berkeley.gamesman.util.Util;
 @SuppressWarnings("deprecation")
 public class SplitDatabaseReduce implements Reducer<IntWritable, SplitDatabaseWritable, IntWritable, SplitDatabaseWritableList> {
 	public void reduce(IntWritable tier, Iterator<SplitDatabaseWritable> dbList, OutputCollector<IntWritable, SplitDatabaseWritableList> outCollector, Reporter reporter) {
-		SplitDatabaseWritableList list = new SplitDatabaseWritableList();
-		list.setTier(tier.get());
+		SplitDatabaseWritableList list = new SplitDatabaseWritableList(tier.get());
 		while (dbList.hasNext()) {
 			list.addDatabase(dbList.next());
 		}
