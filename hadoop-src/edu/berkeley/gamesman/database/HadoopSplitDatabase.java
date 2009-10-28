@@ -29,10 +29,10 @@ import java.io.IOException;
  */
 public class HadoopSplitDatabase extends TierMap.MapReduceDatabase {
 
-	HadoopSplitDatabase() {
+	public HadoopSplitDatabase() {
 	}
 
-	HadoopSplitDatabase(FileSystem fs) {
+	public HadoopSplitDatabase(FileSystem fs) {
 		super(fs);
 	}
 
@@ -42,6 +42,9 @@ public class HadoopSplitDatabase extends TierMap.MapReduceDatabase {
 		databaseEnd = new HashMap<Long, Long>();
 		int lastslash = splitfilename.lastIndexOf('/');
 		inputFilenameBase = splitfilename.substring(0, lastslash + 1);
+		if (fs==null) {
+			Util.fatalError("Filesystem null in HadoopSplitDatabase.");
+		}
 		try {
 			FSDataInputStream fd = fs.open(new Path(splitfilename));
 			long next = 0;

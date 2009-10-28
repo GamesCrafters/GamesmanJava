@@ -109,11 +109,13 @@ public class TierMap<S> implements
 		// Class<Hasher<?>> gh = null;
 		final String base = "edu.berkeley.gamesman.";
 		// Properties props = new Properties(System.getProperties());
-
+		jobconf = conf;
+		if (jobconf == null) {
+			Util.fatalError("JobConf is null in TierMap.configure");
+		}
 		try {
 			config = Configuration.load(Util.decodeBase64(conf
 					.get("configuration_data")));
-			jobconf = conf;
 			db = Util.typedInstantiate(base + "database."
 					+ config.getProperty("gamesman.database"),
 					MapReduceDatabase.class);
@@ -124,7 +126,11 @@ public class TierMap<S> implements
 
 		// db.initialize(conf.get("dburi"),config);
 		try {
-			db.setFilesystem(FileSystem.get(jobconf));
+			FileSystem fs = FileSystem.get(jobconf);
+			if (fs == null) {
+				Util.fatalError("Null filesystem in TierMap.configure!");
+			}
+			db.setFilesystem(fs);
 		} catch (IOException e) {
 			Util.fatalError("Unable to get filesystem", e);
 		}
