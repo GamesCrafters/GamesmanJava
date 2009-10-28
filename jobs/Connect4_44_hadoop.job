@@ -1,0 +1,16 @@
+gamesman.game = Connect4
+gamesman.game.width = 4
+gamesman.game.height = 4
+gamesman.game.pieces = 4
+gamesman.hasher = TieredItergameHasher
+gamesman.solver = C4IntegratedSolver
+gamesman.master = HadoopMaster
+gamesman.database = HadoopSplitDatabase
+gamesman.db.uri = database.db
+record.fields = VALUE:3,REMOTENESS:17
+record.compression = 90
+gamesman.threads = 8
+gamesman.debug.THREADING = true
+gamesman.debug.SOLVER = true
+gamesman.hadoop.incr = 10000
+gamesman.hadoop.numMappers = 60
