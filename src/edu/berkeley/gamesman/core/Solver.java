@@ -17,6 +17,8 @@ public abstract class Solver {
 
 	protected Database writeDb;
 
+	protected Configuration conf;
+
 	/**
 	 * Set the Database to use for this solver
 	 * 
@@ -26,6 +28,7 @@ public abstract class Solver {
 	public void initialize(Configuration conf) {
 		readDb = conf.db;
 		writeDb = conf.db;
+		this.conf = conf;
 	}
 
 	/**
@@ -36,11 +39,11 @@ public abstract class Solver {
 	 *            The configuration used for this solve
 	 * @return a WorkUnit that has enough information to solve the game in its
 	 *         entirety.
-	 *
-	 * @note   This function also modifies the state of the solver.
-	 * The WorkUnit allows you to parallelize the solve within one process;
-	 * however, the WorkUnit returned does not have all the information
-	 * to solve the game.
+	 * 
+	 * @note This function also modifies the state of the solver. The WorkUnit
+	 *       allows you to parallelize the solve within one process; however,
+	 *       the WorkUnit returned does not have all the information to solve
+	 *       the game.
 	 */
 	public abstract WorkUnit prepareSolve(Configuration config);
 }

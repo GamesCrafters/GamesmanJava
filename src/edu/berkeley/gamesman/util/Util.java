@@ -58,11 +58,11 @@ public final class Util {
 
 	public static byte[] decodeBase64(String in) {
 		return Base64.decode(in);
-	} 
+	}
 
-	public static String encodeBase64(byte[]in) {
+	public static String encodeBase64(byte[] in) {
 		return Base64.encodeBytes(in);
-	} 
+	}
 
 	/**
 	 * Throws a fatal Error if a required condition is not satisfied
@@ -388,15 +388,15 @@ public final class Util {
 	 *            the array it is stored in
 	 * @return the object stored
 	 */
-        @SuppressWarnings("unchecked")
+	@SuppressWarnings("unchecked")
 	public static <T> T deserialize(byte[] bytes) {
 		ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
 		ObjectInputStream ois;
 		try {
 			ois = new ObjectInputStream(bais); // TODO why is this broken on
-												// nyc?
+			// nyc?
 			// return checkedCast(ois.readObject());
-			return (T)checkedCast(ois.readObject());
+			return (T) checkedCast(ois.readObject());
 		} catch (ClassCastException e) {
 			Util.fatalError("Could not deserialize object", e);
 		} catch (Exception e) {
@@ -665,7 +665,8 @@ public final class Util {
 	}
 
 	/**
-	 * @param arr An array of strings of numbers
+	 * @param arr
+	 *            An array of strings of numbers
 	 * @return An array of the equivalent integers
 	 */
 	public static Integer[] parseIntegers(String... arr) {
@@ -692,18 +693,22 @@ public final class Util {
 	}
 
 	/**
-	 * @param <H> The type of the array
-	 * @param list The list of objects
+	 * @param <H>
+	 *            The type of the array
+	 * @param list
+	 *            The list of objects
 	 * @return An array with the same objects
 	 */
 	public static <H> H[] toArray(List<H> list) {
-		return list.toArray(Util.<H[],Object>checkedCast(Array.newInstance(list.get(0).getClass(),
-				list.size())));
+		return list.toArray(Util.<H[], Object> checkedCast(Array.newInstance(
+				list.get(0).getClass(), list.size())));
 	}
 
 	/**
-	 * @param index The index to search for
-	 * @param rangeEnds The largest and smallest possible values
+	 * @param index
+	 *            The index to search for
+	 * @param rangeEnds
+	 *            The largest and smallest possible values
 	 * @return The index that index is at
 	 */
 	public static int binaryRangeSearch(BigInteger index, BigInteger[] rangeEnds) {
@@ -733,5 +738,29 @@ public final class Util {
 		}
 		assert p >= 0 && p < rangeEnds.length;
 		return p;
+	}
+
+	/**
+	 * @param tasks
+	 *            The preferred number of tasks
+	 * @param start
+	 *            The start of the first task
+	 * @param length
+	 *            The length of all the tasks combined
+	 * @param groupLength
+	 *            The group length to align to
+	 * @return The starts of each task
+	 */
+	public static long[] groupAlignedTasks(int tasks, long start, long length,
+			int groupLength) {
+		int split = (int) Math.min(tasks, Math.max(length / groupLength, 1));
+		long[] starts = new long[split + 1];
+		for (int count = 0; count < split; count++) {
+			starts[count] = length * count / split + start;
+			if (count > 0)
+				starts[count] -= starts[count] % groupLength;
+		}
+		starts[split] = length + start;
+		return starts;
 	}
 }

@@ -27,7 +27,7 @@ public class TierSolver<T> extends Solver {
 
 	private int count;
 
-	private long bottom, top;
+	private long[] starts;
 
 	boolean hadooping;
 
@@ -35,10 +35,11 @@ public class TierSolver<T> extends Solver {
 	public WorkUnit prepareSolve(Configuration inconf) {
 
 		myGame = Util.checkedCast(inconf.getGame());
-		tier = myGame.numberOfTiers() - 1;
+		tier = myGame.numberOfTiers();
 		updater = new TierSolverUpdater();
 		hadooping = false;
-
+		flusher.run();
+		needs2Reset = false;
 		return new TierSolverWorkUnit(inconf);
 	}
 
@@ -95,10 +96,17 @@ public class TierSolver<T> extends Solver {
 				writeDb.flush();
 			--tier;
 			needs2Sync = false;
-			if (tier == -1)
+			if (tier < 0)
 				updater.complete();
-			else
-				needs2Reset = true;
+			else {
+				if (barr != null)
+					needs2Reset = true;
+				long fullStart = myGame.hashOffsetForTier(tier);
+				long fullSize = myGame.lastHashValueForTier(tier) + 1L
+						- fullStart;
+				starts = Util.groupAlignedTasks(split, fullStart, fullSize,
+						conf.recordsPerGroup);
+			}
 		}
 	};
 
@@ -138,28 +146,14 @@ public class TierSolver<T> extends Solver {
 				if (barr == null || !needs2Sync) {
 					if (tier < 0)
 						return null;
-					long fullStart = hadooping ? bottom : myGame
-							.hashOffsetForTier(tier);
-					long fullSize = (hadooping ? top : (myGame
-							.lastHashValueForTier(tier) + 1L))
-							- fullStart;
-					int split = (int) Math.min(this.split, Math.max(fullSize
-							/ conf.recordsPerGroup, 1));
-					long start = fullStart + fullSize * count / split;
-					long adjustStart = start - start % conf.recordsPerGroup;
-					long end = fullStart + fullSize * (count + 1) / split;
-					long adjustEnd = end - end % conf.recordsPerGroup;
-					if (count > 0)
-						start = adjustStart;
-					if (count < split - 1) {
-						end = adjustEnd;
+					Pair<Long, Long> slice = new Pair<Long, Long>(
+							starts[count], starts[count + 1] - 1);
+					if (count < starts.length - 2) {
 						++count;
 					} else {
 						count = 0;
 						needs2Sync = true;
 					}
-					--end;
-					Pair<Long, Long> slice = new Pair<Long, Long>(start, end);
 					assert Util.debug(DebugFacility.THREADING,
 							"Beginning to solve slice " + slice + " for count "
 									+ (needs2Sync ? (split - 1) : (count - 1))
@@ -272,8 +266,8 @@ public class TierSolver<T> extends Solver {
 		myGame = Util.checkedCast(conf.getGame());
 		updater = new TierSolverUpdater();
 		this.tier = tier;
-		bottom = startHash;
-		top = endHash;
+		starts = Util.groupAlignedTasks(split, startHash, endHash - startHash,
+				conf.recordsPerGroup);
 		hadooping = true;
 		return new TierSolverWorkUnit(conf);
 	}
