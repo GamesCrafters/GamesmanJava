@@ -20,7 +20,8 @@ import edu.berkeley.gamesman.util.Util;
 public class Pyraminx extends Game<PyraminxState> {
 
 	/**
-	 * @param conf The configuration object
+	 * @param conf
+	 *            The configuration object
 	 */
 	public Pyraminx(Configuration conf) {
 		super(conf);
@@ -99,10 +100,10 @@ public class Pyraminx extends Game<PyraminxState> {
 	}
 
 	@Override
-	public long lastHash() {
-		return epHasher.maxHash().add(BigInteger.ONE).multiply(
+	public long numHashes() {
+		return epHasher.numHashes().multiply(
 				TWO_TO_X[edgeCount - 1].multiply(THREE_TO_X[centerCount]))
-				.subtract(BigInteger.ONE).longValue();
+				.longValue();
 	}
 
 	@Override
@@ -116,7 +117,7 @@ public class Pyraminx extends Game<PyraminxState> {
 		Integer[] edgeOrientation = new Integer[edgeCount];
 		int totalorient = 0;
 		for (int i = 0; i < edgeCount - 1; i++) {
-			edgeOrientation[i] = (int) (hash%2);
+			edgeOrientation[i] = (int) (hash % 2);
 			hash /= 2;
 			totalorient += edgeOrientation[i];
 		}
@@ -124,7 +125,8 @@ public class Pyraminx extends Game<PyraminxState> {
 		edgeOrientation[edgeCount - 1] = Util
 				.positiveModulo(2 - totalorient, 2);
 
-		Integer[] edgePermutation = Util.toArray(epHasher.unhash(BigInteger.valueOf(hash)));
+		Integer[] edgePermutation = Util.toArray(epHasher.unhash(BigInteger
+				.valueOf(hash)));
 		return new PyraminxState(edgePermutation, edgeOrientation,
 				centerOrientation);
 	}

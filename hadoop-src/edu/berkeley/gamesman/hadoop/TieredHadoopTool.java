@@ -17,9 +17,9 @@ import edu.berkeley.gamesman.util.Util;
 
 /**
  * The TieredHadoopTool is the code that runs on the master node. It loops over
- * all tiers, and for each tier, it sets "tier" in the JobConf.
- * Then, it uses SequenceInputFormat to subdivide the hash space into a set of
- * inputs for each mapper. 
+ * all tiers, and for each tier, it sets "tier" in the JobConf. Then, it uses
+ * SequenceInputFormat to subdivide the hash space into a set of inputs for each
+ * mapper.
  * 
  * @author Patrick Horn
  */
@@ -51,7 +51,7 @@ public class TieredHadoopTool extends Configured implements Tool {
 	private void processRun(Configuration conf, int tier) throws IOException {
 		TieredHasher<?> h = Util.checkedCast(myConf.getHasher());
 		long firstHash = h.hashOffsetForTier(tier);
-		long endHash = h.lastHashValueForTier(tier) + 1;
+		long endHash = h.hashOffsetForTier(tier + 1);
 		int incr = myConf.getInteger("gamesman.hadoop.incr", 1000);
 
 		JobConf job = new JobConf(conf, TierMap.class);
@@ -63,7 +63,7 @@ public class TieredHadoopTool extends Configured implements Tool {
 
 		job.set("first", Long.toString(firstHash));
 		job.set("end", Long.toString(endHash));
-		//job.set("tasks", Integer.toString(incr));
+		// job.set("tasks", Integer.toString(incr));
 		job.set("tier", Integer.toString(tier));
 		job.set("recordsPerGroup", Integer.toString(myConf.recordsPerGroup));
 
@@ -71,9 +71,9 @@ public class TieredHadoopTool extends Configured implements Tool {
 		FileInputFormat.setInputPaths(job, new Path("in"));
 		job.setInputFormat(SequenceInputFormat.class);
 		job.setOutputFormat(SplitDatabaseOutputFormat.class);
-		FileOutputFormat.setOutputPath(job,
-				new Path(new Path(myConf.getProperty("gamesman.db.uri")),
-				String.format("tier%02d", tier)));
+		FileOutputFormat.setOutputPath(job, new Path(new Path(myConf
+				.getProperty("gamesman.db.uri")), String.format("tier%02d",
+				tier)));
 		FileSystem.get(job).mkdirs(FileOutputFormat.getOutputPath(job));
 		job.setMapperClass(TierMap.class);
 		job.setNumMapTasks(myConf.getInteger("gamesman.hadoop.numMappers", 60));

@@ -16,33 +16,36 @@ import edu.berkeley.gamesman.util.Pair;
  */
 public class OneTwoNGame extends Game<Integer> {
 	private final int MAX_NUMBER, MAX_STEP;
+
 	/**
 	 * Default constructor
-	 * @param conf the configuration
+	 * 
+	 * @param conf
+	 *            the configuration
 	 */
 	public OneTwoNGame(Configuration conf) {
 		super(conf);
 		MAX_NUMBER = conf.getInteger("maxNumber", 10);
 		MAX_STEP = conf.getInteger("maxStep", 2);
 	}
-	
+
 	@Override
 	public Collection<Integer> startingPositions() {
 		return Arrays.asList(0);
 	}
-	
+
 	@Override
 	public PrimitiveValue primitiveValue(Integer pos) {
 		if (pos == MAX_NUMBER)
-			return PrimitiveValue.LOSE;		
+			return PrimitiveValue.LOSE;
 		return PrimitiveValue.UNDECIDED;
 	}
-	
+
 	@Override
 	public String displayState(Integer pos) {
 		return pos + "";
 	}
-	
+
 	@Override
 	public Integer stringToState(String pos) {
 		return Integer.parseInt(pos);
@@ -54,27 +57,28 @@ public class OneTwoNGame extends Game<Integer> {
 	}
 
 	@Override
-	public Collection<Pair<String,Integer>> validMoves(Integer pos) {
-		ArrayList<Pair<String,Integer>> next = new ArrayList<Pair<String,Integer>>();		
-		for(int move = 1; move <= MAX_STEP; move++)
-			if(move + pos <= MAX_NUMBER)
-				next.add(new Pair<String,Integer>("+"+move,pos + move));
+	public Collection<Pair<String, Integer>> validMoves(Integer pos) {
+		ArrayList<Pair<String, Integer>> next = new ArrayList<Pair<String, Integer>>();
+		for (int move = 1; move <= MAX_STEP; move++)
+			if (move + pos <= MAX_NUMBER)
+				next.add(new Pair<String, Integer>("+" + move, pos + move));
 		return next;
 	}
-	
+
 	@Override
 	public String describe() {
-		return "OneTwo"+MAX_NUMBER+" ("+MAX_STEP+" max spaces per move)";
+		return "OneTwo" + MAX_NUMBER + " (" + MAX_STEP
+				+ " max spaces per move)";
 	}
 
 	@Override
 	public Integer hashToState(long hash) {
-		return (int)hash;
+		return (int) hash;
 	}
 
 	@Override
-	public long lastHash() {
-		return MAX_NUMBER;
+	public long numHashes() {
+		return MAX_NUMBER + 1;
 	}
 
 	@Override

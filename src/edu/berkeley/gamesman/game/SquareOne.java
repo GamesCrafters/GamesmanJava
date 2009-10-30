@@ -79,8 +79,8 @@ public class SquareOne extends Game<SquareOneState> {
 			hash /= 2;
 		}
 
-		ArrayList<Integer> permutation = IGNORE_COLORS ? br.unhash(BigInteger.valueOf(hash)) : ph
-				.unhash(BigInteger.valueOf(hash));
+		ArrayList<Integer> permutation = IGNORE_COLORS ? br.unhash(BigInteger
+				.valueOf(hash)) : ph.unhash(BigInteger.valueOf(hash));
 		ArrayList<Integer> topLayer = new ArrayList<Integer>();
 		ArrayList<Integer> bottomLayer = new ArrayList<Integer>();
 		int layerSize = 0;
@@ -99,11 +99,12 @@ public class SquareOne extends Game<SquareOneState> {
 	}
 
 	@Override
-	public long lastHash() {
-		long lastHash = IGNORE_COLORS ? br.maxHash().longValue() : ph.maxHash().longValue();
+	public long numHashes() {
+		long lastHash = IGNORE_COLORS ? br.maxHash().longValue() : (ph
+				.numHashes().longValue() - 1L);
 		if (TWO_LAYER)
 			lastHash <<= 1;
-		return lastHash;
+		return lastHash + 1;
 	}
 
 	private static int stripNull(Integer[] src, Integer[] dest, int destIndex) {
@@ -118,8 +119,8 @@ public class SquareOne extends Game<SquareOneState> {
 		Integer[] permutation = new Integer[PIECE_COUNT];
 		int dest = stripNull(pos.topLayer, permutation, 0);
 		dest = stripNull(pos.bottomLayer, permutation, dest);
-		long hash = IGNORE_COLORS ? br.hash(permutation).longValue() : ph
-				.hash(permutation).longValue();
+		long hash = IGNORE_COLORS ? br.hash(permutation).longValue() : ph.hash(
+				permutation).longValue();
 		if (!TWO_LAYER) {
 			hash <<= 1;
 			if (!pos.middleEven)

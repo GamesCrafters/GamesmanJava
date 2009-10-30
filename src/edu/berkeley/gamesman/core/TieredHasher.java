@@ -47,11 +47,13 @@ public abstract class TieredHasher<State> extends Hasher<State> {
 	 */
 	public abstract int numberOfTiers();
 
-	long tierEnds[]; // For tier i, tierEnds[i] is the /last/ hash value for
+	private long tierOffsets[] = null; // For tier i, tierEnds[i] is the /last/
+
+	// hash
+
+	// value for
 
 	// that tier.
-
-	int cacheNumTiers = -1;
 
 	/**
 	 * Return the first hashed value in a given tier
@@ -62,30 +64,21 @@ public abstract class TieredHasher<State> extends Hasher<State> {
 	 * @see #tierIndexForState
 	 */
 	public final long hashOffsetForTier(int tier) {
-		if (tier == 0)
-			return 0;
-		if (tierEnds == null)
-			lastHashValueForTier(numberOfTiers() - 1);
-		return tierEnds[tier - 1] + 1;
+		if (tierOffsets == null) {
+			int tiers = numberOfTiers();
+			tierOffsets = new long[tiers + 1];
+			tierOffsets[0] = 0;
+			for (int i = 0; i < tiers; i++)
+				tierOffsets[i + 1] = tierOffsets[i] + numHashesForTier(i);
+			assert Util.debug(DebugFacility.HASHER, "Created offset table: "
+					+ Arrays.toString(tierOffsets));
+		}
+		return tierOffsets[tier];
 	}
 
-	/**
-	 * Return the last hash value a tier represents
-	 * 
-	 * @param tier
-	 *            The tier we're interested in
-	 * @return The last hash that will be in the given tier
-	 */
-	public final long lastHashValueForTier(int tier) {
-		if (tierEnds == null) {
-			tierEnds = new long[numberOfTiers()];
-			for (int i = 0; i < tierEnds.length; i++) {
-				tierEnds[i] = hashOffsetForTier(i) + numHashesForTier(i) - 1;
-			}
-			assert Util.debug(DebugFacility.HASHER, "Created offset table: "
-					+ Arrays.toString(tierEnds));
-		}
-		return tierEnds[tier];
+	@Override
+	public long numHashes() {
+		return hashOffsetForTier(numberOfTiers());
 	}
 
 	/**

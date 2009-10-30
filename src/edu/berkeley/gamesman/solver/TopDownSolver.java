@@ -35,7 +35,7 @@ public class TopDownSolver<T> extends Solver {
 	public WorkUnit prepareSolve(Configuration config) {
 		conf = config;
 		Game<?> game = config.getGame();
-		long hashSpace = game.lastHash() + 1;
+		long hashSpace = game.numHashes();
 		Record defaultRecord = game.newRecord(PrimitiveValue.UNDECIDED);
 		for (long index = 0; index < hashSpace; index++) {
 			writeDb.putRecord(index, defaultRecord);

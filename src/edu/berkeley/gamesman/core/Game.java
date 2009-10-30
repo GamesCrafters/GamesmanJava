@@ -137,11 +137,6 @@ public abstract class Game<State> {
 	public abstract long stateToHash(State pos);
 
 	/**
-	 * @return the last valid hash possible in the current configuration
-	 */
-	public abstract long lastHash();
-
-	/**
 	 * Produce a machine-parsable String representing the state. This function
 	 * must be the exact opposite of stringToState
 	 * 
@@ -416,4 +411,9 @@ public abstract class Game<State> {
 	public Record newRecord(long val) {
 		return new Record(conf, val);
 	}
+
+	/**
+	 * @return The total number of hashes
+	 */
+	public abstract long numHashes();
 }

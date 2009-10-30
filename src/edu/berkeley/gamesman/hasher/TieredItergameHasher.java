@@ -44,10 +44,4 @@ public final class TieredItergameHasher extends TieredHasher<ItergameState> {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
-	@Override
-	public long numHashes() {
-		return conf.getGame().lastHash() + 1;
-	}
-
 }

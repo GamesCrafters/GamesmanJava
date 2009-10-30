@@ -15,7 +15,8 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author Steven Schlansker
  * 
- * @param <State> The type that you use to represent your States
+ * @param <State>
+ *            The type that you use to represent your States
  */
 public abstract class TieredGame<State> extends Game<State> {
 	protected TieredHasher<State> myHasher;
@@ -23,7 +24,8 @@ public abstract class TieredGame<State> extends Game<State> {
 	/**
 	 * Default constructor
 	 * 
-	 * @param conf the configuration
+	 * @param conf
+	 *            the configuration
 	 */
 	public TieredGame(Configuration conf) {
 		super(conf);
@@ -38,21 +40,22 @@ public abstract class TieredGame<State> extends Game<State> {
 	public State hashToState(long hash) {
 		if (myHasher == null)
 			Util.fatalError("You must call prepare() before hashing!");
-		if (myHasher.cacheNumTiers == -1)
-			myHasher.cacheNumTiers = myHasher.numberOfTiers();
-		if (myHasher.tierEnds == null)
-			myHasher.lastHashValueForTier(myHasher.cacheNumTiers - 1);
-
-		for (int i = 0; i < myHasher.cacheNumTiers; i++) {
-			if (myHasher.tierEnds[i] >= hash) {
-				if (i == 0)
-					return myHasher.gameStateForTierAndOffset(i, hash);
-				return myHasher.gameStateForTierAndOffset(i, hash
-						- myHasher.tierEnds[i - 1] - 1);
-			}
+		int tiers = myHasher.numberOfTiers();
+		int guess = tiers / 2, low = 0, high = tiers;
+		while (high > low + 1) {
+			long offset = myHasher.hashOffsetForTier(guess);
+			if (offset <= hash)
+				if (myHasher.hashOffsetForTier(guess + 1) > hash)
+					return myHasher.gameStateForTierAndOffset(guess, hash
+							- offset);
+				else
+					low = guess;
+			else
+				high = guess;
+			guess = (low + high) / 2;
 		}
-		Util.fatalError("Hash outside of tiered values: " + hash);
-		return null;
+		return myHasher.gameStateForTierAndOffset(low, hash
+				- myHasher.hashOffsetForTier(low));
 	}
 
 	@Override
@@ -60,7 +63,7 @@ public abstract class TieredGame<State> extends Game<State> {
 		if (myHasher == null)
 			Util.fatalError("You must call prepare() before hashing!");
 		Pair<Integer, Long> p = myHasher.tierIndexForState(pos);
-		return myHasher.hashOffsetForTier(p.car)+p.cdr;
+		return myHasher.hashOffsetForTier(p.car) + p.cdr;
 	}
 
 	/**
@@ -73,7 +76,8 @@ public abstract class TieredGame<State> extends Game<State> {
 	}
 
 	/**
-	 * @param tier the Tier we're interested in
+	 * @param tier
+	 *            the Tier we're interested in
 	 * @return the first hash value for that tier
 	 */
 	public final long hashOffsetForTier(int tier) {
@@ -82,18 +86,8 @@ public abstract class TieredGame<State> extends Game<State> {
 		return myHasher.hashOffsetForTier(tier);
 	}
 
-	/**
-	 * @param tier the Tier we're interested in
-	 * @return the last hash value that is still within that tier
-	 */
-	public final long lastHashValueForTier(int tier) {
-		if (myHasher == null)
-			Util.fatalError("You must call prepare() before hashing!");
-		return myHasher.lastHashValueForTier(tier);
-	}
-
 	@Override
-	public final long lastHash() {
-		return lastHashValueForTier(numberOfTiers() - 1);
+	public long numHashes() {
+		return myHasher.numHashes();
 	}
 }

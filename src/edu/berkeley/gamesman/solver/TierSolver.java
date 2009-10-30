@@ -18,8 +18,6 @@ import edu.berkeley.gamesman.util.*;
  */
 public class TierSolver<T> extends Solver {
 
-	protected TieredGame<T> myGame;
-
 	/**
 	 * The number of positions to go through between each update/reset
 	 */
@@ -34,8 +32,8 @@ public class TierSolver<T> extends Solver {
 	@Override
 	public WorkUnit prepareSolve(Configuration inconf) {
 
-		myGame = Util.checkedCast(inconf.getGame());
-		tier = myGame.numberOfTiers();
+		tier = Util.<TieredGame<T>, Game<?>> checkedCast(inconf.getGame())
+				.numberOfTiers();
 		updater = new TierSolverUpdater();
 		hadooping = false;
 		flusher.run();
@@ -43,14 +41,11 @@ public class TierSolver<T> extends Solver {
 		return new TierSolverWorkUnit(inconf);
 	}
 
-	protected void solvePartialTier(Configuration conf, long start, long end,
-			TierSolverUpdater t, Database inRead, Database inWrite) {
-		long current = start - 1;
+	protected void solvePartialTier(Configuration conf, long start,
+			long hashes, TierSolverUpdater t, Database inRead, Database inWrite) {
+		long current = start;
 		TieredGame<T> game = Util.checkedCast(conf.getGame());
-
-		while (current < end) {
-			current++;
-
+		for (long i = 0L; i < hashes; i++) {
 			if (current % STEP_SIZE == 0)
 				t.calculated(STEP_SIZE);
 
@@ -78,10 +73,10 @@ public class TierSolver<T> extends Solver {
 						"Primitive value for state " + current + " is " + prim);
 				inWrite.putRecord(current, prim);
 			}
+			++current;
 		}
 		assert Util.debug(DebugFacility.THREADING,
-				"Reached end of partial tier at " + end);
-
+				"Reached end of partial tier at " + (start + hashes));
 	}
 
 	protected int nextIndex = 0;
@@ -101,9 +96,10 @@ public class TierSolver<T> extends Solver {
 			else {
 				if (barr != null)
 					needs2Reset = true;
-				long fullStart = myGame.hashOffsetForTier(tier);
-				long fullSize = myGame.lastHashValueForTier(tier) + 1L
-						- fullStart;
+				long fullStart = Util.<TieredGame<T>, Game<?>> checkedCast(
+						conf.getGame()).hashOffsetForTier(tier);
+				long fullSize = Util.<TieredHasher<T>, Hasher<?>> checkedCast(
+						conf.getHasher()).numHashesForTier(tier);
 				starts = Util.groupAlignedTasks(split, fullStart, fullSize,
 						conf.recordsPerGroup);
 			}
@@ -147,17 +143,23 @@ public class TierSolver<T> extends Solver {
 					if (tier < 0)
 						return null;
 					Pair<Long, Long> slice = new Pair<Long, Long>(
-							starts[count], starts[count + 1] - 1);
+							starts[count], starts[count + 1] - starts[count]);
 					if (count < starts.length - 2) {
 						++count;
 					} else {
 						count = 0;
 						needs2Sync = true;
 					}
-					assert Util.debug(DebugFacility.THREADING,
-							"Beginning to solve slice " + slice + " for count "
-									+ (needs2Sync ? (split - 1) : (count - 1))
-									+ " in tier " + tier);
+					assert Util
+							.debug(DebugFacility.THREADING,
+									"Beginning to solve slice "
+											+ slice.car
+											+ "-"
+											+ (slice.car + slice.cdr)
+											+ " for count "
+											+ (needs2Sync ? (starts.length - 2)
+													: (count - 1))
+											+ " in tier " + tier);
 					return slice;
 				}
 			}
@@ -179,21 +181,18 @@ public class TierSolver<T> extends Solver {
 			assert Util.debug(DebugFacility.SOLVER, "Started the solver... ("
 					+ index + ")");
 			Thread.currentThread().setName(
-					"Solver (" + index + "): " + myGame.toString());
+					"Solver (" + index + "): " + conf.getGame().toString());
 			Pair<Long, Long> slice;
 			while ((slice = nextSlice(conf)) != null) {
-				if (slice.car <= slice.cdr) {
-					if (hadooping) {
-						Database myWrite = writeDb.beginWrite(tier, slice.car,
-								slice.cdr + 1);
-						solvePartialTier(conf, slice.car, slice.cdr, updater,
-								readDb, myWrite);
-						writeDb.endWrite(tier, myWrite, slice.car,
-								slice.cdr + 1);
-					} else
-						solvePartialTier(conf, slice.car, slice.cdr, updater,
-								readDb, writeDb);
-				}
+				if (hadooping) {
+					Database myWrite = writeDb.beginWrite(tier, slice.car,
+							slice.car + slice.cdr);
+					solvePartialTier(conf, slice.car, slice.cdr, updater,
+							readDb, myWrite);
+					writeDb.endWrite(tier, myWrite, slice.car, slice.cdr + 1);
+				} else
+					solvePartialTier(conf, slice.car, slice.cdr, updater,
+							readDb, writeDb);
 			}
 			if (barr != null)
 				try {
@@ -225,8 +224,9 @@ public class TierSolver<T> extends Solver {
 		private Task t;
 
 		TierSolverUpdater() {
+			TieredGame<T> myGame = Util.checkedCast(conf.getGame());
 			t = Task.beginTask("Tier solving \"" + myGame.describe() + "\"");
-			t.setTotal(myGame.lastHashValueForTier(myGame.numberOfTiers() - 1));
+			t.setTotal(myGame.numHashes());
 		}
 
 		synchronized void calculated(int howMuch) {
@@ -263,7 +263,6 @@ public class TierSolver<T> extends Solver {
 	 */
 	public WorkUnit prepareSolve(Configuration conf, int tier, long startHash,
 			long endHash) {
-		myGame = Util.checkedCast(conf.getGame());
 		updater = new TierSolverUpdater();
 		this.tier = tier;
 		starts = Util.groupAlignedTasks(split, startHash, endHash - startHash,

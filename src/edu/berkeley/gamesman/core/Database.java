@@ -94,7 +94,7 @@ public abstract class Database {
 	}
 
 	public void endWrite(int tier, Database db, long recordStart, long recordEnd) {
-		//Hi
+		// Hi
 	}
 
 	/**
@@ -313,8 +313,8 @@ public abstract class Database {
 	 *         include the header size)
 	 */
 	public long getByteSize() {
-		return (conf.getGame().lastHash() / conf.recordsPerGroup + 1)
-				* conf.recordGroupByteLength;
+		return (conf.getGame().numHashes() + conf.recordsPerGroup - 1)
+				/ conf.recordsPerGroup * conf.recordGroupByteLength;
 	}
 
 	private class LongRecordGroupIterator implements LongIterator {

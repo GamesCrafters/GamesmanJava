@@ -86,7 +86,8 @@ public class DatabaseDump extends GamesmanApplication {
 	/**
 	 * Dumps a database file without using an existing configuration.
 	 * 
-	 * @param args Usage: DatabaseDump BlockDatabase database.db
+	 * @param args
+	 *            Usage: DatabaseDump BlockDatabase database.db
 	 */
 	public static void main(String[] args) {
 		Database db;
@@ -112,7 +113,8 @@ public class DatabaseDump extends GamesmanApplication {
 	}
 
 	/**
-	 * @param db The loaded database. db.getConfiguration() must not be null.
+	 * @param db
+	 *            The loaded database. db.getConfiguration() must not be null.
 	 */
 	public void runWithDatabase(Database db) {
 		Configuration conf = db.getConfiguration();
@@ -149,8 +151,8 @@ public class DatabaseDump extends GamesmanApplication {
 		if (alignRemoteness) {
 			// TODO - this should get stored in the database or something
 			long maxRemoteness = 0;
-			long lastHash = gm.lastHash();
-			for (long i = 0; i < lastHash; i++)
+			long numHashes = gm.numHashes();
+			for (long i = 0; i < numHashes; i++)
 				maxRemoteness = Math.max(maxRemoteness, db.getRecord(i).get(
 						RecordFields.REMOTENESS));
 
@@ -174,8 +176,8 @@ public class DatabaseDump extends GamesmanApplication {
 				printNode(parentHash, levels, seen, fringe);
 			}
 		} else {
-			long lastHash=gm.lastHash();
-			for (long i=0;i<lastHash;i++)
+			long numHashes = gm.numHashes();
+			for (long i = 0; i < numHashes; i++)
 				printNode(i, levels, null, null);
 		}
 
@@ -196,8 +198,8 @@ public class DatabaseDump extends GamesmanApplication {
 	}
 
 	private void printNode(long parentHash,
-			HashMap<Long, ArrayList<Long>> levels,
-			HashSet<Long> seen, Queue<Long> fringe) {
+			HashMap<Long, ArrayList<Long>> levels, HashSet<Long> seen,
+			Queue<Long> fringe) {
 		Util.assertTrue((seen == null) == (fringe == null),
 				"seen and fringe must both be null or not null!");
 
@@ -214,7 +216,8 @@ public class DatabaseDump extends GamesmanApplication {
 		TreeMap<String, String> attrs = new TreeMap<String, String>();
 		Record rec = db.getRecord(parentHash);
 		PrimitiveValue v = rec.get();
-		attrs.put("label", String.format("< %s <br/>%s<br/>%s >", Long.toString(parentHash), gm.displayHTML(parent), rec.toString()));
+		attrs.put("label", String.format("< %s <br/>%s<br/>%s >", Long
+				.toString(parentHash), gm.displayHTML(parent), rec.toString()));
 
 		String color = PRIMITIVE_COLORS.get(v);
 		Util.assertTrue(color != null,

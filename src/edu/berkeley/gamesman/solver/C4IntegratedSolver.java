@@ -16,10 +16,8 @@ import edu.berkeley.gamesman.util.Util;
  */
 public class C4IntegratedSolver extends TierSolver<ItergameState> {
 	@Override
-	protected void solvePartialTier(Configuration conf, long start, long end,
-			TierSolverUpdater t, Database inRead, Database inWrite) {
-		if (end < start)
-			return;
+	protected void solvePartialTier(Configuration conf, long start,
+			long hashes, TierSolverUpdater t, Database inRead, Database inWrite) {
 		Connect4 game = Util.checkedCast(conf.getGame());
 		long current = start;
 		long currentGroup = current / conf.recordsPerGroup;
@@ -33,12 +31,11 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 		int numPages = 0;
 		Page[] childPages = new Page[game.maxChildren()];
 		int[] whichPage = new int[game.maxChildren()];
-		long endGroup = end / conf.recordsPerGroup;
-		int writeLen = (int) (endGroup - currentGroup + 1);
+		long endGroup = (start + hashes - 1) / conf.recordsPerGroup;
+		int writeLen = (int) (endGroup + 1 - currentGroup);
 		LocalizedPage writePage = new LocalizedPage(conf, 1);
 		writePage.loadPage(currentGroup, writeLen);
-		if (game.lastHashValueForTier(tier) == end
-				&& (end + 1L) % conf.recordsPerGroup > 0) {
+		if ((start + hashes) % conf.recordsPerGroup > 0) {
 			if (conf.recordGroupUsesLong)
 				writePage.setGroup(writeLen - 1, inRead
 						.getLongRecordGroup(endGroup
@@ -51,7 +48,7 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 		assert Util.debug(DebugFacility.SOLVER, "Loading " + currentGroup
 				+ " - " + (currentGroup + writeLen - 1) + " for write");
 		boolean hasRemoteness = conf.containsField(RecordFields.REMOTENESS);
-		game.setState(game.hashToState(end));
+		game.setState(game.hashToState(start + hashes - 1));
 		if (game.getTier() < game.numberOfTiers() - 1) {
 			children = new ItergameState[game.maxChildren()];
 			for (int i = 0; i < children.length; i++) {
@@ -66,7 +63,7 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 			}
 		}
 		game.setState(game.hashToState(start));
-		while (current <= end) {
+		for (long count = 0L; count < hashes; count++) {
 			if (current % STEP_SIZE == 0)
 				t.calculated(STEP_SIZE);
 			PrimitiveValue pv = game.primitiveValue();
@@ -154,7 +151,7 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 				prim.set(RecordFields.VALUE, pv.value());
 				writePage.putRecord(currentGroup, currentNum, prim);
 			}
-			if (current != end)
+			if (count < hashes - 1)
 				game.nextHashInTier();
 			current++;
 			currentNum++;

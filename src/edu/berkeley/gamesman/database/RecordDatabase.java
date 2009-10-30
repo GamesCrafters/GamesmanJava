@@ -44,7 +44,7 @@ public class RecordDatabase extends Database {
 
 	@Override
 	public void initialize(String uri) {
-		recordArray = new Record[(int) (conf.getGame().lastHash()) + 1];
+		recordArray = new Record[(int) (conf.getGame().numHashes())];
 	}
 
 	@Override

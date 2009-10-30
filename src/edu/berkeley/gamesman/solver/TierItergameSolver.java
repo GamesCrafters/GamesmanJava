@@ -14,8 +14,8 @@ import edu.berkeley.gamesman.util.Util;
  */
 public final class TierItergameSolver extends TierSolver<ItergameState> {
 	@Override
-	protected void solvePartialTier(Configuration conf, long start, long end,
-			TierSolverUpdater t, Database inRead, Database inWrite) {
+	protected void solvePartialTier(Configuration conf, long start,
+			long hashes, TierSolverUpdater t, Database inRead, Database inWrite) {
 		TieredIterGame game = Util.checkedCast(conf.getGame());
 		long current = start;
 		game.setState(game.hashToState(start));
@@ -27,7 +27,7 @@ public final class TierItergameSolver extends TierSolver<ItergameState> {
 		boolean hasRemoteness = conf.containsField(RecordFields.REMOTENESS);
 		for (int i = 0; i < children.length; i++)
 			children[i] = new ItergameState();
-		while (current <= end) {
+		for (long count = 0L; count < hashes; count++) {
 			if (current % STEP_SIZE == 0)
 				t.calculated(STEP_SIZE);
 			PrimitiveValue pv = game.primitiveValue();
@@ -47,9 +47,9 @@ public final class TierItergameSolver extends TierSolver<ItergameState> {
 				prim.set(RecordFields.VALUE, pv.value());
 				inRead.putRecord(current, prim);
 			}
-			if (current != end)
+			if (count < hashes - 1)
 				game.nextHashInTier();
-			current++;
+			++current;
 		}
 	}
 }

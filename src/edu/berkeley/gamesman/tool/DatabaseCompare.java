@@ -43,7 +43,7 @@ public class DatabaseCompare<S> {
 		Game<S> g2 = Util.checkedCast(c2.getGame());
 
 		for (long hash1 = 0; hash1 < db1.getConfiguration().getGame()
-				.lastHash(); hash1++) {
+				.numHashes(); hash1++) {
 			long hash2 = g2.stateToHash(g1.hashToState(hash1));
 
 			Set<RecordFields> toCheck = EnumSet.copyOf(c1.usedFields);

@@ -32,9 +32,6 @@ public class BreadthFirstSolver<T> extends Solver {
 
 	Configuration conf;
 
-	long maxHash;
-
-	// / = maxHash + 1
 	long hashSpace;
 
 	protected CyclicBarrier barr;
@@ -47,8 +44,7 @@ public class BreadthFirstSolver<T> extends Solver {
 		Game<?> game = config.getGame();
 		int maxRemoteness = conf.getInteger("gamesman.solver.maxRemoteness",
 				Integer.MAX_VALUE);
-		maxHash = game.lastHash();
-		hashSpace = maxHash + 1;
+		hashSpace = game.numHashes();
 		Record defaultRecord = game.newRecord(PrimitiveValue.UNDECIDED);
 		for (long index = 0; index < hashSpace; index++)
 			writeDb.putRecord(index, defaultRecord);
