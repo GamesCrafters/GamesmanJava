@@ -2,6 +2,7 @@ package edu.berkeley.gamesman.hadoop;
 
 import java.io.IOException;
 
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -70,8 +71,10 @@ public class TieredHadoopTool extends Configured implements Tool {
 		FileInputFormat.setInputPaths(job, new Path("in"));
 		job.setInputFormat(SequenceInputFormat.class);
 		job.setOutputFormat(SplitDatabaseOutputFormat.class);
-		FileOutputFormat.setOutputPath(job, new Path(String.format(
-				"tier%02d/tier.hdb", tier)));
+		FileOutputFormat.setOutputPath(job,
+				new Path(new Path(myConf.getProperty("gamesman.db.uri")),
+				String.format("tier%02d", tier)));
+		FileSystem.get(job).mkdirs(FileOutputFormat.getOutputPath(job));
 		job.setMapperClass(TierMap.class);
 		job.setNumMapTasks(myConf.getInteger("gamesman.hadoop.numMappers", 60));
 		job.setNumReduceTasks(1);

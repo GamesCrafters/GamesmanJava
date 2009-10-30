@@ -154,7 +154,6 @@ public class TierMap<S> implements
 			// db.initialize(conf.get("dburi"),config);
 			try {
 				FileSystem fs = FileSystem.get(jobconf);
-				System.out.println("FILESYSTEM IS "+fs);
 				if (fs == null) {
 					Util.fatalError("Null filesystem in TierMap.configure!");
 				}
@@ -162,6 +161,8 @@ public class TierMap<S> implements
 			} catch (IOException e) {
 				Util.fatalError("Unable to get filesystem", e);
 			}
+			System.out.println("Work output path is "+FileOutputFormat.getWorkOutputPath(jobconf));
+			System.out.println("Output path is "+FileOutputFormat.getOutputPath(jobconf));
 			db.setOutputDirectory(FileOutputFormat.getWorkOutputPath(jobconf));
 			db.initialize(FileOutputFormat.getOutputPath(jobconf).toString(), config);
 		}

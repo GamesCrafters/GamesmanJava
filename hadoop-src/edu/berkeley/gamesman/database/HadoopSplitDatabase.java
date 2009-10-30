@@ -96,7 +96,7 @@ public class HadoopSplitDatabase extends TierMap.MapReduceDatabase {
 	@Override
 	public Database beginWrite(int tier, long startRecord, long stopRecord) {
 		HDFSOutputDatabase db = new HDFSOutputDatabase(fs);
-		String name = new Path(outputFilenameBase, tier + ".hdb." + startRecord)
+		String name = new Path(tier + ".hdb." + startRecord, outputFilenameBase)
 				.toString();
 		db.initialize(name, conf);
 
