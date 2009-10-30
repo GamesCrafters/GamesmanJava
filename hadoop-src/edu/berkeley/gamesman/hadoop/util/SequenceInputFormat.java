@@ -1,5 +1,7 @@
 package edu.berkeley.gamesman.hadoop.util;
 
+import edu.berkeley.gamesman.util.Util;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -29,20 +31,15 @@ public class SequenceInputFormat implements InputFormat<LongWritable, LongWritab
 	public InputSplit[] getSplits(JobConf conf, int numSplits) throws IOException {
 		long cur = Long.parseLong(conf.get("first"));
 		long end = Long.parseLong(conf.get("end"));
-		long incr = Long.parseLong(conf.get("incr"));
+		int tasks = numSplits; //Integer.parseInt(conf.get("tasks"));
+		int groupLength = Integer.parseInt(conf.get("recordsPerGroup"));
 
-		long Do_Something_Smart_Here = incr;
+		long[] groups = Util.groupAlignedTasks(tasks, cur, end, groupLength);
 		
 		SequenceSplit[] splits = new SequenceSplit[numSplits];
 		
-		
-		long step = (end-cur+numSplits-1)/numSplits;
-		
-		for(int i = 0; i < numSplits; i++){
-			if(i == numSplits-1)
-				step = end-cur;
-			splits[i] = new SequenceSplit(cur,step,incr);
-			cur += step;
+		for(int i = 0; i < groups.length-1; i++){
+			splits[i] = new SequenceSplit(groups[i], groups[i+1]);
 		}
 		
 		System.out.println(Arrays.toString(splits));
@@ -60,17 +57,15 @@ class SequenceSplit implements InputSplit {
 	public SequenceSplit() {
 		s = 0;
 		l = 0;
-		incr = 1;
 	}
 	
-	SequenceSplit(long start, long len, long increment){
+	SequenceSplit(long start, long len){
 		s = start;
 		l = len;
-		incr = increment;
 	}
 	
 	public long getLength() throws IOException {
-		return (l+incr-1)/incr;
+		return l;
 	}
 
 	public String[] getLocations() throws IOException {
@@ -81,19 +76,16 @@ class SequenceSplit implements InputSplit {
 	public void readFields(DataInput din) throws IOException {
 		s = din.readLong();
 		l = din.readLong();
-		incr = din.readLong();
 	}
 
 	public void write(DataOutput dout) throws IOException {
 		dout.writeLong(s);
 		dout.writeLong(l);
-		dout.writeLong(incr);
 	}
 	
 	public String toString(){
-		return "[@"+s+"+"+l+"/"+incr+"]";
+		return "[@"+s+"+"+l+"]";
 	}
-	
 }
 
 class SequenceReader implements RecordReader<LongWritable, LongWritable>{
@@ -124,20 +116,18 @@ class SequenceReader implements RecordReader<LongWritable, LongWritable>{
 	}
 
 	public float getProgress() throws IOException {
-		return (float)pos / (float)split.getLength();
+		if (pos == 0) {
+			return 0;
+		} else {
+			return 1;
+		}
 	}
 
 	public boolean next(LongWritable key, LongWritable value)
 			throws IOException {
-		if(pos <= split.getLength()){
-			long realPos = pos*split.incr;
-			key.set(split.s + realPos);
-			pos++;
-			realPos += split.incr;
-			if (realPos >= split.l) {
-				realPos = split.l-1;
-			}
-			value.set(split.s + realPos);
+		if(pos == 0){
+			key.set(split.s);
+			value.set(split.s+split.l);
 			return true;
 		}
 		return false;

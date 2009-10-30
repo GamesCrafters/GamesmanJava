@@ -103,6 +103,8 @@ public class TierMap<S> implements
 
 	private JobConf jobconf;
 
+	private boolean initialized;
+
 	public void configure(JobConf conf) {
 		// Class<TieredGame<Object>> gc = null;
 		// Class<Database> gd = null;
@@ -124,18 +126,6 @@ public class TierMap<S> implements
 			return;
 		}
 
-		// db.initialize(conf.get("dburi"),config);
-		try {
-			FileSystem fs = FileSystem.get(jobconf);
-			if (fs == null) {
-				Util.fatalError("Null filesystem in TierMap.configure!");
-			}
-			db.setFilesystem(fs);
-		} catch (IOException e) {
-			Util.fatalError("Unable to get filesystem", e);
-		}
-		db.setOutputDirectory(FileOutputFormat.getWorkOutputPath(jobconf));
-		db.initialize(FileOutputFormat.getOutputPath(conf).toString(), config);
 		tier = Integer.parseInt(jobconf.get("tier"));
 		game = Util.checkedCast(config.getGame());
 		hasher = Util.checkedCast(config.getHasher());
@@ -159,6 +149,22 @@ public class TierMap<S> implements
 	public void map(LongWritable startHash, LongWritable endHash,
 			OutputCollector<LongWritable, SplitDatabaseWritable> outRec,
 			Reporter reporter) throws IOException {
+		if (!initialized) {
+			initialized = true;
+			// db.initialize(conf.get("dburi"),config);
+			try {
+				FileSystem fs = FileSystem.get(jobconf);
+				System.out.println("FILESYSTEM IS "+fs);
+				if (fs == null) {
+					Util.fatalError("Null filesystem in TierMap.configure!");
+				}
+				db.setFilesystem(fs);
+			} catch (IOException e) {
+				Util.fatalError("Unable to get filesystem", e);
+			}
+			db.setOutputDirectory(FileOutputFormat.getWorkOutputPath(jobconf));
+			db.initialize(FileOutputFormat.getOutputPath(jobconf).toString(), config);
+		}
 		this.reporter = reporter;
 		this.outRec = outRec;
 		solve(startHash.get(), endHash.get());

@@ -62,8 +62,9 @@ public class TieredHadoopTool extends Configured implements Tool {
 
 		job.set("first", Long.toString(firstHash));
 		job.set("end", Long.toString(endHash));
-		job.set("incr", Integer.toString(incr));
+		//job.set("tasks", Integer.toString(incr));
 		job.set("tier", Integer.toString(tier));
+		job.set("recordsPerGroup", Integer.toString(myConf.recordsPerGroup));
 
 		job.setJobName("Tier Map-Reduce");
 		FileInputFormat.setInputPaths(job, new Path("in"));

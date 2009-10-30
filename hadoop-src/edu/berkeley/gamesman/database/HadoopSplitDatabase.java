@@ -77,8 +77,6 @@ public class HadoopSplitDatabase extends TierMap.MapReduceDatabase {
 		databaseEnd = null;
 	}
 
-	FileSystem fs;
-
 	Configuration conf;
 
 	String inputFilenameBase;
