@@ -12,5 +12,6 @@ record.compression = 90
 gamesman.threads = 8
 gamesman.debug.THREADING = true
 gamesman.debug.SOLVER = true
+gamesman.debug.HADOOP = true
 gamesman.hadoop.incr = 10000
 gamesman.hadoop.numMappers = 60

@@ -6,7 +6,7 @@ import org.apache.hadoop.fs.Path;
 
 import edu.berkeley.gamesman.core.RecordGroup;
 import edu.berkeley.gamesman.util.LongIterator;
-import edu.berkeley.gamesman.hadoop.TierMap;
+import edu.berkeley.gamesman.hadoop.util.HadoopUtil;
 import edu.berkeley.gamesman.util.Util;
 import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
@@ -24,7 +24,7 @@ import java.io.IOException;
  * 
  * @author Steven Schlansker
  */
-public class HDFSOutputDatabase extends TierMap.MapReduceDatabase {
+public class HDFSOutputDatabase extends HadoopUtil.MapReduceDatabase {
 
 	protected Path myFile;
 

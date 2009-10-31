@@ -40,19 +40,22 @@ public class TieredHadoopTool extends Configured implements Tool {
 		// Determine last index
 		TieredGame<?> g = Util.checkedCast(myConf.getGame());
 
-		for (int tier = g.numberOfTiers() - 1; tier >= 0; tier--) {
+		int primitiveTier = g.numberOfTiers() - 1;
+		int tier = primitiveTier - 1;
+		Util.debug(DebugFacility.HADOOP, "Processing first tier " + tier);
+		processRun(conf, tier, -1);
+		for (tier--; tier >= 0; tier--) {
 			Util.debug(DebugFacility.HADOOP, "Processing tier " + tier);
-			processRun(conf, tier);
+			processRun(conf, tier, tier+1);
 		}
 
 		return 0;
 	}
 
-	private void processRun(Configuration conf, int tier) throws IOException {
+	private void processRun(Configuration conf, int tier, int lastTier) throws IOException {
 		TieredHasher<?> h = Util.checkedCast(myConf.getHasher());
 		long firstHash = h.hashOffsetForTier(tier);
-		long endHash = h.hashOffsetForTier(tier + 1);
-		int incr = myConf.getInteger("gamesman.hadoop.incr", 1000);
+		long endHash = h.hashOffsetForTier(tier+1);
 
 		JobConf job = new JobConf(conf, TierMap.class);
 
@@ -66,15 +69,18 @@ public class TieredHadoopTool extends Configured implements Tool {
 		// job.set("tasks", Integer.toString(incr));
 		job.set("tier", Integer.toString(tier));
 		job.set("recordsPerGroup", Integer.toString(myConf.recordsPerGroup));
+		if (lastTier >= 0) {
+			job.set("previousTierDb", HadoopUtil.getTierIndexPath(myConf, lastTier).toString());
+		}
+
+		Path outputPath = HadoopUtil.getTierPath(myConf, tier);
+		FileOutputFormat.setOutputPath(job, outputPath);
+		FileSystem.get(job).mkdirs(outputPath);
 
 		job.setJobName("Tier Map-Reduce");
 		FileInputFormat.setInputPaths(job, new Path("in"));
 		job.setInputFormat(SequenceInputFormat.class);
 		job.setOutputFormat(SplitDatabaseOutputFormat.class);
-		FileOutputFormat.setOutputPath(job, new Path(new Path(myConf
-				.getProperty("gamesman.db.uri")), String.format("tier%02d",
-				tier)));
-		FileSystem.get(job).mkdirs(FileOutputFormat.getOutputPath(job));
 		job.setMapperClass(TierMap.class);
 		job.setNumMapTasks(myConf.getInteger("gamesman.hadoop.numMappers", 60));
 		job.setNumReduceTasks(1);

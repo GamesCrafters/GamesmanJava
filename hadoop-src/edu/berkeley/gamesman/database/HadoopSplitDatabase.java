@@ -9,7 +9,8 @@ import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.util.LongIterator;
 import edu.berkeley.gamesman.util.Util;
 import edu.berkeley.gamesman.util.biginteger.BigInteger;
-import edu.berkeley.gamesman.hadoop.TierMap;
+import edu.berkeley.gamesman.hadoop.util.HadoopUtil;
+
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.Map;
@@ -27,17 +28,27 @@ import java.io.IOException;
  * 
  * @author Steven Schlansker
  */
-public class HadoopSplitDatabase extends TierMap.MapReduceDatabase {
+public class HadoopSplitDatabase extends HadoopUtil.MapReduceDatabase {
 
+	/** Default constructor. Must by followed by calls to setFilesystem(),
+	 * setOutputDirectory(), setDelegate(), and initialize().
+	 */
 	public HadoopSplitDatabase() {
 	}
 
+	/**
+	 * Equivalent to default constructor, followed by setFilesystem().
+	 * @param fs FileSystem, if known already
+	 */
 	public HadoopSplitDatabase(FileSystem fs) {
 		super(fs);
 	}
 
 	@Override
 	public void initialize(String splitfilename) {
+		if (splitfilename == null || splitfilename.length()==0) {
+			return;
+		}
 		databaseTree = new TreeMap<Long, Database>();
 		databaseEnd = new HashMap<Long, Long>();
 		int lastslash = splitfilename.lastIndexOf('/');
@@ -70,14 +81,14 @@ public class HadoopSplitDatabase extends TierMap.MapReduceDatabase {
 	}
 
 	public void close() {
-		for (Map.Entry<Long, Database> dbpair : databaseTree.entrySet()) {
-			dbpair.getValue().close();
+		if (databaseTree != null) {
+			for (Map.Entry<Long, Database> dbpair : databaseTree.entrySet()) {
+				dbpair.getValue().close();
+			}
 		}
 		databaseTree = null;
 		databaseEnd = null;
 	}
-
-	Configuration conf;
 
 	String inputFilenameBase;
 

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapred.FileOutputFormat;
@@ -14,6 +13,7 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 
 import edu.berkeley.gamesman.core.*;
+import edu.berkeley.gamesman.hadoop.util.HadoopUtil;
 import edu.berkeley.gamesman.hadoop.util.SplitDatabaseWritable;
 import edu.berkeley.gamesman.solver.TierSolver;
 import edu.berkeley.gamesman.util.DebugFacility;
@@ -32,66 +32,13 @@ import edu.berkeley.gamesman.util.Util;
 public class TierMap<S> implements
 		Mapper<LongWritable, LongWritable, LongWritable, SplitDatabaseWritable> {
 
-	/**
-	 * MapReduceDatabase abstract parent for children 
-	 *
-	 */
-	public static abstract class MapReduceDatabase extends Database {
-		/**
-		 * Default constructor, so this can be instantiated from a class name.
-		 */
-		public MapReduceDatabase() {
-		}
-
-		/**
-		 * Convenience constructor. Equivalent to calling setFilesystem
-		 * @param fs Reference to hadoop FileSystem.
-		 */
-		public MapReduceDatabase(FileSystem fs) {
-			this.fs = fs;
-		}
-
-		/**
-		 * All hadoop classes that need to access the disk need a FileSystem instance.
-		 * Must be set before the database is used.
-		 * @param fs The hadoop filesystem.
-		 */
-		public void setFilesystem(FileSystem fs) {
-			this.fs = fs;
-		}
-
-		/**
-		 * Called by the mapper to allow the database to communicate via
-		 * TierMap.started() and TierMap.finished().
-		 * @param tmr TierMap instance.
-		 */
-		void setDelegate(TierMap<?> tmr) {
-			this.delegate = tmr;
-		}
-
-		/**
-		 * Called by the mapper to tell the database where to dump output files.
-		 * @param dir FileOutputFormat.getWorkOutputPath(jobconf));
-		 */
-		public void setOutputDirectory(Path dir) {
-			outputFilenameBase = dir;
-			// dir contains a trailing slash
-		}
-
-		protected TierMap<?> delegate;
-
-		protected FileSystem fs;
-
-		protected Path outputFilenameBase;
-	}
-
 	protected TieredGame<S> game;
 
 	protected Hasher<S> hasher;
 
 	protected TierSolver<S> solver;
 
-	protected MapReduceDatabase db;
+	protected HadoopUtil.MapReduceDatabase db;
 
 	int tier;
 
@@ -103,7 +50,7 @@ public class TierMap<S> implements
 
 	private JobConf jobconf;
 
-	private boolean initialized;
+	private boolean initialized = false;
 
 	public void configure(JobConf conf) {
 		// Class<TieredGame<Object>> gc = null;
@@ -120,7 +67,7 @@ public class TierMap<S> implements
 					.get("configuration_data")));
 			db = Util.typedInstantiate(base + "database."
 					+ config.getProperty("gamesman.database"),
-					MapReduceDatabase.class);
+					HadoopUtil.MapReduceDatabase.class);
 		} catch (ClassNotFoundException e) {
 			Util.fatalError("failed to load configuration class!", e);
 			return;
@@ -132,6 +79,8 @@ public class TierMap<S> implements
 		try {
 			solver = Util.checkedCast(Util.typedInstantiate(base + "solver."
 					+ config.getProperty("gamesman.solver"), TierSolver.class));
+			config.db = db;
+			solver.initialize(config);
 		} catch (ClassNotFoundException e) {
 			Util.fatalError("failed to load configuration class!", e);
 			return;
@@ -161,10 +110,15 @@ public class TierMap<S> implements
 			} catch (IOException e) {
 				Util.fatalError("Unable to get filesystem", e);
 			}
-			System.out.println("Work output path is "+FileOutputFormat.getWorkOutputPath(jobconf));
-			System.out.println("Output path is "+FileOutputFormat.getOutputPath(jobconf));
+			Util.debug(DebugFacility.HADOOP,
+					"Work output path is "+
+					FileOutputFormat.getWorkOutputPath(jobconf));
+			Util.debug(DebugFacility.HADOOP,
+					"Output path is "+
+					FileOutputFormat.getOutputPath(jobconf));
 			db.setOutputDirectory(FileOutputFormat.getWorkOutputPath(jobconf));
-			db.initialize(FileOutputFormat.getOutputPath(jobconf).toString(), config);
+			System.out.println("SETTING CONF TO "+config);
+			db.initialize(jobconf.get("previousTierDb", null), config);
 		}
 		this.reporter = reporter;
 		this.outRec = outRec;
