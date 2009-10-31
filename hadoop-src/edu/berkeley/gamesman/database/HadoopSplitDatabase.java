@@ -4,7 +4,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 
-import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.util.LongIterator;
 import edu.berkeley.gamesman.util.Util;
@@ -107,8 +106,9 @@ public class HadoopSplitDatabase extends HadoopUtil.MapReduceDatabase {
 	@Override
 	public Database beginWrite(int tier, long startRecord, long stopRecord) {
 		HDFSOutputDatabase db = new HDFSOutputDatabase(fs);
-		String name = new Path(tier + ".hdb." + startRecord, outputFilenameBase)
+		String name = new Path(outputFilenameBase, tier + ".hdb." + startRecord)
 				.toString();
+		System.out.println(name);
 		db.initialize(name, conf);
 
 		if (delegate != null) {

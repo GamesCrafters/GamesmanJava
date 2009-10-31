@@ -98,37 +98,42 @@ public class TierMap<S> implements
 	public void map(LongWritable startHash, LongWritable endHash,
 			OutputCollector<LongWritable, SplitDatabaseWritable> outRec,
 			Reporter reporter) throws IOException {
-		if (!initialized) {
-			initialized = true;
-			// db.initialize(conf.get("dburi"),config);
-			try {
-				FileSystem fs = FileSystem.get(jobconf);
-				if (fs == null) {
-					Util.fatalError("Null filesystem in TierMap.configure!");
+		try {
+			Util.debug(DebugFacility.HADOOP,
+					"Map "+startHash+" - "+endHash);
+			if (!initialized) {
+				initialized = true;
+				// db.initialize(conf.get("dburi"),config);
+				try {
+					FileSystem fs = FileSystem.get(jobconf);
+					if (fs == null) {
+						Util.fatalError("Null filesystem in TierMap.configure!");
+					}
+					db.setFilesystem(fs);
+				} catch (IOException e) {
+					Util.fatalError("Unable to get filesystem", e);
 				}
-				db.setFilesystem(fs);
-			} catch (IOException e) {
-				Util.fatalError("Unable to get filesystem", e);
+				Util.debug(DebugFacility.HADOOP,
+						"Work output path is "+
+						FileOutputFormat.getWorkOutputPath(jobconf));
+				Util.debug(DebugFacility.HADOOP,
+						"Output path is "+
+						FileOutputFormat.getOutputPath(jobconf));
+				db.setOutputDirectory(FileOutputFormat.getWorkOutputPath(jobconf));
+				db.initialize(jobconf.get("previousTierDb", null), config);
 			}
-			Util.debug(DebugFacility.HADOOP,
-					"Work output path is "+
-					FileOutputFormat.getWorkOutputPath(jobconf));
-			Util.debug(DebugFacility.HADOOP,
-					"Output path is "+
-					FileOutputFormat.getOutputPath(jobconf));
-			db.setOutputDirectory(FileOutputFormat.getWorkOutputPath(jobconf));
-			System.out.println("SETTING CONF TO "+config);
-			db.initialize(jobconf.get("previousTierDb", null), config);
+			this.reporter = reporter;
+			this.outRec = outRec;
+			solve(startHash.get(), endHash.get());
+		} catch (Util.FatalError fe) {
+			throw new RuntimeException(fe);
 		}
-		this.reporter = reporter;
-		this.outRec = outRec;
-		solve(startHash.get(), endHash.get());
 	}
 
 	private void solve(long startHash, long endHash) {
 		int threads = config.getInteger("gamesman.threads", 1);
-		assert Util.debug(DebugFacility.MASTER, "Launching " + threads
-				+ " threads for " + startHash + "-" + (endHash - 1));
+		assert Util.debug(DebugFacility.HADOOP, "Launching " + threads
+				+ " threads for " + startHash + "-" + endHash);
 		List<WorkUnit> list = solver.prepareSolve(config, tier, startHash,
 				endHash).divide(threads);
 
@@ -148,7 +153,7 @@ public class TierMap<S> implements
 			} catch (InterruptedException e) {
 				Util.warn("Interrupted while joined on thread " + t);
 			}
-		assert Util.debug(DebugFacility.MASTER, "Finished master run");
+		assert Util.debug(DebugFacility.HADOOP, "Finished hadoop run");
 	}
 
 	/** Called by the HadoopSplitDatabase when a child database is opened.
@@ -193,10 +198,14 @@ public class TierMap<S> implements
 		}
 
 		public void run() {
-			assert Util.debug(DebugFacility.MASTER,
+			assert Util.debug(DebugFacility.HADOOP,
 					"HadoopMasterRunnable begin");
-			w.conquer();
-			assert Util.debug(DebugFacility.MASTER, "HadoopMasterRunnable end");
+			try {
+				w.conquer();
+			} catch (Util.FatalError fe) {
+				System.exit(1);
+			}
+			assert Util.debug(DebugFacility.HADOOP, "HadoopMasterRunnable end");
 		}
 	}
 

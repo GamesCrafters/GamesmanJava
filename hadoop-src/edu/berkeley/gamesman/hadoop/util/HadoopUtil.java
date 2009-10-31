@@ -84,7 +84,7 @@ public class HadoopUtil {
 	 * @return The full Path to the directory for that tier.
 	 */
 	public static Path getTierPath(Configuration gmConf, int tier) {
-		return new Path(getParentPath(gmConf), getTierDirectoryName(tier+1));
+		return new Path(getParentPath(gmConf), getTierDirectoryName(tier));
 	}
 
 	/**
@@ -92,7 +92,7 @@ public class HadoopUtil {
 	 * @return The name of the file that contains the index in the database.
 	 */
 	public static String getTierIndexFilename(int tier) {
-		return "index.hdb";
+		return tier+".hdb";
 	}
 
 	/**

@@ -35,7 +35,7 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 		int writeLen = (int) (endGroup + 1 - currentGroup);
 		LocalizedPage writePage = new LocalizedPage(conf, 1);
 		writePage.loadPage(currentGroup, writeLen);
-		if ((start + hashes) % conf.recordsPerGroup > 0) {
+		if (!hadooping && (start + hashes) % conf.recordsPerGroup > 0) {
 			if (conf.recordGroupUsesLong)
 				writePage.setGroup(writeLen - 1, inRead
 						.getLongRecordGroup(endGroup
