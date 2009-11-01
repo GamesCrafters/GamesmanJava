@@ -62,7 +62,7 @@ public abstract class Task {
 	 * @param p
 	 *            The progress you have reached
 	 */
-	public void setProgress(long p) {
+	public synchronized void setProgress(long p) {
 		completed = p;
 		update();
 	}

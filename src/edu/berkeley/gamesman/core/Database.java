@@ -192,8 +192,8 @@ public abstract class Database {
 	 * @param numRecords
 	 *            The number of records to go through
 	 */
-	public synchronized void putRecords(long recordIndex,
-			RecordIterator records, int numRecords) {
+	public void putRecords(long recordIndex, RecordIterator records,
+			int numRecords) {
 		int preRecords = conf.recordsPerGroup
 				- ((int) ((recordIndex - 1) % conf.recordsPerGroup) + 1);
 		int recordGroups = (numRecords - preRecords) / conf.recordsPerGroup;
@@ -249,14 +249,15 @@ public abstract class Database {
 	}
 
 	/**
+	 * Warning! This method must be synchronized by the caller
+	 * 
 	 * @param loc
 	 *            The location to start at
 	 * @param numGroups
 	 *            The number of groups to return
 	 * @return An iterator over numGroups RecordGroups from this database
 	 */
-	public synchronized Iterator<BigInteger> getBigIntRecordGroups(long loc,
-			int numGroups) {
+	public Iterator<BigInteger> getBigIntRecordGroups(long loc, int numGroups) {
 		int groupsLength = Math.min(maxBytes, numGroups
 				* conf.recordGroupByteLength);
 		if (groups == null || groups.length < groupsLength)
@@ -530,8 +531,8 @@ public abstract class Database {
 	 * @param numRecords
 	 *            The number of records to go through
 	 */
-	public synchronized void putRecords(long recordIndex, Record[] records,
-			int offset, int numRecords) {
+	public void putRecords(long recordIndex, Record[] records, int offset,
+			int numRecords) {
 		int preRecords = conf.recordsPerGroup
 				- ((int) ((recordIndex - 1) % conf.recordsPerGroup) + 1);
 		int recordGroups = (numRecords - preRecords) / conf.recordsPerGroup;

@@ -236,7 +236,7 @@ public class TierSolver<T> extends Solver {
 			}
 		}
 
-		public synchronized void complete() {
+		public void complete() {
 			if (t != null)
 				t.complete();
 			t = null;

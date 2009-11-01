@@ -52,12 +52,12 @@ public class MemoryDatabase extends Database {
 	}
 
 	@Override
-	public synchronized long getLongRecordGroup(long loc) {
+	public long getLongRecordGroup(long loc) {
 		return RecordGroup.longRecordGroup(conf, memoryStorage, (int) loc);
 	}
 
 	@Override
-	public synchronized BigInteger getBigIntRecordGroup(long loc) {
+	public BigInteger getBigIntRecordGroup(long loc) {
 		return RecordGroup.bigIntRecordGroup(conf, memoryStorage, (int) loc);
 	}
 
@@ -125,17 +125,17 @@ public class MemoryDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void putRecordGroup(long loc, long value) {
+	public void putRecordGroup(long loc, long value) {
 		RecordGroup.toUnsignedByteArray(conf, value, memoryStorage, (int) loc);
 	}
 
 	@Override
-	public synchronized void putRecordGroup(long loc, BigInteger value) {
+	public void putRecordGroup(long loc, BigInteger value) {
 		RecordGroup.toUnsignedByteArray(conf, value, memoryStorage, (int) loc);
 	}
 
 	@Override
-	public synchronized void putRecordGroups(long loc, LongIterator it,
+	public void putRecordGroups(long loc, LongIterator it,
 			int numGroups) {
 		for (int i = 0; i < numGroups; i++) {
 			putRecordGroup(loc, it.next());
@@ -144,7 +144,7 @@ public class MemoryDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void putRecordGroups(long loc, Iterator<BigInteger> it,
+	public void putRecordGroups(long loc, Iterator<BigInteger> it,
 			int numGroups) {
 		for (int i = 0; i < numGroups; i++) {
 			putRecordGroup(loc, it.next());
@@ -166,12 +166,18 @@ public class MemoryDatabase extends Database {
 				"Closing Memory DataBase. Does Nothing.");
 	}
 
+	/**
+	 * Must be synchronized by caller
+	 */
 	@Override
 	public void getBytes(byte[] arr, int off, int len) {
 		for (int i = 0; i < len; i++)
 			arr[off++] = memoryStorage[nextPlace++];
 	}
 
+	/**
+	 * Must be synchronized by caller
+	 */
 	@Override
 	public void putBytes(byte[] arr, int off, int len) {
 		for (int i = 0; i < len; i++)

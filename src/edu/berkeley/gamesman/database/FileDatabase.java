@@ -15,7 +15,7 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author Steven Schlansker
  */
-public class FileDatabase extends Database {
+public final class FileDatabase extends Database {
 
 	protected File myFile;
 
@@ -26,7 +26,7 @@ public class FileDatabase extends Database {
 	protected long offset;
 
 	@Override
-	public synchronized void close() {
+	public void close() {
 		try {
 			fd.close();
 		} catch (IOException e) {
@@ -35,16 +35,16 @@ public class FileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void flush() {
-//		try {
-//			fd.getFD().sync();
-//			fd.getChannel().force(true);
-//		} catch (IOException e) {
-//			Util.fatalError("Error while writing to database: " + e);
-//		}
+	public void flush() {
+		// try {
+		// fd.getFD().sync();
+		// fd.getChannel().force(true);
+		// } catch (IOException e) {
+		// Util.fatalError("Error while writing to database: " + e);
+		// }
 	}
 
-	public synchronized void seek(long loc) {
+	public void seek(long loc) {
 		try {
 			fd.seek(loc + offset);
 		} catch (IOException e) {
@@ -53,7 +53,7 @@ public class FileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void getBytes(byte[] arr, int off, int len) {
+	public void getBytes(byte[] arr, int off, int len) {
 		try {
 			fd.read(arr, off, len);
 		} catch (IOException e) {
@@ -62,7 +62,7 @@ public class FileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void putBytes(byte[] arr, int off, int len) {
+	public void putBytes(byte[] arr, int off, int len) {
 		try {
 			fd.write(arr, off, len);
 		} catch (IOException e) {
@@ -71,7 +71,7 @@ public class FileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void initialize(String loc) {
+	public void initialize(String loc) {
 
 		boolean previouslyExisted;
 		try {

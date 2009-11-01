@@ -128,13 +128,13 @@ public class HadoopSplitDatabase extends HadoopUtil.MapReduceDatabase {
 	}
 
 	@Override
-	public synchronized void putBytes(byte[] arr, int offset, int length) {
+	public void putBytes(byte[] arr, int offset, int length) {
 		throw new RuntimeException(
 				"HadoopSplitDatabase requires a position argument to putBytes");
 	}
 
 	@Override
-	public synchronized void putBytes(long loc, byte[] arr, int offset,
+	public void putBytes(long loc, byte[] arr, int offset,
 			int length) {
 		throw new RuntimeException(
 			"putBytes can only be called from beginWrite()'s return value");
@@ -157,7 +157,7 @@ public class HadoopSplitDatabase extends HadoopUtil.MapReduceDatabase {
 	}
 
 	@Override
-	public synchronized void seek(long position) {
+	public void seek(long position) {
 		throw new RuntimeException(
 				"HadoopSplitDatabase does not implement seek");
 	}
@@ -184,7 +184,7 @@ public class HadoopSplitDatabase extends HadoopUtil.MapReduceDatabase {
 	}
 
 	@Override
-	public synchronized void getBytes(byte[] arr, int offset, int length) {
+	public void getBytes(byte[] arr, int offset, int length) {
 		throw new RuntimeException(
 				"HadoopSplitDatabase requires a position argument to getBytes");
 	}

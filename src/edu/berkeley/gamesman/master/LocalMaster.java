@@ -137,13 +137,14 @@ public final class LocalMaster implements Master, TaskFactory {
 		@Override
 		public void update() {
 			long elapsedMillis = System.currentTimeMillis() - start;
-			double thousandpct = completed / (total / 100000D);
-			double pct = thousandpct / 1000;
-			long totalMillis = (long) ((double) elapsedMillis * 100 / pct);
-			System.out.print("Task: " + name + ", "
-					+ String.format("%4.02f", pct) + "% ETA "
-					+ Util.millisToETA(totalMillis - elapsedMillis)
-					+ " remains\r");
+			double fraction = (double) completed / total;
+			System.out.print("Task: "
+					+ name
+					+ ", "
+					+ String.format("%4.02f", fraction * 100)
+					+ "% ETA "
+					+ Util.millisToETA((long) (elapsedMillis / fraction)
+							- elapsedMillis) + " remains\r");
 		}
 	}
 
