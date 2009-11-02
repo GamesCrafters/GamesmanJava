@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobConf;
@@ -30,7 +31,7 @@ import edu.berkeley.gamesman.util.Util;
  */
 @SuppressWarnings("deprecation")
 public class TierMap<S> implements
-		Mapper<LongWritable, LongWritable, LongWritable, SplitDatabaseWritable> {
+		Mapper<LongWritable, LongWritable, IntWritable, SplitDatabaseWritable> {
 
 	protected TieredGame<S> game;
 
@@ -44,7 +45,7 @@ public class TierMap<S> implements
 
 	private Reporter reporter;
 
-	private OutputCollector<LongWritable, SplitDatabaseWritable> outRec;
+	private OutputCollector<IntWritable, SplitDatabaseWritable> outRec;
 
 	private Configuration config;
 
@@ -96,7 +97,7 @@ public class TierMap<S> implements
 	}
 
 	public void map(LongWritable startHash, LongWritable endHash,
-			OutputCollector<LongWritable, SplitDatabaseWritable> outRec,
+			OutputCollector<IntWritable, SplitDatabaseWritable> outRec,
 			Reporter reporter) throws IOException {
 		try {
 			Util.debug(DebugFacility.HADOOP,
@@ -120,6 +121,7 @@ public class TierMap<S> implements
 						"Output path is "+
 						FileOutputFormat.getOutputPath(jobconf));
 				db.setOutputDirectory(FileOutputFormat.getWorkOutputPath(jobconf));
+				db.setDelegate(this);
 				db.initialize(jobconf.get("previousTierDb", null), config);
 			}
 			this.reporter = reporter;
@@ -180,10 +182,10 @@ public class TierMap<S> implements
 	public void finished(int tier, String filename, long startRecord,
 			long stopRecord) {
 		reporter.progress();
-		SplitDatabaseWritable w = new SplitDatabaseWritable(tier);
+		SplitDatabaseWritable w = new SplitDatabaseWritable();
 		w.set(filename, startRecord, stopRecord);
 		try {
-			outRec.collect(new LongWritable(startRecord), w);
+			outRec.collect(new IntWritable(tier), w);
 		} catch (IOException e) {
 			Util.warn("Failed to collect finished database " + tier + "@"
 					+ filename, e);

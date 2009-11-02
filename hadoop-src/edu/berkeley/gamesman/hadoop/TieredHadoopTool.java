@@ -45,7 +45,6 @@ public class TieredHadoopTool extends Configured implements Tool {
 		Util.debug(DebugFacility.HADOOP, "Processing first tier " + tier);
 		processRun(conf, tier, -1);
 		for (tier--; tier >= 0; tier--) {
-			Util.debug(DebugFacility.HADOOP, "Processing tier " + tier);
 			processRun(conf, tier, tier+1);
 		}
 
@@ -63,6 +62,8 @@ public class TieredHadoopTool extends Configured implements Tool {
 		job.setMapOutputValueClass(SplitDatabaseWritable.class);
 		job.setOutputKeyClass(IntWritable.class);
 		job.setOutputValueClass(SplitDatabaseWritableList.class);
+
+		Util.debug(DebugFacility.HADOOP, "Processing tier " + tier+" from "+firstHash+" to "+endHash);
 
 		job.set("first", Long.toString(firstHash));
 		job.set("end", Long.toString(endHash));

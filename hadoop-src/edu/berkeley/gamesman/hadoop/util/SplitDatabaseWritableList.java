@@ -18,16 +18,22 @@ import java.util.ArrayList;
  * @see SplitDatabaseWritable
  * @author Patrick Horn
  */
-public class SplitDatabaseWritableList implements Writable{
-	private List<SplitDatabaseWritable> list;
+public class SplitDatabaseWritableList extends ArrayList<SplitDatabaseWritable> implements Writable{
+	private static final long serialVersionUID = 1L;
+
 	int tier;
+
+	/**
+	 * Default constructor for deserializing.
+	 */
+	public SplitDatabaseWritableList() {
+	}
 
 	/**
 	 * Constructor, takes the tier number.
 	 * @param tier The tier that this database list represents.
 	 */
 	public SplitDatabaseWritableList(int tier) {
-		list = new ArrayList<SplitDatabaseWritable>();
 		this.tier = tier;
 	}
 
@@ -35,22 +41,23 @@ public class SplitDatabaseWritableList implements Writable{
 	 * @param w Another database to add to set. Doesn't need to be in order.
 	 */
 	public void addDatabase(SplitDatabaseWritable w) {
-		list.add(w);
+		add(w);
 	}
+
 	public void readFields(DataInput in) throws IOException {
 		tier = in.readInt();
 		try {
 			while (true) {
-				SplitDatabaseWritable sdw = new SplitDatabaseWritable(tier);
+				SplitDatabaseWritable sdw = new SplitDatabaseWritable();
 				sdw.readFields(in);
-				list.add(sdw);
+				add(sdw);
 			}
 		} catch(EOFException e) {
 		}
 	}
 	public void write(DataOutput out) throws IOException {
 		out.writeInt(tier);
-		for (SplitDatabaseWritable sdw : list) {
+		for (SplitDatabaseWritable sdw : this) {
 			sdw.write(out);
 		}
 	}

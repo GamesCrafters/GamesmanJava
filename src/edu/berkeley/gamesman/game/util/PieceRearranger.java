@@ -414,6 +414,9 @@ public final class PieceRearranger implements Cloneable {
 	 * @return The character of the piece.
 	 */
 	public char get(final int piece) {
+		if (pieces[piece]==null) {
+			return ' ';
+		}
 		return pieces[piece].player;
 	}
 

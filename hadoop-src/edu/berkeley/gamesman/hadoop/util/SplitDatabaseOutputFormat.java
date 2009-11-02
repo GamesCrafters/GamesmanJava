@@ -6,6 +6,7 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputFormat;
 import org.apache.hadoop.mapred.RecordWriter;
@@ -27,7 +28,7 @@ public class SplitDatabaseOutputFormat implements
 			FileSystem fs, JobConf jc, String name, Progressable progress)
 			throws IOException {
 
-		final FSDataOutputStream out = fs.create(new Path(name));
+		final FSDataOutputStream out = fs.create(new Path(FileOutputFormat.getOutputPath(jc), name));
 
 		return new RecordWriter<IntWritable, SplitDatabaseWritableList>() {
 

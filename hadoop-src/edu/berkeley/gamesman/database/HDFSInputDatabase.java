@@ -5,6 +5,7 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.util.Util;
 import edu.berkeley.gamesman.hadoop.util.HadoopUtil;
 import java.io.IOException;
@@ -18,8 +19,9 @@ import java.io.IOException;
  * 
  * @author Steven Schlansker
  */
-public class HDFSInputDatabase extends HadoopUtil.MapReduceDatabase {
+public class HDFSInputDatabase extends Database {
 
+	protected FileSystem fs;
 	protected Path myFile;
 
 	protected FSDataInputStream fd;
@@ -36,7 +38,7 @@ public class HDFSInputDatabase extends HadoopUtil.MapReduceDatabase {
 	}
 
 	HDFSInputDatabase(FileSystem fs) {
-		super(fs);
+		this.fs = fs;
 	}
 
 	@Override
@@ -55,7 +57,7 @@ public class HDFSInputDatabase extends HadoopUtil.MapReduceDatabase {
 	@Override
 	public void getBytes(long loc, byte[] arr, int off, int len) {
 		try {
-			fd.readFully(loc, arr, off, len);
+			fd.readFully(offset+loc, arr, off, len);
 		} catch (IOException e) {
 			Util.fatalError("IO Error", e);
 		}

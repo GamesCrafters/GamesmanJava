@@ -115,6 +115,9 @@ public class TierSolver<T> extends Solver {
 	protected Pair<Long, Long> nextSlice(Configuration conf) {
 		while (true) {
 			if (needs2Sync) {
+				if (hadooping) {
+					return null;
+				}
 				if (barr == null)
 					flusher.run();
 				else {
@@ -189,7 +192,8 @@ public class TierSolver<T> extends Solver {
 							slice.car + slice.cdr);
 					solvePartialTier(conf, slice.car, slice.cdr, updater,
 							readDb, myWrite);
-					writeDb.endWrite(tier, myWrite, slice.car, slice.cdr + 1);
+					writeDb.endWrite(tier, myWrite, slice.car,
+							slice.car + slice.cdr);
 				} else
 					solvePartialTier(conf, slice.car, slice.cdr, updater,
 							readDb, writeDb);

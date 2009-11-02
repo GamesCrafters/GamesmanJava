@@ -34,7 +34,7 @@ public class SequenceInputFormat implements InputFormat<LongWritable, LongWritab
 		int tasks = 1;//numSplits; //Integer.parseInt(conf.get("tasks"));
 		int groupLength = Integer.parseInt(conf.get("recordsPerGroup"));
 
-		long[] groups = Util.groupAlignedTasks(tasks, cur, end, groupLength);
+		long[] groups = Util.groupAlignedTasks(tasks, cur, end-cur, groupLength);
 		
 		SequenceSplit[] splits = new SequenceSplit[numSplits];
 		
@@ -52,20 +52,20 @@ public class SequenceInputFormat implements InputFormat<LongWritable, LongWritab
 @SuppressWarnings("deprecation")
 class SequenceSplit implements InputSplit {
 
-	long s,l, incr;
+	long s,e;
 	
 	public SequenceSplit() {
 		s = 0;
-		l = 0;
+		e = 0;
 	}
 	
-	SequenceSplit(long start, long len){
+	SequenceSplit(long start, long end){
 		s = start;
-		l = len;
+		e = end;
 	}
 	
 	public long getLength() throws IOException {
-		return l;
+		return e-s;
 	}
 
 	public String[] getLocations() throws IOException {
@@ -75,16 +75,16 @@ class SequenceSplit implements InputSplit {
 
 	public void readFields(DataInput din) throws IOException {
 		s = din.readLong();
-		l = din.readLong();
+		e = din.readLong();
 	}
 
 	public void write(DataOutput dout) throws IOException {
 		dout.writeLong(s);
-		dout.writeLong(l);
+		dout.writeLong(e);
 	}
 	
 	public String toString(){
-		return "[@"+s+"+"+l+"]";
+		return "[@"+s+"-"+e+"]";
 	}
 }
 
@@ -127,7 +127,8 @@ class SequenceReader implements RecordReader<LongWritable, LongWritable>{
 			throws IOException {
 		if(pos == 0){
 			key.set(split.s);
-			value.set(split.s+split.l);
+			value.set(split.e);
+			pos++;
 			return true;
 		}
 		return false;

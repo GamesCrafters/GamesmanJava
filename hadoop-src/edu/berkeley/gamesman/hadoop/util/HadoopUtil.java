@@ -44,7 +44,7 @@ public class HadoopUtil {
 		 * TierMap.started() and TierMap.finished().
 		 * @param tmr TierMap instance.
 		 */
-		void setDelegate(TierMap<?> tmr) {
+		public void setDelegate(TierMap<?> tmr) {
 			this.delegate = tmr;
 		}
 	
@@ -69,7 +69,7 @@ public class HadoopUtil {
 	 * @return The toplevel hadoop solve directory.
 	 */
 	public static Path getParentPath(Configuration gmConf) {
-		return new Path(gmConf.getProperty("gamesman.db.uri"));
+		return new Path(new Path("file:///"), gmConf.getProperty("gamesman.db.uri"));
 	}
 	/**
 	 * @param tier The tier number in the solve process
@@ -92,7 +92,7 @@ public class HadoopUtil {
 	 * @return The name of the file that contains the index in the database.
 	 */
 	public static String getTierIndexFilename(int tier) {
-		return tier+".hdb";
+		return "part-00000";//tier+".hdb";
 	}
 
 	/**

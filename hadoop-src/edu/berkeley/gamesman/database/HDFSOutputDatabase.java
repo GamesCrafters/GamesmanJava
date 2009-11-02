@@ -4,6 +4,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 
+import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.hadoop.util.HadoopUtil;
 import edu.berkeley.gamesman.util.Util;
 
@@ -21,8 +22,10 @@ import java.io.IOException;
  * 
  * @author Steven Schlansker
  */
-public class HDFSOutputDatabase extends HadoopUtil.MapReduceDatabase {
+public class HDFSOutputDatabase extends Database {
 
+	protected FileSystem fs;
+	
 	protected Path myFile;
 
 	protected FSDataOutputStream fd;
@@ -33,7 +36,7 @@ public class HDFSOutputDatabase extends HadoopUtil.MapReduceDatabase {
 	}
 
 	HDFSOutputDatabase(FileSystem fs) {
-		super(fs);
+		this.fs = fs;
 	}
 
 	@Override

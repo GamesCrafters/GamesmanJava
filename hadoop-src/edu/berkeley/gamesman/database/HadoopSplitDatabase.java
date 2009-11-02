@@ -9,6 +9,8 @@ import edu.berkeley.gamesman.util.LongIterator;
 import edu.berkeley.gamesman.util.Util;
 import edu.berkeley.gamesman.util.biginteger.BigInteger;
 import edu.berkeley.gamesman.hadoop.util.HadoopUtil;
+import edu.berkeley.gamesman.hadoop.util.SplitDatabaseWritable;
+import edu.berkeley.gamesman.hadoop.util.SplitDatabaseWritableList;
 
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -55,18 +57,22 @@ public class HadoopSplitDatabase extends HadoopUtil.MapReduceDatabase {
 		if (fs==null) {
 			Util.fatalError("Filesystem null in HadoopSplitDatabase.");
 		}
+		FSDataInputStream fd = null;
 		try {
-			FSDataInputStream fd = fs.open(new Path(splitfilename));
+			fd = fs.open(new Path(splitfilename));
 			long next = 0;
-			while (true) {
-				long start = fd.readLong();
+			SplitDatabaseWritableList list = new SplitDatabaseWritableList();
+			list.readFields(fd);
+			for (SplitDatabaseWritable sdw : list) {
+				long start = sdw.getStart();
 				assert next == start;
-				long len = fd.readLong();
+				long len = sdw.getLength();
 				if (len <= 0) {
 					Util.fatalError("Invalid length " + start
 							+ " in split database " + splitfilename);
 				}
-				String filename = fd.readUTF();
+				String filename = sdw.getFilename();
+
 				Database db = new HDFSInputDatabase(fs);
 				db.initialize(inputFilenameBase + filename, conf);
 				databaseTree.put(start, db);
@@ -76,6 +82,13 @@ public class HadoopSplitDatabase extends HadoopUtil.MapReduceDatabase {
 			// Nothing left in our list of databases, stop the loop.
 		} catch (IOException e) {
 			Util.fatalError("IOException in loading split database", e);
+		} finally {
+			if (fd != null) {
+				try {
+					fd.close();
+				} catch (IOException e) {
+				}
+			}
 		}
 	}
 
@@ -96,6 +109,9 @@ public class HadoopSplitDatabase extends HadoopUtil.MapReduceDatabase {
 	private Map<Long, Long> databaseEnd;
 
 	protected final Long getDatabaseKeyFor(long loc) {
+		if (databaseTree.containsKey(loc)) {
+			return loc;
+		}
 		return databaseTree.headMap(loc).firstKey();
 	}
 
@@ -142,7 +158,7 @@ public class HadoopSplitDatabase extends HadoopUtil.MapReduceDatabase {
 
 	@Override
 	public long getLongRecordGroup(long loc) {
-		Database db = getDatabaseFor(loc);
+		Database db = getDatabaseFor((loc/conf.recordGroupByteLength)*conf.recordsPerGroup);
 		return db.getLongRecordGroup(loc);
 	}
 
@@ -163,22 +179,30 @@ public class HadoopSplitDatabase extends HadoopUtil.MapReduceDatabase {
 	}
 
 	@Override
-	public void getBytes(long loc, byte[] arr, int offset,
+	public void getBytes(long recordGroupByteLocation, byte[] arr, int offset,
 			int length) {
 		while (length > 0) {
-			long currentDbStart = getDatabaseKeyFor(loc);
-			long currentDbEnd = databaseEnd.get(loc);
+			long recordNumber = conf.recordsPerGroup-1+
+			((recordGroupByteLocation+(conf.recordGroupByteLength-1))/
+					conf.recordGroupByteLength)*conf.recordsPerGroup;
+			long currentDbStart = getDatabaseKeyFor(recordNumber);
+			long currentDbEnd = databaseEnd.get(currentDbStart);
 			Database db = databaseTree.get(currentDbStart);
 			int amtRead;
-			if (length > currentDbEnd - loc) {
-				amtRead = (int) (currentDbEnd - loc);
+			long startRecordGroupByte = (currentDbStart/conf.recordsPerGroup)*conf.recordGroupByteLength;
+			long endRecordGroupByte = ((currentDbEnd+(conf.recordsPerGroup-1))/conf.recordsPerGroup)*conf.recordGroupByteLength;
+			if (length > endRecordGroupByte - recordGroupByteLocation) {
+				amtRead = (int) (endRecordGroupByte - recordGroupByteLocation);
+				if (amtRead == 0) {
+					return; // Page.extendUp may call this with one record group past the end in the case that the end is exactly aligned.
+				}
 			} else {
 				amtRead = length;
 			}
 			assert amtRead > 0;
-			db.getBytes(loc, arr, offset, amtRead);
+			db.getBytes(recordGroupByteLocation-startRecordGroupByte, arr, offset, amtRead);
 			length -= amtRead;
-			loc += amtRead;
+			recordGroupByteLocation += amtRead;
 			offset += amtRead;
 		}
 	}
@@ -190,32 +214,7 @@ public class HadoopSplitDatabase extends HadoopUtil.MapReduceDatabase {
 	}
 
 	@Override
-	public LongIterator getLongRecordGroups(long loc, int numGroups) {
-		return new LongIterator() {
-			private long currentDbStart = 0;
-
-			private long currentDbEnd = 0;
-
-			private Database db;
-
-			private long loc;
-
-			private int numGroups;
-
-			public boolean hasNext() {
-				return numGroups > 0;
-			}
-
-			public long next() {
-				if (loc >= this.currentDbEnd) {
-					currentDbStart = getDatabaseKeyFor(loc);
-					currentDbEnd = databaseEnd.get(loc);
-					db = databaseTree.get(currentDbStart);
-				}
-				long recordGroup = db.getLongRecordGroup(loc);
-				loc++;
-				return recordGroup;
-			}
-		};
+	public LongIterator getLongRecordGroups(long recordGroupByteLocation, int numGroups) {
+		throw new RuntimeException("getLongRecordGroups is not yet implemented.");
 	}
 }

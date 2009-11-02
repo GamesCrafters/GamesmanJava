@@ -17,14 +17,11 @@ public class SplitDatabaseWritable implements Writable {
 	String filename;
 	long start;
 	long end;
-	int tier;
 
 	/**
-	 * Default constructor, given tier.
-	 * @param tier Which tier in the solving process. Used to determine directory name.
+	 * Default constructor for deserializing.
 	 */
-	public SplitDatabaseWritable(int tier) {
-		this.tier = tier;
+	public SplitDatabaseWritable() {
 	}
 
 	/**
@@ -50,13 +47,6 @@ public class SplitDatabaseWritable implements Writable {
                 out.writeUTF(getFilename());
                 out.writeLong(getStart());
                 out.writeInt(getLength());
-	}
-
-	/**
-	 * @return tier number for this database.
-	 */
-	public int getTier() {
-		return tier;
 	}
 
 	/**
