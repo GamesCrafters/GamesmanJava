@@ -1,13 +1,14 @@
 package edu.berkeley.gamesman.database;
 
-import java.util.Iterator;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
-import edu.berkeley.gamesman.core.RecordGroup;
 import edu.berkeley.gamesman.util.DebugFacility;
-import edu.berkeley.gamesman.util.LongIterator;
 import edu.berkeley.gamesman.util.Util;
-import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 /**
  * Test DataBase for GamesCrafters Java. Right now it just writes BigIntegers to
@@ -26,129 +27,48 @@ import edu.berkeley.gamesman.util.biginteger.BigInteger;
  *          1.0 - Initial (working) Version.
  */
 public class MemoryDatabase extends Database {
-
-	/**
-	 * Set this variable to a MemoryDatabase when instantiated so it can be used
-	 * by a testing class later.
-	 */
-	public static MemoryDatabase md;
-
 	/* Class Variables */
 	private byte[] memoryStorage; // byte array to store the data
 
-	protected boolean open; // whether this database is initialized
-
-	// and not closed.
+	protected boolean reading;
 
 	private int nextPlace = 0;
 
-	/**
-	 * Null Constructor, used primarily for testing. It doesn't set anything
-	 * 
-	 * @author Alex Trofimov
-	 */
-	public MemoryDatabase() {
-		md = this;
-	}
+	private File myFile;
 
 	@Override
-	public long getLongRecordGroup(long loc) {
-		return RecordGroup.longRecordGroup(conf, memoryStorage, (int) loc);
-	}
-
-	@Override
-	public BigInteger getBigIntRecordGroup(long loc) {
-		return RecordGroup.bigIntRecordGroup(conf, memoryStorage, (int) loc);
-	}
-
-	@Override
-	public Iterator<BigInteger> getBigIntRecordGroups(final long loc,
-			final int numGroups) {
-		return new Iterator<BigInteger>() {
-			private long location = loc;
-
-			private int groupNumber = 0;
-
-			public boolean hasNext() {
-				return groupNumber < numGroups;
-			}
-
-			public BigInteger next() {
-				BigInteger rg = getBigIntRecordGroup(location);
-				location += conf.recordGroupByteLength;
-				groupNumber++;
-				return rg;
-			}
-
-			public void remove() {
-				throw new UnsupportedOperationException(
-						"remove() not implemented");
-			}
-		};
-	}
-
-	@Override
-	public LongIterator getLongRecordGroups(final long loc, final int numGroups) {
-		return new LongIterator() {
-			private long location = loc;
-
-			private int groupNumber = 0;
-
-			public boolean hasNext() {
-				return groupNumber < numGroups;
-			}
-
-			public long next() {
-				long rg = getLongRecordGroup(location);
-				location += conf.recordGroupByteLength;
-				groupNumber++;
-				return rg;
-			}
-		};
-	}
-
-	@Override
-	public void initialize(String locations) {
-		this.initialize();
-	}
-
-	/**
-	 * Null Constructor for testing the database outside of Gamesman
-	 * environment. Initializes the internal storage.
-	 * 
-	 * @author Alex Trofimov
-	 */
-	private void initialize() {
+	public void initialize(String location) {
 		System.out.println(getByteSize());
 		this.memoryStorage = new byte[(int) getByteSize()];
-		this.open = true;
-	}
-
-	@Override
-	public void putRecordGroup(long loc, long value) {
-		RecordGroup.toUnsignedByteArray(conf, value, memoryStorage, (int) loc);
-	}
-
-	@Override
-	public void putRecordGroup(long loc, BigInteger value) {
-		RecordGroup.toUnsignedByteArray(conf, value, memoryStorage, (int) loc);
-	}
-
-	@Override
-	public void putRecordGroups(long loc, LongIterator it,
-			int numGroups) {
-		for (int i = 0; i < numGroups; i++) {
-			putRecordGroup(loc, it.next());
-			loc += conf.recordGroupByteLength;
-		}
-	}
-
-	@Override
-	public void putRecordGroups(long loc, Iterator<BigInteger> it,
-			int numGroups) {
-		for (int i = 0; i < numGroups; i++) {
-			putRecordGroup(loc, it.next());
-			loc += conf.recordGroupByteLength;
+		try {
+			myFile = new File(location);
+			if (myFile.exists()) {
+				reading = true;
+				try {
+					FileInputStream fis = new FileInputStream(myFile);
+					int confLength = 0;
+					for (int i = 24; i >= 0; i -= 8) {
+						confLength <<= 8;
+						confLength |= fis.read();
+					}
+					System.out.println(confLength);
+					byte[] b = new byte[confLength];
+					fis.read(b);
+					if (conf == null)
+						conf = Configuration.load(b);
+					fis.read(memoryStorage);
+					fis.close();
+				} catch (IOException e) {
+					Util.fatalError("IO Error", e);
+				} catch (ClassNotFoundException e) {
+					Util.fatalError("Class Not Found", e);
+				}
+			} else {
+				reading = false;
+				myFile.createNewFile();
+			}
+		} catch (IOException e) {
+			Util.fatalError("IO Error", e);
 		}
 	}
 
@@ -160,10 +80,19 @@ public class MemoryDatabase extends Database {
 
 	@Override
 	public void close() {
-		this.open = false;
-		flush();
-		assert Util.debug(DebugFacility.DATABASE,
-				"Closing Memory DataBase. Does Nothing.");
+		if (!reading) {
+			try {
+				FileOutputStream fos = new FileOutputStream(myFile);
+				byte[] b = conf.store();
+				for (int i = 24; i >= 0; i -= 8)
+					fos.write(b.length >>> i);
+				fos.write(b);
+				fos.write(memoryStorage);
+				fos.close();
+			} catch (IOException e) {
+				Util.fatalError("IO Error", e);
+			}
+		}
 	}
 
 	/**

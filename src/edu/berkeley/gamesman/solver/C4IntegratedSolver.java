@@ -57,8 +57,7 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 			ends = new long[children.length];
 			for (int i = 0; i < ends.length; i++) {
 				whichPage[i] = -1;
-				ends[i] = (game.stateToHash(children[i]) + conf.recordsPerGroup - 1)
-						/ conf.recordsPerGroup;
+				ends[i] = game.stateToHash(children[i]) / conf.recordsPerGroup;
 			}
 		}
 		game.setState(game.hashToState(start));
