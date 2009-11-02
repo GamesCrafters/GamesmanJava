@@ -34,7 +34,7 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 		int writeLen = (int) (endGroup + 1 - currentGroup);
 		Page writePage = new Page(conf);
 		writePage.loadPage(currentGroup, writeLen);
-		if (!hadooping && (start + hashes) % conf.recordsPerGroup > 0) {
+		if ((start + hashes) % conf.recordsPerGroup > 0) {
 			if (conf.recordGroupUsesLong)
 				writePage.setGroup(writeLen - 1, inRead
 						.getLongRecordGroup(endGroup
@@ -68,17 +68,10 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 			PrimitiveValue pv = game.primitiveValue();
 			if (pv.equals(PrimitiveValue.UNDECIDED)) {
 				int len = game.validMoves(children);
+				Record r;
 				for (int i = 0; i < len; i++) {
-					Record r = vals[i];
-					PrimitiveValue childpv = game.primitiveValue(children[i]);
+					r = vals[i];
 					long hash = game.stateToHash(children[i]);
-					if (!childpv.equals(PrimitiveValue.UNDECIDED)) {
-						if (hasRemoteness)
-							r.set(RecordFields.REMOTENESS, 0);
-						r.set(RecordFields.VALUE, childpv.value());
-						r.previousPosition();
-						continue;
-					}
 					long hashGroup = hash / conf.recordsPerGroup;
 					int col = game.openColumn[i];
 					if (whichPage[col] == -1) {
