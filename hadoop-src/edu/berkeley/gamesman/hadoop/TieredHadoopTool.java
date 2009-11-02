@@ -2,6 +2,8 @@ package edu.berkeley.gamesman.hadoop;
 
 import java.io.IOException;
 
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.conf.Configuration;
@@ -11,6 +13,8 @@ import org.apache.hadoop.mapred.*;
 import org.apache.hadoop.util.Tool;
 
 import edu.berkeley.gamesman.core.*;
+import edu.berkeley.gamesman.database.util.SplitDatabaseWritable;
+import edu.berkeley.gamesman.database.util.SplitDatabaseWritableList;
 import edu.berkeley.gamesman.hadoop.util.*;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
@@ -41,12 +45,31 @@ public class TieredHadoopTool extends Configured implements Tool {
 		TieredGame<?> g = Util.checkedCast(myConf.getGame());
 
 		int primitiveTier = g.numberOfTiers() - 1;
-		int tier = primitiveTier - 1;
+		int tier = primitiveTier;
 		Util.debug(DebugFacility.HADOOP, "Processing first tier " + tier);
 		processRun(conf, tier, -1);
 		for (tier--; tier >= 0; tier--) {
 			processRun(conf, tier, tier+1);
 		}
+		
+		FileSystem fs = FileSystem.get(conf);
+		SplitDatabaseWritableList allDatabases = new SplitDatabaseWritableList();
+		myConf.setProperty("gamesman.database", "SplitSolidDatabase");
+		allDatabases.setConf(myConf);
+		for (tier = 0; tier <= primitiveTier; tier++) {
+			SplitDatabaseWritableList thisTier = new SplitDatabaseWritableList();
+			FSDataInputStream di = fs.open(HadoopUtil.getTierIndexPath(myConf, tier));
+			thisTier.readFields(di);
+			di.close();
+			for (SplitDatabaseWritable w : thisTier) {
+				w.setFilename(HadoopUtil.getTierDirectoryName(tier)+
+						"/"+w.getFilename());
+				allDatabases.add(w);
+			}
+		}
+		FSDataOutputStream dout = fs.create(new Path(HadoopUtil.getParentPath(myConf), "index.db"));
+		allDatabases.write(dout);
+		dout.close();
 
 		return 0;
 	}

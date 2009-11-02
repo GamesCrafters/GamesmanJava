@@ -7,6 +7,9 @@ import java.io.IOException;
 
 import java.util.ArrayList;
 
+import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.util.Util;
+
 /**
  * SplitDatabaseWritableList is the list of all databases for a given tier,
  * and is a copy of the input iterator given to reduce().
@@ -16,8 +19,20 @@ import java.util.ArrayList;
  */
 public class SplitDatabaseWritableList extends ArrayList<SplitDatabaseWritable> {
 	private static final long serialVersionUID = 1L;
+	
+	private Configuration conf;
 
-	int tier;
+	/** @return the configuration used to create the SplitDatabase. */
+	public Configuration getConf() {
+		return conf;
+	}
+
+	/**
+	 * @param conf Set the configuration to be written to the SplitDatabase.
+	 */
+	public void setConf(Configuration conf) {
+		this.conf = conf;
+	}
 
 	/**
 	 * Default constructor for deserializing.
@@ -25,24 +40,20 @@ public class SplitDatabaseWritableList extends ArrayList<SplitDatabaseWritable> 
 	public SplitDatabaseWritableList() {
 	}
 
-	/**
-	 * Constructor, takes the tier number.
-	 * @param tier The tier that this database list represents.
-	 */
-	public SplitDatabaseWritableList(int tier) {
-		this.tier = tier;
-	}
-
-	/**
-	 * @param w Another database to add to set. Doesn't need to be in order.
-	 */
-	public void addDatabase(SplitDatabaseWritable w) {
-		add(w);
-	}
-
 	public void readFields(DataInput in) throws IOException {
-		tier = in.readInt();
 		try {
+			int conflen = in.readInt();
+			if (conflen > 0) {
+				byte[] confArray = new byte[conflen];
+				in.readFully(confArray);
+				if (conf == null) {
+					try {
+						conf = Configuration.load(confArray);
+					} catch (ClassNotFoundException e) {
+						Util.fatalError("Failed to load configuration for SplitSolidDatabase",e);
+					}
+				}
+			}
 			while (true) {
 				SplitDatabaseWritable sdw = new SplitDatabaseWritable();
 				sdw.readFields(in);
@@ -52,7 +63,13 @@ public class SplitDatabaseWritableList extends ArrayList<SplitDatabaseWritable> 
 		}
 	}
 	public void write(DataOutput out) throws IOException {
-		out.writeInt(tier);
+		if (conf != null) {
+			byte[] storedConf = conf.store();
+			out.writeInt(storedConf.length);
+			out.write(storedConf);
+		} else {
+			out.writeInt(0);
+		}
 		for (SplitDatabaseWritable sdw : this) {
 			sdw.write(out);
 		}

@@ -137,8 +137,14 @@ public abstract class SolidDatabase extends Database {
 			getBytes(loc, arr, off, toRead);
 			getBytes(loc+toRead, arr, off+toRead, len-toRead);
 		}
-		System.arraycopy(this.readContents.get((int)loc/Integer.MAX_VALUE),
-				(int)(loc%Integer.MAX_VALUE), arr, off, len);
+		byte[] inputArr = this.readContents.get((int)loc/Integer.MAX_VALUE);
+		int inputOff = (int)(loc%Integer.MAX_VALUE);
+		/*
+		if (inputOff + len > inputArr.length || inputOff + len < 0) {
+			len = inputArr.length - inputOff;
+		}
+		*/
+		System.arraycopy(inputArr, inputOff, arr, off, len);
 	}
 
 	@Override

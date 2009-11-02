@@ -13,13 +13,5 @@ public class HadoopSplitDatabaseWritableList extends SplitDatabaseWritableList i
 		super();
 	}
 
-	/**
-	 * Constructor, takes the tier number.
-	 * @param tier The tier that this database list represents.
-	 */
-	public HadoopSplitDatabaseWritableList(int tier) {
-		super(tier);
-	}
-
 	private static final long serialVersionUID = 1L;
 }

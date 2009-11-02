@@ -36,6 +36,7 @@ public class SequenceInputFormat implements InputFormat<LongWritable, LongWritab
 
 		long[] groups = Util.groupAlignedTasks(tasks, cur, end-cur, groupLength);
 		
+		numSplits = groups.length-1;
 		SequenceSplit[] splits = new SequenceSplit[numSplits];
 		
 		for(int i = 0; i < groups.length-1; i++){

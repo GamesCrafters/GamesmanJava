@@ -100,6 +100,9 @@ public class SplitSolidDatabase extends Database {
 			fd = new DataInputStream(new FileInputStream(name));
 			list = new SplitDatabaseWritableList();
 			list.readFields(fd);
+			if (conf == null && list.getConf() != null) {
+				conf = list.getConf();
+			}
 		} catch (EOFException e) {
 			// Nothing left in our list of databases, stop the loop.
 		} catch (IOException e) {
@@ -143,7 +146,7 @@ public class SplitSolidDatabase extends Database {
 		if (databaseTree.containsKey(loc)) {
 			return loc;
 		}
-		return databaseTree.headMap(loc).firstKey();
+		return databaseTree.headMap(loc+1).lastKey();
 	}
 
 	protected final Database getDatabaseFor(long loc) {
@@ -183,8 +186,10 @@ public class SplitSolidDatabase extends Database {
 
 	@Override
 	public long getLongRecordGroup(long loc) {
-		Database db = getDatabaseFor((loc/conf.recordGroupByteLength)*conf.recordsPerGroup);
-		return db.getLongRecordGroup(loc);
+		Long firstRec = getDatabaseKeyFor((loc/conf.recordGroupByteLength)*conf.recordsPerGroup);
+		Database db = databaseTree.get(firstRec);
+		long startRecordGroupByte = (firstRec/conf.recordsPerGroup)*conf.recordGroupByteLength;
+		return db.getLongRecordGroup(loc - startRecordGroupByte);
 	}
 
 	@Override

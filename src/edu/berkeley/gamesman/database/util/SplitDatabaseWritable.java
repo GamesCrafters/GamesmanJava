@@ -11,10 +11,19 @@ import java.io.IOException;
  * @see SplitDatabaseWritableList
  * @author Patrick Horn
  */
-public class SplitDatabaseWritable {
+public class SplitDatabaseWritable implements Cloneable {
 	String filename;
 	long start;
 	long end;
+
+    public SplitDatabaseWritable clone() {
+        try {
+            return (SplitDatabaseWritable)super.clone();
+        }
+        catch (CloneNotSupportedException e) {
+            throw new InternalError(e.toString());
+        }
+    }
 
 	/**
 	 * Default constructor for deserializing.
@@ -41,10 +50,17 @@ public class SplitDatabaseWritable {
 		end = start + in.readInt();
 	}
 
-        public void write(DataOutput out) throws IOException {
-                out.writeUTF(getFilename());
-                out.writeLong(getStart());
-                out.writeInt(getLength());
+	public void write(DataOutput out) throws IOException {
+		out.writeUTF(getFilename());
+		out.writeLong(getStart());
+		out.writeInt(getLength());
+	}
+
+	/**
+	 * @param newFile database filename to update
+	 */
+	public void setFilename(String newFile){
+		filename = newFile;
 	}
 
 	/**
