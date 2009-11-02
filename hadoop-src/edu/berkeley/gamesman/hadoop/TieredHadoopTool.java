@@ -59,9 +59,9 @@ public class TieredHadoopTool extends Configured implements Tool {
 		JobConf job = new JobConf(conf, TierMap.class);
 
 		job.setMapOutputKeyClass(IntWritable.class);
-		job.setMapOutputValueClass(SplitDatabaseWritable.class);
+		job.setMapOutputValueClass(HadoopSplitDatabaseWritable.class);
 		job.setOutputKeyClass(IntWritable.class);
-		job.setOutputValueClass(SplitDatabaseWritableList.class);
+		job.setOutputValueClass(HadoopSplitDatabaseWritableList.class);
 
 		Util.debug(DebugFacility.HADOOP, "Processing tier " + tier+" from "+firstHash+" to "+endHash);
 

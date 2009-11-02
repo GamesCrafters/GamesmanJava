@@ -18,26 +18,26 @@ import org.apache.hadoop.util.Progressable;
  * This class doesn't do anything out of the ordinary, and basically calls
  * SplitDatabaseWritableList.write().
  * 
- * @see SplitDatabaseWritableList
+ * @see HadoopSplitDatabaseWritableList
  * @author Patrick Horn
  */
 @SuppressWarnings("deprecation")
 public class SplitDatabaseOutputFormat implements
-		OutputFormat<IntWritable, SplitDatabaseWritableList> {
-	public RecordWriter<IntWritable, SplitDatabaseWritableList> getRecordWriter(
+		OutputFormat<IntWritable, HadoopSplitDatabaseWritableList> {
+	public RecordWriter<IntWritable, HadoopSplitDatabaseWritableList> getRecordWriter(
 			FileSystem fs, JobConf jc, String name, Progressable progress)
 			throws IOException {
 
 		final FSDataOutputStream out = fs.create(new Path(FileOutputFormat.getOutputPath(jc), name));
 
-		return new RecordWriter<IntWritable, SplitDatabaseWritableList>() {
+		return new RecordWriter<IntWritable, HadoopSplitDatabaseWritableList>() {
 
 			public void close(Reporter arg0) throws IOException {
 				out.flush();
 				out.close();
 			}
 
-			public void write(IntWritable tier, SplitDatabaseWritableList rec)
+			public void write(IntWritable tier, HadoopSplitDatabaseWritableList rec)
 					throws IOException {
 				rec.write(out);
 			}

@@ -1,24 +1,20 @@
-package edu.berkeley.gamesman.hadoop.util;
+package edu.berkeley.gamesman.database.util;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.EOFException;
 import java.io.IOException;
 
-import org.apache.hadoop.io.Writable;
-
-import java.util.List;
 import java.util.ArrayList;
 
 /**
  * SplitDatabaseWritableList is the list of all databases for a given tier,
  * and is a copy of the input iterator given to reduce().
  * 
- * @see SplitDatabaseOutputFormat
  * @see SplitDatabaseWritable
  * @author Patrick Horn
  */
-public class SplitDatabaseWritableList extends ArrayList<SplitDatabaseWritable> implements Writable{
+public class SplitDatabaseWritableList extends ArrayList<SplitDatabaseWritable> {
 	private static final long serialVersionUID = 1L;
 
 	int tier;

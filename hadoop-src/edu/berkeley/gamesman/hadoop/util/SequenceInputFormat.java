@@ -31,7 +31,7 @@ public class SequenceInputFormat implements InputFormat<LongWritable, LongWritab
 	public InputSplit[] getSplits(JobConf conf, int numSplits) throws IOException {
 		long cur = Long.parseLong(conf.get("first"));
 		long end = Long.parseLong(conf.get("end"));
-		int tasks = 1;//numSplits; //Integer.parseInt(conf.get("tasks"));
+		int tasks = numSplits; //Integer.parseInt(conf.get("tasks"));
 		int groupLength = Integer.parseInt(conf.get("recordsPerGroup"));
 
 		long[] groups = Util.groupAlignedTasks(tasks, cur, end-cur, groupLength);

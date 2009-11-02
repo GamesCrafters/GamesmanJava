@@ -4,7 +4,8 @@ import org.apache.hadoop.fs.Path;
 //import org.apache.hadoop.mapred.JobConf;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Database;
+import edu.berkeley.gamesman.database.SolidDatabase;
+import edu.berkeley.gamesman.database.SplitSolidDatabase;
 import edu.berkeley.gamesman.hadoop.TierMap;
 /**
  * Utilities for the Hadoop master
@@ -15,13 +16,35 @@ public class HadoopUtil {
 	 * MapReduceDatabase abstract parent for children 
 	 *
 	 */
-	public static abstract class MapReduceDatabase extends Database {
+	public static abstract class MapReduceDatabase extends SplitSolidDatabase {
 		/**
 		 * Default constructor, so this can be instantiated from a class name.
 		 */
 		public MapReduceDatabase() {
 		}
-	
+		
+		protected void startedWrite(int tier, SolidDatabase db, long startRecord, long endRecord) {
+			if (delegate != null) {
+				String file = db.getUri();
+				int lastSlash = file.lastIndexOf('/');
+				if (lastSlash >= 0) {
+					file = file.substring(lastSlash+1);
+				}
+				delegate.started(tier, file, startRecord, endRecord);
+			}
+		}
+		
+		protected void finishedWrite(int tier, SolidDatabase db, long startRecord, long endRecord) {
+			if (delegate != null) {
+				String file = db.getUri();
+				int lastSlash = file.lastIndexOf('/');
+				if (lastSlash >= 0) {
+					file = file.substring(lastSlash+1);
+				}
+				delegate.finished(tier, file, startRecord, endRecord);
+			}
+		}
+
 		/**
 		 * Convenience constructor. Equivalent to calling setFilesystem
 		 * @param fs Reference to hadoop FileSystem.
@@ -53,8 +76,7 @@ public class HadoopUtil {
 		 * @param dir FileOutputFormat.getWorkOutputPath(jobconf));
 		 */
 		public void setOutputDirectory(Path dir) {
-			outputFilenameBase = dir;
-			// dir contains a trailing slash
+			setOutputDirectory(dir.toString());
 		}
 	
 		protected TierMap<?> delegate;

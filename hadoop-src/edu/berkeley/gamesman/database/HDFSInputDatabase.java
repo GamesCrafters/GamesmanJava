@@ -7,7 +7,6 @@ import org.apache.hadoop.fs.Path;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.util.Util;
-import edu.berkeley.gamesman.hadoop.util.HadoopUtil;
 import java.io.IOException;
 
 /**
@@ -89,7 +88,7 @@ public class HDFSInputDatabase extends Database {
 	@Override
 	public void initialize(String loc) {
 		try {
-			myFile = new Path(loc);
+			myFile = new Path(new Path("file:///"), loc);
 			fd = fs.open(myFile);
 			int headerLen = fd.readInt();
 			byte[] header = new byte[headerLen];

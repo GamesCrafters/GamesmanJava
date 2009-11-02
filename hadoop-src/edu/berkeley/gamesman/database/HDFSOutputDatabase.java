@@ -4,11 +4,11 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 
-import edu.berkeley.gamesman.core.Database;
-import edu.berkeley.gamesman.hadoop.util.HadoopUtil;
 import edu.berkeley.gamesman.util.Util;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * The HDFSOutputDatabase is a database designed to write directly to a remote
@@ -22,13 +22,9 @@ import java.io.IOException;
  * 
  * @author Steven Schlansker
  */
-public class HDFSOutputDatabase extends Database {
+public class HDFSOutputDatabase extends SolidDatabase {
 
-	protected FileSystem fs;
-	
-	protected Path myFile;
-
-	protected FSDataOutputStream fd;
+	private FileSystem fs;
 
 	protected long offset;
 
@@ -38,14 +34,14 @@ public class HDFSOutputDatabase extends Database {
 	HDFSOutputDatabase(FileSystem fs) {
 		this.fs = fs;
 	}
-
-	@Override
-	public void close() {
-		try {
-			fd.close();
-		} catch (IOException e) {
-			Util.warn("Error while closing input stream for database: " + e);
-		}
+	
+	/**
+	 * All hadoop classes that need to access the disk need a FileSystem instance.
+	 * Must be set before the database is used.
+	 * @param fs The hadoop filesystem.
+	 */
+	public void setFilesystem(FileSystem fs) {
+		this.fs = fs;
 	}
 
 	/**
@@ -55,17 +51,11 @@ public class HDFSOutputDatabase extends Database {
 	@Override
 	public synchronized void flush() {
 		try {
-			fd.flush();
-			fd.sync();
+			outputStream.flush();
+			((FSDataOutputStream)outputStream).sync();
 		} catch (IOException e) {
 			Util.fatalError("Error while writing to database: " + e);
 		}
-	}
-
-	@Override
-	public void getBytes(byte[] arr, int off, int len) {
-		throw new RuntimeException(
-				"getBytes called in write-only database for len " + len);
 	}
 
 	/**
@@ -73,7 +63,7 @@ public class HDFSOutputDatabase extends Database {
 	 */
 	public final long getPosition() {
 		try {
-			return fd.getPos();
+			return ((FSDataOutputStream)outputStream).getPos();
 		} catch (IOException e) {
 			e.printStackTrace();
 			return -1;
@@ -85,15 +75,6 @@ public class HDFSOutputDatabase extends Database {
 		assert (loc + offset == getPosition());
 	}
 
-	@Override
-	public void putBytes(byte[] arr, int off, int len) {
-		try {
-			fd.write(arr, off, len);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
 	/*
 	 * TODO: I think you're using offset wrong. Since the byte index passed to
 	 * HDFSOutputDatabase is the byte index into the entire game (not just this
@@ -102,25 +83,32 @@ public class HDFSOutputDatabase extends Database {
 	 */
 	@Override
 	public void initialize(String loc) {
+		Path myFile = new Path(loc);
+		boolean previouslyExisted = false;
 		try {
-			myFile = new Path(loc);
-			boolean previouslyExisted = fs.exists(myFile);
-			if (previouslyExisted) {
-				Util.fatalError("Not overwriting existing output file "
-						+ myFile);
-			}
-			if (conf == null) {
-				Util
-						.fatalError("No configuration, but the database is to be created");
-			}
-			fd = fs.create(myFile);
-			byte[] b = conf.store();
-			fd.writeInt(b.length);
-			fd.write(b);
-			offset = fd.getPos();
+			previouslyExisted = fs.exists(myFile);
 		} catch (IOException e) {
-			e.printStackTrace();
-			Util.fatalError(e.toString());
+			Util.fatalError("Unable to check if index file "+myFile+" exists",  e);
 		}
+		if (previouslyExisted) {
+			Util.fatalError("Not overwriting existing output file "+myFile);
+		}
+		if (conf == null) {
+			Util.fatalError("No configuration to create database");
+		}
+		super.initialize(loc);
 	}
+
+
+	@Override
+	protected InputStream openInputStream(String uri) throws IOException {
+		throw new RuntimeException(
+			"openInputStream not supported for HDFSOuptutDatabase");
+	}
+
+	@Override
+	protected OutputStream openOutputStream(String uri) throws IOException {
+		return fs.create(new Path(new Path("file:///"), uri));
+	}
+
 }

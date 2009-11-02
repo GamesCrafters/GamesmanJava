@@ -1,10 +1,8 @@
-package edu.berkeley.gamesman.hadoop.util;
+package edu.berkeley.gamesman.database.util;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-
-import org.apache.hadoop.io.Writable;
 
 /**
  * SplitDatabaseOutputFormat represents a series of hashes and the corresponding
@@ -13,7 +11,7 @@ import org.apache.hadoop.io.Writable;
  * @see SplitDatabaseWritableList
  * @author Patrick Horn
  */
-public class SplitDatabaseWritable implements Writable {
+public class SplitDatabaseWritable {
 	String filename;
 	long start;
 	long end;

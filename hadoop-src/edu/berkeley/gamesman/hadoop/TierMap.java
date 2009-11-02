@@ -15,7 +15,7 @@ import org.apache.hadoop.mapred.Reporter;
 
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.hadoop.util.HadoopUtil;
-import edu.berkeley.gamesman.hadoop.util.SplitDatabaseWritable;
+import edu.berkeley.gamesman.hadoop.util.HadoopSplitDatabaseWritable;
 import edu.berkeley.gamesman.solver.TierSolver;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
@@ -31,7 +31,7 @@ import edu.berkeley.gamesman.util.Util;
  */
 @SuppressWarnings("deprecation")
 public class TierMap<S> implements
-		Mapper<LongWritable, LongWritable, IntWritable, SplitDatabaseWritable> {
+		Mapper<LongWritable, LongWritable, IntWritable, HadoopSplitDatabaseWritable> {
 
 	protected TieredGame<S> game;
 
@@ -45,7 +45,7 @@ public class TierMap<S> implements
 
 	private Reporter reporter;
 
-	private OutputCollector<IntWritable, SplitDatabaseWritable> outRec;
+	private OutputCollector<IntWritable, HadoopSplitDatabaseWritable> outRec;
 
 	private Configuration config;
 
@@ -97,7 +97,7 @@ public class TierMap<S> implements
 	}
 
 	public void map(LongWritable startHash, LongWritable endHash,
-			OutputCollector<IntWritable, SplitDatabaseWritable> outRec,
+			OutputCollector<IntWritable, HadoopSplitDatabaseWritable> outRec,
 			Reporter reporter) throws IOException {
 		try {
 			Util.debug(DebugFacility.HADOOP,
@@ -182,7 +182,7 @@ public class TierMap<S> implements
 	public void finished(int tier, String filename, long startRecord,
 			long stopRecord) {
 		reporter.progress();
-		SplitDatabaseWritable w = new SplitDatabaseWritable();
+		HadoopSplitDatabaseWritable w = new HadoopSplitDatabaseWritable();
 		w.set(filename, startRecord, stopRecord);
 		try {
 			outRec.collect(new IntWritable(tier), w);

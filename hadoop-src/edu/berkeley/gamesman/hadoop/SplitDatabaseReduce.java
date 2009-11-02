@@ -9,8 +9,8 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 
-import edu.berkeley.gamesman.hadoop.util.SplitDatabaseWritableList;
-import edu.berkeley.gamesman.hadoop.util.SplitDatabaseWritable;
+import edu.berkeley.gamesman.hadoop.util.HadoopSplitDatabaseWritableList;
+import edu.berkeley.gamesman.hadoop.util.HadoopSplitDatabaseWritable;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -23,9 +23,9 @@ import edu.berkeley.gamesman.util.Util;
  * @author Patrick Horn
  */
 @SuppressWarnings("deprecation")
-public class SplitDatabaseReduce implements Reducer<IntWritable, SplitDatabaseWritable, IntWritable, SplitDatabaseWritableList> {
-	public void reduce(IntWritable tier, Iterator<SplitDatabaseWritable> dbList, OutputCollector<IntWritable, SplitDatabaseWritableList> outCollector, Reporter reporter) {
-		SplitDatabaseWritableList list = new SplitDatabaseWritableList(tier.get());
+public class SplitDatabaseReduce implements Reducer<IntWritable, HadoopSplitDatabaseWritable, IntWritable, HadoopSplitDatabaseWritableList> {
+	public void reduce(IntWritable tier, Iterator<HadoopSplitDatabaseWritable> dbList, OutputCollector<IntWritable, HadoopSplitDatabaseWritableList> outCollector, Reporter reporter) {
+		HadoopSplitDatabaseWritableList list = new HadoopSplitDatabaseWritableList(tier.get());
 		while (dbList.hasNext()) {
 			list.addDatabase(dbList.next());
 		}
