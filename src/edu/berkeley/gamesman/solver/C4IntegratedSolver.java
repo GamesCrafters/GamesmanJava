@@ -4,7 +4,6 @@ import java.util.ArrayList;
 
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.database.util.Page;
-import edu.berkeley.gamesman.database.util.LocalizedPage;
 import edu.berkeley.gamesman.game.Connect4;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
@@ -33,7 +32,7 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 		int[] whichPage = new int[game.maxChildren()];
 		long endGroup = (start + hashes - 1) / conf.recordsPerGroup;
 		int writeLen = (int) (endGroup + 1 - currentGroup);
-		LocalizedPage writePage = new LocalizedPage(conf, 1);
+		Page writePage = new Page(conf);
 		writePage.loadPage(currentGroup, writeLen);
 		if (!hadooping && (start + hashes) % conf.recordsPerGroup > 0) {
 			if (conf.recordGroupUsesLong)
