@@ -18,7 +18,7 @@ public abstract class Database {
 
 	private byte[] groups;
 
-	private int maxBytes;
+	protected int maxBytes;
 
 	/**
 	 * Initialize a Database given a URI and a Configuration. This method may
@@ -262,7 +262,8 @@ public abstract class Database {
 				* conf.recordGroupByteLength);
 		if (groups == null || groups.length < groupsLength)
 			groups = new byte[groupsLength];
-		return new BigIntRecordGroupByteIterator(numGroups);
+		getBytes(loc, groups, 0, groupsLength);
+		return new BigIntRecordGroupByteIterator(groups, 0, numGroups);
 	}
 
 	/**
@@ -278,7 +279,7 @@ public abstract class Database {
 		if (groups == null || groups.length < groupsLength)
 			groups = new byte[groupsLength];
 		getBytes(loc, groups, 0, groupsLength);
-		return new LongRecordGroupByteIterator(numGroups);
+		return new LongRecordGroupByteIterator(groups, 0, numGroups);
 	}
 
 	/**
@@ -396,15 +397,21 @@ public abstract class Database {
 		}
 	}
 
-	private class BigIntRecordGroupByteIterator implements Iterator<BigInteger> {
-		private int onByte = 0;
+	protected class BigIntRecordGroupByteIterator implements
+			Iterator<BigInteger> {
+		private int onByte;
 
 		private int groupCount = 0;
 
 		private int totalGroups;
 
-		private BigIntRecordGroupByteIterator(int numGroups) {
+		private byte[] groups;
+
+		public BigIntRecordGroupByteIterator(byte[] groups, int offset,
+				int numGroups) {
 			totalGroups = numGroups;
+			this.groups = groups;
+			onByte = offset;
 		}
 
 		public boolean hasNext() {
@@ -430,15 +437,20 @@ public abstract class Database {
 		}
 	}
 
-	private class LongRecordGroupByteIterator implements LongIterator {
-		private int onByte = 0;
+	protected class LongRecordGroupByteIterator implements LongIterator {
+		private int onByte;
 
 		private int groupCount = 0;
 
 		private int totalGroups;
 
-		private LongRecordGroupByteIterator(int numGroups) {
+		private byte[] groups;
+
+		public LongRecordGroupByteIterator(byte[] groups, int offset,
+				int numGroups) {
 			totalGroups = numGroups;
+			this.groups = groups;
+			onByte = offset;
 		}
 
 		public boolean hasNext() {

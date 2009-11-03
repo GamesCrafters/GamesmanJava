@@ -4,11 +4,19 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Iterator;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
+import edu.berkeley.gamesman.core.RecordGroup;
 import edu.berkeley.gamesman.util.DebugFacility;
+import edu.berkeley.gamesman.util.LongIterator;
 import edu.berkeley.gamesman.util.Util;
+import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 /**
  * Test DataBase for GamesCrafters Java. Right now it just writes BigIntegers to
@@ -38,24 +46,26 @@ public class MemoryDatabase extends Database {
 
 	@Override
 	public void initialize(String location) {
-		System.out.println(getByteSize());
-		this.memoryStorage = new byte[(int) getByteSize()];
 		try {
 			myFile = new File(location);
 			if (myFile.exists()) {
 				reading = true;
 				try {
-					FileInputStream fis = new FileInputStream(myFile);
+					InputStream fis = new FileInputStream(myFile);
 					int confLength = 0;
 					for (int i = 24; i >= 0; i -= 8) {
 						confLength <<= 8;
 						confLength |= fis.read();
 					}
-					System.out.println(confLength);
 					byte[] b = new byte[confLength];
 					fis.read(b);
 					if (conf == null)
 						conf = Configuration.load(b);
+					if (conf.getProperty("gamesman.db.compression", "none")
+							.equals("gzip"))
+						fis = new GZIPInputStream(fis);
+					maxBytes = (int) getByteSize();
+					memoryStorage = new byte[maxBytes];
 					fis.read(memoryStorage);
 					fis.close();
 				} catch (IOException e) {
@@ -66,6 +76,8 @@ public class MemoryDatabase extends Database {
 			} else {
 				reading = false;
 				myFile.createNewFile();
+				maxBytes = (int) getByteSize();
+				memoryStorage = new byte[maxBytes];
 			}
 		} catch (IOException e) {
 			Util.fatalError("IO Error", e);
@@ -82,11 +94,14 @@ public class MemoryDatabase extends Database {
 	public void close() {
 		if (!reading) {
 			try {
-				FileOutputStream fos = new FileOutputStream(myFile);
+				OutputStream fos = new FileOutputStream(myFile);
 				byte[] b = conf.store();
 				for (int i = 24; i >= 0; i -= 8)
 					fos.write(b.length >>> i);
 				fos.write(b);
+				if (conf.getProperty("gamesman.db.compression", "none").equals(
+						"gzip"))
+					fos = new GZIPOutputStream(fos);
 				fos.write(memoryStorage);
 				fos.close();
 			} catch (IOException e) {
@@ -116,5 +131,57 @@ public class MemoryDatabase extends Database {
 	@Override
 	public void seek(long loc) {
 		nextPlace = (int) loc;
+	}
+
+	@Override
+	public synchronized long getLongRecordGroup(long loc) {
+		return RecordGroup.longRecordGroup(conf, memoryStorage, (int) loc);
+	}
+
+	@Override
+	public synchronized BigInteger getBigIntRecordGroup(long loc) {
+		return RecordGroup.bigIntRecordGroup(conf, memoryStorage, (int) loc);
+	}
+
+	@Override
+	public Iterator<BigInteger> getBigIntRecordGroups(long loc, int numGroups) {
+		return new BigIntRecordGroupByteIterator(memoryStorage, (int) loc,
+				numGroups);
+	}
+
+	@Override
+	public LongIterator getLongRecordGroups(long loc, int numGroups) {
+		return new LongRecordGroupByteIterator(memoryStorage, (int) loc,
+				numGroups);
+	}
+
+	@Override
+	public void putRecordGroup(long loc, long rg) {
+		RecordGroup.toUnsignedByteArray(conf, rg, memoryStorage, (int) loc);
+	}
+
+	@Override
+	public void putRecordGroup(long loc, BigInteger rg) {
+		RecordGroup.toUnsignedByteArray(conf, rg, memoryStorage, (int) loc);
+	}
+
+	@Override
+	public synchronized void putRecordGroups(long loc,
+			LongIterator recordGroups, int numGroups) {
+		for (int i = 0; i < numGroups; i++) {
+			RecordGroup.toUnsignedByteArray(conf, recordGroups.next(),
+					memoryStorage, (int) loc);
+			loc += conf.recordGroupByteLength;
+		}
+	}
+
+	@Override
+	public synchronized void putRecordGroups(long loc,
+			Iterator<BigInteger> recordGroups, int numGroups) {
+		for (int i = 0; i < numGroups; i++) {
+			RecordGroup.toUnsignedByteArray(conf, recordGroups.next(),
+					memoryStorage, (int) loc);
+			loc += conf.recordGroupByteLength;
+		}
 	}
 }
