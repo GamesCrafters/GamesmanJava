@@ -64,6 +64,8 @@ public class MemoryDatabase extends Database {
 					if (conf.getProperty("gamesman.db.compression", "none")
 							.equals("gzip"))
 						fis = new GZIPInputStream(fis);
+					// TODO: For some reason GZIPInputStream can't read more
+					// than a certain number of bytes at a time
 					maxBytes = (int) getByteSize();
 					memoryStorage = new byte[maxBytes];
 					fis.read(memoryStorage);
@@ -102,6 +104,8 @@ public class MemoryDatabase extends Database {
 				if (conf.getProperty("gamesman.db.compression", "none").equals(
 						"gzip"))
 					fos = new GZIPOutputStream(fos);
+				// TODO: For some reason GZIPOutputStream can't write more
+				// than a certain number of bytes at a time
 				fos.write(memoryStorage);
 				fos.close();
 			} catch (IOException e) {
