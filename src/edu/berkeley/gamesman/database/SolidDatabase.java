@@ -67,7 +67,7 @@ public abstract class SolidDatabase extends Database {
 
 	private synchronized void initializeReadDatabase() throws IOException {
 		if (readContents == null) {
-			readContents = new ArrayList<byte[]>();
+			List<byte[]> readContents = new ArrayList<byte[]>();
 			InputStream inputStream = openInputStream(this.getUri());
 
 			long readLength = 0;
@@ -115,6 +115,7 @@ public abstract class SolidDatabase extends Database {
 			if (readLength <= 0) {
 				throw new RuntimeException("ReadLength <= 0 in SolidDatabase");
 			}
+			this.readContents = readContents;
 		}
 	}
 	
@@ -136,7 +137,9 @@ public abstract class SolidDatabase extends Database {
 			int toRead = (int)(((long)len + loc)%Integer.MAX_VALUE);
 			getBytes(loc, arr, off, toRead);
 			getBytes(loc+toRead, arr, off+toRead, len-toRead);
+			return;
 		}
+		this.readContents.get((int)loc/Integer.MAX_VALUE);
 		byte[] inputArr = this.readContents.get((int)loc/Integer.MAX_VALUE);
 		int inputOff = (int)(loc%Integer.MAX_VALUE);
 		/*
