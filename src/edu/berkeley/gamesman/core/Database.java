@@ -167,7 +167,7 @@ public abstract class Database {
 	 * @param r
 	 *            The Record to store
 	 */
-	public void putRecord(long recordIndex, Record r) {
+	public synchronized void putRecord(long recordIndex, Record r) {
 		int num = (int) (recordIndex % conf.recordsPerGroup);
 		long byteOffset = recordIndex / conf.recordsPerGroup
 				* conf.recordGroupByteLength;
