@@ -160,14 +160,14 @@ public abstract class Database {
 	}
 
 	/**
-	 * Store a record in the Database
+	 * Store a record in the Database... WARNING! NOT SYNCHRONIZED
 	 * 
 	 * @param recordIndex
 	 *            The record number
 	 * @param r
 	 *            The Record to store
 	 */
-	public synchronized void putRecord(long recordIndex, Record r) {
+	public void putRecord(long recordIndex, Record r) {
 		int num = (int) (recordIndex % conf.recordsPerGroup);
 		long byteOffset = recordIndex / conf.recordsPerGroup
 				* conf.recordGroupByteLength;
@@ -225,10 +225,11 @@ public abstract class Database {
 	 *            The index of the byte the group begins on
 	 * @return The group beginning at loc
 	 */
-	public synchronized long getLongRecordGroup(long loc) {
+	public long getLongRecordGroup(long loc) {
 		int groupsLength = conf.recordGroupByteLength;
 		if (groups == null || groups.length < groupsLength)
-			groups = new byte[groupsLength];
+			ensureGroupsLength(groupsLength);
+		// The condition avoids an unecessary synchronized method call
 		getBytes(loc, groups, 0, groupsLength);
 		long v = RecordGroup.longRecordGroup(conf, groups, 0);
 		return v;
@@ -239,10 +240,11 @@ public abstract class Database {
 	 *            The index of the byte the group begins on
 	 * @return The group beginning at loc
 	 */
-	public synchronized BigInteger getBigIntRecordGroup(long loc) {
+	public BigInteger getBigIntRecordGroup(long loc) {
 		int groupsLength = conf.recordGroupByteLength;
 		if (groups == null || groups.length < groupsLength)
-			groups = new byte[groupsLength];
+			ensureGroupsLength(groupsLength);
+		// The condition avoids an unecessary synchronized method call
 		getBytes(loc, groups, 0, groupsLength);
 		BigInteger v = RecordGroup.bigIntRecordGroup(conf, groups, 0);
 		return v;
@@ -261,7 +263,8 @@ public abstract class Database {
 		int groupsLength = Math.min(maxBytes, numGroups
 				* conf.recordGroupByteLength);
 		if (groups == null || groups.length < groupsLength)
-			groups = new byte[groupsLength];
+			ensureGroupsLength(groupsLength);
+		// The condition avoids an unecessary synchronized method call
 		getBytes(loc, groups, 0, groupsLength);
 		return new BigIntRecordGroupByteIterator(groups, 0, numGroups);
 	}
@@ -277,7 +280,8 @@ public abstract class Database {
 		int groupsLength = Math.min(maxBytes, numGroups
 				* conf.recordGroupByteLength);
 		if (groups == null || groups.length < groupsLength)
-			groups = new byte[groupsLength];
+			ensureGroupsLength(groupsLength);
+		// The condition avoids an unecessary synchronized method call
 		getBytes(loc, groups, 0, groupsLength);
 		return new LongRecordGroupByteIterator(groups, 0, numGroups);
 	}
@@ -291,7 +295,8 @@ public abstract class Database {
 	public void putRecordGroup(long loc, long rg) {
 		int groupsLength = conf.recordGroupByteLength;
 		if (groups == null || groups.length < groupsLength)
-			groups = new byte[groupsLength];
+			ensureGroupsLength(groupsLength);
+		// The condition avoids an unecessary synchronized method call
 		RecordGroup.toUnsignedByteArray(conf, rg, groups, 0);
 		putBytes(loc, groups, 0, groupsLength);
 	}
@@ -305,7 +310,8 @@ public abstract class Database {
 	public void putRecordGroup(long loc, BigInteger rg) {
 		int groupsLength = conf.recordGroupByteLength;
 		if (groups == null || groups.length < groupsLength)
-			groups = new byte[groupsLength];
+			ensureGroupsLength(groupsLength);
+		// The condition avoids an unecessary synchronized method call
 		RecordGroup.toUnsignedByteArray(conf, rg, groups, 0);
 		putBytes(loc, groups, 0, groupsLength);
 	}
@@ -585,8 +591,7 @@ public abstract class Database {
 	public synchronized void putRecordGroups(long loc,
 			LongIterator recordGroups, int numGroups) {
 		int groupsLength = numGroups * conf.recordGroupByteLength;
-		if (groups == null || groups.length < groupsLength)
-			groups = new byte[groupsLength];
+		ensureGroupsLength(groupsLength);
 		int onByte = 0;
 		for (int i = 0; i < numGroups; i++) {
 			RecordGroup.toUnsignedByteArray(conf, recordGroups.next(), groups,
@@ -610,8 +615,7 @@ public abstract class Database {
 	public synchronized void putRecordGroups(long loc,
 			Iterator<BigInteger> recordGroups, int numGroups) {
 		int groupsLength = numGroups * conf.recordGroupByteLength;
-		if (groups == null || groups.length < groupsLength)
-			groups = new byte[groupsLength];
+		ensureGroupsLength(groupsLength);
 		int onByte = 0;
 		for (int i = 0; i < numGroups; i++) {
 			RecordGroup.toUnsignedByteArray(conf, recordGroups.next(), groups,
@@ -686,4 +690,9 @@ public abstract class Database {
 	 *            The number of bytes to read
 	 */
 	public abstract void getBytes(byte[] arr, int off, int len);
+
+	private final synchronized void ensureGroupsLength(int length) {
+		if (groups == null || groups.length < length)
+			groups = new byte[length];
+	}
 }
