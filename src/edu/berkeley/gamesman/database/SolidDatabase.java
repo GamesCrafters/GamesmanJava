@@ -113,7 +113,7 @@ public abstract class SolidDatabase extends Database {
 				}
 			}
 			if (readLength <= 0) {
-				throw new RuntimeException("ReadLength <= 0 in SolidDatabase");
+				throw new IOException("SolidDatabase at "+this.getUri()+" appears to be empty");
 			}
 			this.readContents = readContents;
 		}
@@ -121,7 +121,7 @@ public abstract class SolidDatabase extends Database {
 	
 	@Override
 	public void getBytes(byte[] arr, int off, int len) {
-		throw new RuntimeException("getBytes without position argument is not supported in SolidDatabase");
+		throw new UnsupportedOperationException("getBytes without position argument is not supported in SolidDatabase");
 	}
 
 	@Override
@@ -191,7 +191,7 @@ public abstract class SolidDatabase extends Database {
 
 	@Override
 	public void seek(long loc) {
-		throw new RuntimeException("Seeking is not supported in SolidDatabase");
+		throw new UnsupportedOperationException("Seeking is not supported in SolidDatabase");
 	}
 
 	/**

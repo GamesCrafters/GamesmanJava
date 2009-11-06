@@ -173,14 +173,14 @@ public class SplitSolidDatabase extends Database {
 
 	@Override
 	public void putBytes(byte[] arr, int offset, int length) {
-		throw new RuntimeException(
+		throw new UnsupportedOperationException(
 				"HadoopSplitDatabase requires a position argument to putBytes");
 	}
 
 	@Override
 	public void putBytes(long loc, byte[] arr, int offset,
 			int length) {
-		throw new RuntimeException(
+		throw new UnsupportedOperationException(
 			"putBytes can only be called from beginWrite()'s return value");
 	}
 
@@ -194,8 +194,7 @@ public class SplitSolidDatabase extends Database {
 
 	@Override
 	public BigInteger getBigIntRecordGroup(long loc) {
-		Util.fatalError("BigInteger HadoopDatabase not implemented");
-		return BigInteger.ZERO;
+		throw new UnsupportedOperationException("BigInteger HadoopDatabase not implemented");
 	}
 
 	@Override
@@ -204,7 +203,7 @@ public class SplitSolidDatabase extends Database {
 
 	@Override
 	public void seek(long position) {
-		throw new RuntimeException(
+		throw new UnsupportedOperationException(
 				"HadoopSplitDatabase does not implement seek");
 	}
 
@@ -239,12 +238,12 @@ public class SplitSolidDatabase extends Database {
 
 	@Override
 	public void getBytes(byte[] arr, int offset, int length) {
-		throw new RuntimeException(
+		throw new UnsupportedOperationException(
 				"HadoopSplitDatabase requires a position argument to getBytes");
 	}
 
 	@Override
 	public LongIterator getLongRecordGroups(long recordGroupByteLocation, int numGroups) {
-		throw new RuntimeException("getLongRecordGroups is not yet implemented.");
+		throw new UnsupportedOperationException("getLongRecordGroups is not yet implemented.");
 	}
 }

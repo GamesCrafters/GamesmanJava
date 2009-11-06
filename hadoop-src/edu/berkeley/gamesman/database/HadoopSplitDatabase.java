@@ -41,11 +41,11 @@ public class HadoopSplitDatabase extends HadoopUtil.MapReduceDatabase {
 	}
 
 	protected Database createReadDatabase() {
-		return new HDFSSolidDatabase(fs);
+		return new HDFSSolidDatabase(fs); // HDFSInputDatabase(fs)
 	}
 	
 	protected SolidDatabase createWriteDatabase() {
-		SolidDatabase db = new HDFSOutputDatabase(fs);
+		SolidDatabase db = new HDFSSolidDatabase(fs);
 		db.storeConfiguration = false;
 		return db;
 	}

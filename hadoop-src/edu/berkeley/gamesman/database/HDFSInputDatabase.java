@@ -11,12 +11,14 @@ import java.io.IOException;
 
 /**
  * The HDFSInputDatabase is a database designed to read directly from a remote
- * file.
+ * file. Unlike HDFSSolidDatabase, does not support compression.
  * 
  * This database only implements the seek-less read() functions, so allows for
  * random access across all threads. Still, it is better to cache the database.
  * 
- * @author Steven Schlansker
+ * @author Patrick Horn
+ * @deprecated HDFSSolidDatabase is more flexable, however this class is still
+ *             useful for uncompressed hadoop databases.
  */
 public class HDFSInputDatabase extends Database {
 
@@ -64,18 +66,18 @@ public class HDFSInputDatabase extends Database {
 
 	@Override
 	public void seek(long position) {
-		throw new RuntimeException("HDFSInputDatabase does not implement seek");
+		throw new UnsupportedOperationException("HDFSInputDatabase does not implement seek");
 	}
 
 	@Override
 	public void getBytes(byte[] arr, int off, int len) {
-		throw new RuntimeException(
+		throw new UnsupportedOperationException(
 				"HDFSInputDatabase requires a position argument to getBytes");
 	}
 
 	@Override
 	public void putBytes(byte[] arr, int off, int len) {
-		throw new RuntimeException(
+		throw new UnsupportedOperationException(
 				"putBytes unimplemented in read-only database");
 	}
 
