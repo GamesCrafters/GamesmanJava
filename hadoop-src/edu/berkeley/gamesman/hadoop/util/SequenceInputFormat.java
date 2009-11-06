@@ -29,21 +29,21 @@ public class SequenceInputFormat implements InputFormat<LongWritable, LongWritab
 	}
 
 	public InputSplit[] getSplits(JobConf conf, int numSplits) throws IOException {
+		// See TieredHadoopTool to see where these variables are set.
 		long cur = Long.parseLong(conf.get("first"));
 		long end = Long.parseLong(conf.get("end"));
-		int tasks = numSplits; //Integer.parseInt(conf.get("tasks"));
+		int tasks = Integer.parseInt(conf.get("numMappersHack")); // numSplits is broken in local solve....
 		int groupLength = Integer.parseInt(conf.get("recordsPerGroup"));
 
 		long[] groups = Util.groupAlignedTasks(tasks, cur, end-cur, groupLength);
 		
-		numSplits = groups.length-1;
-		SequenceSplit[] splits = new SequenceSplit[numSplits];
+		tasks = groups.length-1;
+		SequenceSplit[] splits = new SequenceSplit[tasks];
 		
 		for(int i = 0; i < groups.length-1; i++){
 			splits[i] = new SequenceSplit(groups[i], groups[i+1]);
 		}
-		
-		System.out.println(Arrays.toString(splits));
+		System.out.println("numsplits was: "+numSplits+": set to "+tasks+"; splits = "+Arrays.toString(splits));
 		
 		return splits;
 	}

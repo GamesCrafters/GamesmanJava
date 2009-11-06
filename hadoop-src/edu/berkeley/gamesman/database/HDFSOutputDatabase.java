@@ -91,7 +91,8 @@ public class HDFSOutputDatabase extends SolidDatabase {
 			Util.fatalError("Unable to check if index file "+myFile+" exists",  e);
 		}
 		if (previouslyExisted) {
-			Util.fatalError("Not overwriting existing output file "+myFile);
+			//Util.fatalError("Not overwriting existing output file "+myFile);
+			Util.warn("!!! Overwriting existing output file "+myFile);
 		}
 		if (conf == null) {
 			Util.fatalError("No configuration to create database");

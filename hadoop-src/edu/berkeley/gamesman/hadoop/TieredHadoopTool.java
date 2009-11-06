@@ -88,9 +88,10 @@ public class TieredHadoopTool extends Configured implements Tool {
 
 		Util.debug(DebugFacility.HADOOP, "Processing tier " + tier+" from "+firstHash+" to "+endHash);
 
+		int numMappers = myConf.getInteger("gamesman.hadoop.numMappers", 60);
 		job.set("first", Long.toString(firstHash));
 		job.set("end", Long.toString(endHash));
-		// job.set("tasks", Integer.toString(incr));
+		job.set("numMappersHack", Integer.toString(numMappers));
 		job.set("tier", Integer.toString(tier));
 		job.set("recordsPerGroup", Integer.toString(myConf.recordsPerGroup));
 		if (lastTier >= 0) {
@@ -106,7 +107,7 @@ public class TieredHadoopTool extends Configured implements Tool {
 		job.setInputFormat(SequenceInputFormat.class);
 		job.setOutputFormat(SplitDatabaseOutputFormat.class);
 		job.setMapperClass(TierMap.class);
-		job.setNumMapTasks(myConf.getInteger("gamesman.hadoop.numMappers", 60));
+		job.setNumMapTasks(numMappers);
 		job.setNumReduceTasks(1);
 		job.setReducerClass(SplitDatabaseReduce.class);
 

@@ -48,9 +48,6 @@ done
 for f in $HADOOP_HOME/hadoop-*-tools.jar; do
   TOOL_PATH=${TOOL_PATH}:$f;
 done
-for f in $HADOOP_HOME/build/hadoop-*-tools.jar; do
-  TOOL_PATH=${TOOL_PATH}:$f;
-done
 
 # add user-specified CLASSPATH last
 if [ "$HADOOP_CLASSPATH" != "" ]; then
