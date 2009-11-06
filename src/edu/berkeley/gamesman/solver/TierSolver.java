@@ -108,9 +108,9 @@ public class TierSolver<T> extends Solver {
 
 	protected int tier;
 
-	private boolean needs2Sync = false;
+	private volatile boolean needs2Sync = false;
 
-	private boolean needs2Reset = false;
+	private volatile boolean needs2Reset = false;
 
 	protected Pair<Long, Long> nextSlice(Configuration conf) {
 		while (true) {
