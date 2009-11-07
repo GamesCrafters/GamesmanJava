@@ -93,8 +93,9 @@ public class HadoopUtil {
 	 */
 	public static Path getParentPath(org.apache.hadoop.conf.Configuration hadoopConfig, Configuration gmConf) {
 		URI uri = FileSystem.getDefaultUri(hadoopConfig);
-		return new Path(new Path(uri.getScheme(), uri.getAuthority(), uri.getPath()),
-			gmConf.getProperty("gamesman.db.uri"));
+		//System.out.println("URI Is "+uri+", scheme: "+uri.getScheme()+
+		//	", host: "+uri.getAuthority()+", path: "+uri.getPath());
+		return new Path(uri.getScheme(), uri.getAuthority(), gmConf.getProperty("gamesman.db.uri"));
 	}
 	/**
 	 * @param tier The tier number in the solve process

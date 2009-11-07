@@ -63,5 +63,5 @@ if [ "$HADOOP_LOGFILE" = "" ]; then
 fi
 
 export CLASSPATH="${CLASSPATH}:${HADOOP_HOME}/hadoop-0.20.1-core.jar"
-export CLASSPATH="bin:${CLASSPATH}"
+export CLASSPATH="$PWD/bin:${CLASSPATH}"
 
