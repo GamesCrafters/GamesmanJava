@@ -58,7 +58,7 @@ public class TieredHadoopTool extends Configured implements Tool {
 		allDatabases.setConf(myConf);
 		for (tier = 0; tier <= primitiveTier; tier++) {
 			SplitDatabaseWritableList thisTier = new SplitDatabaseWritableList();
-			FSDataInputStream di = fs.open(HadoopUtil.getTierIndexPath(myConf, tier));
+			FSDataInputStream di = fs.open(HadoopUtil.getTierIndexPath(conf, myConf, tier));
 			thisTier.readFields(di);
 			di.close();
 			for (SplitDatabaseWritable w : thisTier) {
@@ -67,7 +67,7 @@ public class TieredHadoopTool extends Configured implements Tool {
 				allDatabases.add(w);
 			}
 		}
-		FSDataOutputStream dout = fs.create(new Path(HadoopUtil.getParentPath(myConf), "index.db"));
+		FSDataOutputStream dout = fs.create(new Path(HadoopUtil.getParentPath(conf, myConf), "index.db"));
 		allDatabases.write(dout);
 		dout.close();
 
@@ -95,10 +95,10 @@ public class TieredHadoopTool extends Configured implements Tool {
 		job.set("tier", Integer.toString(tier));
 		job.set("recordsPerGroup", Integer.toString(myConf.recordsPerGroup));
 		if (lastTier >= 0) {
-			job.set("previousTierDb", HadoopUtil.getTierIndexPath(myConf, lastTier).toString());
+			job.set("previousTierDb", HadoopUtil.getTierIndexPath(conf, myConf, lastTier).toString());
 		}
 
-		Path outputPath = HadoopUtil.getTierPath(myConf, tier);
+		Path outputPath = HadoopUtil.getTierPath(conf, myConf, tier);
 		FileOutputFormat.setOutputPath(job, outputPath);
 		FileSystem.get(job).mkdirs(outputPath);
 

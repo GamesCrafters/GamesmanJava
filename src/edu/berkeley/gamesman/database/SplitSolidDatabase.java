@@ -1,5 +1,6 @@
 package edu.berkeley.gamesman.database;
 
+import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.database.util.SplitDatabaseWritable;
 import edu.berkeley.gamesman.database.util.SplitDatabaseWritableList;
@@ -185,10 +186,39 @@ public class SplitSolidDatabase extends Database {
 	}
 
 	@Override
+	public Record getRecord(long rec) {
+		Long firstRec = getDatabaseKeyFor(rec);
+		System.out.println("Get record "+rec+"; firstRec = "+firstRec);
+		Database db = databaseTree.get(firstRec);
+		long firstRecGroupRec = (rec / conf.recordsPerGroup) * conf.recordsPerGroup;
+		return db.getRecord(rec - firstRecGroupRec);
+	}
+
+	@Override
+	public void getRecord(long rec, Record outRec) {
+		Long firstRec = getDatabaseKeyFor(rec);
+		Database db = databaseTree.get(firstRec);
+		db.getRecord(rec - firstRec, outRec);
+	}
+
+	@Override
 	public long getLongRecordGroup(long loc) {
 		Long firstRec = getDatabaseKeyFor((loc/conf.recordGroupByteLength)*conf.recordsPerGroup);
 		Database db = databaseTree.get(firstRec);
 		long startRecordGroupByte = (firstRec/conf.recordsPerGroup)*conf.recordGroupByteLength;
+
+/////////// SOURCE OF THE "LOSE in 0" BUG:
+/* FIXME: Need to support case where this record group crosses a *TIER* boundary...
+   This does not come up in solving, but it does happen when querying the database. The problem is that
+   'loc' is not specific enough to determine which *record* we want. Ideally the caller would pass that
+   information into getLongRecordGroup, but at the moment we have two options:
+   - Leave getLongRecordGroup unimplemented or throw an error if at a boundary
+     (only implement getLongRecord)
+   - Do some ugly record group merging at the tier boundaries
+
+                          To be continued...            
+
+*/
 		return db.getLongRecordGroup(loc - startRecordGroupByte);
 	}
 

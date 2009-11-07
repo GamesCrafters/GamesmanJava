@@ -54,7 +54,7 @@ public class HadoopSplitDatabase extends HadoopUtil.MapReduceDatabase {
 		DataInputStream fd = null;
 		SplitDatabaseWritableList list = null;
 		try {
-			fd = fs.open(new Path(new Path("file:///"), name));
+			fd = fs.open(new Path(name));
 			list = new SplitDatabaseWritableList();
 			list.readFields(fd);
 			if (conf == null && list.getConf() != null) {

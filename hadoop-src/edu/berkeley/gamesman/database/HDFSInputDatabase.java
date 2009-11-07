@@ -90,7 +90,7 @@ public class HDFSInputDatabase extends Database {
 	@Override
 	public void initialize(String loc) {
 		try {
-			myFile = new Path(new Path("file:///"), loc);
+			myFile = new Path(loc);
 			fd = fs.open(myFile);
 			int headerLen = fd.readInt();
 			byte[] header = new byte[headerLen];

@@ -1,7 +1,8 @@
 package edu.berkeley.gamesman.hadoop.util;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-//import org.apache.hadoop.mapred.JobConf;
+
+import java.net.URI;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.database.SolidDatabase;
@@ -90,8 +91,10 @@ public class HadoopUtil {
 	 * @param gmConf Gamesman Configuration
 	 * @return The toplevel hadoop solve directory.
 	 */
-	public static Path getParentPath(Configuration gmConf) {
-		return new Path(new Path("file:///"), gmConf.getProperty("gamesman.db.uri"));
+	public static Path getParentPath(org.apache.hadoop.conf.Configuration hadoopConfig, Configuration gmConf) {
+		URI uri = FileSystem.getDefaultUri(hadoopConfig);
+		return new Path(new Path(uri.getScheme(), uri.getAuthority(), uri.getPath()),
+			gmConf.getProperty("gamesman.db.uri"));
 	}
 	/**
 	 * @param tier The tier number in the solve process
@@ -105,8 +108,8 @@ public class HadoopUtil {
 	 * @param tier The tier number in the solve process
 	 * @return The full Path to the directory for that tier.
 	 */
-	public static Path getTierPath(Configuration gmConf, int tier) {
-		return new Path(getParentPath(gmConf), getTierDirectoryName(tier));
+	public static Path getTierPath(org.apache.hadoop.conf.Configuration hadoopConfig, Configuration gmConf, int tier) {
+		return new Path(getParentPath(hadoopConfig, gmConf), getTierDirectoryName(tier));
 	}
 
 	/**
@@ -122,7 +125,7 @@ public class HadoopUtil {
 	 * @param tier The tier number in the solve process
 	 * @return The full path to the file that contains the index in the database.
 	 */
-	public static Path getTierIndexPath(Configuration gmConf, int tier) {
-		return new Path(getTierPath(gmConf, tier), getTierIndexFilename(tier));
+	public static Path getTierIndexPath(org.apache.hadoop.conf.Configuration hadoopConfig, Configuration gmConf, int tier) {
+		return new Path(getTierPath(hadoopConfig, gmConf, tier), getTierIndexFilename(tier));
 	}
 }

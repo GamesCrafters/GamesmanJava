@@ -86,7 +86,7 @@ public class HDFSSolidDatabase extends SolidDatabase {
 
 	@Override
 	protected InputStream openInputStream(String uri) throws IOException {
-		return fs.open(new Path(new Path("file:///"), uri));
+		return fs.open(new Path(uri));
 	}
 
 	@Override
@@ -105,7 +105,7 @@ public class HDFSSolidDatabase extends SolidDatabase {
 			//Util.fatalError("Not overwriting existing output file "+myFile);
 			Util.warn("!!! Overwriting existing output file "+myFile);
 		}
-		return fs.create(new Path(new Path("file:///"), uri));
+		return fs.create(myFile);
 	}
 
 }
