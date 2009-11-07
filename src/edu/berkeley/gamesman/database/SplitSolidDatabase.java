@@ -188,9 +188,8 @@ public class SplitSolidDatabase extends Database {
 	@Override
 	public Record getRecord(long rec) {
 		Long firstRec = getDatabaseKeyFor(rec);
-		System.out.println("Get record "+rec+"; firstRec = "+firstRec);
 		Database db = databaseTree.get(firstRec);
-		long firstRecGroupRec = (rec / conf.recordsPerGroup) * conf.recordsPerGroup;
+		long firstRecGroupRec = (firstRec / conf.recordsPerGroup) * conf.recordsPerGroup;
 		return db.getRecord(rec - firstRecGroupRec);
 	}
 
@@ -198,7 +197,8 @@ public class SplitSolidDatabase extends Database {
 	public void getRecord(long rec, Record outRec) {
 		Long firstRec = getDatabaseKeyFor(rec);
 		Database db = databaseTree.get(firstRec);
-		db.getRecord(rec - firstRec, outRec);
+		long firstRecGroupRec = (firstRec / conf.recordsPerGroup) * conf.recordsPerGroup;
+		db.getRecord(rec - firstRecGroupRec, outRec);
 	}
 
 	@Override
