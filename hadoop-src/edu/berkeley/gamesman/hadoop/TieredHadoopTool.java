@@ -95,8 +95,8 @@ public class TieredHadoopTool extends Configured implements Tool {
 			numMappers = 1;
 		}
 		if (minSplit > 0) {
-			if (((int)(endHash - firstHash))/numMappers < minSplit) {
-				numMappers = ((int)(endHash - firstHash))/minSplit;
+			if (((endHash - firstHash)/numMappers) < minSplit) {
+				numMappers = (int)((endHash - firstHash)/minSplit);
 				if (numMappers < 1) {
 					numMappers = 1;
 				}
