@@ -132,37 +132,32 @@ public class TierSolver<T> extends Solver {
 							}
 						}
 					} catch (InterruptedException e) {
-						Util
-								.fatalError(
-										"TierSolver thread was interrupted while waiting!",
-										e);
+						Util.fatalError("TierSolver thread was interrupted while waiting!", e);
 					} catch (BrokenBarrierException e) {
 						Util.fatalError("Barrier Broken", e);
 					}
 				}
 			}
 			synchronized (this) {
-				if (barr == null || !needs2Sync) {
-					if (tier < 0)
+				if (!needs2Sync) {
+					if (tier < 0) {
 						return null;
+					}
 					Pair<Long, Long> slice = new Pair<Long, Long>(
-							starts[count], starts[count + 1] - starts[count]);
+							starts[count],
+							starts[count + 1] - starts[count]);
 					if (count < starts.length - 2) {
 						++count;
 					} else {
 						count = 0;
 						needs2Sync = true;
 					}
-					assert Util
-							.debug(DebugFacility.THREADING,
-									"Beginning to solve slice "
-											+ slice.car
-											+ "-"
-											+ (slice.car + slice.cdr)
-											+ " for count "
-											+ (needs2Sync ? (starts.length - 2)
-													: (count - 1))
-											+ " in tier " + tier);
+					assert Util.debug(DebugFacility.THREADING,
+						"Beginning to solve slice "
+								+ slice.car + "-" + (slice.car + slice.cdr)
+								+ " for count "
+								+ (needs2Sync ? (starts.length-2) : (count-1))
+								+ " in tier " + tier);
 					return slice;
 				}
 			}
