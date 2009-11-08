@@ -119,6 +119,7 @@ public abstract class SolidDatabase extends Database {
 						lenToCopy);
 					len -= lenToCopy;
 					off += lenToCopy;
+					loc += lenToCopy;
 				}
 				currentLoc += count;
 			}

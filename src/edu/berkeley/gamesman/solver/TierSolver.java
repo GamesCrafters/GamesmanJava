@@ -294,24 +294,24 @@ public class TierSolver<T> extends Solver {
 			if ((endHash-startHash)/split < minRecordsInSplit) {
 				System.out.println("Too few records "+((endHash-startHash)/split)+
 					" in "+split+" splits for tier "+tier);;
-				split = ((int)(endHash-startHash))/minRecordsInSplit;
+				split = (int)((endHash-startHash)/minRecordsInSplit);
 				if (split <= 0) {
 					split = 1;
 				}
 				System.out.println("Setting to "+split+" splits ("+
-					(((int)(endHash-startHash))/split)+")");
+					((endHash-startHash)/split)+")");
 			}
 		}
 		if (maxRecordsInSplit > 0) {
 			if ((endHash-startHash)/split > maxRecordsInSplit) {
 				System.out.println("Too many records "+((endHash-startHash)/split)+
-					" in "+split+" splits for tier "+tier);;
-				split = ((int)(endHash-startHash))/maxRecordsInSplit;
+					" in "+split+" splits for tier "+tier);
+				split = (int)((endHash-startHash)/maxRecordsInSplit);
 				if (split <= 0) {
 					split = 1;
 				}
 				System.out.println("Setting to "+split+" splits ("+
-					(((int)(endHash-startHash))/split)+")");
+					((endHash-startHash)/split)+")");
 			}
 		}
 		starts = Util.groupAlignedTasks(split, startHash, endHash - startHash,
