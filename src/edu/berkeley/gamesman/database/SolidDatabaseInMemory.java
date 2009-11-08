@@ -147,7 +147,14 @@ public abstract class SolidDatabase extends Database {
 			len = inputArr.length - inputOff;
 		}
 		*/
-		System.arraycopy(inputArr, inputOff, arr, off, len);
+		try {
+			System.arraycopy(inputArr, inputOff, arr, off, len);
+		} catch (java.lang.ArrayIndexOutOfBoundsException e) {
+			System.out.println("[SolidDatabase] Out of bounds in arrayCopy: "+
+				"input len="+inputArr.length+" off="+inputOff+
+				"; output len="+arr.length+" off="+off+" ... LEN="+len);
+			throw e;
+		}
 	}
 
 	@Override
