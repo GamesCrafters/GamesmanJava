@@ -174,6 +174,7 @@ public class TierSolver<T> extends Solver {
 		private int index;
 
 		Configuration conf;
+		Pair<Long, Long> thisSlice;
 
 		TierSolverWorkUnit(Configuration conf) {
 			this.conf = conf;
@@ -187,13 +188,22 @@ public class TierSolver<T> extends Solver {
 					"Solver (" + index + "): " + conf.getGame().toString());
 			Pair<Long, Long> slice;
 			while ((slice = nextSlice(conf)) != null) {
+				thisSlice = slice;
 				if (hadooping) {
-					Database myWrite = writeDb.beginWrite(tier, slice.car,
+					try {
+						Database myWrite = writeDb.beginWrite(tier, slice.car,
 							slice.car + slice.cdr);
-					solvePartialTier(conf, slice.car, slice.cdr, updater,
+						solvePartialTier(conf, slice.car, slice.cdr, updater,
 							readDb, myWrite);
-					writeDb.endWrite(tier, myWrite, slice.car,
+						writeDb.endWrite(tier, myWrite, slice.car,
 							slice.car + slice.cdr);
+					} catch (Util.FatalError e) {
+						e.printStackTrace(System.out);
+						throw e;
+					} catch (Throwable e) {
+						e.printStackTrace(System.out);
+						throw new RuntimeException(e);
+					}
 				} else
 					solvePartialTier(conf, slice.car, slice.cdr, updater,
 							readDb, writeDb);
@@ -218,6 +228,17 @@ public class TierSolver<T> extends Solver {
 			else
 				barr = new CyclicBarrier(num, flusher);
 			return arr;
+		}
+
+		@Override
+		public String toString() {
+			String str = "WorkUnit "+index+"; slice is ";
+			if (thisSlice != null) {
+				str += "["+thisSlice.car+"-"+thisSlice.cdr+"]";
+			} else {
+				str += "null";
+			}
+			return str;
 		}
 	}
 

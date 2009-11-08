@@ -159,7 +159,7 @@ public class SplitSolidDatabase extends Database {
 		SolidDatabase db = createWriteDatabase();
 		String filename = tier + ".hdb." + startRecord;
 		String name = outputFilenameBase + "/" + filename;
-		System.out.println(name);
+		System.out.println("[SplitSolidDatabase] Output "+name+" "+startRecord+"-"+endRecord);
 		db.initialize(name, conf);
 		startedWrite(tier, db, startRecord, endRecord);
 
@@ -169,6 +169,7 @@ public class SplitSolidDatabase extends Database {
 	public void endWrite(int tier, Database db, long startRecord, long endRecord) {
 		SolidDatabase hdb = (SolidDatabase) db;
 		finishedWrite(tier, hdb, startRecord, endRecord);
+		System.out.println("[SplitSolidDatabase] Ended output "+tier+":"+startRecord+"-"+endRecord);
 		db.close();
 	}
 
@@ -240,6 +241,9 @@ public class SplitSolidDatabase extends Database {
 	@Override
 	public void getBytes(long recordGroupByteLocation, byte[] arr, int offset,
 			int length) {
+		long origLoc = recordGroupByteLocation;
+		int origOff = offset;
+		int origLen = length;
 		while (length > 0) {
 			long recordNumber = conf.recordsPerGroup-1+
 			((recordGroupByteLocation+(conf.recordGroupByteLength-1))/
@@ -259,7 +263,15 @@ public class SplitSolidDatabase extends Database {
 				amtRead = length;
 			}
 			assert amtRead > 0;
-			db.getBytes(recordGroupByteLocation-startRecordGroupByte, arr, offset, amtRead);
+			try {
+				db.getBytes(recordGroupByteLocation-startRecordGroupByte, arr, offset, amtRead);
+			} catch (java.lang.ArrayIndexOutOfBoundsException e) {
+				System.out.println("[SplitSolidDatabase] Out of bounds in db.getBytes: "+
+					"db starts at "+currentDbStart+"; ends at "+currentDbEnd+"... "+
+					"origRGB="+origLoc+", curRGB = "+recordGroupByteLocation+", startRGB = "+startRecordGroupByte+
+					", endRGB="+endRecordGroupByte+"; origOff="+origOff+"; origLen="+origLen);
+				throw e;
+			}
 			length -= amtRead;
 			recordGroupByteLocation += amtRead;
 			offset += amtRead;

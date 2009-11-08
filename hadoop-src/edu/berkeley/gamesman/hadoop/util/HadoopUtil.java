@@ -84,7 +84,7 @@ public class HadoopUtil {
 	
 		protected FileSystem fs;
 	
-		protected Path outputFilenameBase;
+		public Path outputFilenameBase;
 	}
 
 	/**

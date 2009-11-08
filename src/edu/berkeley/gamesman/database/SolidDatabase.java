@@ -20,10 +20,8 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author Patrick Horn
  */
-public abstract class SolidDatabaseInMemory extends Database {
+public abstract class SolidDatabase extends Database {
 
-	private List<byte[]> readContents;
-	
 	private String uri;
 	
 	protected OutputStream outputStream;
@@ -34,15 +32,11 @@ public abstract class SolidDatabaseInMemory extends Database {
 	public boolean storeConfiguration = true;
 
 	/** Default constructor */
-	SolidDatabaseInMemory() {
+	SolidDatabase() {
 	}
 	
 	@Override
 	public void close() {
-		if (readContents != null) {
-			readContents.clear();
-			readContents = null;
-		}
 		if (outputStream != null) {
 			try {
 				outputStream.close();
@@ -65,22 +59,39 @@ public abstract class SolidDatabaseInMemory extends Database {
 	protected abstract InputStream openInputStream(String uri) throws IOException;
 	protected abstract OutputStream openOutputStream(String uri) throws IOException;
 
-	private synchronized void initializeReadDatabase() throws IOException {
-		if (readContents == null) {
-			List<byte[]> readContents = new ArrayList<byte[]>();
-			InputStream inputStream = openInputStream(this.getUri());
+	private List<byte[]> initializeReadDatabase() throws IOException {
+		List<byte[]> readContents = new ArrayList<byte[]>();
+		if (true) {
+		}
+		return readContents;
+	}
+	
+	@Override
+	public void getBytes(byte[] arr, int off, int len) {
+		throw new UnsupportedOperationException("getBytes without position argument is not supported in SolidDatabase");
+	}
 
-			long readLength = 0;
-			byte[] tmpArray = new byte[4];
-			inputStream.read(tmpArray);
-			int conflen = ByteBuffer.wrap(tmpArray).getInt();
-			byte[] storedConf = new byte[conflen];
-			inputStream.read(storedConf);
-			if (conf == null) {
-				try {
-					conf = Configuration.load(storedConf);
-				} catch (ClassNotFoundException e) {
-					Util.fatalError("Failed to read header from SolidDatabase", e);
+	@Override
+	public void getBytes(long loc, byte[] arr, int off, int len) {
+		byte[]decompressed = new byte[1000000];
+		long currentLoc = 0;
+		int decompressedOffset=0;
+		int lenToCopy=0;
+		int count=-999;
+		try {
+			InputStream inputStream = openInputStream(this.getUri());
+			{
+				byte[] tmpArray = new byte[4];
+				inputStream.read(tmpArray);
+				int conflen = ByteBuffer.wrap(tmpArray).getInt();
+				byte[] storedConf = new byte[conflen];
+				inputStream.read(storedConf);
+				if (conf == null) {
+					try {
+						conf = Configuration.load(storedConf);
+					} catch (ClassNotFoundException e) {
+						Util.fatalError("Failed to read header from SolidDatabase", e);
+					}
 				}
 			}
 			String compression = conf.getProperty("gamesman.db.compression", null);
@@ -92,67 +103,40 @@ public abstract class SolidDatabaseInMemory extends Database {
 				}
 			}
 
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			byte[]buf = new byte[65536];
-			while (true) {
-				long toRead = 65536;
-				if (((toRead + readLength)%Integer.MAX_VALUE) < toRead) {
-					toRead = ((toRead + readLength)%Integer.MAX_VALUE);
+			while (len > 0) {
+				count = inputStream.read(decompressed, 0, decompressed.length);
+				if (count <= 0) {
+					break;
 				}
-				int count = inputStream.read(buf, 0, (int)toRead);
-				if (count > 0) {
-					baos.write(buf, 0, count);
-					readLength += count;
-				}
-				if (count <= 0 || readLength == Integer.MAX_VALUE) {
-					readContents.add(baos.toByteArray());
-					if (count <= 0) {
-						break;
+				if (currentLoc+count > loc && len > 0) {
+					decompressedOffset = (int)(loc-currentLoc);
+					lenToCopy = count - decompressedOffset;
+					if (lenToCopy > len) {
+						lenToCopy = len;
 					}
-					baos = new ByteArrayOutputStream();
+					System.arraycopy(arr, off,
+						decompressed, decompressedOffset,
+						lenToCopy);
+					len -= lenToCopy;
+					off += lenToCopy;
 				}
+				currentLoc += count;
 			}
-			if (readLength <= 0) {
+			if (currentLoc <= 0) {
 				throw new IOException("SolidDatabase at "+this.getUri()+" appears to be empty");
 			}
-			this.readContents = readContents;
-		}
-	}
-	
-	@Override
-	public void getBytes(byte[] arr, int off, int len) {
-		throw new UnsupportedOperationException("getBytes without position argument is not supported in SolidDatabase");
-	}
-
-	@Override
-	public void getBytes(long loc, byte[] arr, int off, int len) {
-		if (readContents == null) {
-			try {
-				initializeReadDatabase();
-			} catch (IOException e) {
-				Util.fatalError("Failed to initialized read SolidDatabase", e);
+			if (len > 0) {
+				throw new IOException("Failed to read enough from SolidDatabase "+
+					this.getUri()+"; "+len+" remaining");
 			}
-		}
-		if ((int)(((long)len + loc)%Integer.MAX_VALUE) < len) {
-			int toRead = (int)(((long)len + loc)%Integer.MAX_VALUE);
-			getBytes(loc, arr, off, toRead);
-			getBytes(loc+toRead, arr, off+toRead, len-toRead);
-			return;
-		}
-		this.readContents.get((int)loc/Integer.MAX_VALUE);
-		byte[] inputArr = this.readContents.get((int)loc/Integer.MAX_VALUE);
-		int inputOff = (int)(loc%Integer.MAX_VALUE);
-		/*
-		if (inputOff + len > inputArr.length || inputOff + len < 0) {
-			len = inputArr.length - inputOff;
-		}
-		*/
-		try {
-			System.arraycopy(inputArr, inputOff, arr, off, len);
-		} catch (java.lang.ArrayIndexOutOfBoundsException e) {
+		} catch (IOException ie) {
+			System.out.println("[SolidDatabase] IOException in getBytes"+ie);
+			throw new RuntimeException(ie);
+		} catch (ArrayIndexOutOfBoundsException e) {
 			System.out.println("[SolidDatabase] Out of bounds in arrayCopy: "+
-				"input len="+inputArr.length+" off="+inputOff+
-				"; output len="+arr.length+" off="+off+" ... LEN="+len);
+				"input len="+decompressed.length+" off="+decompressedOffset+
+				"; file curLoc="+currentLoc+" count="+count+
+				"; output len="+arr.length+" off="+off+" ... LEN="+lenToCopy);
 			throw e;
 		}
 	}

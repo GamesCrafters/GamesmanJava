@@ -166,7 +166,7 @@ public class TierMap<S> implements
 	 * @param startRecord First record in database
 	 * @param stopRecord 1 + Last record in database.
 	 */
-	public void started(int tier, String filename, long startRecord,
+	public synchronized void started(int tier, String filename, long startRecord,
 			long stopRecord) {
 		reporter.setStatus("Started " + tier + " [" + startRecord + "-"
 				+ stopRecord + "]");
@@ -179,8 +179,20 @@ public class TierMap<S> implements
 	 * @param startRecord First record in database
 	 * @param stopRecord 1 + Last record in database.
 	 */
-	public void finished(int tier, String filename, long startRecord,
+	public synchronized void finished(int tier, String filename, long startRecord,
 			long stopRecord) {
+		try {
+		FileSystem fs = FileSystem.get(jobconf);
+		System.out.println("Testing Output file at "+filename);
+		System.out.println("; "+FileOutputFormat.getWorkOutputPath(jobconf));
+		if (!fs.exists(new org.apache.hadoop.fs.Path(FileOutputFormat.getWorkOutputPath(jobconf), filename))) {
+			System.out.println("Fatal error: Output file at "+filename+" was never created!");
+			boolean reallyExists= fs.exists(new org.apache.hadoop.fs.Path(HadoopUtil.getTierPath(jobconf, config, tier), filename));
+			Util.fatalError("Failed to make "+filename+"; tier="+tier+"; sR="+startRecord+"; eR="+stopRecord+"; exists outside tempdir="+reallyExists);
+		}
+		} catch (IOException e){
+			throw new RuntimeException(e);
+		}
 		reporter.progress();
 		HadoopSplitDatabaseWritable w = new HadoopSplitDatabaseWritable();
 		w.set(filename, startRecord, stopRecord);
@@ -204,8 +216,13 @@ public class TierMap<S> implements
 					"HadoopMasterRunnable begin");
 			try {
 				w.conquer();
+			} catch (Exception ee) {
+				System.out.println("[TierMap] Exception in WorkUnit "+w);
+				ee.printStackTrace(System.out);
 			} catch (Util.FatalError fe) {
-				System.exit(1);
+				System.out.println("[TierMap] FatalError in WorkUnit "+w);
+				fe.printStackTrace(System.out);
+				throw fe;
 			}
 			assert Util.debug(DebugFacility.HADOOP, "HadoopMasterRunnable end");
 		}
