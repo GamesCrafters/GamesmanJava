@@ -21,7 +21,7 @@ public class TierSolver<T> extends Solver {
 	/**
 	 * The number of positions to go through between each update/reset
 	 */
-	private int split;
+	private int split, minRecordsInSplit, maxRecordsInSplit;
 
 	private int count;
 
@@ -271,6 +271,8 @@ public class TierSolver<T> extends Solver {
 	@Override
 	public void initialize(Configuration conf) {
 		super.initialize(conf);
+		minRecordsInSplit = conf.getInteger("gamesman.minSplit", 0);
+		maxRecordsInSplit = conf.getInteger("gamesman.maxSplit", 0);
 		split = conf.getInteger("gamesman.split", conf.getInteger(
 				"gamesman.threads", 1));
 	}
@@ -290,6 +292,33 @@ public class TierSolver<T> extends Solver {
 			long endHash) {
 		updater = new TierSolverUpdater();
 		this.tier = tier;
+		if (split <= 0) {
+			split = 1;
+		}
+		if (minRecordsInSplit > 0) {
+			if ((endHash-startHash)/split < minRecordsInSplit) {
+				System.out.println("Too few records "+((endHash-startHash)/split)+
+					" in "+split+" splits for tier "+tier);;
+				split = ((int)(endHash-startHash))/minRecordsInSplit;
+				if (split <= 0) {
+					split = 1;
+				}
+				System.out.println("Setting to "+split+" splits ("+
+					(((int)(endHash-startHash))/split)+")");
+			}
+		}
+		if (maxRecordsInSplit > 0) {
+			if ((endHash-startHash)/split > maxRecordsInSplit) {
+				System.out.println("Too many records "+((endHash-startHash)/split)+
+					" in "+split+" splits for tier "+tier);;
+				split = ((int)(endHash-startHash))/maxRecordsInSplit;
+				if (split <= 0) {
+					split = 1;
+				}
+				System.out.println("Setting to "+split+" splits ("+
+					(((int)(endHash-startHash))/split)+")");
+			}
+		}
 		starts = Util.groupAlignedTasks(split, startHash, endHash - startHash,
 				conf.recordsPerGroup);
 		hadooping = true;

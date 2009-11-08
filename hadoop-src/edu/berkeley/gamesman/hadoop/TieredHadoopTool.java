@@ -89,6 +89,19 @@ public class TieredHadoopTool extends Configured implements Tool {
 		Util.debug(DebugFacility.HADOOP, "Processing tier " + tier+" from "+firstHash+" to "+endHash);
 
 		int numMappers = myConf.getInteger("gamesman.hadoop.numMappers", 60);
+		int minSplit = myConf.getInteger("gamesman.hadoop.minSplit",
+			myConf.getInteger("gamesman.minSplit", myConf.recordsPerGroup));
+		if (numMappers < 1) {
+			numMappers = 1;
+		}
+		if (minSplit > 0) {
+			if (((int)(firstHash - endHash))/numMappers < minSplit) {
+				numMappers = ((int)(firstHash - endHash))/minSplit;
+				if (numMappers < 1) {
+					numMappers = 1;
+				}
+			}
+		}
 		job.set("first", Long.toString(firstHash));
 		job.set("end", Long.toString(endHash));
 		job.set("numMappersHack", Integer.toString(numMappers));
