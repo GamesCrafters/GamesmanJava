@@ -14,6 +14,20 @@ import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
+import org.apache.thrift.*;
+
+import edu.berkeley.gamesman.thrift.*;
+import edu.berkeley.gamesman.thrift.GamestateRequestHandler.Iface;
+
+
+import org.apache.thrift.TException;
+import org.apache.thrift.server.TServer;
+import org.apache.thrift.server.TSimpleServer;
+import org.apache.thrift.server.TThreadPoolServer;
+import org.apache.thrift.transport.TServerSocket;
+import org.apache.thrift.transport.TServerTransport;
+import org.apache.thrift.transport.TTransportException;
+
 /**
  * Basic JSON interface for web app usage
  * 
@@ -71,28 +85,27 @@ public class JSONInterface extends GamesmanApplication {
 	public void reallyRun(final int port) {
 		assert Util.debug(DebugFacility.JSON, "Loading JSON server...");
 
-		ServerSocket ssock;
-		try {
-			ssock = new ServerSocket(port);
-		} catch (IOException e) {
-			Util.fatalError("Could not listen on port " + port, e);
-			return;
-		}
-
 		// Want to always print this out.
 		System.out.println("Server ready on port " + port + "!");
-		while (true) {
-			Socket s;
-			try {
-				s = ssock.accept();
-			} catch (IOException e) {
-				Util.warn("IO Exception while accepting: " + e);
-				break;
-			}
-			JSONThread t = new JSONThread(s);
-			t.setName("JSONThread " + s);
-			t.start();
-		}
+
+		GamestateRequestServer handler = new GamestateRequestServer();
+		GamestateRequestHandler.Processor processor = new GamestateRequestHandler.Processor(handler);
+	
+	        TServerTransport serverTransport;
+		try {
+			serverTransport = new TServerSocket(port);
+			TServer threaded = new TThreadPoolServer(processor, serverTransport);
+		    
+		    System.out.println("Starting the server...");
+		    threaded.serve();
+		    
+		} catch (TTransportException e) {
+			// TODO Auto-generated catch block
+			Util.fatalError("Could not start server on port " + port, e);
+			e.printStackTrace();
+			
+		}	    
+		
 	}
 
 	/*
@@ -129,11 +142,12 @@ public class JSONInterface extends GamesmanApplication {
 		}
 	}
 
-	Configuration loadDatabase(Map<String, String> params) {
-		String game = params.get("game");
+	Configuration newLoadDatabase(Map<String, String> params, String game) {
+		/*String game = params.get("game");
 		if (game == null) {
 			return null;
-		}
+		}*/
+		
 		String filename = sanitise(game);
 		String[] allowedFields = serverConf.getProperty("json.fields." + game,
 				"").split(",");
@@ -242,19 +256,125 @@ public class JSONInterface extends GamesmanApplication {
 			return null;
 		}
 	}
-
-	private class JSONThread extends Thread {
-
-		final Socket s;
-
-		JSONThread(Socket s) {
-			this.s = s;
-			assert Util.debug(DebugFacility.JSON, "Accepted new connection "
-					+ s);
+	
+	private class GamestateRequestServer implements Iface {
+		
+		@Override
+		public GetNextMoveResponse getNextMoveValues(String game, String configuration) throws TException {
+			
+			GetNextMoveResponse response = new GetNextMoveResponse();
+			Map<String, String> j = reconstructGameParams(configuration);
+					
+			System.out.println(j);
+			
+			response.setResponse(getNextMoveValues_core(game, j) );
+			response.setStatus("ok");
+			
+			return response;
+			
 		}
+		
+		@Override
+	    	public GetMoveResponse getMoveValue(String game, String configuration) throws TException {
+			
+			System.out.println("Got request");
+			System.out.println("Game: " + game);
+			System.out.println("Config: " + configuration);
+			GetMoveResponse response = new GetMoveResponse();
+			
+			Map<String, String> params = reconstructGameParams(configuration);
 
-		private <T> void fillJSONFields(Configuration conf, JSONObject entry,
-				T state, boolean isChildState) throws JSONException {
+			response.setResponse(getMoveValue_core(game, params));
+			response.setStatus("ok");
+			
+			return response;
+	    }
+		private <T> List<GamestateResponse> getNextMoveValues_core(String gamename, Map<String, String> params) throws TException {
+	    	
+	    	String board = params.get("board");
+			if (board == null) {
+				throw new TException("No board passed!");
+			}
+			
+			Configuration config = newLoadDatabase(params, gamename);
+			if (config == null) {
+				throw new TException("This game does not exist.");
+			}
+			// Database db = config.getDatabase();
+			Game<T> game  = Util.checkedCast(config.getGame());
+			
+			
+	    	T state = game.stringToState(board);
+		
+	    	List<GamestateResponse> responseArray = new LinkedList<GamestateResponse>();
+			
+			PrimitiveValue pv = game.primitiveValue(state);
+			if (game.getPlayerCount() <= 1 || pv == PrimitiveValue.UNDECIDED) {
+				// Game is not over yet...
+				for (Pair<String, T> next : game.validMoves(state)) {
+					GamestateResponse entry = new GamestateResponse();
+					entry = fillResponseFields(config, next.cdr, true);
+					entry.setMove(next.car);
+					responseArray.add(entry);
+				}
+			}
+			return responseArray;
+	    
+	    }
+		public <T> GamestateResponse getMoveValue_core(String gamename, Map<String, String> params) throws TException {
+			
+			GamestateResponse response;
+			
+			String board = params.get("board");
+			
+			if (board == null) {
+				System.out.println("No board passed!");
+				throw new TException("No board passed!");
+			}
+			
+			Configuration config = newLoadDatabase(params, gamename);
+			if (config == null) {
+				System.out.println("This game does not exist.");
+				throw new TException("This game does not exist.");
+			}
+			
+			// Database db = config.getDatabase();
+			Game<T> game  = Util.checkedCast(config.getGame());
+			
+			T state = game.stringToState(board);
+			
+			response = fillResponseFields(config, state, false);
+			
+			return response;
+
+		}
+		
+		/**
+		 * Returns a Map containing the params and corresponding values from the configuration given
+		 * Ex: {"board": +++++++++}
+		 * @param configuration
+		 * @return
+		 */
+	    private Map<String, String> reconstructGameParams(String configuration) {
+	    	Map<String, String> j = new HashMap<String, String>();
+			String line = configuration.replace(';', '&');
+			for (String param : line.split("&")) {
+				String[] key_val = param.split("=", 2);
+				if (key_val.length != 2) {
+					continue;
+				}
+				try {
+					j.put(URLDecoder.decode(key_val[0], "utf-8"),
+							URLDecoder.decode(key_val[1], "utf-8"));
+				} catch (UnsupportedEncodingException e) {
+				}
+			}
+			return j;
+	    }	    
+	    
+	    private <T> GamestateResponse fillResponseFields(Configuration conf,
+				T state, boolean isChildState)  {
+	    	GamestateResponse request = new GamestateResponse();
 			Collection<RecordFields> storedFields = conf.usedFields;
 			Database db = conf.db;
 			Record rec = null;
@@ -272,10 +392,14 @@ public class JSONInterface extends GamesmanApplication {
 							else if (pv == PrimitiveValue.LOSE)
 								pv = PrimitiveValue.WIN;
 						}
-						entry.put(f.name().toLowerCase(), pv.name()
-								.toLowerCase());
+						request.setValue(pv.name().toLowerCase());
 					} else {
-						entry.put(f.name().toLowerCase(), rec.get(f));
+						if ( f == RecordFields.REMOTENESS) {
+							request.setRemoteness(rec.get(f) );
+						}
+						if ( f == RecordFields.SCORE) {
+							request.setScore(rec.get(f) );
+						}
 					}
 				}
 			} else {
@@ -287,141 +411,19 @@ public class JSONInterface extends GamesmanApplication {
 						else if (pv == PrimitiveValue.LOSE)
 							pv = PrimitiveValue.WIN;
 					}
-					entry.put("value", pv.name().toLowerCase());
+					request.setValue(pv.name().toLowerCase());
+					
 				}
 				int score = g.primitiveScore(state);
 				if (score > 0) {
-					entry.put("score", score);
+					request.setScore(score);
 				}
 			}
-			entry.put("board", g.stateToString(state));
+			request.setBoard(g.stateToString(state));
+			
+			return request;
 		}
-
-		class RequestException extends Exception {
-			private static final long serialVersionUID = 4304664084577498297L;
-
-			public RequestException(String msg) {
-				super(msg);
-			}
-		}
-
-		public void run() {
-			LineNumberReader r = null;
-			PrintWriter w = null;
-			try {
-				r = new LineNumberReader(new InputStreamReader(s
-						.getInputStream()));
-				w = new PrintWriter(new OutputStreamWriter(s.getOutputStream()));
-			} catch (IOException e) {
-				Util.warn("Got IO exception in JSONThread: " + e);
-			}
-
-			while (true) {
-				String line;
-				try {
-					line = r.readLine();
-				} catch (IOException e) {
-					Util.warn("Unable to read line from socket, dropping");
-					break;
-				}
-				if (line == null) {
-					assert Util.debug(DebugFacility.JSON, "Connection closed.");
-					break; // connection closed.
-				}
-				System.out.println(line);
-				Map<String, String> j = new HashMap<String, String>();
-				line = line.replace(';', '&');
-				for (String param : line.split("&")) {
-					String[] key_val = param.split("=", 2);
-					if (key_val.length != 2) {
-						continue;
-					}
-					try {
-						j.put(URLDecoder.decode(key_val[0], "utf-8"),
-								URLDecoder.decode(key_val[1], "utf-8"));
-					} catch (UnsupportedEncodingException e) {
-					}
-				}
-				System.out.println(j);
-				JSONObject response;
-				try {
-					try {
-						response = handleRequest(j);
-					} catch (RequestException re) {
-						response = new JSONObject();
-						response.put("status", "error");
-						response.put("msg", re.toString());
-					} catch (Util.FatalError fe) {
-						fe.printStackTrace();
-						throw new Exception(fe.toString());
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-					try {
-						response = new JSONObject();
-						response.put("status", "error");
-						response.put("msg", "An exception was generated: " + e);
-					} catch (JSONException e1) {
-						Util
-								.warn("Could not send an error response to client: "
-										+ e);
-						break;
-					}
-				}
-				System.out.println(response.toString());
-				w.println(response.toString());
-				w.flush();
-			}
-		}
-
-		private <T> JSONObject handleRequest(Map<String, String> j)
-				throws RequestException, JSONException {
-			Configuration config = loadDatabase(j);
-			if (config == null) {
-				throw new RequestException("This game does not exist.");
-			}
-			// Database db = config.getDatabase();
-			Game<T> g = Util.checkedCast(config.getGame());
-
-			JSONObject response = new JSONObject();
-
-			String method = j.get("method");
-			if (method == null) {
-				response.put("status", "error");
-				response.put("msg", "No method specified!");
-			} else if (method.equals("getNextMoveValues")) {
-				String board = j.get("board");
-				if (board == null) {
-					throw new RequestException("No board passed!");
-				}
-				T state = g.stringToState(board);
-				JSONArray responseArray = new JSONArray();
-
-				PrimitiveValue pv = g.primitiveValue(state);
-				if (g.getPlayerCount() <= 1 || pv == PrimitiveValue.UNDECIDED) {
-					// Game is not over yet...
-					for (Pair<String, T> next : g.validMoves(state)) {
-						JSONObject entry = new JSONObject();
-						entry.put("move", next.car);
-						fillJSONFields(config, entry, next.cdr, true);
-						responseArray.put(entry);
-					}
-				}
-				response.put("response", responseArray);
-				response.put("status", "ok");
-			} else if (method.equals("getMoveValue")) {
-				String board = j.get("board");
-				if (board == null) {
-					throw new RequestException("No board passed!");
-				}
-				T state = g.stringToState(board);
-				JSONObject entry = new JSONObject();
-				fillJSONFields(config, entry, state, false);
-				response.put("response", entry);
-				response.put("status", "ok");
-			}
-			return response;
-		}
-
+		
 	}
+	
 }
