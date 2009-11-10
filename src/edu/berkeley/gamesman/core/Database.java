@@ -1,11 +1,8 @@
 package edu.berkeley.gamesman.core;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 import edu.berkeley.gamesman.util.LongIterator;
-import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 /**

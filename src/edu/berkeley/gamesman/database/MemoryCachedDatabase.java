@@ -50,8 +50,10 @@ public class MemoryCachedDatabase extends MemoryDatabase {
 			} catch (ClassNotFoundException e) {
 				Util.fatalError("Class Not Found", e);
 			}
-		} else
+		} else {
+			super.initialize(location);
 			reading = false;
+		}
 	}
 
 	@Override
