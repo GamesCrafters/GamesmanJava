@@ -221,8 +221,11 @@ public final class Connect4 extends TieredIterGame {
 	@Override
 	public PrimitiveValue primitiveValue() {
 		char lastTurn = (pieces.size() % 2 == 1 ? 'X' : 'O');
-		if (bsb.xInALine(piecesToWin, lastTurn))
+		int result = bsb.xInALine(piecesToWin, lastTurn);
+		if (result > 0)
 			return PrimitiveValue.LOSE;
+		else if (result < 0)
+			return PrimitiveValue.IMPOSSIBLE;
 		else if (pieces.size() == gameSize)
 			return PrimitiveValue.TIE;
 		else

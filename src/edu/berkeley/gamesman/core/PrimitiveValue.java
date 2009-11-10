@@ -22,7 +22,11 @@ public enum PrimitiveValue {
 	/**
 	 * The game is not over yet
 	 */
-	UNDECIDED(3);
+	UNDECIDED(3),
+	/**
+	 * This is not a legal position
+	 */
+	IMPOSSIBLE(4);
 
 	private int value;
 
@@ -64,14 +68,10 @@ public enum PrimitiveValue {
 		switch (this) {
 		case LOSE:
 			return WIN;
-		case TIE:
-			return TIE;
-		case UNDECIDED:
-			return UNDECIDED;
 		case WIN:
 			return LOSE;
 		default:
-			return UNDECIDED;
+			return this;
 		}
 	}
 }

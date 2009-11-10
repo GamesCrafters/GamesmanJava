@@ -22,7 +22,8 @@ public abstract class TieredIterGame extends TieredGame<ItergameState>
 
 	@Override
 	public PrimitiveValue primitiveValue(ItergameState pos) {
-		return unHashedClone(pos).primitiveValue();
+		setState(pos);
+		return primitiveValue();
 	}
 
 	/**

@@ -146,25 +146,27 @@ public class BitSetBoard extends Board2D {
 	 * @param color
 	 *            Color of pieces
 	 * @return Whether there are x pieces of color color in a straight line on
-	 *         the board.
+	 *         the board. 0 for false, 1 for true.
 	 */
-	public boolean xInALine(int x, char color) {
+	public int xInALine(int x, char color) {
+		boolean isLine;
 		if (usesLong) {
 			long board = (color == 'X' ? xPlayerLong : oPlayerLong);
-			return checkDirection(x, 1, board)
+			isLine = checkDirection(x, 1, board)
 					|| checkDirection(x, height, board)
 					|| checkDirection(x, height + 1, board)
 					|| checkDirection(x, height + 2, board);
 		} else {
 			BigInteger board = (color == 'X' ? xPlayer : oPlayer);
-			return checkDirection(x, 1, board)
+			isLine = checkDirection(x, 1, board)
 					|| checkDirection(x, height, board)
 					|| checkDirection(x, height + 1, board)
 					|| checkDirection(x, height + 2, board);
 		}
+		return isLine ? 1 : 0;
 	}
 
-	private boolean checkDirection(int x, int direction, long board) {
+	protected boolean checkDirection(int x, int direction, long board) {
 		int dist = direction * x;
 		int checked = direction;
 		while (checked << 1 < dist) {
@@ -181,7 +183,7 @@ public class BitSetBoard extends Board2D {
 	 * to x to see if there are x 1's anywhere in the number evenly spaced at
 	 * intervals of length direction.
 	 */
-	private boolean checkDirection(int x, int direction, BigInteger board) {
+	protected boolean checkDirection(int x, int direction, BigInteger board) {
 		int dist = direction * x;
 		int checked = direction;
 		while (checked << 1 < dist) {
