@@ -23,6 +23,7 @@ public class MemoryCachedDatabase extends MemoryDatabase {
 
 	@Override
 	public void initialize(String location) {
+		super.initialize(location);
 		myFile = new File(location);
 		if (myFile.exists()) {
 			reading = true;
@@ -51,7 +52,6 @@ public class MemoryCachedDatabase extends MemoryDatabase {
 			}
 		} else
 			reading = false;
-		super.initialize(location);
 	}
 
 	@Override
