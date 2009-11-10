@@ -7,14 +7,20 @@ import edu.berkeley.gamesman.core.Board2D;
 /**
  * @author dnspies
  */
-public final class BitSetBoard extends Board2D {
-	private BigInteger xPlayer = BigInteger.ZERO, oPlayer = BigInteger.ZERO;
+public class BitSetBoard extends Board2D {
+	protected BigInteger xPlayer;
 
-	private long xPlayerLong = 0, oPlayerLong = 0;
+	protected BigInteger oPlayer;
 
-	private int height, width;
+	protected long xPlayerLong;
 
-	private boolean usesLong;
+	protected long oPlayerLong;
+
+	protected int height;
+
+	protected int width;
+
+	protected boolean usesLong;
 
 	/**
 	 * @param gameHeight
@@ -25,7 +31,14 @@ public final class BitSetBoard extends Board2D {
 	public BitSetBoard(int gameHeight, int gameWidth) {
 		height = gameHeight;
 		width = gameWidth;
-		usesLong = (width + 1) * height <= 64;
+		usesLong = (height + 1) * width <= 64;
+		if (usesLong) {
+			xPlayerLong = 0L;
+			oPlayerLong = 0L;
+		} else {
+			xPlayer = BigInteger.ZERO;
+			oPlayer = BigInteger.ZERO;
+		}
 	}
 
 	@Override
@@ -43,8 +56,8 @@ public final class BitSetBoard extends Board2D {
 		return new char[] { 'X', 'O' };
 	}
 
-	private int getBit(int row, int col) {
-		return row * (width + 1) + col;
+	protected int getBit(int row, int col) {
+		return col * (height + 1) + row;
 	}
 
 	/**
@@ -77,8 +90,8 @@ public final class BitSetBoard extends Board2D {
 	public void removePiece(int row, int col) {
 		int bit = getBit(row, col);
 		if (usesLong) {
-			xPlayerLong = xPlayerLong & (-1L ^ (1L << bit));
-			oPlayerLong = oPlayerLong & (-1L ^ (1L << bit));
+			xPlayerLong = xPlayerLong & ~(1L << bit);
+			oPlayerLong = oPlayerLong & ~(1L << bit);
 		} else {
 			xPlayer = xPlayer.clearBit(bit);
 			oPlayer = oPlayer.clearBit(bit);
@@ -139,15 +152,15 @@ public final class BitSetBoard extends Board2D {
 		if (usesLong) {
 			long board = (color == 'X' ? xPlayerLong : oPlayerLong);
 			return checkDirection(x, 1, board)
-					|| checkDirection(x, width, board)
-					|| checkDirection(x, width + 1, board)
-					|| checkDirection(x, width + 2, board);
+					|| checkDirection(x, height, board)
+					|| checkDirection(x, height + 1, board)
+					|| checkDirection(x, height + 2, board);
 		} else {
 			BigInteger board = (color == 'X' ? xPlayer : oPlayer);
 			return checkDirection(x, 1, board)
-					|| checkDirection(x, width, board)
-					|| checkDirection(x, width + 1, board)
-					|| checkDirection(x, width + 2, board);
+					|| checkDirection(x, height, board)
+					|| checkDirection(x, height + 1, board)
+					|| checkDirection(x, height + 2, board);
 		}
 	}
 
@@ -168,7 +181,7 @@ public final class BitSetBoard extends Board2D {
 	 * to x to see if there are x 1's anywhere in the number evenly spaced at
 	 * intervals of length direction.
 	 */
-	private static boolean checkDirection(int x, int direction, BigInteger board) {
+	private boolean checkDirection(int x, int direction, BigInteger board) {
 		int dist = direction * x;
 		int checked = direction;
 		while (checked << 1 < dist) {

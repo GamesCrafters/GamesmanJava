@@ -5,6 +5,7 @@ import java.util.Collection;
 
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.game.util.BitSetBoard;
+import edu.berkeley.gamesman.game.util.Connect4ReducerBoard;
 import edu.berkeley.gamesman.game.util.PieceRearranger;
 import edu.berkeley.gamesman.util.ExpCoefs;
 import edu.berkeley.gamesman.util.Pair;
@@ -77,7 +78,10 @@ public final class Connect4 extends TieredIterGame {
 		pieces = new ArrayList<Place>(gameSize);
 		moveArrangement = new long[gameWidth];
 		colHeights = new int[gameWidth];
-		bsb = new BitSetBoard(gameHeight, gameWidth);
+		if (conf.getBoolean("gamesman.game.reduceWins", false))
+			bsb = new Connect4ReducerBoard(gameHeight, gameWidth);
+		else
+			bsb = new BitSetBoard(gameHeight, gameWidth);
 		ec = new ExpCoefs(gameHeight, gameWidth + 1);
 		multiplier = new long[gameSize + 1];
 		multiplier[0] = 1;
