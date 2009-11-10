@@ -8,6 +8,6 @@ gamesman.solver.directRead = true
 gamesman.database = MemoryCachedDatabase
 gamesman.db.uri = database55.db
 gamesman.db.compression = gzip
-record.fields = VALUE:3,REMOTENESS:26
+record.fields = VALUE,REMOTENESS
 record.compression = 90
 gamesman.debug.THREADING = true

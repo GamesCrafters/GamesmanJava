@@ -5,7 +5,7 @@ package edu.berkeley.gamesman.core;
  * 
  * @author dnspies
  */
-public final class Record {
+public class Record {
 	private final Configuration conf;
 
 	private final int[] values;
@@ -19,21 +19,6 @@ public final class Record {
 			int val = conf.getFieldStates(rf);
 			this.values[i++] = (int) (remainingState % val);
 			remainingState /= val;
-		}
-	}
-
-	/**
-	 * @param conf
-	 *            The configuration object
-	 * @param values
-	 *            The values of each of the respective fields in this record
-	 *            ordered VALUE, REMOTENESS, SCORE
-	 */
-	protected Record(Configuration conf, int... values) {
-		this.conf = conf;
-		this.values = new int[conf.numFields()];
-		for (int i = 0; i < values.length; i++) {
-			this.values[i] = values[i];
 		}
 	}
 

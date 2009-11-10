@@ -49,29 +49,29 @@ public class Configuration {
 	/**
 	 * 
 	 */
-	public final long totalStates;
+	public long totalStates;
 
-	protected final BigInteger bigIntTotalStates;
+	protected BigInteger bigIntTotalStates;
 
-	final BigInteger[] multipliers;
+	BigInteger[] multipliers;
 
-	final long[] longMultipliers;
+	long[] longMultipliers;
 
 	/**
 	 * The number of records contained in a RecordGroup
 	 */
-	public final int recordsPerGroup;
+	public int recordsPerGroup;
 
 	/**
 	 * The number of bytes in a RecordGroup
 	 */
-	public final int recordGroupByteLength;
+	public int recordGroupByteLength;
 
 	/**
 	 * Whether the record group size is small enough to fit in a long. If this
 	 * is not true, solving is slowed immensely
 	 */
-	public final boolean recordGroupUsesLong;
+	public boolean recordGroupUsesLong;
 
 	/**
 	 * The database associated with this configuration
@@ -112,9 +112,94 @@ public class Configuration {
 	public Configuration(Properties props, boolean initLater)
 			throws ClassNotFoundException {
 		this.props = props;
+		if (!initLater) {
+			String gamename = getProperty("gamesman.game");
+			String hashname = getProperty("gamesman.hasher");
+			initialize(gamename, hashname);
+		}
+	}
+
+	/**
+	 * Given a Properties, will construct a Configuration
+	 * 
+	 * @param props
+	 *            A Properties object (probably constructed from a job file).
+	 * @throws ClassNotFoundException
+	 *             Could not find game class or hasher class
+	 */
+	public Configuration(Properties props) throws ClassNotFoundException {
+		this(props, false);
+	}
+
+	/**
+	 * Calls new Configuration(Configuration.readProperties(path))
+	 * 
+	 * @param path
+	 *            The path to the job file to read
+	 * @throws ClassNotFoundException
+	 *             Could not find game class or hasher class
+	 */
+	public Configuration(String path) throws ClassNotFoundException {
+		this(readProperties(path), false);
+	}
+
+	// To specify the size, use ':' followed by the number of possible
+	// states
+	private void initializeStoredFields() {
+		String fields = getProperty("record.fields", RecordFields.VALUE.name()
+				+ "," + RecordFields.REMOTENESS.name());
+		RecordFields field;
+		int states;
+		String[] splitFields = fields.split(",");
+		usedFields.clear();
+		storedFields = new int[splitFields.length];
+		for (int i = 0; i < fieldIndices.length; i++)
+			fieldIndices[i] = -1;
+		for (int i = 0; i < splitFields.length; i++) {
+			String[] splt = splitFields[i].split(":");
+			field = RecordFields.valueOf(splt[0]);
+			if (splt.length > 1)
+				states = Integer.parseInt(splt[1]);
+			else
+				states = g.defaultNumberOfStates(field);
+			usedFields.add(field);
+			storedFields[i] = states;
+			fieldIndices[field.ordinal()] = i;
+		}
+	}
+
+	/**
+	 * Initialize the Configuration with a game and a hasher object.
+	 * 
+	 * @param newG
+	 *            The Game associated with this configuration.
+	 * @param newH
+	 *            The Hasher associated with this configuration.
+	 */
+	public void initialize(Game<?> newG, Hasher<?> newH) {
+		initialize(g, h, true);
+	}
+
+	/**
+	 * Initialize the Configuration with a game and a hasher object.
+	 * 
+	 * @param newG
+	 *            The Game associated with this configuration.
+	 * @param newH
+	 *            The Hasher associated with this configuration.
+	 * @param prepare
+	 *            Whether to call prepare for the game being passed
+	 */
+	public void initialize(Game<?> newG, Hasher<?> newH, boolean prepare) {
+		g = newG;
+		h = newH;
+		if (prepare) {
+			g.prepare();
+		}
+		initializeStoredFields();
+		totalStates = g.recordStates();
 		double requiredCompression = Double.parseDouble(getProperty(
 				"record.compression", "0")) / 100;
-		totalStates = initializeStoredFields();
 		double compression;
 		if (requiredCompression == 0D)
 			recordsPerGroup = 1;
@@ -166,93 +251,6 @@ public class Configuration {
 			recordGroupUsesLong = false;
 			longMultipliers = null;
 		}
-		if (!initLater) {
-			String gamename = getProperty("gamesman.game");
-			String hashname = getProperty("gamesman.hasher");
-			initialize(gamename, hashname);
-		}
-	}
-
-	/**
-	 * Given a Properties, will construct a Configuration
-	 * 
-	 * @param props
-	 *            A Properties object (probably constructed from a job file).
-	 * @throws ClassNotFoundException
-	 *             Could not find game class or hasher class
-	 */
-	public Configuration(Properties props) throws ClassNotFoundException {
-		this(props, false);
-	}
-
-	/**
-	 * Calls new Configuration(Configuration.readProperties(path))
-	 * 
-	 * @param path
-	 *            The path to the job file to read
-	 * @throws ClassNotFoundException
-	 *             Could not find game class or hasher class
-	 */
-	public Configuration(String path) throws ClassNotFoundException {
-		this(readProperties(path), false);
-	}
-
-	// To specify the bit size, use ':' followed by the number of possible
-	// states
-	private long initializeStoredFields() {
-		String fields = getProperty("record.fields", RecordFields.VALUE.name()
-				+ "," + RecordFields.REMOTENESS.name());
-		RecordFields field;
-		long totalStates = 1;
-		int states;
-		String[] splitFields = fields.split(",");
-		usedFields.clear();
-		storedFields = new int[splitFields.length];
-		for (int i = 0; i < fieldIndices.length; i++)
-			fieldIndices[i] = -1;
-		for (int i = 0; i < splitFields.length; i++) {
-			String[] splt = splitFields[i].split(":");
-			field = RecordFields.valueOf(splt[0]);
-			if (splt.length > 1)
-				states = Integer.parseInt(splt[1]);
-			else
-				states = field.defaultNumberOfStates();
-			usedFields.add(field);
-			storedFields[i] = states;
-			fieldIndices[field.ordinal()] = i;
-			totalStates *= states;
-		}
-		return totalStates;
-	}
-
-	/**
-	 * Initialize the Configuration with a game and a hasher object.
-	 * 
-	 * @param newG
-	 *            The Game associated with this configuration.
-	 * @param newH
-	 *            The Hasher associated with this configuration.
-	 */
-	public void initialize(Game<?> newG, Hasher<?> newH) {
-		initialize(g, h, true);
-	}
-
-	/**
-	 * Initialize the Configuration with a game and a hasher object.
-	 * 
-	 * @param newG
-	 *            The Game associated with this configuration.
-	 * @param newH
-	 *            The Hasher associated with this configuration.
-	 * @param prepare
-	 *            Whether to call prepare for the game being passed
-	 */
-	public void initialize(Game<?> newG, Hasher<?> newH, boolean prepare) {
-		g = newG;
-		h = newH;
-		if (prepare) {
-			g.prepare();
-		}
 	}
 
 	/**
@@ -280,11 +278,9 @@ public class Configuration {
 			hashname = "edu.berkeley.gamesman.hasher." + hashname;
 		}
 		setProperty("gamesman.hasher", hashname);
-		this.g = Util.typedInstantiateArg(gamename, Game.class, this);
-		this.h = Util.typedInstantiateArg(hashname, Hasher.class, this);
-		if (prepare) {
-			g.prepare();
-		}
+		Game<?> g = Util.typedInstantiateArg(gamename, Game.class, this);
+		Hasher<?> h = Util.typedInstantiateArg(hashname, Hasher.class, this);
+		initialize(g, h, prepare);
 	}
 
 	/**

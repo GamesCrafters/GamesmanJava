@@ -21,6 +21,8 @@ import edu.berkeley.gamesman.util.Pair;
 class ConnectFour implements MouseListener {
 	final char[][] board;
 
+	private final Connect4 cgame;
+
 	private int[] columnHeight = new int[7];
 
 	private char turn = 'X';
@@ -34,8 +36,6 @@ class ConnectFour implements MouseListener {
 	private Thread paintThread;
 
 	private DisplayFour df;
-
-	private Connect4 cgame;
 
 	Database fd;
 
@@ -67,6 +67,7 @@ class ConnectFour implements MouseListener {
 	 */
 	public ConnectFour(Configuration conf, DisplayFour disfour, boolean cX,
 			boolean cO) {
+		cgame = (Connect4) conf.getGame();
 		int c, r;
 		compX = cX;
 		compO = cO;
@@ -75,8 +76,6 @@ class ConnectFour implements MouseListener {
 		board = new char[gameHeight][gameWidth];
 		fd = conf.db;
 		df = disfour;
-		cgame = new Connect4(conf);
-		cgame.prepare();
 		for (c = 0; c < gameWidth; c++) {
 			for (r = 0; r < gameHeight; r++) {
 				df.slots[r][c].addMouseListener(this);

@@ -416,4 +416,15 @@ public abstract class Game<State> {
 	 * @return The total number of hashes
 	 */
 	public abstract long numHashes();
+
+	public long recordStates() {
+		long prod = 1;
+		for (int i = 0; i < conf.numFields(); i++)
+			prod *= conf.storedFields[i];
+		return prod;
+	}
+
+	public int defaultNumberOfStates(RecordFields field) {
+		return field.defaultNumberOfStates();
+	}
 }

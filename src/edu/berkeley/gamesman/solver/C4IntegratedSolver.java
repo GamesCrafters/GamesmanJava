@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.database.util.Page;
+import edu.berkeley.gamesman.database.util.SequentialPage;
 import edu.berkeley.gamesman.game.Connect4;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
@@ -30,7 +31,7 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 		int numPages = 0;
 		Page[] childPages = null;
 		int[] whichPage = null;
-		Page writePage = null;
+		SequentialPage writePage = null;
 		long currentGroup = 0L;
 		int currentNum = 0;
 		boolean hasRemoteness = conf.containsField(RecordFields.REMOTENESS);
@@ -41,7 +42,7 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 			int writeLen = (int) (endGroup + 1 - currentGroup);
 			childPages = new Page[game.maxChildren()];
 			whichPage = new int[game.maxChildren()];
-			writePage = new Page(conf);
+			writePage = new SequentialPage(conf);
 			writePage.loadPage(currentGroup, writeLen);
 			if (!hadooping && (start + hashes) % conf.recordsPerGroup > 0) {
 				if (conf.recordGroupUsesLong)

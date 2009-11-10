@@ -24,7 +24,7 @@ public class Page {
 	 */
 	public long firstGroup;
 
-	private boolean dirty = false;
+	protected boolean dirty = false;
 
 	protected final Configuration conf;
 

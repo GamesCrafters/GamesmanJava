@@ -551,4 +551,85 @@ public final class Connect4 extends TieredIterGame {
 	public String toString() {
 		return gameWidth + "x" + gameHeight + " Connect " + piecesToWin;
 	}
+
+	private class C4Record extends Record {
+		protected C4Record() {
+			super(conf);
+		}
+
+		protected C4Record(long state) {
+			super(conf);
+			set(state);
+		}
+
+		protected C4Record(PrimitiveValue pVal) {
+			super(conf, pVal);
+		}
+
+		@Override
+		public long getState() {
+			if (conf.containsField(RecordFields.REMOTENESS)) {
+				PrimitiveValue val = get();
+				if (val.equals(PrimitiveValue.TIE)) {
+					return gameSize + 1;
+				} else {
+					return get(RecordFields.REMOTENESS);
+				}
+			} else {
+				return get(RecordFields.VALUE);
+			}
+		}
+
+		@Override
+		public void set(long state) {
+			if (conf.containsField(RecordFields.REMOTENESS)) {
+				if (state == gameSize + 1) {
+					set(RecordFields.VALUE, PrimitiveValue.TIE.value());
+					set(RecordFields.REMOTENESS, gameSize - pieces.size());
+				} else if ((state & 1L) > 0) {
+					set(RecordFields.VALUE, PrimitiveValue.WIN.value());
+					set(RecordFields.REMOTENESS, (int) state);
+				} else {
+					set(RecordFields.VALUE, PrimitiveValue.LOSE.value());
+					set(RecordFields.REMOTENESS, (int) state);
+				}
+			} else {
+				set(RecordFields.VALUE, (int) state);
+			}
+		}
+	}
+
+	@Override
+	public Record newRecord(PrimitiveValue pv) {
+		return new C4Record(pv);
+	}
+
+	@Override
+	public Record newRecord() {
+		return new C4Record();
+	}
+
+	@Override
+	public Record newRecord(long val) {
+		return new C4Record(val);
+	}
+
+	@Override
+	public long recordStates() {
+		return gameSize + 2;
+	}
+
+	@Override
+	public int defaultNumberOfStates(RecordFields rf) {
+		switch (rf) {
+		case VALUE:
+			return 3;
+		case REMOTENESS:
+			return gameSize + 1;
+		default:
+			Util.fatalError("The record field " + rf
+					+ " is not used in Connect 4");
+			return 0;
+		}
+	}
 }
