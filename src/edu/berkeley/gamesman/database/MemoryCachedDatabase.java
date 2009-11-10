@@ -23,7 +23,6 @@ public class MemoryCachedDatabase extends MemoryDatabase {
 
 	@Override
 	public void initialize(String location) {
-		super.initialize(location);
 		myFile = new File(location);
 		if (myFile.exists()) {
 			reading = true;
@@ -38,6 +37,7 @@ public class MemoryCachedDatabase extends MemoryDatabase {
 				fis.read(b);
 				if (conf == null)
 					conf = Configuration.load(b);
+				super.initialize(location);
 				if (conf.getProperty("gamesman.db.compression", "none").equals(
 						"gzip"))
 					fis = new GZIPInputStream(fis);
