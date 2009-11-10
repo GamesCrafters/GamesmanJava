@@ -46,18 +46,24 @@ class ConnectFour implements MouseListener {
 	final int gameHeight;
 
 	/**
-	 * @param conf The configuration object
-	 * @param disfour The display board
+	 * @param conf
+	 *            The configuration object
+	 * @param disfour
+	 *            The display board
 	 */
 	public ConnectFour(Configuration conf, DisplayFour disfour) {
 		this(conf, disfour, false, true);
 	}
 
 	/**
-	 * @param conf The configuration object
-	 * @param disfour The displayBoard
-	 * @param cX Does the computer play as Red?
-	 * @param cO Does the computer play as Black?
+	 * @param conf
+	 *            The configuration object
+	 * @param disfour
+	 *            The displayBoard
+	 * @param cX
+	 *            Does the computer play as Red?
+	 * @param cO
+	 *            Does the computer play as Black?
 	 */
 	public ConnectFour(Configuration conf, DisplayFour disfour, boolean cX,
 			boolean cO) {
@@ -127,17 +133,18 @@ class ConnectFour implements MouseListener {
 			ArrayList<Pair<String, ItergameState>> listMoves = new ArrayList<Pair<String, ItergameState>>(
 					moves.size());
 			listMoves.addAll(moves);
-			ArrayList<Record> records = new ArrayList<Record>(moves.size());
-			for (Pair<String, ItergameState> move : listMoves) {
-				Record rec = fd.getRecord(cgame.stateToHash(move.cdr));
-				rec.previousPosition();
-				records.add(rec);
+			long[] moveHashes = new long[listMoves.size()];
+			for (int i = 0; i < listMoves.size(); i++) {
+				moveHashes[i] = cgame.stateToHash(listMoves.get(i).cdr);
 			}
-			Record bestRecord = cgame.combine(records);
+			Record[] records = fd.getRecords(moveHashes);
+			for (Record r : records)
+				r.previousPosition();
+			Record bestRecord = cgame.combine(records, 0, records.length);
 			ArrayList<Pair<String, ItergameState>> bestMoves = new ArrayList<Pair<String, ItergameState>>(
 					listMoves.size());
-			for (int i = 0; i < records.size(); i++) {
-				if (records.get(i).equals(bestRecord))
+			for (int i = 0; i < records.length; i++) {
+				if (records[i].equals(bestRecord))
 					bestMoves.add(listMoves.get(i));
 			}
 			makeMove(bestMoves.get(r.nextInt(bestMoves.size())).car.charAt(0) - '0');

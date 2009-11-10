@@ -1,8 +1,11 @@
 package edu.berkeley.gamesman.core;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import edu.berkeley.gamesman.util.LongIterator;
+import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 /**
@@ -93,8 +96,19 @@ public abstract class Database {
 		return this;
 	}
 
+	/**
+	 * Notifies the database that a thread has finished writing.
+	 * 
+	 * @param tier
+	 *            Which tier this task belongs to (if solving all tiers at once)
+	 * @param db
+	 *            The sub-database to which the chunk was written
+	 * @param recordStart
+	 *            The first record that will be written. Must be group-aligned.
+	 * @param recordEnd
+	 *            1 plus lastRecord
+	 */
 	public void endWrite(int tier, Database db, long recordStart, long recordEnd) {
-		// Hi
 	}
 
 	/**
@@ -690,6 +704,61 @@ public abstract class Database {
 	 *            The number of bytes to read
 	 */
 	public abstract void getBytes(byte[] arr, int off, int len);
+
+	public byte[][] getByteSets(long[] byteOffsets, int lengths) {
+		byte[][] byteSets = new byte[byteOffsets.length][lengths];
+		for (int i = 0; i < byteOffsets.length; i++) {
+			getBytes(byteOffsets[i], byteSets[i], 0, lengths);
+		}
+		return byteSets;
+	}
+
+	public long[] getLongRecordGroups(long[] byteOffsets) {
+		byte[][] groupBytes = getByteSets(byteOffsets,
+				conf.recordGroupByteLength);
+		long[] recordGroups = new long[byteOffsets.length];
+		for (int i = 0; i < byteOffsets.length; i++)
+			recordGroups[i] = RecordGroup.longRecordGroup(conf, groupBytes[i],
+					0);
+		return recordGroups;
+	}
+
+	public BigInteger[] getBigIntRecordGroups(long[] byteOffsets) {
+		byte[][] groupBytes = getByteSets(byteOffsets,
+				conf.recordGroupByteLength);
+		BigInteger[] recordGroups = new BigInteger[byteOffsets.length];
+		for (int i = 0; i < byteOffsets.length; i++)
+			recordGroups[i] = RecordGroup.bigIntRecordGroup(conf,
+					groupBytes[i], 0);
+		return recordGroups;
+	}
+
+	public Record[] getRecords(long[] hashes) {
+		int length = hashes.length;
+		long[] byteOffsets = new long[length];
+		int[] num = new int[length];
+		for (int i = 0; i < length; i++) {
+			byteOffsets[i] = hashes[i] / conf.recordsPerGroup
+					* conf.recordGroupByteLength;
+			num[i] = (int) (hashes[i] % conf.recordsPerGroup);
+		}
+		if (conf.recordGroupUsesLong) {
+			long[] underGroups = getLongRecordGroups(byteOffsets);
+			Record[] records = new Record[length];
+			for (int i = 0; i < length; i++)
+				records[i] = RecordGroup
+						.getRecord(conf, underGroups[i], num[i]);
+			return records;
+		} else {
+			BigInteger[] underGroups = getBigIntRecordGroups(byteOffsets);
+			Record[] records = new Record[length];
+			for (int i = 0; i < length; i++)
+				records[i] = RecordGroup
+						.getRecord(conf, underGroups[i], num[i]);
+			return records;
+		}
+
+	}
 
 	private final synchronized void ensureGroupsLength(int length) {
 		if (groups == null || groups.length < length)

@@ -4,25 +4,17 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.database.FileDatabase;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
-import org.apache.thrift.*;
-
 import edu.berkeley.gamesman.thrift.*;
 import edu.berkeley.gamesman.thrift.GamestateRequestHandler.Iface;
 
-
 import org.apache.thrift.TException;
 import org.apache.thrift.server.TServer;
-import org.apache.thrift.server.TSimpleServer;
 import org.apache.thrift.server.TThreadPoolServer;
 import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TServerTransport;
@@ -89,23 +81,24 @@ public class JSONInterface extends GamesmanApplication {
 		System.out.println("Server ready on port " + port + "!");
 
 		GamestateRequestServer handler = new GamestateRequestServer();
-		GamestateRequestHandler.Processor processor = new GamestateRequestHandler.Processor(handler);
-	
-	        TServerTransport serverTransport;
+		GamestateRequestHandler.Processor processor = new GamestateRequestHandler.Processor(
+				handler);
+
+		TServerTransport serverTransport;
 		try {
 			serverTransport = new TServerSocket(port);
 			TServer threaded = new TThreadPoolServer(processor, serverTransport);
-		    
-		    System.out.println("Starting the server...");
-		    threaded.serve();
-		    
+
+			System.out.println("Starting the server...");
+			threaded.serve();
+
 		} catch (TTransportException e) {
 			// TODO Auto-generated catch block
 			Util.fatalError("Could not start server on port " + port, e);
 			e.printStackTrace();
-			
-		}	    
-		
+
+		}
+
 	}
 
 	/*
@@ -143,11 +136,10 @@ public class JSONInterface extends GamesmanApplication {
 	}
 
 	Configuration newLoadDatabase(Map<String, String> params, String game) {
-		/*String game = params.get("game");
-		if (game == null) {
-			return null;
-		}*/
-		
+		/*
+		 * String game = params.get("game"); if (game == null) { return null; }
+		 */
+
 		String filename = sanitise(game);
 		String[] allowedFields = serverConf.getProperty("json.fields." + game,
 				"").split(",");
@@ -256,58 +248,59 @@ public class JSONInterface extends GamesmanApplication {
 			return null;
 		}
 	}
-	
+
 	private class GamestateRequestServer implements Iface {
-		
-		@Override
-		public GetNextMoveResponse getNextMoveValues(String game, String configuration) throws TException {
-			
+
+		public GetNextMoveResponse getNextMoveValues(String game,
+				String configuration) throws TException {
+
 			GetNextMoveResponse response = new GetNextMoveResponse();
 			Map<String, String> j = reconstructGameParams(configuration);
-					
+
 			System.out.println(j);
-			
-			response.setResponse(getNextMoveValues_core(game, j) );
+
+			response.setResponse(getNextMoveValues_core(game, j));
 			response.setStatus("ok");
-			
+
 			return response;
-			
+
 		}
-		
-		@Override
-	    	public GetMoveResponse getMoveValue(String game, String configuration) throws TException {
-			
+
+		public GetMoveResponse getMoveValue(String game, String configuration)
+				throws TException {
+
 			System.out.println("Got request");
 			System.out.println("Game: " + game);
 			System.out.println("Config: " + configuration);
 			GetMoveResponse response = new GetMoveResponse();
-			
+
 			Map<String, String> params = reconstructGameParams(configuration);
 
 			response.setResponse(getMoveValue_core(game, params));
 			response.setStatus("ok");
-			
+
 			return response;
-	    }
-		private <T> List<GamestateResponse> getNextMoveValues_core(String gamename, Map<String, String> params) throws TException {
-	    	
-	    	String board = params.get("board");
+		}
+
+		private <T> List<GamestateResponse> getNextMoveValues_core(
+				String gamename, Map<String, String> params) throws TException {
+
+			String board = params.get("board");
 			if (board == null) {
 				throw new TException("No board passed!");
 			}
-			
+
 			Configuration config = newLoadDatabase(params, gamename);
 			if (config == null) {
 				throw new TException("This game does not exist.");
 			}
 			// Database db = config.getDatabase();
-			Game<T> game  = Util.checkedCast(config.getGame());
-			
-			
-	    	T state = game.stringToState(board);
-		
-	    	List<GamestateResponse> responseArray = new LinkedList<GamestateResponse>();
-			
+			Game<T> game = Util.checkedCast(config.getGame());
+
+			T state = game.stringToState(board);
+
+			List<GamestateResponse> responseArray = new LinkedList<GamestateResponse>();
+
 			PrimitiveValue pv = game.primitiveValue(state);
 			if (game.getPlayerCount() <= 1 || pv == PrimitiveValue.UNDECIDED) {
 				// Game is not over yet...
@@ -319,44 +312,47 @@ public class JSONInterface extends GamesmanApplication {
 				}
 			}
 			return responseArray;
-	    
-	    }
-		public <T> GamestateResponse getMoveValue_core(String gamename, Map<String, String> params) throws TException {
-			
+
+		}
+
+		public <T> GamestateResponse getMoveValue_core(String gamename,
+				Map<String, String> params) throws TException {
+
 			GamestateResponse response;
-			
+
 			String board = params.get("board");
-			
+
 			if (board == null) {
 				System.out.println("No board passed!");
 				throw new TException("No board passed!");
 			}
-			
+
 			Configuration config = newLoadDatabase(params, gamename);
 			if (config == null) {
 				System.out.println("This game does not exist.");
 				throw new TException("This game does not exist.");
 			}
-			
+
 			// Database db = config.getDatabase();
-			Game<T> game  = Util.checkedCast(config.getGame());
-			
+			Game<T> game = Util.checkedCast(config.getGame());
+
 			T state = game.stringToState(board);
-			
+
 			response = fillResponseFields(config, state, false);
-			
+
 			return response;
 
 		}
-		
+
 		/**
-		 * Returns a Map containing the params and corresponding values from the configuration given
-		 * Ex: {"board": +++++++++}
+		 * Returns a Map containing the params and corresponding values from the
+		 * configuration given Ex: {"board": +++++++++}
+		 * 
 		 * @param configuration
 		 * @return
 		 */
-	    private Map<String, String> reconstructGameParams(String configuration) {
-	    	Map<String, String> j = new HashMap<String, String>();
+		private Map<String, String> reconstructGameParams(String configuration) {
+			Map<String, String> j = new HashMap<String, String>();
 			String line = configuration.replace(';', '&');
 			for (String param : line.split("&")) {
 				String[] key_val = param.split("=", 2);
@@ -364,17 +360,17 @@ public class JSONInterface extends GamesmanApplication {
 					continue;
 				}
 				try {
-					j.put(URLDecoder.decode(key_val[0], "utf-8"),
-							URLDecoder.decode(key_val[1], "utf-8"));
+					j.put(URLDecoder.decode(key_val[0], "utf-8"), URLDecoder
+							.decode(key_val[1], "utf-8"));
 				} catch (UnsupportedEncodingException e) {
 				}
 			}
 			return j;
-	    }	    
-	    
-	    private <T> GamestateResponse fillResponseFields(Configuration conf,
-				T state, boolean isChildState)  {
-	    	GamestateResponse request = new GamestateResponse();
+		}
+
+		private <T> GamestateResponse fillResponseFields(Configuration conf,
+				T state, boolean isChildState) {
+			GamestateResponse request = new GamestateResponse();
 			Collection<RecordFields> storedFields = conf.usedFields;
 			Database db = conf.db;
 			Record rec = null;
@@ -394,11 +390,11 @@ public class JSONInterface extends GamesmanApplication {
 						}
 						request.setValue(pv.name().toLowerCase());
 					} else {
-						if ( f == RecordFields.REMOTENESS) {
-							request.setRemoteness(rec.get(f) );
+						if (f == RecordFields.REMOTENESS) {
+							request.setRemoteness(rec.get(f));
 						}
-						if ( f == RecordFields.SCORE) {
-							request.setScore(rec.get(f) );
+						if (f == RecordFields.SCORE) {
+							request.setScore(rec.get(f));
 						}
 					}
 				}
@@ -412,7 +408,7 @@ public class JSONInterface extends GamesmanApplication {
 							pv = PrimitiveValue.WIN;
 					}
 					request.setValue(pv.name().toLowerCase());
-					
+
 				}
 				int score = g.primitiveScore(state);
 				if (score > 0) {
@@ -420,10 +416,10 @@ public class JSONInterface extends GamesmanApplication {
 				}
 			}
 			request.setBoard(g.stateToString(state));
-			
+
 			return request;
 		}
-		
+
 	}
-	
+
 }

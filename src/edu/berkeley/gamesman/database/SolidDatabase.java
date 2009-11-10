@@ -1,12 +1,9 @@
 package edu.berkeley.gamesman.database;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -59,13 +56,6 @@ public abstract class SolidDatabase extends Database {
 	protected abstract InputStream openInputStream(String uri) throws IOException;
 	protected abstract OutputStream openOutputStream(String uri) throws IOException;
 
-	private List<byte[]> initializeReadDatabase() throws IOException {
-		List<byte[]> readContents = new ArrayList<byte[]>();
-		if (true) {
-		}
-		return readContents;
-	}
-	
 	@Override
 	public void getBytes(byte[] arr, int off, int len) {
 		throw new UnsupportedOperationException("getBytes without position argument is not supported in SolidDatabase");
