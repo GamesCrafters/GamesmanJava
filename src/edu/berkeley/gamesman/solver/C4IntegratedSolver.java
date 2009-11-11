@@ -166,7 +166,13 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 					writeDb.putRecord(current, newVal);
 				else
 					writePage.putRecord(currentGroup, currentNum, newVal);
-			} else if (!pv.equals(PrimitiveValue.IMPOSSIBLE)) {
+			} else if (pv.equals(PrimitiveValue.IMPOSSIBLE)) {
+				prim.set(RecordFields.VALUE, PrimitiveValue.TIE.value());
+				if (directRead)
+					writeDb.putRecord(current, prim);
+				else
+					writePage.putRecord(currentGroup, currentNum, prim);
+			} else {
 				if (hasRemoteness)
 					prim.set(RecordFields.REMOTENESS, 0);
 				prim.set(RecordFields.VALUE, pv.value());

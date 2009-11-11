@@ -93,14 +93,6 @@ public final class Connect4 extends TieredIterGame {
 	}
 
 	@Override
-	public Connect4 clone() {
-		Connect4 other = new Connect4(conf);
-		if (iah != null)
-			other.setFromString(stateToString());
-		return other;
-	}
-
-	@Override
 	public String displayState() {
 		String s = stateToString();
 		StringBuffer str = new StringBuffer((gameWidth + 3) * gameHeight);
