@@ -15,10 +15,20 @@ import edu.berkeley.gamesman.util.Util;
 public class GZippedFileDatabase extends Database {
 	private File myFile;
 
+	private InputStream myStream;
+
+	private long currentPos;
+
 	private int confLength;
 
 	@Override
 	public void close() {
+		if (myStream != null)
+			try {
+				myStream.close();
+			} catch (IOException e) {
+				Util.fatalError("IO Error", e);
+			}
 	}
 
 	@Override
@@ -28,25 +38,15 @@ public class GZippedFileDatabase extends Database {
 
 	@Override
 	public void getBytes(byte[] arr, int off, int len) {
-		throw new UnsupportedOperationException();
-	}
-
-	public void getBytes(long loc, byte[] arr, int off, int len) {
-		InputStream fis;
-		try {
-			fis = new FileInputStream(myFile);
-			int toSkip = confLength + 4;
-			while (toSkip > 0)
-				toSkip -= fis.skip(toSkip);
-			fis = new GZIPInputStream(fis);
-			while (loc > 0)
-				loc -= fis.skip(loc);
-			while (len > 0)
-				len -= fis.read(arr, off, len);
-			fis.close();
-		} catch (IOException e) {
-			Util.fatalError("IO Error", e);
-		}
+		int bytesRead = 0;
+		while (bytesRead < len)
+			try {
+				bytesRead += myStream.read(arr, off + bytesRead, len
+						- bytesRead);
+			} catch (IOException e) {
+				Util.fatalError("IO Error", e);
+			}
+		currentPos += bytesRead;
 	}
 
 	@Override
@@ -111,6 +111,21 @@ public class GZippedFileDatabase extends Database {
 
 	@Override
 	public void seek(long loc) {
-		throw new UnsupportedOperationException();
+		try {
+			if (myStream == null || currentPos > loc) {
+				if (myStream != null)
+					myStream.close();
+				myStream = new FileInputStream(myFile);
+				int toSkip = confLength + 4;
+				while (toSkip > 0)
+					toSkip -= myStream.skip(toSkip);
+				currentPos = 0L;
+				myStream = new GZIPInputStream(myStream);
+			}
+			while (currentPos < loc)
+				currentPos += myStream.skip(loc - currentPos);
+		} catch (IOException e) {
+			Util.fatalError("IO Error", e);
+		}
 	}
 }
