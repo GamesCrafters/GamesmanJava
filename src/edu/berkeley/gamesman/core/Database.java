@@ -702,61 +702,6 @@ public abstract class Database {
 	 */
 	public abstract void getBytes(byte[] arr, int off, int len);
 
-	public byte[][] getByteSets(long[] byteOffsets, int lengths) {
-		byte[][] byteSets = new byte[byteOffsets.length][lengths];
-		for (int i = 0; i < byteOffsets.length; i++) {
-			getBytes(byteOffsets[i], byteSets[i], 0, lengths);
-		}
-		return byteSets;
-	}
-
-	public long[] getLongRecordGroups(long[] byteOffsets) {
-		byte[][] groupBytes = getByteSets(byteOffsets,
-				conf.recordGroupByteLength);
-		long[] recordGroups = new long[byteOffsets.length];
-		for (int i = 0; i < byteOffsets.length; i++)
-			recordGroups[i] = RecordGroup.longRecordGroup(conf, groupBytes[i],
-					0);
-		return recordGroups;
-	}
-
-	public BigInteger[] getBigIntRecordGroups(long[] byteOffsets) {
-		byte[][] groupBytes = getByteSets(byteOffsets,
-				conf.recordGroupByteLength);
-		BigInteger[] recordGroups = new BigInteger[byteOffsets.length];
-		for (int i = 0; i < byteOffsets.length; i++)
-			recordGroups[i] = RecordGroup.bigIntRecordGroup(conf,
-					groupBytes[i], 0);
-		return recordGroups;
-	}
-
-	public Record[] getRecords(long[] hashes) {
-		int length = hashes.length;
-		long[] byteOffsets = new long[length];
-		int[] num = new int[length];
-		for (int i = 0; i < length; i++) {
-			byteOffsets[i] = hashes[i] / conf.recordsPerGroup
-					* conf.recordGroupByteLength;
-			num[i] = (int) (hashes[i] % conf.recordsPerGroup);
-		}
-		if (conf.recordGroupUsesLong) {
-			long[] underGroups = getLongRecordGroups(byteOffsets);
-			Record[] records = new Record[length];
-			for (int i = 0; i < length; i++)
-				records[i] = RecordGroup
-						.getRecord(conf, underGroups[i], num[i]);
-			return records;
-		} else {
-			BigInteger[] underGroups = getBigIntRecordGroups(byteOffsets);
-			Record[] records = new Record[length];
-			for (int i = 0; i < length; i++)
-				records[i] = RecordGroup
-						.getRecord(conf, underGroups[i], num[i]);
-			return records;
-		}
-
-	}
-
 	private final synchronized void ensureGroupsLength(int length) {
 		if (groups == null || groups.length < length)
 			groups = new byte[length];

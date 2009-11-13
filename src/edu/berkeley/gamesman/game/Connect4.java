@@ -233,12 +233,12 @@ public final class Connect4 extends TieredIterGame {
 
 	@Override
 	public void setStartingPosition(int n) {
-		setNumPieces(0);
+		setTier(0);
 	}
 
 	@Override
 	public void setState(ItergameState pos) {
-		setNumPieces(pos.tier);
+		setTier(pos.tier);
 		long mult = iah.colorArrangements;
 		long hash = pos.hash;
 		setArrangement(hash / mult);
@@ -262,18 +262,18 @@ public final class Connect4 extends TieredIterGame {
 	}
 
 	@Override
-	public void setNumPieces(int numPieces) {
+	public void setTier(int tier) {
 		int pieceCount = 0;
 		for (int col = 0; col < gameWidth; col++) {
-			if (numPieces - pieceCount > gameHeight) {
+			if (tier - pieceCount > gameHeight) {
 				pieceCount += gameHeight;
 				colHeights[col] = gameHeight;
 			} else {
-				colHeights[col] = numPieces - pieceCount;
-				pieceCount = numPieces;
+				colHeights[col] = tier - pieceCount;
+				pieceCount = tier;
 			}
 		}
-		setToColHeights(numPieces);
+		setToColHeights(tier);
 	}
 
 	private void setToColHeights(int numPieces) {

@@ -74,36 +74,6 @@ public class GZippedFileDatabase extends Database {
 		}
 	}
 
-	public byte[][] getByteSets(long[] byteOffsets, int lengths) {
-		byte[][] byteSets = new byte[byteOffsets.length][lengths];
-		InputStream fis;
-		try {
-			fis = new FileInputStream(myFile);
-			int toSkip = confLength + 4;
-			while (toSkip > 0)
-				toSkip -= fis.skip(toSkip);
-			fis = new GZIPInputStream(fis);
-			long atByte = 0;
-			for (int i = 0; i < byteOffsets.length; i++) {
-				if (atByte > byteOffsets[i]) {
-					for (int n = 0; n < lengths; n++)
-						byteSets[i][n] = byteSets[i - 1][n];
-					continue;
-				}
-				while (atByte < byteOffsets[i])
-					atByte += fis.skip(byteOffsets[i] - atByte);
-				int lengthRead = 0;
-				while (lengthRead < lengths)
-					lengthRead += fis.read(byteSets[i]);
-				atByte += lengthRead;
-			}
-			fis.close();
-		} catch (IOException e) {
-			Util.fatalError("IO Error", e);
-		}
-		return byteSets;
-	}
-
 	@Override
 	public void putBytes(byte[] arr, int off, int len) {
 		throw new UnsupportedOperationException();

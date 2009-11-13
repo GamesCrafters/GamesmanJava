@@ -68,7 +68,7 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> {
 		if (hasNextHashInTier())
 			nextHashInTier();
 		else
-			setNumPieces(getTier() + 1);
+			setTier(getTier() + 1);
 	}
 
 	@Override
@@ -113,7 +113,7 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> {
 	 * @return The number of hashes in the tier
 	 */
 	public long numHashesForTier(int tier) {
-		setNumPieces(tier);
+		setTier(tier);
 		return numHashesForTier();
 	}
 
@@ -123,7 +123,7 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> {
 	 * @param tier
 	 *            The tier to set to.
 	 */
-	public abstract void setNumPieces(int tier);
+	public abstract void setTier(int tier);
 
 	/**
 	 * Pretty-print's the current position

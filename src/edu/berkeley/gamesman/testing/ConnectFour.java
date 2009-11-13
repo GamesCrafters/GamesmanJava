@@ -45,6 +45,8 @@ class ConnectFour implements MouseListener {
 
 	final int gameHeight;
 
+	private Record nextRecord = null;
+
 	/**
 	 * @param conf
 	 *            The configuration object
@@ -109,7 +111,12 @@ class ConnectFour implements MouseListener {
 		paintThread.start();
 		paintThread = new Thread(df);
 		cgame.setFromString(arrToString(board));
-		System.out.println(fd.getRecord(cgame.stateToHash(cgame.getState())));
+		if (nextRecord != null) {
+			System.out.println(nextRecord);
+			nextRecord = null;
+		} else
+			System.out.println(fd
+					.getRecord(cgame.stateToHash(cgame.getState())));
 		if (!win())
 			new Thread() {
 				public void run() {
@@ -133,10 +140,14 @@ class ConnectFour implements MouseListener {
 					moves.size());
 			listMoves.addAll(moves);
 			long[] moveHashes = new long[listMoves.size()];
+			Record[] records = new Record[listMoves.size()];
 			for (int i = 0; i < listMoves.size(); i++) {
-				moveHashes[i] = cgame.stateToHash(listMoves.get(i).cdr);
+				ItergameState state = listMoves.get(i).cdr;
+				moveHashes[i] = cgame.stateToHash(state);
+				if (cgame.getTier() != state.tier)
+					cgame.setTier(state.tier);
+				records[i] = fd.getRecord(moveHashes[i]);
 			}
-			Record[] records = fd.getRecords(moveHashes);
 			for (Record r : records)
 				r.previousPosition();
 			Record bestRecord = cgame.combine(records, 0, records.length);
@@ -146,7 +157,11 @@ class ConnectFour implements MouseListener {
 				if (records[i].equals(bestRecord))
 					bestMoves.add(listMoves.get(i));
 			}
-			makeMove(bestMoves.get(r.nextInt(bestMoves.size())).car.charAt(0) - '0');
+			Pair<String, ItergameState> chosenMove = bestMoves.get(r
+					.nextInt(bestMoves.size()));
+			nextRecord = bestRecord;
+			nextRecord.nextPosition();
+			makeMove(chosenMove.car.charAt(0) - '0');
 		}
 	}
 

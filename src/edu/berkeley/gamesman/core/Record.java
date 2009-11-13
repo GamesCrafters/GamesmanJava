@@ -171,4 +171,10 @@ public class Record {
 	public static int byteSize(Configuration conf) {
 		return 16 + (12 + conf.numFields() * 4 + 7) / 8 * 8;
 	}
+
+	public void nextPosition() {
+		set(RecordFields.VALUE, get().previousMovesValue().value());
+		if (conf.containsField(RecordFields.REMOTENESS))
+			set(RecordFields.REMOTENESS, get(RecordFields.REMOTENESS) - 1);
+	}
 }
