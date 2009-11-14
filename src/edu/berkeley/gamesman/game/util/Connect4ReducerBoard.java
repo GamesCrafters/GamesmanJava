@@ -19,26 +19,26 @@ public class Connect4ReducerBoard extends BitSetBoard {
 
 	@Override
 	protected boolean checkDirection(int x, int direction, long board) {
-		int absDir = Math.abs(direction);
-		int sign = direction > 0 ? 1 : -1;
-		int dist = absDir * x;
-		int checked = absDir;
+		int dist = direction * x;
+		int checked = direction;
 		while (checked << 1 < dist) {
-			if (sign > 0)
-				board &= (board << checked);
-			else
-				board &= (board >> checked);
+			board &= (board >> checked);
 			checked <<= 1;
 		}
 		int lastCheck = dist - checked;
-		if (sign > 0)
-			board &= (board << lastCheck);
-		else
-			board &= (board >> lastCheck);
+		board &= (board >> lastCheck);
 		if (board == 0)
 			return false;
 		else {
-			long sky = ~(xPlayerLong & oPlayerLong);
+			dist = direction * x;
+			checked = direction;
+			while (checked << 1 < dist) {
+				board |= (board << checked);
+				checked <<= 1;
+			}
+			lastCheck = dist - checked;
+			board |= (board << lastCheck);
+			long sky = ~(xPlayerLong | oPlayerLong);
 			board = (board << 1) & sky;
 			if (board == 0)
 				badPosition = true;
@@ -48,26 +48,26 @@ public class Connect4ReducerBoard extends BitSetBoard {
 
 	@Override
 	protected boolean checkDirection(int x, int direction, BigInteger board) {
-		int absDir = Math.abs(direction);
-		int sign = direction > 0 ? 1 : -1;
-		int dist = absDir * x;
-		int checked = absDir;
+		int dist = direction * x;
+		int checked = direction;
 		while (checked << 1 < dist) {
-			if (sign > 0)
-				board = board.and(board.shiftLeft(checked));
-			else
-				board = board.and(board.shiftRight(checked));
+			board = board.and(board.shiftRight(checked));
 			checked <<= 1;
 		}
 		int lastCheck = dist - checked;
-		if (sign > 0)
-			board = board.and(board.shiftLeft(lastCheck));
-		else
-			board = board.and(board.shiftRight(lastCheck));
+		board = board.and(board.shiftRight(lastCheck));
 		if (board.equals(BigInteger.ZERO))
 			return false;
 		else {
-			BigInteger sky = xPlayer.and(oPlayer).not();
+			dist = direction * x;
+			checked = direction;
+			while (checked << 1 < dist) {
+				board = board.or(board.shiftLeft(checked));
+				checked <<= 1;
+			}
+			lastCheck = dist - checked;
+			board = board.or(board.shiftLeft(lastCheck));
+			BigInteger sky = xPlayer.or(oPlayer).not();
 			board = (board.shiftLeft(1)).and(sky);
 			if (board.equals(BigInteger.ZERO))
 				badPosition = true;
@@ -79,47 +79,26 @@ public class Connect4ReducerBoard extends BitSetBoard {
 	public int xInALine(int x, char color) {
 		boolean isWin;
 		if (usesLong) {
-			long board = (color == 'X' ? xPlayerLong : oPlayerLong);
-			isWin = checkDirection(x, 1, board)
-					|| checkDirection(x, -height, board)
+			long board = (color == 'X' ? oPlayerLong : xPlayerLong);
+			if (checkDirection(x, 1, board) || checkDirection(x, height, board)
 					|| checkDirection(x, height + 1, board)
-					|| checkDirection(x, height + 2, board);
-			board = (color == 'X' ? oPlayerLong : xPlayerLong);
-			if (isWin) {
-				if (checkDirection(x, 1, board)
-						|| checkDirection(x, -height, board)
-						|| checkDirection(x, height + 1, board)
-						|| checkDirection(x, height + 2, board) || badPosition) {
-					badPosition = false;
-					return -1;
-				} else
-					return 1;
-			} else if (badPosition) {
+					|| checkDirection(x, height + 2, board)) {
 				badPosition = false;
 				return -1;
-			} else
-				return 0;
-		} else {
-			BigInteger board = (color == 'X' ? xPlayer : oPlayer);
-			isWin = checkDirection(x, 1, board)
-					|| checkDirection(x, -height, board)
-					|| checkDirection(x, height + 1, board)
-					|| checkDirection(x, height + 2, board);
-			board = (color == 'X' ? oPlayer : xPlayer);
-			if (isWin) {
-				if (checkDirection(x, 1, board)
-						|| checkDirection(x, -height, board)
-						|| checkDirection(x, height + 1, board)
-						|| checkDirection(x, height + 2, board) || badPosition) {
-					badPosition = false;
-					return -1;
-				} else
-					return 1;
-			} else if (badPosition) {
+			}
+			board = (color == 'X' ? xPlayerLong : oPlayerLong);
+			isWin = checkDirection(x, 1, board);
+			isWin = checkDirection(x, height, board) || isWin;
+			isWin = checkDirection(x, height + 1, board) || isWin;
+			isWin = checkDirection(x, height + 2, board) || isWin;
+			if (badPosition) {
 				badPosition = false;
 				return -1;
-			} else
+			} else if (isWin)
+				return 1;
+			else
 				return 0;
 		}
+		return 0;
 	}
 }
