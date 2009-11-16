@@ -63,6 +63,11 @@ public abstract class SolidDatabase extends Database {
 
 	@Override
 	public void getBytes(long loc, byte[] arr, int off, int len) {
+		/*
+		if (Math.random() < .01) {
+			Util.fatalError("Epic Fail", new IOException("Hadoop angry! Hadoop do not like you!"));
+		}
+		*/
 		byte[]decompressed = new byte[1000000];
 		long currentLoc = 0;
 		int decompressedOffset=0;

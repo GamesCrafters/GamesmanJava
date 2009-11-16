@@ -52,6 +52,10 @@ public class TierMap<S> implements
 	private JobConf jobconf;
 
 	private boolean initialized = false;
+	
+	volatile boolean failedSolve = false;
+	volatile IOException failedIOException = null;
+	Thread mainThread;
 
 	public void configure(JobConf conf) {
 		// Class<TieredGame<Object>> gc = null;
@@ -132,7 +136,7 @@ public class TierMap<S> implements
 		}
 	}
 
-	private void solve(long startHash, long endHash) {
+	private void solve(long startHash, long endHash) throws IOException {
 		int threads = config.getInteger("gamesman.threads", 1);
 		assert Util.debug(DebugFacility.HADOOP, "Launching " + threads
 				+ " threads for " + startHash + "-" + endHash);
@@ -140,7 +144,10 @@ public class TierMap<S> implements
 				endHash).divide(threads);
 
 		ArrayList<Thread> myThreads = new ArrayList<Thread>(threads);
+		failedSolve = false;
 
+		mainThread = Thread.currentThread();
+		
 		ThreadGroup solverGroup = new ThreadGroup("Solver Group: "
 				+ config.getGame());
 		for (WorkUnit w : list) {
@@ -149,12 +156,26 @@ public class TierMap<S> implements
 			myThreads.add(t);
 		}
 
-		for (Thread t : myThreads)
+		for (Thread t : myThreads) {
 			try {
 				t.join();
 			} catch (InterruptedException e) {
 				Util.warn("Interrupted while joined on thread " + t);
 			}
+			if (failedSolve) {
+				break;
+			}
+		}
+		if (failedSolve) {
+			IOException ioe = failedIOException;
+			for (Thread t2 : myThreads) {
+				t2.stop();
+			}
+			if (ioe != null) {
+				throw ioe;
+			}
+			throw new IOException("Failed to complete solve in one of the threads!");
+		}
 		assert Util.debug(DebugFacility.HADOOP, "Finished hadoop run");
 	}
 
@@ -183,8 +204,7 @@ public class TierMap<S> implements
 			long stopRecord) {
 		try {
 		FileSystem fs = FileSystem.get(jobconf);
-		System.out.println("Testing Output file at "+filename);
-		System.out.println("; "+FileOutputFormat.getWorkOutputPath(jobconf));
+		System.out.println("Testing Output file at "+filename+" ("+FileOutputFormat.getWorkOutputPath(jobconf)+")");
 		if (!fs.exists(new org.apache.hadoop.fs.Path(FileOutputFormat.getWorkOutputPath(jobconf), filename))) {
 			System.out.println("Fatal error: Output file at "+filename+" was never created!");
 			boolean reallyExists= fs.exists(new org.apache.hadoop.fs.Path(HadoopUtil.getTierPath(jobconf, config, tier), filename));
@@ -216,15 +236,22 @@ public class TierMap<S> implements
 					"HadoopMasterRunnable begin");
 			try {
 				w.conquer();
+				assert Util.debug(DebugFacility.HADOOP, "HadoopMasterRunnable end");
 			} catch (Exception ee) {
 				System.out.println("[TierMap] Exception in WorkUnit "+w);
 				ee.printStackTrace(System.out);
-			} catch (Util.FatalError fe) {
+				assert Util.debug(DebugFacility.HADOOP, "HadoopMasterRunnable error");
+				failedSolve = true;
+				mainThread.interrupt();
+			} catch (ThreadDeath td) {
+				throw td;
+			} catch (Throwable fe) {
 				System.out.println("[TierMap] FatalError in WorkUnit "+w);
 				fe.printStackTrace(System.out);
-				throw fe;
+				assert Util.debug(DebugFacility.HADOOP, "HadoopMasterRunnable error");
+				failedSolve = true;
+				mainThread.interrupt();
 			}
-			assert Util.debug(DebugFacility.HADOOP, "HadoopMasterRunnable end");
 		}
 	}
 

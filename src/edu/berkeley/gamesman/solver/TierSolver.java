@@ -184,6 +184,7 @@ public class TierSolver<T> extends Solver {
 			Pair<Long, Long> slice;
 			while ((slice = nextSlice(conf)) != null) {
 				thisSlice = slice;
+				Thread.currentThread().setName("Solving "+conf.getGame()+": "+slice.car+"-"+(slice.car+slice.cdr));
 				if (hadooping) {
 					try {
 						Database myWrite = writeDb.beginWrite(tier, slice.car,
