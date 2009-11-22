@@ -78,7 +78,8 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 			if (current % STEP_SIZE == 0)
 				t.calculated(STEP_SIZE);
 			PrimitiveValue pv = game.primitiveValue();
-			if (pv.equals(PrimitiveValue.UNDECIDED)) {
+			switch (pv) {
+			case UNDECIDED:
 				int len = game.validMoves(children);
 				Record r;
 				for (int i = 0; i < len; i++) {
@@ -166,13 +167,15 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 					writeDb.putRecord(current, newVal);
 				else
 					writePage.putRecord(currentGroup, currentNum, newVal);
-			} else if (pv.equals(PrimitiveValue.IMPOSSIBLE)) {
+				break;
+			case IMPOSSIBLE:
 				prim.set(RecordFields.VALUE, PrimitiveValue.TIE.value());
 				if (directRead)
 					writeDb.putRecord(current, prim);
 				else
 					writePage.putRecord(currentGroup, currentNum, prim);
-			} else {
+				break;
+			default:
 				if (hasRemoteness)
 					prim.set(RecordFields.REMOTENESS, 0);
 				prim.set(RecordFields.VALUE, pv.value());

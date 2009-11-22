@@ -31,7 +31,8 @@ public final class TierItergameSolver extends TierSolver<ItergameState> {
 			if (current % STEP_SIZE == 0)
 				t.calculated(STEP_SIZE);
 			PrimitiveValue pv = game.primitiveValue();
-			if (pv.equals(PrimitiveValue.UNDECIDED)) {
+			switch (pv) {
+			case UNDECIDED:
 				int len = game.validMoves(children);
 				Record r;
 				for (int i = 0; i < len; i++) {
@@ -41,7 +42,12 @@ public final class TierItergameSolver extends TierSolver<ItergameState> {
 				}
 				Record newVal = game.combine(vals, 0, len);
 				inWrite.putRecord(current, newVal);
-			} else {
+				break;
+			case IMPOSSIBLE:
+				prim.set(RecordFields.VALUE, PrimitiveValue.TIE.value());
+				inWrite.putRecord(current, prim);
+				break;
+			default:
 				if (hasRemoteness)
 					prim.set(RecordFields.REMOTENESS, 0);
 				prim.set(RecordFields.VALUE, pv.value());
