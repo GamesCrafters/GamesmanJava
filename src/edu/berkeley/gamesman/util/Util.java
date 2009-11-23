@@ -40,8 +40,8 @@ public final class Util {
 	 */
 	public static class FatalError extends Error {
 
-		FatalError(String s, Exception cause) {
-			super(s, cause);
+		FatalError(String s, Throwable throwable) {
+			super(s, throwable);
 		}
 
 		private static final long serialVersionUID = -5642903706572262719L;
@@ -101,16 +101,16 @@ public final class Util {
 	 * 
 	 * @param s
 	 *            The reason for failure
-	 * @param cause
+	 * @param throwable
 	 *            An exception that caused this fatal error
 	 */
-	public static void fatalError(String s, Exception cause) {
+	public static void fatalError(String s, Throwable throwable) {
 		System.err.println("FATAL: (" + Thread.currentThread().getName() + ") "
 				+ s);
-		System.err.println(cause.getMessage());
-		cause.printStackTrace(System.err);
+		System.err.println(throwable.getMessage());
+		throwable.printStackTrace(System.err);
 		try {
-			throw new FatalError(s, cause);
+			throw new FatalError(s, throwable);
 		} catch (FatalError e) {
 			e.printStackTrace(System.err);
 			throw e;

@@ -1,6 +1,8 @@
 package edu.berkeley.gamesman.util;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 public class QuickLinkedList<T> implements List<T>, Queue<T> {
@@ -16,7 +18,9 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 
 	private final QuickLinkedIterator internalIterator;
 
-	public QuickLinkedList(T[] objects) {
+	private final Constructor<T> constructor;
+
+	public QuickLinkedList(T[] objects, Constructor<T> constructor) {
 		nextList = new int[objects.length];
 		prevList = new int[objects.length];
 		nextNull = new int[objects.length];
@@ -29,6 +33,7 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 		}
 		nextNull[objects.length - 1] = -1;
 		internalIterator = listIterator();
+		this.constructor = constructor;
 	}
 
 	private boolean addBefore(int position) {
@@ -93,6 +98,24 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 		public void add(T e) {
 			addBefore(nextPosition);
 			objects[lastAdded] = e;
+		}
+
+		public T add() {
+			addBefore(nextPosition);
+			if (objects[lastAdded] == null)
+				try {
+					objects[lastAdded] = constructor.newInstance();
+				} catch (IllegalArgumentException e) {
+					Util.fatalError("Constructor must take no arguments", e);
+				} catch (InstantiationException e) {
+					Util.fatalError("Cannot Instantiate", e);
+				} catch (IllegalAccessException e) {
+					Util.fatalError("Constructor is not public", e);
+				} catch (InvocationTargetException e) {
+					Util.fatalError("Constructor threw an exception", e
+							.getTargetException());
+				}
+			return objects[lastAdded];
 		}
 
 		public boolean hasNext() {
