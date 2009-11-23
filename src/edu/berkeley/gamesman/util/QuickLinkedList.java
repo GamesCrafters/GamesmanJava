@@ -201,8 +201,8 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 		} else if (index == size) {
 			add(element);
 		} else {
-			ListIterator<T> iter = listIterator(index);
-			iter.add(element);
+			setNextIndex(internalIterator, index);
+			internalIterator.add(element);
 		}
 	}
 
@@ -222,9 +222,9 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 			return addAll(c);
 		else {
 			Iterator<? extends T> it = c.iterator();
-			ListIterator<T> myIter = listIterator(index);
+			setNextIndex(internalIterator, index);
 			while (it.hasNext())
-				myIter.add(it.next());
+				internalIterator.add(it.next());
 			return true;
 		}
 	}
@@ -330,9 +330,9 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 	}
 
 	public T remove(int index) {
-		ListIterator<T> iter = listIterator(index);
-		T retVal = iter.next();
-		iter.remove();
+		setNextIndex(internalIterator, index);
+		T retVal = internalIterator.next();
+		internalIterator.remove();
 		return retVal;
 	}
 
