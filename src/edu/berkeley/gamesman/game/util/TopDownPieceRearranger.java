@@ -8,10 +8,6 @@ public class TopDownPieceRearranger {
 		int hash, index, numOs;
 
 		char player;
-
-		public Piece() {
-
-		}
 	}
 
 	private int hash;
@@ -29,9 +25,9 @@ public class TopDownPieceRearranger {
 			myPieces = new QuickLinkedList<Piece>(pieceArray, Piece.class
 					.getConstructor());
 		} catch (SecurityException e) {
-			Util.fatalError("This shouldn't happen", e);
+			Util.fatalError("Cannot access constructor", e);
 		} catch (NoSuchMethodException e) {
-			Util.fatalError("This shouldn't happen", e);
+			Util.fatalError("No empty constructor", e);
 		}
 		pieces = myPieces;
 		pieceIterator = pieces.listIterator();

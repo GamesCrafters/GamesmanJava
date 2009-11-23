@@ -18,9 +18,29 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 
 	private final QuickLinkedIterator internalIterator;
 
-	private final Constructor<T> constructor;
+	private final Factory<T> factory;
 
-	public QuickLinkedList(T[] objects, Constructor<T> constructor) {
+	public QuickLinkedList(T[] objects, final Constructor<T> constructor) {
+		this(objects, new Factory<T>() {
+			public T newElement() {
+				try {
+					return constructor.newInstance();
+				} catch (IllegalArgumentException e) {
+					Util.fatalError("Must use an empty constructor", e);
+				} catch (InstantiationException e) {
+					Util.fatalError("Instantiation Error", e);
+				} catch (IllegalAccessException e) {
+					Util.fatalError("Constructor must be public", e);
+				} catch (InvocationTargetException e) {
+					Util.fatalError("Constructor threw an exception", e
+							.getTargetException());
+				}
+				return null;
+			}
+		});
+	}
+
+	public QuickLinkedList(T[] objects, Factory<T> factory) {
 		nextList = new int[objects.length];
 		prevList = new int[objects.length];
 		nextNull = new int[objects.length];
@@ -33,7 +53,7 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 		}
 		nextNull[objects.length - 1] = -1;
 		internalIterator = listIterator();
-		this.constructor = constructor;
+		this.factory = factory;
 	}
 
 	private boolean addBefore(int position) {
@@ -103,18 +123,7 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 		public T add() {
 			addBefore(nextPosition);
 			if (objects[lastAdded] == null)
-				try {
-					objects[lastAdded] = constructor.newInstance();
-				} catch (IllegalArgumentException e) {
-					Util.fatalError("Constructor must take no arguments", e);
-				} catch (InstantiationException e) {
-					Util.fatalError("Cannot Instantiate", e);
-				} catch (IllegalAccessException e) {
-					Util.fatalError("Constructor is not public", e);
-				} catch (InvocationTargetException e) {
-					Util.fatalError("Constructor threw an exception", e
-							.getTargetException());
-				}
+				objects[lastAdded] = factory.newElement();
 			return objects[lastAdded];
 		}
 
@@ -466,5 +475,12 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 				nextList[prevList[serial]] = serial;
 		}
 		++size;
+	}
+
+	public T add() {
+		addBefore(first);
+		if (objects[lastAdded] == null)
+			objects[lastAdded] = factory.newElement();
+		return objects[lastAdded];
 	}
 }
