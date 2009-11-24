@@ -1,8 +1,6 @@
 package edu.berkeley.gamesman.util;
 
 import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 public class QuickLinkedList<T> implements List<T>, Queue<T> {
@@ -19,26 +17,6 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 	private final QuickLinkedIterator internalIterator;
 
 	private final Factory<T> factory;
-
-	public QuickLinkedList(T[] objects, final Constructor<T> constructor) {
-		this(objects, new Factory<T>() {
-			public T newElement() {
-				try {
-					return constructor.newInstance();
-				} catch (IllegalArgumentException e) {
-					Util.fatalError("Must use an empty constructor", e);
-				} catch (InstantiationException e) {
-					Util.fatalError("Instantiation Error", e);
-				} catch (IllegalAccessException e) {
-					Util.fatalError("Constructor must be public", e);
-				} catch (InvocationTargetException e) {
-					Util.fatalError("Constructor threw an exception", e
-							.getTargetException());
-				}
-				return null;
-			}
-		});
-	}
 
 	public QuickLinkedList(T[] objects, Factory<T> factory) {
 		nextList = new int[objects.length];

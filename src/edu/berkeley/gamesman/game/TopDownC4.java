@@ -11,6 +11,7 @@ import edu.berkeley.gamesman.game.util.BitSetBoard;
 import edu.berkeley.gamesman.game.util.C4State;
 import edu.berkeley.gamesman.hasher.TDC4Hasher;
 import edu.berkeley.gamesman.util.ExpCoefs;
+import edu.berkeley.gamesman.util.Factory;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.QuickLinkedList;
 import edu.berkeley.gamesman.util.Util;
@@ -56,14 +57,11 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 		colHeights = new int[gameWidth];
 		Move[] moveArray = new Move[gameSize];
 		QuickLinkedList<Move> myMoves = null;
-		try {
-			myMoves = new QuickLinkedList<Move>(moveArray, Move.class
-					.getConstructor());
-		} catch (SecurityException e) {
-			Util.fatalError("Security error", e);
-		} catch (NoSuchMethodException e) {
-			Util.fatalError("This shouldn't happen", e);
-		}
+		myMoves = new QuickLinkedList<Move>(moveArray, new Factory<Move>() {
+			public Move newElement() {
+				return new Move();
+			}
+		});
 		moves = myMoves;
 		myState = new C4State(0, 0, 0);
 		for (int i = 0; i < gameWidth; i++)

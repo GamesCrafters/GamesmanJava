@@ -1,7 +1,7 @@
 package edu.berkeley.gamesman.game.util;
 
+import edu.berkeley.gamesman.util.Factory;
 import edu.berkeley.gamesman.util.QuickLinkedList;
-import edu.berkeley.gamesman.util.Util;
 
 public class TopDownPieceRearranger {
 	private static class Piece {
@@ -23,14 +23,11 @@ public class TopDownPieceRearranger {
 	public TopDownPieceRearranger(int numSpaces) {
 		Piece[] pieceArray = new Piece[numSpaces];
 		QuickLinkedList<Piece> myPieces = null;
-		try {
-			myPieces = new QuickLinkedList<Piece>(pieceArray, Piece.class
-					.getConstructor());
-		} catch (SecurityException e) {
-			Util.fatalError("Cannot access constructor", e);
-		} catch (NoSuchMethodException e) {
-			Util.fatalError("No empty constructor", e);
-		}
+		myPieces = new QuickLinkedList<Piece>(pieceArray, new Factory<Piece>() {
+			public Piece newElement() {
+				return new Piece();
+			}
+		});
 		pieces = myPieces;
 		pieceIterator = pieces.listIterator();
 		hash = 0;
