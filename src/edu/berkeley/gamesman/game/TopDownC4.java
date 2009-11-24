@@ -2,6 +2,7 @@ package edu.berkeley.gamesman.game;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedList;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;
@@ -17,9 +18,9 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 	private BitSetBoard bsb;
 
-	final int piecesToWin, gameWidth, gameHeight;
+	private final int piecesToWin;
 
-	public final int gameSize;
+	public final int gameWidth, gameHeight, gameSize;
 
 	private final int[] colHeights, lastMove;
 
@@ -27,9 +28,11 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 	private final TDC4Hasher hasher;
 
-	private int numPieces, openColumns;
+	private int openColumns;
 
 	private char turn;
+
+	private C4State myState;
 
 	public TopDownC4(Configuration conf) {
 		super(conf);
@@ -39,12 +42,14 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 		gameSize = gameWidth * gameHeight;
 		colHeights = new int[gameWidth];
 		lastMove = new int[gameSize];
-		numPieces = 0;
+		myState = new C4State(0, 0, 0);
 		openColumns = gameWidth;
 		for (int i = 0; i < gameWidth; i++)
 			colHeights[i] = 0;
 		ec = new ExpCoefs(gameHeight, gameWidth);
 		hasher = (TDC4Hasher) conf.getHasher();
+		bsb = new BitSetBoard(gameHeight, gameWidth);
+		turn = 'X';
 	}
 
 	@Override
@@ -55,14 +60,12 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 	@Override
 	public long getHash() {
-		// TODO Auto-generated method stub
-		return 0;
+		return hasher.hash(myState);
 	}
 
 	@Override
 	public C4State getState() {
-		// TODO Auto-generated method stub
-		return null;
+		return myState;
 	}
 
 	@Override
@@ -73,14 +76,12 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 	@Override
 	public int maxChildren() {
-		// TODO Auto-generated method stub
-		return 0;
+		return gameWidth;
 	}
 
 	@Override
 	public int maxMoves() {
-		// TODO Auto-generated method stub
-		return 0;
+		return gameSize;
 	}
 
 	@Override
@@ -89,7 +90,7 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 		case 1:
 			return PrimitiveValue.LOSE;
 		case 0:
-			if (numPieces == gameSize)
+			if (myState.numPieces == gameSize)
 				return PrimitiveValue.TIE;
 			else
 				return PrimitiveValue.WIN;
@@ -103,13 +104,12 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 	@Override
 	public void setToHash(long hash) {
-		// TODO Auto-generated method stub
-
+		setToState(hasher.unhash(hash));
 	}
 
 	@Override
 	public void setToState(C4State pos) {
-		setToHash(hasher.hash(pos));
+		// TODO Auto-generated method stub
 	}
 
 	@Override
@@ -126,14 +126,13 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 	@Override
 	public String describe() {
-		// TODO Auto-generated method stub
-		return null;
+		return "Top Down" + gameWidth + "x" + gameHeight + " Connect "
+				+ piecesToWin;
 	}
 
 	@Override
 	public long numHashes() {
-		// TODO Auto-generated method stub
-		return 0;
+		return hasher.numHashes();
 	}
 
 	@Override
@@ -145,14 +144,25 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 	@Override
 	public String displayState() {
-		// TODO Auto-generated method stub
-		return null;
+		return bsb.toString();
 	}
 
 	@Override
 	public Collection<Pair<String, C4State>> validMoves(C4State pos) {
-		// TODO write method
-		return null;
+		LinkedList<Pair<String, C4State>> moves = new LinkedList<Pair<String, C4State>>();
+		int col = gameWidth - 1;
+		while (colHeights[col] == gameHeight && col >= 0)
+			col--;
+		boolean made = makeMove();
+		while (made) {
+			moves.addFirst(new Pair<String, C4State>(Integer.toString(col),
+					getState().clone()));
+			col--;
+			while (colHeights[col] == gameHeight && col >= 0)
+				col--;
+			made = changeMove();
+		}
+		undoMove();
+		return moves;
 	}
-
 }

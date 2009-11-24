@@ -5,12 +5,14 @@ import edu.berkeley.gamesman.util.Util;
 
 public class TopDownPieceRearranger {
 	private static class Piece {
-		int hash, index, numOs;
+		long hash;
+
+		int index, numOs;
 
 		char player;
 	}
 
-	private int hash;
+	private long hash;
 
 	private final Piece afterPiece;
 
@@ -47,7 +49,7 @@ public class TopDownPieceRearranger {
 		for (int i = 0; i < stepsBack; i++) {
 			p = pieceIterator.previous();
 			++p.index;
-			int hashDiff;
+			long hashDiff;
 			if (move.player == 'O') {
 				++p.numOs;
 				hashDiff = p.hash * p.index / p.numOs - p.hash;
@@ -84,7 +86,7 @@ public class TopDownPieceRearranger {
 		Piece p = afterPiece;
 		for (int i = 0; i <= stepsBack; i++) {
 			++p.index;
-			int hashDiff;
+			long hashDiff;
 			if (player == 'O') {
 				++p.numOs;
 				hashDiff = p.hash * p.index / p.numOs - p.hash;
@@ -120,7 +122,7 @@ public class TopDownPieceRearranger {
 		Piece p = null;
 		while (pieceIterator.hasNext()) {
 			p = pieceIterator.next();
-			int hashDiff;
+			long hashDiff;
 			if (move.player == 'O') {
 				hashDiff = p.hash - p.hash * p.numOs / p.index;
 				--p.numOs;
