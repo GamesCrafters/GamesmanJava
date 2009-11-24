@@ -93,7 +93,6 @@ public class JSONInterface extends GamesmanApplication {
 			threaded.serve();
 
 		} catch (TTransportException e) {
-			// TODO Auto-generated catch block
 			Util.fatalError("Could not start server on port " + port, e);
 			e.printStackTrace();
 

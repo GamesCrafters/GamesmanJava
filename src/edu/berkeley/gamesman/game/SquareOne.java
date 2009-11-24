@@ -67,7 +67,6 @@ public class SquareOne extends Game<SquareOneState> {
 
 	@Override
 	public String displayState(SquareOneState pos) {
-		// TODO Auto-generated method stub
 		return stateToString(pos);
 	}
 

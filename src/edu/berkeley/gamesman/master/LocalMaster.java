@@ -54,8 +54,6 @@ public final class LocalMaster implements Master, TaskFactory {
 		}
 
 		conf = inconf;
-		// conf = new Configuration(game,hasher,EnumSet.of(RecordFields.Value));
-		// //TODO: have more than Value here
 
 		database.initialize(conf.getProperty("gamesman.db.uri"), inconf);
 

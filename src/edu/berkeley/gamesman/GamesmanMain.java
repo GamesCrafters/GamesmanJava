@@ -118,12 +118,6 @@ public final class GamesmanMain extends GamesmanApplication {
 			m.run();
 		}
 
-		//if (dohelp) {
-		//	System.out.println("Gamesman help stub, please fill this out!"); // TODO: help text
-		//	//OptionProcessor.help();
-		//	return;
-		//}
-
 		assert Util.debug(DebugFacility.CORE,"Finished run, tearing down...");
 		return 0;
 	}

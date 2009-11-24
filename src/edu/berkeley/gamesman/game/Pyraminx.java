@@ -39,7 +39,6 @@ public class Pyraminx extends Game<PyraminxState> {
 
 	@Override
 	public String displayState(PyraminxState pos) {
-		// TODO Auto-generated method stub
 		return stateToString(pos);
 	}
 
