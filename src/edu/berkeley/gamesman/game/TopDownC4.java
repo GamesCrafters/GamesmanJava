@@ -12,9 +12,20 @@ import edu.berkeley.gamesman.game.util.C4State;
 import edu.berkeley.gamesman.hasher.TDC4Hasher;
 import edu.berkeley.gamesman.util.ExpCoefs;
 import edu.berkeley.gamesman.util.Pair;
+import edu.berkeley.gamesman.util.QuickLinkedList;
 import edu.berkeley.gamesman.util.Util;
 
 public final class TopDownC4 extends TopDownMutaGame<C4State> {
+
+	private class Move {
+		final int[] openColumns;
+
+		int columnIndex;
+
+		public Move() {
+			openColumns = new int[gameWidth];
+		}
+	}
 
 	private BitSetBoard bsb;
 
@@ -22,11 +33,13 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 	public final int gameWidth, gameHeight, gameSize;
 
-	private final int[] colHeights, lastMove;
+	private final int[] colHeights;
 
 	public final ExpCoefs ec;
 
 	private final TDC4Hasher hasher;
+
+	private final QuickLinkedList<Move> moves;
 
 	private int openColumns;
 
@@ -41,9 +54,18 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 		gameHeight = conf.getInteger("gamesman.game.height", 4);
 		gameSize = gameWidth * gameHeight;
 		colHeights = new int[gameWidth];
-		lastMove = new int[gameSize];
+		Move[] moveArray = new Move[gameSize];
+		QuickLinkedList<Move> myMoves = null;
+		try {
+			myMoves = new QuickLinkedList<Move>(moveArray, Move.class
+					.getConstructor());
+		} catch (SecurityException e) {
+			Util.fatalError("Security error", e);
+		} catch (NoSuchMethodException e) {
+			Util.fatalError("This shouldn't happen", e);
+		}
+		moves = myMoves;
 		myState = new C4State(0, 0, 0);
-		openColumns = gameWidth;
 		for (int i = 0; i < gameWidth; i++)
 			colHeights[i] = 0;
 		ec = new ExpCoefs(gameHeight, gameWidth);
@@ -54,8 +76,18 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 	@Override
 	public boolean changeMove() {
-		// TODO Auto-generated method stub
-		return false;
+		Move myMove = moves.element();
+		if (myMove.columnIndex == 0)
+			return false;
+		int col = myMove.openColumns[myMove.columnIndex];
+		// TODO Remove piece (check all fields)
+		--myMove.columnIndex;
+		for (; col > myMove.openColumns[myMove.columnIndex]; --col) {
+			// TODO Alter hash appropriately (use formula for column height, not
+			// individual pieces)
+		}
+		// TODO Add piece (check all fields)
+		return true;
 	}
 
 	@Override
@@ -70,8 +102,21 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 	@Override
 	public boolean makeMove() {
-		// TODO Auto-generated method stub
-		return false;
+		Move newMove = moves.add();
+		int i = 0;
+		for (int col = 0; col < gameWidth; col++) {
+			if (colHeights[col] < gameHeight)
+				newMove.openColumns[i++] = col;
+		}
+		if (i == 0)
+			return false;
+		newMove.columnIndex = i - 1;
+		for (int col = gameWidth - 1; col > newMove.openColumns[newMove.columnIndex]; col--) {
+			// TODO Alter hash appropriately (use formula for column height, not
+			// individual pieces)
+		}
+		// TODO Add piece (remember to check all fields)
+		return true;
 	}
 
 	@Override
@@ -120,8 +165,11 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 	@Override
 	public void undoMove() {
-		// TODO Auto-generated method stub
-
+		int col = moves.remove().openColumns[0];
+		// TODO Remove piece (check all fields)
+		for (++col; col < gameWidth; ++col) {
+			// TODO Alter hash back
+		}
 	}
 
 	@Override
