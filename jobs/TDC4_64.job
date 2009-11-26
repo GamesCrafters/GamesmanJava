@@ -1,12 +1,12 @@
 gamesman.game = TopDownC4
-gamesman.game.width = 5
+gamesman.game.width = 6
 gamesman.game.height = 4
 gamesman.game.pieces = 4
 gamesman.hasher = TDC4Hasher
 gamesman.solver = TopDownMutaSolver
 gamesman.solver.directRead = true
 gamesman.database = MemoryCachedDatabase
-gamesman.db.uri = tddatabase54.db
+gamesman.db.uri = tddatabase64.db
 gamesman.db.compression = gzip
-record.fields = VALUE:4,REMOTENESS:20
+record.fields = VALUE,REMOTENESS
 gamesman.debug.THREADING = true

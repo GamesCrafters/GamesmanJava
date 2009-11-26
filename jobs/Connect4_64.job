@@ -9,4 +9,3 @@ gamesman.database = MemoryCachedDatabase
 gamesman.db.uri = database64.db
 gamesman.db.compression = gzip
 record.fields = VALUE,REMOTENESS
-record.compression = 90

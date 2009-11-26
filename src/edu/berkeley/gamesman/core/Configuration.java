@@ -60,6 +60,8 @@ public class Configuration {
 	 */
 	public final Properties props;
 
+	public boolean superCompress;
+
 	/**
 	 * Reads the key value pairs from the given job file into a Properties
 	 * object.
@@ -187,9 +189,15 @@ public class Configuration {
 		double requiredCompression = Double.parseDouble(getProperty(
 				"record.compression", "0")) / 100;
 		double compression;
-		if (requiredCompression == 0D)
+		if (requiredCompression == 0D) {
+			superCompress = false;
+			int bits = (int) (Math.log(totalStates) / Math.log(2));
+			if ((1 << bits) < totalStates)
+				++bits;
+			recordGroupByteLength = (bits + 7) >> 3;
 			recordsPerGroup = 1;
-		else {
+		} else {
+			superCompress = true;
 			int recordGuess;
 			int bitLength;
 			double log2;
@@ -215,16 +223,16 @@ public class Configuration {
 				}
 			}
 			recordsPerGroup = recordGuess;
+			multipliers = new BigInteger[recordsPerGroup + 1];
+			BigInteger multiplier = BigInteger.ONE;
+			bigIntTotalStates = BigInteger.valueOf(totalStates);
+			for (int i = 0; i <= recordsPerGroup; i++) {
+				multipliers[i] = multiplier;
+				multiplier = multiplier.multiply(bigIntTotalStates);
+			}
+			recordGroupByteLength = (bigIntTotalStates.pow(recordsPerGroup)
+					.bitLength() + 7) >> 3;
 		}
-		multipliers = new BigInteger[recordsPerGroup + 1];
-		BigInteger multiplier = BigInteger.ONE;
-		bigIntTotalStates = BigInteger.valueOf(totalStates);
-		for (int i = 0; i <= recordsPerGroup; i++) {
-			multipliers[i] = multiplier;
-			multiplier = multiplier.multiply(bigIntTotalStates);
-		}
-		recordGroupByteLength = (bigIntTotalStates.pow(recordsPerGroup)
-				.bitLength() + 7) >> 3;
 		if (recordGroupByteLength < 8) {
 			recordGroupUsesLong = true;
 			longMultipliers = new long[recordsPerGroup + 1];

@@ -23,15 +23,10 @@ import java.io.IOException;
 public class HDFSInputDatabase extends Database {
 
 	protected FileSystem fs;
+
 	protected Path myFile;
 
 	protected FSDataInputStream fd;
-
-	protected byte[] rawRecord;
-
-	protected byte[] groups;
-
-	protected int groupsLength;
 
 	protected long offset;
 
@@ -58,7 +53,7 @@ public class HDFSInputDatabase extends Database {
 	@Override
 	public void getBytes(long loc, byte[] arr, int off, int len) {
 		try {
-			fd.readFully(offset+loc, arr, off, len);
+			fd.readFully(offset + loc, arr, off, len);
 		} catch (IOException e) {
 			Util.fatalError("IO Error", e);
 		}
@@ -66,7 +61,8 @@ public class HDFSInputDatabase extends Database {
 
 	@Override
 	public void seek(long position) {
-		throw new UnsupportedOperationException("HDFSInputDatabase does not implement seek");
+		throw new UnsupportedOperationException(
+				"HDFSInputDatabase does not implement seek");
 	}
 
 	@Override
@@ -99,7 +95,6 @@ public class HDFSInputDatabase extends Database {
 				conf = Configuration.load(header);
 			}
 			offset = fd.getPos();
-			rawRecord = new byte[conf.recordGroupByteLength];
 		} catch (IOException e) {
 			e.printStackTrace();
 			Util.fatalError(e.toString());

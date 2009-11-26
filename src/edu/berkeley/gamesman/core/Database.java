@@ -116,15 +116,20 @@ public abstract class Database {
 	 * @return The stored Record
 	 */
 	public Record getRecord(long recordIndex) {
-		long group = recordIndex / conf.recordsPerGroup;
-		int num = (int) (recordIndex % conf.recordsPerGroup);
-		long byteOffset = group * conf.recordGroupByteLength;
-		if (conf.recordGroupUsesLong)
-			return RecordGroup.getRecord(conf, getLongRecordGroup(byteOffset),
-					num);
-		else
-			return RecordGroup.getRecord(conf,
-					getBigIntRecordGroup(byteOffset), num);
+		if (conf.superCompress) {
+			long group = recordIndex / conf.recordsPerGroup;
+			int num = (int) (recordIndex % conf.recordsPerGroup);
+			long byteOffset = group * conf.recordGroupByteLength;
+			if (conf.recordGroupUsesLong)
+				return RecordGroup.getRecord(conf,
+						getLongRecordGroup(byteOffset), num);
+			else
+				return RecordGroup.getRecord(conf,
+						getBigIntRecordGroup(byteOffset), num);
+		} else {
+			return RecordGroup.getRecord(conf, getLongRecordGroup(recordIndex
+					* conf.recordGroupByteLength), 0);
+		}
 	}
 
 	/**
@@ -136,14 +141,19 @@ public abstract class Database {
 	 *            The record to store in
 	 */
 	public void getRecord(long recordIndex, Record r) {
-		long group = recordIndex / conf.recordsPerGroup;
-		int num = (int) (recordIndex % conf.recordsPerGroup);
-		long byteOffset = group * conf.recordGroupByteLength;
-		if (conf.recordGroupUsesLong)
-			RecordGroup.getRecord(conf, getLongRecordGroup(byteOffset), num, r);
-		else
-			RecordGroup.getRecord(conf, getBigIntRecordGroup(byteOffset), num,
-					r);
+		if (conf.superCompress) {
+			long group = recordIndex / conf.recordsPerGroup;
+			int num = (int) (recordIndex % conf.recordsPerGroup);
+			long byteOffset = group * conf.recordGroupByteLength;
+			if (conf.recordGroupUsesLong)
+				RecordGroup.getRecord(conf, getLongRecordGroup(byteOffset),
+						num, r);
+			else
+				RecordGroup.getRecord(conf, getBigIntRecordGroup(byteOffset),
+						num, r);
+		} else
+			RecordGroup.getRecord(conf, getLongRecordGroup(recordIndex
+					* conf.recordGroupByteLength), 0, r);
 	}
 
 	/**
@@ -155,18 +165,24 @@ public abstract class Database {
 	 *         this database
 	 */
 	public Iterator<Record> getRecords(long recordIndex, int numRecords) {
-		long byteOffset = recordIndex / conf.recordsPerGroup
-				* conf.recordGroupByteLength;
-		int preRecords = (int) (recordIndex % conf.recordsPerGroup);
-		int recordGroups = (numRecords + preRecords - 1) / conf.recordsPerGroup
-				+ 1;
 		RecordIterator ri;
-		if (conf.recordGroupUsesLong)
-			ri = new RecordIterator(getLongRecordGroups(byteOffset,
-					recordGroups), preRecords, numRecords);
-		else
-			ri = new RecordIterator(getBigIntRecordGroups(byteOffset,
-					recordGroups), preRecords, numRecords);
+		if (conf.superCompress) {
+			long byteOffset = recordIndex / conf.recordsPerGroup
+					* conf.recordGroupByteLength;
+			int preRecords = (int) (recordIndex % conf.recordsPerGroup);
+			int recordGroups = (numRecords + preRecords - 1)
+					/ conf.recordsPerGroup + 1;
+			if (conf.recordGroupUsesLong)
+				ri = new RecordIterator(getLongRecordGroups(byteOffset,
+						recordGroups), preRecords, numRecords);
+			else
+				ri = new RecordIterator(getBigIntRecordGroups(byteOffset,
+						recordGroups), preRecords, numRecords);
+		} else {
+			long byteOffset = recordIndex * conf.recordGroupByteLength;
+			ri = new RecordIterator(
+					getLongRecordGroups(byteOffset, numRecords), 0, numRecords);
+		}
 		return ri;
 	}
 
@@ -179,18 +195,22 @@ public abstract class Database {
 	 *            The Record to store
 	 */
 	public void putRecord(long recordIndex, Record r) {
-		int num = (int) (recordIndex % conf.recordsPerGroup);
-		long byteOffset = recordIndex / conf.recordsPerGroup
-				* conf.recordGroupByteLength;
-		if (conf.recordGroupUsesLong) {
-			long rg = getLongRecordGroup(byteOffset);
-			rg = RecordGroup.setRecord(conf, rg, num, r);
-			putRecordGroup(byteOffset, rg);
-		} else {
-			BigInteger rg = getBigIntRecordGroup(byteOffset);
-			rg = RecordGroup.setRecord(conf, rg, num, r);
-			putRecordGroup(byteOffset, rg);
-		}
+		if (conf.superCompress) {
+			int num = (int) (recordIndex % conf.recordsPerGroup);
+			long byteOffset = recordIndex / conf.recordsPerGroup
+					* conf.recordGroupByteLength;
+			if (conf.recordGroupUsesLong) {
+				long rg = getLongRecordGroup(byteOffset);
+				rg = RecordGroup.setRecord(conf, rg, num, r);
+				putRecordGroup(byteOffset, rg);
+			} else {
+				BigInteger rg = getBigIntRecordGroup(byteOffset);
+				rg = RecordGroup.setRecord(conf, rg, num, r);
+				putRecordGroup(byteOffset, rg);
+			}
+		} else
+			putRecordGroup(recordIndex * conf.recordGroupByteLength, r
+					.getState());
 	}
 
 	/**
@@ -205,29 +225,35 @@ public abstract class Database {
 	 */
 	public void putRecords(long recordIndex, RecordIterator records,
 			int numRecords) {
-		int preRecords = conf.recordsPerGroup
-				- ((int) ((recordIndex - 1) % conf.recordsPerGroup) + 1);
-		int recordGroups = (numRecords - preRecords) / conf.recordsPerGroup;
-		int mainRecords = recordGroups * conf.recordsPerGroup;
-		int postRecords = (numRecords - preRecords) % conf.recordsPerGroup;
-		for (int i = 0; i < preRecords; i++) {
-			putRecord(recordIndex++, records.next());
-		}
-		if (conf.recordGroupUsesLong) {
-			LongRecordGroupIterator rgi = new LongRecordGroupIterator(records);
-			long groupByteOffset = recordIndex / conf.recordsPerGroup
-					* conf.recordGroupByteLength;
-			putRecordGroups(groupByteOffset, rgi, recordGroups);
+		if (conf.superCompress) {
+			int preRecords = conf.recordsPerGroup
+					- ((int) ((recordIndex - 1) % conf.recordsPerGroup) + 1);
+			int recordGroups = (numRecords - preRecords) / conf.recordsPerGroup;
+			int mainRecords = recordGroups * conf.recordsPerGroup;
+			int postRecords = (numRecords - preRecords) % conf.recordsPerGroup;
+			for (int i = 0; i < preRecords; i++) {
+				putRecord(recordIndex++, records.next());
+			}
+			if (conf.recordGroupUsesLong) {
+				LongRecordGroupIterator rgi = new LongRecordGroupIterator(
+						records);
+				long groupByteOffset = recordIndex / conf.recordsPerGroup
+						* conf.recordGroupByteLength;
+				putRecordGroups(groupByteOffset, rgi, recordGroups);
+			} else {
+				BigIntRecordGroupIterator rgi = new BigIntRecordGroupIterator(
+						records);
+				long groupByteOffset = recordIndex / conf.recordsPerGroup
+						* conf.recordGroupByteLength;
+				putRecordGroups(groupByteOffset, rgi, recordGroups);
+			}
+			recordIndex += mainRecords;
+			for (int i = 0; i < postRecords; i++) {
+				putRecord(recordIndex++, records.next());
+			}
 		} else {
-			BigIntRecordGroupIterator rgi = new BigIntRecordGroupIterator(
-					records);
-			long groupByteOffset = recordIndex / conf.recordsPerGroup
-					* conf.recordGroupByteLength;
-			putRecordGroups(groupByteOffset, rgi, recordGroups);
-		}
-		recordIndex += mainRecords;
-		for (int i = 0; i < postRecords; i++) {
-			putRecord(recordIndex++, records.next());
+			putRecordGroups(recordIndex * conf.recordGroupByteLength,
+					new LongRecordGroupIterator(records), numRecords);
 		}
 	}
 
@@ -562,30 +588,35 @@ public abstract class Database {
 	 */
 	public void putRecords(long recordIndex, Record[] records, int offset,
 			int numRecords) {
-		int preRecords = conf.recordsPerGroup
-				- ((int) ((recordIndex - 1) % conf.recordsPerGroup) + 1);
-		int recordGroups = (numRecords - preRecords) / conf.recordsPerGroup;
-		int mainRecords = recordGroups * conf.recordsPerGroup;
-		int postRecords = (numRecords - preRecords) % conf.recordsPerGroup;
-		for (int i = 0; i < preRecords; i++) {
-			putRecord(recordIndex++, records[offset++]);
-		}
-		long groupByteOffset = recordIndex / conf.recordsPerGroup
-				* conf.recordGroupByteLength;
-		if (conf.recordGroupUsesLong) {
-			LongRecordGroupIterator rgi = new LongRecordGroupIterator(records,
-					offset, numRecords);
-			putRecordGroups(groupByteOffset, rgi, recordGroups);
-		} else {
-			BigIntRecordGroupIterator rgi = new BigIntRecordGroupIterator(
-					records, offset, numRecords);
-			putRecordGroups(groupByteOffset, rgi, recordGroups);
-		}
-		recordIndex += mainRecords;
-		offset += mainRecords;
-		for (int i = 0; i < postRecords; i++) {
-			putRecord(recordIndex++, records[offset++]);
-		}
+		if (conf.superCompress) {
+			int preRecords = conf.recordsPerGroup
+					- ((int) ((recordIndex - 1) % conf.recordsPerGroup) + 1);
+			int recordGroups = (numRecords - preRecords) / conf.recordsPerGroup;
+			int mainRecords = recordGroups * conf.recordsPerGroup;
+			int postRecords = (numRecords - preRecords) % conf.recordsPerGroup;
+			for (int i = 0; i < preRecords; i++) {
+				putRecord(recordIndex++, records[offset++]);
+			}
+			long groupByteOffset = recordIndex / conf.recordsPerGroup
+					* conf.recordGroupByteLength;
+			if (conf.recordGroupUsesLong) {
+				LongRecordGroupIterator rgi = new LongRecordGroupIterator(
+						records, offset, numRecords);
+				putRecordGroups(groupByteOffset, rgi, recordGroups);
+			} else {
+				BigIntRecordGroupIterator rgi = new BigIntRecordGroupIterator(
+						records, offset, numRecords);
+				putRecordGroups(groupByteOffset, rgi, recordGroups);
+			}
+			recordIndex += mainRecords;
+			offset += mainRecords;
+			for (int i = 0; i < postRecords; i++) {
+				putRecord(recordIndex++, records[offset++]);
+			}
+		} else
+			putRecordGroups(recordIndex * conf.recordGroupByteLength,
+					new LongRecordGroupIterator(records, offset, numRecords),
+					numRecords);
 	}
 
 	/**
