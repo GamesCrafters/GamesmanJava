@@ -1,18 +1,8 @@
 package edu.berkeley.gamesman.solver;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
-import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Game;
-import edu.berkeley.gamesman.core.PrimitiveValue;
-import edu.berkeley.gamesman.core.Record;
-import edu.berkeley.gamesman.core.RecordFields;
-import edu.berkeley.gamesman.core.Solver;
-import edu.berkeley.gamesman.core.WorkUnit;
+import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
@@ -88,8 +78,7 @@ public class TopDownSolver<T> extends Solver {
 					Record r;
 
 					r = readDb.getRecord(loc);
-					if (r.get(RecordFields.VALUE) == PrimitiveValue.UNDECIDED
-							.value()) {
+					if (r.value == PrimitiveValue.UNDECIDED) {
 						assert Util.debug(DebugFacility.SOLVER,
 								"Not seen child state "
 										+ game.stateToString(child.cdr)
@@ -118,10 +107,10 @@ public class TopDownSolver<T> extends Solver {
 							"Getting primitive value for state "
 									+ game.stateToString(state) + ": " + prim);
 					next = game.newRecord(prim);
-					next.set(RecordFields.SCORE, game.primitiveScore(state));
+					next.score = game.primitiveScore(state);
 				} else {
 					next = game.combine(recs);
-					int remoteness = (int) next.get(RecordFields.REMOTENESS);
+					int remoteness = (int) next.remoteness;
 					if (remoteness > maxRemoteness) {
 						System.out.println("Found remoteness: " + remoteness);
 						maxRemoteness = remoteness;

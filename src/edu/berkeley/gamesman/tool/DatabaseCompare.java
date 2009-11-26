@@ -1,13 +1,6 @@
 package edu.berkeley.gamesman.tool;
 
-import java.util.EnumSet;
-import java.util.Set;
-
-import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Database;
-import edu.berkeley.gamesman.core.Game;
-import edu.berkeley.gamesman.core.Record;
-import edu.berkeley.gamesman.core.RecordFields;
+import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -39,6 +32,10 @@ public class DatabaseCompare<S> {
 		c1 = db1.getConfiguration();
 		c2 = db2.getConfiguration();
 
+		boolean bothContainValue = c1.valueStates > 0 && c2.valueStates > 0, bothContainRemoteness = c1.remotenessStates > 0
+				&& c2.remotenessStates > 0, bothContainScore = c1.scoreStates > 0
+				&& c2.scoreStates > 0;
+
 		Game<S> g1 = Util.checkedCast(c1.getGame());
 		Game<S> g2 = Util.checkedCast(c2.getGame());
 
@@ -46,19 +43,21 @@ public class DatabaseCompare<S> {
 				.numHashes(); hash1++) {
 			long hash2 = g2.stateToHash(g1.hashToState(hash1));
 
-			Set<RecordFields> toCheck = EnumSet.copyOf(c1.usedFields);
-			toCheck.retainAll(c2.usedFields);
-
 			Record r1 = db1.getRecord(hash1);
 			Record r2 = db2.getRecord(hash2);
 
-			for (RecordFields rf : toCheck) {
-				if (r1.get(rf) != r2.get(rf)) {
-					Util.fatalError("Database does not match at position\n"
-							+ g1.displayState(g1.hashToState(hash1)) + "\n"
-							+ rf + " " + r1.get(rf) + " != " + r2.get(rf));
-				}
-			}
+			if (bothContainValue && r1.value != r2.value)
+				Util.fatalError("Database does not match at position\n"
+						+ g1.displayState(g1.hashToState(hash1)) + "\n" + r1
+						+ " != " + r2);
+			if (bothContainRemoteness && r1.remoteness != r2.remoteness)
+				Util.fatalError("Database does not match at position\n"
+						+ g1.displayState(g1.hashToState(hash1)) + "\n" + r1
+						+ " != " + r2);
+			if (bothContainValue && r1.score != r2.score)
+				Util.fatalError("Database does not match at position\n"
+						+ g1.displayState(g1.hashToState(hash1)) + "\n" + r1
+						+ " != " + r2);
 		}
 	}
 

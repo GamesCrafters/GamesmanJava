@@ -8,17 +8,27 @@ package edu.berkeley.gamesman.core;
 public class Record {
 	private final Configuration conf;
 
-	private final int[] values;
+	public PrimitiveValue value;
+
+	public int remoteness;
+
+	public int score;
 
 	protected Record(Configuration conf, long state) {
 		this.conf = conf;
-		values = new int[conf.numFields()];
-		long remainingState = state;
-		int i = 0;
-		for (RecordFields rf : conf.usedFields) {
-			int val = conf.getFieldStates(rf);
-			this.values[i++] = (int) (remainingState % val);
-			remainingState /= val;
+		int fieldStates = 1;
+		if (conf.valueStates > 0) {
+			fieldStates = conf.valueStates;
+			value = PrimitiveValue.values[(int) (state % fieldStates)];
+		}
+		if (conf.remotenessStates > 0) {
+			state /= fieldStates;
+			fieldStates = conf.remotenessStates;
+			remoteness = (int) (state % fieldStates);
+		}
+		if (conf.scoreStates > 0) {
+			state /= fieldStates;
+			score = (int) state;
 		}
 	}
 
@@ -31,14 +41,7 @@ public class Record {
 	 */
 	protected Record(Configuration conf, PrimitiveValue pVal) {
 		this.conf = conf;
-		this.values = new int[conf.numFields()];
-		int i = 0;
-		for (RecordFields rf : conf.usedFields) {
-			if (rf.equals(RecordFields.VALUE))
-				this.values[i++] = pVal.value();
-			else
-				this.values[i++] = 0;
-		}
+		value = pVal;
 	}
 
 	/**
@@ -49,17 +52,6 @@ public class Record {
 	 */
 	protected Record(Configuration conf) {
 		this.conf = conf;
-		values = new int[conf.numFields()];
-	}
-
-	/**
-	 * @param field
-	 *            The field to change
-	 * @param value
-	 *            The new value of the field
-	 */
-	public void set(RecordFields field, int value) {
-		values[conf.getFieldIndex(field)] = value;
 	}
 
 	/**
@@ -69,37 +61,31 @@ public class Record {
 	 *            Another record
 	 */
 	public void set(Record record) {
-		for (int i = 0; i < values.length; i++)
-			values[i] = record.values[i];
-	}
-
-	/**
-	 * @param rf
-	 *            The type of one block of information
-	 * @return The information encoded as a long
-	 */
-	public int get(RecordFields rf) {
-		return values[conf.getFieldIndex(rf)];
-	}
-
-	/**
-	 * @return The primitive value of this position
-	 */
-	public PrimitiveValue get() {
-		return PrimitiveValue.values[get(RecordFields.VALUE)];
+		value = record.value;
+		remoteness = record.remoteness;
+		score = record.score;
 	}
 
 	/**
 	 * @return The integer value of this record
 	 */
 	public long getState() {
-		long currentState = 0;
-		long multiplier = 1;
-		for (int i = 0; i < values.length; i++) {
-			currentState += values[i] * multiplier;
-			multiplier *= conf.storedFields[i];
+		int fieldStates = 1;
+		long totalState = 0;
+		if (conf.scoreStates > 0) {
+			totalState += score;
+			fieldStates = conf.scoreStates;
 		}
-		return currentState;
+		if (conf.remotenessStates > 0) {
+			totalState *= fieldStates;
+			totalState += remoteness;
+			fieldStates = conf.remotenessStates;
+		}
+		if (conf.valueStates > 0) {
+			totalState *= fieldStates;
+			totalState += value.value;
+		}
+		return totalState;
 	}
 
 	/**
@@ -107,39 +93,41 @@ public class Record {
 	 * the score. You must do that yourself.
 	 */
 	public void previousPosition() {
-		set(RecordFields.VALUE, get().previousMovesValue().value());
-		if (conf.containsField(RecordFields.REMOTENESS))
-			set(RecordFields.REMOTENESS, get(RecordFields.REMOTENESS) + 1);
+		if (conf.valueStates > 0)
+			value = value.flipValue();
+		if (conf.remotenessStates > 0)
+			++remoteness;
 	}
 
 	@Override
 	public boolean equals(Object r) {
 		if (r instanceof Record) {
 			Record rec = (Record) r;
-			for (int i = 0; i < values.length; i++)
-				if (rec.values[i] != values[i])
-					return false;
-			return true;
+			return (conf.valueStates == 0 || value == rec.value)
+					&& (conf.remotenessStates == 0 || remoteness == rec.remoteness)
+					&& (conf.scoreStates == 0 || score == rec.score);
 		} else
 			return false;
 	}
 
 	@Override
 	public String toString() {
-		String s = PrimitiveValue.values[values[conf
-				.getFieldIndex(RecordFields.VALUE)]].name();
-		if (conf.containsField(RecordFields.REMOTENESS))
-			return s + " in "
-					+ values[conf.getFieldIndex(RecordFields.REMOTENESS)];
+		String s;
+		if (conf.valueStates > 0)
+			s = value.name();
+		else
+			s = "Finish";
+		if (conf.remotenessStates > 0)
+			return s + " in " + remoteness;
 		else
 			return s;
 	}
 
 	private Record(Record record) {
 		this.conf = record.conf;
-		this.values = new int[conf.numFields()];
-		for (int i = 0; i < values.length; i++)
-			values[i] = record.values[i];
+		value = record.value;
+		remoteness = record.remoteness;
+		score = record.score;
 	}
 
 	@Override
@@ -154,11 +142,19 @@ public class Record {
 	 *            The state to derive the fields from
 	 */
 	public void set(long state) {
-		long remainingState = state;
-		for (int i = 0; i < values.length; i++) {
-			int val = conf.storedFields[i];
-			values[i] = (int) (remainingState % val);
-			remainingState /= val;
+		int fieldStates = 1;
+		if (conf.valueStates > 0) {
+			fieldStates = conf.valueStates;
+			value = PrimitiveValue.values[(int) (state % fieldStates)];
+		}
+		if (conf.remotenessStates > 0) {
+			state /= fieldStates;
+			fieldStates = conf.remotenessStates;
+			remoteness = (int) (state % fieldStates);
+		}
+		if (conf.scoreStates > 0) {
+			state /= fieldStates;
+			score = (int) state;
 		}
 	}
 
@@ -169,12 +165,11 @@ public class Record {
 	 *         configuration object
 	 */
 	public static int byteSize(Configuration conf) {
-		return 16 + (12 + conf.numFields() * 4 + 7) / 8 * 8;
+		return 24;
 	}
 
 	public void nextPosition() {
-		set(RecordFields.VALUE, get().previousMovesValue().value());
-		if (conf.containsField(RecordFields.REMOTENESS))
-			set(RecordFields.REMOTENESS, get(RecordFields.REMOTENESS) - 1);
+		value = value.flipValue();
+		--remoteness;
 	}
 }

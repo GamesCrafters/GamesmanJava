@@ -6,17 +6,8 @@ import java.util.List;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
-import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Game;
-import edu.berkeley.gamesman.core.PrimitiveValue;
-import edu.berkeley.gamesman.core.Record;
-import edu.berkeley.gamesman.core.RecordFields;
-import edu.berkeley.gamesman.core.Solver;
-import edu.berkeley.gamesman.core.WorkUnit;
-import edu.berkeley.gamesman.util.DebugFacility;
-import edu.berkeley.gamesman.util.Pair;
-import edu.berkeley.gamesman.util.Task;
-import edu.berkeley.gamesman.util.Util;
+import edu.berkeley.gamesman.core.*;
+import edu.berkeley.gamesman.util.*;
 
 /**
  * A solver designed with puzzles in mind that will do a breadth first search
@@ -94,8 +85,8 @@ public class BreadthFirstSolver<T> extends Solver {
 				numPositionsInLevel = 0;
 				for (long hash = firstHash; hash < lastHashPlusOne - 1; hash++) {
 					rec = readDb.getRecord(hash);
-					if (rec.get() != PrimitiveValue.UNDECIDED
-							&& rec.get(RecordFields.REMOTENESS) == remoteness) {
+					if (rec.value != PrimitiveValue.UNDECIDED
+							&& rec.remoteness == remoteness) {
 						// System.out.println("Found! "+hash+"="+rec);
 						for (Pair<String, T> child : game.validMoves(game
 								.hashToState(hash))) {
@@ -104,11 +95,9 @@ public class BreadthFirstSolver<T> extends Solver {
 								continue;
 							}
 							childrec = readDb.getRecord(childhash);
-							if (childrec.get() == PrimitiveValue.UNDECIDED) {
-								childrec.set(RecordFields.VALUE, rec.get()
-										.value());
-								childrec.set(RecordFields.REMOTENESS,
-										remoteness + 1);
+							if (childrec.value == PrimitiveValue.UNDECIDED) {
+								childrec.value = rec.value;
+								childrec.remoteness = remoteness + 1;
 								// System.out.println("Setting child "+childhash+"="+childrec);
 								writeDb.putRecord(childhash, childrec);
 								numPositionsInLevel++;
@@ -156,9 +145,9 @@ public class BreadthFirstSolver<T> extends Solver {
 					// it is possible that some of our children are duplicates
 					// so to count numPositionsOne correctly, we ignore those
 					// duplicates
-					if (readDb.getRecord(childhash).get() == PrimitiveValue.UNDECIDED) {
+					if (readDb.getRecord(childhash).value == PrimitiveValue.UNDECIDED) {
 						Record childrec = game.newRecord(win);
-						childrec.set(RecordFields.REMOTENESS, 1);
+						childrec.remoteness = 1;
 						writeDb.putRecord(childhash, childrec);
 						numPositionsOne++;
 					}

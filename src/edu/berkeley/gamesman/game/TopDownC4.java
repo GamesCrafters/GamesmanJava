@@ -4,11 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 
-import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.PrimitiveValue;
-import edu.berkeley.gamesman.core.Record;
-import edu.berkeley.gamesman.core.RecordFields;
-import edu.berkeley.gamesman.core.TopDownMutaGame;
+import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.game.util.BitSetBoard;
 import edu.berkeley.gamesman.game.util.C4State;
 import edu.berkeley.gamesman.game.util.TopDownPieceRearranger;
@@ -316,37 +312,37 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 		@Override
 		public long getState() {
-			if (conf.containsField(RecordFields.REMOTENESS)) {
-				PrimitiveValue val = get();
+			if (conf.remotenessStates > 0) {
+				PrimitiveValue val = value;
 				if (val.equals(PrimitiveValue.TIE)) {
 					return gameSize + 1;
 				} else if (val.equals(PrimitiveValue.UNDECIDED)) {
 					return gameSize + 2;
 				} else {
-					return get(RecordFields.REMOTENESS);
+					return remoteness;
 				}
 			} else {
-				return get(RecordFields.VALUE);
+				return value.value;
 			}
 		}
 
 		@Override
 		public void set(long state) {
-			if (conf.containsField(RecordFields.REMOTENESS)) {
+			if (conf.remotenessStates > 0) {
 				if (state == gameSize + 1) {
-					set(RecordFields.VALUE, PrimitiveValue.TIE.value());
-					set(RecordFields.REMOTENESS, gameSize - myState.numPieces);
+					value = PrimitiveValue.TIE;
+					remoteness = gameSize - myState.numPieces;
 				} else if (state == gameSize + 2) {
-					set(RecordFields.VALUE, PrimitiveValue.UNDECIDED.value());
+					value = PrimitiveValue.UNDECIDED;
 				} else if ((state & 1L) > 0) {
-					set(RecordFields.VALUE, PrimitiveValue.WIN.value());
-					set(RecordFields.REMOTENESS, (int) state);
+					value = PrimitiveValue.WIN;
+					remoteness = (int) state;
 				} else {
-					set(RecordFields.VALUE, PrimitiveValue.LOSE.value());
-					set(RecordFields.REMOTENESS, (int) state);
+					value = PrimitiveValue.LOSE;
+					remoteness = (int) state;
 				}
 			} else {
-				set(RecordFields.VALUE, (int) state);
+				value = PrimitiveValue.values[(int) state];
 			}
 		}
 	}
@@ -373,20 +369,6 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 	@Override
 	public long recordStates() {
 		return gameSize + 3;
-	}
-
-	@Override
-	public int defaultNumberOfStates(RecordFields rf) {
-		switch (rf) {
-		case VALUE:
-			return 4;
-		case REMOTENESS:
-			return gameSize + 1;
-		default:
-			Util.fatalError("The record field " + rf
-					+ " is not used in Connect 4");
-			return 0;
-		}
 	}
 
 	@Override

@@ -563,33 +563,33 @@ public final class Connect4 extends TieredIterGame {
 
 		@Override
 		public long getState() {
-			if (conf.containsField(RecordFields.REMOTENESS)) {
-				PrimitiveValue val = get();
+			if (conf.remotenessStates > 0) {
+				PrimitiveValue val = value;
 				if (val.equals(PrimitiveValue.TIE)) {
 					return gameSize + 1;
 				} else {
-					return get(RecordFields.REMOTENESS);
+					return remoteness;
 				}
 			} else {
-				return get(RecordFields.VALUE);
+				return value.value;
 			}
 		}
 
 		@Override
 		public void set(long state) {
-			if (conf.containsField(RecordFields.REMOTENESS)) {
+			if (conf.remotenessStates > 0) {
 				if (state == gameSize + 1) {
-					set(RecordFields.VALUE, PrimitiveValue.TIE.value());
-					set(RecordFields.REMOTENESS, gameSize - pieces.size());
+					value = PrimitiveValue.TIE;
+					remoteness = gameSize - pieces.size();
 				} else if ((state & 1L) > 0) {
-					set(RecordFields.VALUE, PrimitiveValue.WIN.value());
-					set(RecordFields.REMOTENESS, (int) state);
+					value = PrimitiveValue.WIN;
+					remoteness = (int) state;
 				} else {
-					set(RecordFields.VALUE, PrimitiveValue.LOSE.value());
-					set(RecordFields.REMOTENESS, (int) state);
+					value = PrimitiveValue.LOSE;
+					remoteness = (int) state;
 				}
 			} else {
-				set(RecordFields.VALUE, (int) state);
+				value = PrimitiveValue.values[(int) state];
 			}
 		}
 	}
@@ -612,19 +612,5 @@ public final class Connect4 extends TieredIterGame {
 	@Override
 	public long recordStates() {
 		return gameSize + 2;
-	}
-
-	@Override
-	public int defaultNumberOfStates(RecordFields rf) {
-		switch (rf) {
-		case VALUE:
-			return 3;
-		case REMOTENESS:
-			return gameSize + 1;
-		default:
-			Util.fatalError("The record field " + rf
-					+ " is not used in Connect 4");
-			return 0;
-		}
 	}
 }

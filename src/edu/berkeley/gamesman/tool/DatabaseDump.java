@@ -22,7 +22,6 @@ import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
-import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -152,8 +151,8 @@ public class DatabaseDump extends GamesmanApplication {
 			long maxRemoteness = 0;
 			long numHashes = gm.numHashes();
 			for (long i = 0; i < numHashes; i++)
-				maxRemoteness = Math.max(maxRemoteness, db.getRecord(i).get(
-						RecordFields.REMOTENESS));
+				maxRemoteness = Math.max(maxRemoteness,
+						db.getRecord(i).remoteness);
 
 			for (long remoteness = maxRemoteness; remoteness > 0; remoteness--)
 				w.print(remoteness + " -> ");
@@ -202,7 +201,7 @@ public class DatabaseDump extends GamesmanApplication {
 		Util.assertTrue((seen == null) == (fringe == null),
 				"seen and fringe must both be null or not null!");
 
-		long remoteness = db.getRecord(parentHash).get(RecordFields.REMOTENESS);
+		long remoteness = db.getRecord(parentHash).remoteness;
 		ArrayList<Long> arr = levels.get(remoteness);
 		if (arr == null) {
 			arr = new ArrayList<Long>();
@@ -214,7 +213,7 @@ public class DatabaseDump extends GamesmanApplication {
 
 		TreeMap<String, String> attrs = new TreeMap<String, String>();
 		Record rec = db.getRecord(parentHash);
-		PrimitiveValue v = rec.get();
+		PrimitiveValue v = rec.value;
 		attrs.put("label", String.format("< %s <br/>%s<br/>%s >", Long
 				.toString(parentHash), gm.displayHTML(parent), rec.toString()));
 

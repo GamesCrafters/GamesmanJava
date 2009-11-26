@@ -1,12 +1,6 @@
 package edu.berkeley.gamesman.solver;
 
-import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Database;
-import edu.berkeley.gamesman.core.ItergameState;
-import edu.berkeley.gamesman.core.PrimitiveValue;
-import edu.berkeley.gamesman.core.Record;
-import edu.berkeley.gamesman.core.RecordFields;
-import edu.berkeley.gamesman.core.TieredIterGame;
+import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -24,7 +18,6 @@ public final class TierItergameSolver extends TierSolver<ItergameState> {
 			vals[i] = game.newRecord();
 		Record prim = game.newRecord();
 		ItergameState[] children = new ItergameState[game.maxChildren()];
-		boolean hasRemoteness = conf.containsField(RecordFields.REMOTENESS);
 		for (int i = 0; i < children.length; i++)
 			children[i] = new ItergameState();
 		for (long count = 0L; count < hashes; count++) {
@@ -44,13 +37,13 @@ public final class TierItergameSolver extends TierSolver<ItergameState> {
 				inWrite.putRecord(current, newVal);
 				break;
 			case IMPOSSIBLE:
-				prim.set(RecordFields.VALUE, PrimitiveValue.TIE.value());
+				prim.value = PrimitiveValue.TIE;
 				inWrite.putRecord(current, prim);
 				break;
 			default:
-				if (hasRemoteness)
-					prim.set(RecordFields.REMOTENESS, 0);
-				prim.set(RecordFields.VALUE, pv.value());
+				if (conf.remotenessStates > 0)
+					prim.remoteness = 0;
+				prim.value = pv;
 				inRead.putRecord(current, prim);
 			}
 			if (count < hashes - 1)

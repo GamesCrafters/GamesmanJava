@@ -1,22 +1,9 @@
 package edu.berkeley.gamesman.core;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
+import java.io.*;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.LinkedList;
 import java.util.Properties;
 import java.util.Set;
-import java.util.Map.Entry;
 
 import edu.berkeley.gamesman.util.Util;
 import edu.berkeley.gamesman.util.biginteger.BigInteger;
@@ -33,18 +20,6 @@ public class Configuration {
 	private Game<?> g;
 
 	private Hasher<?> h;
-
-	// storedFields stores a mapping of RecordFields to an integer.
-	// The integer is the number of possible values of the field
-	protected int[] storedFields;
-
-	private final int[] fieldIndices = new int[RecordFields.values().length];
-
-	/**
-	 * A list of all the RecordFields used in this configuration (in the same
-	 * order as stored fields)
-	 */
-	public final LinkedList<RecordFields> usedFields = new LinkedList<RecordFields>();
 
 	/**
 	 * 
@@ -66,6 +41,8 @@ public class Configuration {
 	 * The number of bytes in a RecordGroup
 	 */
 	public int recordGroupByteLength;
+
+	public int valueStates, remotenessStates, scoreStates;
 
 	/**
 	 * Whether the record group size is small enough to fit in a long. If this
@@ -146,25 +123,34 @@ public class Configuration {
 	// To specify the size, use ':' followed by the number of possible
 	// states
 	private void initializeStoredFields() {
-		String fields = getProperty("record.fields", RecordFields.VALUE.name()
-				+ "," + RecordFields.REMOTENESS.name());
-		RecordFields field;
+		String fields = getProperty("record.fields", "VALUE,REMOTENESS");
 		int states;
 		String[] splitFields = fields.split(",");
-		usedFields.clear();
-		storedFields = new int[splitFields.length];
-		for (int i = 0; i < fieldIndices.length; i++)
-			fieldIndices[i] = -1;
+		valueStates = 0;
+		remotenessStates = 0;
+		scoreStates = 0;
 		for (int i = 0; i < splitFields.length; i++) {
 			String[] splt = splitFields[i].split(":");
-			field = RecordFields.valueOf(splt[0]);
 			if (splt.length > 1)
 				states = Integer.parseInt(splt[1]);
 			else
-				states = g.defaultNumberOfStates(field);
-			usedFields.add(field);
-			storedFields[i] = states;
-			fieldIndices[field.ordinal()] = i;
+				states = 0;
+			if (splt[0].trim().equalsIgnoreCase("VALUE")) {
+				if (states == 0)
+					valueStates = 4;
+				else
+					valueStates = states;
+			} else if (splt[0].trim().equalsIgnoreCase("REMOTENESS")) {
+				if (states == 0)
+					remotenessStates = 2 << 6;
+				else
+					remotenessStates = states;
+			} else if (splt[0].trim().equalsIgnoreCase("SCORE")) {
+				if (states == 0)
+					scoreStates = 2 << 4;
+				else
+					scoreStates = states;
+			}
 		}
 	}
 
@@ -304,29 +290,6 @@ public class Configuration {
 	}
 
 	/**
-	 * Specify which fields are to be saved by the database Each Field maps to
-	 * an integer representing the number of possible values for that field
-	 * 
-	 * @param fields
-	 *            EnumMap as described above
-	 */
-	public void setStoredFields(EnumMap<RecordFields, Integer> fields) {
-		storedFields = new int[fields.size()];
-		usedFields.clear();
-		int i;
-		for (i = 0; i < fieldIndices.length; i++) {
-			fieldIndices[i] = -1;
-		}
-		i = 0;
-		for (Entry<RecordFields, Integer> e : fields.entrySet()) {
-			fieldIndices[e.getKey().ordinal()] = i;
-			storedFields[i] = e.getValue();
-			usedFields.add(e.getKey());
-			i++;
-		}
-	}
-
-	/**
 	 * Unserialize a configuration from a bytestream
 	 * 
 	 * @param barr
@@ -350,23 +313,12 @@ public class Configuration {
 			// assert Util.debug(DebugFacility.CORE, "Deserialized
 			// properties:\n"+props);
 
-			EnumMap<RecordFields, Integer> sf = new EnumMap<RecordFields, Integer>(
-					RecordFields.class);
-
 			String gamename = instream.readUTF();
 			String hashername = instream.readUTF();
 
-			int num = instream.readInt();
-
-			// assert Util.debug(DebugFacility.CORE, "Expecting "+num+" stored
-			// fields");
-
-			for (int i = 0; i < num; i++) {
-				String name = instream.readUTF();
-				// assert Util.debug(DebugFacility.CORE," Found field "+name);
-				sf.put(RecordFields.valueOf(name), (int) instream.readLong());
-			}
-			conf.setStoredFields(sf);
+			conf.valueStates = instream.readInt();
+			conf.remotenessStates = instream.readInt();
+			conf.scoreStates = instream.readInt();
 
 			try {
 				conf.g = Util.typedInstantiateArg(gamename, Game.class, conf);
@@ -417,12 +369,9 @@ public class Configuration {
 			out.writeUTF(g.getClass().getCanonicalName());
 			out.writeUTF(h.getClass().getCanonicalName());
 
-			out.writeInt(storedFields.length);
-
-			for (RecordFields rf : usedFields) {
-				out.writeUTF(rf.name());
-				out.writeLong(getFieldStates(rf));
-			}
+			out.writeInt(valueStates);
+			out.writeInt(remotenessStates);
+			out.writeInt(scoreStates);
 
 			out.close();
 
@@ -450,8 +399,7 @@ public class Configuration {
 	}
 
 	public String toString() {
-		return "Config[" + props + "," + g + "," + h + ","
-				+ Arrays.toString(storedFields) + "]";
+		return "Config[" + props + "," + g + "," + h + "]";
 	}
 
 	/**
@@ -709,40 +657,6 @@ public class Configuration {
 		}
 		db.initialize(getProperty("gamesman.db.uri"), this);
 		return db;
-	}
-
-	/**
-	 * @param rf
-	 *            The field
-	 * @return Whether or not this record configuration contains rf
-	 */
-	public boolean containsField(RecordFields rf) {
-		return fieldIndices[rf.ordinal()] >= 0;
-	}
-
-	/**
-	 * @param rf
-	 *            The field
-	 * @return The number of possible states for rf
-	 */
-	public int getFieldStates(RecordFields rf) {
-		return storedFields[getFieldIndex(rf)];
-	}
-
-	/**
-	 * @param rf
-	 *            The field
-	 * @return The index in a record array that corresponds to rf
-	 */
-	public int getFieldIndex(RecordFields rf) {
-		return fieldIndices[rf.ordinal()];
-	}
-
-	/**
-	 * @return The number of fields this configuration contains
-	 */
-	public int numFields() {
-		return storedFields.length;
 	}
 
 	/**

@@ -370,7 +370,6 @@ public class JSONInterface extends GamesmanApplication {
 		private <T> GamestateResponse fillResponseFields(Configuration conf,
 				T state, boolean isChildState) {
 			GamestateResponse request = new GamestateResponse();
-			Collection<RecordFields> storedFields = conf.usedFields;
 			Database db = conf.db;
 			Record rec = null;
 			Game<T> g = Util.checkedCast(conf.getGame());
@@ -378,24 +377,21 @@ public class JSONInterface extends GamesmanApplication {
 				rec = db.getRecord(g.stateToHash(state));
 			}
 			if (rec != null) {
-				for (RecordFields f : storedFields) {
-					if (f == RecordFields.VALUE) {
-						PrimitiveValue pv = rec.get();
-						if (g.getPlayerCount() > 1 && isChildState) {
-							if (pv == PrimitiveValue.WIN)
-								pv = PrimitiveValue.LOSE;
-							else if (pv == PrimitiveValue.LOSE)
-								pv = PrimitiveValue.WIN;
-						}
-						request.setValue(pv.name().toLowerCase());
-					} else {
-						if (f == RecordFields.REMOTENESS) {
-							request.setRemoteness(rec.get(f));
-						}
-						if (f == RecordFields.SCORE) {
-							request.setScore(rec.get(f));
-						}
+				if (conf.valueStates > 0) {
+					PrimitiveValue pv = rec.value;
+					if (g.getPlayerCount() > 1 && isChildState) {
+						if (pv == PrimitiveValue.WIN)
+							pv = PrimitiveValue.LOSE;
+						else if (pv == PrimitiveValue.LOSE)
+							pv = PrimitiveValue.WIN;
 					}
+					request.setValue(pv.name().toLowerCase());
+				}
+				if (conf.remotenessStates > 0) {
+					request.setRemoteness(rec.remoteness);
+				}
+				if (conf.scoreStates > 0) {
+					request.setScore(rec.score);
 				}
 			} else {
 				PrimitiveValue pv = g.primitiveValue(state);

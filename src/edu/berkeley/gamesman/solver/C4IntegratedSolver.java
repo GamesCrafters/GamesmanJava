@@ -34,7 +34,7 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 		SequentialPage writePage = null;
 		long currentGroup = 0L;
 		int currentNum = 0;
-		boolean hasRemoteness = conf.containsField(RecordFields.REMOTENESS);
+		boolean hasRemoteness = conf.remotenessStates > 0;
 		if (!directRead) {
 			currentGroup = current / conf.recordsPerGroup;
 			currentNum = (int) (current % conf.recordsPerGroup);
@@ -169,7 +169,7 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 					writePage.putRecord(currentGroup, currentNum, newVal);
 				break;
 			case IMPOSSIBLE:
-				prim.set(RecordFields.VALUE, PrimitiveValue.TIE.value());
+				prim.value = PrimitiveValue.TIE;
 				if (directRead)
 					writeDb.putRecord(current, prim);
 				else
@@ -177,8 +177,8 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 				break;
 			default:
 				if (hasRemoteness)
-					prim.set(RecordFields.REMOTENESS, 0);
-				prim.set(RecordFields.VALUE, pv.value());
+					prim.remoteness = 0;
+				prim.value = pv;
 				if (directRead)
 					writeDb.putRecord(current, prim);
 				else

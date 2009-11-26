@@ -68,7 +68,7 @@ public class TierSolver<T> extends Solver {
 				inWrite.putRecord(current, newVal);
 			} else {
 				Record prim = game.newRecord();
-				prim.set(RecordFields.VALUE, pv.value());
+				prim.value = pv;
 				assert Util.debug(DebugFacility.SOLVER,
 						"Primitive value for state " + current + " is " + prim);
 				inWrite.putRecord(current, prim);
@@ -132,7 +132,10 @@ public class TierSolver<T> extends Solver {
 							}
 						}
 					} catch (InterruptedException e) {
-						Util.fatalError("TierSolver thread was interrupted while waiting!", e);
+						Util
+								.fatalError(
+										"TierSolver thread was interrupted while waiting!",
+										e);
 					} catch (BrokenBarrierException e) {
 						Util.fatalError("Barrier Broken", e);
 					}
@@ -144,20 +147,23 @@ public class TierSolver<T> extends Solver {
 						return null;
 					}
 					Pair<Long, Long> slice = new Pair<Long, Long>(
-							starts[count],
-							starts[count + 1] - starts[count]);
+							starts[count], starts[count + 1] - starts[count]);
 					if (count < starts.length - 2) {
 						++count;
 					} else {
 						count = 0;
 						needs2Sync = true;
 					}
-					assert Util.debug(DebugFacility.THREADING,
-						"Beginning to solve slice "
-								+ slice.car + "-" + (slice.car + slice.cdr)
-								+ " for count "
-								+ (needs2Sync ? (starts.length-2) : (count-1))
-								+ " in tier " + tier);
+					assert Util
+							.debug(DebugFacility.THREADING,
+									"Beginning to solve slice "
+											+ slice.car
+											+ "-"
+											+ (slice.car + slice.cdr)
+											+ " for count "
+											+ (needs2Sync ? (starts.length - 2)
+													: (count - 1))
+											+ " in tier " + tier);
 					return slice;
 				}
 			}
@@ -169,6 +175,7 @@ public class TierSolver<T> extends Solver {
 		private int index;
 
 		Configuration conf;
+
 		Pair<Long, Long> thisSlice;
 
 		TierSolverWorkUnit(Configuration conf) {
@@ -184,15 +191,17 @@ public class TierSolver<T> extends Solver {
 			Pair<Long, Long> slice;
 			while ((slice = nextSlice(conf)) != null) {
 				thisSlice = slice;
-				Thread.currentThread().setName("Solving "+conf.getGame()+": "+slice.car+"-"+(slice.car+slice.cdr));
+				Thread.currentThread().setName(
+						"Solving " + conf.getGame() + ": " + slice.car + "-"
+								+ (slice.car + slice.cdr));
 				if (hadooping) {
 					try {
 						Database myWrite = writeDb.beginWrite(tier, slice.car,
-							slice.car + slice.cdr);
+								slice.car + slice.cdr);
 						solvePartialTier(conf, slice.car, slice.cdr, updater,
-							readDb, myWrite);
-						writeDb.endWrite(tier, myWrite, slice.car,
-							slice.car + slice.cdr);
+								readDb, myWrite);
+						writeDb.endWrite(tier, myWrite, slice.car, slice.car
+								+ slice.cdr);
 					} catch (Util.FatalError e) {
 						e.printStackTrace(System.out);
 						throw e;
@@ -228,9 +237,9 @@ public class TierSolver<T> extends Solver {
 
 		@Override
 		public String toString() {
-			String str = "WorkUnit "+index+"; slice is ";
+			String str = "WorkUnit " + index + "; slice is ";
 			if (thisSlice != null) {
-				str += "["+thisSlice.car+"-"+thisSlice.cdr+"]";
+				str += "[" + thisSlice.car + "-" + thisSlice.cdr + "]";
 			} else {
 				str += "null";
 			}
@@ -292,27 +301,30 @@ public class TierSolver<T> extends Solver {
 			split = 1;
 		}
 		if (minRecordsInSplit > 0) {
-			if ((endHash-startHash)/split < minRecordsInSplit) {
-				System.out.println("Too few records "+((endHash-startHash)/split)+
-					" in "+split+" splits for tier "+tier);;
-				split = (int)((endHash-startHash)/minRecordsInSplit);
+			if ((endHash - startHash) / split < minRecordsInSplit) {
+				System.out.println("Too few records "
+						+ ((endHash - startHash) / split) + " in " + split
+						+ " splits for tier " + tier);
+				;
+				split = (int) ((endHash - startHash) / minRecordsInSplit);
 				if (split <= 0) {
 					split = 1;
 				}
-				System.out.println("Setting to "+split+" splits ("+
-					((endHash-startHash)/split)+")");
+				System.out.println("Setting to " + split + " splits ("
+						+ ((endHash - startHash) / split) + ")");
 			}
 		}
 		if (maxRecordsInSplit > 0) {
-			if ((endHash-startHash)/split > maxRecordsInSplit) {
-				System.out.println("Too many records "+((endHash-startHash)/split)+
-					" in "+split+" splits for tier "+tier);
-				split = (int)((endHash-startHash)/maxRecordsInSplit);
+			if ((endHash - startHash) / split > maxRecordsInSplit) {
+				System.out.println("Too many records "
+						+ ((endHash - startHash) / split) + " in " + split
+						+ " splits for tier " + tier);
+				split = (int) ((endHash - startHash) / maxRecordsInSplit);
 				if (split <= 0) {
 					split = 1;
 				}
-				System.out.println("Setting to "+split+" splits ("+
-					((endHash-startHash)/split)+")");
+				System.out.println("Setting to " + split + " splits ("
+						+ ((endHash - startHash) / split) + ")");
 			}
 		}
 		starts = Util.groupAlignedTasks(split, startHash, endHash - startHash,

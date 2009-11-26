@@ -10,25 +10,22 @@ import edu.berkeley.gamesman.util.biginteger.BigInteger;
 public class TopDownMutaSolver<State> extends Solver {
 	private boolean containsRemoteness;
 
-	private QuickLinkedList<Record> recordList;
-
-	private final Record[] tempRecords;
-
-	public TopDownMutaSolver() {
-		tempRecords = new Record[2];
-	}
+	private QuickLinkedList<Record[]> recordList;
 
 	public void initialize(Configuration conf) {
 		super.initialize(conf);
 		final TopDownMutaGame<State> game = Util.checkedCast(conf.getGame());
-		Record[] recArray = new Record[game.maxMoves() + 1];
-		recordList = new QuickLinkedList<Record>(recArray,
-				new Factory<Record>() {
-					public Record newElement() {
-						return game.newRecord();
+		Record[][] recArray = new Record[game.maxMoves() + 1][];
+		recordList = new QuickLinkedList<Record[]>(recArray,
+				new Factory<Record[]>() {
+					public Record[] newElement() {
+						Record[] retVal = new Record[game.maxChildren()];
+						for (int i = 0; i < retVal.length; i++)
+							retVal[i] = game.newRecord();
+						return retVal;
 					}
 				});
-		containsRemoteness = conf.containsField(RecordFields.REMOTENESS);
+		containsRemoteness = conf.remotenessStates > 0;
 	}
 
 	@Override
@@ -97,11 +94,10 @@ public class TopDownMutaSolver<State> extends Solver {
 		for (State s : game.startingPositions()) {
 			game.setToState(s);
 			long currentTimeMillis = System.currentTimeMillis();
-			solve(game, recordList.addFirst(), 0);
+			solve(game, game.newRecord(), 0);
 			System.out.println(Util.millisToETA(System.currentTimeMillis()
 					- currentTimeMillis)
 					+ " time to complete");
-			recordList.remove();
 		}
 	}
 
@@ -110,28 +106,24 @@ public class TopDownMutaSolver<State> extends Solver {
 			assert Util.debug(DebugFacility.SOLVER, game.toString());
 		long hash = game.getHash();
 		readDb.getRecord(hash, value);
-		if (value.get() != PrimitiveValue.UNDECIDED)
+		if (value.value != PrimitiveValue.UNDECIDED)
 			return;
 		PrimitiveValue pv = game.primitiveValue();
 		switch (pv) {
 		case UNDECIDED:
-			Record best = recordList.addFirst();
+			Record[] recs = recordList.addFirst();
 			boolean made = game.makeMove();
-			boolean isFirst = true;
+			int i = 0;
 			while (made) {
 				solve(game, value, depth + 1);
-				if (isFirst) {
-					best.set(value);
-					isFirst = false;
-				} else {
-					tempRecords[0] = best;
-					tempRecords[1] = value;
-					best = game.combine(tempRecords, 0, 2);
-				}
+				recs[i].set(value);
+				recs[i].previousPosition();
+				++i;
 				made = game.changeMove();
 			}
-			if (!isFirst)
+			if (i > 0)
 				game.undoMove();
+			Record best = game.combine(recs, 0, i);
 			value.set(best);
 			recordList.remove();
 			break;
@@ -139,10 +131,10 @@ public class TopDownMutaSolver<State> extends Solver {
 			Util
 					.fatalError("Top-down solve should not reach impossible positions");
 		default:
-			value.set(RecordFields.VALUE, pv.value());
+			value.value = pv;
 			if (containsRemoteness)
-				value.set(RecordFields.REMOTENESS, 0);
+				value.remoteness = 0;
 		}
-		writeDb.putRecord(game.getHash(), value);
+		writeDb.putRecord(hash, value);
 	}
 }

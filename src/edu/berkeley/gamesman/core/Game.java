@@ -206,7 +206,7 @@ public abstract class Game<State> {
 		int size = 0;
 		PrimitiveValue bestPrim = PrimitiveValue.LOSE;
 		for (Record val : vals) {
-			PrimitiveValue pv = val.get();
+			PrimitiveValue pv = val.value;
 			if (pv.isPreferableTo(bestPrim)) {
 				size = 1;
 				valsBest[0] = val;
@@ -223,12 +223,12 @@ public abstract class Game<State> {
 		}
 		Record[] arrVals = valsBest;
 		int lastSize;
-		if (conf.containsField(RecordFields.SCORE)) {
+		if (conf.scoreStates > 0) {
 			lastSize = size;
 			size = 0;
 			int bestScore = Integer.MIN_VALUE;
 			for (int i = 0; i < lastSize; i++) {
-				int score = arrVals[i].get(RecordFields.SCORE);
+				int score = arrVals[i].score;
 				if (score > bestScore) {
 					size = 1;
 					valsBestScore[0] = arrVals[i];
@@ -245,13 +245,13 @@ public abstract class Game<State> {
 			}
 			arrVals = valsBestScore;
 		}
-		if (conf.containsField(RecordFields.REMOTENESS)) {
+		if (conf.remotenessStates > 0) {
 			lastSize = size;
 			size = 0;
 			if (bestPrim.equals(PrimitiveValue.LOSE)) {
 				int bestRemoteness = 0;
 				for (int i = 0; i < lastSize; i++) {
-					int remoteness = arrVals[i].get(RecordFields.REMOTENESS);
+					int remoteness = arrVals[i].remoteness;
 					if (remoteness > bestRemoteness) {
 						size = 1;
 						valsBestRemoteness[0] = arrVals[i];
@@ -269,7 +269,7 @@ public abstract class Game<State> {
 			} else {
 				int bestRemoteness = Integer.MAX_VALUE;
 				for (int i = 0; i < lastSize; i++) {
-					int remoteness = arrVals[i].get(RecordFields.REMOTENESS);
+					int remoteness = arrVals[i].remoteness;
 					if (remoteness < bestRemoteness) {
 						size = 1;
 						valsBestRemoteness[0] = arrVals[i];
@@ -303,7 +303,7 @@ public abstract class Game<State> {
 		int size = 0;
 		PrimitiveValue bestPrim = PrimitiveValue.LOSE;
 		for (int i = 0; i < len; i++) {
-			PrimitiveValue pv = recordArray[i].get();
+			PrimitiveValue pv = recordArray[i].value;
 			if (pv.isPreferableTo(bestPrim)) {
 				size = 1;
 				valsBest[0] = recordArray[i];
@@ -320,12 +320,12 @@ public abstract class Game<State> {
 		}
 		Record[] arrVals = valsBest;
 		int lastSize;
-		if (conf.containsField(RecordFields.SCORE)) {
+		if (conf.scoreStates > 0) {
 			lastSize = size;
 			size = 0;
 			int bestScore = Integer.MIN_VALUE;
 			for (int i = 0; i < lastSize; i++) {
-				int score = arrVals[i].get(RecordFields.SCORE);
+				int score = arrVals[i].score;
 				if (score > bestScore) {
 					size = 1;
 					valsBestScore[0] = arrVals[i];
@@ -342,13 +342,13 @@ public abstract class Game<State> {
 			}
 			arrVals = valsBestScore;
 		}
-		if (conf.containsField(RecordFields.REMOTENESS)) {
+		if (conf.remotenessStates > 0) {
 			lastSize = size;
 			size = 0;
 			if (bestPrim.equals(PrimitiveValue.LOSE)) {
 				int bestRemoteness = 0;
 				for (int i = 0; i < lastSize; i++) {
-					int remoteness = arrVals[i].get(RecordFields.REMOTENESS);
+					int remoteness = arrVals[i].remoteness;
 					if (remoteness > bestRemoteness) {
 						size = 1;
 						valsBestRemoteness[0] = arrVals[i];
@@ -366,7 +366,7 @@ public abstract class Game<State> {
 			} else {
 				int bestRemoteness = Integer.MAX_VALUE;
 				for (int i = 0; i < lastSize; i++) {
-					int remoteness = arrVals[i].get(RecordFields.REMOTENESS);
+					int remoteness = arrVals[i].remoteness;
 					if (remoteness < bestRemoteness) {
 						size = 1;
 						valsBestRemoteness[0] = arrVals[i];
@@ -418,13 +418,8 @@ public abstract class Game<State> {
 	public abstract long numHashes();
 
 	public long recordStates() {
-		long prod = 1;
-		for (int i = 0; i < conf.numFields(); i++)
-			prod *= conf.storedFields[i];
-		return prod;
-	}
-
-	public int defaultNumberOfStates(RecordFields field) {
-		return field.defaultNumberOfStates();
+		return (conf.valueStates > 0 ? conf.valueStates : 1)
+				* (conf.remotenessStates > 0 ? conf.remotenessStates : 1)
+				* (conf.scoreStates > 0 ? conf.scoreStates : 1);
 	}
 }

@@ -28,7 +28,7 @@ public enum PrimitiveValue {
 	 */
 	IMPOSSIBLE(4);
 
-	private int value;
+	public final int value;
 
 	/**
 	 * The same as PrimitiveValue.values(), but without needing to allocate new
@@ -38,13 +38,6 @@ public enum PrimitiveValue {
 
 	PrimitiveValue(int v) {
 		value = v;
-	}
-
-	/**
-	 * @return the numeric value of this primitive
-	 */
-	public int value() {
-		return value;
 	}
 
 	public String toString() {
@@ -64,7 +57,7 @@ public enum PrimitiveValue {
 	/**
 	 * @return The value of this move from the perspective of the other player.
 	 */
-	public PrimitiveValue previousMovesValue() {
+	public PrimitiveValue flipValue() {
 		switch (this) {
 		case LOSE:
 			return WIN;

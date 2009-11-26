@@ -8,10 +8,9 @@ import java.util.Random;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
+import edu.berkeley.gamesman.core.ItergameState;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.game.Connect4;
-import edu.berkeley.gamesman.game.TopDownC4;
-import edu.berkeley.gamesman.game.util.C4State;
 import edu.berkeley.gamesman.util.Pair;
 
 /**
@@ -22,7 +21,7 @@ import edu.berkeley.gamesman.util.Pair;
 class ConnectFour implements MouseListener {
 	final char[][] board;
 
-	private final TopDownC4 cgame;
+	private final Connect4 cgame;
 
 	private int[] columnHeight = new int[7];
 
@@ -70,7 +69,7 @@ class ConnectFour implements MouseListener {
 	 */
 	public ConnectFour(Configuration conf, DisplayFour disfour, boolean cX,
 			boolean cO) {
-		cgame = (TopDownC4) conf.getGame();
+		cgame = (Connect4) conf.getGame();
 		int c, r;
 		compX = cX;
 		compO = cO;
@@ -136,29 +135,29 @@ class ConnectFour implements MouseListener {
 					e.printStackTrace();
 				}
 			cgame.setFromString(arrToString(board));
-			Collection<Pair<String, C4State>> moves = cgame.validMoves();
-			ArrayList<Pair<String, C4State>> listMoves = new ArrayList<Pair<String, C4State>>(
+			Collection<Pair<String, ItergameState>> moves = cgame.validMoves();
+			ArrayList<Pair<String, ItergameState>> listMoves = new ArrayList<Pair<String, ItergameState>>(
 					moves.size());
 			listMoves.addAll(moves);
 			long[] moveHashes = new long[listMoves.size()];
 			Record[] records = new Record[listMoves.size()];
 			for (int i = 0; i < listMoves.size(); i++) {
-				C4State state = listMoves.get(i).cdr;
+				ItergameState state = listMoves.get(i).cdr;
 				moveHashes[i] = cgame.stateToHash(state);
-				if (cgame.getState().numPieces != state.numPieces)
-					cgame.setNumPieces(state.numPieces);
+				if (cgame.getState().tier != state.tier)
+					cgame.setTier(state.tier);
 				records[i] = fd.getRecord(moveHashes[i]);
 			}
 			for (Record r : records)
 				r.previousPosition();
 			Record bestRecord = cgame.combine(records, 0, records.length);
-			ArrayList<Pair<String, C4State>> bestMoves = new ArrayList<Pair<String, C4State>>(
+			ArrayList<Pair<String, ItergameState>> bestMoves = new ArrayList<Pair<String, ItergameState>>(
 					listMoves.size());
 			for (int i = 0; i < records.length; i++) {
 				if (records[i].equals(bestRecord))
 					bestMoves.add(listMoves.get(i));
 			}
-			Pair<String, C4State> chosenMove = bestMoves.get(r
+			Pair<String, ItergameState> chosenMove = bestMoves.get(r
 					.nextInt(bestMoves.size()));
 			nextRecord = bestRecord;
 			nextRecord.nextPosition();
