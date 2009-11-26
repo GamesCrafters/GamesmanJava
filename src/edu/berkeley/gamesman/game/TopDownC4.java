@@ -6,15 +6,14 @@ import java.util.LinkedList;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.core.Record;
+import edu.berkeley.gamesman.core.RecordFields;
 import edu.berkeley.gamesman.core.TopDownMutaGame;
 import edu.berkeley.gamesman.game.util.BitSetBoard;
 import edu.berkeley.gamesman.game.util.C4State;
+import edu.berkeley.gamesman.game.util.TopDownPieceRearranger;
 import edu.berkeley.gamesman.hasher.TDC4Hasher;
-import edu.berkeley.gamesman.util.ExpCoefs;
-import edu.berkeley.gamesman.util.Factory;
-import edu.berkeley.gamesman.util.Pair;
-import edu.berkeley.gamesman.util.QuickLinkedList;
-import edu.berkeley.gamesman.util.Util;
+import edu.berkeley.gamesman.util.*;
 
 public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
@@ -22,6 +21,10 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 		final int[] openColumns;
 
 		int columnIndex;
+
+		int piecesLeft;
+
+		int moveSerial;
 
 		public Move() {
 			openColumns = new int[gameWidth];
@@ -38,11 +41,9 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 	public final ExpCoefs ec;
 
-	private final TDC4Hasher hasher;
-
 	private final QuickLinkedList<Move> moves;
 
-	private int openColumns;
+	private final TopDownPieceRearranger arranger;
 
 	private char turn;
 
@@ -67,8 +68,8 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 		for (int i = 0; i < gameWidth; i++)
 			colHeights[i] = 0;
 		ec = new ExpCoefs(gameHeight, gameWidth);
-		hasher = (TDC4Hasher) conf.getHasher();
 		bsb = new BitSetBoard(gameHeight, gameWidth);
+		arranger = new TopDownPieceRearranger(gameSize);
 		turn = 'X';
 	}
 
@@ -78,19 +79,28 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 		if (myMove.columnIndex == 0)
 			return false;
 		int col = myMove.openColumns[myMove.columnIndex];
-		// TODO Remove piece (check all fields)
+		int stepsBack = --colHeights[col];
+		bsb.removePiece(colHeights[col], col);
 		--myMove.columnIndex;
-		for (; col > myMove.openColumns[myMove.columnIndex]; --col) {
-			// TODO Alter hash appropriately (use formula for column height, not
-			// individual pieces)
+		myMove.piecesLeft -= colHeights[col];
+		myState.spaceArrangement -= ec.getCoef(col, myMove.piecesLeft);
+		for (--col; col > myMove.openColumns[myMove.columnIndex]; --col) {
+			myState.spaceArrangement += ec.getCoef(col, myMove.piecesLeft);
+			myMove.piecesLeft -= colHeights[col];
+			stepsBack += colHeights[col];
+			myState.spaceArrangement -= ec.getCoef(col, myMove.piecesLeft);
 		}
-		// TODO Add piece (check all fields)
+		myMove.moveSerial = arranger.changeMove(myMove.moveSerial, stepsBack);
+		bsb.addPiece(colHeights[col], col, oppositeTurn());
+		++colHeights[col];
+		myState.spaceArrangement += ec.getCoef(col, myMove.piecesLeft);
+		myState.pieceArrangement = arranger.getHash();
 		return true;
 	}
 
 	@Override
 	public long getHash() {
-		return hasher.hash(myState);
+		return ((TDC4Hasher) conf.getHasher()).hash(myState);
 	}
 
 	@Override
@@ -100,7 +110,7 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 	@Override
 	public boolean makeMove() {
-		Move newMove = moves.add();
+		Move newMove = moves.addFirst();
 		int i = 0;
 		for (int col = 0; col < gameWidth; col++) {
 			if (colHeights[col] < gameHeight)
@@ -108,12 +118,23 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 		}
 		if (i == 0)
 			return false;
+		++myState.numPieces;
 		newMove.columnIndex = i - 1;
-		for (int col = gameWidth - 1; col > newMove.openColumns[newMove.columnIndex]; col--) {
-			// TODO Alter hash appropriately (use formula for column height, not
-			// individual pieces)
+		newMove.piecesLeft = myState.numPieces;
+		int col;
+		int stepsBack = 0;
+		for (col = gameWidth - 1; col > newMove.openColumns[newMove.columnIndex]; col--) {
+			myState.spaceArrangement += ec.getCoef(col, newMove.piecesLeft);
+			newMove.piecesLeft -= colHeights[col];
+			stepsBack += colHeights[col];
+			myState.spaceArrangement -= ec.getCoef(col, newMove.piecesLeft);
 		}
-		// TODO Add piece (remember to check all fields)
+		bsb.addPiece(colHeights[col], col, turn);
+		newMove.moveSerial = arranger.makeMove(turn, stepsBack);
+		++colHeights[col];
+		turn = oppositeTurn();
+		myState.spaceArrangement += ec.getCoef(col, newMove.piecesLeft);
+		myState.pieceArrangement = arranger.getHash();
 		return true;
 	}
 
@@ -129,14 +150,14 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 	@Override
 	public PrimitiveValue primitiveValue() {
-		switch (bsb.xInALine(piecesToWin, turn)) {
+		switch (bsb.xInALine(piecesToWin, oppositeTurn())) {
 		case 1:
 			return PrimitiveValue.LOSE;
 		case 0:
 			if (myState.numPieces == gameSize)
 				return PrimitiveValue.TIE;
 			else
-				return PrimitiveValue.WIN;
+				return PrimitiveValue.UNDECIDED;
 		case -1:
 			return PrimitiveValue.IMPOSSIBLE;
 		default:
@@ -145,29 +166,94 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 		}
 	}
 
+	private char oppositeTurn() {
+		switch (turn) {
+		case 'X':
+			return 'O';
+		case 'O':
+			return 'X';
+		default:
+			throw new RuntimeException("This should never happen");
+		}
+	}
+
 	@Override
 	public void setToHash(long hash) {
-		setToState(hasher.unhash(hash));
+		setToState(((TDC4Hasher) conf.getHasher()).unhash(hash));
 	}
 
 	@Override
 	public void setToState(C4State pos) {
-		// TODO Auto-generated method stub
+		myState.set(pos);
+		turn = ((myState.numPieces & 1) > 0) ? 'O' : 'X';
+		setColumnHeights(pos.spaceArrangement);
+		arranger.setArrangement(pos.numPieces, pos.numPieces / 2,
+				pos.pieceArrangement);
+		setBSB();
+	}
+
+	private void setBSB() {
+		CharIterator iter = arranger.getCharIterator();
+		bsb.clear();
+		for (int col = 0; col < gameWidth; col++) {
+			for (int row = 0; row < colHeights[col]; row++)
+				bsb.addPiece(row, col, iter.next());
+		}
+	}
+
+	private void setColumnHeights(long spaceArrangement) {
+		int remainingPieces = myState.numPieces;
+		for (int col = gameWidth - 1; col >= 0; col--) {
+			colHeights[col] = 0;
+			long pieceHash = ec.getCoef(col, remainingPieces);
+			while (spaceArrangement >= pieceHash && remainingPieces > 0) {
+				--remainingPieces;
+				++colHeights[col];
+				spaceArrangement -= pieceHash;
+			}
+		}
 	}
 
 	@Override
-	public void setToState(String pos) {
-		// TODO Auto-generated method stub
-
+	public void setFromString(String pos) {
+		char[] posChars = pos.toCharArray();
+		StringBuilder arrangerChars = new StringBuilder();
+		myState.numPieces = 0;
+		myState.spaceArrangement = 0;
+		myState.pieceArrangement = 0;
+		int charIndex;
+		for (int col = 0; col < gameWidth; col++) {
+			colHeights[col] = 0;
+			for (int row = 0; row < gameHeight; row++) {
+				charIndex = row * gameWidth + col;
+				if (posChars[charIndex] != ' ') {
+					++myState.numPieces;
+					++colHeights[col];
+					myState.spaceArrangement += ec.getCoef(col,
+							myState.numPieces);
+					arrangerChars.append(posChars[charIndex]);
+				}
+			}
+		}
+		arranger.setArrangement(arrangerChars.toString());
 	}
 
 	@Override
 	public void undoMove() {
-		int col = moves.remove().openColumns[0];
-		// TODO Remove piece (check all fields)
+		Move myMove = moves.remove();
+		int col = myMove.openColumns[myMove.columnIndex];
+		--colHeights[col];
+		bsb.removePiece(colHeights[col], col);
+		myState.spaceArrangement -= ec.getCoef(col, myMove.piecesLeft);
 		for (++col; col < gameWidth; ++col) {
-			// TODO Alter hash back
+			myState.spaceArrangement += ec.getCoef(col, myMove.piecesLeft);
+			myMove.piecesLeft += colHeights[col];
+			myState.spaceArrangement -= ec.getCoef(col, myMove.piecesLeft);
 		}
+		arranger.undoMove(myMove.moveSerial);
+		turn = oppositeTurn();
+		--myState.numPieces;
+		myState.pieceArrangement = arranger.getHash();
 	}
 
 	@Override
@@ -178,7 +264,7 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 	@Override
 	public long numHashes() {
-		return hasher.numHashes();
+		return ((TDC4Hasher) conf.getHasher()).numHashes();
 	}
 
 	@Override
@@ -194,7 +280,7 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 	}
 
 	@Override
-	public Collection<Pair<String, C4State>> validMoves(C4State pos) {
+	public Collection<Pair<String, C4State>> validMoves() {
 		LinkedList<Pair<String, C4State>> moves = new LinkedList<Pair<String, C4State>>();
 		int col = gameWidth - 1;
 		while (colHeights[col] == gameHeight && col >= 0)
@@ -204,11 +290,107 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 			moves.addFirst(new Pair<String, C4State>(Integer.toString(col),
 					getState().clone()));
 			col--;
-			while (colHeights[col] == gameHeight && col >= 0)
+			while (col >= 0 && colHeights[col] == gameHeight)
 				col--;
+			if (col < 0)
+				break;
 			made = changeMove();
 		}
 		undoMove();
 		return moves;
+	}
+
+	private class C4Record extends Record {
+		protected C4Record() {
+			super(conf);
+		}
+
+		protected C4Record(long state) {
+			super(conf);
+			set(state);
+		}
+
+		protected C4Record(PrimitiveValue pVal) {
+			super(conf, pVal);
+		}
+
+		@Override
+		public long getState() {
+			if (conf.containsField(RecordFields.REMOTENESS)) {
+				PrimitiveValue val = get();
+				if (val.equals(PrimitiveValue.TIE)) {
+					return gameSize + 1;
+				} else if (val.equals(PrimitiveValue.UNDECIDED)) {
+					return gameSize + 2;
+				} else {
+					return get(RecordFields.REMOTENESS);
+				}
+			} else {
+				return get(RecordFields.VALUE);
+			}
+		}
+
+		@Override
+		public void set(long state) {
+			if (conf.containsField(RecordFields.REMOTENESS)) {
+				if (state == gameSize + 1) {
+					set(RecordFields.VALUE, PrimitiveValue.TIE.value());
+					set(RecordFields.REMOTENESS, gameSize - myState.numPieces);
+				} else if (state == gameSize + 2) {
+					set(RecordFields.VALUE, PrimitiveValue.UNDECIDED.value());
+				} else if ((state & 1L) > 0) {
+					set(RecordFields.VALUE, PrimitiveValue.WIN.value());
+					set(RecordFields.REMOTENESS, (int) state);
+				} else {
+					set(RecordFields.VALUE, PrimitiveValue.LOSE.value());
+					set(RecordFields.REMOTENESS, (int) state);
+				}
+			} else {
+				set(RecordFields.VALUE, (int) state);
+			}
+		}
+	}
+
+	@Override
+	public Record newRecord(PrimitiveValue pv) {
+		return new C4Record(pv);
+	}
+
+	@Override
+	public Record newRecord() {
+		return new C4Record();
+	}
+
+	@Override
+	public Record newRecord(long val) {
+		return new C4Record(val);
+	}
+
+	public void setNumPieces(int numPieces) {
+		myState.numPieces = numPieces;
+	}
+
+	@Override
+	public long recordStates() {
+		return gameSize + 3;
+	}
+
+	@Override
+	public int defaultNumberOfStates(RecordFields rf) {
+		switch (rf) {
+		case VALUE:
+			return 4;
+		case REMOTENESS:
+			return gameSize + 1;
+		default:
+			Util.fatalError("The record field " + rf
+					+ " is not used in Connect 4");
+			return 0;
+		}
+	}
+
+	@Override
+	public String toString() {
+		return bsb.toString();
 	}
 }

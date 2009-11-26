@@ -6,11 +6,9 @@ import java.util.*;
 public class QuickLinkedList<T> implements List<T>, Queue<T> {
 	private final int[] nextList, prevList;
 
-	private int first, last, size = 0, lastAdded = 0;
+	private int first = -1, last = -1, size = 0, lastAdded = 0;
 
 	private final T[] objects;
-
-	private final int[] nextNull;
 
 	private int firstNull;
 
@@ -21,15 +19,13 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 	public QuickLinkedList(T[] objects, Factory<T> factory) {
 		nextList = new int[objects.length];
 		prevList = new int[objects.length];
-		nextNull = new int[objects.length];
 		firstNull = 0;
 		this.objects = objects;
 		for (int i = 0; i < objects.length; i++) {
-			nextList[i] = -1;
+			nextList[i] = i + 1;
 			prevList[i] = -1;
-			nextNull[i] = i + 1;
 		}
-		nextNull[objects.length - 1] = -1;
+		nextList[objects.length - 1] = -1;
 		internalIterator = listIterator();
 		this.factory = factory;
 	}
@@ -60,7 +56,7 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 
 	private int nextNullAndRemove() {
 		int retVal = firstNull;
-		firstNull = nextNull[firstNull];
+		firstNull = nextList[firstNull];
 		return retVal;
 	}
 
@@ -79,7 +75,7 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 	}
 
 	private void addNull(int position) {
-		nextNull[position] = firstNull;
+		nextList[position] = firstNull;
 		firstNull = position;
 	}
 
@@ -106,14 +102,14 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 		}
 
 		public boolean hasNext() {
-			return nextPosition > 0;
+			return nextPosition >= 0;
 		}
 
 		public boolean hasPrevious() {
-			if (nextPosition > 0)
-				return prevList[nextPosition] > 0;
+			if (nextPosition >= 0)
+				return prevList[nextPosition] >= 0;
 			else
-				return last > 0;
+				return last >= 0;
 		}
 
 		public T next() {
@@ -128,7 +124,7 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 		}
 
 		public T previous() {
-			if (nextPosition > 0)
+			if (nextPosition >= 0)
 				nextPosition = prevList[nextPosition];
 			else
 				nextPosition = last;
@@ -144,7 +140,7 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 			if (lastCallWasPrevious)
 				removeFrom(nextPosition, false);
 			else {
-				if (nextPosition > 0)
+				if (nextPosition >= 0)
 					removeFrom(prevList[nextPosition], false);
 				else
 					removeFrom(last, false);
@@ -155,7 +151,7 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 			if (lastCallWasPrevious)
 				objects[nextPosition] = e;
 			else {
-				if (nextPosition > 0)
+				if (nextPosition >= 0)
 					objects[prevList[nextPosition]] = e;
 				else
 					objects[last] = e;
@@ -185,7 +181,7 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 			if (lastCallWasPrevious)
 				posRemoved = nextPosition;
 			else {
-				if (nextPosition > 0)
+				if (nextPosition >= 0)
 					posRemoved = prevList[nextPosition];
 				else
 					posRemoved = last;
@@ -455,8 +451,25 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 		++size;
 	}
 
-	public T add() {
+	public T addFirst() {
 		addBefore(first);
+		if (objects[lastAdded] == null)
+			objects[lastAdded] = factory.newElement();
+		return objects[lastAdded];
+	}
+
+	public String toString() {
+		StringBuilder str = new StringBuilder();
+		Iterator<T> iter = listIterator();
+		str.append("{" + iter.next());
+		while (iter.hasNext())
+			str.append("," + iter.next());
+		str.append("}");
+		return str.toString();
+	}
+
+	public T addLast() {
+		addBefore(-1);
 		if (objects[lastAdded] == null)
 			objects[lastAdded] = factory.newElement();
 		return objects[lastAdded];

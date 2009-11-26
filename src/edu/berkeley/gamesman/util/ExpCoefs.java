@@ -14,6 +14,8 @@ public class ExpCoefs {
 
 	ArrayList<long[]> triangle;
 
+	ArrayList<long[]> sumTriangle;
+
 	/**
 	 * @param degree
 	 *            The degree of the triangle. This will be Pascal's Triangle if
@@ -34,7 +36,7 @@ public class ExpCoefs {
 		triangle = new ArrayList<long[]>(rows);
 		this.degree = degree;
 		triangle.add(new long[] { 1 });
-		while (triangle.size()<rows)
+		while (triangle.size() < rows)
 			addRow();
 	}
 
@@ -62,11 +64,38 @@ public class ExpCoefs {
 			addRow();
 		return triangle.get(n)[k];
 	}
-	
-	public String toString(){
-		StringBuilder s=new StringBuilder();
-		for(long[] row:triangle)
-			s.append(Arrays.toString(row)+"\n");
+
+	/**
+	 * @param n
+	 *            The power to raise the polynomial to.
+	 * @param k
+	 *            The power of x to find the coefficient of.
+	 * @return The sum of coefficients of x^i from i=0 to k (inclusive).
+	 */
+	public long getSum(int n, int k) {
+		if (k < 0)
+			return 0;
+		while (n >= sumTriangle.size())
+			addSumRow();
+		int lastVal = n * degree;
+		if (k > lastVal)
+			return sumTriangle.get(n)[lastVal];
+		return sumTriangle.get(n)[k];
+	}
+
+	private void addSumRow() {
+		int rows = sumTriangle.size();
+		int rowLen = rows * degree + 1;
+		long[] newRow = new long[rowLen];
+		sumTriangle.add(newRow);
+		for (int i = 0; i < rowLen; i++)
+			newRow[i] = getSum(rows, i - 1) + getCoef(rows, i);
+	}
+
+	public String toString() {
+		StringBuilder s = new StringBuilder();
+		for (long[] row : triangle)
+			s.append(Arrays.toString(row) + "\n");
 		return s.toString();
 	}
 }

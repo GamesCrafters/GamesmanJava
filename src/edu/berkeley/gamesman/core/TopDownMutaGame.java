@@ -55,11 +55,11 @@ public abstract class TopDownMutaGame<S> extends Game<S> {
 
 	@Override
 	public S stringToState(String pos) {
-		setToState(pos);
+		setFromString(pos);
 		return getState();
 	}
 
-	public abstract void setToState(String pos);
+	public abstract void setFromString(String pos);
 
 	public abstract boolean makeMove();
 
@@ -69,6 +69,11 @@ public abstract class TopDownMutaGame<S> extends Game<S> {
 
 	@Override
 	public Collection<Pair<String, S>> validMoves(S pos) {
+		setToState(pos);
+		return validMoves();
+	}
+
+	public Collection<Pair<String, S>> validMoves() {
 		boolean made = makeMove();
 		int i = 0;
 		ArrayList<Pair<String, S>> validMoves = new ArrayList<Pair<String, S>>();

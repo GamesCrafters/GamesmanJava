@@ -15,4 +15,10 @@ public class C4State implements Cloneable {
 		return new C4State(numPieces, spaceArrangement, pieceArrangement);
 	}
 
+	public void set(C4State pos) {
+		numPieces = pos.numPieces;
+		spaceArrangement = pos.spaceArrangement;
+		pieceArrangement = pos.pieceArrangement;
+	}
+
 }
