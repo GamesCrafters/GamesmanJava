@@ -17,6 +17,8 @@ public class SequentialPage extends Page {
 		lastGroup = new Record[conf.recordsPerGroup];
 		lastGroupNum = -1;
 		lastDirty = false;
+		for (int i = 0; i < conf.recordsPerGroup; i++)
+			lastGroup[i] = conf.getGame().newRecord();
 	}
 
 	@Override
