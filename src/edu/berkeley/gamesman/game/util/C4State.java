@@ -21,4 +21,9 @@ public class C4State implements Cloneable {
 		pieceArrangement = pos.pieceArrangement;
 	}
 
+	public String toString() {
+		return "[" + numPieces + "," + spaceArrangement + ","
+				+ pieceArrangement + "]";
+	}
+
 }

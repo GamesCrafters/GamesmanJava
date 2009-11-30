@@ -249,7 +249,7 @@ public class TopDownPieceRearranger {
 			}
 			p.index = i;
 			p.numOs = remainingOs;
-			if (pieceArrangement >= lastPiece.hash) {
+			if (remainingOs > 0 && pieceArrangement >= p.hash) {
 				p.player = 'O';
 				--remainingOs;
 				pieceArrangement -= p.hash;
@@ -270,12 +270,12 @@ public class TopDownPieceRearranger {
 		Piece p = beforePiece, lastPiece;
 		int numOs = 0;
 		hash = 0L;
-		for (int i = 0; i < arrangePos.length; i++) {
+		int numPieces = arrangePos.length;
+		for (int i = 0; i < numPieces; i++) {
 			lastPiece = p;
 			p = pieces.addLast();
 			p.player = arrangePos[i];
 			p.index = i;
-			p.numOs = numOs;
 			if (p.player == 'O') {
 				++numOs;
 				if (lastPiece.hash == 0)
@@ -290,7 +290,17 @@ public class TopDownPieceRearranger {
 				else
 					p.hash = lastPiece.hash * i / (i - numOs);
 			}
+			p.numOs = numOs;
 		}
+		lastPiece = p;
+		p = afterPiece;
+		p.player = 'X';
+		p.index = arrangePos.length;
+		p.numOs = numOs;
+		if (lastPiece.hash == 0)
+			p.hash = 1;
+		else
+			p.hash = lastPiece.hash * numPieces / (numPieces - numOs);
 		pieceIterator.reset(false);
 	}
 }

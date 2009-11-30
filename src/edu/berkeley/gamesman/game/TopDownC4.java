@@ -71,6 +71,7 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 	@Override
 	public boolean changeMove() {
+
 		Move myMove = moves.element();
 		if (myMove.columnIndex == 0)
 			return false;
@@ -91,6 +92,7 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 		++colHeights[col];
 		myState.spaceArrangement += ec.getCoef(col, myMove.piecesLeft);
 		myState.pieceArrangement = arranger.getHash();
+
 		return true;
 	}
 
@@ -206,6 +208,7 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 				--remainingPieces;
 				++colHeights[col];
 				spaceArrangement -= pieceHash;
+				pieceHash = ec.getCoef(col, remainingPieces);
 			}
 		}
 	}
@@ -227,11 +230,14 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 					++colHeights[col];
 					myState.spaceArrangement += ec.getCoef(col,
 							myState.numPieces);
+					bsb.addPiece(row, col, posChars[charIndex]);
 					arrangerChars.append(posChars[charIndex]);
 				}
 			}
 		}
+		turn = ((myState.numPieces & 1) > 0) ? 'O' : 'X';
 		arranger.setArrangement(arrangerChars.toString());
+		myState.pieceArrangement = arranger.getHash();
 	}
 
 	@Override
@@ -251,6 +257,22 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 		--myState.numPieces;
 		myState.pieceArrangement = arranger.getHash();
 	}
+
+//	private void checkArrangement() {
+//		long totalHash = 0L;
+//
+//		int pieceCount = 0;
+//
+//		for (int col = 0; col < gameWidth; col++) {
+//			for (int row = 0; row < colHeights[col]; row++) {
+//				++pieceCount;
+//				totalHash += ec.getCoef(col, pieceCount);
+//			}
+//		}
+//
+//		if (totalHash != myState.spaceArrangement)
+//			throw new RuntimeException("Not Equal");
+//	}
 
 	@Override
 	public String describe() {
@@ -279,7 +301,7 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 	public Collection<Pair<String, C4State>> validMoves() {
 		LinkedList<Pair<String, C4State>> moves = new LinkedList<Pair<String, C4State>>();
 		int col = gameWidth - 1;
-		while (colHeights[col] == gameHeight && col >= 0)
+		while (col >= 0 && colHeights[col] == gameHeight)
 			col--;
 		boolean made = makeMove();
 		while (made) {
@@ -292,7 +314,8 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 				break;
 			made = changeMove();
 		}
-		undoMove();
+		if (made)
+			undoMove();
 		return moves;
 	}
 
@@ -364,6 +387,7 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 	public void setNumPieces(int numPieces) {
 		myState.numPieces = numPieces;
+		turn = ((numPieces & 1) > 0) ? 'O' : 'X';
 	}
 
 	@Override
@@ -374,5 +398,10 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 	@Override
 	public String toString() {
 		return bsb.toString();
+	}
+
+	@Override
+	public long stateToHash(C4State pos) {
+		return ((TDC4Hasher) conf.getHasher()).hash(pos);
 	}
 }
