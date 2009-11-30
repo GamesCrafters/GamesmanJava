@@ -8,7 +8,9 @@ import java.util.Random;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
+import edu.berkeley.gamesman.core.ItergameState;
 import edu.berkeley.gamesman.core.Record;
+import edu.berkeley.gamesman.game.Connect4;
 import edu.berkeley.gamesman.game.TopDownC4;
 import edu.berkeley.gamesman.game.util.C4State;
 import edu.berkeley.gamesman.util.Pair;
@@ -21,7 +23,11 @@ import edu.berkeley.gamesman.util.Pair;
 class ConnectFour implements MouseListener {
 	final char[][] board;
 
-	private final TopDownC4 cgame;
+	private final Connect4 game;
+
+	private final boolean topDown;
+
+	private final TopDownC4 tdgame;
 
 	private int[] columnHeight = new int[7];
 
@@ -69,7 +75,14 @@ class ConnectFour implements MouseListener {
 	 */
 	public ConnectFour(Configuration conf, DisplayFour disfour, boolean cX,
 			boolean cO) {
-		cgame = (TopDownC4) conf.getGame();
+		topDown = conf.getProperty("gamesman.game").contains("TopDownC4");
+		if (topDown) {
+			game = null;
+			tdgame = (TopDownC4) conf.getGame();
+		} else {
+			tdgame = null;
+			game = (Connect4) conf.getGame();
+		}
 		int c, r;
 		compX = cX;
 		compO = cO;
@@ -110,8 +123,14 @@ class ConnectFour implements MouseListener {
 		df.setBoard(copy(board));
 		paintThread.start();
 		paintThread = new Thread(df);
-		cgame.setFromString(arrToString(board));
-		System.out.println(fd.getRecord(cgame.stateToHash(cgame.getState())));
+		if (topDown) {
+			tdgame.setFromString(arrToString(board));
+			System.out.println(fd.getRecord(tdgame.stateToHash(tdgame
+					.getState())));
+		} else {
+			game.setFromString(arrToString(board));
+			System.out.println(fd.getRecord(game.stateToHash(game.getState())));
+		}
 		if (!win())
 			new Thread() {
 				public void run() {
@@ -129,34 +148,68 @@ class ConnectFour implements MouseListener {
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
-			cgame.setFromString(arrToString(board));
-			Collection<Pair<String, C4State>> moves = cgame.validMoves();
-			ArrayList<Pair<String, C4State>> listMoves = new ArrayList<Pair<String, C4State>>(
-					moves.size());
-			listMoves.addAll(moves);
-			long[] moveHashes = new long[listMoves.size()];
-			Record[] records = new Record[listMoves.size()];
-			for (int i = 0; i < listMoves.size(); i++) {
-				C4State state = listMoves.get(i).cdr;
-				moveHashes[i] = cgame.stateToHash(state);
-				if (cgame.getState().numPieces != state.numPieces)
-					cgame.setNumPieces(state.numPieces);
-				records[i] = fd.getRecord(moveHashes[i]);
+			if (topDown) {
+				tdgame.setFromString(arrToString(board));
+				Collection<Pair<String, C4State>> moves = tdgame.validMoves();
+				ArrayList<Pair<String, C4State>> listMoves = new ArrayList<Pair<String, C4State>>(
+						moves.size());
+				listMoves.addAll(moves);
+				long[] moveHashes = new long[listMoves.size()];
+				Record[] records = new Record[listMoves.size()];
+				for (int i = 0; i < listMoves.size(); i++) {
+					C4State state = listMoves.get(i).cdr;
+					moveHashes[i] = tdgame.stateToHash(state);
+					if (tdgame.getState().numPieces != state.numPieces)
+						tdgame.setNumPieces(state.numPieces);
+					records[i] = fd.getRecord(moveHashes[i]);
+				}
+				for (Record r : records)
+					r.previousPosition();
+				Record bestRecord = tdgame.combine(records, 0, records.length);
+				ArrayList<Pair<String, C4State>> bestMoves = new ArrayList<Pair<String, C4State>>(
+						listMoves.size());
+
+				for (int i = 0; i < records.length; i++) {
+					if (records[i].equals(bestRecord))
+						bestMoves.add(listMoves.get(i));
+				}
+				Pair<String, C4State> chosenMove = bestMoves.get(r
+						.nextInt(bestMoves.size()));
+				nextRecord = bestRecord;
+				nextRecord.nextPosition();
+				makeMove(chosenMove.car.charAt(0) - '0');
+			} else {
+				game.setFromString(arrToString(board));
+				Collection<Pair<String, ItergameState>> moves = game
+						.validMoves();
+				ArrayList<Pair<String, ItergameState>> listMoves = new ArrayList<Pair<String, ItergameState>>(
+						moves.size());
+				listMoves.addAll(moves);
+				long[] moveHashes = new long[listMoves.size()];
+				Record[] records = new Record[listMoves.size()];
+				for (int i = 0; i < listMoves.size(); i++) {
+					ItergameState state = listMoves.get(i).cdr;
+					moveHashes[i] = game.stateToHash(state);
+					if (game.getTier() != state.tier)
+						game.setTier(state.tier);
+					records[i] = fd.getRecord(moveHashes[i]);
+				}
+				for (Record r : records)
+					r.previousPosition();
+				Record bestRecord = game.combine(records, 0, records.length);
+				ArrayList<Pair<String, ItergameState>> bestMoves = new ArrayList<Pair<String, ItergameState>>(
+						listMoves.size());
+
+				for (int i = 0; i < records.length; i++) {
+					if (records[i].equals(bestRecord))
+						bestMoves.add(listMoves.get(i));
+				}
+				Pair<String, ItergameState> chosenMove = bestMoves.get(r
+						.nextInt(bestMoves.size()));
+				nextRecord = bestRecord;
+				nextRecord.nextPosition();
+				makeMove(chosenMove.car.charAt(0) - '0');
 			}
-			for (Record r : records)
-				r.previousPosition();
-			Record bestRecord = cgame.combine(records, 0, records.length);
-			ArrayList<Pair<String, C4State>> bestMoves = new ArrayList<Pair<String, C4State>>(
-					listMoves.size());
-			for (int i = 0; i < records.length; i++) {
-				if (records[i].equals(bestRecord))
-					bestMoves.add(listMoves.get(i));
-			}
-			Pair<String, C4State> chosenMove = bestMoves.get(r
-					.nextInt(bestMoves.size()));
-			nextRecord = bestRecord;
-			nextRecord.nextPosition();
-			makeMove(chosenMove.car.charAt(0) - '0');
 		}
 	}
 
