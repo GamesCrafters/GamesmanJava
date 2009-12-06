@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Set;
 
+import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
@@ -245,6 +246,8 @@ public class Configuration {
 			recordGroupUsesLong = false;
 			longMultipliers = null;
 		}
+		Util.debug(DebugFacility.CORE, recordsPerGroup + " records per group\n"
+				+ recordGroupByteLength + " bytes per group");
 	}
 
 	/**

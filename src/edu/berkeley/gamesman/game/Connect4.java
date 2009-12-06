@@ -611,6 +611,9 @@ public final class Connect4 extends TieredIterGame {
 
 	@Override
 	public long recordStates() {
-		return gameSize + 2;
+		if (conf.remotenessStates > 0)
+			return gameSize + 2;
+		else
+			return 3;
 	}
 }

@@ -4,6 +4,9 @@ import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.GridLayout;
 import java.awt.event.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 
 import javax.swing.*;
 
@@ -15,6 +18,7 @@ import edu.berkeley.gamesman.util.Util;
 
 /**
  * A testing class for playing against a perfect play database
+ * 
  * @author dnspies
  */
 public class C4Container extends JPanel implements ActionListener, KeyListener,
@@ -30,7 +34,8 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 	JRadioButton oButton;
 
 	/**
-	 * @param conf The configuration object
+	 * @param conf
+	 *            The configuration object
 	 */
 	public C4Container(Configuration conf) {
 		super();
@@ -78,16 +83,28 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 	}
 
 	/**
-	 * @param args The job file
+	 * @param args
+	 *            The job file
 	 */
-	public static void main(String[] args){
+	public static void main(String[] args) {
 		if (args.length != 1) {
 			Util.fatalError("Please specify a jobfile as the only argument");
 		}
 		Configuration conf;
 		Database fd;
+
 		try {
-			conf = new Configuration(args[0]);
+			File dataFile = new File(args[0]);
+			FileInputStream fis = new FileInputStream(dataFile);
+			int confLength = 0;
+			for (int i = 28; i >= 0; i -= 8) {
+				confLength <<= 8;
+				confLength |= fis.read();
+			}
+			byte[] confBytes = new byte[confLength];
+			fis.read(confBytes);
+			fis.close();
+			conf = Configuration.load(confBytes);
 			if (conf.getProperty("gamesman.database").equals("RecordDatabase")) {
 				Gamesman.main(args);
 				fd = RecordDatabase.rd;
@@ -97,6 +114,9 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 			}
 		} catch (ClassNotFoundException e) {
 			Util.fatalError("failed to load class", e);
+			return;
+		} catch (IOException e) {
+			Util.fatalError("IO Error", e);
 			return;
 		}
 		int width = conf.getInteger("gamesman.game.width", 7);
@@ -112,7 +132,7 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 		jf.addKeyListener(c4c);
 		jf.setFocusable(true);
 		jf.requestFocus();
-		jf.setSize(width * 100, height * 100+125);
+		jf.setSize(width * 100, height * 100 + 125);
 		jf.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		jf.setVisible(true);
 		jf.addWindowListener(c4c);
