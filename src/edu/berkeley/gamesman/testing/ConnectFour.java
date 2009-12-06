@@ -123,7 +123,10 @@ class ConnectFour implements MouseListener {
 		df.setBoard(copy(board));
 		paintThread.start();
 		paintThread = new Thread(df);
-		if (topDown) {
+		if (nextRecord != null) {
+			System.out.println(nextRecord);
+			nextRecord = null;
+		} else if (topDown) {
 			tdgame.setFromString(arrToString(board));
 			System.out.println(fd.getRecord(tdgame.stateToHash(tdgame
 					.getState())));
