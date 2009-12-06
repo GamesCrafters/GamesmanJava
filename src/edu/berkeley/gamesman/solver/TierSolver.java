@@ -181,8 +181,8 @@ public class TierSolver<T> extends Solver {
 			Pair<Long, Long> slice;
 			while ((slice = nextSlice(conf)) != null) {
 				thisSlice = slice;
-				assert Util.debug(DebugFacility.THREADING, "Solver " + index
-						+ " solving " + conf.getGame() + ": " + slice.car + "-"
+				assert Util.debug(DebugFacility.THREADING, "Solving "
+						+ conf.getGame() + ": " + slice.car + "-"
 						+ (slice.car + slice.cdr));
 				if (hadooping) {
 					try {
