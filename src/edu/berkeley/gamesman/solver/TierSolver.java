@@ -154,16 +154,6 @@ public class TierSolver<T> extends Solver {
 						count = 0;
 						needs2Sync = true;
 					}
-					assert Util
-							.debug(DebugFacility.THREADING,
-									"Beginning to solve slice "
-											+ slice.car
-											+ "-"
-											+ (slice.car + slice.cdr)
-											+ " for count "
-											+ (needs2Sync ? (starts.length - 2)
-													: (count - 1))
-											+ " in tier " + tier);
 					return slice;
 				}
 			}
@@ -191,9 +181,9 @@ public class TierSolver<T> extends Solver {
 			Pair<Long, Long> slice;
 			while ((slice = nextSlice(conf)) != null) {
 				thisSlice = slice;
-				Thread.currentThread().setName(
-						"Solver " + index + " solving " + conf.getGame() + ": "
-								+ slice.car + "-" + (slice.car + slice.cdr));
+				assert Util.debug(DebugFacility.THREADING, "Solver " + index
+						+ " solving " + conf.getGame() + ": " + slice.car + "-"
+						+ (slice.car + slice.cdr));
 				if (hadooping) {
 					try {
 						Database myWrite = writeDb.beginWrite(tier, slice.car,
