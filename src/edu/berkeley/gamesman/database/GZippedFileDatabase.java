@@ -65,7 +65,7 @@ public class GZippedFileDatabase extends Database {
 				conf = Configuration.load(b);
 			if (conf.getProperty("gamesman.db.compression", "none").equals(
 					"gzip"))
-				fis = new GZIPInputStream(fis);
+				fis = new GZIPInputStream(fis, 1 << 16);
 			maxBytes = (int) getByteSize();
 		} catch (IOException e) {
 			Util.fatalError("IO Error", e);
@@ -90,7 +90,7 @@ public class GZippedFileDatabase extends Database {
 				while (toSkip > 0)
 					toSkip -= myStream.skip(toSkip);
 				currentPos = 0L;
-				myStream = new GZIPInputStream(myStream);
+				myStream = new GZIPInputStream(myStream,1<<16);
 			}
 			while (currentPos < loc)
 				currentPos += myStream.skip(loc - currentPos);

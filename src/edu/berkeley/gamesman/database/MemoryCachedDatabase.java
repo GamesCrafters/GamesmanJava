@@ -40,7 +40,7 @@ public class MemoryCachedDatabase extends MemoryDatabase {
 				super.initialize(location);
 				if (conf.getProperty("gamesman.db.compression", "none").equals(
 						"gzip"))
-					fis = new GZIPInputStream(fis);
+					fis = new GZIPInputStream(fis,1<<16);
 				int n = 0;
 				while (n >= 0 && n < maxBytes)
 					n += fis.read(memoryStorage, n, maxBytes - n);
@@ -68,7 +68,7 @@ public class MemoryCachedDatabase extends MemoryDatabase {
 				fos.write(b);
 				if (conf.getProperty("gamesman.db.compression", "none").equals(
 						"gzip"))
-					fos = new GZIPOutputStream(fos);
+					fos = new GZIPOutputStream(fos,1<<16);
 				fos.write(memoryStorage);
 				fos.close();
 			} catch (IOException e) {

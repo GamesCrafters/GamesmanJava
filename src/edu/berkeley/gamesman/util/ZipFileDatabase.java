@@ -29,10 +29,10 @@ public class ZipFileDatabase {
 		for (int i = 24; i >= 0; i -= 8)
 			fos.write(confArray.length >> i);
 		fos.write(confArray);
-		fos = new GZIPOutputStream(fos);
+		fos = new GZIPOutputStream(fos, 1 << 16);
 		long numBytes = (conf.getHasher().numHashes() + conf.recordsPerGroup - 1)
 				/ conf.recordsPerGroup * conf.recordGroupByteLength;
-		byte[] tempArray = new byte[65536];
+		byte[] tempArray = new byte[1 << 16];
 		long i = 0;
 		while (i < numBytes) {
 			int bytes = fis.read(tempArray);
