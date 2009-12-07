@@ -10,10 +10,8 @@ import java.io.IOException;
 
 import javax.swing.*;
 
-import edu.berkeley.gamesman.Gamesman;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
-import edu.berkeley.gamesman.database.RecordDatabase;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -105,13 +103,8 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 			fis.read(confBytes);
 			fis.close();
 			conf = Configuration.load(confBytes);
-			if (conf.getProperty("gamesman.database").equals("RecordDatabase")) {
-				Gamesman.main(args);
-				fd = RecordDatabase.rd;
-				conf = fd.getConfiguration();
-			} else {
-				fd = conf.openDatabase();
-			}
+			conf.setProperty("gamesman.db.uri", args[0]);
+			fd = conf.openDatabase();
 		} catch (ClassNotFoundException e) {
 			Util.fatalError("failed to load class", e);
 			return;

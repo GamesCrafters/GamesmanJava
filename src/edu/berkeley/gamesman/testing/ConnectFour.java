@@ -39,8 +39,6 @@ class ConnectFour implements MouseListener {
 
 	private boolean win = false;
 
-	private Thread paintThread;
-
 	private DisplayFour df;
 
 	Database fd;
@@ -96,7 +94,6 @@ class ConnectFour implements MouseListener {
 				df.slots[r][c].addMouseListener(this);
 			}
 		}
-		paintThread = new Thread(df);
 		for (c = 0; c < gameWidth; c++) {
 			for (r = 0; r < gameHeight; r++) {
 				board[r][c] = ' ';
@@ -121,25 +118,29 @@ class ConnectFour implements MouseListener {
 			turn = 'O';
 		columnHeight[move]++;
 		df.setBoard(copy(board));
-		paintThread.start();
-		paintThread = new Thread(df);
-		if (nextRecord != null) {
-			System.out.println(nextRecord);
-			nextRecord = null;
-		} else if (topDown) {
-			tdgame.setFromString(arrToString(board));
-			System.out.println(fd.getRecord(tdgame.stateToHash(tdgame
-					.getState())));
-		} else {
-			game.setFromString(arrToString(board));
-			System.out.println(fd.getRecord(game.stateToHash(game.getState())));
-		}
-		if (!win())
-			new Thread() {
-				public void run() {
-					startCompMove();
+		df.paintBoard();
+		new Thread() {
+			public void run() {
+				if (nextRecord != null) {
+					System.out.println(nextRecord);
+					nextRecord = null;
+				} else if (topDown) {
+					tdgame.setFromString(arrToString(board));
+					System.out.println(fd.getRecord(tdgame.stateToHash(tdgame
+							.getState())));
+				} else {
+					game.setFromString(arrToString(board));
+					System.out.println(fd.getRecord(game.stateToHash(game
+							.getState())));
 				}
-			}.start();
+				if (!win())
+					new Thread() {
+						public void run() {
+							startCompMove();
+						}
+					}.start();
+			}
+		}.start();
 
 	}
 
@@ -254,8 +255,7 @@ class ConnectFour implements MouseListener {
 					else
 						System.out.println("Red wins");
 					win = true;
-					paintThread.start();
-					paintThread = new Thread(df);
+					df.paintBoard();
 					return true;
 				}
 			}

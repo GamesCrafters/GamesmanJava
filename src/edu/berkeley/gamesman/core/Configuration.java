@@ -464,13 +464,10 @@ public class Configuration {
 	 */
 	public boolean getBoolean(String key, boolean dfl) {
 		String s = props.getProperty(key);
-		if (s != null) {
-			try {
-				return !s.equalsIgnoreCase("false") && !s.equalsIgnoreCase("0");
-			} catch (Exception e) {
-			}
-		}
-		return dfl;
+		if (s == null)
+			return dfl;
+		else
+			return !s.equalsIgnoreCase("false") && !s.equalsIgnoreCase("0");
 	}
 
 	/**
@@ -502,12 +499,12 @@ public class Configuration {
 	 * @return The value associated with the key, if defined and an long.
 	 *         Otherwise, returns dfl.
 	 */
-	public Long getLong(String key, Long dfl) {
-		try {
-			return Long.parseLong(props.getProperty(key));
-		} catch (Exception e) {
-		}
-		return dfl;
+	public long getLong(String key, long dfl) {
+		String lString = props.getProperty(key);
+		if (lString == null)
+			return dfl;
+		else
+			return Long.parseLong(lString);
 	}
 
 	/**
@@ -521,11 +518,11 @@ public class Configuration {
 	 *         array. Otherwise, returns dfl.
 	 */
 	public Integer[] getIntegers(String key, Integer[] dfl) {
-		try {
-			return Util.parseIntegers(props.getProperty(key).split(", *"));
-		} catch (Exception e) {
-		}
-		return dfl;
+		String iString = props.getProperty(key);
+		if (iString == null)
+			return dfl;
+		else
+			return Util.parseIntegers(iString.split(", *"));
 	}
 
 	/**

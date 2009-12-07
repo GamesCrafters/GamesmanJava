@@ -3,7 +3,6 @@ package edu.berkeley.gamesman.testing;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.zip.GZIPInputStream;
@@ -17,22 +16,32 @@ public class TestingClass {
 	static Random r = new Random();
 
 	public static void main(String[] args) throws IOException {
-		InputStream pis;
-		ByteArrayOutputStream pos;
+		ByteArrayInputStream bais;
+		GZIPInputStream pis = null;
+		ByteArrayOutputStream pos = null;
 		GZIPOutputStream gzo;
 		pos = new ByteArrayOutputStream();
-		gzo = new GZIPOutputStream(pos);
 		byte[] bArray = new byte[1024];
 		byte[] arr2 = new byte[1024];
+		int[] positions = new int[4];
 		r.nextBytes(bArray);
-		gzo.write(bArray);
-		gzo.close();
-		byte[] arr = pos.toByteArray();
-		pis = new GZIPInputStream(new ByteArrayInputStream(arr));
-		for (int i = 0; i < 1024; i++) {
-			arr2[i] = (byte) pis.read();
+		for (int i = 0; i < 4; i++) {
+			gzo = new GZIPOutputStream(pos, 1024);
+			gzo.write(bArray, i << 8, 256);
+			gzo.finish();
+			positions[i] = pos.size();
 		}
-		pis.close();
+		pos.close();
+		byte[] arr = pos.toByteArray();
+		for (int i = 0; i < 4; i++) {
+			int count = i << 8, tot = (i + 1) << 8;
+			bais = new ByteArrayInputStream(arr,
+					(i == 0 ? 0 : positions[i - 1]), positions[i]);
+			pis = new GZIPInputStream(bais, 1024);
+			while (count < tot)
+				count += pis.read(arr2, count, tot - count);
+			pis.close();
+		}
 		if (Arrays.equals(bArray, arr2))
 			System.out.println("Worked");
 	}

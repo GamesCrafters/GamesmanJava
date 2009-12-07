@@ -15,46 +15,62 @@ import edu.berkeley.gamesman.util.Util;
 public class GZippedFileDatabase extends Database {
 	private File myFile;
 
-	private InputStream myStream;
+	private FileInputStream fis;
+
+	private GZIPInputStream myStream;
 
 	private long currentPos;
 
-	private int confLength;
+	private long[] entryPoints;
+
+	private long entrySize;
+
+	private int bufferSize;
 
 	@Override
 	public void close() {
-		if (myStream != null)
-			try {
+		try {
+			if (myStream == null)
+				fis.close();
+			else
 				myStream.close();
-			} catch (IOException e) {
-				Util.fatalError("IO Error", e);
-			}
+		} catch (IOException e) {
+			Util.fatalError("IO Error", e);
+		}
 	}
 
 	@Override
 	public void flush() {
-		throw new RuntimeException("GZippedFileDatabase is Read Only");
+		Util.fatalError("GZippedFileDatabase is Read Only");
 	}
 
 	@Override
 	public void getBytes(byte[] arr, int off, int len) {
 		int bytesRead = 0;
-		while (bytesRead < len)
-			try {
-				bytesRead += myStream.read(arr, off + bytesRead, len
-						- bytesRead);
-			} catch (IOException e) {
-				Util.fatalError("IO Error", e);
-			}
-		currentPos += bytesRead;
+		int nextEntry = (int) (currentPos / entrySize) + 1;
+		do {
+			int sLen = (int) Math.min(len, nextEntry * entrySize - currentPos);
+			while (bytesRead < sLen)
+				try {
+					bytesRead += myStream.read(arr, off + bytesRead, len
+							- bytesRead);
+				} catch (IOException e) {
+					Util.fatalError("IO Error", e);
+				}
+			currentPos += bytesRead;
+			off += bytesRead;
+			len -= bytesRead;
+			if (len > 0)
+				seek(currentPos);
+		} while (len > 0);
 	}
 
 	@Override
 	public void initialize(String location) {
 		myFile = new File(location);
 		try {
-			InputStream fis = new FileInputStream(myFile);
-			confLength = 0;
+			fis = new FileInputStream(myFile);
+			int confLength = 0;
 			for (int i = 24; i >= 0; i -= 8) {
 				confLength <<= 8;
 				confLength |= fis.read();
@@ -63,10 +79,22 @@ public class GZippedFileDatabase extends Database {
 			fis.read(b);
 			if (conf == null)
 				conf = Configuration.load(b);
-			if (conf.getProperty("gamesman.db.compression", "none").equals(
-					"gzip"))
-				fis = new GZIPInputStream(fis, 1 << 16);
-			maxBytes = (int) getByteSize();
+			entrySize = conf.getLong("zip.entryKB", 0L) << 10;
+			bufferSize = conf.getInteger("zip.bufferKB", 1 << 12) << 10;
+			if (entrySize > 0L) {
+				int numEntries = (int) ((conf.getGame().numHashes() + entrySize - 1) / entrySize);
+				entryPoints = new long[numEntries];
+				for (int i = 0; i < numEntries; i++) {
+					for (int bit = 56; bit >= 0; bit -= 8) {
+						entryPoints[i] <<= 8;
+						entryPoints[i] |= fis.read();
+					}
+				}
+			} else {
+				entrySize = getByteSize();
+				entryPoints = new long[1];
+				entryPoints[0] = confLength + 4;
+			}
 		} catch (IOException e) {
 			Util.fatalError("IO Error", e);
 		} catch (ClassNotFoundException e) {
@@ -82,16 +110,10 @@ public class GZippedFileDatabase extends Database {
 	@Override
 	public void seek(long loc) {
 		try {
-			if (myStream == null || currentPos > loc) {
-				if (myStream != null)
-					myStream.close();
-				myStream = new FileInputStream(myFile);
-				int toSkip = confLength + 4;
-				while (toSkip > 0)
-					toSkip -= myStream.skip(toSkip);
-				currentPos = 0L;
-				myStream = new GZIPInputStream(myStream,1<<16);
-			}
+			int entryNum = (int) (loc / entrySize);
+			fis.getChannel().position(entryPoints[entryNum]);
+			currentPos = loc - loc % entrySize;
+			myStream = new GZIPInputStream(fis, bufferSize);
 			while (currentPos < loc)
 				currentPos += myStream.skip(loc - currentPos);
 		} catch (IOException e) {

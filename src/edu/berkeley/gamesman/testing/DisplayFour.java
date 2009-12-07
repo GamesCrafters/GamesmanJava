@@ -5,7 +5,7 @@ import java.awt.GridLayout;
 
 import javax.swing.JPanel;
 
-class DisplayFour extends JPanel implements Runnable {
+class DisplayFour extends JPanel {
 	private final static long serialVersionUID = 2;
 	private char[][] board;
 	private final int gameHeight;
@@ -22,7 +22,7 @@ class DisplayFour extends JPanel implements Runnable {
 		setLayout(new GridLayout(gameHeight, gameWidth));
 		for (row = gameHeight - 1; row >= 0; row--) {
 			for (col = 0; col < gameWidth; col++) {
-				slots[row][col] = new Slot(row,col);
+				slots[row][col] = new Slot(row, col);
 				add(slots[row][col]);
 			}
 		}
@@ -30,10 +30,10 @@ class DisplayFour extends JPanel implements Runnable {
 
 	void setBoard(char[][] board) {
 		this.board = board;
-		new Thread(this).start();
+		paintBoard();
 	}
 
-	public synchronized void run() {
+	public void paintBoard() {
 		int c, r;
 		for (c = 0; c < gameWidth; c++) {
 			for (r = 0; r < gameHeight; r++) {
