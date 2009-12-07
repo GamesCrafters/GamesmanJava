@@ -148,6 +148,9 @@ public class TierSolver<T> extends Solver {
 					}
 					Pair<Long, Long> slice = new Pair<Long, Long>(
 							starts[count], starts[count + 1] - starts[count]);
+					assert Util.debug(DebugFacility.THREADING, "Solving "
+							+ count + " in tier " + tier + "; " + starts[count]
+							+ "-" + starts[count + 1]);
 					if (count < starts.length - 2) {
 						++count;
 					} else {
@@ -181,9 +184,6 @@ public class TierSolver<T> extends Solver {
 			Pair<Long, Long> slice;
 			while ((slice = nextSlice(conf)) != null) {
 				thisSlice = slice;
-				assert Util.debug(DebugFacility.THREADING, "Solving "
-						+ conf.getGame() + ": " + slice.car + "-"
-						+ (slice.car + slice.cdr));
 				if (hadooping) {
 					try {
 						Database myWrite = writeDb.beginWrite(tier, slice.car,

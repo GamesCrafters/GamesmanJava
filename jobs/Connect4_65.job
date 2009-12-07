@@ -7,7 +7,6 @@ gamesman.solver = C4IntegratedSolver
 gamesman.database = FileDatabase
 gamesman.db.uri = /tmp/database65.db
 record.fields = VALUE,REMOTENESS
-record.compression = 90
 gamesman.threads = 8
 gamesman.split = 200
 gamesman.debug.THREADING = true
