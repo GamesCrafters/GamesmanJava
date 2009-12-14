@@ -8,10 +8,19 @@ package edu.berkeley.gamesman.core;
 public class Record {
 	private final Configuration conf;
 
+	/**
+	 * The value of this record
+	 */
 	public PrimitiveValue value;
 
+	/**
+	 * The remoteness of this record
+	 */
 	public int remoteness;
 
+	/**
+	 * The score of this record
+	 */
 	public int score;
 
 	protected Record(Configuration conf, long state) {
@@ -168,6 +177,10 @@ public class Record {
 		return 24;
 	}
 
+	/**
+	 * Changes this record to the next position. WARNING! Does not change
+	 * the score. You must do that yourself.
+	 */
 	public void nextPosition() {
 		value = value.flipValue();
 		--remoteness;

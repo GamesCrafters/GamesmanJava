@@ -11,6 +11,11 @@ import edu.berkeley.gamesman.game.util.TopDownPieceRearranger;
 import edu.berkeley.gamesman.hasher.TDC4Hasher;
 import edu.berkeley.gamesman.util.*;
 
+/**
+ * The game for solving Connect4 top down
+ * 
+ * @author dnspies
+ */
 public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 	private class Move {
@@ -31,10 +36,24 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 	private final int piecesToWin;
 
-	public final int gameWidth, gameHeight, gameSize;
+	/**
+	 * The width of the game
+	 */
+	public final int gameWidth;
+	/**
+	 * The height of the game
+	 */
+	public final int gameHeight;
+	/**
+	 * gameWidth * gameHeight
+	 */
+	public final int gameSize;
 
 	private final int[] colHeights;
 
+	/**
+	 * An ExpCoefs object of degree gameHeight for making hash calculations
+	 */
 	public final ExpCoefs ec;
 
 	private final QuickLinkedList<Move> moves;
@@ -45,6 +64,10 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 	private C4State myState;
 
+	/**
+	 * @param conf
+	 *            The configuration object
+	 */
 	public TopDownC4(Configuration conf) {
 		super(conf);
 		piecesToWin = conf.getInteger("gamesman.game.pieces", 4);
@@ -258,21 +281,21 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 		myState.pieceArrangement = arranger.getHash();
 	}
 
-//	private void checkArrangement() {
-//		long totalHash = 0L;
-//
-//		int pieceCount = 0;
-//
-//		for (int col = 0; col < gameWidth; col++) {
-//			for (int row = 0; row < colHeights[col]; row++) {
-//				++pieceCount;
-//				totalHash += ec.getCoef(col, pieceCount);
-//			}
-//		}
-//
-//		if (totalHash != myState.spaceArrangement)
-//			throw new RuntimeException("Not Equal");
-//	}
+	// private void checkArrangement() {
+	// long totalHash = 0L;
+	//
+	// int pieceCount = 0;
+	//
+	// for (int col = 0; col < gameWidth; col++) {
+	// for (int row = 0; row < colHeights[col]; row++) {
+	// ++pieceCount;
+	// totalHash += ec.getCoef(col, pieceCount);
+	// }
+	// }
+	//
+	// if (totalHash != myState.spaceArrangement)
+	// throw new RuntimeException("Not Equal");
+	// }
 
 	@Override
 	public String describe() {
@@ -385,6 +408,12 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 		return new C4Record(val);
 	}
 
+	/**
+	 * Sets the board to contain the passed number of pieces
+	 * 
+	 * @param numPieces
+	 *            The number of pieces on the board
+	 */
 	public void setNumPieces(int numPieces) {
 		myState.numPieces = numPieces;
 		turn = ((numPieces & 1) > 0) ? 'O' : 'X';

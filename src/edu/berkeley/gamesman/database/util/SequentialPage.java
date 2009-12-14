@@ -5,6 +5,13 @@ import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.RecordGroup;
 
+/**
+ * A page that remembers the last record group accessed. If stepping through a
+ * database sequentially, it only needs to extract the records from each group
+ * once
+ * 
+ * @author dnspies
+ */
 public class SequentialPage extends Page {
 	Record[] lastGroup;
 
@@ -12,6 +19,9 @@ public class SequentialPage extends Page {
 
 	boolean lastDirty;
 
+	/**
+	 * @param conf The configuration object
+	 */
 	public SequentialPage(Configuration conf) {
 		super(conf);
 		lastGroup = new Record[conf.recordsPerGroup];

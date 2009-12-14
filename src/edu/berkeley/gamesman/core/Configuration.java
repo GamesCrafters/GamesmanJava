@@ -43,7 +43,21 @@ public class Configuration {
 	 */
 	public int recordGroupByteLength;
 
-	public int valueStates, remotenessStates, scoreStates;
+	/**
+	 * The number of possible states for value. When zero, the record does not
+	 * contain value.
+	 */
+	public int valueStates;
+	/**
+	 * The number of possible states for remoteness. When zero, the record does
+	 * not contain remoteness.
+	 */
+	public int remotenessStates;
+	/**
+	 * The number of possible states for score. When zero, the record does not
+	 * contain score.
+	 */
+	public int scoreStates;
 
 	/**
 	 * Whether the record group size is small enough to fit in a long. If this
@@ -61,6 +75,10 @@ public class Configuration {
 	 */
 	public final Properties props;
 
+	/**
+	 * Should records be compressed by grouping them as integers of the
+	 * appropriate base?
+	 */
 	public boolean superCompress;
 
 	/**

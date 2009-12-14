@@ -5,8 +5,20 @@ import java.util.Collection;
 
 import edu.berkeley.gamesman.util.Pair;
 
+/**
+ * This is the super class for all top-down mutable games
+ * 
+ * @author dnspies
+ * 
+ * @param <S>
+ *            The state for this game
+ */
 public abstract class TopDownMutaGame<S> extends Game<S> {
 
+	/**
+	 * @param conf
+	 *            The configuration object
+	 */
 	public TopDownMutaGame(Configuration conf) {
 		super(conf);
 	}
@@ -17,6 +29,11 @@ public abstract class TopDownMutaGame<S> extends Game<S> {
 		return displayState();
 	}
 
+	/**
+	 * "Pretty-print" the current State for display to the user
+	 * 
+	 * @return a pretty-printed string
+	 */
 	public abstract String displayState();
 
 	@Override
@@ -25,8 +42,17 @@ public abstract class TopDownMutaGame<S> extends Game<S> {
 		return getState();
 	}
 
+	/**
+	 * Sets the board position to the passed hash
+	 * 
+	 * @param hash
+	 *            The hash to match
+	 */
 	public abstract void setToHash(long hash);
 
+	/**
+	 * @return The current state of the game
+	 */
 	public abstract S getState();
 
 	@Override
@@ -35,8 +61,17 @@ public abstract class TopDownMutaGame<S> extends Game<S> {
 		return primitiveValue();
 	}
 
+	/**
+	 * @return The primitive value of the current position
+	 */
 	public abstract PrimitiveValue primitiveValue();
 
+	/**
+	 * Sets the board to the passed state
+	 * 
+	 * @param pos
+	 *            A state to set
+	 */
 	public abstract void setToState(S pos);
 
 	@Override
@@ -45,6 +80,9 @@ public abstract class TopDownMutaGame<S> extends Game<S> {
 		return getHash();
 	}
 
+	/**
+	 * @return The hash of the current position
+	 */
 	public abstract long getHash();
 
 	@Override
@@ -59,12 +97,32 @@ public abstract class TopDownMutaGame<S> extends Game<S> {
 		return getState();
 	}
 
+	/**
+	 * Sets the board to the position passed in string form
+	 * 
+	 * @param pos
+	 *            The position to set to
+	 */
 	public abstract void setFromString(String pos);
 
+	/**
+	 * Makes a move on the board. The possible moves are ordered such that this
+	 * will always be the move made when makeMove() is called
+	 * 
+	 * @return Whether there are any possible moves to be made
+	 */
 	public abstract boolean makeMove();
 
+	/**
+	 * Changes the last move made to the next possible move in the list
+	 * 
+	 * @return If there are any more moves to be tried
+	 */
 	public abstract boolean changeMove();
 
+	/**
+	 * Undoes the last move made
+	 */
 	public abstract void undoMove();
 
 	@Override
@@ -73,6 +131,9 @@ public abstract class TopDownMutaGame<S> extends Game<S> {
 		return validMoves();
 	}
 
+	/**
+	 * @return All the possible moves for the current position
+	 */
 	public Collection<Pair<String, S>> validMoves() {
 		boolean made = makeMove();
 		int i = 0;
@@ -86,6 +147,9 @@ public abstract class TopDownMutaGame<S> extends Game<S> {
 		return validMoves;
 	}
 
+	/**
+	 * @return The maximum number of possible moves for any position
+	 */
 	public abstract int maxMoves();
 
 	/**

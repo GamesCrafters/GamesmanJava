@@ -3,6 +3,14 @@ package edu.berkeley.gamesman.util;
 import java.lang.reflect.Array;
 import java.util.*;
 
+/**
+ * A LinkedList whose objects are recycled rather than instantiated
+ * 
+ * @author dnspies
+ * 
+ * @param <T>
+ *            The type of element
+ */
 public class QuickLinkedList<T> implements List<T>, Queue<T> {
 	private final int[] nextList, prevList;
 
@@ -16,6 +24,13 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 
 	private final Factory<T> factory;
 
+	/**
+	 * @param objects
+	 *            The array to be used as the object pile for this list
+	 * @param factory
+	 *            A factory for instantiating new objects when there are no
+	 *            available older ones
+	 */
 	public QuickLinkedList(T[] objects, Factory<T> factory) {
 		nextList = new int[objects.length];
 		prevList = new int[objects.length];
@@ -79,6 +94,11 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 		firstNull = position;
 	}
 
+	/**
+	 * A ListIterator over the elements in the QuickLinkedList
+	 * 
+	 * @author dnspies
+	 */
 	public class QuickLinkedIterator implements ListIterator<T> {
 		int nextPosition = first;
 
@@ -94,6 +114,13 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 			objects[lastAdded] = e;
 		}
 
+		/**
+		 * Adds a new object to the list and returns it. If there is an old
+		 * unused object, it recycles that, otherwise it asks the factory for a
+		 * new one
+		 * 
+		 * @return The added object
+		 */
 		public T add() {
 			addBefore(nextPosition);
 			if (objects[lastAdded] == null)
@@ -158,6 +185,12 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 			}
 		}
 
+		/**
+		 * Resets this iterator to the beginning or end of the list
+		 * 
+		 * @param fromEnd
+		 *            Whether or not to start at the end of the list
+		 */
 		public void reset(boolean fromEnd) {
 			if (fromEnd) {
 				nextPosition = -1;
@@ -168,14 +201,25 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 			}
 		}
 
+		/**
+		 * @return The array index of the next object in the list
+		 */
 		public int nextSerial() {
 			return nextPosition;
 		}
 
+		/**
+		 * @param serial
+		 *            The array index of the object to jump to
+		 */
 		public void jumpSerial(int serial) {
 			nextPosition = serial;
 		}
 
+		/**
+		 * @return The array index of the object to be used later with
+		 *         QuickLinkedList.putBack
+		 */
 		public int tempRemove() {
 			int posRemoved;
 			if (lastCallWasPrevious)
@@ -431,6 +475,13 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 			return result;
 	}
 
+	/**
+	 * Puts a tempRemoved object back into the list at the same position it was
+	 * previously at
+	 * 
+	 * @param serial
+	 *            The array index of the removed object
+	 */
 	public void putBack(int serial) {
 		if (nextList[serial] < 0) {
 			if (last < 0)
@@ -451,6 +502,12 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 		++size;
 	}
 
+	/**
+	 * Adds an element to the start of the list. Either it recycles an unused
+	 * element or instantiates a new one
+	 * 
+	 * @return The element added
+	 */
 	public T addFirst() {
 		addBefore(first);
 		if (objects[lastAdded] == null)
@@ -468,6 +525,12 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 		return str.toString();
 	}
 
+	/**
+	 * Adds an element to the end of the list. Either it recycles an unused
+	 * element or instantiates a new one
+	 * 
+	 * @return The element added
+	 */
 	public T addLast() {
 		addBefore(-1);
 		if (objects[lastAdded] == null)

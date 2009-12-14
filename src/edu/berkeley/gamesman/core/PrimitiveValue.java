@@ -28,6 +28,9 @@ public enum PrimitiveValue {
 	 */
 	IMPOSSIBLE(4);
 
+	/**
+	 * The numeric value of this primitive value (same as ordinal())
+	 */
 	public final int value;
 
 	/**

@@ -7,6 +7,13 @@ import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.util.*;
 import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
+/**
+ * A solver for top-down mutable games
+ * 
+ * @author dnspies
+ *
+ * @param <State> The state for the game
+ */
 public class TopDownMutaSolver<State> extends Solver {
 	private boolean containsRemoteness;
 
@@ -43,6 +50,11 @@ public class TopDownMutaSolver<State> extends Solver {
 		};
 	}
 
+	/**
+	 * The method that solves the game
+	 * 
+	 * @param conf The configuration object
+	 */
 	public void solve(Configuration conf) {
 		TopDownMutaGame<State> game = Util.checkedCast(conf.getGame());
 		Record[] undecideRecords = new Record[conf.recordsPerGroup];

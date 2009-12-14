@@ -6,12 +6,20 @@ import edu.berkeley.gamesman.game.TopDownC4;
 import edu.berkeley.gamesman.game.util.C4State;
 import edu.berkeley.gamesman.util.ExpCoefs;
 
+/**
+ * A hasher for top-down connect 4
+ * 
+ * @author dnspies
+ */
 public class TDC4Hasher extends Hasher<C4State> {
 
 	private long[] offsets;
 
 	private long[] arrangeLengths;
 
+	/**
+	 * @param conf The configuration object
+	 */
 	public TDC4Hasher(Configuration conf) {
 		super(conf);
 	}

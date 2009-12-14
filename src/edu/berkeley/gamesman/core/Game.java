@@ -417,6 +417,9 @@ public abstract class Game<State> {
 	 */
 	public abstract long numHashes();
 
+	/**
+	 * @return The total number of possible states a record could be
+	 */
 	public long recordStates() {
 		return (conf.valueStates > 0 ? conf.valueStates : 1)
 				* (conf.remotenessStates > 0 ? conf.remotenessStates : 1)

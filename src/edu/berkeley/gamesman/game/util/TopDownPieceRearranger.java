@@ -2,6 +2,12 @@ package edu.berkeley.gamesman.game.util;
 
 import edu.berkeley.gamesman.util.*;
 
+/**
+ * A binary rearranger which is structured to match the format of top-down
+ * solves (No next method and allowing multiple insertions and removals)
+ * 
+ * @author dnspies
+ */
 public class TopDownPieceRearranger {
 	private static class Piece {
 		long hash;
@@ -46,6 +52,11 @@ public class TopDownPieceRearranger {
 
 	}
 
+	/**
+	 * @param numSpaces
+	 *            The number of empty spaces on the board (it is presumed the
+	 *            game begins with no pieces on the board)
+	 */
 	public TopDownPieceRearranger(int numSpaces) {
 		Piece[] pieceArray = new Piece[numSpaces];
 		QuickLinkedList<Piece> myPieces = null;
@@ -70,6 +81,15 @@ public class TopDownPieceRearranger {
 		myCharIter = new TDPRIter();
 	}
 
+	/**
+	 * Moves a piece at the given serial back a certain number of steps
+	 * 
+	 * @param serial
+	 *            The serial of the piece to be moved
+	 * @param stepsBack
+	 *            The number of steps back you wish to move it
+	 * @return The new serial of the piece being moved
+	 */
 	public int changeMove(int serial, int stepsBack) {
 		pieceIterator.jumpSerial(serial);
 		Piece move = pieceIterator.next();
@@ -145,6 +165,16 @@ public class TopDownPieceRearranger {
 	// throw new RuntimeException("Hash doesn't match");
 	// }
 
+	/**
+	 * Adds a piece to the arrangement stepsBack steps from the end of the
+	 * arrangement
+	 * 
+	 * @param player
+	 *            The player of the added piece
+	 * @param stepsBack
+	 *            The number of steps from the end
+	 * @return The serial of the added piece
+	 */
 	public int makeMove(char player, int stepsBack) {
 
 		pieceIterator.reset(true);
@@ -188,6 +218,12 @@ public class TopDownPieceRearranger {
 		return serial;
 	}
 
+	/**
+	 * Removes the passed piece from the arrangement
+	 * 
+	 * @param serial
+	 *            The serial of the piece to remove
+	 */
 	public void undoMove(int serial) {
 
 		pieceIterator.jumpSerial(serial);
@@ -221,6 +257,9 @@ public class TopDownPieceRearranger {
 
 	}
 
+	/**
+	 * @return The hash of this arrangement
+	 */
 	public long getHash() {
 		return hash;
 	}
@@ -229,6 +268,14 @@ public class TopDownPieceRearranger {
 		return pieces.toString();
 	}
 
+	/**
+	 * @param numPieces
+	 *            The number of pieces present
+	 * @param numOs
+	 *            The number of those pieces which are O's
+	 * @param pieceArrangement
+	 *            The arrangement hash of the pieces
+	 */
 	public void setArrangement(int numPieces, int numOs, long pieceArrangement) {
 		pieces.clear();
 		hash = pieceArrangement;
@@ -259,11 +306,20 @@ public class TopDownPieceRearranger {
 		pieceIterator.reset(false);
 	}
 
+	/**
+	 * @return An iterator over the players of all the pieces from left to right
+	 */
 	public CharIterator getCharIterator() {
 		myCharIter.reset();
 		return myCharIter;
 	}
 
+	/**
+	 * Sets this rearranger to match the passed arrangement
+	 * 
+	 * @param arrangement
+	 *            A string representing the arrangement of pieces
+	 */
 	public void setArrangement(String arrangement) {
 		pieces.clear();
 		char[] arrangePos = arrangement.toCharArray();

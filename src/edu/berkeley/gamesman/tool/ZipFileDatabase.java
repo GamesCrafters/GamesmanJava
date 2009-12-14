@@ -1,11 +1,26 @@
-package edu.berkeley.gamesman.util;
+package edu.berkeley.gamesman.tool;
 
 import java.io.*;
 import java.util.zip.GZIPOutputStream;
 
 import edu.berkeley.gamesman.core.Configuration;
 
+/**
+ * Converts a FileDatabase into a GZippedFileDatabase
+ * 
+ * @author dnspies
+ */
 public class ZipFileDatabase {
+	/**
+	 * @param args
+	 *            The file name of the database to zip followed by the length of
+	 *            each entry followed by the buffer length for the OutputStream
+	 * @throws IOException
+	 *             If an IOException is thrown
+	 * @throws ClassNotFoundException
+	 *             If loading the configuration object throws a
+	 *             ClassNotFoundException
+	 */
 	public static void main(String[] args) throws IOException,
 			ClassNotFoundException {
 		File readFrom = new File(args[0]);

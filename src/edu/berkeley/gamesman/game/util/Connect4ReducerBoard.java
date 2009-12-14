@@ -7,11 +7,20 @@ import java.math.BigInteger;
  * row or if the four-in-a-row are not on top. If you can think of any other
  * ways to quickly check for impossible positions, please let me know
  * 
+ * EDIT: This class doesn't seem to help reduce database size... It may be
+ * useless
+ * 
  * @author dnspies
  */
 public class Connect4ReducerBoard extends BitSetBoard {
 	boolean badPosition;
 
+	/**
+	 * @param gameHeight
+	 *            The height of the game
+	 * @param gameWidth
+	 *            The width of the game
+	 */
 	public Connect4ReducerBoard(int gameHeight, int gameWidth) {
 		super(gameHeight, gameWidth);
 		badPosition = false;
