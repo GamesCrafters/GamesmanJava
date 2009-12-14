@@ -84,10 +84,16 @@ public class GZippedFileDatabase extends Database {
 			if (entrySize > 0L) {
 				int numEntries = (int) ((conf.getGame().numHashes() + entrySize - 1) / entrySize);
 				entryPoints = new long[numEntries];
+				byte[] entryBytes = new byte[numEntries << 3];
+				int bytesRead = 0;
+				while (bytesRead < entryBytes.length)
+					bytesRead += fis.read(entryBytes, bytesRead,
+							entryBytes.length - bytesRead);
+				int count = 0;
 				for (int i = 0; i < numEntries; i++) {
 					for (int bit = 56; bit >= 0; bit -= 8) {
 						entryPoints[i] <<= 8;
-						entryPoints[i] |= fis.read();
+						entryPoints[i] |= ((int) entryBytes[count++]) & 255;
 					}
 				}
 			} else {

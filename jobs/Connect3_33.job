@@ -1,0 +1,11 @@
+gamesman.game = Connect4
+gamesman.game.width = 3
+gamesman.game.height = 3
+gamesman.game.pieces = 3
+gamesman.hasher = TieredItergameHasher
+gamesman.solver = C4IntegratedSolver
+gamesman.solver.directRead = false
+gamesman.database = MemoryCachedDatabase
+gamesman.db.uri = database33.db
+gamesman.db.compression = gzip
+record.fields = VALUE,REMOTENESS
