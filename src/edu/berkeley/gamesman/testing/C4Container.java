@@ -12,6 +12,7 @@ import javax.swing.*;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
+import edu.berkeley.gamesman.database.GZippedFileDatabase;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -92,19 +93,27 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 		Database fd;
 
 		try {
-			File dataFile = new File(args[0]);
-			FileInputStream fis = new FileInputStream(dataFile);
-			int confLength = 0;
-			for (int i = 28; i >= 0; i -= 8) {
-				confLength <<= 8;
-				confLength |= fis.read();
+			if (args[0].contains(":")) {
+				Database theBase = new GZippedFileDatabase();
+				theBase.initialize(args[0]);
+				conf = theBase.getConfiguration();
+				fd = theBase;
+				conf.db = theBase;
+			} else {
+				File dataFile = new File(args[0]);
+				FileInputStream fis = new FileInputStream(dataFile);
+				int confLength = 0;
+				for (int i = 28; i >= 0; i -= 8) {
+					confLength <<= 8;
+					confLength |= fis.read();
+				}
+				byte[] confBytes = new byte[confLength];
+				fis.read(confBytes);
+				fis.close();
+				conf = Configuration.load(confBytes);
+				conf.setProperty("gamesman.db.uri", args[0]);
+				fd = conf.openDatabase();
 			}
-			byte[] confBytes = new byte[confLength];
-			fis.read(confBytes);
-			fis.close();
-			conf = Configuration.load(confBytes);
-			conf.setProperty("gamesman.db.uri", args[0]);
-			fd = conf.openDatabase();
 		} catch (ClassNotFoundException e) {
 			Util.fatalError("failed to load class", e);
 			return;

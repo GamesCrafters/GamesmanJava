@@ -77,7 +77,8 @@ public class TieredHadoopTool extends Configured implements Tool {
 	private void processRun(Configuration conf, int tier, int lastTier) throws IOException {
 		TieredHasher<?> h = Util.checkedCast(myConf.getHasher());
 		long firstHash = h.hashOffsetForTier(tier);
-		long endHash = h.hashOffsetForTier(tier+1);
+		long numHashes=h.numHashesForTier(tier);
+		long endHash = firstHash+numHashes;
 
 		JobConf job = new JobConf(conf, TierMap.class);
 
@@ -95,8 +96,8 @@ public class TieredHadoopTool extends Configured implements Tool {
 			numMappers = 1;
 		}
 		if (minSplit > 0) {
-			if (((endHash - firstHash)/numMappers) < minSplit) {
-				numMappers = (int)((endHash - firstHash)/minSplit);
+			if ((numHashes/numMappers) < minSplit) {
+				numMappers = (int)(numHashes/minSplit);
 				if (numMappers < 1) {
 					numMappers = 1;
 				}
