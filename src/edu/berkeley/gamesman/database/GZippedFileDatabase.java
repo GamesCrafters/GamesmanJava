@@ -61,8 +61,7 @@ public class GZippedFileDatabase extends Database {
 				int entryNum = (int) (loc / entrySize);
 				if (isRemote) {
 					filePos = entryPoints[entryNum];
-					int readInsurance = Math.max(
-							(int) ((len + loc % entrySize) * 2), bufferSize);
+					int readInsurance = (int) (len+loc%entrySize+512);
 					byte[] readFrom = new byte[readInsurance];
 					rdf.getBytes(filePos, readFrom, 0, readInsurance);
 					myStream = new GZIPInputStream(new ByteArrayInputStream(
