@@ -737,4 +737,37 @@ public abstract class Database {
 		if (groups == null || groups.length < length)
 			groups = new byte[length];
 	}
+
+	public void fill(Record r, long offset, long len) {
+		Record[] recs = new Record[conf.recordsPerGroup];
+		for (int i = 0; i < conf.recordsPerGroup; i++)
+			recs[i] = r;
+		seek(offset);
+		while (len > 0) {
+			int groupsLength = (int) Math.min(len, maxBytes);
+			int numGroups = groupsLength / conf.recordGroupByteLength;
+			groupsLength = numGroups * conf.recordGroupByteLength;
+			ensureGroupsLength(groupsLength);
+			int onByte = 0;
+			if (conf.recordGroupUsesLong) {
+				long recordGroup = RecordGroup.longRecordGroup(conf, recs, 0);
+				for (int i = 0; i < numGroups; i++) {
+					RecordGroup.toUnsignedByteArray(conf, recordGroup, groups,
+							onByte);
+					onByte += conf.recordGroupByteLength;
+				}
+			} else {
+				BigInteger recordGroup = RecordGroup.bigIntRecordGroup(conf,
+						recs, 0);
+				for (int i = 0; i < numGroups; i++) {
+					RecordGroup.toUnsignedByteArray(conf, recordGroup, groups,
+							onByte);
+					onByte += conf.recordGroupByteLength;
+				}
+
+			}
+			putBytes(groups, 0, groupsLength);
+			len -= groupsLength;
+		}
+	}
 }

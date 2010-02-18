@@ -32,13 +32,41 @@ public class BreadthFirstSolver<T> extends Solver {
 	@Override
 	public WorkUnit prepareSolve(Configuration config) {
 		conf = config;
-		Game<?> game = config.getGame();
+		Game<T> game = Util.checkedCast(config.getGame());
 		int maxRemoteness = conf.getInteger("gamesman.solver.maxRemoteness",
 				Integer.MAX_VALUE);
 		hashSpace = game.numHashes();
 		Record defaultRecord = game.newRecord(PrimitiveValue.UNDECIDED);
-		for (long index = 0; index < hashSpace; index++)
-			writeDb.putRecord(index, defaultRecord);
+		writeDb.fill(defaultRecord, 0, hashSpace);
+
+		long numPositionsZero = 0;
+		long numPositionsOne = 0;
+		for (T s : game.startingPositions()) {
+			long hash = game.stateToHash(s);
+			PrimitiveValue win = game.primitiveValue(s);
+			Record rec = game.newRecord(win);
+			writeDb.putRecord(hash, rec);
+			for (Pair<String, T> child : game.validMoves(s)) {
+				long childhash = game.stateToHash(child.cdr);
+				// it is possible that some of our children are duplicates
+				// so to count numPositionsOne correctly, we ignore those
+				// duplicates
+				if (readDb.getRecord(childhash).value == PrimitiveValue.UNDECIDED) {
+					Record childrec = game.newRecord(win);
+					childrec.remoteness = 1;
+					writeDb.putRecord(childhash, childrec);
+					numPositionsOne++;
+				}
+			}
+			numPositionsZero++;
+		}
+		assert Util.debug(DebugFacility.SOLVER,
+				"Number of states at remoteness 0: " + numPositionsZero);
+		assert Util.debug(DebugFacility.SOLVER,
+				"Number of states at remoteness 1: " + numPositionsOne);
+		lastTier = 1;
+		writeDb.flush();
+
 		return new BreadthFirstWorkUnit(Util
 				.<Game<T>, Game<?>> checkedCast(game), maxRemoteness);
 	}
@@ -119,7 +147,8 @@ public class BreadthFirstSolver<T> extends Solver {
 								+ numPositionsInLevel);
 				try {
 					writeDb.flush();
-					barr.await();
+					if (barr != null)
+						barr.await();
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				} catch (BrokenBarrierException e) {
@@ -133,33 +162,6 @@ public class BreadthFirstSolver<T> extends Solver {
 		}
 
 		public List<WorkUnit> divide(int num) {
-			long numPositionsZero = 0;
-			long numPositionsOne = 0;
-			for (T s : game.startingPositions()) {
-				long hash = game.stateToHash(s);
-				PrimitiveValue win = game.primitiveValue(s);
-				Record rec = game.newRecord(win);
-				writeDb.putRecord(hash, rec);
-				for (Pair<String, T> child : game.validMoves(s)) {
-					long childhash = game.stateToHash(child.cdr);
-					// it is possible that some of our children are duplicates
-					// so to count numPositionsOne correctly, we ignore those
-					// duplicates
-					if (readDb.getRecord(childhash).value == PrimitiveValue.UNDECIDED) {
-						Record childrec = game.newRecord(win);
-						childrec.remoteness = 1;
-						writeDb.putRecord(childhash, childrec);
-						numPositionsOne++;
-					}
-				}
-				numPositionsZero++;
-			}
-			assert Util.debug(DebugFacility.SOLVER,
-					"Number of states at remoteness 0: " + numPositionsZero);
-			assert Util.debug(DebugFacility.SOLVER,
-					"Number of states at remoteness 1: " + numPositionsOne);
-			lastTier = 1;
-			writeDb.flush();
 			ArrayList<WorkUnit> arr = new ArrayList<WorkUnit>(num);
 			// arr.add(this);
 			long hashIncrement = hashSpace / num;

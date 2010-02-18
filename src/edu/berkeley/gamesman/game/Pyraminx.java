@@ -9,6 +9,7 @@ import java.util.HashMap;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.hasher.PermutationHash;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
@@ -201,8 +202,66 @@ public class Pyraminx extends Game<PyraminxState> {
 				nextMoves.add(new Pair<String, PyraminxState>(move, next));
 			}
 		}
-		System.out.println(nextMoves);
 		return nextMoves;
+	}
+
+	private class PRecord extends Record {
+		protected PRecord() {
+			super(conf);
+		}
+
+		protected PRecord(long state) {
+			super(conf);
+			set(state);
+		}
+
+		protected PRecord(int remoteness) {
+			super(conf);
+			this.remoteness = remoteness;
+		}
+
+		public PRecord(PrimitiveValue pv) {
+			super(conf);
+			value = pv;
+		}
+
+		@Override
+		public long getState() {
+			if (value.equals(PrimitiveValue.UNDECIDED))
+				return 0;
+			else
+				return remoteness + 1;
+		}
+
+		@Override
+		public void set(long state) {
+			if (state == 0)
+				value = PrimitiveValue.UNDECIDED;
+			else {
+				value = PrimitiveValue.WIN;
+				remoteness = (int) (state - 1);
+			}
+		}
+	}
+
+	@Override
+	public Record newRecord() {
+		return new PRecord();
+	}
+
+	@Override
+	public Record newRecord(long val) {
+		return new PRecord(val);
+	}
+
+	@Override
+	public Record newRecord(PrimitiveValue pv) {
+		return new PRecord(pv);
+	}
+
+	@Override
+	public long recordStates() {
+		return 21;
 	}
 }
 

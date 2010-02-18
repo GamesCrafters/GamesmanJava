@@ -2,15 +2,5 @@ gamesman.game = Pyraminx
 gamesman.solver = BreadthFirstSolver
 gamesman.hasher = NullHasher
 gamesman.db.uri = databasePyraminx.db
-gamesman.database = cached:FileDatabase
-gamesman.dotty.uri = databasePyraminx.dot
+gamesman.database = MemoryCachedDatabase
 gamesman.debug.SOLVER = true
-gamesman.debug.JSON = true
-gamesman.threads = 2
-
-json.databasedirectory = 
-
-# "json.unsolved.*" is the default configuration for unsolved games.
-# "json.fields.*" is the list of valid fields (in the database filename)
-json.unsolved.pyraminx = jobs/Pyraminx.job
-json.fields.pyraminx =
