@@ -21,8 +21,6 @@ import edu.berkeley.gamesman.util.*;
  */
 public class BreadthFirstSolver<T extends State> extends Solver {
 
-	Configuration conf;
-
 	long hashSpace;
 
 	protected CyclicBarrier barr;
@@ -74,10 +72,10 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 		}
 
 		// For divide()
-		private BreadthFirstWorkUnit(BreadthFirstWorkUnit copy, long firstHash,
-				long lastHashPlusOne) {
-			game = copy.game;
-			maxRemoteness = copy.maxRemoteness;
+		private BreadthFirstWorkUnit(Configuration conf, long firstHash,
+				long lastHashPlusOne, int maxRemoteness) {
+			game = Util.checkedCast(conf.getGame());
+			this.maxRemoteness = maxRemoteness;
 			this.firstHash = firstHash;
 			this.lastHashPlusOne = lastHashPlusOne;
 		}
@@ -159,14 +157,13 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 			if (num < hashSpace) {
 				for (int i = 0; i < num - 1; i++) {
 					long endHash = currentHash + hashIncrement;
-					arr
-							.add(new BreadthFirstWorkUnit(this, currentHash,
-									endHash));
+					arr.add(new BreadthFirstWorkUnit(conf.cloneAll(),
+							currentHash, endHash, maxRemoteness));
 					currentHash = endHash;
 				}
 			}
 			// add the last one separately in case of rounding errors.
-			arr.add(new BreadthFirstWorkUnit(this, currentHash, hashSpace));
+			arr.add(this);
 			barr = new CyclicBarrier(arr.size());
 			return arr;
 		}
