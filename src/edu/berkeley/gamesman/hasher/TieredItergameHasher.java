@@ -20,8 +20,9 @@ public final class TieredItergameHasher extends TieredHasher<ItergameState> {
 	}
 
 	@Override
-	public ItergameState gameStateForTierAndOffset(int tier, long index) {
-		return new ItergameState(tier, index);
+	public void gameStateForTierAndOffset(int tier, long index, ItergameState s) {
+		s.tier = tier;
+		s.hash = index;
 	}
 
 	@Override

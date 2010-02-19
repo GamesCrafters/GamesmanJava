@@ -13,7 +13,7 @@ import edu.berkeley.gamesman.util.Pair;
  * @param <S>
  *            The state for this game
  */
-public abstract class TopDownMutaGame<S> extends Game<S> {
+public abstract class TopDownMutaGame<S extends State> extends Game<S> {
 
 	/**
 	 * @param conf
@@ -37,9 +37,9 @@ public abstract class TopDownMutaGame<S> extends Game<S> {
 	public abstract String displayState();
 
 	@Override
-	public S hashToState(long hash) {
+	public void hashToState(long hash, S state) {
 		setToHash(hash);
-		return getState();
+		state.set(getState());
 	}
 
 	/**
@@ -145,6 +145,17 @@ public abstract class TopDownMutaGame<S> extends Game<S> {
 		}
 		undoMove();
 		return validMoves;
+	}
+
+	public int validMoves(S pos, S[] childArray) {
+		boolean made = makeMove();
+		int i;
+		for (i = 0; made; i++) {
+			childArray[i] = getState();
+			made = changeMove();
+		}
+		undoMove();
+		return i;
 	}
 
 	/**

@@ -13,10 +13,10 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author Steven Schlansker
  * @see TieredGame
- * @param <State>
+ * @param <S>
  *            The class that represents a State
  */
-public abstract class TieredHasher<State> extends Hasher<State> {
+public abstract class TieredHasher<S extends State> extends Hasher<S> {
 	/**
 	 * Default constructor
 	 * 
@@ -28,13 +28,13 @@ public abstract class TieredHasher<State> extends Hasher<State> {
 	}
 
 	@Override
-	public long hash(State board) {
+	public long hash(S board) {
 		Util.fatalError("Not implemented"); // TODO
 		return 0;
 	}
 
 	@Override
-	public State unhash(long hash) {
+	public S unhash(long hash) {
 		Util.fatalError("Not implemented"); // TODO
 		return null;
 	}
@@ -101,7 +101,7 @@ public abstract class TieredHasher<State> extends Hasher<State> {
 	 *            the first board in the tier)
 	 * @return The represented GameState
 	 */
-	public abstract State gameStateForTierAndOffset(int tier, long index);
+	public abstract void gameStateForTierAndOffset(int tier, long index, S state);
 
 	/**
 	 * Convert a State into a tier/index pair Analogous to hash for a Tiered
@@ -111,5 +111,5 @@ public abstract class TieredHasher<State> extends Hasher<State> {
 	 *            The game state we have
 	 * @return a Pair with tier/offset enclosed
 	 */
-	public abstract Pair<Integer, Long> tierIndexForState(State state);
+	public abstract Pair<Integer, Long> tierIndexForState(S state);
 }

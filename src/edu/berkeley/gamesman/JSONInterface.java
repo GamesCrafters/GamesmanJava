@@ -281,7 +281,7 @@ public class JSONInterface extends GamesmanApplication {
 			return response;
 		}
 
-		private <T> List<GamestateResponse> getNextMoveValues_core(
+		private <T extends State> List<GamestateResponse> getNextMoveValues_core(
 				String gamename, Map<String, String> params) throws TException {
 
 			String board = params.get("board");
@@ -314,8 +314,8 @@ public class JSONInterface extends GamesmanApplication {
 
 		}
 
-		public <T> GamestateResponse getMoveValue_core(String gamename,
-				Map<String, String> params) throws TException {
+		public <T extends State> GamestateResponse getMoveValue_core(
+				String gamename, Map<String, String> params) throws TException {
 
 			GamestateResponse response;
 
@@ -367,8 +367,8 @@ public class JSONInterface extends GamesmanApplication {
 			return j;
 		}
 
-		private <T> GamestateResponse fillResponseFields(Configuration conf,
-				T state, boolean isChildState) {
+		private <T extends State> GamestateResponse fillResponseFields(
+				Configuration conf, T state, boolean isChildState) {
 			GamestateResponse request = new GamestateResponse();
 			Database db = conf.db;
 			Record rec = null;

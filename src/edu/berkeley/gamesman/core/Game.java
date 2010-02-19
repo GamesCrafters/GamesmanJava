@@ -10,11 +10,11 @@ import edu.berkeley.gamesman.util.Util;
  * Public interface that all Games must implement to be solvable
  * 
  * @author Steven Schlansker
- * @param <State>
+ * @param <S>
  *            The object used to represent a Game State
  * 
  */
-public abstract class Game<State> {
+public abstract class Game<S extends State> {
 
 	protected final Configuration conf;
 
@@ -46,7 +46,7 @@ public abstract class Game<State> {
 	 * 
 	 * @return a Collection of all valid starting positions
 	 */
-	public abstract Collection<State> startingPositions();
+	public abstract Collection<S> startingPositions();
 
 	/**
 	 * Given a board state, generates all valid board states one move away from
@@ -56,7 +56,24 @@ public abstract class Game<State> {
 	 *            The board state to start from
 	 * @return A <move,state> pair for all valid board states one move forward
 	 */
-	public abstract Collection<Pair<String, State>> validMoves(State pos);
+	public abstract Collection<Pair<String, S>> validMoves(S pos);
+
+	/**
+	 * Valid moves without instantiation. Pass in a State array which the
+	 * children will be stored in.
+	 * 
+	 * @param pos
+	 *            The board state to start from
+	 * @param children
+	 *            The array to store all valid board states one move forward
+	 * @return The number of children for this position
+	 */
+	public abstract int validMoves(S pos, S[] children);
+
+	/**
+	 * @return The maximum number of children for any position
+	 */
+	public abstract int maxChildren();
 
 	/**
 	 * Applies move to pos
@@ -67,13 +84,13 @@ public abstract class Game<State> {
 	 *            A String for the move to apply to pos
 	 * @return The resulting State, or null if it isn't found in validMoves()
 	 */
-	public State doMove(State pos, String move) {
+	public S doMove(S pos, String move) {
 		// TODO - better solution for games!
 		// we don't want to keep the user from turning a rubik's cube if solved
 		// (primitive)
 		// if(!primitiveValue(pos).equals(PrimitiveValue.UNDECIDED))
 		// return null;
-		for (Pair<String, State> next : validMoves(pos))
+		for (Pair<String, S> next : validMoves(pos))
 			if (next.car.equals(move))
 				return next.cdr;
 		return null;
@@ -89,7 +106,7 @@ public abstract class Game<State> {
 	 *            The primitive State
 	 * @return the score of this position
 	 */
-	public int primitiveScore(State pos) {
+	public int primitiveScore(S pos) {
 		return 0;
 	}
 
@@ -110,7 +127,7 @@ public abstract class Game<State> {
 	 * @return the Record representing the state
 	 * @see edu.berkeley.gamesman.core.Record
 	 */
-	public abstract PrimitiveValue primitiveValue(State pos);
+	public abstract PrimitiveValue primitiveValue(S pos);
 
 	/**
 	 * @param conf
@@ -125,7 +142,11 @@ public abstract class Game<State> {
 	 *            The hash given
 	 * @return the State represented
 	 */
-	public abstract State hashToState(long hash);
+	public S hashToState(long hash) {
+		S res = newState();
+		hashToState(hash, res);
+		return res;
+	}
 
 	/**
 	 * Hash a given state into a hashed value
@@ -134,7 +155,7 @@ public abstract class Game<State> {
 	 *            The State given
 	 * @return The hash that represents that State
 	 */
-	public abstract long stateToHash(State pos);
+	public abstract long stateToHash(S pos);
 
 	/**
 	 * Produce a machine-parsable String representing the state. This function
@@ -145,7 +166,7 @@ public abstract class Game<State> {
 	 * @return a String
 	 * @see Game#stringToState(String)
 	 */
-	public abstract String stateToString(State pos);
+	public abstract String stateToString(S pos);
 
 	/**
 	 * "Pretty-print" a State for display to the user
@@ -154,7 +175,7 @@ public abstract class Game<State> {
 	 *            The state to display
 	 * @return a pretty-printed string
 	 */
-	public abstract String displayState(State pos);
+	public abstract String displayState(S pos);
 
 	/**
 	 * "Pretty-print" a State for display by Graphviz/Dotty. See
@@ -168,7 +189,7 @@ public abstract class Game<State> {
 	 *            The GameState to format.
 	 * @return The html-like formatting of the string.
 	 */
-	public String displayHTML(State pos) {
+	public String displayHTML(S pos) {
 		return displayState(pos).replaceAll("\n", "<br align=\"left\"/>");
 	}
 
@@ -181,7 +202,7 @@ public abstract class Game<State> {
 	 * @return a State
 	 * @see Game#stateToString(Object)
 	 */
-	public abstract State stringToState(String pos);
+	public abstract S stringToState(String pos);
 
 	/**
 	 * @return a String that uniquely describes the setup of this Game
@@ -425,4 +446,18 @@ public abstract class Game<State> {
 				* (conf.remotenessStates > 0 ? conf.remotenessStates : 1)
 				* (conf.scoreStates > 0 ? conf.scoreStates : 1);
 	}
+
+	/**
+	 * For mutable states. Avoids needing to instantiate new states.
+	 * 
+	 * @param hash
+	 *            The hash to use
+	 * @param s
+	 *            The state to store the result in
+	 */
+	public abstract void hashToState(long hash, S s);
+
+	public abstract S newState();
+
+	public abstract S[] newStateArray(int len);
 }

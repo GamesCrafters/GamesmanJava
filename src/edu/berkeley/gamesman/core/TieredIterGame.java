@@ -44,6 +44,12 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> {
 		return validMoves();
 	}
 
+	@Override
+	public int validMoves(ItergameState pos, ItergameState[] children) {
+		setState(pos);
+		return validMoves(children);
+	}
+
 	/**
 	 * @return The states of all the possible moves from this position.
 	 */
@@ -179,9 +185,7 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> {
 
 	public abstract int numberOfTiers();
 
-	/**
-	 * @return The maximum number of children for any position
-	 */
+	@Override
 	public abstract int maxChildren();
 
 	/**
@@ -192,4 +196,17 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> {
 	 * @return The number of moves stored
 	 */
 	public abstract int validMoves(ItergameState[] moves);
+
+	@Override
+	public ItergameState newState() {
+		return new ItergameState();
+	}
+
+	@Override
+	public ItergameState[] newStateArray(int len) {
+		ItergameState[] arr = new ItergameState[len];
+		for (int i = 0; i < len; i++)
+			arr[i] = newState();
+		return arr;
+	}
 }

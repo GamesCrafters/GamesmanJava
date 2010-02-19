@@ -9,7 +9,7 @@ import edu.berkeley.gamesman.util.Util;
  * @param <S>
  *            The state type of the comparison
  */
-public class DatabaseCompare<S> {
+public class DatabaseCompare<S extends State> {
 
 	/**
 	 * Compare two arguments
@@ -69,7 +69,7 @@ public class DatabaseCompare<S> {
 	 */
 	public static void main(String args[]) {
 		try {
-			new DatabaseCompare<Object>().compare(args);
+			new DatabaseCompare<State>().compare(args);
 			System.out.println("Compare successful!");
 		} catch (ClassNotFoundException e) {
 			Util.fatalError("Unable to load database class!", e);

@@ -19,7 +19,7 @@ import edu.berkeley.gamesman.util.*;
  * @param <T>
  *            The game state
  */
-public class BreadthFirstSolver<T> extends Solver {
+public class BreadthFirstSolver<T extends State> extends Solver {
 
 	Configuration conf;
 
@@ -34,41 +34,25 @@ public class BreadthFirstSolver<T> extends Solver {
 		conf = config;
 		Game<T> game = Util.checkedCast(config.getGame());
 		int maxRemoteness = conf.getInteger("gamesman.solver.maxRemoteness",
-				Integer.MAX_VALUE);
+				conf.remotenessStates);
 		hashSpace = game.numHashes();
 		Record defaultRecord = game.newRecord(PrimitiveValue.UNDECIDED);
 		writeDb.fill(defaultRecord, 0, hashSpace);
 
 		long numPositionsZero = 0;
-		long numPositionsOne = 0;
 		for (T s : game.startingPositions()) {
 			long hash = game.stateToHash(s);
 			PrimitiveValue win = game.primitiveValue(s);
 			Record rec = game.newRecord(win);
 			writeDb.putRecord(hash, rec);
-			for (Pair<String, T> child : game.validMoves(s)) {
-				long childhash = game.stateToHash(child.cdr);
-				// it is possible that some of our children are duplicates
-				// so to count numPositionsOne correctly, we ignore those
-				// duplicates
-				if (readDb.getRecord(childhash).value == PrimitiveValue.UNDECIDED) {
-					Record childrec = game.newRecord(win);
-					childrec.remoteness = 1;
-					writeDb.putRecord(childhash, childrec);
-					numPositionsOne++;
-				}
-			}
 			numPositionsZero++;
 		}
 		assert Util.debug(DebugFacility.SOLVER,
 				"Number of states at remoteness 0: " + numPositionsZero);
-		assert Util.debug(DebugFacility.SOLVER,
-				"Number of states at remoteness 1: " + numPositionsOne);
-		lastTier = 1;
+		lastTier = 0;
 		writeDb.flush();
 
-		return new BreadthFirstWorkUnit(Util
-				.<Game<T>, Game<?>> checkedCast(game), maxRemoteness);
+		return new BreadthFirstWorkUnit(game, maxRemoteness);
 	}
 
 	class BreadthFirstWorkUnit implements WorkUnit {
@@ -106,19 +90,24 @@ public class BreadthFirstSolver<T> extends Solver {
 					game.describe()));
 			solveTask.setTotal(lastHashPlusOne - firstHash);
 			solveTask.setProgress(0);
-			Record rec;
+			Record rec = game.newRecord();
 			Record childrec;
-			while (lastTier >= remoteness && remoteness < maxRemoteness) {
+			T currentPos = game.newState();
+			T[] childPositions = game.newStateArray(game.maxChildren());
+			while (lastTier >= remoteness && remoteness <= maxRemoteness) {
 				HashSet<Long> setValues = new HashSet<Long>();
 				numPositionsInLevel = 0;
-				for (long hash = firstHash; hash < lastHashPlusOne - 1; hash++) {
-					rec = readDb.getRecord(hash);
+				for (long hash = firstHash; hash < lastHashPlusOne; hash++) {
+					readDb.getRecord(hash, rec);
 					if (rec.value != PrimitiveValue.UNDECIDED
 							&& rec.remoteness == remoteness) {
 						// System.out.println("Found! "+hash+"="+rec);
-						for (Pair<String, T> child : game.validMoves(game
-								.hashToState(hash))) {
-							long childhash = game.stateToHash(child.cdr);
+						game.hashToState(hash, currentPos);
+						int numChildren = game.validMoves(currentPos,
+								childPositions);
+						for (int i = 0; i < numChildren; i++) {
+							long childhash = game
+									.stateToHash(childPositions[i]);
 							if (setValues.contains(childhash)) {
 								continue;
 							}

@@ -1,6 +1,5 @@
 package edu.berkeley.gamesman.game;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -9,6 +8,7 @@ import java.util.HashMap;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.hasher.PermutationHash;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
@@ -21,7 +21,7 @@ import edu.berkeley.gamesman.util.Util;
 public class Cuboid extends Game<CubeState> {
 	final int WIDTH, HEIGHT, DEPTH;
 
-	final Integer[] VALID_DIRS;
+	final int[] VALID_DIRS;
 
 	final String[] VALID_FACES;
 
@@ -52,8 +52,7 @@ public class Cuboid extends Game<CubeState> {
 		DEPTH = conf.getInteger("gamesman.game.depth", 2);
 		VALID_FACES = conf.getProperty("gamesman.game.faces", "FUR").split(
 				", *");
-		VALID_DIRS = conf.getIntegers("gamesman.game.dirs", new Integer[] { 1,
-				3 });
+		VALID_DIRS = conf.getInts("gamesman.game.dirs", new int[] { 1, 3 });
 		// TODO - generalize to arbitrary cuboids!
 		// TODO should we treat a 2x2x3 as different from a 3x2x2
 		// we could require that WIDTH <= HEIGHT <= DEPTH,
@@ -92,12 +91,10 @@ public class Cuboid extends Game<CubeState> {
 
 	@Override
 	public long stateToHash(CubeState state) {
-		ArrayList<Integer> cp = new ArrayList<Integer>(Arrays
-				.asList(state.pieces));
-		cp.remove(cp.size() - 1); // we don't care about the last piece because
-									// it will always be fixed
-		long hash = cpHasher.hash(cp).longValue();
-
+		int[] cp = new int[state.pieces.length - 1];
+		for (int i = 0; i < cp.length; i++)
+			cp[i] = state.pieces[i];
+		long hash = cpHasher.hash(cp);
 		hash *= THREE_TO_X[6];
 		for (int i = 0; i < 6; i++)
 			hash += state.orientations[i] * THREE_TO_X[i];
@@ -106,13 +103,13 @@ public class Cuboid extends Game<CubeState> {
 
 	@Override
 	public long numHashes() {
-		return THREE_TO_X[6] * (cpHasher.numHashes().longValue());
+		return THREE_TO_X[6] * cpHasher.numHashes();
 	}
 
 	@Override
-	public CubeState hashToState(long hash) {
+	public void hashToState(long hash, CubeState cs) {
 		// corner orientations
-		Integer[] co = new Integer[cornerCount];
+		int[] co = cs.orientations;
 		int totalorient = 0;
 		for (int i = 0; i < 6; i++) {
 			co[i] = (int) (hash % 3);
@@ -123,9 +120,9 @@ public class Cuboid extends Game<CubeState> {
 		co[7] = 0;
 
 		// corner permutations
-		ArrayList<Integer> cp = cpHasher.unhash(BigInteger.valueOf(hash));
-		cp.add(7);
-		return new CubeState(Util.toArray(cp), co);
+		int[] cp = cs.pieces;
+		cpHasher.unhash(hash, cp);
+		cp[cornerCount - 1] = 7;
 	}
 
 	@Override
@@ -147,13 +144,12 @@ public class Cuboid extends Game<CubeState> {
 	@Override
 	public CubeState stringToState(String pos) {
 		String[] pieces_orientations = pos.split(";");
-		return new CubeState(Util.parseIntegers(pieces_orientations[0]
-				.split(",")), Util.parseIntegers(pieces_orientations[1]
-				.split(",")));
+		return new CubeState(Util.parseInts(pieces_orientations[0].split(",")),
+				Util.parseInts(pieces_orientations[1].split(",")));
 	}
 
-	private void cycle_pieces(int p1, int p2, Integer[] pieces) {
-		Integer temp = pieces[p1];
+	private void cycle_pieces(int p1, int p2, int[] pieces) {
+		int temp = pieces[p1];
 		pieces[p1] = pieces[p2 - 4];
 		pieces[p2 - 4] = pieces[p2];
 		pieces[p2] = pieces[p1 + 4];
@@ -167,8 +163,8 @@ public class Cuboid extends Game<CubeState> {
 		ArrayList<Pair<String, CubeState>> next = new ArrayList<Pair<String, CubeState>>();
 		for (int times : VALID_DIRS) {
 			for (String face : VALID_FACES) {
-				Integer[] pieces = pos.pieces.clone();
-				Integer[] orientations = pos.orientations.clone();
+				int[] pieces = pos.pieces.clone();
+				int[] orientations = pos.orientations.clone();
 				for (int i = 0; i < times; i++) {
 					if (face.equals("F")) {
 						cycle_pieces(0, 5, pieces);
@@ -178,7 +174,7 @@ public class Cuboid extends Game<CubeState> {
 						orientations[5] = (orientations[5] + 2) % 3;
 						orientations[1] = (orientations[1] + 1) % 3;
 					} else if (face.equals("U")) {
-						Integer temp = pieces[0];
+						int temp = pieces[0];
 						pieces[0] = pieces[2];
 						pieces[2] = pieces[3];
 						pieces[3] = pieces[1];
@@ -205,18 +201,82 @@ public class Cuboid extends Game<CubeState> {
 		}
 		return next;
 	}
+
+	@Override
+	public int maxChildren() {
+		return VALID_DIRS.length * VALID_FACES.length;
+	}
+
+	@Override
+	public CubeState newState() {
+		return new CubeState();
+	}
+
+	@Override
+	public CubeState[] newStateArray(int len) {
+		CubeState[] arr = new CubeState[len];
+		for (int i = 0; i < len; i++)
+			arr[i] = newState();
+		return arr;
+	}
+
+	@Override
+	public int validMoves(CubeState pos, CubeState[] children) {
+		int c = 0;
+		for (int times : VALID_DIRS) {
+			for (String face : VALID_FACES) {
+				for (int i = 0; i < pos.pieces.length; i++)
+					children[c].pieces[i] = pos.pieces[i];
+				for (int i = 0; i < pos.orientations.length; i++)
+					children[c].orientations[i] = pos.orientations[i];
+				int[] pieces = children[c].pieces;
+				int[] orientations = children[c].orientations;
+				for (int i = 0; i < times; i++) {
+					if (face.equals("F")) {
+						cycle_pieces(0, 5, pieces);
+						cycle_pieces(0, 5, orientations);
+						orientations[0] = (orientations[0] + 2) % 3;
+						orientations[4] = (orientations[4] + 1) % 3;
+						orientations[5] = (orientations[5] + 2) % 3;
+						orientations[1] = (orientations[1] + 1) % 3;
+					} else if (face.equals("U")) {
+						int temp = pieces[0];
+						pieces[0] = pieces[2];
+						pieces[2] = pieces[3];
+						pieces[3] = pieces[1];
+						pieces[1] = temp;
+
+						temp = orientations[0];
+						orientations[0] = orientations[2];
+						orientations[2] = orientations[3];
+						orientations[3] = orientations[1];
+						orientations[1] = temp;
+					} else if (face.equals("R")) {
+						cycle_pieces(2, 4, pieces);
+						cycle_pieces(2, 4, orientations);
+						orientations[2] = (orientations[2] + 2) % 3;
+						orientations[6] = (orientations[6] + 1) % 3;
+						orientations[4] = (orientations[4] + 2) % 3;
+						orientations[0] = (orientations[0] + 1) % 3;
+					}
+				}
+				c++;
+			}
+		}
+		return c;
+	}
 }
 
-class CubeState {
-	private static final Integer[] SOLVED_PIECES = new Integer[] { 0, 1, 2, 3,
-			4, 5, 6, 7 };
+class CubeState implements State {
+	private static final int[] SOLVED_PIECES = new int[] { 0, 1, 2, 3, 4, 5, 6,
+			7 };
 
-	private static final Integer[] SOLVED_ORIENTATIONS = new Integer[] { 0, 0,
-			0, 0, 0, 0, 0, 0 };
+	private static final int[] SOLVED_ORIENTATIONS = new int[] { 0, 0, 0, 0, 0,
+			0, 0, 0 };
 
-	Integer[] pieces, orientations;
+	int[] pieces, orientations;
 
-	public CubeState(Integer[] pieces, Integer[] orientations) {
+	public CubeState(int[] pieces, int[] orientations) {
 		this.pieces = pieces;
 		this.orientations = orientations;
 	}
@@ -247,11 +307,11 @@ class CubeState {
 			int piece = pieces[i], orientation = orientations[i];
 			char[] current_chunk = new char[3];
 			current_chunk[0] = (solved_cube[piece][(orientation) % 3]); // top
-																		// piece
+			// piece
 			current_chunk[1] = (solved_cube[piece][(1 + orientation) % 3]); // right
-																			// piece
+			// piece
 			current_chunk[2] = (solved_cube[piece][(2 + orientation) % 3]); // left
-																			// piece
+			// piece
 			actual_colors[location] = current_chunk;
 			location++;
 		}
@@ -321,5 +381,16 @@ class CubeState {
 				cube_string = cube_string.replaceAll(face, "<font color=\""
 						+ COLOR_SCHEME.get(face) + "\">" + face + "</font>");
 		return cube_string;
+	}
+
+	public void set(State s) {
+		if (s instanceof CubeState) {
+			CubeState cs = (CubeState) s;
+			for (int i = 0; i < pieces.length; i++)
+				pieces[i] = cs.pieces[i];
+			for (int i = 0; i < orientations.length; i++)
+				orientations[i] = cs.orientations[i];
+		} else
+			throw new RuntimeException("Type mismatch");
 	}
 }

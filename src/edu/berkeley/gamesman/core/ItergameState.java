@@ -5,7 +5,7 @@ package edu.berkeley.gamesman.core;
  * 
  * @author DNSpies
  */
-public final class ItergameState {
+public final class ItergameState implements State {
 
 	/**
 	 * The tier
@@ -38,5 +38,14 @@ public final class ItergameState {
 	@Override
 	public String toString() {
 		return tier + "." + hash;
+	}
+
+	public void set(State s) {
+		if (s instanceof ItergameState) {
+			ItergameState is = (ItergameState) s;
+			tier = is.tier;
+			hash = is.hash;
+		} else
+			throw new RuntimeException("Wrong State passed");
 	}
 }

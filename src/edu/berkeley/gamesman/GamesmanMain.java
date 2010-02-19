@@ -8,7 +8,9 @@ import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Master;
 import edu.berkeley.gamesman.core.Solver;
+import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.util.DebugFacility;
+import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -16,7 +18,7 @@ import edu.berkeley.gamesman.util.Util;
  */
 public final class GamesmanMain extends GamesmanApplication {
 	private Configuration conf;
-	private Game<Object> gm;
+	private Game<State> gm;
 
 	/**
 	 * No arg constructor
@@ -126,7 +128,7 @@ public final class GamesmanMain extends GamesmanApplication {
 	 * Diagnostic call to unhash an arbitrary value to a game board
 	 */
 	public void executeunhash() {
-		Object state = gm.hashToState(Long.parseLong(conf.getProperty("gamesman.hash")));
+		State state = gm.hashToState(Long.parseLong(conf.getProperty("gamesman.hash")));
 		System.out.println(gm.displayState(state));
 	}
 
@@ -134,10 +136,10 @@ public final class GamesmanMain extends GamesmanApplication {
 	 * Diagnostic call to view all child moves of a given hashed game state
 	 */
 	public void executegenmoves() {
-		Object state = gm.hashToState(Long.parseLong(conf.getProperty("gamesman.hash")));
-		for (Object nextstate : gm.validMoves(state)) {
-			System.out.println(gm.stateToHash(nextstate));
-			System.out.println(gm.displayState(nextstate));
+		State state = gm.hashToState(Long.parseLong(conf.getProperty("gamesman.hash")));
+		for (Pair<String,State> nextstate : gm.validMoves(state)) {
+			System.out.println(gm.stateToHash(nextstate.cdr));
+			System.out.println(gm.displayState(nextstate.cdr));
 		}
 	}
 

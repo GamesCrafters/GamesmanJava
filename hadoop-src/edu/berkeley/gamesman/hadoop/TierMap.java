@@ -30,7 +30,7 @@ import edu.berkeley.gamesman.util.Util;
  * @author Patrick Horn
  */
 @SuppressWarnings("deprecation")
-public class TierMap<S> implements
+public class TierMap<S extends State> implements
 		Mapper<LongWritable, LongWritable, IntWritable, HadoopSplitDatabaseWritable> {
 
 	protected TieredGame<S> game;

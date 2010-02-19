@@ -9,6 +9,7 @@ import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.core.Master;
 import edu.berkeley.gamesman.core.Solver;
+import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.database.DatabaseCache;
 import edu.berkeley.gamesman.util.DebugFacility;
@@ -23,7 +24,7 @@ import edu.berkeley.gamesman.util.Util;
  */
 public final class LocalMaster implements Master, TaskFactory {
 
-	private Game<Object> game;
+	private Game<State> game;
 
 	Solver solver;
 

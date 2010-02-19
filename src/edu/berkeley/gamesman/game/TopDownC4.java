@@ -433,4 +433,18 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 	public long stateToHash(C4State pos) {
 		return ((TDC4Hasher) conf.getHasher()).hash(pos);
 	}
+
+	@Override
+	public C4State newState() {
+		return new C4State(0, 0, 0);
+	}
+
+	@Override
+	public C4State[] newStateArray(int len) {
+		C4State[] arr = new C4State[len];
+		for (int i = 0; i < len; i++) {
+			arr[i] = newState();
+		}
+		return arr;
+	}
 }

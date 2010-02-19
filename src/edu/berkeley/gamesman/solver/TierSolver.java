@@ -16,7 +16,7 @@ import edu.berkeley.gamesman.util.*;
  * @param <T>
  *            The state type for the game
  */
-public class TierSolver<T> extends Solver {
+public class TierSolver<T extends State> extends Solver {
 
 	/**
 	 * The number of positions to go through between each update/reset

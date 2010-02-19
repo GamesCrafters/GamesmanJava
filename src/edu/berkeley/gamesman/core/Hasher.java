@@ -8,7 +8,7 @@ import edu.berkeley.gamesman.util.Util;
  * @author Steven Schlansker
  * @param <Board> The type of Board that this hasher can hash
  */
-public abstract class Hasher<Board> {
+public abstract class Hasher<Board extends State> {
 	protected Game<Board> game;
 	protected Configuration conf;
 	

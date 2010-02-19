@@ -12,16 +12,16 @@ import edu.berkeley.gamesman.util.biginteger.BigInteger;
  * 
  * @author dnspies
  *
- * @param <State> The state for the game
+ * @param <S> The state for the game
  */
-public class TopDownMutaSolver<State> extends Solver {
+public class TopDownMutaSolver<S extends State> extends Solver {
 	private boolean containsRemoteness;
 
 	private QuickLinkedList<Record[]> recordList;
 
 	public void initialize(Configuration conf) {
 		super.initialize(conf);
-		final TopDownMutaGame<State> game = Util.checkedCast(conf.getGame());
+		final TopDownMutaGame<S> game = Util.checkedCast(conf.getGame());
 		Record[][] recArray = new Record[game.maxMoves() + 1][];
 		recordList = new QuickLinkedList<Record[]>(recArray,
 				new Factory<Record[]>() {
@@ -56,7 +56,7 @@ public class TopDownMutaSolver<State> extends Solver {
 	 * @param conf The configuration object
 	 */
 	public void solve(Configuration conf) {
-		TopDownMutaGame<State> game = Util.checkedCast(conf.getGame());
+		TopDownMutaGame<S> game = Util.checkedCast(conf.getGame());
 		Record[] undecideRecords = new Record[conf.recordsPerGroup];
 		Record uRecord = game.newRecord(PrimitiveValue.UNDECIDED);
 		for (int i = 0; i < conf.recordsPerGroup; i++)
@@ -103,7 +103,7 @@ public class TopDownMutaSolver<State> extends Solver {
 							(int) ((game.numHashes() + conf.recordsPerGroup - 1) / conf.recordsPerGroup));
 
 		}
-		for (State s : game.startingPositions()) {
+		for (S s : game.startingPositions()) {
 			game.setToState(s);
 			long currentTimeMillis = System.currentTimeMillis();
 			solve(game, game.newRecord(), 0);
@@ -113,7 +113,7 @@ public class TopDownMutaSolver<State> extends Solver {
 		}
 	}
 
-	private void solve(TopDownMutaGame<State> game, Record value, int depth) {
+	private void solve(TopDownMutaGame<S> game, Record value, int depth) {
 		if (depth < 3)
 			assert Util.debug(DebugFacility.SOLVER, game.toString());
 		long hash = game.getHash();

@@ -22,6 +22,7 @@ import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
+import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -47,7 +48,7 @@ public class DatabaseDump extends GamesmanApplication {
 
 	private Database db;
 
-	private Game<Object> gm;
+	private Game<State> gm;
 
 	private boolean pruneInvalid, alignRemoteness;
 
@@ -126,7 +127,7 @@ public class DatabaseDump extends GamesmanApplication {
 			Util.fatalError("Could not open URI: " + dottyFile, e);
 		}
 
-		Game<Object> gm = Util.checkedCast(db.getConfiguration().getGame());
+		Game<State> gm = Util.checkedCast(db.getConfiguration().getGame());
 		pruneInvalid = conf.getBoolean("gamesman.dotty.prune", true);
 		alignRemoteness = conf.getBoolean("gamesman.dotty.alignRemoteness",
 				true);
@@ -164,7 +165,7 @@ public class DatabaseDump extends GamesmanApplication {
 			// TODO - make this work with BFS and maxRemoteness!
 			HashSet<Long> seen = new HashSet<Long>();
 			Queue<Long> fringe = new LinkedList<Long>();
-			for (Object s : gm.startingPositions())
+			for (State s : gm.startingPositions())
 				fringe.add(gm.stateToHash(s));
 			while (!fringe.isEmpty()) {
 				long parentHash = fringe.remove();
@@ -209,7 +210,7 @@ public class DatabaseDump extends GamesmanApplication {
 		}
 		arr.add(parentHash);
 
-		Object parent = gm.hashToState(parentHash);
+		State parent = gm.hashToState(parentHash);
 
 		TreeMap<String, String> attrs = new TreeMap<String, String>();
 		Record rec = db.getRecord(parentHash);
@@ -241,7 +242,7 @@ public class DatabaseDump extends GamesmanApplication {
 			didOne = true;
 		}
 		w.println(" ];");
-		for (Pair<String, Object> child : gm.validMoves(parent)) {
+		for (Pair<String, State> child : gm.validMoves(parent)) {
 			// we're not interested in primitives that lead to primitives
 			if (gm.primitiveValue(parent) != PrimitiveValue.UNDECIDED
 					&& gm.primitiveValue(child.cdr) != PrimitiveValue.UNDECIDED)

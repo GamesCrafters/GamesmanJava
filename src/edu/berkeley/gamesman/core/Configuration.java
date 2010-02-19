@@ -535,12 +535,12 @@ public class Configuration {
 	 * @return The value associated with the key, if defined and an integer
 	 *         array. Otherwise, returns dfl.
 	 */
-	public Integer[] getIntegers(String key, Integer[] dfl) {
+	public int[] getInts(String key, int[] dfl) {
 		String iString = props.getProperty(key);
 		if (iString == null)
 			return dfl;
 		else
-			return Util.parseIntegers(iString.split(", *"));
+			return Util.parseInts(iString.split(", *"));
 	}
 
 	/**
@@ -696,5 +696,13 @@ public class Configuration {
 			e.printStackTrace();
 			return null;
 		}
+	}
+
+	public Integer[] getIntegers(String key, Integer[] dfl) {
+		String iString = props.getProperty(key);
+		if (iString == null)
+			return dfl;
+		else
+			return Util.parseIntegers(iString.split(", *"));
 	}
 }

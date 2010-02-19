@@ -14,12 +14,11 @@ import edu.berkeley.gamesman.util.Util;
  * manner
  * 
  * @author Steven Schlansker
- * 
- * @param <State>
+ * @param <S>
  *            The type that you use to represent your States
  */
-public abstract class TieredGame<State> extends Game<State> {
-	protected TieredHasher<State> myHasher;
+public abstract class TieredGame<S extends State> extends Game<S> {
+	protected TieredHasher<S> myHasher;
 
 	/**
 	 * Default constructor
@@ -37,7 +36,7 @@ public abstract class TieredGame<State> extends Game<State> {
 	}
 
 	@Override
-	public State hashToState(long hash) {
+	public void hashToState(long hash, S state) {
 		if (myHasher == null)
 			Util.fatalError("You must call prepare() before hashing!");
 		int tiers = myHasher.numberOfTiers();
@@ -45,21 +44,22 @@ public abstract class TieredGame<State> extends Game<State> {
 		while (high > low + 1) {
 			long offset = myHasher.hashOffsetForTier(guess);
 			if (offset <= hash)
-				if (myHasher.hashOffsetForTier(guess + 1) > hash)
-					return myHasher.gameStateForTierAndOffset(guess, hash
-							- offset);
-				else
+				if (myHasher.hashOffsetForTier(guess + 1) > hash) {
+					myHasher.gameStateForTierAndOffset(guess, hash - offset,
+							state);
+					return;
+				} else
 					low = guess;
 			else
 				high = guess;
 			guess = (low + high) / 2;
 		}
-		return myHasher.gameStateForTierAndOffset(low, hash
-				- myHasher.hashOffsetForTier(low));
+		myHasher.gameStateForTierAndOffset(low, hash
+				- myHasher.hashOffsetForTier(low), state);
 	}
 
 	@Override
-	public long stateToHash(State pos) {
+	public long stateToHash(S pos) {
 		if (myHasher == null)
 			Util.fatalError("You must call prepare() before hashing!");
 		Pair<Integer, Long> p = myHasher.tierIndexForState(pos);

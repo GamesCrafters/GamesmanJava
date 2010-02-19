@@ -2,13 +2,14 @@ package edu.berkeley.gamesman.hasher;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Hasher;
+import edu.berkeley.gamesman.core.State;
 
 /**
  * NullHasher is a placeholder for games that do not allow use of a custom hasher.
  * It does nothing interesting.
  * @author Steven Schlansker
  */
-public class NullHasher extends Hasher<Object> {
+public class NullHasher extends Hasher<State> {
 	/**
 	 * Default constructor
 	 * @param conf the configuration
@@ -23,7 +24,7 @@ public class NullHasher extends Hasher<Object> {
 	}
 
 	@Override
-	public long hash(Object board) {
+	public long hash(State board) {
 		return 0;
 	}
 
@@ -33,7 +34,7 @@ public class NullHasher extends Hasher<Object> {
 	}
 
 	@Override
-	public Object unhash(long hash) {
+	public State unhash(long hash) {
 		return null;
 	}
 }

@@ -1,13 +1,5 @@
 package edu.berkeley.gamesman.hasher;
 
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-
-import edu.berkeley.gamesman.util.Util;
-
 public class PermutationHash {
 	// Jython testing code
 	// from edu.berkeley.gamesman.hasher import PermutationHash
@@ -16,31 +8,37 @@ public class PermutationHash {
 	// [p.unhash(PyLong(i)) for i in range(p.maxHash().intValue()+1)]
 	private final int permutationLength;
 
-	private final BigInteger[] FACTORIAL;
+	private final int[] ident;
+
+	private final int[] clone;
+
+	private final long[] FACTORIAL;
 
 	private final boolean evenPermutation;
 
 	public PermutationHash(int permutationLength, boolean evenPermutation) {
 		this.permutationLength = permutationLength;
 		this.evenPermutation = evenPermutation;
-
-		FACTORIAL = new BigInteger[permutationLength + 1];
-		FACTORIAL[0] = BigInteger.ONE;
+		ident = new int[permutationLength];
+		clone = new int[permutationLength];
+		FACTORIAL = new long[permutationLength + 1];
+		FACTORIAL[0] = 1;
 		for (int i = 1; i < FACTORIAL.length; i++)
-			FACTORIAL[i] = BigInteger.valueOf(i).multiply(FACTORIAL[i - 1]);
+			FACTORIAL[i] = i * FACTORIAL[i - 1];
 		if (evenPermutation)
 			for (int i = 0; i < FACTORIAL.length; i++)
-				FACTORIAL[i] = FACTORIAL[i].divide(BigInteger.valueOf(2));
+				FACTORIAL[i] /= 2;
 	}
 
-	public boolean isEven(Integer[] pieces) {
-		Integer[] clone = pieces.clone();
+	public boolean isEven(int[] pieces) {
+		for (int i = 0; i < pieces.length; i++)
+			clone[i] = pieces[i];
 		int count = 0;
-		for (int i = 0; i < clone.length; i++) {
+		for (int i = 0; i < pieces.length; i++) {
 			if (clone[i] != i) {
 				count++;
 				int j;
-				for (j = i + 1; j < clone.length; j++)
+				for (j = i + 1; j < pieces.length; j++)
 					if (clone[j] == i)
 						break;
 				clone[j] = clone[i]; // swap 'em
@@ -53,71 +51,78 @@ public class PermutationHash {
 		return count % 2 == 0;
 	}
 
-	public static void main(String[] args) {
-		PermutationHash ph = new PermutationHash(4, true);
-		for (BigInteger h : Util.bigIntIterator(ph.numHashes().subtract(
-				BigInteger.ONE))) {
-			Integer[] unhash1 = Util.toArray(ph.unhash(h));
-			System.out.print(Arrays.toString(unhash1));
-			System.out.println(" " + ph.hash(unhash1) + " "
-					+ ph.isEven(unhash1));
-			assert ph.isEven(unhash1);
-			assert ph.hash(unhash1).equals(h);
-		}
-	}
+	// public static void main(String[] args) {
+	// PermutationHash ph = new PermutationHash(4, true);
+	// for (BigInteger h : Util.bigIntIterator(ph.numHashes().subtract(
+	// BigInteger.ONE))) {
+	// Integer[] unhash1 = Util.toArray(ph.unhash(h));
+	// System.out.print(Arrays.toString(unhash1));
+	// System.out.println(" " + ph.hash(unhash1) + " "
+	// + ph.isEven(unhash1));
+	// assert ph.isEven(unhash1);
+	// assert ph.hash(unhash1).equals(h);
+	// }
+	// }
 
-	private ArrayList<Integer> getIdentityPermutation() {
-		ArrayList<Integer> ident = new ArrayList<Integer>();
+	private void resetIdentityPermutation() {
 		for (int i = 0; i < permutationLength; i++)
-			ident.add(i);
-		return ident;
+			ident[i] = i;
 	}
 
-	public BigInteger hash(ArrayList<Integer> pieces) {
-		return hash(Util.toArray(pieces));
-	}
-
-	public BigInteger hash(Integer[] pieces) {
-		ArrayList<Integer> ident = getIdentityPermutation();
-		assert new HashSet<Integer>(Arrays.asList(pieces)).equals(ident);
-		BigInteger hash = BigInteger.ZERO;
+	public long hash(int[] pieces) {
+		resetIdentityPermutation();
+		int identLen = ident.length;
+		// assert new HashSet<Integer>(Arrays.asList(pieces)).equals(ident);
+		long hash = 0L;
 		int last = evenPermutation ? permutationLength - 2
 				: permutationLength - 1;
 		for (int i = 0; i < last; i++) {
-			int pos = ident.indexOf(pieces[i]);
-			ident.remove(pos);
-			hash = hash.add(FACTORIAL[ident.size()].multiply(BigInteger
-					.valueOf(pos)));
+			int pos = --identLen;
+			if (ident[pos] > pieces[i]) {
+				int lastIdent = ident[pos];
+				for (--pos; ident[pos] > pieces[i]; --pos) {
+					int thisIdent = ident[pos];
+					ident[pos] = lastIdent;
+					lastIdent = thisIdent;
+				}
+				ident[pos] = lastIdent;
+			}
+			hash = hash + FACTORIAL[identLen] * pos;
 		}
 		return hash;
 	}
 
-	public ArrayList<Integer> unhash(BigInteger hash) {
-		ArrayList<Integer> ident = getIdentityPermutation();
-		ArrayList<Integer> pieces = new ArrayList<Integer>();
+	public void unhash(long hash, int[] pieces) {
+		resetIdentityPermutation();
+		int identLen = ident.length;
 		int last = evenPermutation ? permutationLength - 2 : permutationLength;
 		for (int i = 0; i < last; i++) {
-			BigInteger fact = FACTORIAL[ident.size() - 1];
-			BigInteger[] location_rem = hash.divideAndRemainder(fact);
-			hash = location_rem[1];
-			pieces.add(ident.remove(location_rem[0].intValue()));
+			long fact = FACTORIAL[identLen - 1];
+			int location = (int) (hash / fact);
+			hash = hash % fact;
+			pieces[i] = ident[location];
+			identLen--;
+			for (int c = location; c < identLen; c++) {
+				ident[c] = ident[c + 1];
+			}
 		}
 		if (evenPermutation) {
-			assert ident.size() == 2;
-			pieces.add(ident.remove(0));
-			pieces.add(ident.remove(0));
+			assert identLen == 2;
+			pieces[last] = ident[0];
+			pieces[last + 1] = ident[1];
 			// is there a better way of doing this?
 			// it could be merged with the above loop,
 			// but that wouldn't make this it any faster
-			if (!isEven(Util.toArray(pieces)))
-				Collections.swap(pieces, pieces.size() - 1, pieces.size() - 2);
-			assert isEven(Util.toArray(pieces));
+			if (!isEven(pieces)) {
+				int p = pieces[last];
+				pieces[last] = pieces[last + 1];
+				pieces[last + 1] = p;
+			}
+			assert isEven(pieces);
 		}
-		assert ident.size() == 0;
-		return pieces;
 	}
 
-	public BigInteger numHashes() {
+	public long numHashes() {
 		return FACTORIAL[permutationLength];
 	}
 }

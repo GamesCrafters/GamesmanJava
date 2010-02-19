@@ -669,8 +669,8 @@ public final class Util {
 	 *            An array of strings of numbers
 	 * @return An array of the equivalent integers
 	 */
-	public static Integer[] parseIntegers(String... arr) {
-		Integer[] ints = new Integer[arr.length];
+	public static int[] parseInts(String... arr) {
+		int[] ints = new int[arr.length];
 		for (int i = 0; i < ints.length; i++)
 			ints[i] = Integer.parseInt(arr[i]);
 		return ints;
@@ -762,5 +762,17 @@ public final class Util {
 		}
 		starts[split] = length + start;
 		return starts;
+	}
+
+	/**
+	 * @param arr
+	 *            An array of strings of numbers
+	 * @return An array of the equivalent integers
+	 */
+	public static Integer[] parseIntegers(String... arr) {
+		Integer[] ints = new Integer[arr.length];
+		for (int i = 0; i < ints.length; i++)
+			ints[i] = Integer.parseInt(arr[i]);
+		return ints;
 	}
 }

@@ -1,11 +1,13 @@
 package edu.berkeley.gamesman.game.util;
 
+import edu.berkeley.gamesman.core.State;
+
 /**
  * A dummy state for top down C4
  * 
  * @author dnspies
  */
-public class C4State implements Cloneable {
+public class C4State implements Cloneable, State {
 	/**
 	 * The number of pieces on the board
 	 */
@@ -39,13 +41,17 @@ public class C4State implements Cloneable {
 	}
 
 	/**
-	 * @param pos
-	 *            Sets this state to be the same as pos
+	 * @param s
+	 *            Sets this state to be the same as s
 	 */
-	public void set(C4State pos) {
-		numPieces = pos.numPieces;
-		spaceArrangement = pos.spaceArrangement;
-		pieceArrangement = pos.pieceArrangement;
+	public void set(State s) {
+		if (s instanceof C4State) {
+			C4State pos = (C4State) s;
+			numPieces = pos.numPieces;
+			spaceArrangement = pos.spaceArrangement;
+			pieceArrangement = pos.pieceArrangement;
+		} else
+			throw new RuntimeException("Type mismatch");
 	}
 
 	public String toString() {

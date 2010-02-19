@@ -15,7 +15,7 @@ import edu.berkeley.gamesman.util.Util;
  * @param <T>
  *            The game state
  */
-public class TopDownSolver<T> extends Solver {
+public class TopDownSolver<T extends State> extends Solver {
 
 	Configuration conf;
 
