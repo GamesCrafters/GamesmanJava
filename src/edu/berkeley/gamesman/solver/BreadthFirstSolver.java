@@ -59,9 +59,9 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 
 		final private int maxRemoteness;
 
-		final private long firstHash;
+		private long firstHash;
 
-		final private long lastHashPlusOne;
+		private long lastHashPlusOne;
 
 		// Constructs for the entire hash space.
 		public BreadthFirstWorkUnit(Game<T> g, int maxRemoteness) {
@@ -164,6 +164,8 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 			}
 			// add the last one separately in case of rounding errors.
 			arr.add(this);
+			firstHash = currentHash;
+			lastHashPlusOne = currentHash + hashIncrement;
 			barr = new CyclicBarrier(arr.size());
 			return arr;
 		}

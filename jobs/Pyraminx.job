@@ -5,5 +5,5 @@ gamesman.db.uri = databasePyraminx.db
 gamesman.database = MemoryCachedDatabase
 gamesman.debug.SOLVER = true
 record.fields = VALUE,REMOTENESS:11
-gamesman.threads = 1
+gamesman.threads = 2
 gamesman.db.compression = gzip

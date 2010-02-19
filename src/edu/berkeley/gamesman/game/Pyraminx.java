@@ -65,8 +65,7 @@ public class Pyraminx extends Game<PyraminxState> {
 	private static final long[] THREE_TO_X = powers(3, centerCount + 1),
 			TWO_TO_X = powers(2, edgeCount + 1);
 
-	// TODO - even permutations only!
-	private static final PermutationHash epHasher = new PermutationHash(
+	private final PermutationHash epHasher = new PermutationHash(
 			edgeCount, true);
 
 	private static long[] powers(int base, int maxExp) {
