@@ -134,14 +134,8 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 								+ numPositionsInLevel);
 				try {
 					writeDb.flush();
-					assert Util.debug(DebugFacility.SOLVER,
-							"Before await, Remoteness: " + remoteness
-									+ ", lastTier: " + lastTier);
 					if (barr != null)
 						barr.await();
-					assert Util.debug(DebugFacility.SOLVER,
-							"After await, Remoteness: " + remoteness
-									+ ", lastTier: " + lastTier);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				} catch (BrokenBarrierException e) {
