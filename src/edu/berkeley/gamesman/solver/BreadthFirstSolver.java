@@ -83,7 +83,7 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 		public void conquer() {
 			long numPositionsInLevel = 0;
 			long numPositionsSeen = numPositionsInLevel;
-			int remoteness = lastTier;
+			int remoteness = 0;
 			Task solveTask = Task.beginTask(String.format("BFS solving \"%s\"",
 					game.describe()));
 			solveTask.setTotal(lastHashPlusOne - firstHash);
@@ -134,8 +134,14 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 								+ numPositionsInLevel);
 				try {
 					writeDb.flush();
+					assert Util.debug(DebugFacility.SOLVER,
+							"Before await, Remoteness: " + remoteness
+									+ ", lastTier: " + lastTier);
 					if (barr != null)
 						barr.await();
+					assert Util.debug(DebugFacility.SOLVER,
+							"After await, Remoteness: " + remoteness
+									+ ", lastTier: " + lastTier);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				} catch (BrokenBarrierException e) {

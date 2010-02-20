@@ -6,9 +6,7 @@ import java.util.Collection;
 import java.util.HashMap;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.PrimitiveValue;
-import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.hasher.PermutationHash;
 import edu.berkeley.gamesman.util.Pair;
@@ -18,7 +16,7 @@ import edu.berkeley.gamesman.util.Util;
  * @author Jeremy Fleischman
  * 
  */
-public class Pyraminx extends Game<PyraminxState> {
+public class Pyraminx extends TwistyPuzzle<PyraminxState> {
 	/**
 	 * @param conf
 	 *            The configuration object
@@ -65,8 +63,8 @@ public class Pyraminx extends Game<PyraminxState> {
 	private static final long[] THREE_TO_X = powers(3, centerCount + 1),
 			TWO_TO_X = powers(2, edgeCount + 1);
 
-	private final PermutationHash epHasher = new PermutationHash(
-			edgeCount, true);
+	private final PermutationHash epHasher = new PermutationHash(edgeCount,
+			true);
 
 	private static long[] powers(int base, int maxExp) {
 		long[] powers = new long[maxExp];
@@ -131,9 +129,8 @@ public class Pyraminx extends Game<PyraminxState> {
 	public PyraminxState stringToState(String pos) {
 		String[] eperm_orient_cperm = pos.split(";");
 		return new PyraminxState(Util.parseInts(eperm_orient_cperm[0]
-				.split(",")), Util.parseInts(eperm_orient_cperm[1]
-				.split(",")), Util.parseInts(eperm_orient_cperm[2]
-				.split(",")));
+				.split(",")), Util.parseInts(eperm_orient_cperm[1].split(",")),
+				Util.parseInts(eperm_orient_cperm[2].split(",")));
 	}
 
 	private static final int UP = 0, RIGHT = 1, LEFT = 2, BACK = 3;
@@ -234,65 +231,6 @@ public class Pyraminx extends Game<PyraminxState> {
 			}
 		}
 		return nextMoves;
-	}
-
-	private class PRecord extends Record {
-		protected PRecord() {
-			super(conf);
-		}
-
-		protected PRecord(long state) {
-			super(conf);
-			set(state);
-		}
-
-		protected PRecord(int remoteness) {
-			super(conf);
-			this.remoteness = remoteness;
-		}
-
-		public PRecord(PrimitiveValue pv) {
-			super(conf);
-			value = pv;
-		}
-
-		@Override
-		public long getState() {
-			if (value.equals(PrimitiveValue.UNDECIDED))
-				return 0;
-			else
-				return remoteness + 1;
-		}
-
-		@Override
-		public void set(long state) {
-			if (state == 0)
-				value = PrimitiveValue.UNDECIDED;
-			else {
-				value = PrimitiveValue.WIN;
-				remoteness = (int) (state - 1);
-			}
-		}
-	}
-
-	@Override
-	public Record newRecord() {
-		return new PRecord();
-	}
-
-	@Override
-	public Record newRecord(long val) {
-		return new PRecord(val);
-	}
-
-	@Override
-	public Record newRecord(PrimitiveValue pv) {
-		return new PRecord(pv);
-	}
-
-	@Override
-	public long recordStates() {
-		return conf.remotenessStates + 1;
 	}
 
 	@Override

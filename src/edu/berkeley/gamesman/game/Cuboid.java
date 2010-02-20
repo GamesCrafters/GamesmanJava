@@ -6,7 +6,6 @@ import java.util.Collection;
 import java.util.HashMap;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.hasher.PermutationHash;
@@ -18,7 +17,7 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author Jeremy Fleischman
  */
-public class Cuboid extends Game<CubeState> {
+public class Cuboid extends TwistyPuzzle<CubeState> {
 	final int WIDTH, HEIGHT, DEPTH;
 
 	final int[] VALID_DIRS;
