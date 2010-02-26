@@ -3,14 +3,16 @@ package edu.berkeley.gamesman.game;
 import edu.berkeley.gamesman.core.*;
 
 public class YGame extends ConnectGame {
-	private static final class Space {
+	private final class Space {
 		final int t, r, c;
+		final int charNum;
 		final boolean[] isOnEdge = new boolean[3];
 
 		Space(int t, int r, int c) {
 			this.t = t;
 			this.r = r;
 			this.c = c;
+			charNum = 0; //TODO: Calculate correct value
 		}
 	}
 
