@@ -4,6 +4,7 @@ import edu.berkeley.gamesman.core.*;
 
 public class YGame extends ConnectGame {
 	private final class Space {
+		// t = triangle, r = row c = column
 		final int t, r, c;
 		final int charNum;
 		final boolean[] isOnEdge = new boolean[3];
@@ -12,6 +13,7 @@ public class YGame extends ConnectGame {
 			this.t = t;
 			this.r = r;
 			this.c = c;
+			// index into board
 			charNum = 0; //TODO: Calculate correct value
 		}
 	}
@@ -62,13 +64,17 @@ public class YGame extends ConnectGame {
 			else if (s1.c == s2.c && Math.abs(s1.r - s2.r) == 1)
 				return true;
 			else
+				// correct diagonal
 				return Math.abs(s1.r - s2.r) == 1
 						&& (s1.r - s2.r == s1.c - s2.c);
-		} else if ((s2.t + 3 - s1.t) % 3 == 2) {
+		}
+		// if they are in separate triangles, switch them. 
+		else if ((s2.t + 3 - s1.t) % 3 == 2) {
 			Space temp = s2;
 			s2 = s1;
 			s1 = temp;
 		}
+		// between triangles
 		return s2.c == 0 && s1.c == s1.r && s2.r >= s1.r && s2.r - s1.r <= 1;
 	}
 
