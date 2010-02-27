@@ -8,13 +8,26 @@ public class YGame extends ConnectGame {
 		final int t, r, c;
 		final int charNum;
 		final boolean[] isOnEdge = new boolean[3];
+		final Space[] connectedSpaces;
 
-		Space(int t, int r, int c) {
+		Space(int t, int r, int c, int charNum) {
 			this.t = t;
 			this.r = r;
 			this.c = c;
 			// index into board
-			charNum = 0; //TODO: Calculate correct value
+			this.charNum = charNum;
+			connectedSpaces = null; // TODO Correct this. First initiate with
+			// correct size, then fill it in (in
+			// constructor of YGame) when all spaces
+			// have been initialized
+		}
+
+		char getChar() {
+			return board[charNum];
+		}
+
+		void setChar(char c) {
+			board[charNum] = c;
 		}
 	}
 
@@ -30,12 +43,13 @@ public class YGame extends ConnectGame {
 		super(conf);
 		boardSide = conf.getInteger("game.sideLength", 4);
 		yBoard = new Space[3][boardSide - 1][];
+		int n = 0;
 		for (int t = 0; t < 3; t++) {
 			int i;
 			for (i = 0; i < boardSide - 1; i++) {
 				yBoard[t][i] = new Space[i + 1];
 				for (int c = 0; c <= i; c++)
-					yBoard[t][i][c] = new Space(t, i, c);
+					yBoard[t][i][c] = new Space(t, i, c, n++);
 			}
 			i = boardSide - 2;
 			for (int c = 0; c <= i; c++) {
@@ -68,7 +82,7 @@ public class YGame extends ConnectGame {
 				return Math.abs(s1.r - s2.r) == 1
 						&& (s1.r - s2.r == s1.c - s2.c);
 		}
-		// if they are in separate triangles, switch them. 
+		// if they are in separate triangles, switch them.
 		else if ((s2.t + 3 - s1.t) % 3 == 2) {
 			Space temp = s2;
 			s2 = s1;
