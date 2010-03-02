@@ -36,7 +36,6 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 		hashSpace = game.numHashes();
 		Record defaultRecord = game.newRecord(PrimitiveValue.UNDECIDED);
 		writeDb.fill(defaultRecord, 0, hashSpace);
-
 		long numPositionsZero = 0;
 		for (T s : game.startingPositions()) {
 			long hash = game.stateToHash(s);

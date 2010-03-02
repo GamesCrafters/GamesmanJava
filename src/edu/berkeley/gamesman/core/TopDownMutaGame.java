@@ -161,10 +161,5 @@ public abstract class TopDownMutaGame<S extends State> extends Game<S> {
 	/**
 	 * @return The maximum number of possible moves for any position
 	 */
-	public abstract int maxMoves();
-
-	/**
-	 * @return The maximum number of children for any position
-	 */
-	public abstract int maxChildren();
+	public abstract int maxRemoteness();
 }

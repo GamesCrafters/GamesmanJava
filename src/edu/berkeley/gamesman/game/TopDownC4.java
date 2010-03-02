@@ -165,7 +165,7 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 	}
 
 	@Override
-	public int maxMoves() {
+	public int maxRemoteness() {
 		return gameSize;
 	}
 

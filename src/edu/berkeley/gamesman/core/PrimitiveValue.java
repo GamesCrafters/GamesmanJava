@@ -26,7 +26,15 @@ public enum PrimitiveValue {
 	/**
 	 * This is not a legal position
 	 */
-	IMPOSSIBLE(4);
+	IMPOSSIBLE(4),
+	/**
+	 * This position could be a draw
+	 */
+	MAYBE_DRAW(5),
+	/**
+	 * This position is a draw
+	 */
+	DEFINITE_DRAW(6);
 
 	/**
 	 * The numeric value of this primitive value (same as ordinal())

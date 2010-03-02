@@ -1,28 +1,27 @@
 package edu.berkeley.gamesman.solver;
 
-import java.util.Iterator;
 import java.util.List;
 
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.util.*;
-import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 /**
  * A solver for top-down mutable games
  * 
  * @author dnspies
- *
- * @param <S> The state for the game
+ * 
+ * @param <S>
+ *            The state for the game
  */
 public class TopDownMutaSolver<S extends State> extends Solver {
-	private boolean containsRemoteness;
+	protected boolean containsRemoteness;
 
-	private QuickLinkedList<Record[]> recordList;
+	protected QuickLinkedList<Record[]> recordList;
 
 	public void initialize(Configuration conf) {
 		super.initialize(conf);
 		final TopDownMutaGame<S> game = Util.checkedCast(conf.getGame());
-		Record[][] recArray = new Record[game.maxMoves() + 1][];
+		Record[][] recArray = new Record[game.maxRemoteness() + 1][];
 		recordList = new QuickLinkedList<Record[]>(recArray,
 				new Factory<Record[]>() {
 					public Record[] newElement() {
@@ -37,6 +36,11 @@ public class TopDownMutaSolver<S extends State> extends Solver {
 
 	@Override
 	public WorkUnit prepareSolve(final Configuration conf) {
+		long hashSpace = conf.getGame().numHashes();
+		Record defaultRecord = conf.getGame().newRecord(
+				PrimitiveValue.UNDECIDED);
+		writeDb.fill(defaultRecord, 0, hashSpace);
+
 		return new WorkUnit() {
 
 			public void conquer() {
@@ -53,56 +57,11 @@ public class TopDownMutaSolver<S extends State> extends Solver {
 	/**
 	 * The method that solves the game
 	 * 
-	 * @param conf The configuration object
+	 * @param conf
+	 *            The configuration object
 	 */
 	public void solve(Configuration conf) {
 		TopDownMutaGame<S> game = Util.checkedCast(conf.getGame());
-		Record[] undecideRecords = new Record[conf.recordsPerGroup];
-		Record uRecord = game.newRecord(PrimitiveValue.UNDECIDED);
-		for (int i = 0; i < conf.recordsPerGroup; i++)
-			undecideRecords[i] = uRecord;
-		if (conf.recordGroupUsesLong) {
-			final long undecideGroup = RecordGroup.longRecordGroup(conf,
-					undecideRecords, 0);
-			writeDb
-					.putRecordGroups(
-							0,
-							new LongIterator() {
-
-								public boolean hasNext() {
-									return true;
-								}
-
-								public long next() {
-									return undecideGroup;
-								}
-
-							},
-							(int) ((game.numHashes() + conf.recordsPerGroup - 1) / conf.recordsPerGroup));
-		} else {
-			final BigInteger undecideGroup = RecordGroup.bigIntRecordGroup(
-					conf, undecideRecords, 0);
-			writeDb
-					.putRecordGroups(
-							0,
-							new Iterator<BigInteger>() {
-
-								public boolean hasNext() {
-									return true;
-								}
-
-								public BigInteger next() {
-									return undecideGroup;
-								}
-
-								public void remove() {
-									throw new UnsupportedOperationException();
-								}
-
-							},
-							(int) ((game.numHashes() + conf.recordsPerGroup - 1) / conf.recordsPerGroup));
-
-		}
 		for (S s : game.startingPositions()) {
 			game.setToState(s);
 			long currentTimeMillis = System.currentTimeMillis();
