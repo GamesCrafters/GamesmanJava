@@ -1,8 +1,13 @@
 package edu.berkeley.gamesman.solver;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Scanner;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
@@ -27,13 +32,39 @@ public class TierSolver<T extends State> extends Solver {
 
 	private long[] starts;
 
+	private File minSolvedFile = null;
+
 	boolean hadooping;
 
 	@Override
 	public WorkUnit prepareSolve(Configuration inconf) {
-
-		tier = Util.<TieredGame<T>, Game<?>> checkedCast(inconf.getGame())
-				.numberOfTiers();
+		String msf = inconf.getProperty("gamesman.minSolvedFile", null);
+		if (msf == null)
+			tier = Util.<TieredGame<T>, Game<?>> checkedCast(inconf.getGame())
+					.numberOfTiers();
+		else {
+			minSolvedFile = new File(msf);
+			if (minSolvedFile.exists()) {
+				try {
+					Scanner scan = new Scanner(minSolvedFile);
+					tier = scan.nextInt();
+					scan.close();
+				} catch (FileNotFoundException e) {
+					Util.fatalError("This should never happen", e);
+				}
+			} else {
+				tier = Util.<TieredGame<T>, Game<?>> checkedCast(
+						inconf.getGame()).numberOfTiers();
+				try {
+					minSolvedFile.createNewFile();
+					FileWriter fw = new FileWriter(minSolvedFile);
+					fw.write(Integer.toString(tier));
+					fw.close();
+				} catch (IOException e) {
+					Util.fatalError("IO Error", e);
+				}
+			}
+		}
 		updater = new TierSolverUpdater();
 		hadooping = false;
 		flusher.run();
@@ -89,6 +120,16 @@ public class TierSolver<T extends State> extends Solver {
 		public void run() {
 			if (writeDb != null)
 				writeDb.flush();
+			if (minSolvedFile != null) {
+				try {
+					FileWriter fw;
+					fw = new FileWriter(minSolvedFile);
+					fw.write(Integer.toString(tier));
+					fw.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 			--tier;
 			needs2Sync = false;
 			if (tier < 0)
