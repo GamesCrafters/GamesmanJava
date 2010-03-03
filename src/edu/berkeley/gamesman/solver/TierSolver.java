@@ -23,7 +23,7 @@ import edu.berkeley.gamesman.util.*;
  */
 public class TierSolver<T extends State> extends Solver {
 
-	protected static final double PAGE_SIZE_FRACTION = 1.5;
+	protected static final double PAGE_SIZE_FRACTION = 2.25;
 
 	protected boolean strainingMemory;
 
