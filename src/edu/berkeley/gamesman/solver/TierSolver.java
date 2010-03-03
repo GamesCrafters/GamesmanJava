@@ -23,12 +23,24 @@ import edu.berkeley.gamesman.util.*;
  */
 public class TierSolver<T extends State> extends Solver {
 
+	protected static final double PAGE_SIZE_FRACTION = 1.5;
+
+	protected boolean strainingMemory;
+
+	private int splits;
+
+	private long maxMem;
+
 	/**
 	 * The number of positions to go through between each update/reset
 	 */
-	private int split, minRecordsInSplit, maxRecordsInSplit;
+	private int minRecordsInSplit, maxRecordsInSplit;
 
 	private int count;
+
+	private int numThreads;
+
+	private int minSplit;
 
 	private long[] starts;
 
@@ -132,16 +144,24 @@ public class TierSolver<T extends State> extends Solver {
 			}
 			--tier;
 			needs2Sync = false;
-			if (tier < 0)
+			if (tier < 0) {
 				updater.complete();
-			else {
+				minSolvedFile.delete();
+			} else {
 				if (barr != null)
 					needs2Reset = true;
-				long fullStart = Util.<TieredGame<T>, Game<?>> checkedCast(
-						conf.getGame()).hashOffsetForTier(tier);
-				long fullSize = Util.<TieredHasher<T>, Hasher<?>> checkedCast(
-						conf.getHasher()).numHashesForTier(tier);
-				starts = Util.groupAlignedTasks(split, fullStart, fullSize,
+				TieredGame<T> game = Util.checkedCast(conf.getGame());
+				long fullStart = game.hashOffsetForTier(tier);
+				TieredHasher<T> h = Util.checkedCast(conf.getHasher());
+				long fullSize = h.numHashesForTier(tier);
+				long neededMem = memNeededForTier(conf);
+				splits = Math.max(minSplit,
+						(int) (neededMem * numThreads / maxMem));
+				if (splits > minSplit)
+					strainingMemory = true;
+				else
+					strainingMemory = false;
+				starts = Util.groupAlignedTasks(splits, fullStart, fullSize,
 						conf.recordsPerGroup);
 			}
 		}
@@ -190,8 +210,8 @@ public class TierSolver<T extends State> extends Solver {
 					Pair<Long, Long> slice = new Pair<Long, Long>(
 							starts[count], starts[count + 1] - starts[count]);
 					assert Util.debug(DebugFacility.THREADING, "Solving "
-							+ count + " in tier " + tier + "; " + starts[count]
-							+ "-" + starts[count + 1]);
+							+ count + "/" + splits + " in tier " + tier + "; "
+							+ starts[count] + "-" + starts[count + 1]);
 					if (count < starts.length - 2) {
 						++count;
 					} else {
@@ -259,10 +279,10 @@ public class TierSolver<T extends State> extends Solver {
 			arr.add(this);
 			for (int i = 1; i < num; i++)
 				arr.add(new TierSolverWorkUnit(conf.cloneAll()));
-			if (hadooping || num == 1)
+			if (hadooping || numThreads == 1)
 				barr = null;
 			else
-				barr = new CyclicBarrier(num, flusher);
+				barr = new CyclicBarrier(numThreads, flusher);
 			return arr;
 		}
 
@@ -309,8 +329,9 @@ public class TierSolver<T extends State> extends Solver {
 		super.initialize(conf);
 		minRecordsInSplit = conf.getInteger("gamesman.minSplit", 0);
 		maxRecordsInSplit = conf.getInteger("gamesman.maxSplit", 0);
-		split = conf.getInteger("gamesman.split", conf.getInteger(
-				"gamesman.threads", 1));
+		maxMem = conf.getLong("gamesman.memory", Integer.MAX_VALUE);
+		numThreads = conf.getInteger("gamesman.threads", 1);
+		minSplit = conf.getInteger("gamesman.split", numThreads);
 	}
 
 	/**
@@ -328,39 +349,48 @@ public class TierSolver<T extends State> extends Solver {
 			long endHash) {
 		updater = new TierSolverUpdater();
 		this.tier = tier;
-		if (split <= 0) {
-			split = 1;
+		if (splits <= 0) {
+			splits = 1;
 		}
 		if (minRecordsInSplit > 0) {
-			if ((endHash - startHash) / split < minRecordsInSplit) {
+			if ((endHash - startHash) / splits < minRecordsInSplit) {
 				System.out.println("Too few records "
-						+ ((endHash - startHash) / split) + " in " + split
+						+ ((endHash - startHash) / splits) + " in " + splits
 						+ " splits for tier " + tier);
 				;
-				split = (int) ((endHash - startHash) / minRecordsInSplit);
-				if (split <= 0) {
-					split = 1;
+				splits = (int) ((endHash - startHash) / minRecordsInSplit);
+				if (splits <= 0) {
+					splits = 1;
 				}
-				System.out.println("Setting to " + split + " splits ("
-						+ ((endHash - startHash) / split) + ")");
+				System.out.println("Setting to " + splits + " splits ("
+						+ ((endHash - startHash) / splits) + ")");
 			}
 		}
 		if (maxRecordsInSplit > 0) {
-			if ((endHash - startHash) / split > maxRecordsInSplit) {
+			if ((endHash - startHash) / splits > maxRecordsInSplit) {
 				System.out.println("Too many records "
-						+ ((endHash - startHash) / split) + " in " + split
+						+ ((endHash - startHash) / splits) + " in " + splits
 						+ " splits for tier " + tier);
-				split = (int) ((endHash - startHash) / maxRecordsInSplit);
-				if (split <= 0) {
-					split = 1;
+				splits = (int) ((endHash - startHash) / maxRecordsInSplit);
+				if (splits <= 0) {
+					splits = 1;
 				}
-				System.out.println("Setting to " + split + " splits ("
-						+ ((endHash - startHash) / split) + ")");
+				System.out.println("Setting to " + splits + " splits ("
+						+ ((endHash - startHash) / splits) + ")");
 			}
 		}
-		starts = Util.groupAlignedTasks(split, startHash, endHash - startHash,
+		starts = Util.groupAlignedTasks(splits, startHash, endHash - startHash,
 				conf.recordsPerGroup);
 		hadooping = true;
 		return new TierSolverWorkUnit(conf);
+	}
+
+	private long memNeededForTier(Configuration conf) {
+		TieredHasher<T> hasher = Util.checkedCast(conf.getHasher());
+		TieredGame<T> game = Util.checkedCast(conf.getGame());
+		return (long) ((hasher.numHashesForTier(tier) + game.maxChildren()
+				* (tier == game.numberOfTiers() - 1 ? 0 : hasher
+						.numHashesForTier(tier + 1)) * PAGE_SIZE_FRACTION)
+				* conf.recordGroupByteLength / conf.recordsPerGroup);
 	}
 }

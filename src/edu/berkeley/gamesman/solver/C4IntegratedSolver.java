@@ -1,5 +1,6 @@
 package edu.berkeley.gamesman.solver;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 import edu.berkeley.gamesman.core.*;
@@ -54,8 +55,8 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 							.getBigIntRecordGroup(endGroup
 									* conf.recordGroupByteLength));
 			}
-			assert Util.debug(DebugFacility.SOLVER, "Loading " + currentGroup
-					+ " - " + (currentGroup + writeLen - 1) + " for write");
+			// assert Util.debug(DebugFacility.SOLVER, "Loading " + currentGroup
+			// + " - " + (currentGroup + writeLen - 1) + " for write");
 			game.setState(game.hashToState(start + hashes - 1));
 		}
 		if (tier < game.numberOfTiers() - 1) {
@@ -90,8 +91,41 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 					} else {
 						long hashGroup = hash / conf.recordsPerGroup;
 						int col = game.openColumn[i];
-						if (whichPage[col] == -1) {
+						if (whichPage[col] == -1
+								|| hashGroup >= childPages[whichPage[col]].firstGroup
+										+ childPages[whichPage[col]].numGroups) {
 							long pageStart = hashGroup, pageEnd = ends[col];
+							if (whichPage[col] >= 0) {
+								int c;
+								for (c = 0; c < whichPage.length; c++) {
+									if (whichPage[c] == whichPage[col]
+											&& c != col)
+										break;
+								}
+								if (c == whichPage.length)
+									childPages[whichPage[col]] = null;
+								else
+									whichPage[col] = -1;
+							}
+							if (strainingMemory) {
+								double marginUsed = (double) (pageEnd - pageStart)
+										* conf.recordsPerGroup / hashes;
+								if (marginUsed > PAGE_SIZE_FRACTION) {
+									pageEnd = pageStart
+											+ (long) (PAGE_SIZE_FRACTION
+													* hashes / conf.recordsPerGroup);
+									assert Util
+											.debug(
+													DebugFacility.SOLVER,
+													"Exceeded page size limit by: "
+															+ DecimalFormat
+																	.getPercentInstance()
+																	.format(
+																			marginUsed
+																					/ PAGE_SIZE_FRACTION
+																					- 1));
+								}
+							}
 							int lowPage = -1;
 							ArrayList<Page> pageList = new ArrayList<Page>(game
 									.maxChildren());
@@ -101,8 +135,8 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 								long firstGroup = childPages[c].firstGroup;
 								long lastGroup = firstGroup
 										+ childPages[c].numGroups - 1;
-								if (firstGroup <= pageEnd
-										&& lastGroup >= pageStart) {
+								if (firstGroup < pageEnd
+										&& lastGroup > pageStart) {
 									if (lastGroup > pageEnd)
 										pageEnd = lastGroup;
 									if (lowPage == -1
@@ -119,12 +153,13 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 								}
 							}
 							if (lowPage == -1) {
-								childPages[numPages] = new Page(conf);
-								childPages[numPages].loadPage(inRead,
-										pageStart,
+								if (whichPage[col] < 0)
+									lowPage = numPages++;
+								else
+									lowPage = whichPage[col];
+								childPages[lowPage] = new Page(conf);
+								childPages[lowPage].loadPage(inRead, pageStart,
 										(int) (pageEnd - pageStart) + 1);
-								lowPage = numPages;
-								++numPages;
 							}
 							Page thePage = childPages[lowPage];
 							if (thePage.firstGroup <= pageStart) {
@@ -156,9 +191,8 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 									whichPage[c] = lowPage;
 							}
 						}
-						childPages[whichPage[game.openColumn[i]]].getRecord(
-								hashGroup, (int) (hash % conf.recordsPerGroup),
-								r);
+						childPages[whichPage[col]].getRecord(hashGroup,
+								(int) (hash % conf.recordsPerGroup), r);
 					}
 					r.previousPosition();
 				}
@@ -196,9 +230,9 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 			}
 		}
 		if (!directRead) {
-			assert Util.debug(DebugFacility.SOLVER, "Writing "
-					+ writePage.firstGroup + " - "
-					+ (writePage.firstGroup + writePage.numGroups - 1));
+			// assert Util.debug(DebugFacility.SOLVER, "Writing "
+			// + writePage.firstGroup + " - "
+			// + (writePage.firstGroup + writePage.numGroups - 1));
 			writePage.writeBack(inWrite);
 		}
 	}

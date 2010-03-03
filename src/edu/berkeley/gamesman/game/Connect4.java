@@ -38,7 +38,7 @@ public final class Connect4 extends TieredIterGame {
 
 	private final long[] children;
 
-	private final BitSetBoard bsb;
+	public final BitSetBoard bsb;
 
 	private final ExpCoefs ec;
 

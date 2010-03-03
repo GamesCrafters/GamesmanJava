@@ -186,7 +186,7 @@ public final class Util {
 	 * @return true
 	 */
 	public static boolean debug(DebugFacility fac, String s) {
-		if (debugOpts.contains(fac) || debugOpts.contains(DebugFacility.ALL)) {
+		if (debug(fac)) {
 			// StackTraceElement stack =
 			// Thread.currentThread().getStackTrace()[3];
 			// System.out.printf("DEBUG %s (%s)\n\t%s\n", stack.toString(),
@@ -774,5 +774,9 @@ public final class Util {
 		for (int i = 0; i < ints.length; i++)
 			ints[i] = Integer.parseInt(arr[i]);
 		return ints;
+	}
+
+	public static boolean debug(DebugFacility fac) {
+		return debugOpts.contains(fac) || debugOpts.contains(DebugFacility.ALL);
 	}
 }

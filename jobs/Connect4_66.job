@@ -9,5 +9,5 @@ gamesman.db.uri = /tmp/database66.db
 record.fields = VALUE,REMOTENESS
 record.compression = 90
 gamesman.threads = 10
-gamesman.split = 5000
+gamesman.memory = 2000000000
 gamesman.debug.THREADING = true
