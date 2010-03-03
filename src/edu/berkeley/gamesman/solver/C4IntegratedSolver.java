@@ -95,6 +95,32 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 								|| hashGroup >= childPages[whichPage[col]].firstGroup
 										+ childPages[whichPage[col]].numGroups) {
 							long pageStart = hashGroup, pageEnd = ends[col];
+							if (strainingMemory) {
+								double marginUsed = (pageEnd - pageStart)
+										/ prevToCurFraction
+										* conf.recordsPerGroup / hashes;
+								if (whichPage[col] < 0) {
+									marginVarSum += (marginUsed - 1)
+											* (marginUsed - 1);
+									++timesUsed;
+								}
+								if (marginUsed > SAFETY_MARGIN) {
+									pageEnd = pageStart
+											+ (long) (SAFETY_MARGIN
+													* prevToCurFraction
+													* hashes / conf.recordsPerGroup);
+									assert Util
+											.debug(
+													DebugFacility.SOLVER,
+													"Exceeded page size limit by: "
+															+ DecimalFormat
+																	.getPercentInstance()
+																	.format(
+																			marginUsed
+																					/ SAFETY_MARGIN
+																					- 1));
+								}
+							}
 							if (whichPage[col] >= 0) {
 								int c;
 								for (c = 0; c < whichPage.length; c++) {
@@ -106,25 +132,6 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 									childPages[whichPage[col]] = null;
 								else
 									whichPage[col] = -1;
-							}
-							if (strainingMemory) {
-								double marginUsed = (double) (pageEnd - pageStart)
-										* conf.recordsPerGroup / hashes;
-								if (marginUsed > PAGE_SIZE_FRACTION) {
-									pageEnd = pageStart
-											+ (long) (PAGE_SIZE_FRACTION
-													* hashes / conf.recordsPerGroup);
-									assert Util
-											.debug(
-													DebugFacility.SOLVER,
-													"Exceeded page size limit by: "
-															+ DecimalFormat
-																	.getPercentInstance()
-																	.format(
-																			marginUsed
-																					/ PAGE_SIZE_FRACTION
-																					- 1));
-								}
 							}
 							int lowPage = -1;
 							ArrayList<Page> pageList = new ArrayList<Page>(game
@@ -229,6 +236,13 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 				}
 			}
 		}
+		if (strainingMemory && children != null)
+			for (int col = 0; col < children.length; col++) {
+				if (whichPage[col] < 0) {
+					++timesUsed;
+					++marginVarSum;
+				}
+			}
 		if (!directRead) {
 			// assert Util.debug(DebugFacility.SOLVER, "Writing "
 			// + writePage.firstGroup + " - "

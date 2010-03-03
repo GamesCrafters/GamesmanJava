@@ -23,7 +23,9 @@ import edu.berkeley.gamesman.util.*;
  */
 public class TierSolver<T extends State> extends Solver {
 
-	protected static final double PAGE_SIZE_FRACTION = 2.25;
+	protected static final double SAFETY_MARGIN = 2.0;
+
+	private boolean strictSafety;
 
 	protected boolean strainingMemory;
 
@@ -48,9 +50,16 @@ public class TierSolver<T extends State> extends Solver {
 
 	boolean hadooping;
 
+	protected double prevToCurFraction;
+
+	protected double marginVarSum = 0;
+
+	protected long timesUsed = 0;
+
 	@Override
 	public WorkUnit prepareSolve(Configuration inconf) {
 		String msf = inconf.getProperty("gamesman.minSolvedFile", null);
+		strictSafety = inconf.getBoolean("gamesman.solver.strictMemory", false);
 		if (msf == null)
 			tier = Util.<TieredGame<T>, Game<?>> checkedCast(inconf.getGame())
 					.numberOfTiers();
@@ -146,7 +155,12 @@ public class TierSolver<T extends State> extends Solver {
 			needs2Sync = false;
 			if (tier < 0) {
 				updater.complete();
-				minSolvedFile.delete();
+				if (minSolvedFile != null)
+					minSolvedFile.delete();
+				if (timesUsed > 0)
+					assert Util.debug(DebugFacility.SOLVER,
+							"Standard Deviation = "
+									+ Math.sqrt(marginVarSum / timesUsed));
 			} else {
 				if (barr != null)
 					needs2Reset = true;
@@ -155,12 +169,13 @@ public class TierSolver<T extends State> extends Solver {
 				TieredHasher<T> h = Util.checkedCast(conf.getHasher());
 				long fullSize = h.numHashesForTier(tier);
 				long neededMem = memNeededForTier(conf);
+				TieredHasher<T> hasher = Util.checkedCast(conf.getHasher());
+				prevToCurFraction = (tier >= game.numberOfTiers() - 1) ? 0
+						: ((double) hasher.numHashesForTier(tier + 1) / hasher
+								.numHashesForTier(tier));
 				splits = Math.max(minSplit,
 						(int) (neededMem * numThreads / maxMem));
-				if (splits > minSplit)
-					strainingMemory = true;
-				else
-					strainingMemory = false;
+				strainingMemory = strictSafety && splits > minSplit;
 				starts = Util.groupAlignedTasks(splits, fullStart, fullSize,
 						conf.recordsPerGroup);
 			}
@@ -390,7 +405,18 @@ public class TierSolver<T extends State> extends Solver {
 		TieredGame<T> game = Util.checkedCast(conf.getGame());
 		return (long) ((hasher.numHashesForTier(tier) + game.maxChildren()
 				* (tier == game.numberOfTiers() - 1 ? 0 : hasher
-						.numHashesForTier(tier + 1)) * PAGE_SIZE_FRACTION)
+						.numHashesForTier(tier + 1)) * SAFETY_MARGIN)
 				* conf.recordGroupByteLength / conf.recordsPerGroup);
+	}
+
+	private double expectedFractionForTier(Configuration conf) {
+		TieredGame<T> game = Util.checkedCast(conf.getGame());
+		if (tier >= game.numberOfTiers() - 1)
+			return 0;
+		else {
+			TieredHasher<T> hasher = Util.checkedCast(conf.getHasher());
+			return (double) hasher.numHashesForTier(tier + 1)
+					/ hasher.numHashesForTier(tier);
+		}
 	}
 }
