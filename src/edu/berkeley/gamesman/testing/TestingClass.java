@@ -12,8 +12,8 @@ import java.util.zip.GZIPOutputStream;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
-import edu.berkeley.gamesman.core.ItergameState;
 import edu.berkeley.gamesman.game.Connect4;
+import edu.berkeley.gamesman.game.util.ItergameState;
 import edu.berkeley.gamesman.util.Util;
 
 public class TestingClass {
@@ -39,7 +39,7 @@ public class TestingClass {
 			fis.close();
 			conf = Configuration.load(confBytes);
 			conf.setProperty("gamesman.db.uri", args[0]);
-			fd = conf.openDatabase();
+			fd = conf.openDatabase(false);
 		} catch (ClassNotFoundException e) {
 			Util.fatalError("failed to load class", e);
 			return;

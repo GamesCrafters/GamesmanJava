@@ -6,6 +6,7 @@ import java.io.RandomAccessFile;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
+import edu.berkeley.gamesman.hasher.TieredHasher;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -24,6 +25,8 @@ public final class FileDatabase extends Database {
 	protected int groupsLength;
 
 	protected long offset;
+
+	private int tier = -1;
 
 	@Override
 	public void close() {
@@ -71,27 +74,28 @@ public final class FileDatabase extends Database {
 	}
 
 	@Override
-	public void initialize(String loc) {
-
-		boolean previouslyExisted;
+	public void initialize(String loc, boolean solve) {
 		try {
 			myFile = new File(loc);
-			previouslyExisted = myFile.exists();
 			fd = new RandomAccessFile(myFile, "rw");
-			if (previouslyExisted) {
+			if (solve) {
+				if (conf == null)
+					Util
+							.fatalError("You must specify a configuration if the database is to be created");
+				if (tier >= 0)
+					fd.writeInt(0);
+				else {
+					byte[] b = conf.store();
+					fd.writeInt(b.length);
+					fd.write(b);
+				}
+			} else {
 				int headerLen = fd.readInt();
 				byte[] header = new byte[headerLen];
 				fd.readFully(header);
 				if (conf == null) {
 					conf = Configuration.load(header);
 				}
-			} else {
-				if (conf == null)
-					Util
-							.fatalError("You must specify a configuration if the database is to be created");
-				byte[] b = conf.store();
-				fd.writeInt(b.length);
-				fd.write(b);
 			}
 			offset = fd.getFilePointer();
 			fd.setLength(offset + getByteSize());
@@ -102,5 +106,33 @@ public final class FileDatabase extends Database {
 			e.printStackTrace();
 			Util.fatalError(e.toString());
 		}
+	}
+
+	@Override
+	public long getByteSize() {
+		if (tier < 0)
+			return super.getByteSize();
+		else {
+			TieredHasher<?> hasher = (TieredHasher<?>) conf.getHasher();
+			return (hasher.hashOffsetForTier(tier + 1) + conf.recordsPerGroup - 1)
+					/ conf.recordsPerGroup
+					* conf.recordGroupByteLength
+					- hasher.hashOffsetForTier(tier)
+					/ conf.recordsPerGroup
+					* conf.recordGroupByteLength;
+		}
+	}
+
+	/**
+	 * If this database only covers a single tier of a tiered game, call this
+	 * method before calling initialize
+	 * 
+	 * @param n
+	 *            The tier
+	 */
+	public void setSingleTier(int n) {
+		if (conf != null)
+			Util.fatalError("This must be called before initialize");
+		tier = n;
 	}
 }

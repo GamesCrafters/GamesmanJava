@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 
-import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.hasher.PermutationHash;
@@ -17,13 +16,6 @@ import edu.berkeley.gamesman.util.Util;
  * 
  */
 public class Pyraminx extends TwistyPuzzle<PyraminxState> {
-	/**
-	 * @param conf
-	 *            The configuration object
-	 */
-	public Pyraminx(Configuration conf) {
-		super(conf);
-	}
 
 	@Override
 	public String describe() {
@@ -242,14 +234,6 @@ public class Pyraminx extends TwistyPuzzle<PyraminxState> {
 	@Override
 	public PyraminxState newState() {
 		return new PyraminxState(edgeCount, centerCount);
-	}
-
-	@Override
-	public PyraminxState[] newStateArray(int len) {
-		PyraminxState[] ps = new PyraminxState[len];
-		for (int i = 0; i < len; i++)
-			ps[i] = newState();
-		return ps;
 	}
 }
 

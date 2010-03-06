@@ -1,10 +1,11 @@
 package edu.berkeley.gamesman.database.util;
 
+import java.math.BigInteger;
+
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.RecordGroup;
-import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 /**
  * A page for caching RecordGroups

@@ -1,6 +1,8 @@
 package edu.berkeley.gamesman.core;
 
+import java.lang.reflect.Array;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import edu.berkeley.gamesman.util.Pair;
@@ -16,7 +18,7 @@ import edu.berkeley.gamesman.util.Util;
  */
 public abstract class Game<S extends State> {
 
-	protected final Configuration conf;
+	protected Configuration conf;
 
 	private Record[] valsBest = new Record[1];
 
@@ -24,20 +26,20 @@ public abstract class Game<S extends State> {
 
 	private Record[] valsBestRemoteness = new Record[1];
 
-	@SuppressWarnings("unused")
-	private Game() {
-		Util.fatalError("Do not call this constructor!");
-		conf = null;
+	/**
+	 * Default constructor
+	 */
+	public Game() {
+
 	}
 
 	/**
-	 * Initialize game width/height NB: when this constructor is called, the
-	 * Configuration is not required to have initialized the Hasher yet!
+	 * Initialize game width/height NB: when this constructor is called
 	 * 
 	 * @param conf
 	 *            configuration
 	 */
-	public Game(Configuration conf) {
+	public void initialize(Configuration conf) {
 		this.conf = conf;
 	}
 
@@ -50,11 +52,14 @@ public abstract class Game<S extends State> {
 
 	/**
 	 * Given a board state, generates all valid board states one move away from
-	 * the given state
+	 * the given state. It is <b>very strongly recommended</b> that you also
+	 * override validMoves(S pos, S[] children) as this will result in a
+	 * significant speedup for pretty much any solver
 	 * 
 	 * @param pos
 	 *            The board state to start from
 	 * @return A <move,state> pair for all valid board states one move forward
+	 * @see Game#validMoves(State,State[])
 	 */
 	public abstract Collection<Pair<String, S>> validMoves(S pos);
 
@@ -68,10 +73,16 @@ public abstract class Game<S extends State> {
 	 *            The array to store all valid board states one move forward
 	 * @return The number of children for this position
 	 */
-	public abstract int validMoves(S pos, S[] children);
+	public int validMoves(S pos, S[] children) {
+		Collection<Pair<String, S>> vm = validMoves(pos);
+		Iterator<Pair<String, S>> iter = vm.iterator();
+		for (int i = 0; iter.hasNext(); i++)
+			children[i] = iter.next().cdr;
+		return vm.size();
+	}
 
 	/**
-	 * @return The maximum number of children for any position
+	 * @return The maximum number of child states for any position
 	 */
 	public abstract int maxChildren();
 
@@ -85,11 +96,6 @@ public abstract class Game<S extends State> {
 	 * @return The resulting State, or null if it isn't found in validMoves()
 	 */
 	public S doMove(S pos, String move) {
-		// TODO - better solution for games!
-		// we don't want to keep the user from turning a rubik's cube if solved
-		// (primitive)
-		// if(!primitiveValue(pos).equals(PrimitiveValue.UNDECIDED))
-		// return null;
 		for (Pair<String, S> next : validMoves(pos))
 			if (next.car.equals(move))
 				return next.cdr;
@@ -124,16 +130,9 @@ public abstract class Game<S extends State> {
 	 * 
 	 * @param pos
 	 *            The primitive State
-	 * @return the Record representing the state
-	 * @see edu.berkeley.gamesman.core.Record
+	 * @return the primitive value of the state
 	 */
 	public abstract PrimitiveValue primitiveValue(S pos);
-
-	/**
-	 * @param conf
-	 *            the Configuration that this game is played with
-	 */
-	// public abstract void initialize(Configuration conf);
 
 	/**
 	 * Unhash a given hashed value and return the corresponding Board
@@ -200,7 +199,7 @@ public abstract class Game<S extends State> {
 	 * @param pos
 	 *            The String given
 	 * @return a State
-	 * @see Game#stateToString(Object)
+	 * @see Game#stateToString(State)
 	 */
 	public abstract S stringToState(String pos);
 
@@ -209,107 +208,6 @@ public abstract class Game<S extends State> {
 	 *         (including any variant information, game size, etc)
 	 */
 	public abstract String describe();
-
-	/**
-	 * Called to notify the Game that the Configuration now has a specified and
-	 * initialized Hasher. Make sure to call your superclass's method!
-	 */
-	public void prepare() {
-	}
-
-	/**
-	 * @param vals
-	 *            A collection of records
-	 * @return The "best" record in the collection (ordered by primitive value,
-	 *         then score, then remoteness)
-	 */
-	public Record combine(List<Record> vals) {
-		int size = 0;
-		PrimitiveValue bestPrim = PrimitiveValue.LOSE;
-		for (Record val : vals) {
-			PrimitiveValue pv = val.value;
-			if (pv.isPreferableTo(bestPrim)) {
-				size = 1;
-				valsBest[0] = val;
-				bestPrim = pv;
-			} else if (pv.equals(bestPrim)) {
-				if (valsBest.length <= size) {
-					Record[] temp = valsBest;
-					valsBest = new Record[size + 1];
-					for (int c = 0; c < temp.length; c++)
-						valsBest[c] = temp[c];
-				}
-				valsBest[size++] = val;
-			}
-		}
-		Record[] arrVals = valsBest;
-		int lastSize;
-		if (conf.scoreStates > 0) {
-			lastSize = size;
-			size = 0;
-			int bestScore = Integer.MIN_VALUE;
-			for (int i = 0; i < lastSize; i++) {
-				int score = arrVals[i].score;
-				if (score > bestScore) {
-					size = 1;
-					valsBestScore[0] = arrVals[i];
-					bestScore = score;
-				} else if (score == bestScore) {
-					if (valsBestScore.length <= size) {
-						Record[] temp = valsBestScore;
-						valsBestScore = new Record[size + 1];
-						for (int c = 0; c < temp.length; c++)
-							valsBestScore[c] = temp[c];
-					}
-					valsBestScore[size++] = arrVals[i];
-				}
-			}
-			arrVals = valsBestScore;
-		}
-		if (conf.remotenessStates > 0) {
-			lastSize = size;
-			size = 0;
-			if (bestPrim.equals(PrimitiveValue.LOSE)) {
-				int bestRemoteness = 0;
-				for (int i = 0; i < lastSize; i++) {
-					int remoteness = arrVals[i].remoteness;
-					if (remoteness > bestRemoteness) {
-						size = 1;
-						valsBestRemoteness[0] = arrVals[i];
-						bestRemoteness = remoteness;
-					} else if (remoteness == bestRemoteness) {
-						if (valsBestRemoteness.length <= size) {
-							Record[] temp = valsBestRemoteness;
-							valsBestRemoteness = new Record[size + 1];
-							for (int c = 0; c < temp.length; c++)
-								valsBestRemoteness[c] = temp[c];
-						}
-						valsBestRemoteness[size++] = arrVals[i];
-					}
-				}
-			} else {
-				int bestRemoteness = Integer.MAX_VALUE;
-				for (int i = 0; i < lastSize; i++) {
-					int remoteness = arrVals[i].remoteness;
-					if (remoteness < bestRemoteness) {
-						size = 1;
-						valsBestRemoteness[0] = arrVals[i];
-						bestRemoteness = remoteness;
-					} else if (remoteness == bestRemoteness) {
-						if (valsBestRemoteness.length <= size) {
-							Record[] temp = valsBestRemoteness;
-							valsBestRemoteness = new Record[size + 1];
-							for (int c = 0; c < temp.length; c++)
-								valsBestRemoteness[c] = temp[c];
-						}
-						valsBestRemoteness[size++] = arrVals[i];
-					}
-				}
-			}
-			arrVals = valsBestRemoteness;
-		}
-		return arrVals[0];
-	}
 
 	/**
 	 * @param recordArray
@@ -457,7 +355,35 @@ public abstract class Game<S extends State> {
 	 */
 	public abstract void hashToState(long hash, S s);
 
+	/**
+	 * @return A new empty state
+	 */
 	public abstract S newState();
 
-	public abstract S[] newStateArray(int len);
+	/**
+	 * @param len
+	 *            The number of states
+	 * @return A new array with len states
+	 */
+	public final S[] newStateArray(int len) {
+		S oneState = newState();
+		S[] arr = Util.checkedCast(Array.newInstance(oneState.getClass(), len));
+		if (len > 0)
+			arr[0] = oneState;
+		for (int i = 1; i < len; i++)
+			arr[i] = newState();
+		return arr;
+	}
+
+	/**
+	 * @param recs
+	 *            A list of records
+	 * @return The best of the records
+	 * @see Game#combine(Record[], int, int)
+	 */
+	public Record combine(List<Record> recs) {
+		Record[] recArray = new Record[recs.size()];
+		recArray = recs.toArray(recArray);
+		return combine(recArray, 0, recArray.length);
+	}
 }

@@ -186,7 +186,7 @@ public class JSONInterface extends GamesmanApplication {
 				System.out.println("Loading solved job " + solvedJob + ".");
 				Configuration config = new Configuration(solvedJob);
 				try {
-					config.openDatabase();
+					config.openDatabase(false);
 				} catch (Exception e) {
 					Util.warn(
 							"Error when loading database for special configuration "
@@ -196,7 +196,7 @@ public class JSONInterface extends GamesmanApplication {
 			} else if (filename != null && new File(filename).exists()) {
 				System.out.println("Loading solved database " + filename + ".");
 				Database db = dbClass.getConstructor().newInstance();
-				db.initialize(filename, null);
+				db.initialize(filename, false);
 				Configuration conf = db.getConfiguration();
 				conf.db = db;
 				return conf;
@@ -231,7 +231,7 @@ public class JSONInterface extends GamesmanApplication {
 			Configuration config = null;
 			try {
 				config = new Configuration(props, true);
-				config.initialize(gamename, "NullHasher", false);
+				config.initialize(gamename, "NullHasher");
 			} catch (ClassNotFoundException e) {
 				Util.warn("Failed to load the game class.", e);
 				throw new RuntimeException("Failed to load the game class.", e);

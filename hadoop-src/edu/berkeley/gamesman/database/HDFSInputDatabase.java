@@ -84,7 +84,7 @@ public class HDFSInputDatabase extends Database {
 	 * elsewhere?
 	 */
 	@Override
-	public void initialize(String loc) {
+	public void initialize(String loc, boolean solve) {
 		try {
 			myFile = new Path(loc);
 			fd = fs.open(myFile);

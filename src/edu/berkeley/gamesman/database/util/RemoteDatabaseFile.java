@@ -7,6 +7,12 @@ import java.io.OutputStreamWriter;
 
 import edu.berkeley.gamesman.util.Util;
 
+/**
+ * An encapsulating class for reading a database by calling the OS's ssh and
+ * then dd for the necessary bytes
+ * 
+ * @author dnspies
+ */
 public class RemoteDatabaseFile {
 	private BufferedWriter ddWriter;
 	private InputStream byteReader;
@@ -15,6 +21,9 @@ public class RemoteDatabaseFile {
 	private byte firstByte;
 	private Thread skipper;
 
+	/**
+	 * Close this Database. Exit ssh
+	 */
 	public void close() {
 		try {
 			String s = "exit\n";
@@ -25,6 +34,18 @@ public class RemoteDatabaseFile {
 		}
 	}
 
+	/**
+	 * Seek to this location and read len bytes from the database into an array
+	 * 
+	 * @param loc
+	 *            The location to seek to
+	 * @param arr
+	 *            The array to write to
+	 * @param off
+	 *            The offset into the array
+	 * @param len
+	 *            The number of bytes to read
+	 */
 	public void getBytes(long loc, byte[] arr, int off, int len) {
 		try {
 			int skipBytes = (int) (loc & 511L);
@@ -65,6 +86,12 @@ public class RemoteDatabaseFile {
 		}
 	}
 
+	/**
+	 * Initializes this RemoteDatabase.
+	 * 
+	 * @param uri
+	 *            The host and path of the database (separated with a colon)
+	 */
 	public synchronized void initialize(String uri) {
 		try {
 			Runtime r = Runtime.getRuntime();

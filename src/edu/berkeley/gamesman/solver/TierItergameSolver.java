@@ -1,6 +1,8 @@
 package edu.berkeley.gamesman.solver;
 
 import edu.berkeley.gamesman.core.*;
+import edu.berkeley.gamesman.game.TieredIterGame;
+import edu.berkeley.gamesman.game.util.ItergameState;
 import edu.berkeley.gamesman.util.Util;
 
 /**

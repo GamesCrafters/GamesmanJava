@@ -2,12 +2,10 @@ package edu.berkeley.gamesman.game.util;
 
 import java.math.BigInteger;
 
-import edu.berkeley.gamesman.core.Board2D;
-
 /**
  * @author dnspies
  */
-public class BitSetBoard extends Board2D {
+public class BitSetBoard {
 	protected BigInteger xPlayer;
 
 	protected BigInteger oPlayer;
@@ -39,21 +37,6 @@ public class BitSetBoard extends Board2D {
 			xPlayer = BigInteger.ZERO;
 			oPlayer = BigInteger.ZERO;
 		}
-	}
-
-	@Override
-	public int getBoardHeight() {
-		return height;
-	}
-
-	@Override
-	public int getBoardWidth() {
-		return width;
-	}
-
-	@Override
-	public char[] getPieces() {
-		return new char[] { 'X', 'O' };
 	}
 
 	protected int getBit(int row, int col) {

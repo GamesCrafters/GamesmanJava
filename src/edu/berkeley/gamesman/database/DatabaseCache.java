@@ -201,11 +201,11 @@ public final class DatabaseCache extends Database {
 	}
 
 	@Override
-	public void initialize(String uri) {
-		if (conf != null)
-			db.initialize(uri, conf);
+	public void initialize(String uri, boolean solve) {
+		if (solve)
+			db.initialize(uri, conf, solve);
 		else {
-			db.initialize(uri);
+			db.initialize(uri, false);
 			conf = db.getConfiguration();
 		}
 		int totalBytes = conf.getInteger("gamesman.db.cacheSize", 67108864);

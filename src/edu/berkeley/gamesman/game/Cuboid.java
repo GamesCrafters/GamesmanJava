@@ -18,11 +18,11 @@ import edu.berkeley.gamesman.util.Util;
  * @author Jeremy Fleischman
  */
 public class Cuboid extends TwistyPuzzle<CubeState> {
-	final int WIDTH, HEIGHT, DEPTH;
+	int WIDTH, HEIGHT, DEPTH;
 
-	final int[] VALID_DIRS;
+	int[] VALID_DIRS;
 
-	final String[] VALID_FACES;
+	String[] VALID_FACES;
 
 	// as you look at the F face of the cuboid,
 	// H +-----+
@@ -39,13 +39,13 @@ public class Cuboid extends TwistyPuzzle<CubeState> {
 	// WIDTH
 
 	/**
-	 * Constructs a Cuboid
+	 * Initializes a Cuboid
 	 * 
 	 * @param conf
 	 *            the configuration
 	 */
-	public Cuboid(Configuration conf) {
-		super(conf);
+	public void initialize(Configuration conf) {
+		super.initialize(conf);
 		WIDTH = conf.getInteger("gamesman.game.width", 2);
 		HEIGHT = conf.getInteger("gamesman.game.height", 2);
 		DEPTH = conf.getInteger("gamesman.game.depth", 2);
@@ -209,14 +209,6 @@ public class Cuboid extends TwistyPuzzle<CubeState> {
 	@Override
 	public CubeState newState() {
 		return new CubeState();
-	}
-
-	@Override
-	public CubeState[] newStateArray(int len) {
-		CubeState[] arr = new CubeState[len];
-		for (int i = 0; i < len; i++)
-			arr[i] = newState();
-		return arr;
 	}
 
 	@Override
@@ -391,5 +383,10 @@ class CubeState implements State {
 				orientations[i] = cs.orientations[i];
 		} else
 			throw new RuntimeException("Type mismatch");
+	}
+
+	public boolean equals(CubeState other) {
+		return Arrays.equals(pieces, other.pieces)
+				&& Arrays.equals(orientations, other.orientations);
 	}
 }

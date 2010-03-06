@@ -2,13 +2,22 @@ package edu.berkeley.gamesman.game;
 
 import edu.berkeley.gamesman.core.Configuration;
 
+/**
+ * The game Connections
+ * 
+ * @author dnspies
+ */
 public class Connections extends ConnectGame {
 
-	private final int boardSide;
-	private final int boardSize;
+	private int boardSide;
+	private int boardSize;
 
-	public Connections(Configuration conf) {
-		super(conf);
+	/**
+	 * @param conf
+	 *            The configuration object
+	 */
+	public void initialize(Configuration conf) {
+		super.initialize(conf);
 		boardSide = conf.getInteger("game.sideLength", 4);
 		boardSize = boardSide * (boardSide - 1) * 2;
 	}

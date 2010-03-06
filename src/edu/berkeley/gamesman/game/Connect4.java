@@ -6,6 +6,7 @@ import java.util.Collection;
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.game.util.BitSetBoard;
 import edu.berkeley.gamesman.game.util.Connect4ReducerBoard;
+import edu.berkeley.gamesman.game.util.ItergameState;
 import edu.berkeley.gamesman.game.util.PieceRearranger;
 import edu.berkeley.gamesman.util.ExpCoefs;
 import edu.berkeley.gamesman.util.Pair;
@@ -17,30 +18,30 @@ import edu.berkeley.gamesman.util.Util;
  * @author DNSpies
  */
 public final class Connect4 extends TieredIterGame {
-	private final int[][] indices;
+	private int[][] indices;
 
-	private final int[] colHeights;
+	private int[] colHeights;
 
-	private final int piecesToWin;
+	private int piecesToWin;
 
-	private final int gameHeight, gameWidth, gameSize;
+	private int gameHeight, gameWidth, gameSize;
 
-	private final ArrayList<Place> pieces;
+	private ArrayList<Place> pieces;
 
-	private final long[] multiplier;
+	private long[] multiplier;
 
-	private final long[] moveArrangement;
+	private long[] moveArrangement;
 
 	/**
 	 * A list of the columns which are not full
 	 */
-	public final int[] openColumn;
+	public int[] openColumn;
 
-	private final long[] children;
+	private long[] children;
 
-	public final BitSetBoard bsb;
+	private BitSetBoard bsb;
 
-	private final ExpCoefs ec;
+	private ExpCoefs ec;
 
 	private long pieceArrangement;
 
@@ -65,8 +66,8 @@ public final class Connect4 extends TieredIterGame {
 	 * @param conf
 	 *            The configuration object
 	 */
-	public Connect4(Configuration conf) {
-		super(conf);
+	public void initialize(Configuration conf) {
+		super.initialize(conf);
 		gameWidth = conf.getInteger("gamesman.game.width", 7);
 		gameHeight = conf.getInteger("gamesman.game.height", 6);
 		piecesToWin = conf.getInteger("gamesman.game.pieces", 4);

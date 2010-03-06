@@ -1,49 +1,55 @@
 package edu.berkeley.gamesman.core;
 
-import edu.berkeley.gamesman.util.Util;
-
-
 /**
- * A Hasher converts between a game board and a BigInteger hash in a space- and time-efficient manner.
+ * A Hasher converts between a game board and a long hash in a space- and
+ * time-efficient manner.
+ * 
  * @author Steven Schlansker
- * @param <Board> The type of Board that this hasher can hash
+ * @param <S>
+ *            The type of Board that this hasher can hash
  */
-public abstract class Hasher<Board extends State> {
-	protected Game<Board> game;
+public abstract class Hasher<S extends State> {
 	protected Configuration conf;
-	
+
 	/**
-	 * Default constructor
-	 * @param conf the configuration object
+	 * Initialize this Hasher
+	 * 
+	 * @param conf
+	 *            The configuration object
 	 */
-	public Hasher(Configuration conf){
-		game = Util.checkedCast(conf.getGame());
+	public void initialize(Configuration conf) {
 		this.conf = conf;
 	}
-	
+
 	/**
-	 * Convert a previously hashed board back into its canonical char-array representation
-	 * @param hash The hashed representation of a board
+	 * Convert a previously hashed board back into its canonical char-array
+	 * representation
+	 * 
+	 * @param hash
+	 *            The hashed representation of a board
 	 * @return The board
 	 */
-	public abstract Board unhash(long hash);
+	public abstract S unhash(long hash);
 
 	/**
 	 * Convert a board into a compact hash representation
-	 * @param board The board to hash
+	 * 
+	 * @param state
+	 *            The board to hash
 	 * @return Hash of the board
 	 */
-	public abstract long hash(Board board);
-	
+	public abstract long hash(S state);
+
 	/**
 	 * @return Maximum hash that the Hasher could return via a call to hash()
-	 * @see Hasher#hash(Object)
+	 * @see Hasher#hash(State)
 	 */
 	public abstract long numHashes();
-	
+
 	/**
-	 * @return a String that uniquely identifies this Hasher (including valid pieces if appropriate, etc)
+	 * @return a String that uniquely identifies this Hasher (including valid
+	 *         pieces if appropriate, etc)
 	 */
 	public abstract String describe();
-	
+
 }

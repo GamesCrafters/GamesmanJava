@@ -73,7 +73,7 @@ public class DatabaseDump extends GamesmanApplication {
 		}
 		Database db;
 		try {
-			db = conf.openDatabase();
+			db = conf.openDatabase(false);
 		} catch (ClassNotFoundException e1) {
 			Util.fatalError("Failed to instantiantiate database class", e1);
 			return 1;
@@ -106,7 +106,7 @@ public class DatabaseDump extends GamesmanApplication {
 			Util.fatalError("failed to instantiate database", e);
 			return;
 		}
-		db.initialize(args[0], null);
+		db.initialize(args[0], false);
 		db.getConfiguration().setProperty("gamesman.dotty.uri", args[1]);
 		new DatabaseDump().runWithDatabase(db);
 	}

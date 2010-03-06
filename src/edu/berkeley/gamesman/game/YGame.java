@@ -2,6 +2,11 @@ package edu.berkeley.gamesman.game;
 
 import edu.berkeley.gamesman.core.*;
 
+/**
+ * The game Y
+ * 
+ * @author dnspies
+ */
 public class YGame extends ConnectGame {
 	private final class Space {
 		// t = triangle, r = row c = column
@@ -31,16 +36,20 @@ public class YGame extends ConnectGame {
 		}
 	}
 
-	private final Space[][][] yBoard;
+	private Space[][][] yBoard;
 
-	private final char[] board;
+	private char[] board;
 
-	private final int boardSide;
+	private int boardSide;
 
-	private final int boardSize;
+	private int boardSize;
 
-	public YGame(Configuration conf) {
-		super(conf);
+	/**
+	 * @param conf
+	 *            The configuration object
+	 */
+	public void initialize(Configuration conf) {
+		super.initialize(conf);
 		boardSide = conf.getInteger("game.sideLength", 4);
 		yBoard = new Space[3][boardSide - 1][];
 		int n = 0;

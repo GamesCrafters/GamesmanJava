@@ -56,7 +56,7 @@ public final class LocalMaster implements Master, TaskFactory {
 
 		conf = inconf;
 
-		database.initialize(conf.getProperty("gamesman.db.uri"), inconf);
+		database.initialize(conf.getProperty("gamesman.db.uri"), inconf, true);
 
 		solver.initialize(conf);
 

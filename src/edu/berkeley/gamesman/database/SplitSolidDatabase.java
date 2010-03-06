@@ -6,7 +6,6 @@ import edu.berkeley.gamesman.database.util.SplitDatabaseWritable;
 import edu.berkeley.gamesman.database.util.SplitDatabaseWritableList;
 import edu.berkeley.gamesman.util.LongIterator;
 import edu.berkeley.gamesman.util.Util;
-import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 import java.util.List;
 import java.util.SortedMap;
@@ -17,31 +16,34 @@ import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 
 /**
- * HadoopSplitDatabase contains a NavigableMap of read databases, sorted by
- * a range of hash values, so that it is possible to read from a previous
- * tier without combining all the mini-databases.
+ * HadoopSplitDatabase contains a NavigableMap of read databases, sorted by a
+ * range of hash values, so that it is possible to read from a previous tier
+ * without combining all the mini-databases.
  * 
- * For writing databases, it uses beginWrite() and endWrite() in order to
- * create a mini-database only used for one thread of the solve.
+ * For writing databases, it uses beginWrite() and endWrite() in order to create
+ * a mini-database only used for one thread of the solve.
  * 
  * @author Steven Schlansker
  */
 public class SplitSolidDatabase extends Database {
 
-	/** Default constructor. Must by followed by calls to setFilesystem(),
+	/**
+	 * Default constructor. Must by followed by calls to setFilesystem(),
 	 * setOutputDirectory(), setDelegate(), and initialize().
 	 */
 	public SplitSolidDatabase() {
 	}
 
-	/** Default initialize() function. Should be overridden if a subclass
+	/**
+	 * Default initialize() function. Should be overridden if a subclass
 	 * requires a different method to access the filesystem.
 	 */
 	@Override
-	public void initialize(String splitfilename) {
-		if (splitfilename == null || splitfilename.length()==0) {
+	public void initialize(String splitfilename, boolean solve) {
+		if (splitfilename == null || splitfilename.length() == 0) {
 			return;
 		}
 		databaseTree = new TreeMap<Long, Database>();
@@ -64,7 +66,7 @@ public class SplitSolidDatabase extends Database {
 			String filename = sdw.getFilename();
 
 			Database db = createReadDatabase();
-			db.initialize(inputFilenameBase + filename, conf);
+			db.initialize(inputFilenameBase + filename, conf, solve);
 			databaseTree.put(start, db);
 			databaseEnd.put(start, start + len);
 		}
@@ -73,25 +75,25 @@ public class SplitSolidDatabase extends Database {
 	protected Database createReadDatabase() {
 		return new SolidFileDatabase();
 	}
-	
+
 	protected SolidDatabase createWriteDatabase() {
 		return new SolidFileDatabase();
 	}
-	
-	protected void startedWrite(int tier, SolidDatabase db, long startRecord, long endRecord) {
+
+	protected void startedWrite(int tier, SolidDatabase db, long startRecord,
+			long endRecord) {
 		/*
-		if (delegate != null) {
-			delegate.started(tier, db.uri, startRecord, endRecord);
-		}
-		*/
+		 * if (delegate != null) { delegate.started(tier, db.uri, startRecord,
+		 * endRecord); }
+		 */
 	}
-	
-	protected void finishedWrite(int tier, SolidDatabase db, long startRecord, long endRecord) {
+
+	protected void finishedWrite(int tier, SolidDatabase db, long startRecord,
+			long endRecord) {
 		/*
-		if (delegate != null) {
-			delegate.finished(tier, db.uri, startRecord, endRecord);
-		}
-		*/
+		 * if (delegate != null) { delegate.finished(tier, db.uri, startRecord,
+		 * endRecord); }
+		 */
 	}
 
 	protected List<SplitDatabaseWritable> readIndexFile(String name) {
@@ -118,10 +120,11 @@ public class SplitSolidDatabase extends Database {
 		}
 		return list;
 	}
-	
+
 	/**
-	 * @param dirName The directory to create output chunks in
-	 * (defaults to the input directory).
+	 * @param dirName
+	 *            The directory to create output chunks in (defaults to the
+	 *            input directory).
 	 */
 	public void setOutputDirectory(String dirName) {
 		outputFilenameBase = dirName;
@@ -147,7 +150,7 @@ public class SplitSolidDatabase extends Database {
 		if (databaseTree.containsKey(loc)) {
 			return loc;
 		}
-		return databaseTree.headMap(loc+1).lastKey();
+		return databaseTree.headMap(loc + 1).lastKey();
 	}
 
 	protected final Database getDatabaseFor(long loc) {
@@ -159,8 +162,9 @@ public class SplitSolidDatabase extends Database {
 		SolidDatabase db = createWriteDatabase();
 		String filename = tier + ".hdb." + startRecord;
 		String name = outputFilenameBase + "/" + filename;
-		System.out.println("[SplitSolidDatabase] Output "+name+" "+startRecord+"-"+endRecord);
-		db.initialize(name, conf);
+		System.out.println("[SplitSolidDatabase] Output " + name + " "
+				+ startRecord + "-" + endRecord);
+		db.initialize(name, conf, true);
 		startedWrite(tier, db, startRecord, endRecord);
 
 		return db;
@@ -169,7 +173,8 @@ public class SplitSolidDatabase extends Database {
 	public void endWrite(int tier, Database db, long startRecord, long endRecord) {
 		SolidDatabase hdb = (SolidDatabase) db;
 		finishedWrite(tier, hdb, startRecord, endRecord);
-		System.out.println("[SplitSolidDatabase] Ended output "+tier+":"+startRecord+"-"+endRecord);
+		System.out.println("[SplitSolidDatabase] Ended output " + tier + ":"
+				+ startRecord + "-" + endRecord);
 		db.close();
 	}
 
@@ -180,17 +185,17 @@ public class SplitSolidDatabase extends Database {
 	}
 
 	@Override
-	public void putBytes(long loc, byte[] arr, int offset,
-			int length) {
+	public void putBytes(long loc, byte[] arr, int offset, int length) {
 		throw new UnsupportedOperationException(
-			"putBytes can only be called from beginWrite()'s return value");
+				"putBytes can only be called from beginWrite()'s return value");
 	}
 
 	@Override
 	public Record getRecord(long rec) {
 		Long firstRec = getDatabaseKeyFor(rec);
 		Database db = databaseTree.get(firstRec);
-		long firstRecGroupRec = (firstRec / conf.recordsPerGroup) * conf.recordsPerGroup;
+		long firstRecGroupRec = (firstRec / conf.recordsPerGroup)
+				* conf.recordsPerGroup;
 		return db.getRecord(rec - firstRecGroupRec);
 	}
 
@@ -198,34 +203,39 @@ public class SplitSolidDatabase extends Database {
 	public void getRecord(long rec, Record outRec) {
 		Long firstRec = getDatabaseKeyFor(rec);
 		Database db = databaseTree.get(firstRec);
-		long firstRecGroupRec = (firstRec / conf.recordsPerGroup) * conf.recordsPerGroup;
+		long firstRecGroupRec = (firstRec / conf.recordsPerGroup)
+				* conf.recordsPerGroup;
 		db.getRecord(rec - firstRecGroupRec, outRec);
 	}
 
 	@Override
 	public long getLongRecordGroup(long loc) {
-		Long firstRec = getDatabaseKeyFor((loc/conf.recordGroupByteLength)*conf.recordsPerGroup);
+		Long firstRec = getDatabaseKeyFor((loc / conf.recordGroupByteLength)
+				* conf.recordsPerGroup);
 		Database db = databaseTree.get(firstRec);
-		long startRecordGroupByte = (firstRec/conf.recordsPerGroup)*conf.recordGroupByteLength;
+		long startRecordGroupByte = (firstRec / conf.recordsPerGroup)
+				* conf.recordGroupByteLength;
 
-/////////// SOURCE OF THE "LOSE in 0" BUG:
-/* FIXME: Need to support case where this record group crosses a *TIER* boundary...
-   This does not come up in solving, but it does happen when querying the database. The problem is that
-   'loc' is not specific enough to determine which *record* we want. Ideally the caller would pass that
-   information into getLongRecordGroup, but at the moment we have two options:
-   - Leave getLongRecordGroup unimplemented or throw an error if at a boundary
-     (only implement getLongRecord)
-   - Do some ugly record group merging at the tier boundaries
-
-                          To be continued...            
-
-*/
+		// ///////// SOURCE OF THE "LOSE in 0" BUG:
+		/*
+		 * FIXME: Need to support case where this record group crosses a *TIER*
+		 * boundary... This does not come up in solving, but it does happen when
+		 * querying the database. The problem is that 'loc' is not specific
+		 * enough to determine which *record* we want. Ideally the caller would
+		 * pass that information into getLongRecordGroup, but at the moment we
+		 * have two options: - Leave getLongRecordGroup unimplemented or throw
+		 * an error if at a boundary (only implement getLongRecord) - Do some
+		 * ugly record group merging at the tier boundaries
+		 * 
+		 * To be continued...
+		 */
 		return db.getLongRecordGroup(loc - startRecordGroupByte);
 	}
 
 	@Override
 	public BigInteger getBigIntRecordGroup(long loc) {
-		throw new UnsupportedOperationException("BigInteger HadoopDatabase not implemented");
+		throw new UnsupportedOperationException(
+				"BigInteger HadoopDatabase not implemented");
 	}
 
 	@Override
@@ -245,31 +255,51 @@ public class SplitSolidDatabase extends Database {
 		int origOff = offset;
 		int origLen = length;
 		while (length > 0) {
-			long recordNumber = conf.recordsPerGroup-1+
-			((recordGroupByteLocation+(conf.recordGroupByteLength-1))/
-					conf.recordGroupByteLength)*conf.recordsPerGroup;
+			long recordNumber = conf.recordsPerGroup
+					- 1
+					+ ((recordGroupByteLocation + (conf.recordGroupByteLength - 1)) / conf.recordGroupByteLength)
+					* conf.recordsPerGroup;
 			long currentDbStart = getDatabaseKeyFor(recordNumber);
 			long currentDbEnd = databaseEnd.get(currentDbStart);
 			Database db = databaseTree.get(currentDbStart);
 			int amtRead;
-			long startRecordGroupByte = (currentDbStart/conf.recordsPerGroup)*conf.recordGroupByteLength;
-			long endRecordGroupByte = ((currentDbEnd+(conf.recordsPerGroup-1))/conf.recordsPerGroup)*conf.recordGroupByteLength;
+			long startRecordGroupByte = (currentDbStart / conf.recordsPerGroup)
+					* conf.recordGroupByteLength;
+			long endRecordGroupByte = ((currentDbEnd + (conf.recordsPerGroup - 1)) / conf.recordsPerGroup)
+					* conf.recordGroupByteLength;
 			if (length > endRecordGroupByte - recordGroupByteLocation) {
 				amtRead = (int) (endRecordGroupByte - recordGroupByteLocation);
 				if (amtRead == 0) {
-					return; // Page.extendUp may call this with one record group past the end in the case that the end is exactly aligned.
+					return; // Page.extendUp may call this with one record group
+					// past the end in the case that the end is exactly
+					// aligned.
 				}
 			} else {
 				amtRead = length;
 			}
 			assert amtRead > 0;
 			try {
-				db.getBytes(recordGroupByteLocation-startRecordGroupByte, arr, offset, amtRead);
+				db.getBytes(recordGroupByteLocation - startRecordGroupByte,
+						arr, offset, amtRead);
 			} catch (java.lang.ArrayIndexOutOfBoundsException e) {
-				System.out.println("[SplitSolidDatabase] Out of bounds in db.getBytes: "+
-					"db starts at "+currentDbStart+"; ends at "+currentDbEnd+"... "+
-					"origRGB="+origLoc+", curRGB = "+recordGroupByteLocation+", startRGB = "+startRecordGroupByte+
-					", endRGB="+endRecordGroupByte+"; origOff="+origOff+"; origLen="+origLen);
+				System.out
+						.println("[SplitSolidDatabase] Out of bounds in db.getBytes: "
+								+ "db starts at "
+								+ currentDbStart
+								+ "; ends at "
+								+ currentDbEnd
+								+ "... "
+								+ "origRGB="
+								+ origLoc
+								+ ", curRGB = "
+								+ recordGroupByteLocation
+								+ ", startRGB = "
+								+ startRecordGroupByte
+								+ ", endRGB="
+								+ endRecordGroupByte
+								+ "; origOff="
+								+ origOff
+								+ "; origLen=" + origLen);
 				throw e;
 			}
 			length -= amtRead;
@@ -285,7 +315,9 @@ public class SplitSolidDatabase extends Database {
 	}
 
 	@Override
-	public LongIterator getLongRecordGroups(long recordGroupByteLocation, int numGroups) {
-		throw new UnsupportedOperationException("getLongRecordGroups is not yet implemented.");
+	public LongIterator getLongRecordGroups(long recordGroupByteLocation,
+			int numGroups) {
+		throw new UnsupportedOperationException(
+				"getLongRecordGroups is not yet implemented.");
 	}
 }

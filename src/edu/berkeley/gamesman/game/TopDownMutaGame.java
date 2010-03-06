@@ -1,8 +1,11 @@
-package edu.berkeley.gamesman.core;
+package edu.berkeley.gamesman.game;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
+import edu.berkeley.gamesman.core.Game;
+import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.util.Pair;
 
 /**
@@ -14,14 +17,6 @@ import edu.berkeley.gamesman.util.Pair;
  *            The state for this game
  */
 public abstract class TopDownMutaGame<S extends State> extends Game<S> {
-
-	/**
-	 * @param conf
-	 *            The configuration object
-	 */
-	public TopDownMutaGame(Configuration conf) {
-		super(conf);
-	}
 
 	@Override
 	public String displayState(S pos) {

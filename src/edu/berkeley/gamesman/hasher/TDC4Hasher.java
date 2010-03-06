@@ -1,6 +1,5 @@
 package edu.berkeley.gamesman.hasher;
 
-import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.game.TopDownC4;
 import edu.berkeley.gamesman.game.util.C4State;
@@ -16,13 +15,6 @@ public class TDC4Hasher extends Hasher<C4State> {
 	private long[] offsets;
 
 	private long[] arrangeLengths;
-
-	/**
-	 * @param conf The configuration object
-	 */
-	public TDC4Hasher(Configuration conf) {
-		super(conf);
-	}
 
 	@Override
 	public String describe() {

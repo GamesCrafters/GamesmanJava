@@ -22,10 +22,13 @@ public class MemoryCachedDatabase extends MemoryDatabase {
 	private File myFile;
 
 	@Override
-	public void initialize(String location) {
+	public void initialize(String location, boolean solve) {
 		myFile = new File(location);
-		if (myFile.exists()) {
-			reading = true;
+		if (solve) {
+			super.initialize(location, true);
+			readingOnly = false;
+		} else {
+			readingOnly = true;
 			try {
 				InputStream fis = new FileInputStream(myFile);
 				int confLength = 0;
@@ -35,9 +38,8 @@ public class MemoryCachedDatabase extends MemoryDatabase {
 				}
 				byte[] b = new byte[confLength];
 				fis.read(b);
-				if (conf == null)
-					conf = Configuration.load(b);
-				super.initialize(location);
+				conf = Configuration.load(b);
+				super.initialize(location, false);
 				if (conf.getProperty("gamesman.db.compression", "none").equals(
 						"gzip")) {
 					int bufferSize = conf.getInteger("zip.bufferKB", 1 << 12) << 10;
@@ -52,15 +54,12 @@ public class MemoryCachedDatabase extends MemoryDatabase {
 			} catch (ClassNotFoundException e) {
 				Util.fatalError("Class Not Found", e);
 			}
-		} else {
-			super.initialize(location);
-			reading = false;
 		}
 	}
 
 	@Override
 	public void close() {
-		if (!reading) {
+		if (!readingOnly) {
 			try {
 				myFile.createNewFile();
 				OutputStream fos = new FileOutputStream(myFile);

@@ -12,10 +12,11 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapred.*;
 import org.apache.hadoop.util.Tool;
 
-import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.database.util.SplitDatabaseWritable;
 import edu.berkeley.gamesman.database.util.SplitDatabaseWritableList;
+import edu.berkeley.gamesman.game.TieredGame;
 import edu.berkeley.gamesman.hadoop.util.*;
+import edu.berkeley.gamesman.hasher.TieredHasher;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 

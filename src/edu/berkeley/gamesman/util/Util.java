@@ -475,37 +475,6 @@ public final class Util {
 	}
 
 	/**
-	 * Like Class.forName(name).newInstance() but with type checking and an
-	 * argument
-	 * 
-	 * @param <T>
-	 *            The type requested
-	 * @param name
-	 *            The name of the class to instantiate
-	 * @param baseClass
-	 *            Usually equals the template param
-	 * @param arg
-	 *            The argument to provide to the constructor
-	 * @return A new instance (created with the non-default constructor)
-	 * @throws ClassNotFoundException
-	 *             The class could not be loaded
-	 */
-	public static <T> T typedInstantiateArg(String name, Class<T> baseClass,
-			Object arg) throws ClassNotFoundException {
-		try { // TODO why is this broken on nyc?
-			// return checkedCast(typedForName(name,
-			// baseClass).getConstructors()[0].newInstance(arg));
-			return (T) typedForName(name, baseClass).getConstructor(
-					arg.getClass()).newInstance(arg);
-		} catch (ClassNotFoundException e) {
-			throw e;
-		} catch (Exception e) {
-			throw new ClassNotFoundException(
-					"Uncaught exception while instantiating " + name, e);
-		}
-	}
-
-	/**
 	 * Handy method for working with 'unchecked' casts - send them here and it
 	 * will throw a RuntimeException instead of giving you a compiler warning.
 	 * DO NOT USE unless you are sure there's no other options! Use generics
@@ -776,6 +745,11 @@ public final class Util {
 		return ints;
 	}
 
+	/**
+	 * @param fac
+	 *            A debugging facility
+	 * @return Is this debug facility turned on?
+	 */
 	public static boolean debug(DebugFacility fac) {
 		return debugOpts.contains(fac) || debugOpts.contains(DebugFacility.ALL);
 	}

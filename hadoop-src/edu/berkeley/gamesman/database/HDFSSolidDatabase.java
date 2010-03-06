@@ -22,10 +22,10 @@ import java.io.OutputStream;
  * .beginWrite() and close/add to the reduce queue using HadoopSplitDatabase
  * .endWrite(). SolidDatabase only implements sequential writes, so you must
  * create one HDFSSolidDatabase for each concurrent thread at a time.
- *
+ * 
  * HadoopSplitDatabase will also use this class to create a read database.
- * Unlike HDFSInputDatabase, SolidDatabase requires reading the whole file
- * into memory.
+ * Unlike HDFSInputDatabase, SolidDatabase requires reading the whole file into
+ * memory.
  * 
  * @author Steven Schlansker
  */
@@ -41,11 +41,13 @@ public class HDFSSolidDatabase extends SolidDatabase {
 	HDFSSolidDatabase(FileSystem fs) {
 		this.fs = fs;
 	}
-	
+
 	/**
-	 * All hadoop classes that need to access the disk need a FileSystem instance.
-	 * Must be set before the database is used.
-	 * @param fs The hadoop filesystem.
+	 * All hadoop classes that need to access the disk need a FileSystem
+	 * instance. Must be set before the database is used.
+	 * 
+	 * @param fs
+	 *            The hadoop filesystem.
 	 */
 	public void setFilesystem(FileSystem fs) {
 		this.fs = fs;
@@ -55,7 +57,7 @@ public class HDFSSolidDatabase extends SolidDatabase {
 	public synchronized void flush() {
 		try {
 			outputStream.flush();
-			((FSDataOutputStream)outputStream).sync();
+			((FSDataOutputStream) outputStream).sync();
 		} catch (IOException e) {
 			Util.fatalError("Error while writing to database: " + e);
 		}
@@ -66,7 +68,7 @@ public class HDFSSolidDatabase extends SolidDatabase {
 	 */
 	public final long getPosition() {
 		try {
-			return ((FSDataOutputStream)outputStream).getPos();
+			return ((FSDataOutputStream) outputStream).getPos();
 		} catch (IOException e) {
 			e.printStackTrace();
 			return -1;
@@ -79,10 +81,9 @@ public class HDFSSolidDatabase extends SolidDatabase {
 	}
 
 	@Override
-	public void initialize(String loc) {
-		super.initialize(loc);
+	public void initialize(String loc, boolean solve) {
+		super.initialize(loc, solve);
 	}
-
 
 	@Override
 	protected InputStream openInputStream(String uri) throws IOException {
@@ -99,11 +100,12 @@ public class HDFSSolidDatabase extends SolidDatabase {
 		try {
 			previouslyExisted = fs.exists(myFile);
 		} catch (IOException e) {
-			Util.fatalError("Unable to check if index file "+myFile+" exists",  e);
+			Util.fatalError("Unable to check if index file " + myFile
+					+ " exists", e);
 		}
 		if (previouslyExisted) {
-			//Util.fatalError("Not overwriting existing output file "+myFile);
-			Util.warn("!!! Overwriting existing output file "+myFile);
+			// Util.fatalError("Not overwriting existing output file "+myFile);
+			Util.warn("!!! Overwriting existing output file " + myFile);
 		}
 		return fs.create(myFile);
 	}

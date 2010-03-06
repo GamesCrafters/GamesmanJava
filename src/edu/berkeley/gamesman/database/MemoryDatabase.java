@@ -1,5 +1,6 @@
 package edu.berkeley.gamesman.database;
 
+import java.math.BigInteger;
 import java.util.Iterator;
 
 import edu.berkeley.gamesman.core.Database;
@@ -7,7 +8,6 @@ import edu.berkeley.gamesman.core.RecordGroup;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.LongIterator;
 import edu.berkeley.gamesman.util.Util;
-import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 /**
  * Stores the entire database as an array of bytes
@@ -18,11 +18,12 @@ public class MemoryDatabase extends Database {
 	/* Class Variables */
 	protected byte[] memoryStorage; // byte array to store the data
 
-	protected boolean reading;
+	protected boolean readingOnly;
 
 	private int nextPlace = 0;
 
-	public void initialize(String location) {
+	@Override
+	public void initialize(String location, boolean solve) {
 		maxBytes = (int) getByteSize();
 		memoryStorage = new byte[maxBytes];
 	}

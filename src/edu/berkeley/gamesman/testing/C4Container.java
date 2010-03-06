@@ -95,7 +95,7 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 		try {
 			if (args[0].contains(":")) {
 				Database theBase = new GZippedFileDatabase();
-				theBase.initialize(args[0]);
+				theBase.initialize(args[0], false);
 				conf = theBase.getConfiguration();
 				fd = theBase;
 				conf.db = theBase;
@@ -112,7 +112,7 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 				fis.close();
 				conf = Configuration.load(confBytes);
 				conf.setProperty("gamesman.db.uri", args[0]);
-				fd = conf.openDatabase();
+				fd = conf.openDatabase(false);
 			}
 		} catch (ClassNotFoundException e) {
 			Util.fatalError("failed to load class", e);

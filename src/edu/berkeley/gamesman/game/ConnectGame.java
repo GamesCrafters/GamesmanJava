@@ -3,15 +3,25 @@ package edu.berkeley.gamesman.game;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.*;
+import edu.berkeley.gamesman.game.util.ItergameState;
 import edu.berkeley.gamesman.util.Pair;
 
+/**
+ * A superclass for hex-style dartboard games in which the objective is to
+ * connect across the board somehow
+ * 
+ * @author dnspies
+ */
 public abstract class ConnectGame extends TieredIterGame {
 
-	protected final ItergameState myState;
+	protected final ItergameState myState = newState();
 
-	public ConnectGame(Configuration conf) {
-		super(conf);
-		myState = newState();
+	/**
+	 * @param conf
+	 *            The configuration object
+	 */
+	public void initialize(Configuration conf) {
+		super.initialize(conf);
 	}
 
 	protected abstract int getBoardSize();

@@ -34,31 +34,31 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 	private BitSetBoard bsb;
 
-	private final int piecesToWin;
+	private int piecesToWin;
 
 	/**
 	 * The width of the game
 	 */
-	public final int gameWidth;
+	public int gameWidth;
 	/**
 	 * The height of the game
 	 */
-	public final int gameHeight;
+	public int gameHeight;
 	/**
 	 * gameWidth * gameHeight
 	 */
-	public final int gameSize;
+	public int gameSize;
 
-	private final int[] colHeights;
+	private int[] colHeights;
 
 	/**
 	 * An ExpCoefs object of degree gameHeight for making hash calculations
 	 */
-	public final ExpCoefs ec;
+	public ExpCoefs ec;
 
-	private final QuickLinkedList<Move> moves;
+	private QuickLinkedList<Move> moves;
 
-	private final TopDownPieceRearranger arranger;
+	private TopDownPieceRearranger arranger;
 
 	private char turn;
 
@@ -68,8 +68,8 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 	 * @param conf
 	 *            The configuration object
 	 */
-	public TopDownC4(Configuration conf) {
-		super(conf);
+	public void initialize(Configuration conf) {
+		super.initialize(conf);
 		piecesToWin = conf.getInteger("gamesman.game.pieces", 4);
 		gameWidth = conf.getInteger("gamesman.game.width", 5);
 		gameHeight = conf.getInteger("gamesman.game.height", 4);
@@ -437,14 +437,5 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 	@Override
 	public C4State newState() {
 		return new C4State(0, 0, 0);
-	}
-
-	@Override
-	public C4State[] newStateArray(int len) {
-		C4State[] arr = new C4State[len];
-		for (int i = 0; i < len; i++) {
-			arr[i] = newState();
-		}
-		return arr;
 	}
 }

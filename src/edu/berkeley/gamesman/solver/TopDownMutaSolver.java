@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.solver;
 import java.util.List;
 
 import edu.berkeley.gamesman.core.*;
+import edu.berkeley.gamesman.game.TopDownMutaGame;
 import edu.berkeley.gamesman.util.*;
 
 /**

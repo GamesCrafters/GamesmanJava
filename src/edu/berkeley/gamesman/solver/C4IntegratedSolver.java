@@ -7,6 +7,7 @@ import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.database.util.Page;
 import edu.berkeley.gamesman.database.util.SequentialPage;
 import edu.berkeley.gamesman.game.Connect4;
+import edu.berkeley.gamesman.game.util.ItergameState;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 

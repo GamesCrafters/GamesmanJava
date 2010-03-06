@@ -1,12 +1,8 @@
 package edu.berkeley.gamesman.core;
 
-import java.io.DataOutput;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
+import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Iterator;
-
-import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 /**
  * @author dnspies Stores a small group of records in the most compressed
@@ -44,7 +40,9 @@ public abstract class RecordGroup {
 	 */
 	public static BigInteger bigIntRecordGroup(Configuration conf,
 			byte[] values, int offset) {
-		return new BigInteger(1, values, offset, conf.recordGroupByteLength);
+		byte[] bigIntByte = Arrays.copyOfRange(values, offset, offset
+				+ conf.recordGroupByteLength);
+		return new BigInteger(1, bigIntByte);
 	}
 
 	/**
@@ -305,39 +303,6 @@ public abstract class RecordGroup {
 	}
 
 	/**
-	 * Outputs the bytes from this RecordGroup into output
-	 * 
-	 * @param conf
-	 *            The configuration object
-	 * @param recordGroup
-	 *            The Record Group
-	 * 
-	 * @param output
-	 *            A ByteBuffer to output to
-	 */
-	public static void outputUnsignedBytes(Configuration conf,
-			long recordGroup, ByteBuffer output) {
-		for (int i = (conf.recordGroupByteLength - 1) * 8; i >= 0; i -= 8)
-			output.put((byte) (recordGroup >>> i));
-	}
-
-	/**
-	 * Outputs the bytes from this RecordGroup into output
-	 * 
-	 * @param conf
-	 *            The configuration object
-	 * @param recordGroup
-	 *            The Record Group
-	 * 
-	 * @param output
-	 *            A ByteBuffer to output to
-	 */
-	public static void outputUnsignedBytes(Configuration conf,
-			BigInteger recordGroup, ByteBuffer output) {
-		recordGroup.outputUnsignedBytes(output, conf.recordGroupByteLength);
-	}
-
-	/**
 	 * Outputs the bytes from this RecordGroup into byteArray
 	 * 
 	 * @param conf
@@ -371,77 +336,14 @@ public abstract class RecordGroup {
 	 */
 	public static void toUnsignedByteArray(Configuration conf,
 			BigInteger recordGroup, byte[] byteArray, int offset) {
-		recordGroup.toUnsignedByteArray(byteArray, offset,
-				conf.recordGroupByteLength);
-	}
-
-	/**
-	 * Outputs the bytes from this RecordGroup into output
-	 * 
-	 * @param conf
-	 *            The configuration object
-	 * @param recordGroup
-	 *            The Record Group
-	 * @param output
-	 *            A DataOutput to output to
-	 * @throws IOException
-	 *             If output throws an IOException
-	 */
-	public static void outputUnsignedBytes(Configuration conf,
-			long recordGroup, DataOutput output) throws IOException {
-		for (int i = (conf.recordGroupByteLength - 1) * 8; i >= 0; i -= 8)
-			output.write((int) (recordGroup >>> i));
-	}
-
-	/**
-	 * Outputs the bytes from this RecordGroup into output
-	 * 
-	 * @param conf
-	 *            The configuration object
-	 * @param recordGroup
-	 *            The Record Group
-	 * @param output
-	 *            A DataOutput to output to
-	 * @throws IOException
-	 *             If output throws an IOException
-	 */
-	public static void outputUnsignedBytes(Configuration conf,
-			BigInteger recordGroup, DataOutput output) throws IOException {
-		recordGroup.outputUnsignedBytes(output, conf.recordGroupByteLength);
-	}
-
-	/**
-	 * Outputs the bytes from this RecordGroup into output
-	 * 
-	 * @param conf
-	 *            The configuration object
-	 * @param recordGroup
-	 *            The Record Group
-	 * @param output
-	 *            An OutputStream to output to
-	 * @throws IOException
-	 *             If output throws an IOException
-	 */
-	public static void outputUnsignedBytes(Configuration conf,
-			long recordGroup, OutputStream output) throws IOException {
-		for (int i = (conf.recordGroupByteLength - 1) * 8; i >= 0; i -= 8)
-			output.write((int) (recordGroup >>> i));
-	}
-
-	/**
-	 * Outputs the bytes from this RecordGroup into output
-	 * 
-	 * @param conf
-	 *            The configuration object
-	 * @param recordGroup
-	 *            The Record Group
-	 * @param output
-	 *            An OutputStream to output to
-	 * @throws IOException
-	 *             If output throws an IOException
-	 */
-	public static void outputUnsignedBytes(Configuration conf,
-			BigInteger recordGroup, OutputStream output) throws IOException {
-		recordGroup.outputUnsignedBytes(output, conf.recordGroupByteLength);
+		byte[] bigIntArray = recordGroup.toByteArray();
+		int initialZeros = conf.recordGroupByteLength
+				- (bigIntArray.length - 1);
+		for (int i = 0; i < initialZeros; i++) {
+			byteArray[offset++] = 0;
+		}
+		for (int i = 1; i < bigIntArray.length; i++) {
+			byteArray[offset++] = bigIntArray[i];
+		}
 	}
 }

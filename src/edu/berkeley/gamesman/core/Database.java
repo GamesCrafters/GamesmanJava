@@ -1,9 +1,9 @@
 package edu.berkeley.gamesman.core;
 
+import java.math.BigInteger;
 import java.util.Iterator;
 
 import edu.berkeley.gamesman.util.LongIterator;
-import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 /**
  * A Database is the abstract superclass of all data storage methods used in
@@ -40,10 +40,12 @@ public abstract class Database {
 	 *            The URI that the Database is associated with
 	 * @param config
 	 *            The Configuration that is relevant
+	 * @param solve
+	 *            true for solving, false for playing
 	 */
-	public final void initialize(String uri, Configuration config) {
+	public final void initialize(String uri, Configuration config, boolean solve) {
 		conf = config;
-		initialize(uri);
+		initialize(uri, solve);
 		maxBytes = 1024 - 1024 % conf.recordGroupByteLength;
 	}
 
@@ -52,8 +54,10 @@ public abstract class Database {
 	 * 
 	 * @param uri
 	 *            The URI that the Database is associated with
+	 * @param solve
+	 *            true for solving, false for playing
 	 */
-	public abstract void initialize(String uri);
+	public abstract void initialize(String uri, boolean solve);
 
 	/**
 	 * Ensure all buffers are flushed to disk. The on-disk state should be
@@ -358,8 +362,11 @@ public abstract class Database {
 	 *         include the header size)
 	 */
 	public long getByteSize() {
-		return (conf.getGame().numHashes() + conf.recordsPerGroup - 1)
-				/ conf.recordsPerGroup * conf.recordGroupByteLength;
+		return conf.superCompress ? (conf.getGame().numHashes()
+				+ conf.recordsPerGroup - 1)
+				/ conf.recordsPerGroup * conf.recordGroupByteLength : conf
+				.getGame().numHashes()
+				* conf.recordGroupByteLength;
 	}
 
 	private class LongRecordGroupIterator implements LongIterator {
@@ -738,6 +745,16 @@ public abstract class Database {
 			groups = new byte[length];
 	}
 
+	/**
+	 * Fills a portion of the database with the passed record.
+	 * 
+	 * @param r
+	 *            The record
+	 * @param offset
+	 *            The byte offset into the database
+	 * @param len
+	 *            The number of bytes to fill
+	 */
 	public void fill(Record r, long offset, long len) {
 		Record[] recs = new Record[conf.recordsPerGroup];
 		for (int i = 0; i < conf.recordsPerGroup; i++)

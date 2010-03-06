@@ -1,7 +1,10 @@
-package edu.berkeley.gamesman.core;
+package edu.berkeley.gamesman.hasher;
 
 import java.util.Arrays;
 
+import edu.berkeley.gamesman.core.Hasher;
+import edu.berkeley.gamesman.core.State;
+import edu.berkeley.gamesman.game.TieredGame;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
@@ -17,15 +20,6 @@ import edu.berkeley.gamesman.util.Util;
  *            The class that represents a State
  */
 public abstract class TieredHasher<S extends State> extends Hasher<S> {
-	/**
-	 * Default constructor
-	 * 
-	 * @param conf
-	 *            the configuration
-	 */
-	public TieredHasher(Configuration conf) {
-		super(conf);
-	}
 
 	@Override
 	public long hash(S board) {
@@ -99,7 +93,7 @@ public abstract class TieredHasher<S extends State> extends Hasher<S> {
 	 * @param index
 	 *            The hash offset into that tier (relative to the start - 0 is
 	 *            the first board in the tier)
-	 * @return The represented GameState
+	 * @param state The state to store the result in
 	 */
 	public abstract void gameStateForTierAndOffset(int tier, long index, S state);
 

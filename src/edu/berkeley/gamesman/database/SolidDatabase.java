@@ -12,26 +12,27 @@ import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.util.Util;
 
 /**
- * Database that does nor permit seeking without being entirely read into memory.
- * (Used for Hadoop or GZIP).
+ * Database that does nor permit seeking without being entirely read into
+ * memory. (Used for Hadoop or GZIP).
  * 
  * @author Patrick Horn
  */
 public abstract class SolidDatabase extends Database {
 
 	private String uri;
-	
+
 	protected OutputStream outputStream;
 
-	/** Set to false if you want an empty configuration header
-	 * (used for SplitDatabase.) Make sure to set 'conf' yourself.
+	/**
+	 * Set to false if you want an empty configuration header (used for
+	 * SplitDatabase.) Make sure to set 'conf' yourself.
 	 */
 	public boolean storeConfiguration = true;
 
 	/** Default constructor */
 	SolidDatabase() {
 	}
-	
+
 	@Override
 	public void close() {
 		if (outputStream != null) {
@@ -52,27 +53,30 @@ public abstract class SolidDatabase extends Database {
 			e.printStackTrace();
 		}
 	}
-	
-	protected abstract InputStream openInputStream(String uri) throws IOException;
-	protected abstract OutputStream openOutputStream(String uri) throws IOException;
+
+	protected abstract InputStream openInputStream(String uri)
+			throws IOException;
+
+	protected abstract OutputStream openOutputStream(String uri)
+			throws IOException;
 
 	@Override
 	public void getBytes(byte[] arr, int off, int len) {
-		throw new UnsupportedOperationException("getBytes without position argument is not supported in SolidDatabase");
+		throw new UnsupportedOperationException(
+				"getBytes without position argument is not supported in SolidDatabase");
 	}
 
 	@Override
 	public void getBytes(long loc, byte[] arr, int off, int len) {
 		/*
-		if (Math.random() < .01) {
-			Util.fatalError("Epic Fail", new IOException("Hadoop angry! Hadoop do not like you!"));
-		}
-		*/
-		byte[]decompressed = new byte[1000000];
+		 * if (Math.random() < .01) { Util.fatalError("Epic Fail", new
+		 * IOException("Hadoop angry! Hadoop do not like you!")); }
+		 */
+		byte[] decompressed = new byte[1000000];
 		long currentLoc = 0;
-		int decompressedOffset=0;
-		int lenToCopy=0;
-		int count=-999;
+		int decompressedOffset = 0;
+		int lenToCopy = 0;
+		int count = -999;
 		try {
 			InputStream inputStream = openInputStream(this.getUri());
 			{
@@ -85,16 +89,19 @@ public abstract class SolidDatabase extends Database {
 					try {
 						conf = Configuration.load(storedConf);
 					} catch (ClassNotFoundException e) {
-						Util.fatalError("Failed to read header from SolidDatabase", e);
+						Util.fatalError(
+								"Failed to read header from SolidDatabase", e);
 					}
 				}
 			}
-			String compression = conf.getProperty("gamesman.db.compression", null);
+			String compression = conf.getProperty("gamesman.db.compression",
+					null);
 			if (compression != null) {
 				if (compression.equals("gzip")) {
 					inputStream = new GZIPInputStream(inputStream);
 				} else {
-					Util.fatalError("Unknown compression method '"+compression+"'");
+					Util.fatalError("Unknown compression method '"
+							+ compression + "'");
 				}
 			}
 
@@ -103,15 +110,14 @@ public abstract class SolidDatabase extends Database {
 				if (count <= 0) {
 					break;
 				}
-				if (currentLoc+count > loc && len > 0) {
-					decompressedOffset = (int)(loc-currentLoc);
+				if (currentLoc + count > loc && len > 0) {
+					decompressedOffset = (int) (loc - currentLoc);
 					lenToCopy = count - decompressedOffset;
 					if (lenToCopy > len) {
 						lenToCopy = len;
 					}
-					System.arraycopy(arr, off,
-						decompressed, decompressedOffset,
-						lenToCopy);
+					System.arraycopy(arr, off, decompressed,
+							decompressedOffset, lenToCopy);
 					len -= lenToCopy;
 					off += lenToCopy;
 					loc += lenToCopy;
@@ -119,26 +125,29 @@ public abstract class SolidDatabase extends Database {
 				currentLoc += count;
 			}
 			if (currentLoc <= 0) {
-				throw new IOException("SolidDatabase at "+this.getUri()+" appears to be empty");
+				throw new IOException("SolidDatabase at " + this.getUri()
+						+ " appears to be empty");
 			}
 			if (len > 0) {
-				throw new IOException("Failed to read enough from SolidDatabase "+
-					this.getUri()+"; "+len+" remaining");
+				throw new IOException(
+						"Failed to read enough from SolidDatabase "
+								+ this.getUri() + "; " + len + " remaining");
 			}
 		} catch (IOException ie) {
-			System.out.println("[SolidDatabase] IOException in getBytes"+ie);
+			System.out.println("[SolidDatabase] IOException in getBytes" + ie);
 			throw new RuntimeException(ie);
 		} catch (ArrayIndexOutOfBoundsException e) {
-			System.out.println("[SolidDatabase] Out of bounds in arrayCopy: "+
-				"input len="+decompressed.length+" off="+decompressedOffset+
-				"; file curLoc="+currentLoc+" count="+count+
-				"; output len="+arr.length+" off="+off+" ... LEN="+lenToCopy);
+			System.out.println("[SolidDatabase] Out of bounds in arrayCopy: "
+					+ "input len=" + decompressed.length + " off="
+					+ decompressedOffset + "; file curLoc=" + currentLoc
+					+ " count=" + count + "; output len=" + arr.length
+					+ " off=" + off + " ... LEN=" + lenToCopy);
 			throw e;
 		}
 	}
 
 	@Override
-	public void initialize(String uri) {
+	public void initialize(String uri, boolean solve) {
 		this.uri = uri;
 	}
 
@@ -147,7 +156,8 @@ public abstract class SolidDatabase extends Database {
 		try {
 			if (outputStream == null) {
 				outputStream = this.openOutputStream(this.getUri());
-				String compression = conf.getProperty("gamesman.db.compression", null);
+				String compression = conf.getProperty(
+						"gamesman.db.compression", null);
 				if (compression != null) {
 					if (compression.equals("gzip")) {
 					} else {
@@ -172,13 +182,15 @@ public abstract class SolidDatabase extends Database {
 			}
 			outputStream.write(arr, off, len);
 		} catch (IOException e) {
-			Util.fatalError("Failed to write "+len+"bytes to SolidDatabase", e);
+			Util.fatalError(
+					"Failed to write " + len + "bytes to SolidDatabase", e);
 		}
 	}
 
 	@Override
 	public void seek(long loc) {
-		throw new UnsupportedOperationException("Seeking is not supported in SolidDatabase");
+		throw new UnsupportedOperationException(
+				"Seeking is not supported in SolidDatabase");
 	}
 
 	/**

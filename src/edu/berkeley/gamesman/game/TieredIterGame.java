@@ -1,23 +1,16 @@
-package edu.berkeley.gamesman.core;
+package edu.berkeley.gamesman.game;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
+import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.game.util.ItergameState;
 import edu.berkeley.gamesman.util.Pair;
-import edu.berkeley.gamesman.util.Util;
 
 /**
  * @author DNSpies
  */
 public abstract class TieredIterGame extends TieredGame<ItergameState> {
-
-	/**
-	 * @param conf
-	 *            The configuration object
-	 */
-	public TieredIterGame(Configuration conf) {
-		super(conf);
-	}
 
 	@Override
 	public PrimitiveValue primitiveValue(ItergameState pos) {
@@ -178,8 +171,6 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> {
 
 	@Override
 	public long stateToHash(ItergameState pos) {
-		if (myHasher == null)
-			Util.fatalError("You must call prepare() before hashing!");
 		return myHasher.hashOffsetForTier(pos.tier) + pos.hash;
 	}
 
@@ -200,13 +191,5 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> {
 	@Override
 	public ItergameState newState() {
 		return new ItergameState();
-	}
-
-	@Override
-	public ItergameState[] newStateArray(int len) {
-		ItergameState[] arr = new ItergameState[len];
-		for (int i = 0; i < len; i++)
-			arr[i] = newState();
-		return arr;
 	}
 }

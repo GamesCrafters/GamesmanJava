@@ -1,4 +1,6 @@
-package edu.berkeley.gamesman.core;
+package edu.berkeley.gamesman.game.util;
+
+import edu.berkeley.gamesman.core.State;
 
 /**
  * All Itergames use this as the state.
@@ -47,5 +49,14 @@ public final class ItergameState implements State {
 			hash = is.hash;
 		} else
 			throw new RuntimeException("Wrong State passed");
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof ItergameState) {
+			ItergameState other = (ItergameState) obj;
+			return tier == other.tier && hash == other.hash;
+		} else
+			return false;
 	}
 }

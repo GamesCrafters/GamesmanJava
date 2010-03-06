@@ -43,7 +43,7 @@ public class RecordDatabase extends Database {
 	}
 
 	@Override
-	public void initialize(String uri) {
+	public void initialize(String uri, boolean solve) {
 		recordArray = new Record[(int) (conf.getGame().numHashes())];
 	}
 

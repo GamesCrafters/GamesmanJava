@@ -1,13 +1,13 @@
 package edu.berkeley.gamesman.core;
 
 import java.io.*;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Set;
 
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
-import edu.berkeley.gamesman.util.biginteger.BigInteger;
 
 /**
  * A Configuration object stores information related to a specific configuration
@@ -22,10 +22,7 @@ public class Configuration {
 
 	private Hasher<?> h;
 
-	/**
-	 * 
-	 */
-	public long totalStates;
+	protected long totalStates;
 
 	protected BigInteger bigIntTotalStates;
 
@@ -34,7 +31,7 @@ public class Configuration {
 	long[] longMultipliers;
 
 	/**
-	 * The number of records contained in a RecordGroup
+	 * The number of records contained in a Record Group
 	 */
 	public int recordsPerGroup;
 
@@ -63,6 +60,7 @@ public class Configuration {
 	 * Whether the record group size is small enough to fit in a long. If this
 	 * is not true, solving is slowed immensely
 	 */
+	// TODO: Use mutable big integers when false
 	public boolean recordGroupUsesLong;
 
 	/**
@@ -184,25 +182,10 @@ public class Configuration {
 	 *            The Hasher associated with this configuration.
 	 */
 	public void initialize(Game<?> newG, Hasher<?> newH) {
-		initialize(g, h, true);
-	}
-
-	/**
-	 * Initialize the Configuration with a game and a hasher object.
-	 * 
-	 * @param newG
-	 *            The Game associated with this configuration.
-	 * @param newH
-	 *            The Hasher associated with this configuration.
-	 * @param prepare
-	 *            Whether to call prepare for the game being passed
-	 */
-	public void initialize(Game<?> newG, Hasher<?> newH, boolean prepare) {
 		g = newG;
 		h = newH;
-		if (prepare) {
-			g.prepare();
-		}
+		g.initialize(this);
+		h.initialize(this);
 		initializeStoredFields();
 		totalStates = g.recordStates();
 		double requiredCompression = Double.parseDouble(getProperty(
@@ -275,13 +258,11 @@ public class Configuration {
 	 *            The Game associated with this configuration.
 	 * @param in_hashname
 	 *            The Hasher associated with this configuration.
-	 * @param prepare
-	 *            Whether to call prepare for the game being passed
 	 * @throws ClassNotFoundException
 	 *             Could not load either the hasher or game class
 	 */
-	public void initialize(final String in_gamename, final String in_hashname,
-			boolean prepare) throws ClassNotFoundException {
+	public void initialize(final String in_gamename, final String in_hashname)
+			throws ClassNotFoundException {
 		String gamename = in_gamename, hashname = in_hashname;
 
 		// Python classes end with ".py"
@@ -293,22 +274,9 @@ public class Configuration {
 			hashname = "edu.berkeley.gamesman.hasher." + hashname;
 		}
 		setProperty("gamesman.hasher", hashname);
-		Game<?> g = Util.typedInstantiateArg(gamename, Game.class, this);
-		Hasher<?> h = Util.typedInstantiateArg(hashname, Hasher.class, this);
-		initialize(g, h, prepare);
-	}
-
-	/**
-	 * @param gamename
-	 *            The name of the game class
-	 * @param hashname
-	 *            The name of the hash class
-	 * @throws ClassNotFoundException
-	 *             If either class is not found
-	 */
-	public void initialize(String gamename, String hashname)
-			throws ClassNotFoundException {
-		initialize(gamename, hashname, true);
+		Game<?> g = Util.typedInstantiate(gamename, Game.class);
+		Hasher<?> h = Util.typedInstantiate(hashname, Hasher.class);
+		initialize(g, h);
 	}
 
 	/**
@@ -319,7 +287,7 @@ public class Configuration {
 	}
 
 	/**
-	 * Unserialize a configuration from a bytestream
+	 * Unserialize a configuration from a byte array
 	 * 
 	 * @param barr
 	 *            Bytes to deserialize
@@ -350,21 +318,18 @@ public class Configuration {
 			conf.scoreStates = instream.readInt();
 
 			try {
-				conf.g = Util.typedInstantiateArg(gamename, Game.class, conf);
+				conf.g = Util.typedInstantiate(gamename, Game.class);
 			} catch (ClassNotFoundException e) {
-				conf.g = Util.typedInstantiateArg(conf
-						.getProperty("gamesman.game"), Game.class, conf);
+				conf.g = Util.typedInstantiate(conf
+						.getProperty("gamesman.game"), Game.class);
 			}
 			try {
-				conf.h = Util.typedInstantiateArg(hashername, Hasher.class,
-						conf);
+				conf.h = Util.typedInstantiate(hashername, Hasher.class);
 			} catch (ClassNotFoundException e) {
-				conf.h = Util.typedInstantiateArg(conf
-						.getProperty("gamesman.hasher"), Hasher.class, conf);
+				conf.h = Util.typedInstantiate(conf
+						.getProperty("gamesman.hasher"), Hasher.class);
 			}
-
 			conf.initialize(conf.g, conf.h);
-
 			return conf;
 		} catch (IOException e) {
 			Util.fatalError(
@@ -666,11 +631,13 @@ public class Configuration {
 	}
 
 	/**
+	 * @param solve
+	 *            true for solving, false for playing
 	 * @return the Database used to store this particular solve
 	 * @throws ClassNotFoundException
 	 *             Could not load the database class
 	 */
-	public Database openDatabase() throws ClassNotFoundException {
+	public Database openDatabase(boolean solve) throws ClassNotFoundException {
 		if (db != null)
 			return db;
 		String[] dbType = getProperty("gamesman.database").split(":");
@@ -681,7 +648,7 @@ public class Configuration {
 			db = Util.typedInstantiate("edu.berkeley.gamesman.database."
 					+ dbType[0], Database.class);
 		}
-		db.initialize(getProperty("gamesman.db.uri"), this);
+		db.initialize(getProperty("gamesman.db.uri"), this, solve);
 		return db;
 	}
 
@@ -698,6 +665,13 @@ public class Configuration {
 		}
 	}
 
+	/**
+	 * @param key
+	 *            The key which maps to the Integer array
+	 * @param dfl
+	 *            The default if the given key isn't present
+	 * @return An array of integers separated by ", *"
+	 */
 	public Integer[] getIntegers(String key, Integer[] dfl) {
 		String iString = props.getProperty(key);
 		if (iString == null)

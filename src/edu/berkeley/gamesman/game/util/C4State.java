@@ -59,4 +59,15 @@ public class C4State implements Cloneable, State {
 				+ pieceArrangement + "]";
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof C4State) {
+			C4State other = (C4State) obj;
+			return numPieces == other.numPieces
+					&& spaceArrangement == other.spaceArrangement
+					&& pieceArrangement == other.pieceArrangement;
+		} else
+			return false;
+	}
+
 }

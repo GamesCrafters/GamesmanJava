@@ -8,11 +8,11 @@ import java.util.Random;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
-import edu.berkeley.gamesman.core.ItergameState;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.game.Connect4;
 import edu.berkeley.gamesman.game.TopDownC4;
 import edu.berkeley.gamesman.game.util.C4State;
+import edu.berkeley.gamesman.game.util.ItergameState;
 import edu.berkeley.gamesman.util.Pair;
 
 /**

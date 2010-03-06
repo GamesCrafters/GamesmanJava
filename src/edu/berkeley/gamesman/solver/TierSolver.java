@@ -12,6 +12,9 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
 import edu.berkeley.gamesman.core.*;
+import edu.berkeley.gamesman.database.TierZippedDatabase;
+import edu.berkeley.gamesman.game.TieredGame;
+import edu.berkeley.gamesman.hasher.TieredHasher;
 import edu.berkeley.gamesman.util.*;
 
 /**
@@ -139,8 +142,9 @@ public class TierSolver<T extends State> extends Solver {
 
 	private final Runnable flusher = new Runnable() {
 		public void run() {
-			if (writeDb != null)
+			if (writeDb != null) {
 				writeDb.flush();
+			}
 			if (minSolvedFile != null) {
 				try {
 					FileWriter fw;
@@ -162,6 +166,9 @@ public class TierSolver<T extends State> extends Solver {
 							"Standard Deviation = "
 									+ Math.sqrt(marginVarSum / timesUsed));
 			} else {
+				if (writeDb instanceof TierZippedDatabase) {
+					((TierZippedDatabase) writeDb).setTier(tier);
+				}
 				if (barr != null)
 					needs2Reset = true;
 				TieredGame<T> game = Util.checkedCast(conf.getGame());
@@ -407,16 +414,5 @@ public class TierSolver<T extends State> extends Solver {
 				* (tier == game.numberOfTiers() - 1 ? 0 : hasher
 						.numHashesForTier(tier + 1)) * SAFETY_MARGIN)
 				* conf.recordGroupByteLength / conf.recordsPerGroup);
-	}
-
-	private double expectedFractionForTier(Configuration conf) {
-		TieredGame<T> game = Util.checkedCast(conf.getGame());
-		if (tier >= game.numberOfTiers() - 1)
-			return 0;
-		else {
-			TieredHasher<T> hasher = Util.checkedCast(conf.getHasher());
-			return (double) hasher.numHashesForTier(tier + 1)
-					/ hasher.numHashesForTier(tier);
-		}
 	}
 }

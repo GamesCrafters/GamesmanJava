@@ -14,6 +14,7 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 
 import edu.berkeley.gamesman.core.*;
+import edu.berkeley.gamesman.game.TieredGame;
 import edu.berkeley.gamesman.hadoop.util.HadoopUtil;
 import edu.berkeley.gamesman.hadoop.util.HadoopSplitDatabaseWritable;
 import edu.berkeley.gamesman.solver.TierSolver;
@@ -21,16 +22,18 @@ import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
 /**
- * The Mapper in the hadoop solver. Maps a set of ranges to databases that contain
- * each range. The set of ranges is further divided up into WorkUnits that are
- * used in each thread (WorkUnit.divide(), WorkUnit.conquer()
- *
- * @param <S> The state that the Game holds as it is being solved.
+ * The Mapper in the hadoop solver. Maps a set of ranges to databases that
+ * contain each range. The set of ranges is further divided up into WorkUnits
+ * that are used in each thread (WorkUnit.divide(), WorkUnit.conquer()
+ * 
+ * @param <S>
+ *            The state that the Game holds as it is being solved.
  * 
  * @author Patrick Horn
  */
 @SuppressWarnings("deprecation")
-public class TierMap<S extends State> implements
+public class TierMap<S extends State>
+		implements
 		Mapper<LongWritable, LongWritable, IntWritable, HadoopSplitDatabaseWritable> {
 
 	protected TieredGame<S> game;
@@ -52,7 +55,7 @@ public class TierMap<S extends State> implements
 	private JobConf jobconf;
 
 	private boolean initialized = false;
-	
+
 	volatile boolean failedSolve = false;
 	volatile IOException failedIOException = null;
 	Thread mainThread;
@@ -104,29 +107,31 @@ public class TierMap<S extends State> implements
 			OutputCollector<IntWritable, HadoopSplitDatabaseWritable> outRec,
 			Reporter reporter) throws IOException {
 		try {
-			Util.debug(DebugFacility.HADOOP,
-					"Map "+startHash+" - "+endHash);
+			Util.debug(DebugFacility.HADOOP, "Map " + startHash + " - "
+					+ endHash);
 			if (!initialized) {
 				initialized = true;
 				// db.initialize(conf.get("dburi"),config);
 				try {
 					FileSystem fs = FileSystem.get(jobconf);
 					if (fs == null) {
-						Util.fatalError("Null filesystem in TierMap.configure!");
+						Util
+								.fatalError("Null filesystem in TierMap.configure!");
 					}
 					db.setFilesystem(fs);
 				} catch (IOException e) {
 					Util.fatalError("Unable to get filesystem", e);
 				}
-				Util.debug(DebugFacility.HADOOP,
-						"Work output path is "+
-						FileOutputFormat.getWorkOutputPath(jobconf));
-				Util.debug(DebugFacility.HADOOP,
-						"Output path is "+
-						FileOutputFormat.getOutputPath(jobconf));
-				db.setOutputDirectory(FileOutputFormat.getWorkOutputPath(jobconf));
+				Util.debug(DebugFacility.HADOOP, "Work output path is "
+						+ FileOutputFormat.getWorkOutputPath(jobconf));
+				Util.debug(DebugFacility.HADOOP, "Output path is "
+						+ FileOutputFormat.getOutputPath(jobconf));
+				db.setOutputDirectory(FileOutputFormat
+						.getWorkOutputPath(jobconf));
 				db.setDelegate(this);
-				db.initialize(jobconf.get("previousTierDb", null), config);
+				db
+						.initialize(jobconf.get("previousTierDb", null),
+								config, true);
 			}
 			this.reporter = reporter;
 			this.outRec = outRec;
@@ -147,7 +152,7 @@ public class TierMap<S extends State> implements
 		failedSolve = false;
 
 		mainThread = Thread.currentThread();
-		
+
 		ThreadGroup solverGroup = new ThreadGroup("Solver Group: "
 				+ config.getGame());
 		for (WorkUnit w : list) {
@@ -174,43 +179,61 @@ public class TierMap<S extends State> implements
 			if (ioe != null) {
 				throw ioe;
 			}
-			throw new IOException("Failed to complete solve in one of the threads!");
+			throw new IOException(
+					"Failed to complete solve in one of the threads!");
 		}
 		assert Util.debug(DebugFacility.HADOOP, "Finished hadoop run");
 	}
 
-	/** Called by the HadoopSplitDatabase when a child database is opened.
-	 *  Currently, just writes to the log.
+	/**
+	 * Called by the HadoopSplitDatabase when a child database is opened.
+	 * Currently, just writes to the log.
 	 * 
-	 * @param tier Tier number (constant for whole Mapper)
-	 * @param filename Database filename that was just closed.
-	 * @param startRecord First record in database
-	 * @param stopRecord 1 + Last record in database.
+	 * @param tier
+	 *            Tier number (constant for whole Mapper)
+	 * @param filename
+	 *            Database filename that was just closed.
+	 * @param startRecord
+	 *            First record in database
+	 * @param stopRecord
+	 *            1 + Last record in database.
 	 */
-	public synchronized void started(int tier, String filename, long startRecord,
-			long stopRecord) {
+	public synchronized void started(int tier, String filename,
+			long startRecord, long stopRecord) {
 		reporter.setStatus("Started " + tier + " [" + startRecord + "-"
 				+ stopRecord + "]");
 	}
 
-	/** Called by the HadoopSplitDatabase when a child database file is closed
+	/**
+	 * Called by the HadoopSplitDatabase when a child database file is closed
 	 * 
-	 * @param tier Tier number (constant for whole Mapper)
-	 * @param filename Database filename that was just closed.
-	 * @param startRecord First record in database
-	 * @param stopRecord 1 + Last record in database.
+	 * @param tier
+	 *            Tier number (constant for whole Mapper)
+	 * @param filename
+	 *            Database filename that was just closed.
+	 * @param startRecord
+	 *            First record in database
+	 * @param stopRecord
+	 *            1 + Last record in database.
 	 */
-	public synchronized void finished(int tier, String filename, long startRecord,
-			long stopRecord) {
+	public synchronized void finished(int tier, String filename,
+			long startRecord, long stopRecord) {
 		try {
-		FileSystem fs = FileSystem.get(jobconf);
-		System.out.println("Testing Output file at "+filename+" ("+FileOutputFormat.getWorkOutputPath(jobconf)+")");
-		if (!fs.exists(new org.apache.hadoop.fs.Path(FileOutputFormat.getWorkOutputPath(jobconf), filename))) {
-			System.out.println("Fatal error: Output file at "+filename+" was never created!");
-			boolean reallyExists= fs.exists(new org.apache.hadoop.fs.Path(HadoopUtil.getTierPath(jobconf, config, tier), filename));
-			Util.fatalError("Failed to make "+filename+"; tier="+tier+"; sR="+startRecord+"; eR="+stopRecord+"; exists outside tempdir="+reallyExists);
-		}
-		} catch (IOException e){
+			FileSystem fs = FileSystem.get(jobconf);
+			System.out.println("Testing Output file at " + filename + " ("
+					+ FileOutputFormat.getWorkOutputPath(jobconf) + ")");
+			if (!fs.exists(new org.apache.hadoop.fs.Path(FileOutputFormat
+					.getWorkOutputPath(jobconf), filename))) {
+				System.out.println("Fatal error: Output file at " + filename
+						+ " was never created!");
+				boolean reallyExists = fs
+						.exists(new org.apache.hadoop.fs.Path(HadoopUtil
+								.getTierPath(jobconf, config, tier), filename));
+				Util.fatalError("Failed to make " + filename + "; tier=" + tier
+						+ "; sR=" + startRecord + "; eR=" + stopRecord
+						+ "; exists outside tempdir=" + reallyExists);
+			}
+		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 		reporter.progress();
@@ -236,19 +259,22 @@ public class TierMap<S extends State> implements
 					"HadoopMasterRunnable begin");
 			try {
 				w.conquer();
-				assert Util.debug(DebugFacility.HADOOP, "HadoopMasterRunnable end");
+				assert Util.debug(DebugFacility.HADOOP,
+						"HadoopMasterRunnable end");
 			} catch (Exception ee) {
-				System.out.println("[TierMap] Exception in WorkUnit "+w);
+				System.out.println("[TierMap] Exception in WorkUnit " + w);
 				ee.printStackTrace(System.out);
-				assert Util.debug(DebugFacility.HADOOP, "HadoopMasterRunnable error");
+				assert Util.debug(DebugFacility.HADOOP,
+						"HadoopMasterRunnable error");
 				failedSolve = true;
 				mainThread.interrupt();
 			} catch (ThreadDeath td) {
 				throw td;
 			} catch (Throwable fe) {
-				System.out.println("[TierMap] FatalError in WorkUnit "+w);
+				System.out.println("[TierMap] FatalError in WorkUnit " + w);
 				fe.printStackTrace(System.out);
-				assert Util.debug(DebugFacility.HADOOP, "HadoopMasterRunnable error");
+				assert Util.debug(DebugFacility.HADOOP,
+						"HadoopMasterRunnable error");
 				failedSolve = true;
 				mainThread.interrupt();
 			}

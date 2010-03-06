@@ -1,5 +1,10 @@
 package edu.berkeley.gamesman.game.util;
 
+/**
+ * A rearranger for dartboard top-down solves
+ * 
+ * @author dnspies
+ */
 public class TopDownSpaceRearranger {
 	private class Space {
 		boolean isFilled;
@@ -16,6 +21,10 @@ public class TopDownSpaceRearranger {
 	private int numPieces;
 	private long hash;
 
+	/**
+	 * @param n
+	 *            The number of spaces on the board
+	 */
 	public TopDownSpaceRearranger(int n) {
 		numPlaces = n;
 		arrangement = new Space[n];
@@ -23,6 +32,12 @@ public class TopDownSpaceRearranger {
 			arrangement[i] = new Space();
 	}
 
+	/**
+	 * @param k
+	 *            A list of board-places to change
+	 * @param b
+	 *            Whether to fill or remove them
+	 */
 	public void makePlaces(int[] k, boolean[] b) {
 		int c = 0;
 		int prevDiff = 0;
