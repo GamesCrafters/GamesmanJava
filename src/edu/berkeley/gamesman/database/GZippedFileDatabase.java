@@ -32,7 +32,7 @@ public class GZippedFileDatabase extends Database {
 
 	private RemoteDatabaseFile rdf;
 
-	private int tier;
+	private int tier = -1;
 
 	@Override
 	public void close() {
