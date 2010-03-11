@@ -97,6 +97,7 @@ public class TierMaster {
 					}
 					scan.close();
 					ps.close();
+					failed = false;
 				} catch (IOException e) {
 					e.printStackTrace();
 					failed = true;
