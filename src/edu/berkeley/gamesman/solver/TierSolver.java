@@ -194,6 +194,7 @@ public class TierSolver<T extends State> extends Solver {
 		while (true) {
 			if (needs2Sync) {
 				if (parallelSolving) {
+					updater.complete();
 					return null;
 				}
 				if (barr == null)
@@ -227,8 +228,8 @@ public class TierSolver<T extends State> extends Solver {
 					Pair<Long, Long> slice = new Pair<Long, Long>(
 							starts[count], starts[count + 1] - starts[count]);
 					assert Util.debug(DebugFacility.THREADING, "Solving "
-							+ count + "/" + splits + " in tier " + tier + "; "
-							+ starts[count] + "-" + starts[count + 1]);
+							+ (count + 1) + "/" + splits + " in tier " + tier
+							+ "; " + starts[count] + "-" + starts[count + 1]);
 					if (count < starts.length - 2) {
 						++count;
 					} else {
