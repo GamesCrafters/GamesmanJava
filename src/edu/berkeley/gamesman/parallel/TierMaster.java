@@ -140,12 +140,14 @@ public class TierMaster {
 		}
 
 		public synchronized void run() {
-			while (nodeThreads[myNum].isAlive()) {
+			Thread myThread = nodeThreads[myNum];
+			while (myThread.isAlive()) {
 				try {
 					wait(3000);
 					if (System.currentTimeMillis()
 							- watchers[myNum].lastMessage > 10000) {
-						nodeThreads[myNum].interrupt();
+						if (myThread.isAlive())
+							myThread.interrupt();
 					}
 				} catch (InterruptedException e) {
 					e.printStackTrace();
@@ -238,7 +240,9 @@ public class TierMaster {
 			cdl = new CountDownLatch(1);
 			for (int i = 0; i < watchers.length; i++) {
 				nodeThreads[i] = new Thread(watchers[i]);
+				Thread checkThread = new Thread(checkers[i]);
 				nodeThreads[i].start();
+				checkThread.start();
 			}
 			for (int i = 0; i < watchers.length; i++) {
 				try {
