@@ -19,7 +19,7 @@ import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
 public class TierMaster {
-
+	private static final long TIMEOUT = 10000;
 	private static final float MULTIPLE = (float) 1.8;
 	private static final String FETCH_LINE = "fetch files: ";
 	private static final String END_LINE = "finished with files: ";
@@ -57,7 +57,7 @@ public class TierMaster {
 			this.slaveName = slaveName;
 		}
 
-		public void run() {
+		public synchronized void run() {
 			int mySplit = 0;
 			while (true) {
 				try {
@@ -138,13 +138,23 @@ public class TierMaster {
 						lastMessage = System.currentTimeMillis();
 						readIn = "";
 					}
-					if (failed)
+					if (failed) {
 						addBack(mySplit);
+						wait(TIMEOUT);
+						// A ten-second time-out for bad behavior ensures that
+						// the poorest performers aren't given preference. It's
+						// surprising how much it happens without this statement
+					}
 					scan.close();
 					ps.close();
 				} catch (IOException e) {
 					e.printStackTrace();
 					addBack(mySplit);
+					try {
+						wait(TIMEOUT);
+					} catch (InterruptedException e1) {
+						e1.printStackTrace();
+					}
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
