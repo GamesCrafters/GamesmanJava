@@ -3,7 +3,9 @@ package edu.berkeley.gamesman.core;
 import java.math.BigInteger;
 import java.util.Iterator;
 
+import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.LongIterator;
+import edu.berkeley.gamesman.util.Util;
 
 /**
  * A Database is the abstract superclass of all data storage methods used in
@@ -47,6 +49,9 @@ public abstract class Database {
 		conf = config;
 		initialize(uri, solve);
 		maxBytes = 1024 - 1024 % conf.recordGroupByteLength;
+		assert Util.debug(DebugFacility.DATABASE, conf.recordsPerGroup
+				+ " records per group\n" + conf.recordGroupByteLength
+				+ " bytes per group");
 	}
 
 	/**

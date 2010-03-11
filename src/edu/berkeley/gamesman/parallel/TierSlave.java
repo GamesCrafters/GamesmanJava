@@ -62,8 +62,6 @@ public class TierSlave {
 		writeDb.initialize(parentUri, conf, true);
 		solver.setWriteDb(writeDb);
 		int threads = conf.getInteger("gamesman.threads", 1);
-		assert Util.debug(DebugFacility.MASTER, "Launching " + threads
-				+ " threads...");
 		List<WorkUnit> list = null;
 		WorkUnit wu = solver.prepareSolve(conf, tier, firstHash, firstHash
 				+ numHashes);
@@ -109,9 +107,7 @@ class TierSlaveRunnable implements Runnable {
 	}
 
 	public void run() {
-		assert Util.debug(DebugFacility.MASTER, "TierSlaveRunnable begin");
 		w.conquer();
-		assert Util.debug(DebugFacility.MASTER, "TierSlaveRunnable end");
 	}
 }
 

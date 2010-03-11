@@ -247,8 +247,6 @@ public class Configuration {
 			recordGroupUsesLong = false;
 			longMultipliers = null;
 		}
-		Util.debug(DebugFacility.DATABASE, recordsPerGroup + " records per group\n"
-				+ recordGroupByteLength + " bytes per group");
 	}
 
 	/**
