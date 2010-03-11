@@ -40,8 +40,9 @@ public abstract class RecordGroup {
 	 */
 	public static BigInteger bigIntRecordGroup(Configuration conf,
 			byte[] values, int offset) {
-		byte[] bigIntByte = Arrays.copyOfRange(values, offset, offset
-				+ conf.recordGroupByteLength);
+		byte[] bigIntByte = new byte[conf.recordGroupByteLength];
+		for (int i = 0; i < conf.recordGroupByteLength; i++)
+			bigIntByte[i] = values[offset++];
 		return new BigInteger(1, bigIntByte);
 	}
 

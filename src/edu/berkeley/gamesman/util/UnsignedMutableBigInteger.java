@@ -72,8 +72,12 @@ public class UnsignedMutableBigInteger implements
 	}
 
 	private void ensureSpace(int newLen) {
-		if (ints.length < newLen)
-			ints = Arrays.copyOf(ints, newLen);
+		if (ints.length < newLen) {
+			int[] newInts = new int[newLen];
+			for (int i = 0; i < ints.length; i++)
+				newInts[i] = ints[i];
+			ints = newInts;
+		}
 	}
 
 	private void ensureLength(int newLen) {
