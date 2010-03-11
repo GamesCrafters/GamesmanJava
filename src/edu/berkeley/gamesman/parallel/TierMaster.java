@@ -59,7 +59,7 @@ public class TierMaster {
 
 		public void run() {
 			int mySplit = 0;
-			while (remainingTasks.size() > 0) {
+			while (true) {
 				try {
 					boolean breakNow = false;
 					synchronized (lock) {
@@ -72,9 +72,10 @@ public class TierMaster {
 						else
 							solving.add(mySplit);
 					}
-					if (breakNow)
+					if (breakNow) {
+						cdl.countDown();
 						break;
-					else if (myLatch != null) {
+					} else if (myLatch != null) {
 						myLatch.await();
 						lastMessage = System.currentTimeMillis();
 						// Must be called before the next statement so the
