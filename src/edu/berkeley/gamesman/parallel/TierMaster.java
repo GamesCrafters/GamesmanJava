@@ -31,8 +31,8 @@ public class TierMaster {
 
 	};
 	private long[] splits;
-	LinkedList<Integer> remainingTasks = new LinkedList<Integer>();
-	LinkedList<Integer> solving = new LinkedList<Integer>();
+	private LinkedList<Integer> remainingTasks = new LinkedList<Integer>();
+	private LinkedList<Integer> solving = new LinkedList<Integer>();
 	private Configuration conf;
 	private int tier;
 	private final Runtime r = Runtime.getRuntime();
@@ -40,31 +40,51 @@ public class TierMaster {
 	private ArrayList<Pair<Long, String>> tierFileList;
 	private ArrayList<Pair<Long, String>> lastFileList;
 	private CountDownLatch cdl;
+	private final Object lock = new Object();
 
 	private class NodeWatcher implements Runnable {
 		private final String slaveName;
 		private boolean failed;
 		public long lastMessage;
 		public Process myProcess;
+		public CountDownLatch myLatch = null;
+
+		// Should be the same as CDL when waiting but funky parallelization
+		// stuff could cause it to be different (in which case it will have
+		// already been tripped and will only be set momentarily)
 
 		public NodeWatcher(String slaveName) {
 			this.slaveName = slaveName;
 		}
 
 		public void run() {
+			int mySplit = 0;
 			while (remainingTasks.size() > 0) {
-				final int mySplit = nextSplit();
 				try {
-					if (mySplit == -1) {
-						if (solving.size() == 0)
-							break;
-						else {
-							cdl.await();
-							continue;
-						}
-					} else {
-						solving.add(mySplit);
+					boolean breakNow = false;
+					synchronized (lock) {
+						mySplit = nextSplit();
+						if (mySplit < 0)
+							if (solving.size() == 0)
+								breakNow = true;
+							else
+								myLatch = cdl;
+						else
+							solving.add(mySplit);
 					}
+					if (breakNow)
+						break;
+					else if (myLatch != null) {
+						myLatch.await();
+						lastMessage = System.currentTimeMillis();
+						// Must be called before the next statement so the
+						// checker thread doesn't think I've been held up
+						// blocking for input
+						myLatch = null;
+						continue;
+					}
+					lastMessage = System.currentTimeMillis();
+					solving.add(mySplit);
 					failed = false;
 					long memory = conf.getLong("gamesman.memory", 0);
 					String command = "ssh "
@@ -127,32 +147,41 @@ public class TierMaster {
 					addBack(mySplit);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
-					addBack(mySplit);
 				}
 			}
 		}
 	}
 
 	private class WatchChecker implements Runnable {
-		private final int myNum;
-		private final static long INTERVAL = 3000;
+		private NodeWatcher myWatcher;
+		private Thread myThread;
+		private final static long INTERVAL = 20000;
 
-		public WatchChecker(int i) {
-			myNum = i;
+		public void initialize(NodeWatcher n, Thread t) {
+			myWatcher = n;
+			myThread = t;
 		}
 
 		public synchronized void run() {
-			Thread myThread = nodeThreads[myNum];
 			while (myThread.isAlive()) {
 				try {
-					wait(3000);
-					if (System.currentTimeMillis()
-							- watchers[myNum].lastMessage > 10000) {
-						if (myThread.isAlive()) {
-							System.out.println("Interrupting "
-									+ watchers[myNum].slaveName);
-							watchers[myNum].failed = true;
-							watchers[myNum].myProcess.destroy();
+					wait(INTERVAL);
+					if (System.currentTimeMillis() - myWatcher.lastMessage > INTERVAL) {
+						if (myWatcher.myLatch != null) {
+							CountDownLatch waitingLatch = null;
+							synchronized (lock) {
+								if (myWatcher.myLatch != null)
+									waitingLatch = myWatcher.myLatch;
+							}
+							if (waitingLatch != null)
+								waitingLatch.await();
+						} else {
+							if (myThread.isAlive()) {
+								System.err.println("Killing process on "
+										+ myWatcher.slaveName);
+								myWatcher.failed = true;
+								myWatcher.myProcess.destroy();
+							}
 						}
 					}
 				} catch (InterruptedException e) {
@@ -163,11 +192,15 @@ public class TierMaster {
 	}
 
 	private void addBack(int mySplit) {
-		solving.remove(mySplit);
-		remainingTasks.addFirst(mySplit);
-		CountDownLatch oldDown = cdl;
-		cdl = new CountDownLatch(1);
-		oldDown.countDown();
+		synchronized (lock) {
+			solving.remove(mySplit);
+			remainingTasks.addFirst(mySplit);
+			if (remainingTasks.size() == 1) {
+				CountDownLatch oldDown = cdl;
+				cdl = new CountDownLatch(1);
+				oldDown.countDown();
+			}
+		}
 	}
 
 	private String getFileList(long byteNum, int len) {
@@ -225,7 +258,7 @@ public class TierMaster {
 		nodeThreads = new Thread[slaveNames.size()];
 		for (int i = 0; i < slaveNames.size(); i++) {
 			watchers[i] = new NodeWatcher(slaveNames.get(i));
-			checkers[i] = new WatchChecker(i);
+			checkers[i] = new WatchChecker();
 		}
 		conf = new Configuration(Configuration.readProperties(jobFile));
 	}
@@ -246,6 +279,7 @@ public class TierMaster {
 			cdl = new CountDownLatch(1);
 			for (int i = 0; i < watchers.length; i++) {
 				nodeThreads[i] = new Thread(watchers[i]);
+				checkers[i].initialize(watchers[i], nodeThreads[i]);
 				Thread checkThread = new Thread(checkers[i]);
 				nodeThreads[i].start();
 				checkThread.start();
