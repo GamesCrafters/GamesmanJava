@@ -7,7 +7,5 @@ gamesman.solver = C4IntegratedSolver
 gamesman.solver.directRead = false
 gamesman.db.uri = /tmp/database65
 record.fields = VALUE,REMOTENESS
-gamesman.debug.THREADING = true
-gamesman.debug.SOLVER = true
 gamesman.memory = 2000000000
 gamesman.threads = 8
