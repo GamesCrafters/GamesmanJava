@@ -268,6 +268,7 @@ public class TierMaster {
 				.getGame();
 		int numTiers = game.numberOfTiers();
 		tierFileList = new ArrayList<Pair<Long, String>>();
+		long startTime = System.currentTimeMillis();
 		for (tier = numTiers - 1; tier >= 0; tier--) {
 			long tierOffset = game.hashOffsetForTier(tier);
 			long tierLength = ((TieredHasher<? extends State>) conf.getHasher())
@@ -295,6 +296,8 @@ public class TierMaster {
 			lastFileList = tierFileList;
 			tierFileList = new ArrayList<Pair<Long, String>>();
 		}
+		long totalTime = System.currentTimeMillis() - startTime;
+		System.out.println("Took " + Util.millisToETA(totalTime) + " to solve");
 	}
 
 	public static void main(String[] args) throws FileNotFoundException,
