@@ -10,3 +10,4 @@ record.fields = VALUE,REMOTENESS
 gamesman.debug.THREADING = true
 gamesman.debug.SOLVER = true
 gamesman.memory = 2000000000
+gamesman.threads = 8
