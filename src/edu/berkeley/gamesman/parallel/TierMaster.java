@@ -85,7 +85,6 @@ public class TierMaster {
 						continue;
 					}
 					lastMessage = System.currentTimeMillis();
-					solving.add(mySplit);
 					failed = false;
 					long memory = conf.getLong("gamesman.memory", 0);
 					String command = "ssh "
