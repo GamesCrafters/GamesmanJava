@@ -64,7 +64,7 @@ public class TierMaster {
 						public void run() {
 							Scanner errScan = new Scanner(p.getErrorStream());
 							while (errScan.hasNext()) {
-								System.err.println(errScan.nextLine());
+								System.err.println(slaveName+": "+errScan.nextLine());
 							}
 							errScan.close();
 						}
@@ -86,7 +86,7 @@ public class TierMaster {
 							addFiles(slaveName, readIn.substring(
 									END_LINE.length()).split(" "));
 						} else
-							System.out.println(readIn);
+							System.out.println(slaveName+": "+readIn);
 						readIn = "";
 
 					}
