@@ -72,9 +72,8 @@ public class DistributedDatabaseClient extends Database {
 					while (skipBytes > 0)
 						skipBytes -= byteReader.read(dumbArray, 0, skipBytes);
 				}
-				int bytesRead = 0;
 				while (curLoc < nextStart) {
-					bytesRead += byteReader.read(arr, off,
+					int bytesRead = byteReader.read(arr, off,
 							(int) (nextStart - curLoc));
 					curLoc += bytesRead;
 					off += bytesRead;
