@@ -54,8 +54,7 @@ public class DistributedDatabaseClient extends Database {
 				}
 				if (i < nodeFiles.length - 1) {
 					nextNodeFile = nodeFiles[i + 1].split(":");
-					nextStart = Long.parseLong(nextNodeFile[1].substring(1,
-							nextNodeFile[1].length() - 3));
+					nextStart = Long.parseLong(nextNodeFile[1]);
 				} else {
 					nextStart = curLoc + len;
 				}
