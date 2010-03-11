@@ -7,7 +7,9 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.Scanner;
+import java.util.concurrent.CountDownLatch;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.State;
@@ -17,6 +19,7 @@ import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
 public class TierMaster {
+
 	private static final float MULTIPLE = (float) 1.8;
 	private static final String FETCH_LINE = "fetch files: ";
 	private static final String END_LINE = "finished with files: ";
@@ -28,31 +31,40 @@ public class TierMaster {
 
 	};
 	private long[] splits;
+	LinkedList<Integer> remainingTasks = new LinkedList<Integer>();
+	LinkedList<Integer> solving = new LinkedList<Integer>();
 	private Configuration conf;
 	private int tier;
-	private int curSplit = 0;
 	private final Runtime r = Runtime.getRuntime();
 	private final String jobFile;
 	private ArrayList<Pair<Long, String>> tierFileList;
 	private ArrayList<Pair<Long, String>> lastFileList;
+	private CountDownLatch cdl;
 
 	private class NodeWatcher implements Runnable {
 		private final String slaveName;
+		private boolean failed;
+		public long lastMessage;
 
 		public NodeWatcher(String slaveName) {
 			this.slaveName = slaveName;
 		}
 
 		public void run() {
-			boolean failed = false;
-			int mySplit = 0;
-			while (curSplit < splits.length - 1) {
+			while (remainingTasks.size() > 0) {
+				final int mySplit = nextSplit();
 				try {
-					if (!failed) {
-						mySplit = nextSplit();
-						if (mySplit >= splits.length - 1)
+					if (mySplit == -1) {
+						if (solving.size() == 0)
 							break;
+						else {
+							cdl.await();
+							continue;
+						}
+					} else {
+						solving.add(mySplit);
 					}
+					failed = false;
 					long memory = conf.getLong("gamesman.memory", 0);
 					String command = "ssh "
 							+ slaveName
@@ -64,20 +76,28 @@ public class TierMaster {
 							+ (splits[mySplit + 1] - splits[mySplit]);
 					final Process p = r.exec(command);
 					new Thread() {
+
 						@Override
 						public void run() {
+							failed = false;
 							Scanner errScan = new Scanner(p.getErrorStream());
 							while (errScan.hasNext()) {
 								System.err.println(slaveName + ": "
 										+ errScan.nextLine());
+								failed = true;
 							}
 							errScan.close();
+							if (failed) {
+								addBack(mySplit);
+							}
 						}
 					}.start();
 					Scanner scan = new Scanner(p.getInputStream());
 					PrintStream ps = new PrintStream(p.getOutputStream());
 					String readIn;
 					while (scan.hasNext()) {
+						if (failed)
+							break;
 						readIn = scan.nextLine();
 						if (readIn.startsWith(FETCH_LINE)) {
 							String[] needs = readIn.substring(
@@ -88,22 +108,55 @@ public class TierMaster {
 							ps.println(response);
 							ps.flush();
 						} else if (readIn.startsWith(END_LINE)) {
-							addFiles(slaveName, readIn.substring(
-									END_LINE.length()).split(" "));
+							if (!failed)
+								addFiles(slaveName, readIn.substring(
+										END_LINE.length()).split(" "));
 						} else
 							System.out.println(slaveName + ": " + readIn);
+						lastMessage = System.currentTimeMillis();
 						readIn = "";
-
 					}
 					scan.close();
 					ps.close();
-					failed = false;
 				} catch (IOException e) {
 					e.printStackTrace();
-					failed = true;
+					addBack(mySplit);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					addBack(mySplit);
 				}
 			}
 		}
+	}
+
+	private class WatchChecker implements Runnable {
+		private final int myNum;
+		private final static long INTERVAL = 3000;
+
+		public WatchChecker(int i) {
+			myNum = i;
+		}
+
+		public synchronized void run() {
+			while (nodeThreads[myNum].isAlive()) {
+				try {
+					wait(3000);
+					if (System.currentTimeMillis()
+							- watchers[myNum].lastMessage > 10000) {
+						nodeThreads[myNum].interrupt();
+					}
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
+	private void addBack(int mySplit) {
+		remainingTasks.addFirst(mySplit);
+		CountDownLatch oldDown = cdl;
+		cdl = new CountDownLatch(1);
+		oldDown.countDown();
 	}
 
 	private String getFileList(long byteNum, int len) {
@@ -130,17 +183,22 @@ public class TierMaster {
 		return s;
 	}
 
-	private void addFiles(String slaveName, String[] fileStarts) {
+	private synchronized void addFiles(String slaveName, String[] fileStarts) {
 		for (int i = 0; i < fileStarts.length; i++)
 			tierFileList.add(new Pair<Long, String>(Long
 					.parseLong(fileStarts[i]), slaveName));
 	}
 
 	public synchronized int nextSplit() {
-		return curSplit++;
+		if (remainingTasks.size() == 0)
+			return -1;
+		else
+			return remainingTasks.removeFirst();
 	}
 
 	private final NodeWatcher[] watchers;
+	private final WatchChecker[] checkers;
+	private final Thread[] nodeThreads;
 
 	public TierMaster(String jobFile, String slavesFile)
 			throws FileNotFoundException, ClassNotFoundException {
@@ -152,8 +210,11 @@ public class TierMaster {
 			slaveNames.add(scan.nextLine().trim());
 		scan.close();
 		watchers = new NodeWatcher[slaveNames.size()];
+		checkers = new WatchChecker[slaveNames.size()];
+		nodeThreads = new Thread[slaveNames.size()];
 		for (int i = 0; i < slaveNames.size(); i++) {
 			watchers[i] = new NodeWatcher(slaveNames.get(i));
+			checkers[i] = new WatchChecker(i);
 		}
 		conf = new Configuration(Configuration.readProperties(jobFile));
 	}
@@ -169,15 +230,16 @@ public class TierMaster {
 					.numHashesForTier(tier);
 			splits = Util.groupAlignedTasks((int) (watchers.length * MULTIPLE),
 					tierOffset, tierLength, conf.recordsPerGroup);
-			curSplit = 0;
-			Thread[] myThreads = new Thread[watchers.length];
+			for (int i = 0; i < splits.length - 1; i++)
+				remainingTasks.add(i);
+			cdl = new CountDownLatch(1);
 			for (int i = 0; i < watchers.length; i++) {
-				myThreads[i] = new Thread(watchers[i]);
-				myThreads[i].start();
+				nodeThreads[i] = new Thread(watchers[i]);
+				nodeThreads[i].start();
 			}
 			for (int i = 0; i < watchers.length; i++) {
 				try {
-					myThreads[i].join();
+					nodeThreads[i].join();
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
