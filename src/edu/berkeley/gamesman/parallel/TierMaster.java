@@ -146,8 +146,11 @@ public class TierMaster {
 					wait(3000);
 					if (System.currentTimeMillis()
 							- watchers[myNum].lastMessage > 10000) {
-						if (myThread.isAlive())
+						if (myThread.isAlive()) {
+							System.out.println("Interrupting "
+									+ watchers[myNum].slaveName);
 							myThread.interrupt();
+						}
 					}
 				} catch (InterruptedException e) {
 					e.printStackTrace();
