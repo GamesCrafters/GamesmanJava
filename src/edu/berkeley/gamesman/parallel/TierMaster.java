@@ -45,6 +45,7 @@ public class TierMaster {
 		private final String slaveName;
 		private boolean failed;
 		public long lastMessage;
+		public Process myProcess;
 
 		public NodeWatcher(String slaveName) {
 			this.slaveName = slaveName;
@@ -74,31 +75,30 @@ public class TierMaster {
 							+ "GamesmanJava/" + jobFile + " " + tier + " "
 							+ splits[mySplit] + " "
 							+ (splits[mySplit + 1] - splits[mySplit]);
-					final Process p = r.exec(command);
+					myProcess = r.exec(command);
 					new Thread() {
 
 						@Override
 						public void run() {
 							failed = false;
-							Scanner errScan = new Scanner(p.getErrorStream());
+							Scanner errScan = new Scanner(myProcess
+									.getErrorStream());
 							while (errScan.hasNext()) {
 								System.err.println(slaveName + ": "
 										+ errScan.nextLine());
 								failed = true;
 							}
 							errScan.close();
-							if (failed) {
-								addBack(mySplit);
-							}
 						}
 					}.start();
-					Scanner scan = new Scanner(p.getInputStream());
-					PrintStream ps = new PrintStream(p.getOutputStream());
+					Scanner scan = new Scanner(myProcess.getInputStream());
+					PrintStream ps = new PrintStream(myProcess
+							.getOutputStream());
 					String readIn;
 					while (scan.hasNext()) {
+						readIn = scan.nextLine();
 						if (failed)
 							break;
-						readIn = scan.nextLine();
 						if (readIn.startsWith(FETCH_LINE)) {
 							String[] needs = readIn.substring(
 									FETCH_LINE.length()).split(" ");
@@ -118,6 +118,8 @@ public class TierMaster {
 						lastMessage = System.currentTimeMillis();
 						readIn = "";
 					}
+					if (failed)
+						addBack(mySplit);
 					scan.close();
 					ps.close();
 				} catch (IOException e) {
@@ -149,7 +151,8 @@ public class TierMaster {
 						if (myThread.isAlive()) {
 							System.out.println("Interrupting "
 									+ watchers[myNum].slaveName);
-							myThread.interrupt();
+							watchers[myNum].failed = true;
+							watchers[myNum].myProcess.destroy();
 						}
 					}
 				} catch (InterruptedException e) {
