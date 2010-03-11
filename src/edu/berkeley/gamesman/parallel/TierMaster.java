@@ -155,7 +155,7 @@ public class TierMaster {
 	private class WatchChecker implements Runnable {
 		private NodeWatcher myWatcher;
 		private Thread myThread;
-		private final static long INTERVAL = 20000;
+		private final static long INTERVAL = 300000;
 
 		public void initialize(NodeWatcher n, Thread t) {
 			myWatcher = n;
