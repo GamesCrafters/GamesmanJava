@@ -108,9 +108,11 @@ public class TierMaster {
 							ps.println(response);
 							ps.flush();
 						} else if (readIn.startsWith(END_LINE)) {
-							if (!failed)
+							if (!failed){
 								addFiles(slaveName, readIn.substring(
 										END_LINE.length()).split(" "));
+								solving.remove(mySplit);
+							}
 						} else
 							System.out.println(slaveName + ": " + readIn);
 						lastMessage = System.currentTimeMillis();
@@ -153,6 +155,7 @@ public class TierMaster {
 	}
 
 	private void addBack(int mySplit) {
+		solving.remove(mySplit);
 		remainingTasks.addFirst(mySplit);
 		CountDownLatch oldDown = cdl;
 		cdl = new CountDownLatch(1);
