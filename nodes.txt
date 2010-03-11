@@ -1,3 +1,4 @@
+akane.cs.berkeley.edu
 arlet.cs.berkeley.edu
 barry.cs.berkeley.edu
 bonza.cs.berkeley.edu
