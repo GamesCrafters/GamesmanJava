@@ -322,9 +322,13 @@ public class TierSolver<T extends State> extends Solver {
 		private Task t;
 
 		TierSolverUpdater() {
+			this(conf.getGame().numHashes());
+		}
+
+		TierSolverUpdater(long totalProgress) {
 			TieredGame<T> myGame = Util.checkedCast(conf.getGame());
 			t = Task.beginTask("Tier solving \"" + myGame.describe() + "\"");
-			t.setTotal(myGame.numHashes());
+			t.setTotal(totalProgress);
 		}
 
 		synchronized void calculated(int howMuch) {
@@ -364,7 +368,7 @@ public class TierSolver<T extends State> extends Solver {
 			long endHash) {
 		strictSafety = conf.getBoolean("gamesman.solver.strictMemory", false);
 		this.tier = tier;
-		updater = new TierSolverUpdater();
+		updater = new TierSolverUpdater(endHash - startHash);
 		parallelSolving = true;
 		TieredGame<T> game = Util.checkedCast(conf.getGame());
 		long fullSize = endHash - startHash;
