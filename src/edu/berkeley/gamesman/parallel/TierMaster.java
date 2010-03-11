@@ -44,11 +44,15 @@ public class TierMaster {
 		}
 
 		public void run() {
+			boolean failed = false;
+			int mySplit = 0;
 			while (curSplit < splits.length - 1) {
 				try {
-					int mySplit = nextSplit();
-					if (mySplit >= splits.length - 1)
-						break;
+					if (!failed) {
+						mySplit = nextSplit();
+						if (mySplit >= splits.length - 1)
+							break;
+					}
 					long memory = conf.getLong("gamesman.memory", 0);
 					String command = "ssh "
 							+ slaveName
@@ -95,6 +99,7 @@ public class TierMaster {
 					ps.close();
 				} catch (IOException e) {
 					e.printStackTrace();
+					failed = true;
 				}
 			}
 		}
