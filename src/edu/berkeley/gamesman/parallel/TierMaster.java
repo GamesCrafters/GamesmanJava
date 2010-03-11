@@ -49,9 +49,12 @@ public class TierMaster {
 					int mySplit = nextSplit();
 					if (mySplit >= splits.length - 1)
 						break;
+					long memory = conf.getLong("gamesman.memory", 0);
 					String command = "ssh "
 							+ slaveName
-							+ " java -cp GamesmanJava/bin edu.berkeley.gamesman.parallel.TierSlave "
+							+ " java"
+							+ (memory > 0 ? " -Xmx" + (memory + 100000000) : "")
+							+ " -cp GamesmanJava/bin edu.berkeley.gamesman.parallel.TierSlave "
 							+ "GamesmanJava/" + jobFile + " " + tier + " "
 							+ splits[mySplit] + " "
 							+ (splits[mySplit + 1] - splits[mySplit]);
