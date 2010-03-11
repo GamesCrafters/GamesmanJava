@@ -108,10 +108,10 @@ public class TierMaster {
 							ps.println(response);
 							ps.flush();
 						} else if (readIn.startsWith(END_LINE)) {
-							if (!failed){
+							if (!failed) {
 								addFiles(slaveName, readIn.substring(
 										END_LINE.length()).split(" "));
-								solving.remove(mySplit);
+								solving.remove(new Integer(mySplit));
 							}
 						} else
 							System.out.println(slaveName + ": " + readIn);
