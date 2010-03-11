@@ -36,11 +36,6 @@ public class TierSolver<T extends State> extends Solver {
 
 	private long maxMem;
 
-	/**
-	 * The number of positions to go through between each update/reset
-	 */
-	private int minRecordsInSplit, maxRecordsInSplit;
-
 	private int count;
 
 	private int numThreads;
@@ -51,7 +46,7 @@ public class TierSolver<T extends State> extends Solver {
 
 	private File minSolvedFile = null;
 
-	boolean hadooping;
+	boolean parallelSolving;
 
 	protected double prevToCurFraction;
 
@@ -90,7 +85,7 @@ public class TierSolver<T extends State> extends Solver {
 			}
 		}
 		updater = new TierSolverUpdater();
-		hadooping = false;
+		parallelSolving = false;
 		flusher.run();
 		needs2Reset = false;
 		return new TierSolverWorkUnit(inconf);
@@ -198,7 +193,7 @@ public class TierSolver<T extends State> extends Solver {
 	protected Pair<Long, Long> nextSlice(Configuration conf) {
 		while (true) {
 			if (needs2Sync) {
-				if (hadooping) {
+				if (parallelSolving) {
 					return null;
 				}
 				if (barr == null)
@@ -267,7 +262,7 @@ public class TierSolver<T extends State> extends Solver {
 			Pair<Long, Long> slice;
 			while ((slice = nextSlice(conf)) != null) {
 				thisSlice = slice;
-				if (hadooping) {
+				if (parallelSolving) {
 					try {
 						Database myWrite = writeDb.beginWrite(tier, slice.car,
 								slice.car + slice.cdr);
@@ -301,7 +296,7 @@ public class TierSolver<T extends State> extends Solver {
 			arr.add(this);
 			for (int i = 1; i < num; i++)
 				arr.add(new TierSolverWorkUnit(conf.cloneAll()));
-			if (hadooping || numThreads == 1)
+			if (parallelSolving || numThreads == 1)
 				barr = null;
 			else
 				barr = new CyclicBarrier(numThreads, flusher);
@@ -349,8 +344,6 @@ public class TierSolver<T extends State> extends Solver {
 	@Override
 	public void initialize(Configuration conf) {
 		super.initialize(conf);
-		minRecordsInSplit = conf.getInteger("gamesman.minSplit", 0);
-		maxRecordsInSplit = conf.getInteger("gamesman.maxSplit", 0);
 		maxMem = conf.getLong("gamesman.memory", Integer.MAX_VALUE);
 		numThreads = conf.getInteger("gamesman.threads", 1);
 		minSplit = conf.getInteger("gamesman.split", numThreads);
@@ -369,42 +362,32 @@ public class TierSolver<T extends State> extends Solver {
 	 */
 	public WorkUnit prepareSolve(Configuration conf, int tier, long startHash,
 			long endHash) {
-		updater = new TierSolverUpdater();
+		strictSafety = conf.getBoolean("gamesman.solver.strictMemory", false);
 		this.tier = tier;
-		if (splits <= 0) {
-			splits = 1;
-		}
-		if (minRecordsInSplit > 0) {
-			if ((endHash - startHash) / splits < minRecordsInSplit) {
-				System.out.println("Too few records "
-						+ ((endHash - startHash) / splits) + " in " + splits
-						+ " splits for tier " + tier);
-				;
-				splits = (int) ((endHash - startHash) / minRecordsInSplit);
-				if (splits <= 0) {
-					splits = 1;
-				}
-				System.out.println("Setting to " + splits + " splits ("
-						+ ((endHash - startHash) / splits) + ")");
-			}
-		}
-		if (maxRecordsInSplit > 0) {
-			if ((endHash - startHash) / splits > maxRecordsInSplit) {
-				System.out.println("Too many records "
-						+ ((endHash - startHash) / splits) + " in " + splits
-						+ " splits for tier " + tier);
-				splits = (int) ((endHash - startHash) / maxRecordsInSplit);
-				if (splits <= 0) {
-					splits = 1;
-				}
-				System.out.println("Setting to " + splits + " splits ("
-						+ ((endHash - startHash) / splits) + ")");
-			}
-		}
-		starts = Util.groupAlignedTasks(splits, startHash, endHash - startHash,
+		updater = new TierSolverUpdater();
+		parallelSolving = true;
+		TieredGame<T> game = Util.checkedCast(conf.getGame());
+		long fullSize = endHash - startHash;
+		long neededMem = memNeededForRange(conf, fullSize);
+		TieredHasher<T> hasher = Util.checkedCast(conf.getHasher());
+		prevToCurFraction = (tier >= game.numberOfTiers() - 1) ? 0
+				: ((double) hasher.numHashesForTier(tier + 1) / hasher
+						.numHashesForTier(tier));
+		splits = Math.max(minSplit, (int) (neededMem * numThreads / maxMem));
+		strainingMemory = strictSafety && splits > minSplit;
+		starts = Util.groupAlignedTasks(splits, startHash, fullSize,
 				conf.recordsPerGroup);
-		hadooping = true;
 		return new TierSolverWorkUnit(conf);
+	}
+
+	private long memNeededForRange(Configuration conf, long fullSize) {
+		TieredHasher<T> hasher = Util.checkedCast(conf.getHasher());
+		TieredGame<T> game = Util.checkedCast(conf.getGame());
+		long tierHashes = hasher.numHashesForTier(tier);
+		return (long) ((tierHashes + game.maxChildren()
+				* (tier == game.numberOfTiers() - 1 ? 0 : hasher
+						.numHashesForTier(tier + 1)) * SAFETY_MARGIN)
+				/ conf.recordsPerGroup * conf.recordGroupByteLength * (fullSize / (double) tierHashes));
 	}
 
 	private long memNeededForTier(Configuration conf) {

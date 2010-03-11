@@ -26,7 +26,9 @@ public final class FileDatabase extends Database {
 
 	protected long offset;
 
-	private int tier = -1;
+	private long numBytes = -1;
+
+	private long firstByte = 0;
 
 	@Override
 	public void close() {
@@ -82,7 +84,7 @@ public final class FileDatabase extends Database {
 				if (conf == null)
 					Util
 							.fatalError("You must specify a configuration if the database is to be created");
-				if (tier >= 0)
+				if (numBytes >= 0)
 					fd.writeInt(0);
 				else {
 					byte[] b = conf.store();
@@ -99,6 +101,7 @@ public final class FileDatabase extends Database {
 			}
 			offset = fd.getFilePointer();
 			fd.setLength(offset + getByteSize());
+			offset -= firstByte;
 		} catch (IOException e) {
 			e.printStackTrace();
 			Util.fatalError(e.toString());
@@ -110,16 +113,10 @@ public final class FileDatabase extends Database {
 
 	@Override
 	public long getByteSize() {
-		if (tier < 0)
+		if (numBytes < 0)
 			return super.getByteSize();
 		else {
-			TieredHasher<?> hasher = (TieredHasher<?>) conf.getHasher();
-			return (hasher.hashOffsetForTier(tier + 1) + conf.recordsPerGroup - 1)
-					/ conf.recordsPerGroup
-					* conf.recordGroupByteLength
-					- hasher.hashOffsetForTier(tier)
-					/ conf.recordsPerGroup
-					* conf.recordGroupByteLength;
+			return numBytes;
 		}
 	}
 
@@ -127,12 +124,22 @@ public final class FileDatabase extends Database {
 	 * If this database only covers a single tier of a tiered game, call this
 	 * method before calling initialize
 	 * 
-	 * @param n
+	 * @param tier
 	 *            The tier
 	 */
-	public void setSingleTier(int n) {
-		if (conf != null)
+	public void setSingleTier(Configuration conf, int tier) {
+		TieredHasher<?> hasher = (TieredHasher<?>) conf.getHasher();
+		setRange(conf, hasher.hashOffsetForTier(tier), hasher
+				.numHashesForTier(tier));
+	}
+
+	public void setRange(Configuration conf, long firstRecord, long numRecords) {
+		if (this.conf != null)
 			Util.fatalError("This must be called before initialize");
-		tier = n;
+		long endRecord = firstRecord + numRecords;
+		firstByte = firstRecord / conf.recordsPerGroup
+				* conf.recordGroupByteLength;
+		numBytes = (endRecord + conf.recordsPerGroup - 1)
+				/ conf.recordsPerGroup * conf.recordGroupByteLength - firstByte;
 	}
 }

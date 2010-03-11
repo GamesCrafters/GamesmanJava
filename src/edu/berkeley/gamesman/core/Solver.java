@@ -46,4 +46,13 @@ public abstract class Solver {
 	 *       the game.
 	 */
 	public abstract WorkUnit prepareSolve(Configuration config);
+	
+
+	public void setReadDb(Database db) {
+		readDb = db;
+	}
+
+	public void setWriteDb(Database db) {
+		writeDb = db;
+	}
 }

@@ -70,7 +70,7 @@ public final class GamesmanMain extends GamesmanApplication {
 		hasherName = conf.getProperty("gamesman.hasher");
 		if(hasherName == null)
 			Util.fatalError("You must specify a hasher with the property gamesman.hasher");
-		databaseName = conf.getProperty("gamesman.database","CachedDatabase").split(":");
+		databaseName = conf.getProperty("gamesman.database","FileDatabase").split(":");
 
 		Class<? extends Solver> s;
 		Class<? extends Database> d;

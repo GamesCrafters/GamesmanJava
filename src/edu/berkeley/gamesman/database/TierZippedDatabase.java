@@ -68,7 +68,7 @@ public class TierZippedDatabase extends Database {
 		}
 		thisTier = new FileDatabase();
 		String name = (tier & 1) == 1 ? "oddTier.db" : "evenTier.db";
-		thisTier.setSingleTier(tier);
+		thisTier.setSingleTier(conf, tier);
 		thisTier.initialize(name, conf, true);
 		tierOffset = hasher.hashOffsetForTier(tier) / conf.recordsPerGroup
 				* conf.recordGroupByteLength;
@@ -89,7 +89,7 @@ public class TierZippedDatabase extends Database {
 	@Override
 	public void getBytes(long loc, byte[] arr, int off, int len) {
 		if (zippedTiers == null)
-			lastTier.getBytes(loc - lastTierOffset, arr, off, len);
+			lastTier.getBytes(loc, arr, off, len);
 		else {
 			int tier = game.hashToTier(loc / conf.recordGroupByteLength
 					* conf.recordsPerGroup);
@@ -200,7 +200,7 @@ public class TierZippedDatabase extends Database {
 
 	@Override
 	public void putBytes(long loc, byte[] arr, int off, int len) {
-		thisTier.putBytes(loc - tierOffset, arr, off, len);
+		thisTier.putBytes(loc, arr, off, len);
 	}
 
 	@Override
@@ -211,9 +211,9 @@ public class TierZippedDatabase extends Database {
 	@Override
 	public void seek(long loc) {
 		if (loc > lastTierOffset)
-			lastTier.seek(loc - lastTierOffset);
+			lastTier.seek(loc);
 		else {
-			thisTier.seek(loc - tierOffset);
+			thisTier.seek(loc);
 		}
 	}
 }
