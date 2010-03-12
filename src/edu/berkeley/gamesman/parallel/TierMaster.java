@@ -1,7 +1,6 @@
 package edu.berkeley.gamesman.parallel;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -41,6 +40,8 @@ public class TierMaster {
 	private ArrayList<Pair<Long, String>> lastFileList;
 	private CountDownLatch cdl;
 	private final Object lock = new Object();
+	private final File dbFile;
+	private final PrintStream dbWriter;
 
 	private class NodeWatcher implements Runnable {
 		private final String slaveName;
@@ -122,7 +123,7 @@ public class TierMaster {
 						if (readIn.startsWith(FETCH_LINE)) {
 							String[] needs = readIn.substring(
 									FETCH_LINE.length()).split(" ");
-							String response = getFileList(Long
+							String response = getFileList(lastFileList, Long
 									.parseLong(needs[0]), Integer
 									.parseInt(needs[1]));
 							ps.println(response);
@@ -138,7 +139,8 @@ public class TierMaster {
 						lastMessage = System.currentTimeMillis();
 						readIn = "";
 					}
-					if (failed) {
+					if (failed || solving.contains(mySplit)) {
+						System.err.println(slaveName + " failed to complete");
 						addBack(mySplit);
 						wait(TIMEOUT);
 						// A ten-second time-out for bad behavior ensures that
@@ -148,6 +150,7 @@ public class TierMaster {
 					scan.close();
 					ps.close();
 				} catch (IOException e) {
+					System.err.println(slaveName + " failed to complete");
 					e.printStackTrace();
 					addBack(mySplit);
 					try {
@@ -213,13 +216,14 @@ public class TierMaster {
 		}
 	}
 
-	private String getFileList(long byteNum, int len) {
-		int low = 0, high = lastFileList.size();
+	public static String getFileList(ArrayList<Pair<Long, String>> tierFiles,
+			long byteNum, int len) {
+		int low = 0, high = tierFiles.size();
 		int guess = (low + high) / 2;
 		while (high - low > 1) {
-			if (lastFileList.get(guess).car < byteNum) {
+			if (tierFiles.get(guess).car < byteNum) {
 				low = guess;
-			} else if (lastFileList.get(guess).car > byteNum) {
+			} else if (tierFiles.get(guess).car > byteNum) {
 				high = guess;
 			} else {
 				low = guess;
@@ -229,10 +233,10 @@ public class TierMaster {
 		}
 		guess = low;
 		long end = byteNum + len;
-		Pair<Long, String> p = lastFileList.get(guess);
+		Pair<Long, String> p = tierFiles.get(guess);
 		String s = p.cdr + ":" + p.car;
-		for (guess++; guess < lastFileList.size()
-				&& (p = lastFileList.get(guess)).car < end; guess++)
+		for (guess++; guess < tierFiles.size()
+				&& (p = tierFiles.get(guess)).car < end; guess++)
 			s += " " + p.cdr + ":" + p.car;
 		return s;
 	}
@@ -255,7 +259,7 @@ public class TierMaster {
 	private final Thread[] nodeThreads;
 
 	public TierMaster(String jobFile, String slavesFile)
-			throws FileNotFoundException, ClassNotFoundException {
+			throws ClassNotFoundException, IOException {
 		this.jobFile = jobFile;
 		File slavesList = new File(slavesFile);
 		Scanner scan = new Scanner(slavesList);
@@ -271,6 +275,16 @@ public class TierMaster {
 			checkers[i] = new WatchChecker();
 		}
 		conf = new Configuration(Configuration.readProperties(jobFile));
+		dbFile = new File(conf.getProperty("gamesman.db.uri"));
+		dbFile.createNewFile();
+		dbWriter = new PrintStream(dbFile);
+		byte[] confInfo = conf.store();
+		int confLength = confInfo.length;
+		for (int i = 24; i >= 0; i -= 8) {
+			dbWriter.write(confLength >>> i);
+		}
+		dbWriter.write(confInfo);
+		dbWriter.println();
 	}
 
 	public void solve() {
@@ -292,6 +306,7 @@ public class TierMaster {
 				nodeThreads[i] = new Thread(watchers[i]);
 				checkers[i].initialize(watchers[i], nodeThreads[i]);
 				Thread checkThread = new Thread(checkers[i]);
+				checkThread.setDaemon(true);
 				nodeThreads[i].start();
 				checkThread.start();
 			}
@@ -303,15 +318,17 @@ public class TierMaster {
 				}
 			}
 			Collections.sort(tierFileList, PAIR_COMPARE);
+			dbWriter.println(tierFileList);
 			lastFileList = tierFileList;
 			tierFileList = new ArrayList<Pair<Long, String>>();
 		}
+		dbWriter.close();
 		long totalTime = System.currentTimeMillis() - startTime;
 		System.out.println("Took " + Util.millisToETA(totalTime) + " to solve");
 	}
 
-	public static void main(String[] args) throws FileNotFoundException,
-			ClassNotFoundException {
+	public static void main(String[] args) throws ClassNotFoundException,
+			IOException {
 		TierMaster tm = new TierMaster(args[0], args[1]);
 		tm.solve();
 	}

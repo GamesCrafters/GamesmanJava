@@ -10,6 +10,7 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Solver;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.core.WorkUnit;
+import edu.berkeley.gamesman.database.DistributedDatabaseClient;
 import edu.berkeley.gamesman.game.TieredGame;
 import edu.berkeley.gamesman.solver.TierSolver;
 import edu.berkeley.gamesman.util.DebugFacility;
@@ -55,7 +56,7 @@ public class TierSlave {
 		solver.initialize(conf);
 		DistributedDatabaseClient readDb = new DistributedDatabaseClient(
 				System.in, System.out);
-		String parentUri = conf.getProperty("gamesman.db.uri");
+		String parentUri = conf.getProperty("gamesman.slaveDbFolder");
 		readDb.initialize(parentUri, conf, true);
 		solver.setReadDb(readDb);
 		SplitDatabaseCreator writeDb = new SplitDatabaseCreator();

@@ -9,6 +9,7 @@ import java.util.Random;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Record;
+import edu.berkeley.gamesman.database.DistributedDatabaseClient;
 import edu.berkeley.gamesman.game.Connect4;
 import edu.berkeley.gamesman.game.TopDownC4;
 import edu.berkeley.gamesman.game.util.C4State;
@@ -130,6 +131,10 @@ class ConnectFour implements MouseListener {
 							.getState())));
 				} else {
 					game.setFromString(arrToString(board));
+					if (fd instanceof DistributedDatabaseClient) {
+						DistributedDatabaseClient ddc = (DistributedDatabaseClient) fd;
+						ddc.setTier(game.getTier());
+					}
 					System.out.println(fd.getRecord(game.stateToHash(game
 							.getState())));
 				}
@@ -196,6 +201,10 @@ class ConnectFour implements MouseListener {
 					moveHashes[i] = game.stateToHash(state);
 					if (game.getTier() != state.tier)
 						game.setTier(state.tier);
+					if (fd instanceof DistributedDatabaseClient) {
+						DistributedDatabaseClient ddc = (DistributedDatabaseClient) fd;
+						ddc.setTier(state.tier);
+					}
 					records[i] = fd.getRecord(moveHashes[i]);
 				}
 				for (Record r : records)
