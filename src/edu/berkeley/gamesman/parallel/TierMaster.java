@@ -12,11 +12,18 @@ import java.util.concurrent.CountDownLatch;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.State;
+import edu.berkeley.gamesman.database.DistributedDatabase;
 import edu.berkeley.gamesman.game.TieredGame;
 import edu.berkeley.gamesman.hasher.TieredHasher;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
+/**
+ * The main class to run on the master node for parallel solves.<br />
+ * WARNING! Does not work on Windows (Run on Cygwin).
+ * 
+ * @author dnspies
+ */
 public class TierMaster {
 	private static final long TIMEOUT = 10000;
 	private static final float MULTIPLE = (float) 1.8;
@@ -123,9 +130,9 @@ public class TierMaster {
 						if (readIn.startsWith(FETCH_LINE)) {
 							String[] needs = readIn.substring(
 									FETCH_LINE.length()).split(" ");
-							String response = getFileList(lastFileList, Long
-									.parseLong(needs[0]), Integer
-									.parseInt(needs[1]));
+							String response = DistributedDatabase.getFileList(
+									lastFileList, Long.parseLong(needs[0]),
+									Integer.parseInt(needs[1]));
 							ps.println(response);
 							ps.flush();
 						} else if (readIn.startsWith(END_LINE)) {
@@ -216,38 +223,13 @@ public class TierMaster {
 		}
 	}
 
-	public static String getFileList(ArrayList<Pair<Long, String>> tierFiles,
-			long byteNum, int len) {
-		int low = 0, high = tierFiles.size();
-		int guess = (low + high) / 2;
-		while (high - low > 1) {
-			if (tierFiles.get(guess).car < byteNum) {
-				low = guess;
-			} else if (tierFiles.get(guess).car > byteNum) {
-				high = guess;
-			} else {
-				low = guess;
-				break;
-			}
-			guess = (low + high) / 2;
-		}
-		guess = low;
-		long end = byteNum + len;
-		Pair<Long, String> p = tierFiles.get(guess);
-		String s = p.cdr + ":" + p.car;
-		for (guess++; guess < tierFiles.size()
-				&& (p = tierFiles.get(guess)).car < end; guess++)
-			s += " " + p.cdr + ":" + p.car;
-		return s;
-	}
-
 	private synchronized void addFiles(String slaveName, String[] fileStarts) {
 		for (int i = 0; i < fileStarts.length; i++)
 			tierFileList.add(new Pair<Long, String>(Long
 					.parseLong(fileStarts[i]), slaveName));
 	}
 
-	public synchronized int nextSplit() {
+	private synchronized int nextSplit() {
 		if (remainingTasks.size() == 0)
 			return -1;
 		else
@@ -258,6 +240,18 @@ public class TierMaster {
 	private final WatchChecker[] checkers;
 	private final Thread[] nodeThreads;
 
+	/**
+	 * @param jobFile
+	 *            The location of the job file within GamesmanJava (eg
+	 *            jobs/myPSolve.job)
+	 * @param slavesFile
+	 *            The file containing the addresses of the slaves
+	 * @throws ClassNotFoundException
+	 *             If the configuration throws a ClassNotFoundException when
+	 *             instantiating
+	 * @throws IOException
+	 *             Too many ways to count
+	 */
 	public TierMaster(String jobFile, String slavesFile)
 			throws ClassNotFoundException, IOException {
 		this.jobFile = jobFile;
@@ -287,6 +281,10 @@ public class TierMaster {
 		dbWriter.println();
 	}
 
+	/**
+	 * This method is completely useless... Unless you're interested in solving
+	 * a tiered game across multiple machines.
+	 */
 	public void solve() {
 		TieredGame<? extends State> game = (TieredGame<? extends State>) conf
 				.getGame();
@@ -327,16 +325,18 @@ public class TierMaster {
 		System.out.println("Took " + Util.millisToETA(totalTime) + " to solve");
 	}
 
+	/**
+	 * @param args
+	 *            The job file and the slavesList file
+	 * @throws ClassNotFoundException
+	 *             If the configuration throws a ClassNotFoundException when
+	 *             instantiating
+	 * @throws IOException
+	 *             Too many ways to count
+	 */
 	public static void main(String[] args) throws ClassNotFoundException,
 			IOException {
 		TierMaster tm = new TierMaster(args[0], args[1]);
 		tm.solve();
-	}
-
-	// This is a copy of Util.parseBoolean().
-	// It needs to be here to avoid loading the Util class before we're ready to
-	private static boolean parseBoolean(String s) {
-		return s != null && !s.equalsIgnoreCase("false")
-				&& !s.equalsIgnoreCase("0");
 	}
 }

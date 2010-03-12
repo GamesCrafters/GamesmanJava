@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Set;
 
-import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
 /**

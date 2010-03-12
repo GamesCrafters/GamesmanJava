@@ -1,7 +1,5 @@
 package edu.berkeley.gamesman.util;
 
-import java.util.Arrays;
-
 /**
  * Unsigned Mutable BigIntegers
  * 

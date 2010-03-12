@@ -124,22 +124,35 @@ public final class FileDatabase extends Database {
 	 * If this database only covers a single tier of a tiered game, call this
 	 * method before calling initialize
 	 * 
+	 * @param conf
+	 *            The configuration object
 	 * @param tier
 	 *            The tier
 	 */
 	public void setSingleTier(Configuration conf, int tier) {
 		TieredHasher<?> hasher = (TieredHasher<?>) conf.getHasher();
-		setRange(conf, hasher.hashOffsetForTier(tier), hasher
-				.numHashesForTier(tier));
+		long firstRecord = hasher.hashOffsetForTier(tier);
+		long firstByte = firstRecord / conf.recordsPerGroup
+				* conf.recordGroupByteLength;
+		long endRecord = firstRecord + hasher.numHashesForTier(tier);
+		long endByte = (endRecord + conf.recordsPerGroup - 1)
+				/ conf.recordsPerGroup * conf.recordGroupByteLength;
+		setRange(firstByte, endByte - firstByte);
 	}
 
-	public void setRange(Configuration conf, long firstRecord, long numRecords) {
-		if (this.conf != null)
+	/**
+	 * If this database only covers a particular range of hashes for a game,
+	 * call this method before initialize
+	 * 
+	 * @param firstByte
+	 *            The first byte this database contains
+	 * @param numBytes
+	 *            The total number of bytes contained
+	 */
+	public void setRange(long firstByte, long numBytes) {
+		if (conf != null)
 			Util.fatalError("This must be called before initialize");
-		long endRecord = firstRecord + numRecords;
-		firstByte = firstRecord / conf.recordsPerGroup
-				* conf.recordGroupByteLength;
-		numBytes = (endRecord + conf.recordsPerGroup - 1)
-				/ conf.recordsPerGroup * conf.recordGroupByteLength - firstByte;
+		this.firstByte = firstByte;
+		this.numBytes = numBytes;
 	}
 }

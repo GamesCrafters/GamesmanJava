@@ -10,11 +10,17 @@ import java.util.Scanner;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
-import edu.berkeley.gamesman.parallel.TierMaster;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
-public class DistributedDatabaseClient extends Database {
+/**
+ * A class for reading records (via ssh/dd) from a bunch of different files
+ * distributed across multiple machines.<br />
+ * WARNING! Does not work on Windows (Run on Cygwin)
+ * 
+ * @author dnspies
+ */
+public class DistributedDatabase extends Database {
 	private final Scanner scan;
 	private final PrintStream masterWrite;
 	private long curLoc;
@@ -25,13 +31,23 @@ public class DistributedDatabaseClient extends Database {
 	private boolean solve;
 	private int tier;
 
-	public DistributedDatabaseClient() {
+	/**
+	 * Default constructor (For read-only configuration)
+	 */
+	public DistributedDatabase() {
 		scan = null;
 		masterWrite = null;
 	}
 
-	public DistributedDatabaseClient(InputStream masterRead,
-			PrintStream masterWrite) {
+	/**
+	 * Solving constructor
+	 * 
+	 * @param masterRead
+	 *            The input stream which tells hosts and starting values
+	 * @param masterWrite
+	 *            The output stream to send name requests
+	 */
+	public DistributedDatabase(InputStream masterRead, PrintStream masterWrite) {
 		scan = new Scanner(masterRead);
 		this.masterWrite = masterWrite;
 	}
@@ -57,7 +73,7 @@ public class DistributedDatabaseClient extends Database {
 				masterWrite.println("fetch files: " + curLoc + " " + len);
 				result = scan.nextLine();
 			} else {
-				result = TierMaster.getFileList(files.get(tier), curLoc, len);
+				result = getFileList(files.get(tier), curLoc, len);
 			}
 			String[] nodeFiles = result.split(" ");
 			String[] nodeFile = nodeFiles[0].split(":");
@@ -168,7 +184,52 @@ public class DistributedDatabaseClient extends Database {
 		curLoc = loc;
 	}
 
+	/**
+	 * Sets the tier for read-only mode. This avoids group conflicts at tier
+	 * edges. When in read-only mode, make sure call this before calling
+	 * getBytes
+	 * 
+	 * @param tier
+	 *            The tier
+	 */
 	public void setTier(int tier) {
 		this.tier = tier;
+	}
+
+	/**
+	 * @param tierFiles
+	 *            A list of pairs of the byte of the first position in a file
+	 *            followed by the host it's on for this entire tier
+	 * @param byteNum
+	 *            The byte to start from
+	 * @param len
+	 *            The total number of bytes
+	 * @return A string with a list of only the necessary files for solving the
+	 *         given range (separated by spaces. host/starting position
+	 *         separated by ':')
+	 */
+	public static String getFileList(ArrayList<Pair<Long, String>> tierFiles,
+			long byteNum, int len) {
+		int low = 0, high = tierFiles.size();
+		int guess = (low + high) / 2;
+		while (high - low > 1) {
+			if (tierFiles.get(guess).car < byteNum) {
+				low = guess;
+			} else if (tierFiles.get(guess).car > byteNum) {
+				high = guess;
+			} else {
+				low = guess;
+				break;
+			}
+			guess = (low + high) / 2;
+		}
+		guess = low;
+		long end = byteNum + len;
+		Pair<Long, String> p = tierFiles.get(guess);
+		String s = p.cdr + ":" + p.car;
+		for (guess++; guess < tierFiles.size()
+				&& (p = tierFiles.get(guess)).car < end; guess++)
+			s += " " + p.cdr + ":" + p.car;
+		return s;
 	}
 }

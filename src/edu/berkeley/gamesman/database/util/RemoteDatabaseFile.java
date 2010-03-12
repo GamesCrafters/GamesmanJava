@@ -9,7 +9,8 @@ import edu.berkeley.gamesman.util.Util;
 
 /**
  * An encapsulating class for reading a database by calling the OS's ssh and
- * then dd for the necessary bytes
+ * then dd for the necessary bytes.<br />
+ * WARNING! Does not work on Windows (Run on Cygwin).
  * 
  * @author dnspies
  */

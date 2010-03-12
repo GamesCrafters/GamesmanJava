@@ -46,12 +46,19 @@ public abstract class Solver {
 	 *       the game.
 	 */
 	public abstract WorkUnit prepareSolve(Configuration config);
-	
 
+	/**
+	 * @param db
+	 *            The database for reading from
+	 */
 	public void setReadDb(Database db) {
 		readDb = db;
 	}
 
+	/**
+	 * @param db
+	 *            The database for writing to
+	 */
 	public void setWriteDb(Database db) {
 		writeDb = db;
 	}

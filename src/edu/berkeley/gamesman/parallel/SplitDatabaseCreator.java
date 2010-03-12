@@ -63,9 +63,13 @@ public class SplitDatabaseCreator extends Database {
 	public synchronized Database beginWrite(int tier, long recordStart,
 			long recordEnd) {
 		openDb = new FileDatabase();
-		openDb.setRange(conf, recordStart, recordEnd - recordStart);
-		String fileName = "s" + Long.toString(recordStart) + ".db";
-		starts.add(recordStart);
+		long byteStart = recordStart / conf.recordsPerGroup
+				* conf.recordGroupByteLength;
+		long numBytes = (recordEnd + conf.recordsPerGroup - 1)
+				/ conf.recordsPerGroup * conf.recordGroupByteLength - byteStart;
+		openDb.setRange(byteStart, numBytes);
+		String fileName = "s" + Long.toString(byteStart) + ".db";
+		starts.add(byteStart);
 		openDb.initialize(parent.getPath() + File.separator + fileName, conf,
 				true);
 		openDbs.add(openDb);
@@ -84,6 +88,10 @@ public class SplitDatabaseCreator extends Database {
 				openDb = null;
 	}
 
+	/**
+	 * @return A list of the starting hashes of every file contained (separated
+	 *         by spaces)
+	 */
 	public String getStartList() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(starts.get(0));

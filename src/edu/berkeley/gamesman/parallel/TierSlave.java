@@ -10,7 +10,7 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Solver;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.core.WorkUnit;
-import edu.berkeley.gamesman.database.DistributedDatabaseClient;
+import edu.berkeley.gamesman.database.DistributedDatabase;
 import edu.berkeley.gamesman.game.TieredGame;
 import edu.berkeley.gamesman.solver.TierSolver;
 import edu.berkeley.gamesman.util.DebugFacility;
@@ -18,7 +18,26 @@ import edu.berkeley.gamesman.util.Task;
 import edu.berkeley.gamesman.util.TaskFactory;
 import edu.berkeley.gamesman.util.Util;
 
+/**
+ * The main class for slave computers in a parallel solve
+ * 
+ * @author dnspies
+ */
 public class TierSlave {
+	/**
+	 * Called by TierMaster via ssh
+	 * 
+	 * @param args
+	 *            Job file, tier, first hash, number of hashes
+	 * @throws ClassNotFoundException
+	 *             When initializing the configuration
+	 * @throws IllegalAccessException
+	 *             When instantiating the solver
+	 * @throws InstantiationException
+	 *             When instantiating the solver
+	 * @throws IOException
+	 *             Everywhere
+	 */
 	public static void main(String[] args) throws ClassNotFoundException,
 			IllegalAccessException, InstantiationException, IOException {
 		String jobFile = args[0];
@@ -54,8 +73,8 @@ public class TierSlave {
 				"edu.berkeley.gamesman.solver." + solverName, Solver.class);
 		TierSolver<? extends State> solver = Util.checkedCast(s.newInstance());
 		solver.initialize(conf);
-		DistributedDatabaseClient readDb = new DistributedDatabaseClient(
-				System.in, System.out);
+		DistributedDatabase readDb = new DistributedDatabase(System.in,
+				System.out);
 		String parentUri = conf.getProperty("gamesman.slaveDbFolder");
 		readDb.initialize(parentUri, conf, true);
 		solver.setReadDb(readDb);
