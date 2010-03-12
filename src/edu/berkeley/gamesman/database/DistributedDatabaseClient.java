@@ -92,13 +92,15 @@ public class DistributedDatabaseClient extends Database {
 						int bytesRead = byteReader
 								.read(dumbArray, 0, skipBytes);
 						if (bytesRead == -1)
-							Util.fatalError("Bad");
+							Util.fatalError("No more bytes available");
 						skipBytes -= bytesRead;
 					}
 				}
 				while (curLoc < nextStart) {
 					int bytesRead = byteReader.read(arr, off,
 							(int) (nextStart - curLoc));
+					if (bytesRead == -1)
+						Util.fatalError("No more bytes available");
 					curLoc += bytesRead;
 					off += bytesRead;
 					len -= bytesRead;
