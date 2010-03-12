@@ -206,7 +206,7 @@ public class TierMaster {
 
 	private void addBack(int mySplit) {
 		synchronized (lock) {
-			solving.remove(mySplit);
+			solving.remove(new Integer(mySplit));
 			remainingTasks.addFirst(mySplit);
 			if (remainingTasks.size() == 1) {
 				CountDownLatch oldDown = cdl;
