@@ -317,12 +317,17 @@ public class TierMaster {
 			}
 			Collections.sort(tierFileList, PAIR_COMPARE);
 			dbWriter.println(tierFileList);
+			startZips(lastFileList);
 			lastFileList = tierFileList;
 			tierFileList = new ArrayList<Pair<Long, String>>();
 		}
 		dbWriter.close();
 		long totalTime = System.currentTimeMillis() - startTime;
 		System.out.println("Took " + Util.millisToETA(totalTime) + " to solve");
+	}
+
+	private void startZips(ArrayList<Pair<Long, String>> fileList) {
+		// TODO Auto-generated method stub
 	}
 
 	/**
