@@ -29,6 +29,7 @@ public class DistributedDatabase extends Database {
 	private String parentPath;
 	private ArrayList<ArrayList<Pair<Long, String>>> files;
 	private boolean solve;
+	private boolean zipped = false;
 	private int tier;
 
 	/**
@@ -94,32 +95,53 @@ public class DistributedDatabase extends Database {
 				} else {
 					nextStart = curLoc + len;
 				}
-				String s = "ssh " + nodeFile[0] + " dd if=" + parentPath
-						+ File.separator + "s" + nodeFile[1] + ".db";
-				if (i == 0 && fileBlocks > 0)
-					s += " skip=" + fileBlocks;
-				if (i == nodeFiles.length - 1)
-					s += " count=" + ((len + skipBytes + 511) >> 9);
-				s += "\n";
-				Process p = r.exec(s);
-				InputStream byteReader = p.getInputStream();
-				while (skipBytes > 0) {
-					int bytesRead = byteReader.read(dumbArray, 0, skipBytes);
-					if (bytesRead == -1)
-						Util.fatalError("No more bytes available");
-					skipBytes -= bytesRead;
-				}
-				skipBytes = 4;
-				while (curLoc < nextStart) {
-					int bytesRead = byteReader.read(arr, off,
+				if (zipped) {
+					GZippedFileDatabase myZipBase = new GZippedFileDatabase();
+					myZipBase.initialize(nodeFile[0] + ":" + parentPath + "s"
+							+ nodeFile[1] + ".db.gz", conf, false);
+					myZipBase.getBytes(curLoc - fileStart, arr, off,
 							(int) (nextStart - curLoc));
-					if (bytesRead == -1)
-						Util.fatalError("No more bytes available");
-					curLoc += bytesRead;
-					off += bytesRead;
-					len -= bytesRead;
+					off += nextStart - curLoc;
+					len -= nextStart - curLoc;
+					curLoc = nextStart;
+				} else {
+					StringBuilder sb = new StringBuilder("ssh ");
+					sb.append(nodeFile[0]);
+					sb.append(" dd if=");
+					sb.append(parentPath);
+					sb.append("s");
+					sb.append(nodeFile[1]);
+					sb.append(".db");
+					if (i == 0 && fileBlocks > 0) {
+						sb.append(" skip=");
+						sb.append(fileBlocks);
+					}
+					if (i == nodeFiles.length - 1) {
+						sb.append(" count=");
+						sb.append((len + skipBytes + 511) >> 9);
+					}
+					sb.append("\n");
+					Process p = r.exec(sb.toString());
+					InputStream byteReader = p.getInputStream();
+					while (skipBytes > 0) {
+						int bytesRead = byteReader
+								.read(dumbArray, 0, skipBytes);
+						if (bytesRead == -1)
+							Util.fatalError("No more bytes available");
+						skipBytes -= bytesRead;
+					}
+					skipBytes = 4;
+					while (curLoc < nextStart) {
+						int bytesRead = byteReader.read(arr, off,
+								(int) (nextStart - curLoc));
+						if (bytesRead == -1)
+							Util.fatalError("No more bytes available");
+						curLoc += bytesRead;
+						off += bytesRead;
+						len -= bytesRead;
+					}
+					byteReader.close();
 				}
-				byteReader.close();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -155,7 +177,10 @@ public class DistributedDatabase extends Database {
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
 			}
-			parentPath = conf.getProperty("gamesman.slaveDbFolder");
+			parentPath = conf.getProperty("gamesman.slaveDbFolder")
+					+ File.separator;
+			zipped = conf.getProperty("gamesman.db.compression", "none")
+					.equals("gzip");
 		}
 	}
 

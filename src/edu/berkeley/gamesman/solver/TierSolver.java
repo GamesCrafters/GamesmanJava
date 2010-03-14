@@ -12,7 +12,6 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
 import edu.berkeley.gamesman.core.*;
-import edu.berkeley.gamesman.database.TierZippedDatabase;
 import edu.berkeley.gamesman.game.TieredGame;
 import edu.berkeley.gamesman.hasher.TieredHasher;
 import edu.berkeley.gamesman.util.*;
@@ -161,9 +160,6 @@ public class TierSolver<T extends State> extends Solver {
 							"Standard Deviation = "
 									+ Math.sqrt(marginVarSum / timesUsed));
 			} else {
-				if (writeDb instanceof TierZippedDatabase) {
-					((TierZippedDatabase) writeDb).setTier(tier);
-				}
 				if (barr != null)
 					needs2Reset = true;
 				TieredGame<T> game = Util.checkedCast(conf.getGame());

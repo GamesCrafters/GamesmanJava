@@ -3,11 +3,7 @@ package edu.berkeley.gamesman.parallel;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.Scanner;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
 import edu.berkeley.gamesman.core.Configuration;
@@ -20,7 +16,7 @@ import edu.berkeley.gamesman.util.Util;
 
 /**
  * The main class to run on the master node for parallel solves.<br />
- * WARNING! Does not work on Windows (Run on Cygwin).
+ * WARNING! Does not work on Windows (Run on Cygwin instead).
  * 
  * @author dnspies
  */
@@ -45,14 +41,18 @@ public class TierMaster {
 	private final String jobFile;
 	private ArrayList<Pair<Long, String>> tierFileList;
 	private ArrayList<Pair<Long, String>> lastFileList;
+	private ArrayList<Pair<Long, String>> lastLastFileList;
 	private CountDownLatch cdl;
 	private final Object lock = new Object();
 	private final File dbFile;
 	private final PrintStream dbWriter;
+	private final String gamesmanPath;
+	private final boolean zipping;
 
 	private class NodeWatcher implements Runnable {
 		private final String slaveName;
 		private boolean failed;
+		private boolean startedZips;
 		public long lastMessage;
 		public Process myProcess;
 		public CountDownLatch myLatch = null;
@@ -67,6 +67,7 @@ public class TierMaster {
 
 		public synchronized void run() {
 			int mySplit = 0;
+			startedZips = false;
 			while (true) {
 				try {
 					boolean breakNow = false;
@@ -84,6 +85,10 @@ public class TierMaster {
 						cdl.countDown();
 						break;
 					} else if (myLatch != null) {
+						if (zipping && lastLastFileList != null && !startedZips) {
+							startZips(lastLastFileList);
+							startedZips = true;
+						}
 						myLatch.await();
 						lastMessage = System.currentTimeMillis();
 						// Must be called before the next statement so the
@@ -99,10 +104,11 @@ public class TierMaster {
 							+ slaveName
 							+ " java"
 							+ (memory > 0 ? " -Xmx" + (memory + 100000000) : "")
-							+ " -cp GamesmanJava/bin edu.berkeley.gamesman.parallel.TierSlave "
-							+ "GamesmanJava/" + jobFile + " " + tier + " "
-							+ splits[mySplit] + " "
-							+ (splits[mySplit + 1] - splits[mySplit]);
+							+ " -cp " + gamesmanPath + File.separator
+							+ "bin edu.berkeley.gamesman.parallel.TierSlave "
+							+ gamesmanPath + File.separator + jobFile + " "
+							+ tier + " " + splits[mySplit] + " "
+							+ (splits[mySplit + 1] - splits[mySplit]) + "\n";
 					myProcess = r.exec(command);
 					new Thread() {
 
@@ -169,6 +175,42 @@ public class TierMaster {
 					e.printStackTrace();
 				}
 			}
+			if (zipping && lastLastFileList != null && !startedZips) {
+				startZips(lastLastFileList);
+				startedZips = true;
+			}
+		}
+
+		private void startZips(ArrayList<Pair<Long, String>> lastFileList) {
+			final StringBuilder sb = new StringBuilder("ssh ");
+			sb.append(slaveName);
+			sb.append(" java -cp ");
+			sb.append(gamesmanPath);
+			sb.append(File.separator);
+			sb.append("bin edu.berkeley.gamesman.parallel.ZipFiles ");
+			sb.append(gamesmanPath);
+			sb.append(File.separator);
+			sb.append(jobFile);
+			for (Pair<Long, String> p : lastFileList) {
+				if (p.cdr.equals(slaveName)) {
+					sb.append(" ");
+					sb.append(p.car);
+				}
+			}
+			sb.append("\n");
+			new Thread() {
+				public void run() {
+					try {
+						Process p = r.exec(sb.toString());
+						Scanner scan = new Scanner(p.getErrorStream());
+						while (scan.hasNext())
+							System.err.println(slaveName + ": "
+									+ scan.nextLine());
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}.start();
 		}
 	}
 
@@ -246,13 +288,15 @@ public class TierMaster {
 	 *            jobs/myPSolve.job)
 	 * @param slavesFile
 	 *            The file containing the addresses of the slaves
+	 * @param gamesmanPath
+	 *            The path where the gamesman directory is
 	 * @throws ClassNotFoundException
 	 *             If the configuration throws a ClassNotFoundException when
 	 *             instantiating
 	 * @throws IOException
 	 *             Too many ways to count
 	 */
-	public TierMaster(String jobFile, String slavesFile)
+	public TierMaster(String jobFile, String slavesFile, String gamesmanPath)
 			throws ClassNotFoundException, IOException {
 		this.jobFile = jobFile;
 		File slavesList = new File(slavesFile);
@@ -279,6 +323,9 @@ public class TierMaster {
 		}
 		dbWriter.write(confInfo);
 		dbWriter.println();
+		this.gamesmanPath = gamesmanPath;
+		zipping = conf.getProperty("gamesman.db.compression", "none").equals(
+				"gzip");
 	}
 
 	/**
@@ -317,22 +364,62 @@ public class TierMaster {
 			}
 			Collections.sort(tierFileList, PAIR_COMPARE);
 			dbWriter.println(tierFileList);
-			startZips(lastFileList);
+			if (zipping)
+				lastLastFileList = lastFileList;
 			lastFileList = tierFileList;
 			tierFileList = new ArrayList<Pair<Long, String>>();
+		}
+		if (zipping) {
+			startFullZips(lastLastFileList);
+			startFullZips(lastFileList);
 		}
 		dbWriter.close();
 		long totalTime = System.currentTimeMillis() - startTime;
 		System.out.println("Took " + Util.millisToETA(totalTime) + " to solve");
 	}
 
-	private void startZips(ArrayList<Pair<Long, String>> fileList) {
-		// TODO Auto-generated method stub
+	private void startFullZips(ArrayList<Pair<Long, String>> fileList) {
+		HashMap<String, StringBuilder> hm = new HashMap<String, StringBuilder>();
+		for (Pair<Long, String> p : fileList) {
+			StringBuilder sb = hm.get(p.cdr);
+			if (sb == null) {
+				sb = new StringBuilder("ssh ");
+				sb.append(p.cdr);
+				sb.append(" java -cp ");
+				sb.append(gamesmanPath);
+				sb.append(File.separator);
+				sb.append("bin edu.berkeley.gamesman.parallel.ZipFiles ");
+				sb.append(gamesmanPath);
+				sb.append(File.separator);
+				sb.append(jobFile);
+			}
+			sb.append(" ");
+			sb.append(p.car);
+			hm.put(p.cdr, sb);
+		}
+		for (final String slaveName : hm.keySet()) {
+			final String command = hm.get(slaveName).toString();
+			new Thread() {
+				public void run() {
+					try {
+						Process p = r.exec(command);
+						Scanner scan = new Scanner(p.getErrorStream());
+						while (scan.hasNext())
+							System.err.println(slaveName + ": "
+									+ scan.nextLine());
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}.start();
+		}
 	}
 
 	/**
 	 * @param args
-	 *            The job file and the slavesList file
+	 *            The job file, the slavesList file, and the path to the
+	 *            GamesmanJava directory on all of the nodes (including the
+	 *            directory itself)
 	 * @throws ClassNotFoundException
 	 *             If the configuration throws a ClassNotFoundException when
 	 *             instantiating
@@ -341,7 +428,7 @@ public class TierMaster {
 	 */
 	public static void main(String[] args) throws ClassNotFoundException,
 			IOException {
-		TierMaster tm = new TierMaster(args[0], args[1]);
+		TierMaster tm = new TierMaster(args[0], args[1], args[2]);
 		tm.solve();
 	}
 }

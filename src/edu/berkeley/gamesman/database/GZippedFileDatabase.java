@@ -6,8 +6,6 @@ import java.util.zip.GZIPOutputStream;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
-import edu.berkeley.gamesman.database.util.RemoteDatabaseFile;
-import edu.berkeley.gamesman.hasher.TieredHasher;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -30,9 +28,9 @@ public class GZippedFileDatabase extends Database {
 
 	private boolean isRemote;
 
-	private RemoteDatabaseFile rdf;
+	private RemoteDatabase rdf;
 
-	private int tier = -1;
+	private long numBytes;
 
 	@Override
 	public void close() {
@@ -63,9 +61,17 @@ public class GZippedFileDatabase extends Database {
 				int entryNum = (int) (loc / entrySize);
 				if (isRemote) {
 					filePos = entryPoints[entryNum];
-					int readInsurance = (int) (len + loc % entrySize + 512);
-					byte[] readFrom = new byte[readInsurance];
-					rdf.getBytes(filePos, readFrom, 0, readInsurance);
+					int endEntry = (int) ((loc + len + entrySize - 1) / entrySize);
+					int readBytes;
+					if (endEntry >= entryPoints.length) {
+						readBytes = (int) (rdf.fileSize() - filePos);
+					} else
+						readBytes = (int) (entryPoints[endEntry] - filePos);
+					byte[] readFrom = new byte[readBytes];
+					synchronized (rdf) {
+						rdf.seekInFile(filePos);
+						rdf.getBytes(readFrom, 0, readBytes);
+					}
 					myStream = new GZIPInputStream(new ByteArrayInputStream(
 							readFrom), bufferSize);
 				} else {
@@ -99,34 +105,41 @@ public class GZippedFileDatabase extends Database {
 		try {
 			if (location.contains(":")) {
 				isRemote = true;
-				rdf = new RemoteDatabaseFile();
-				rdf.initialize(location);
+				rdf = new RemoteDatabase();
+				rdf.initialize(location, conf, false);
 			} else {
 				isRemote = false;
 				myFile = new File(location);
 				fis = new FileInputStream(myFile);
 			}
 			int confLength = 0;
-			int count = 0;
-			byte[] confLengthArr = null;
 			if (isRemote) {
-				confLengthArr = new byte[4];
-				rdf.getBytes(0, confLengthArr, 0, 4);
-			}
-			for (int i = 24; i >= 0; i -= 8) {
-				confLength <<= 8;
-				if (isRemote)
-					confLength |= confLengthArr[count++];
-				else
+				if (conf == null)
+					conf = rdf.getConfiguration();
+			} else {
+				for (int i = 24; i >= 0; i -= 8) {
+					confLength <<= 8;
 					confLength |= fis.read();
-			}
-			byte[] b = new byte[confLength];
-			if (isRemote)
-				rdf.getBytes(4, b, 0, confLength);
-			else
+				}
+				byte[] b = new byte[confLength];
 				fis.read(b);
-			if (conf == null)
-				conf = Configuration.load(b);
+				if (conf == null)
+					conf = Configuration.load(b);
+			}
+			numBytes = 0;
+			if (isRemote) {
+				byte[] numBytesBytes = new byte[8];
+				rdf.getBytes(0, numBytesBytes, 0, 8);
+				for (int i = 0; i < 8; i++) {
+					numBytes <<= 8;
+					numBytes |= (numBytesBytes[i] & 255);
+				}
+			} else {
+				for (int i = 56; i >= 0; i -= 8) {
+					numBytes <<= 8;
+					numBytes |= fis.read();
+				}
+			}
 			entrySize = conf.getLong("zip.entryKB", 1 << 6) << 10;
 			bufferSize = conf.getInteger("zip.bufferKB", 1 << 6) << 10;
 			if (entrySize > 0L) {
@@ -134,8 +147,7 @@ public class GZippedFileDatabase extends Database {
 				entryPoints = new long[numEntries];
 				byte[] entryBytes = new byte[numEntries << 3];
 				if (isRemote)
-					rdf.getBytes(confLength + 4, entryBytes, 0,
-							entryBytes.length);
+					rdf.getBytes(8, entryBytes, 0, entryBytes.length);
 				else {
 					int bytesRead = 0;
 					while (bytesRead < entryBytes.length) {
@@ -146,7 +158,7 @@ public class GZippedFileDatabase extends Database {
 						bytesRead += numBytes;
 					}
 				}
-				count = 0;
+				int count = 0;
 				for (int i = 0; i < numEntries; i++) {
 					for (int bit = 56; bit >= 0; bit -= 8) {
 						entryPoints[i] <<= 8;
@@ -156,7 +168,10 @@ public class GZippedFileDatabase extends Database {
 			} else {
 				entrySize = getByteSize();
 				entryPoints = new long[1];
-				entryPoints[0] = confLength + 4;
+				if (isRemote)
+					entryPoints[0] = 0;
+				else
+					entryPoints[0] = confLength + 4;
 			}
 		} catch (IOException e) {
 			Util.fatalError("IO Error", e);
@@ -182,30 +197,7 @@ public class GZippedFileDatabase extends Database {
 
 	@Override
 	public long getByteSize() {
-		if (tier < 0)
-			return super.getByteSize();
-		else {
-			TieredHasher<?> hasher = (TieredHasher<?>) conf.getHasher();
-			return (hasher.hashOffsetForTier(tier + 1) + conf.recordsPerGroup - 1)
-					/ conf.recordsPerGroup
-					* conf.recordGroupByteLength
-					- hasher.hashOffsetForTier(tier)
-					/ conf.recordsPerGroup
-					* conf.recordGroupByteLength;
-		}
-	}
-
-	/**
-	 * If this database only covers a single tier of a tiered game, call this
-	 * method before calling initialize
-	 * 
-	 * @param n
-	 *            The tier
-	 */
-	public void setSingleTier(int n) {
-		if (conf != null)
-			Util.fatalError("This must be called before initialize");
-		tier = n;
+		return numBytes;
 	}
 
 	/**
@@ -266,15 +258,18 @@ public class GZippedFileDatabase extends Database {
 			writeTo.createNewFile();
 			FileInputStream fis = new FileInputStream(readFrom.myFile);
 			FileOutputStream fos = new FileOutputStream(writeTo);
+			int confLength = 0;
+			for (int i = 24; i >= 0; i -= 8) {
+				confLength <<= 8;
+				confLength |= fis.read();
+			}
 			byte[] confArray = null;
-			if (storeConf) {
-				int confLength = 0;
-				for (int i = 24; i >= 0; i -= 8) {
-					confLength <<= 8;
-					confLength |= fis.read();
-				}
+			if (confLength > 0) {
 				confArray = new byte[confLength];
 				fis.read(confArray);
+			} else
+				storeConf = false;
+			if (storeConf) {
 				Configuration conf = Configuration.load(confArray);
 				conf.setProperty("gamesman.database", "GZippedFileDatabase");
 				conf.setProperty("gamesman.db.uri", writeTo.getPath());
@@ -290,6 +285,8 @@ public class GZippedFileDatabase extends Database {
 					fos.write(0);
 			}
 			long numBytes = readFrom.getByteSize();
+			for (int bit = 56; bit >= 0; bit -= 8)
+				fos.write((int) (numBytes >>> bit));
 			GZIPOutputStream gos;
 			byte[] tempArray = new byte[bufferSize];
 			if (entrySize == 0) {
@@ -313,8 +310,8 @@ public class GZippedFileDatabase extends Database {
 				long count = 0;
 				fos.getChannel().position(pos + (numPosits << 3));
 				/*
-				 * TODO The parentheses were in the wrong place when I solved
-				 * 6x6 and 7x5. Now the databases are slightly off
+				 * The parentheses were in the wrong place when I solved 6x6 and
+				 * 7x5. Now the databases contain a few extra empty bytes
 				 */
 				for (int i = 0; i < numPosits; i++) {
 					pos = fos.getChannel().position();
@@ -340,9 +337,9 @@ public class GZippedFileDatabase extends Database {
 					gos.finish();
 				}
 				if (storeConf)
-					fos.getChannel().position(confArray.length + 4);
+					fos.getChannel().position(confArray.length + 12);
 				else
-					fos.getChannel().position(4);
+					fos.getChannel().position(12);
 				for (int i = 0; i < numPosits; i++) {
 					for (int bit = 56; bit >= 0; bit -= 8)
 						fos.write((int) (posits[i] >> bit));
@@ -355,5 +352,4 @@ public class GZippedFileDatabase extends Database {
 			Util.fatalError("This shouldn't happen", e);
 		}
 	}
-
 }

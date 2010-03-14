@@ -6,7 +6,6 @@ import java.io.RandomAccessFile;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
-import edu.berkeley.gamesman.hasher.TieredHasher;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -18,7 +17,10 @@ import edu.berkeley.gamesman.util.Util;
  */
 public final class FileDatabase extends Database {
 
-	protected File myFile;
+	/**
+	 * The file contained in this FileDatabase
+	 */
+	public File myFile;
 
 	protected RandomAccessFile fd;
 
@@ -79,8 +81,8 @@ public final class FileDatabase extends Database {
 	public void initialize(String loc, boolean solve) {
 		try {
 			myFile = new File(loc);
-			fd = new RandomAccessFile(myFile, "rw");
 			if (solve) {
+				fd = new RandomAccessFile(myFile, "rw");
 				if (conf == null)
 					Util
 							.fatalError("You must specify a configuration if the database is to be created");
@@ -91,16 +93,18 @@ public final class FileDatabase extends Database {
 					fd.writeInt(b.length);
 					fd.write(b);
 				}
+				offset = fd.getFilePointer();
+				fd.setLength(offset + getByteSize());
 			} else {
+				fd = new RandomAccessFile(myFile, "r");
 				int headerLen = fd.readInt();
 				byte[] header = new byte[headerLen];
 				fd.readFully(header);
 				if (conf == null) {
 					conf = Configuration.load(header);
 				}
+				offset = fd.getFilePointer();
 			}
-			offset = fd.getFilePointer();
-			fd.setLength(offset + getByteSize());
 			offset -= firstByte;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -118,26 +122,6 @@ public final class FileDatabase extends Database {
 		else {
 			return numBytes;
 		}
-	}
-
-	/**
-	 * If this database only covers a single tier of a tiered game, call this
-	 * method before calling initialize
-	 * 
-	 * @param conf
-	 *            The configuration object
-	 * @param tier
-	 *            The tier
-	 */
-	public void setSingleTier(Configuration conf, int tier) {
-		TieredHasher<?> hasher = (TieredHasher<?>) conf.getHasher();
-		long firstRecord = hasher.hashOffsetForTier(tier);
-		long firstByte = firstRecord / conf.recordsPerGroup
-				* conf.recordGroupByteLength;
-		long endRecord = firstRecord + hasher.numHashesForTier(tier);
-		long endByte = (endRecord + conf.recordsPerGroup - 1)
-				/ conf.recordsPerGroup * conf.recordGroupByteLength;
-		setRange(firstByte, endByte - firstByte);
 	}
 
 	/**
