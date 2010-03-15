@@ -364,6 +364,7 @@ public class TierMaster {
 			}
 			Collections.sort(tierFileList, PAIR_COMPARE);
 			dbWriter.println(tierFileList);
+			dbWriter.flush();
 			if (zipping)
 				lastLastFileList = lastFileList;
 			lastFileList = tierFileList;
