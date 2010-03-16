@@ -105,8 +105,9 @@ public class TierMaster {
 							+ slaveName
 							+ " java"
 							+ (d64 ? " -d64" : "")
-							+ (memory > 0 ? " -Xmx" + (memory + 100000000) : "")
-							+ " -cp " + gamesmanPath + File.separator
+							+ (memory > 0 ? " -Xmx" + (long) (memory * 1.2)
+									: "") + " -cp " + gamesmanPath
+							+ File.separator
 							+ "bin edu.berkeley.gamesman.parallel.TierSlave "
 							+ gamesmanPath + File.separator + jobFile + " "
 							+ tier + " " + splits[mySplit] + " "
