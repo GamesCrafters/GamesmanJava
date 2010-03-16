@@ -12,6 +12,6 @@ gamesman.memory = 10000000000
 gamesman.threads = 10
 gamesman.solver.strictMemory = true
 gamesman.debug.THREADING = true
-gamesman.slaveDbFolder = /tmp/database76
+gamesman.slaveDbFolder = /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/database76
 gamesman.64Bit = true
 gamesman.db.compression = gzip
