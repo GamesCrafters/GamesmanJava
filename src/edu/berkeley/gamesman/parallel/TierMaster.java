@@ -69,6 +69,8 @@ public class TierMaster {
 		public synchronized void run() {
 			int mySplit = 0;
 			startedZips = false;
+			if (tier == 0)
+				System.out.println("Here");
 			while (true) {
 				try {
 					boolean breakNow = false;
@@ -87,7 +89,7 @@ public class TierMaster {
 						break;
 					} else if (myLatch != null) {
 						if (zipping && lastLastFileList != null && !startedZips) {
-							startZips(lastLastFileList);
+							startZips(tier + 2, lastLastFileList);
 							startedZips = true;
 						}
 						myLatch.await();
@@ -179,12 +181,13 @@ public class TierMaster {
 				}
 			}
 			if (zipping && lastLastFileList != null && !startedZips) {
-				startZips(lastLastFileList);
+				startZips(tier + 2, lastLastFileList);
 				startedZips = true;
 			}
 		}
 
-		private void startZips(ArrayList<Pair<Long, String>> lastFileList) {
+		private void startZips(int tier,
+				ArrayList<Pair<Long, String>> lastFileList) {
 			final StringBuilder sb = new StringBuilder("ssh ");
 			sb.append(slaveName);
 			sb.append(" java -cp ");
@@ -194,6 +197,8 @@ public class TierMaster {
 			sb.append(gamesmanPath);
 			sb.append(File.separator);
 			sb.append(jobFile);
+			sb.append(" ");
+			sb.append(tier);
 			for (Pair<Long, String> p : lastFileList) {
 				if (p.cdr.equals(slaveName)) {
 					sb.append(" ");
@@ -375,15 +380,15 @@ public class TierMaster {
 			tierFileList = new ArrayList<Pair<Long, String>>();
 		}
 		if (zipping) {
-			startFullZips(lastLastFileList);
-			startFullZips(lastFileList);
+			startFullZips(1, lastLastFileList);
+			startFullZips(0, lastFileList);
 		}
 		dbWriter.close();
 		long totalTime = System.currentTimeMillis() - startTime;
 		System.out.println("Took " + Util.millisToETA(totalTime) + " to solve");
 	}
 
-	private void startFullZips(ArrayList<Pair<Long, String>> fileList) {
+	private void startFullZips(int tier, ArrayList<Pair<Long, String>> fileList) {
 		HashMap<String, StringBuilder> hm = new HashMap<String, StringBuilder>();
 		for (Pair<Long, String> p : fileList) {
 			StringBuilder sb = hm.get(p.cdr);
@@ -397,6 +402,8 @@ public class TierMaster {
 				sb.append(gamesmanPath);
 				sb.append(File.separator);
 				sb.append(jobFile);
+				sb.append(" ");
+				sb.append(tier);
 			}
 			sb.append(" ");
 			sb.append(p.car);

@@ -97,8 +97,9 @@ public class DistributedDatabase extends Database {
 				}
 				if (zipped) {
 					GZippedFileDatabase myZipBase = new GZippedFileDatabase();
-					myZipBase.initialize(nodeFile[0] + ":" + parentPath + "s"
-							+ nodeFile[1] + ".db.gz", conf, false);
+					myZipBase.initialize(nodeFile[0] + ":" + parentPath + "t"
+							+ tier + File.separator + "s" + nodeFile[1]
+							+ ".db.gz", conf, false);
 					myZipBase.getBytes(curLoc - fileStart, arr, off,
 							(int) (nextStart - curLoc));
 					off += nextStart - curLoc;
@@ -109,6 +110,9 @@ public class DistributedDatabase extends Database {
 					sb.append(nodeFile[0]);
 					sb.append(" dd if=");
 					sb.append(parentPath);
+					sb.append("t");
+					sb.append(tier);
+					sb.append(File.separator);
 					sb.append("s");
 					sb.append(nodeFile[1]);
 					sb.append(".db");

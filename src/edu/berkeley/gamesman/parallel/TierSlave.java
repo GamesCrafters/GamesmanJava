@@ -75,11 +75,13 @@ public class TierSlave {
 		solver.initialize(conf);
 		DistributedDatabase readDb = new DistributedDatabase(System.in,
 				System.out);
+		readDb.setTier(tier + 1);
 		String parentUri = conf.getProperty("gamesman.slaveDbFolder");
 		readDb.initialize(parentUri, conf, true);
 		solver.setReadDb(readDb);
 		SplitDatabaseCreator writeDb = new SplitDatabaseCreator();
 		writeDb.initialize(parentUri, conf, true);
+		writeDb.setTier(tier);
 		solver.setWriteDb(writeDb);
 		int threads = conf.getInteger("gamesman.threads", 1);
 		List<WorkUnit> list = null;

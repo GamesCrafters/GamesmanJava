@@ -23,16 +23,19 @@ public class ZipFiles {
 	/**
 	 * @param conf
 	 *            The configuration object
+	 * @param tier
+	 *            The tier to zip in
 	 * @param args
 	 *            The job file followed by the files to be zipped
 	 */
-	public ZipFiles(Configuration conf, String[] args) {
+	public ZipFiles(Configuration conf, int tier, String[] args) {
 		this.conf = conf;
 		entrySize = conf.getLong("zip.entryKB", 1 << 6) << 10;
 		bufferSize = conf.getInteger("zip.bufferKB", 1 << 6) << 10;
-		String parentPath = conf.getProperty("gamesman.slaveDbFolder");
+		String parentPath = conf.getProperty("gamesman.slaveDbFolder")
+				+ File.separator + "t" + tier;
 		numThreads = conf.getInteger("gamesman.threads", 1);
-		for (int i = 1; i < args.length; i++)
+		for (int i = 2; i < args.length; i++)
 			paths.add(parentPath + File.separator + "s" + args[i] + ".db");
 	}
 
@@ -53,8 +56,9 @@ public class ZipFiles {
 	 */
 	public static void main(String[] args) throws ClassNotFoundException {
 		Properties props = Configuration.readProperties(args[0]);
+		int tier = Integer.parseInt(args[1]);
 		Configuration conf = new Configuration(props);
-		ZipFiles zf = new ZipFiles(conf, args);
+		ZipFiles zf = new ZipFiles(conf, tier, args);
 		zf.startZip();
 	}
 

@@ -11,6 +11,7 @@ import edu.berkeley.gamesman.database.FileDatabase;
  */
 public class SplitDatabaseCreator extends Database {
 	private File parent;
+	private File tierPath;
 	private FileDatabase openDb;
 	private ArrayList<FileDatabase> openDbs = new ArrayList<FileDatabase>();
 	private ArrayList<Long> starts = new ArrayList<Long>();
@@ -70,7 +71,7 @@ public class SplitDatabaseCreator extends Database {
 		openDb.setRange(byteStart, numBytes);
 		String fileName = "s" + Long.toString(byteStart) + ".db";
 		starts.add(byteStart);
-		openDb.initialize(parent.getPath() + File.separator + fileName, conf,
+		openDb.initialize(tierPath.getPath() + File.separator + fileName, conf,
 				true);
 		openDbs.add(openDb);
 		return openDb;
@@ -100,5 +101,14 @@ public class SplitDatabaseCreator extends Database {
 			sb.append(starts.get(i));
 		}
 		return sb.toString();
+	}
+
+	/**
+	 * @param tier The tier for solving in
+	 */
+	public void setTier(int tier) {
+		tierPath = new File(parent, "t" + tier);
+		if (!tierPath.exists())
+			tierPath.mkdir();
 	}
 }
