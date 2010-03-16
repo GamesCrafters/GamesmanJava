@@ -32,6 +32,7 @@ public class TierMaster {
 		}
 
 	};
+	private final boolean d64;
 	private long[] splits;
 	private LinkedList<Integer> remainingTasks = new LinkedList<Integer>();
 	private LinkedList<Integer> solving = new LinkedList<Integer>();
@@ -103,6 +104,7 @@ public class TierMaster {
 					String command = "ssh "
 							+ slaveName
 							+ " java"
+							+ (d64 ? "-d64" : "")
 							+ (memory > 0 ? " -Xmx" + (memory + 100000000) : "")
 							+ " -cp " + gamesmanPath + File.separator
 							+ "bin edu.berkeley.gamesman.parallel.TierSlave "
@@ -326,6 +328,7 @@ public class TierMaster {
 		this.gamesmanPath = gamesmanPath;
 		zipping = conf.getProperty("gamesman.db.compression", "none").equals(
 				"gzip");
+		d64 = conf.getBoolean("gamesman.64Bit", false);
 	}
 
 	/**

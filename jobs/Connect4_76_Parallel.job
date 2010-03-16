@@ -1,0 +1,17 @@
+gamesman.game = Connect4
+gamesman.game.width = 7
+gamesman.game.height = 6
+gamesman.game.pieces = 4
+gamesman.hasher = TieredItergameHasher
+gamesman.solver = C4IntegratedSolver
+gamesman.solver.directRead = false
+gamesman.database = DistributedDatabaseClient
+gamesman.db.uri = database76.db
+record.fields = VALUE,REMOTENESS
+gamesman.memory = 10000000000
+gamesman.threads = 10
+gamesman.solver.strictMemory = true
+gamesman.debug.THREADING = true
+gamesman.slaveDbFolder = /tmp/database76
+gamesman.64Bit = true
+gamesman.db.compression = gzip
