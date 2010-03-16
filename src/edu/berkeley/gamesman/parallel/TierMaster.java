@@ -104,7 +104,7 @@ public class TierMaster {
 					String command = "ssh "
 							+ slaveName
 							+ " java"
-							+ (d64 ? "-d64" : "")
+							+ (d64 ? " -d64" : "")
 							+ (memory > 0 ? " -Xmx" + (memory + 100000000) : "")
 							+ " -cp " + gamesmanPath + File.separator
 							+ "bin edu.berkeley.gamesman.parallel.TierSlave "
