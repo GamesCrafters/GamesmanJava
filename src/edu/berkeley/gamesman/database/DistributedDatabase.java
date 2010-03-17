@@ -188,9 +188,14 @@ public class DistributedDatabase extends Database {
 		}
 	}
 
-	private ArrayList<Pair<Long, String>> parseArray(String nextLine) {
-		nextLine = nextLine.substring(1, nextLine.length() - 1);
-		String[] els = nextLine.split(", ");
+	/**
+	 * @param line
+	 *            The toString print-out of this ArrayList
+	 * @return The ArrayList
+	 */
+	public static ArrayList<Pair<Long, String>> parseArray(String line) {
+		line = line.substring(1, line.length() - 1);
+		String[] els = line.split(", ");
 		ArrayList<Pair<Long, String>> result = new ArrayList<Pair<Long, String>>(
 				els.length);
 		for (int i = 0; i < els.length; i++) {

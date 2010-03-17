@@ -19,6 +19,7 @@ public class ZipFiles {
 	private final int bufferSize;
 	private final LinkedList<String> paths = new LinkedList<String>();
 	private final int numThreads;
+	private final String parentPath;
 
 	/**
 	 * @param conf
@@ -32,7 +33,7 @@ public class ZipFiles {
 		this.conf = conf;
 		entrySize = conf.getLong("zip.entryKB", 1 << 6) << 10;
 		bufferSize = conf.getInteger("zip.bufferKB", 1 << 6) << 10;
-		String parentPath = conf.getProperty("gamesman.slaveDbFolder")
+		parentPath = conf.getProperty("gamesman.slaveDbFolder")
 				+ File.separator + "t" + tier;
 		numThreads = conf.getInteger("gamesman.threads", 1);
 		for (int i = 2; i < args.length; i++)
@@ -66,22 +67,42 @@ public class ZipFiles {
 	 * Begin zipping
 	 */
 	public void startZip() {
+		Thread[] t = new Thread[numThreads];
 		for (int i = 0; i < numThreads; i++) {
-			new Thread() {
+			t[i] = new Thread() {
 				public void run() {
 					String filePath = getTask();
 					while (filePath != null) {
-						FileDatabase readFrom = new FileDatabase();
-						readFrom.setRange(0, new File(filePath).length() - 4);
-						readFrom.initialize(filePath, conf, false);
-						File writeTo = new File(filePath + ".gz");
-						GZippedFileDatabase.createFromFile(readFrom, writeTo,
-								false, entrySize, bufferSize);
-						readFrom.myFile.delete();
+						File f = new File(filePath);
+						if (f.exists()) {
+							FileDatabase readFrom = new FileDatabase();
+							readFrom.setRange(0, f.length() - 4);
+							readFrom.initialize(filePath, conf, false);
+							File writeTo = new File(filePath + ".gz");
+							GZippedFileDatabase.createFromFile(readFrom,
+									writeTo, false, entrySize, bufferSize);
+							readFrom.myFile.delete();
+						}
 						filePath = getTask();
 					}
 				}
-			}.start();
+			};
+			t[i].start();
+		}
+		for (int i = 0; i < numThreads; i++) {
+			while (t[i].isAlive()) {
+				try {
+					t[i].join();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		File parentFolder = new File(parentPath);
+		File[] files = parentFolder.listFiles();
+		for (File f : files) {
+			if (!f.getName().endsWith(".gz"))
+				f.delete();
 		}
 	}
 }

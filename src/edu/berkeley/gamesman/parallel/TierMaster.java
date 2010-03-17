@@ -1,6 +1,8 @@
 package edu.berkeley.gamesman.parallel;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.*;
@@ -22,7 +24,7 @@ import edu.berkeley.gamesman.util.Util;
  */
 public class TierMaster {
 	private static final long TIMEOUT = 10000;
-	private static final float MULTIPLE = (float) 1.8;
+	private static final float MULTIPLE = (float) 20.0;
 	private static final String FETCH_LINE = "fetch files: ";
 	private static final String END_LINE = "finished with files: ";
 	private static final Comparator<Pair<Long, String>> PAIR_COMPARE = new Comparator<Pair<Long, String>>() {
@@ -38,6 +40,7 @@ public class TierMaster {
 	private LinkedList<Integer> solving = new LinkedList<Integer>();
 	private Configuration conf;
 	private int tier;
+	private final int startTier;
 	private final Runtime r = Runtime.getRuntime();
 	private final String jobFile;
 	private ArrayList<Pair<Long, String>> tierFileList;
@@ -49,6 +52,7 @@ public class TierMaster {
 	private final PrintStream dbWriter;
 	private final String gamesmanPath;
 	private final boolean zipping;
+	private final String slaveDbFolder;
 
 	private class NodeWatcher implements Runnable {
 		private final String slaveName;
@@ -57,6 +61,7 @@ public class TierMaster {
 		public long lastMessage;
 		public Process myProcess;
 		public CountDownLatch myLatch = null;
+		public int mySplit;
 
 		// Should be the same as CDL when waiting but funky parallelization
 		// stuff could cause it to be different (in which case it will have
@@ -67,10 +72,8 @@ public class TierMaster {
 		}
 
 		public synchronized void run() {
-			int mySplit = 0;
 			startedZips = false;
-			if (tier == 0)
-				System.out.println("Here");
+			clearTier();
 			while (true) {
 				try {
 					boolean breakNow = false;
@@ -148,9 +151,9 @@ public class TierMaster {
 							ps.flush();
 						} else if (readIn.startsWith(END_LINE)) {
 							if (!failed) {
+								solving.remove(new Integer(mySplit));
 								addFiles(slaveName, readIn.substring(
 										END_LINE.length()).split(" "));
-								solving.remove(new Integer(mySplit));
 							}
 						} else
 							System.out.println(slaveName + ": " + readIn);
@@ -183,6 +186,20 @@ public class TierMaster {
 			if (zipping && lastLastFileList != null && !startedZips) {
 				startZips(tier + 2, lastLastFileList);
 				startedZips = true;
+			}
+		}
+
+		private void clearTier() {
+			String command = "ssh " + slaveName + " rm -rf " + slaveDbFolder
+					+ File.separator + "t" + tier;
+			try {
+				Process p = r.exec(command);
+				p.waitFor();
+			} catch (IOException e) {
+				System.err.println(slaveName + ": ");
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 		}
 
@@ -246,7 +263,8 @@ public class TierMaster {
 							if (waitingLatch != null)
 								waitingLatch.await();
 						} else {
-							if (myThread.isAlive()) {
+							if (myThread.isAlive()
+									&& solving.contains(myWatcher.mySplit)) {
 								System.err.println("Killing process on "
 										+ myWatcher.slaveName);
 								myWatcher.failed = true;
@@ -322,19 +340,49 @@ public class TierMaster {
 		}
 		conf = new Configuration(Configuration.readProperties(jobFile));
 		dbFile = new File(conf.getProperty("gamesman.db.uri"));
-		dbFile.createNewFile();
-		dbWriter = new PrintStream(dbFile);
-		byte[] confInfo = conf.store();
-		int confLength = confInfo.length;
-		for (int i = 24; i >= 0; i -= 8) {
-			dbWriter.write(confLength >>> i);
-		}
-		dbWriter.write(confInfo);
-		dbWriter.println();
 		this.gamesmanPath = gamesmanPath;
 		zipping = conf.getProperty("gamesman.db.compression", "none").equals(
 				"gzip");
 		d64 = conf.getBoolean("gamesman.64Bit", false);
+		slaveDbFolder = conf.getProperty("gamesman.slaveDbFolder");
+		TieredGame<? extends State> game = (TieredGame<? extends State>) conf
+				.getGame();
+		int numTiers = game.numberOfTiers();
+		if (dbFile.exists()) {
+			FileInputStream fis = new FileInputStream(dbFile);
+			int confLength = 0;
+			for (int i = 0; i < 4; i++) {
+				confLength <<= 8;
+				confLength |= fis.read();
+			}
+			while (confLength > 0)
+				confLength -= fis.skip(confLength);
+			scan = new Scanner(fis);
+			scan.nextLine();
+			int startTier = numTiers - 1;
+			while (scan.hasNext()) {
+				if (zipping) {
+					if (lastLastFileList != null)
+						startFullZips(startTier + 2, lastLastFileList);
+					lastLastFileList = lastFileList;
+				}
+				lastFileList = DistributedDatabase.parseArray(scan.nextLine());
+				--startTier;
+			}
+			this.startTier = startTier;
+			dbWriter = new PrintStream(new FileOutputStream(dbFile, true));
+		} else {
+			dbFile.createNewFile();
+			dbWriter = new PrintStream(dbFile);
+			byte[] confInfo = conf.store();
+			int confLength = confInfo.length;
+			for (int i = 24; i >= 0; i -= 8) {
+				dbWriter.write(confLength >>> i);
+			}
+			dbWriter.write(confInfo);
+			dbWriter.println();
+			startTier = numTiers - 1;
+		}
 	}
 
 	/**
@@ -344,10 +392,9 @@ public class TierMaster {
 	public void solve() {
 		TieredGame<? extends State> game = (TieredGame<? extends State>) conf
 				.getGame();
-		int numTiers = game.numberOfTiers();
 		tierFileList = new ArrayList<Pair<Long, String>>();
 		long startTime = System.currentTimeMillis();
-		for (tier = numTiers - 1; tier >= 0; tier--) {
+		for (tier = startTier; tier >= 0; tier--) {
 			long tierOffset = game.hashOffsetForTier(tier);
 			long tierLength = ((TieredHasher<? extends State>) conf.getHasher())
 					.numHashesForTier(tier);
