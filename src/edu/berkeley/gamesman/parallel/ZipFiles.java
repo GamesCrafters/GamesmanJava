@@ -1,6 +1,7 @@
 package edu.berkeley.gamesman.parallel;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Properties;
 
@@ -103,6 +104,11 @@ public class ZipFiles {
 		for (File f : files) {
 			if (!f.getName().endsWith(".gz"))
 				f.delete();
+		}
+		try {
+			Runtime.getRuntime().exec("sync");
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 }

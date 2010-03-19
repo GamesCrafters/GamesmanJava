@@ -421,6 +421,11 @@ public class TierMaster {
 			Collections.sort(tierFileList, PAIR_COMPARE);
 			dbWriter.println(tierFileList);
 			dbWriter.flush();
+			try {
+				r.exec("sync");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 			if (zipping)
 				lastLastFileList = lastFileList;
 			lastFileList = tierFileList;

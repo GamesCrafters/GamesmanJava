@@ -111,6 +111,7 @@ public class TierSlave {
 			}
 		}
 		System.out.println("finished with files: " + writeDb.getStartList());
+		Runtime.getRuntime().exec("sync");
 	}
 
 	// This is a copy of Util.parseBoolean().
