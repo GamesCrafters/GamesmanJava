@@ -110,8 +110,8 @@ public class TierSlave {
 				Util.warn("Interrupted while joined on thread " + t);
 			}
 		}
-		System.out.println("finished with files: " + writeDb.getStartList());
 		Runtime.getRuntime().exec("sync");
+		System.out.println("finished with files: " + writeDb.getStartList());
 	}
 
 	// This is a copy of Util.parseBoolean().
