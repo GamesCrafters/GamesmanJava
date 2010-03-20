@@ -13,7 +13,7 @@ import edu.berkeley.gamesman.util.Pair;
 public abstract class TieredIterGame extends TieredGame<ItergameState> {
 
 	@Override
-	public PrimitiveValue primitiveValue(ItergameState pos) {
+	public synchronized PrimitiveValue primitiveValue(ItergameState pos) {
 		setState(pos);
 		return primitiveValue();
 	}
@@ -32,13 +32,13 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> {
 	public abstract PrimitiveValue primitiveValue();
 
 	@Override
-	public Collection<Pair<String, ItergameState>> validMoves(ItergameState pos) {
+	public synchronized Collection<Pair<String, ItergameState>> validMoves(ItergameState pos) {
 		setState(pos);
 		return validMoves();
 	}
 
 	@Override
-	public int validMoves(ItergameState pos, ItergameState[] children) {
+	public synchronized int validMoves(ItergameState pos, ItergameState[] children) {
 		setState(pos);
 		return validMoves(children);
 	}
@@ -71,7 +71,7 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> {
 	}
 
 	@Override
-	public String stateToString(ItergameState pos) {
+	public synchronized String stateToString(ItergameState pos) {
 		setState(pos);
 		return stateToString();
 	}
@@ -82,7 +82,7 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> {
 	public abstract String stateToString();
 
 	@Override
-	public ItergameState stringToState(String pos) {
+	public synchronized ItergameState stringToState(String pos) {
 		setFromString(pos);
 		return getState();
 	}
@@ -101,7 +101,7 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> {
 	public abstract ItergameState getState();
 
 	@Override
-	public String displayState(ItergameState pos) {
+	public synchronized String displayState(ItergameState pos) {
 		setState(pos);
 		return displayState();
 	}
@@ -111,7 +111,7 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> {
 	 *            The tier in question
 	 * @return The number of hashes in the tier
 	 */
-	public long numHashesForTier(int tier) {
+	public synchronized long numHashesForTier(int tier) {
 		setTier(tier);
 		return numHashesForTier();
 	}
@@ -137,7 +137,7 @@ public abstract class TieredIterGame extends TieredGame<ItergameState> {
 	public abstract long numHashesForTier();
 
 	@Override
-	public Collection<ItergameState> startingPositions() {
+	public synchronized Collection<ItergameState> startingPositions() {
 		ArrayList<ItergameState> positions = new ArrayList<ItergameState>();
 		for (int i = 0; i < numStartingPositions(); i++) {
 			setStartingPosition(i);
