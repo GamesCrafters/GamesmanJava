@@ -192,6 +192,7 @@ public class JSONInterface extends GamesmanApplication {
 					confLength |= fis.read();
 				}
 				byte[] confBytes = new byte[confLength];
+				fis.read(confBytes);
 				Configuration conf = Configuration.load(confBytes);
 				String dbString = conf.getProperty("gamesman.database");
 				if (!dbString.contains("."))
