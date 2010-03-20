@@ -5,7 +5,6 @@ import java.net.*;
 import java.util.*;
 
 import edu.berkeley.gamesman.core.*;
-import edu.berkeley.gamesman.database.FileDatabase;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
@@ -192,6 +191,7 @@ public class JSONInterface extends GamesmanApplication {
 				}
 				byte[] confBytes = new byte[confLength];
 				fis.read(confBytes);
+				fis.close();
 				Configuration conf = Configuration.load(confBytes);
 				String dbString = conf.getProperty("gamesman.database");
 				if (!dbString.contains("."))
