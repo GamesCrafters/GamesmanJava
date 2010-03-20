@@ -312,12 +312,16 @@ public final class Connect4 extends TieredIterGame {
 		}
 		if (colHeights[col] < gameHeight) {
 			rearrangeString.append(' ');
+			for (; row < gameHeight; row++)
+				indices[row][col] = -1;
 			openColumn[numMoves] = col;
 			groupSizes[numMoves] += colHeights[col];
 			numMoves++;
 		}
 		for (col++; col < gameWidth; col++) {
 			rearrangeString.append(' ');
+			for (row = 0; row < gameHeight; row++)
+				indices[row][col] = -1;
 			openColumn[numMoves] = col;
 			groupSizes[numMoves] = 0;
 			numMoves++;
