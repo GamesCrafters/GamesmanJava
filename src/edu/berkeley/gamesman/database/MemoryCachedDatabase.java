@@ -38,7 +38,9 @@ public class MemoryCachedDatabase extends MemoryDatabase {
 				}
 				byte[] b = new byte[confLength];
 				fis.read(b);
-				conf = Configuration.load(b);
+				if (conf == null) {
+					conf = Configuration.load(b);
+				}
 				super.initialize(location, false);
 				if (conf.getProperty("gamesman.db.compression", "none").equals(
 						"gzip")) {
