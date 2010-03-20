@@ -148,7 +148,6 @@ public class JSONInterface extends GamesmanApplication {
 		if (conf != null) {
 			return conf;
 		}
-		System.out.println(filename);
 		conf = addDatabase(params, game, filename);
 		if (conf != null) {
 			loadedConfigurations.put(filename, conf);
