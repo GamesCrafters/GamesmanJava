@@ -36,20 +36,9 @@ public class JSONInterface extends GamesmanApplication {
 
 	Map<String, Configuration> loadedConfigurations = new HashMap<String, Configuration>();
 
-	Class<? extends Database> dbClass;
-
 	@Override
 	public int run(Properties props) {
 		this.serverConf = props;
-		try {
-
-			this.dbClass = Util.typedForName("edu.berkeley.gamesman.database."
-					+ serverConf.getProperty("gamesman.database",
-							"FileDatabase"), Database.class);
-		} catch (ClassNotFoundException e) {
-			Util.warn("Can't load default database!", e);
-			this.dbClass = FileDatabase.class;
-		}
 		/*
 		 * try { db = Util.typedInstantiate(, Database.class); } catch
 		 * (ClassNotFoundException e1) {
@@ -182,6 +171,7 @@ public class JSONInterface extends GamesmanApplication {
 			filename = null;
 		}
 		try {
+			File f = new File(filename);
 			if (solvedJob != null && solvedJob.length() > 0) {
 				System.out.println("Loading solved job " + solvedJob + ".");
 				Configuration config = new Configuration(solvedJob);
@@ -193,12 +183,23 @@ public class JSONInterface extends GamesmanApplication {
 									+ filename, e);
 				}
 				return config;
-			} else if (filename != null && new File(filename).exists()) {
+			} else if (filename != null && f.exists()) {
 				System.out.println("Loading solved database " + filename + ".");
-				Database db = dbClass.getConstructor().newInstance();
-				db.initialize(filename, false);
-				Configuration conf = db.getConfiguration();
-				conf.db = db;
+				int confLength = 0;
+				FileInputStream fis = new FileInputStream(f);
+				for (int i = 0; i < 4; i++) {
+					confLength <<= 8;
+					confLength |= fis.read();
+				}
+				byte[] confBytes = new byte[confLength];
+				Configuration conf = Configuration.load(confBytes);
+				String dbString = conf.getProperty("gamesman.database");
+				if (!dbString.contains("."))
+					dbString = "edu.berkeley.gamesman.database." + dbString;
+				Class<? extends Database> dbClass = Util.checkedCast(Class
+						.forName(dbString));
+				conf.db = dbClass.getConstructor().newInstance();
+				conf.db.initialize(filename, conf, false);
 				return conf;
 			}
 		} catch (Exception e) {
