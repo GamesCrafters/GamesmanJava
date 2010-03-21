@@ -39,7 +39,7 @@ public class TestingClass {
 		for (final Pair<Long, String> pair : list) {
 			String command = "ssh "
 					+ pair.cdr
-					+ " ls -l /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/t37/s"
+					+ " ls -l /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/database76/t37/s"
 					+ pair.car + ".db";
 			final Process p = r.exec(command);
 			new Thread() {
