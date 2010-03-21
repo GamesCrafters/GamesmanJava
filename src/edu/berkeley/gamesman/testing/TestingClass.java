@@ -36,13 +36,23 @@ public class TestingClass {
 		dd.initialize("database76.db", conf, false);
 		ArrayList<Pair<Long, String>> list = dd.getFiles(0);
 		Runtime r = Runtime.getRuntime();
-		for (Pair<Long, String> pair : list) {
-			Process p = r.exec("ssh " + pair.cdr
+		for (final Pair<Long, String> pair : list) {
+			String command = "ssh "
+					+ pair.cdr
 					+ " ls -l /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/t37/s"
-					+ pair.car + ".db");
+					+ pair.car + ".db";
+			final Process p = r.exec(command);
+			new Thread() {
+				public void run() {
+					Scanner errScan = new Scanner(p.getErrorStream());
+					while (errScan.hasNext())
+						System.err.println(pair + ": " + errScan.nextLine());
+					errScan.close();
+				}
+			}.start();
 			Scanner scan = new Scanner(p.getInputStream());
 			while (scan.hasNext())
-				System.out.println(scan.nextLine());
+				System.out.println(pair + ": " + scan.nextLine());
 			scan.close();
 		}
 		dd.close();
