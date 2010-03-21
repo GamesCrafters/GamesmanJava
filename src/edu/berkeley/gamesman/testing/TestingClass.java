@@ -38,7 +38,7 @@ public class TestingClass {
 		Runtime r = Runtime.getRuntime();
 		for (Pair<Long, String> pair : list) {
 			Process p = r.exec("ssh " + pair.cdr
-					+ " ls -l /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/t37"
+					+ " ls -l /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/t37/s"
 					+ pair.car + ".db");
 			Scanner scan = new Scanner(p.getInputStream());
 			while (scan.hasNext())
