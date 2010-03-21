@@ -266,4 +266,14 @@ public class DistributedDatabase extends Database {
 			s += " " + p.cdr + ":" + p.car;
 		return s;
 	}
+
+	/**
+	 * Just for testing
+	 * 
+	 * @param i the index into files
+	 * @return files.get(i);
+	 */
+	public ArrayList<Pair<Long, String>> getFiles(int i) {
+		return files.get(i);
+	}
 }

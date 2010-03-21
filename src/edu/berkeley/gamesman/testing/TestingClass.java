@@ -2,52 +2,50 @@ package edu.berkeley.gamesman.testing;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Database;
+import edu.berkeley.gamesman.database.DistributedDatabase;
 import edu.berkeley.gamesman.game.Connect4;
 import edu.berkeley.gamesman.game.util.ItergameState;
-import edu.berkeley.gamesman.util.Util;
+import edu.berkeley.gamesman.util.Pair;
 
 public class TestingClass {
 	static Random r = new Random();
 
-	public static void main(String[] args) {
-		if (args.length != 1) {
-			Util.fatalError("Please specify a jobfile as the only argument");
+	public static void main(String[] args) throws IOException,
+			ClassNotFoundException {
+		FileInputStream fis = new FileInputStream("database76.db");
+		int confLength = 0;
+		for (int i = 0; i < 4; i++) {
+			confLength <<= 8;
+			confLength |= fis.read();
 		}
-		Configuration conf;
-		Database fd;
-
-		try {
-			File dataFile = new File(args[0]);
-			FileInputStream fis = new FileInputStream(dataFile);
-			int confLength = 0;
-			for (int i = 28; i >= 0; i -= 8) {
-				confLength <<= 8;
-				confLength |= fis.read();
-			}
-			byte[] confBytes = new byte[confLength];
-			fis.read(confBytes);
-			fis.close();
-			conf = Configuration.load(confBytes);
-			conf.setProperty("gamesman.db.uri", args[0]);
-			fd = conf.openDatabase(false);
-		} catch (ClassNotFoundException e) {
-			Util.fatalError("failed to load class", e);
-			return;
-		} catch (IOException e) {
-			Util.fatalError("IO Error", e);
-			return;
+		byte[] confBytes = new byte[confLength];
+		fis.read(confBytes);
+		fis.close();
+		Configuration conf = Configuration.load(confBytes);
+		DistributedDatabase dd = new DistributedDatabase();
+		dd.initialize("database76.db", conf, false);
+		ArrayList<Pair<Long, String>> list = dd.getFiles(0);
+		Runtime r = Runtime.getRuntime();
+		for (Pair<Long, String> pair : list) {
+			Process p = r.exec("ssh " + pair.cdr
+					+ " ls -l /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/t37"
+					+ pair.car + ".db");
+			Scanner scan = new Scanner(p.getInputStream());
+			while (scan.hasNext())
+				System.out.println(scan.nextLine());
+			scan.close();
 		}
-		System.out.println(fd.getRecord(0));
+		dd.close();
 	}
 
 	public static void newerMain(String[] args) throws IOException {
