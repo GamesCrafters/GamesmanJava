@@ -131,7 +131,8 @@ public class DistributedDatabase extends Database {
 						int bytesRead = byteReader
 								.read(dumbArray, 0, skipBytes);
 						if (bytesRead == -1)
-							Util.fatalError("No more bytes available");
+							Util.fatalError(nodeFile[0] + ":" + nodeFile[1]
+									+ ": No more bytes available");
 						skipBytes -= bytesRead;
 					}
 					skipBytes = 4;
@@ -139,7 +140,8 @@ public class DistributedDatabase extends Database {
 						int bytesRead = byteReader.read(arr, off,
 								(int) (nextStart - curLoc));
 						if (bytesRead == -1)
-							Util.fatalError("No more bytes available");
+							Util.fatalError(nodeFile[0] + ":" + nodeFile[1]
+									+ ": No more bytes available");
 						curLoc += bytesRead;
 						off += bytesRead;
 						len -= bytesRead;
@@ -270,7 +272,8 @@ public class DistributedDatabase extends Database {
 	/**
 	 * Just for testing
 	 * 
-	 * @param i the index into files
+	 * @param i
+	 *            the index into files
 	 * @return files.get(i);
 	 */
 	public ArrayList<Pair<Long, String>> getFiles(int i) {
