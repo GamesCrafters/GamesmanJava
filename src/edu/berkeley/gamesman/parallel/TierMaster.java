@@ -24,7 +24,7 @@ import edu.berkeley.gamesman.util.Util;
  */
 public class TierMaster {
 	private static final long TIMEOUT = 10000;
-	private static final float MULTIPLE = (float) 20.0;
+	private final float compMultiple;
 	private static final String FETCH_LINE = "fetch files: ";
 	private static final String END_LINE = "finished with files: ";
 	private static final Comparator<Pair<Long, String>> PAIR_COMPARE = new Comparator<Pair<Long, String>>() {
@@ -341,6 +341,7 @@ public class TierMaster {
 		conf = new Configuration(Configuration.readProperties(jobFile));
 		dbFile = new File(conf.getProperty("gamesman.db.uri"));
 		this.gamesmanPath = gamesmanPath;
+		compMultiple = conf.getFloat("gamesman.compSplits", 20F);
 		zipping = conf.getProperty("gamesman.db.compression", "none").equals(
 				"gzip");
 		d64 = conf.getBoolean("gamesman.64Bit", false);
@@ -398,8 +399,9 @@ public class TierMaster {
 			long tierOffset = game.hashOffsetForTier(tier);
 			long tierLength = ((TieredHasher<? extends State>) conf.getHasher())
 					.numHashesForTier(tier);
-			splits = Util.groupAlignedTasks((int) (watchers.length * MULTIPLE),
-					tierOffset, tierLength, conf.recordsPerGroup);
+			splits = Util.groupAlignedTasks(
+					(int) (watchers.length * compMultiple), tierOffset,
+					tierLength, conf.recordsPerGroup);
 			for (int i = 0; i < splits.length - 1; i++)
 				remainingTasks.add(i);
 			cdl = new CountDownLatch(1);

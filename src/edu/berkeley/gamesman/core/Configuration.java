@@ -466,7 +466,24 @@ public class Configuration {
 			return dfl;
 		else
 			return Integer.parseInt(value);
+	}
 
+	/**
+	 * Parses a property as an Integer.
+	 * 
+	 * @param key
+	 *            the name of the configuration property
+	 * @param dfl
+	 *            default value
+	 * @return The value associated with the key, if defined and an integer.
+	 *         Otherwise, returns dfl.
+	 */
+	public float getFloat(String key, float dfl) {
+		String value = props.getProperty(key);
+		if (value == null)
+			return dfl;
+		else
+			return Float.parseFloat(value);
 	}
 
 	/**
