@@ -4,10 +4,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
-import java.util.Scanner;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -15,7 +13,6 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.database.DistributedDatabase;
 import edu.berkeley.gamesman.game.Connect4;
 import edu.berkeley.gamesman.game.util.ItergameState;
-import edu.berkeley.gamesman.util.Pair;
 
 public class TestingClass {
 	static Random r = new Random();
@@ -34,27 +31,9 @@ public class TestingClass {
 		Configuration conf = Configuration.load(confBytes);
 		DistributedDatabase dd = new DistributedDatabase();
 		dd.initialize("database76.db", conf, false);
-		ArrayList<Pair<Long, String>> list = dd.getFiles(0);
-		Runtime r = Runtime.getRuntime();
-		for (final Pair<Long, String> pair : list) {
-			String command = "ssh "
-					+ pair.cdr
-					+ " ls -l /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/database76/t37/s"
-					+ pair.car + ".db";
-			final Process p = r.exec(command);
-			new Thread() {
-				public void run() {
-					Scanner errScan = new Scanner(p.getErrorStream());
-					while (errScan.hasNext())
-						System.err.println(pair + ": " + errScan.nextLine());
-					errScan.close();
-				}
-			}.start();
-			Scanner scan = new Scanner(p.getInputStream());
-			while (scan.hasNext())
-				System.out.println(pair + ": " + scan.nextLine());
-			scan.close();
-		}
+		System.out.println(DistributedDatabase.getFileList(
+				dd.getFiles(1), Long.parseLong(args[0]),
+				Integer.parseInt(args[1])));
 		dd.close();
 	}
 

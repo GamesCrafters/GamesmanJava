@@ -10,6 +10,8 @@ import java.util.Scanner;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
+import edu.berkeley.gamesman.core.Record;
+import edu.berkeley.gamesman.game.TieredGame;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -152,6 +154,12 @@ public class DistributedDatabase extends Database {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	@Override
+	public void getRecord(long recordIndex, Record r) {
+		setTier(((TieredGame<?>) conf.getGame()).hashToTier(recordIndex));
+		super.getRecord(recordIndex, r);
 	}
 
 	@Override

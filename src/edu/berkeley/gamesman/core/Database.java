@@ -125,20 +125,9 @@ public abstract class Database {
 	 * @return The stored Record
 	 */
 	public Record getRecord(long recordIndex) {
-		if (conf.superCompress) {
-			long group = recordIndex / conf.recordsPerGroup;
-			int num = (int) (recordIndex % conf.recordsPerGroup);
-			long byteOffset = group * conf.recordGroupByteLength;
-			if (conf.recordGroupUsesLong)
-				return RecordGroup.getRecord(conf,
-						getLongRecordGroup(byteOffset), num);
-			else
-				return RecordGroup.getRecord(conf,
-						getBigIntRecordGroup(byteOffset), num);
-		} else {
-			return RecordGroup.getRecord(conf, getLongRecordGroup(recordIndex
-					* conf.recordGroupByteLength), 0);
-		}
+		Record r = conf.getGame().newRecord();
+		getRecord(recordIndex, r);
+		return r;
 	}
 
 	/**
