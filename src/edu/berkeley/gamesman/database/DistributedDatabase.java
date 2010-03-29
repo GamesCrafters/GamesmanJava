@@ -158,7 +158,8 @@ public class DistributedDatabase extends Database {
 
 	@Override
 	public void getRecord(long recordIndex, Record r) {
-		setTier(((TieredGame<?>) conf.getGame()).hashToTier(recordIndex));
+		if (!solve)
+			setTier(((TieredGame<?>) conf.getGame()).hashToTier(recordIndex));
 		super.getRecord(recordIndex, r);
 	}
 
