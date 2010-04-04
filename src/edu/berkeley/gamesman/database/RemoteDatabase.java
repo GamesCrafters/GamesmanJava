@@ -6,6 +6,7 @@ import java.util.Scanner;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
+import edu.berkeley.gamesman.parallel.ErrorThread;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -54,6 +55,8 @@ public class RemoteDatabase extends Database {
 			sb.append("\n");
 			Process p = r.exec(sb.toString());
 			InputStream byteReader = p.getInputStream();
+			new ErrorThread(p.getErrorStream(), host + ":"
+					+ filePath).start();
 			while (skipBytes > 0) {
 				int bytesRead = byteReader.read(dumbArray, 0, skipBytes);
 				if (bytesRead == -1)
@@ -85,6 +88,8 @@ public class RemoteDatabase extends Database {
 					+ " count=1";
 			Process p = r.exec(infoGetter);
 			InputStream is = p.getInputStream();
+			new ErrorThread(p.getErrorStream(), host + ":"
+					+ filePath).start();
 			confLength = 0;
 			for (int i = 0; i < 4; i++) {
 				confLength <<= 8;
@@ -104,6 +109,8 @@ public class RemoteDatabase extends Database {
 					p = r.exec("ssh " + host + " dd if=" + filePath
 							+ " skip=1 count=" + moreBlocks);
 					is = p.getInputStream();
+					new ErrorThread(p.getErrorStream(), host + ":"
+							+ filePath).start();
 					len = confLength - 508;
 					while (len > 0) {
 						int bytesRead = is.read(confBytes, off, len);
@@ -151,6 +158,8 @@ public class RemoteDatabase extends Database {
 				Process p;
 				p = r.exec(infoGetter);
 				Scanner scan = new Scanner(p.getInputStream());
+				new ErrorThread(p.getErrorStream(), host + ":"
+						+ filePath).start();
 				for (int i = 0; i < 4; i++) {
 					scan.next();
 				}

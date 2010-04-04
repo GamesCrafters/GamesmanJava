@@ -12,6 +12,8 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.game.TieredGame;
+import edu.berkeley.gamesman.parallel.ErrorThread;
+import edu.berkeley.gamesman.parallel.TierSlave;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -31,8 +33,9 @@ public class DistributedDatabase extends Database {
 	private String parentPath;
 	private ArrayList<ArrayList<Pair<Long, String>>> files;
 	private boolean solve;
-	private boolean zipped = false;
 	private int tier;
+	private int lastZippedTier = -1;
+	private boolean zipped = false;
 
 	/**
 	 * Default constructor (For read-only configuration)
@@ -97,7 +100,39 @@ public class DistributedDatabase extends Database {
 				} else {
 					nextStart = curLoc + len;
 				}
-				if (zipped) {
+				if (lastZippedTier >= 0 && tier >= lastZippedTier) {
+					String gamesmanPath = conf.getProperty("gamesman.path");
+					StringBuilder sb = new StringBuilder("ssh ");
+					sb.append(nodeFile[0]);
+					sb.append(" java -cp ");
+					sb.append(gamesmanPath);
+					sb.append(File.separator);
+					sb
+							.append("bin edu.berkeley.gamesman.parallel.ReadZippedBytes ");
+					sb.append(TierSlave.jobFile);
+					sb.append(" ");
+					sb.append(tier);
+					sb.append(" ");
+					sb.append(nodeFile[1]);
+					sb.append(" ");
+					sb.append(curLoc);
+					sb.append(" ");
+					sb.append(nextStart - curLoc);
+					Process p = r.exec(sb.toString());
+					InputStream byteReader = p.getInputStream();
+					new ErrorThread(p.getErrorStream(), nodeFile[0] + ":"
+							+ nodeFile[1]).start();
+					while (curLoc < nextStart) {
+						int bytesRead = byteReader.read(arr, off,
+								(int) (nextStart - curLoc));
+						if (bytesRead == -1)
+							Util.fatalError(nodeFile[0] + ":" + nodeFile[1]
+									+ ": No more bytes available");
+						curLoc += bytesRead;
+						off += bytesRead;
+						len -= bytesRead;
+					}
+				} else if (zipped) {
 					GZippedFileDatabase myZipBase = new GZippedFileDatabase();
 					myZipBase.initialize(nodeFile[0] + ":" + parentPath + "t"
 							+ tier + File.separator + "s" + nodeFile[1]
@@ -168,6 +203,7 @@ public class DistributedDatabase extends Database {
 		this.solve = solve;
 		if (solve) {
 			parentPath = uri + File.separator;
+			lastZippedTier = conf.getInteger("gamesman.db.lastZippedTier", -1);
 		} else {
 			try {
 				files = new ArrayList<ArrayList<Pair<Long, String>>>();

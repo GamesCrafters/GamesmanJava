@@ -24,6 +24,8 @@ import edu.berkeley.gamesman.util.Util;
  * @author dnspies
  */
 public class TierSlave {
+	public static String jobFile;
+
 	/**
 	 * Called by TierMaster via ssh
 	 * 
@@ -40,7 +42,7 @@ public class TierSlave {
 	 */
 	public static void main(String[] args) throws ClassNotFoundException,
 			IllegalAccessException, InstantiationException, IOException {
-		String jobFile = args[0];
+		jobFile = args[0];
 		int tier;
 		long firstHash, numHashes;
 		tier = Integer.parseInt(args[1]);

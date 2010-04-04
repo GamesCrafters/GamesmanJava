@@ -118,28 +118,16 @@ public class TierMaster {
 							+ tier + " " + splits[mySplit] + " "
 							+ (splits[mySplit + 1] - splits[mySplit]) + "\n";
 					myProcess = r.exec(command);
-					new Thread() {
-
-						@Override
-						public void run() {
-							failed = false;
-							Scanner errScan = new Scanner(myProcess
-									.getErrorStream());
-							while (errScan.hasNext()) {
-								System.err.println(slaveName + ": "
-										+ errScan.nextLine());
-								failed = true;
-							}
-							errScan.close();
-						}
-					}.start();
+					ErrorThread et = new ErrorThread(
+							myProcess.getErrorStream(), slaveName);
+					et.start();
 					Scanner scan = new Scanner(myProcess.getInputStream());
 					PrintStream ps = new PrintStream(myProcess
 							.getOutputStream());
 					String readIn;
 					while (scan.hasNext()) {
 						readIn = scan.nextLine();
-						if (failed)
+						if (failed || et.hadErrors)
 							break;
 						if (readIn.startsWith(FETCH_LINE)) {
 							String[] needs = readIn.substring(
@@ -150,7 +138,7 @@ public class TierMaster {
 							ps.println(response);
 							ps.flush();
 						} else if (readIn.startsWith(END_LINE)) {
-							if (!failed) {
+							if (!(failed || et.hadErrors)) {
 								solving.remove(new Integer(mySplit));
 								addFiles(slaveName, readIn.substring(
 										END_LINE.length()).split(" "));
@@ -160,7 +148,7 @@ public class TierMaster {
 						lastMessage = System.currentTimeMillis();
 						readIn = "";
 					}
-					if (failed || solving.contains(mySplit)) {
+					if (failed || et.hadErrors || solving.contains(mySplit)) {
 						System.err.println(slaveName + " failed to complete");
 						addBack(mySplit);
 						wait(TIMEOUT);
@@ -194,6 +182,7 @@ public class TierMaster {
 					+ File.separator + "t" + tier;
 			try {
 				Process p = r.exec(command);
+				new ErrorThread(p.getErrorStream(), slaveName).start();
 				p.waitFor();
 			} catch (IOException e) {
 				System.err.println(slaveName + ": ");
@@ -227,10 +216,7 @@ public class TierMaster {
 				public void run() {
 					try {
 						Process p = r.exec(sb.toString());
-						Scanner scan = new Scanner(p.getErrorStream());
-						while (scan.hasNext())
-							System.err.println(slaveName + ": "
-									+ scan.nextLine());
+						new ErrorThread(p.getErrorStream(), slaveName).start();
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -314,15 +300,13 @@ public class TierMaster {
 	 *            jobs/myPSolve.job)
 	 * @param slavesFile
 	 *            The file containing the addresses of the slaves
-	 * @param gamesmanPath
-	 *            The path where the gamesman directory is
 	 * @throws ClassNotFoundException
 	 *             If the configuration throws a ClassNotFoundException when
 	 *             instantiating
 	 * @throws IOException
 	 *             Too many ways to count
 	 */
-	public TierMaster(String jobFile, String slavesFile, String gamesmanPath)
+	public TierMaster(String jobFile, String slavesFile)
 			throws ClassNotFoundException, IOException {
 		this.jobFile = jobFile;
 		File slavesList = new File(slavesFile);
@@ -340,7 +324,7 @@ public class TierMaster {
 		}
 		conf = new Configuration(Configuration.readProperties(jobFile));
 		dbFile = new File(conf.getProperty("gamesman.db.uri"));
-		this.gamesmanPath = gamesmanPath;
+		gamesmanPath = conf.getProperty("gamesman.path");
 		compMultiple = conf.getFloat("gamesman.compSplits", 20F);
 		zipping = conf.getProperty("gamesman.db.compression", "none").equals(
 				"gzip");
@@ -465,19 +449,12 @@ public class TierMaster {
 		}
 		for (final String slaveName : hm.keySet()) {
 			final String command = hm.get(slaveName).toString();
-			new Thread() {
-				public void run() {
-					try {
-						Process p = r.exec(command);
-						Scanner scan = new Scanner(p.getErrorStream());
-						while (scan.hasNext())
-							System.err.println(slaveName + ": "
-									+ scan.nextLine());
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-			}.start();
+			try {
+				Process p = r.exec(command);
+				new ErrorThread(p.getErrorStream(), slaveName).start();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -494,7 +471,7 @@ public class TierMaster {
 	 */
 	public static void main(String[] args) throws ClassNotFoundException,
 			IOException {
-		TierMaster tm = new TierMaster(args[0], args[1], args[2]);
+		TierMaster tm = new TierMaster(args[0], args[1]);
 		tm.solve();
 	}
 }
