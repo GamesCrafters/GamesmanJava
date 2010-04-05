@@ -145,13 +145,13 @@ public class JSONInterface extends GamesmanApplication {
 		}
 		Configuration conf = loadedConfigurations.get(filename);
 		if (conf != null) {
-			return conf.cloneAll();
+			return conf;
 		}
 		conf = addDatabase(params, game, filename);
 		if (conf != null) {
 			loadedConfigurations.put(filename, conf);
 		}
-		return conf.cloneAll();
+		return conf;
 	}
 
 	synchronized Configuration addDatabase(Map<String, String> params,
