@@ -672,6 +672,7 @@ public class Configuration {
 	public Configuration cloneAll() {
 		try {
 			Configuration newConf = new Configuration(props, false);
+			newConf.db = db;
 			return newConf;
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
