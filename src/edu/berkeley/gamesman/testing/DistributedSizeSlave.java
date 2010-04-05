@@ -20,7 +20,7 @@ public class DistributedSizeSlave {
 								"/var/folders/zz/zzzivhrRnAmviuee+++UUE++662/database76/t"
 										+ tier + "/s" + args[i] + ".db.gz");
 						if (myFile.exists()) {
-							totalLength[i] += myFile.length();
+							totalLength[myCount] += myFile.length();
 						} else {
 							new FileNotFoundException(myFile.getPath())
 									.printStackTrace();
