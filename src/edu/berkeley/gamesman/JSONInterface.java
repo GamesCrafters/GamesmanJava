@@ -291,7 +291,7 @@ public class JSONInterface extends GamesmanApplication {
 				throw new TException("No board passed!");
 			}
 
-			Configuration config = newLoadDatabase(params, gamename);
+			final Configuration config = newLoadDatabase(params, gamename);
 			if (config == null) {
 				throw new TException("This game does not exist.");
 			}
@@ -300,20 +300,35 @@ public class JSONInterface extends GamesmanApplication {
 
 			T state = game.stringToState(board);
 
-			List<GamestateResponse> responseArray = new LinkedList<GamestateResponse>();
+			final List<GamestateResponse> responseArray = new LinkedList<GamestateResponse>();
 
 			PrimitiveValue pv = game.primitiveValue(state);
+			Collection<Pair<String, T>> states = game.validMoves(state);
+			Iterator<Pair<String, T>> iter = states.iterator();
+			Thread[] recordThreads = new Thread[states.size()];
 			if (game.getPlayerCount() <= 1 || pv == PrimitiveValue.UNDECIDED) {
 				// Game is not over yet...
-				for (Pair<String, T> next : game.validMoves(state)) {
-					GamestateResponse entry = new GamestateResponse();
-					entry = fillResponseFields(config, next.cdr, true);
-					entry.setMove(next.car);
-					responseArray.add(entry);
+				for (int i = 0; i < recordThreads.length; i++) {
+					final Pair<String, T> next = iter.next();
+					recordThreads[i] = new Thread() {
+						public void run() {
+							GamestateResponse entry = new GamestateResponse();
+							entry = fillResponseFields(config, next.cdr, true);
+							entry.setMove(next.car);
+							responseArray.add(entry);
+						}
+					};
+					recordThreads[i].start();
 				}
 			}
+			for (Thread t : recordThreads)
+				while (t.isAlive())
+					try {
+						t.join();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
 			return responseArray;
-
 		}
 
 		public <T extends State> GamestateResponse getMoveValue_core(
