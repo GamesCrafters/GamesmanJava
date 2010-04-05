@@ -72,21 +72,32 @@ public class DistributedDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void getBytes(byte[] arr, int off, int len) {
+	public void getBytes(byte[] arr, int off, int len) {
+		curLoc = fetchBytes(curLoc, arr, off, len);
+	}
+
+	@Override
+	public void getBytes(long location, byte[] arr, int off, int len) {
+		fetchBytes(location, arr, off, len);
+	}
+
+	private long fetchBytes(long location, byte[] arr, int off, int len) {
 		try {
 			String result;
 			if (solve) {
-				masterWrite.println("fetch files: " + curLoc + " " + len);
-				result = scan.nextLine();
+				synchronized (this) {
+					masterWrite.println("fetch files: " + location + " " + len);
+					result = scan.nextLine();
+				}
 			} else {
-				result = getFileList(files.get(tier), curLoc, len);
+				result = getFileList(files.get(tier), location, len);
 			}
 			String[] nodeFiles = result.split(" ");
 			String[] nodeFile = nodeFiles[0].split(":");
 			String[] nextNodeFile = null;
 			long fileStart = Long.parseLong(nodeFile[1]);
 			long nextStart = 0;
-			long fileLoc = curLoc - fileStart + 4;
+			long fileLoc = location - fileStart + 4;
 			long fileBlocks = fileLoc >> 9;
 			int skipBytes = (int) (fileLoc & 511L);
 			for (int i = 0; i < nodeFiles.length; i++) {
@@ -98,7 +109,7 @@ public class DistributedDatabase extends Database {
 					nextNodeFile = nodeFiles[i + 1].split(":");
 					nextStart = Long.parseLong(nextNodeFile[1]);
 				} else {
-					nextStart = curLoc + len;
+					nextStart = location + len;
 				}
 				if (lastZippedTier >= 0 && tier >= lastZippedTier) {
 					String gamesmanPath = conf.getProperty("gamesman.path");
@@ -115,20 +126,20 @@ public class DistributedDatabase extends Database {
 					sb.append(" ");
 					sb.append(nodeFile[1]);
 					sb.append(" ");
-					sb.append(curLoc);
+					sb.append(location);
 					sb.append(" ");
-					sb.append(nextStart - curLoc);
+					sb.append(nextStart - location);
 					Process p = r.exec(sb.toString());
 					InputStream byteReader = p.getInputStream();
 					new ErrorThread(p.getErrorStream(), nodeFile[0] + ":"
 							+ nodeFile[1]).start();
-					while (curLoc < nextStart) {
+					while (location < nextStart) {
 						int bytesRead = byteReader.read(arr, off,
-								(int) (nextStart - curLoc));
+								(int) (nextStart - location));
 						if (bytesRead == -1)
 							Util.fatalError(nodeFile[0] + ":" + nodeFile[1]
 									+ ": No more bytes available");
-						curLoc += bytesRead;
+						location += bytesRead;
 						off += bytesRead;
 						len -= bytesRead;
 					}
@@ -137,11 +148,11 @@ public class DistributedDatabase extends Database {
 					myZipBase.initialize(nodeFile[0] + ":" + parentPath + "t"
 							+ tier + File.separator + "s" + nodeFile[1]
 							+ ".db.gz", conf, false);
-					myZipBase.getBytes(curLoc - fileStart, arr, off,
-							(int) (nextStart - curLoc));
-					off += nextStart - curLoc;
-					len -= nextStart - curLoc;
-					curLoc = nextStart;
+					myZipBase.getBytes(location - fileStart, arr, off,
+							(int) (nextStart - location));
+					off += nextStart - location;
+					len -= nextStart - location;
+					location = nextStart;
 				} else {
 					StringBuilder sb = new StringBuilder("ssh ");
 					sb.append(nodeFile[0]);
@@ -173,13 +184,13 @@ public class DistributedDatabase extends Database {
 						skipBytes -= bytesRead;
 					}
 					skipBytes = 4;
-					while (curLoc < nextStart) {
+					while (location < nextStart) {
 						int bytesRead = byteReader.read(arr, off,
-								(int) (nextStart - curLoc));
+								(int) (nextStart - location));
 						if (bytesRead == -1)
 							Util.fatalError(nodeFile[0] + ":" + nodeFile[1]
 									+ ": No more bytes available");
-						curLoc += bytesRead;
+						location += bytesRead;
 						off += bytesRead;
 						len -= bytesRead;
 					}
@@ -189,6 +200,7 @@ public class DistributedDatabase extends Database {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		return location;
 	}
 
 	@Override
