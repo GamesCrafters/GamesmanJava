@@ -1,60 +1,60 @@
 echo akane
-ssh akane echo "Howdy"
+ssh akane.cs.berkeley.edu echo "Howdy"
 echo arlet
-ssh arlet echo "Howdy"
+ssh arlet.cs.berkeley.edu echo "Howdy"
 echo barry
-ssh barry echo "Howdy"
+ssh barry.cs.berkeley.edu echo "Howdy"
 echo bonza
-ssh bonza echo "Howdy"
+ssh bonza.cs.berkeley.edu echo "Howdy"
 echo braeburn
-ssh braeburn echo "Howdy"
+ssh braeburn.cs.berkeley.edu echo "Howdy"
 echo crispin
-ssh crispin echo "Howdy"
+ssh crispin.cs.berkeley.edu echo "Howdy"
 echo davey
-ssh davey echo "Howdy"
+ssh davey.cs.berkeley.edu echo "Howdy"
 echo delicious
-ssh delicious echo "Howdy"
+ssh delicious.cs.berkeley.edu echo "Howdy"
 echo dulcet
-ssh dulcet echo "Howdy"
+ssh dulcet.cs.berkeley.edu echo "Howdy"
 echo empress
-ssh empress echo "Howdy"
+ssh empress.cs.berkeley.edu echo "Howdy"
 echo fiesta
-ssh fiesta echo "Howdy"
+ssh fiesta.cs.berkeley.edu echo "Howdy"
 echo firmgold
-ssh firmgold echo "Howdy"
+ssh firmgold.cs.berkeley.edu echo "Howdy"
 echo freyburg
-ssh freyburg echo "Howdy"
+ssh freyburg.cs.berkeley.edu echo "Howdy"
 echo fuji
-ssh fuji echo "Howdy"
+ssh fuji.cs.berkeley.edu echo "Howdy"
 echo geneva
-ssh geneva echo "Howdy"
+ssh geneva.cs.berkeley.edu echo "Howdy"
 echo gilpin
-ssh gilpin echo "Howdy"
+ssh gilpin.cs.berkeley.edu echo "Howdy"
 echo grove
-ssh grove echo "Howdy"
+ssh grove.cs.berkeley.edu echo "Howdy"
 echo haas
-ssh haas echo "Howdy"
+ssh haas.cs.berkeley.edu echo "Howdy"
 echo hazen
-ssh hazen echo "Howdy"
+ssh hazen.cs.berkeley.edu echo "Howdy"
 echo liberty
-ssh liberty echo "Howdy"
+ssh liberty.cs.berkeley.edu echo "Howdy"
 echo mcintosh
-ssh mcintosh echo "Howdy"
+ssh mcintosh.cs.berkeley.edu echo "Howdy"
 echo mio
-ssh mio echo "Howdy"
+ssh mio.cs.berkeley.edu echo "Howdy"
 echo orin
-ssh orin echo "Howdy"
+ssh orin.cs.berkeley.edu echo "Howdy"
 echo priam
-ssh priam echo "Howdy"
+ssh priam.cs.berkeley.edu echo "Howdy"
 echo shay
-ssh shay echo "Howdy"
+ssh shay.cs.berkeley.edu echo "Howdy"
 echo taylor
-ssh taylor echo "Howdy"
+ssh taylor.cs.berkeley.edu echo "Howdy"
 echo vand
-ssh vand echo "Howdy"
+ssh vand.cs.berkeley.edu echo "Howdy"
 echo viking
-ssh viking echo "Howdy"
+ssh viking.cs.berkeley.edu echo "Howdy"
 echo winesap
-ssh winesap echo "Howdy"
+ssh winesap.cs.berkeley.edu echo "Howdy"
 echo york
-ssh york echo "Howdy"
+ssh york.cs.berkeley.edu echo "Howdy"
