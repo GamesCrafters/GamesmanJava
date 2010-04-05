@@ -49,8 +49,8 @@ public class DistributedSizeMaster {
 				watchers.add(new Thread() {
 					public void run() {
 						Scanner scan = new Scanner(p.getInputStream());
-						myValues.put(slaveName, myValues.get(slaveName
-								+ Long.parseLong(scan.nextLine())));
+						myValues.put(slaveName, myValues.get(slaveName)
+								+ Long.parseLong(scan.nextLine()));
 					}
 				});
 				watchers.getLast().start();
