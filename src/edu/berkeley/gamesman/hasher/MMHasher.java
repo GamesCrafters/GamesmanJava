@@ -1,4 +1,7 @@
 package edu.berkeley.gamesman.hasher;
+
+import edu.berkeley.gamesman.util.Util;
+
 public class MMHasher 
 {	
 
@@ -109,8 +112,8 @@ class MMBoard
 			}
 			last = current;
 		}
-		hashX= xMajorHash*comb(nonXCount+1, numO)+oMinorHash;
-		hashO= oMajorHash*comb(nonOCount+1, numX)+xMinorHash;
+		hashX= xMajorHash*Util.nCr(nonXCount+1, numO)+oMinorHash;
+		hashO= oMajorHash*Util.nCr(nonOCount+1, numX)+xMinorHash;
 		
 	}
 	long getPartialXMajorHash(MMBoardElement e)
@@ -144,24 +147,6 @@ class MMBoard
 			return smallComb(e.nonXCount, e.numO);
 		}
 		return quickComb(e.prev.oMinorHash, e.prev.nonXCount, e.prev.numO, e.nonXCount, e.numO);
-	}
-	int comb(int n, int r)
-	{
-		int temp = n-r+1;
-		int prod = 1;
-		while (temp<=n)
-		{
-			prod *= temp;
-			temp++;
-		}
-		temp=2;
-		while(temp<=r)
-		{
-			prod /=temp;
-			temp++;
-		}
-		return prod;
-
 	}
 	long smallComb(int n, int r)
 	{
