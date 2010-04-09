@@ -54,7 +54,7 @@ public class GZippedFileDatabase extends Database {
 	}
 
 	@Override
-	public void getBytes(long loc, byte[] arr, int off, int len) {
+	public synchronized void getBytes(long loc, byte[] arr, int off, int len) {
 		while (len > 0) {
 			long filePos = 0;
 			try {
