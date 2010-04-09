@@ -1,11 +1,21 @@
 package edu.berkeley.gamesman.hasher;
 public class MMHasher 
 {	
+
 	public static void main(String[] args) 
 	{
 		char[] input = "XX OXO".toCharArray();
 		MMBoard test = new MMBoard(input);
 		test.debugPrint();
+	}
+	public static long hash(char[] pieces)
+	{
+		MMBoard board = new MMBoard(pieces);
+		return board.hashX;
+	}
+	public static void unhash(long hash, char[] pieces, int numX, int numO)
+	{
+		//TODO
 	}
 }
 
