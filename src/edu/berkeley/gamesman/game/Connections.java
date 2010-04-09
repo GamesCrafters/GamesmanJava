@@ -8,9 +8,32 @@ import edu.berkeley.gamesman.core.Configuration;
  * @author dnspies
  */
 public class Connections extends ConnectGame {
+	private class Edge {
+		Point[] xPoints;
+		Point[] oPoints;
+		private int charNum;
+
+		char getChar() {
+			return board[charNum];
+		}
+
+		void setChar(char c) {
+			board[charNum] = c;
+		}
+	}
+
+	private class Point {
+		private char color;
+		private Edge[] edges;
+		// List in clockwise order
+	}
 
 	private int boardSide;
 	private int boardSize;
+	private Point[][] xPoints;
+	private Point[][] oPoints;
+	private Edge[][] edges;
+	private char[] board;
 
 	/**
 	 * @param conf
@@ -19,7 +42,11 @@ public class Connections extends ConnectGame {
 	public void initialize(Configuration conf) {
 		super.initialize(conf);
 		boardSide = conf.getInteger("game.sideLength", 4);
-		boardSize = boardSide * (boardSide - 1) * 2;
+		boardSize = boardSide * boardSide;
+		xPoints = new Point[boardSide + 1][boardSide];
+		oPoints = new Point[boardSide + 1][boardSide];
+		edges = new Edge[boardSide][boardSide];
+		board = new char[boardSize];
 	}
 
 	@Override
@@ -29,14 +56,15 @@ public class Connections extends ConnectGame {
 
 	@Override
 	protected char[] getCharArray() {
-		// TODO Auto-generated method stub
-		return null;
+		return board;
 	}
 
 	@Override
 	protected void setToCharArray(char[] myPieces) {
-		// TODO Auto-generated method stub
-
+		if (board != myPieces) {
+			for (int i = 0; i < board.length; i++)
+				board[i] = myPieces[i];
+		}
 	}
 
 	@Override
@@ -47,8 +75,7 @@ public class Connections extends ConnectGame {
 
 	@Override
 	public String describe() {
-		// TODO Auto-generated method stub
-		return null;
+		return "Connections " + boardSide + "x" + boardSide;
 	}
 
 	@Override

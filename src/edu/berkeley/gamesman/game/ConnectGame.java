@@ -5,6 +5,7 @@ import java.util.Collection;
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.game.util.ItergameState;
 import edu.berkeley.gamesman.util.Pair;
+import edu.berkeley.gamesman.util.Util;
 
 /**
  * A superclass for hex-style dartboard games in which the objective is to
@@ -13,6 +14,7 @@ import edu.berkeley.gamesman.util.Pair;
  * @author dnspies
  */
 public abstract class ConnectGame extends TieredIterGame {
+	private char turn;
 
 	protected final ItergameState myState = newState();
 
@@ -38,8 +40,7 @@ public abstract class ConnectGame extends TieredIterGame {
 
 	@Override
 	public boolean hasNextHashInTier() {
-		// TODO Auto-generated method stub
-		return false;
+		return myState.hash < numHashesForTier() - 1;
 	}
 
 	@Override
@@ -49,14 +50,15 @@ public abstract class ConnectGame extends TieredIterGame {
 
 	@Override
 	public void nextHashInTier() {
-		// TODO Auto-generated method stub
-
+		myState.hash++;
+		gameMatchState();
 	}
 
 	@Override
 	public long numHashesForTier() {
-		// TODO Auto-generated method stub
-		return 0;
+		char[] arr = getCharArray();
+		int tier = getTier();
+		return Util.nCr(arr.length, tier) * Util.nCr(tier, tier / 2);
 	}
 
 	@Override
@@ -117,8 +119,19 @@ public abstract class ConnectGame extends TieredIterGame {
 
 	@Override
 	public int validMoves(ItergameState[] moves) {
-		// TODO Auto-generated method stub
-		return 0;
+		char[] pieces = getCharArray();
+		int c = 0;
+		for (int i = 0; i < pieces.length; i++) {
+			if (pieces[i] == ' ') {
+				pieces[i] = turn;
+				stateMatchGame();
+				moves[c].set(myState);
+				pieces[i] = ' ';
+				c++;
+			}
+		}
+		stateMatchGame();
+		return c;
 	}
 
 	private final class ConnectRecord extends Record {
