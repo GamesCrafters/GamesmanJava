@@ -126,8 +126,21 @@ public class YGame extends ConnectGame {
 
 	@Override
 	public String displayState() {
-		// TODO Auto-generated method stub
-		return null;
+		StringBuffer s = new StringBuffer();
+		s.append("    "+yBoard[0][2][0]+" ----- "+yBoard[0][2][1]+" ----- "+yBoard[0][2][2]+"----"+yBoard[2][2][0]+"\n");
+		s.append("   /  \\   /   \\   /  \\ / |\n");
+		s.append("   "+yBoard[1][2][2]+"--- "+yBoard[0][1][0]+"------ "+yBoard[0][1][1]+"    "+yBoard[2][1][0]+"   /\n");
+		s.append("   | \\ /  \\   /    /    /\n");
+		s.append("   \\   "+yBoard[1][1][1]+"    "+yBoard[0][0][0]+"----"+yBoard[2][0][0]+"     /\n");
+		s.append("    \\    \\ /  /  |    "+yBoard[2][2][1]+"\n");
+		s.append("     \\     "+yBoard[1][0][0]+"-----"+yBoard[2][1][1]+"   /\n");
+		s.append("      "+yBoard[1][2][1]+"    |  /  |  /\n");
+		s.append("       \\   "+yBoard[1][1][0]+"     | /\n");
+		s.append("        \\  |     "+yBoard[2][2][2]+"\n");
+		s.append("         \\ |  /\n");
+		s.append("           "+yBoard[1][2][0]+"  \n");
+		
+		return s.toString();
 	}
 
 	@Override
