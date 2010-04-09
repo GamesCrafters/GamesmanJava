@@ -1,9 +1,11 @@
 package edu.berkeley.gamesman.game;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.game.util.ItergameState;
+import edu.berkeley.gamesman.hasher.MMHasher;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -78,13 +80,19 @@ public abstract class ConnectGame extends TieredIterGame {
 	}
 
 	private void stateMatchGame() {
-		// TODO Auto-generated method stub
-
+		char[] arr = getCharArray();
+		int tier = 0;
+		for (int i = 0; i < arr.length; i++) {
+			if (arr[i] != ' ')
+				tier++;
+		}
+		myState.tier = tier;
+		myState.hash = MMHasher.hash(getCharArray());
 	}
 
 	private void gameMatchState() {
-		// TODO Auto-generated method stub
-
+		int tier = myState.tier;
+		MMHasher.unhash(myState.hash, getCharArray(), (tier + 1) / 2, tier / 2);
 	}
 
 	@Override
@@ -113,8 +121,15 @@ public abstract class ConnectGame extends TieredIterGame {
 
 	@Override
 	public Collection<Pair<String, ItergameState>> validMoves() {
-		// TODO Auto-generated method stub
-		return null;
+		ItergameState[] moves = new ItergameState[maxChildren()];
+		int totalMoves = validMoves(moves);
+		ArrayList<Pair<String, ItergameState>> resultMoves = new ArrayList<Pair<String, ItergameState>>(
+				totalMoves);
+		for (int i = 0; i < totalMoves; i++) {
+			resultMoves.add(new Pair<String, ItergameState>(
+					Integer.toString(i), moves[i]));
+		}
+		return resultMoves;
 	}
 
 	@Override
