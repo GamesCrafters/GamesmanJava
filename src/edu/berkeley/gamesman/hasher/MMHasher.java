@@ -7,18 +7,69 @@ public class MMHasher
 
 	public static void main(String[] args) 
 	{
-		char[] input = "XX OXO".toCharArray();
+		char[] input = "XX X O OX OXO".toCharArray();
 		MMBoard test = new MMBoard(input);
-		test.debugPrint();
+		//test.debugPrint();
+		System.out.println("HASHING:");
+		System.out.println(input);
+		input = "             ".toCharArray();
+		unhash(test.hashX, input, 5, 4);
+		System.out.println("UNHASH =");
+		System.out.println(input);
 	}
 	public static long hash(char[] pieces)
 	{
 		MMBoard board = new MMBoard(pieces);
 		return board.hashX;
 	}
+	
 	public static void unhash(long hash, char[] pieces, int numX, int numO)
-	{
-		//TODO
+	{	
+		int numSpace = pieces.length-numX-numO;
+		long temp = Util.nCr(numO+numSpace, numO);
+		long xMajorHash=(long)hash/temp;
+		long oMinorHash=hash%temp;
+		
+		int i = numO+numSpace-1;
+		int iPtr=i;
+		temp = Util.nCr(i, numO);
+		while(i>=0)
+		{
+			if(temp>oMinorHash)
+			{
+				pieces[i]=' ';
+				temp = MMBoard.reverseQuickComb(temp, i, numO, i-1, numO);
+			}
+			else
+			{
+				pieces[i]='O';
+				oMinorHash-=temp;
+				temp = MMBoard.reverseQuickComb(temp, i, numO, i-1, numO-1);
+				numO--;
+			}
+			i--;
+		}
+		
+		i=pieces.length-1;
+		temp = Util.nCr(i, numX);
+		while(i>=0)
+		{
+			if(temp>xMajorHash)
+			{
+				pieces[i]=pieces[iPtr];
+				temp = MMBoard.reverseQuickComb(temp, i, numX, i-1, numX);
+				iPtr--;
+			}
+			else
+			{
+				pieces[i]='X';
+				xMajorHash-=temp;
+				temp=MMBoard.reverseQuickComb(temp, i, numX, i-1, numX-1);
+				numX--;
+			}
+			i--;
+		}
+		
 	}
 }
 
@@ -172,13 +223,39 @@ class MMBoard
 			{
 				return 1;
 			}
-			if(prevR==r)
+			if(prevR==r) // nCr -> n+1Cr
 			{
 				return prev*n/(n-r);
 			}
-			else
+			else		// nCr -> n+1Cr+1
 			{
 				return prev*n/r;
+			}
+		}
+	}
+	static long reverseQuickComb(long prev, int prevN, int prevR, int n, int r)
+	{
+		if(prevN==n)
+		{
+			return prev;
+		}
+		else
+		{
+			if(n==r)
+			{
+				return 1;
+			}
+			if(n<r)
+			{
+				return 0;
+			}
+			if(prevR==r) // nCr -> n-1Cr
+			{
+				return prev*(prevN-prevR)/prevN;
+			}
+			else		// nCr -> n-1Cr-1
+			{
+				return prev*prevR/prevN;
 			}
 		}
 	}
