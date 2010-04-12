@@ -12,7 +12,7 @@ public class MMHasher {
 		System.out.println(input);
 		System.out.println(test.xMajorHash);
 		System.out.println(test.oMinorHash);
-		unhash(test.hashX, input, 5, 8);
+		unhash(test.hashX, input, 5, 7);
 		System.out.println("UNHASH =");
 		System.out.println(input);
 	}
