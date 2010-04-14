@@ -23,11 +23,6 @@ public class Pyraminx extends TwistyPuzzle<PyraminxState> {
 	}
 
 	@Override
-	public int getPlayerCount() {
-		return 1;
-	}
-
-	@Override
 	public String displayState(PyraminxState pos) {
 		return stateToString(pos);
 	}

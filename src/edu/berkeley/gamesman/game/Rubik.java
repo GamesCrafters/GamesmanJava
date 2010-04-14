@@ -17,26 +17,12 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author Jeremy Fleischman
  */
-public class Cuboid extends TwistyPuzzle<CubeState> {
+public class Rubik extends TwistyPuzzle<CubeState> {
 	int WIDTH, HEIGHT, DEPTH;
 
 	int[] VALID_DIRS;
 
 	String[] VALID_FACES;
-
-	// as you look at the F face of the cuboid,
-	// H +-----+
-	// T / /|
-	// P / / |
-	// E / U / |
-	// D / / |
-	// H +-----+ R +
-	// E | | /
-	// I | | /
-	// G | F | /
-	// H | |/
-	// T +-----+
-	// WIDTH
 
 	/**
 	 * Initializes a Cuboid
@@ -80,9 +66,9 @@ public class Cuboid extends TwistyPuzzle<CubeState> {
 
 	private static final long[] THREE_TO_X = new long[cornerCount];
 
-	private static final PermutationHash cpHasher = new PermutationHash(
-			cornerCount - 1, false);
-	{ // memoize some useful values for (un)hashing
+	//not thread safe for this to be static
+	private final PermutationHash cpHasher = new PermutationHash(cornerCount - 1, false);
+	static { // memoize some useful values for (un)hashing
 		THREE_TO_X[0] = 1;
 		for (int i = 1; i < cornerCount; i++)
 			THREE_TO_X[i] = 3 * THREE_TO_X[i - 1];
@@ -273,8 +259,8 @@ class CubeState implements State {
 	}
 
 	public CubeState() {
-		pieces = SOLVED_PIECES;
-		orientations = SOLVED_ORIENTATIONS;
+		pieces = SOLVED_PIECES.clone();
+		orientations = SOLVED_ORIENTATIONS.clone();
 	}
 
 	public boolean isSolved() {

@@ -20,7 +20,12 @@ public abstract class TwistyPuzzle<S extends State> extends Game<S> {
 	public Record newRecord() {
 		return new TwistyPuzzleRecord(conf);
 	}
-
+	
+	@Override
+	public int getPlayerCount() {
+		return 1;
+	}
+	
 	@Override
 	public Record newRecord(long val) {
 		return new TwistyPuzzleRecord(conf, val);

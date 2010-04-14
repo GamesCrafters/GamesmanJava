@@ -2,7 +2,7 @@ json.databasedirectory = solved/
 
 # "json.unsolved.*" is the default configuration for unsolved games.
 # "json.fields.*" is the list of valid fields (in the database filename)
-json.unsolved.rubik = jobs/2x2x2.job
+json.unsolved.rubik = jobs/Rubik.job
 json.fields.rubik =
 
 json.unsolved.pyraminx = jobs/Pyraminx.job
@@ -13,7 +13,3 @@ json.fields.connect4 = width,height,pieces
 
 json.unsolved.pegsolitaire = jobs/TriangularPegSolitaire.job
 json.fields.pegsolitaire = size,start
-
-# Database filenames are gamename_name1_value1_name2_value2.db
-# Special cases (values on the right side of = are .job files):
-json.solved.rubik = jobs/2x2x2.job

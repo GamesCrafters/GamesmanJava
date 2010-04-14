@@ -5,14 +5,6 @@ gamesman.db.uri = pyraminx.db
 gamesman.database = MemoryCachedDatabase
 gamesman.dotty.uri = databasePyraminx.dot
 gamesman.debug.SOLVER = true
-gamesman.debug.JSON = true
 record.fields = VALUE,REMOTENESS:11
-gamesman.threads = 2
-#gamesman.db.compression = gzip
-
-json.databasedirectory = 
-
-# "json.unsolved.*" is the default configuration for unsolved games.
-# "json.fields.*" is the list of valid fields (in the database filename)
-json.unsolved.pyraminx = jobs/Pyraminx.job
-json.fields.pyraminx =
+gamesman.threads = 1
+gamesman.db.compression = gzip
