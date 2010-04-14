@@ -1,4 +1,4 @@
-gamesman.game = Cuboid
+gamesman.game = Rubik
 gamesman.game.width = 2
 gamesman.game.height = 2
 gamesman.game.depth = 2
