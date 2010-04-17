@@ -111,7 +111,8 @@ public class DistributedDatabase extends Database {
 				} else {
 					nextStart = location + len;
 				}
-				if (lastZippedTier >= 0 && tier >= lastZippedTier) {
+				if (lastZippedTier >= 0 && tier >= lastZippedTier
+						|| (zipped && TierSlave.jobFile != null)) {
 					String gamesmanPath = conf.getProperty("gamesman.path");
 					StringBuilder sb = new StringBuilder("ssh ");
 					sb.append(nodeFile[0]);
@@ -244,6 +245,9 @@ public class DistributedDatabase extends Database {
 					+ File.separator;
 			zipped = conf.getProperty("gamesman.db.compression", "none")
 					.equals("gzip");
+			String gamesmanPath = conf.getProperty("gamesman.path");
+			TierSlave.jobFile = gamesmanPath + File.separator
+					+ conf.getProperty("gamesman.confFile", null);
 		}
 	}
 
