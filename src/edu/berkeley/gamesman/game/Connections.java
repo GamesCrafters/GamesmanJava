@@ -27,10 +27,6 @@ public class Connections extends ConnectGame {
 		char getChar() {
 			return board[charNum];
 		}
-
-		void setChar(char c) {
-			board[charNum] = c;
-		}
 	}
 
 	private class Point {
