@@ -13,7 +13,6 @@ public class YGame extends ConnectGame {
 		// t = triangle, r = row c = column
 		final int t, r, c;
 		private final int charNum;
-		int iter;
 		final boolean[] isOnEdge = new boolean[3];
 		Space[] connectedSpaces;
 
@@ -23,59 +22,13 @@ public class YGame extends ConnectGame {
 			this.c = c;
 			// index into board
 			this.charNum = charNum;
-			this.iter = 0;
 			connectedSpaces = new Space[6];
 		}
 
 		char getChar() {
 			return board[charNum];
 		}
-
-		void setChar(char c) {
-			board[charNum] = c;
-		}
 	}
-
-	// Added a stack data structure for use in the isWin() function. - Rohit
-	private final class Stack {
-
-		// stackNode object. Contains the Space and next pointer.
-		private final class stackNode {
-			Space data;
-			stackNode next;
-
-			stackNode(Space s) {
-				data = s;
-				next = null;
-			}
-		}
-
-		stackNode top;
-
-		// Stack constructor
-		Stack() {
-			top = null;
-		}
-
-		void push(Space s) {
-			if (top == null) {
-				top = new stackNode(s);
-				top.next = null;
-			} else {
-				stackNode temp = new stackNode(s);
-				temp.next = top;
-				top = temp;
-			}
-		}
-
-		Space pop() {
-			if (top == null)
-				return null;
-			stackNode temp = top;
-			top = top.next;
-			return temp.data;
-		}
-	} // End stack class
 
 	private Space[][][] yBoard;
 
@@ -116,41 +69,6 @@ public class YGame extends ConnectGame {
 				}
 			}
 		}
-	}
-
-	/**
-	 * Given any two spaces who know their position, this method tells whether
-	 * they are connected.
-	 * 
-	 * @param s1
-	 *            First Space
-	 * @param s2
-	 *            Second Space
-	 * @return Are they connected?
-	 */
-	private boolean connected(Space s1, Space s2) {
-		if (s1.t == s2.t) {
-			if (s1.r == s2.r && Math.abs(s1.c - s2.c) == 1)
-				return true;
-			else if (s1.c == s2.c && Math.abs(s1.r - s2.r) == 1)
-				return true;
-			else
-				// correct diagonal
-				return Math.abs(s1.r - s2.r) == 1
-						&& (s1.r - s2.r == s1.c - s2.c);
-		}
-
-		// if they are in separate triangles, switch them.
-		// add 3 because we don't want to mod a negative value.
-		// if they are in separate triangles, switch them.
-
-		else if ((s2.t + 3 - s1.t) % 3 == 2) {
-			Space temp = s2;
-			s2 = s1;
-			s1 = temp;
-		}
-		// between triangles
-		return s2.c == 0 && s1.c == s1.r && s2.r >= s1.r && s2.r - s1.r <= 1;
 	}
 
 	@Override
