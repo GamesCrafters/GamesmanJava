@@ -210,56 +210,63 @@ public class YGame extends ConnectGame {
 
 	@Override
 	// Uses the stack class in order to avoid recursion.
-	protected boolean isWin(char c) {
-		Stack spaces = new Stack();
+	protected boolean isWin(char player) {
 		// start point
-		int t = 0;
-		int r = boardSide - 2;
+		boolean left = false;
+		Space x = yBoard[0][boardSize - 2][0];
+		Space y;
+
 		int col = 0;
-
-		// Need to loop until an end condition i.e. until we know there is no
-		// path from all 3 sides.
-
-		if (yBoard[t][r][col].charNum == c) {
-			// Push space on the stack.
-			spaces.push(yBoard[t][r][col]);
-
-			// Need to check if the space is on the right or bottom triangle so
-			// we can set a boolean flag.
-
-			// Go to the next space.
-			t = yBoard[t][r][col].connectedSpaces[yBoard[t][r][col].iter].t;
-			r = yBoard[t][r][col].connectedSpaces[yBoard[t][r][col].iter].r;
-			col = yBoard[t][r][col].connectedSpaces[yBoard[t][r][col].iter].c;
-		}
-		// No piece at its neighbor, so determine the next piece to try.
-		else {
-			Space prev = spaces.pop();
-			while (prev != null) {
-				prev.iter++;
-				// Keep popping off the stack if iter >= 6 since that means
-				// we've exhausted all neighbors.
-				if (prev.iter < 6) {
+		while (true) {
+			for (; col < boardSize - 1; col++) {
+				x = yBoard[0][boardSize - 2][col];
+				if (x.getChar() == player) {
 					break;
 				}
-				prev = spaces.pop();
 			}
-			// If nothing is on the stack, then we just move to the next space
-			// on the left edge.
-			if (prev == null) {
-				r++;
-				// need to move to a different triangle possibly...r++ may not
-				// be enough
+			if (col == boardSize - 1) {
+				x = yBoard[1][boardSize - 2][0];
+				if (x.getChar() != player) {
+					return false;
+				}
 			}
-			// Go to the next connected space.
-			else {
-				t = prev.connectedSpaces[prev.iter].t;
-				r = prev.connectedSpaces[prev.iter].r;
-				col = prev.connectedSpaces[prev.iter].c;
+			y = x.connectedSpaces[x.connectedSpaces.length - 1];
+			OUTER: while (true) {
+				int i;
+				for (i = 0; i < x.connectedSpaces.length; i++) {
+					if (y == x.connectedSpaces[i]) {
+						break;
+					}
+				}
+				do {
+					i++;
+					if (i == x.connectedSpaces.length) {
+						i = 0;
+					}
+					y = x.connectedSpaces[i];
+					if (y == null) {
+						if (x.isOnEdge[2]) {
+							return left || x.isOnEdge[1];
+						} else if (x.isOnEdge[1]) {
+							left = true;
+							while (y == null) {
+								i++;
+								if (i == x.connectedSpaces.length)
+									i = 0;
+								y = x.connectedSpaces[i];
+							}
+						} else {
+							col = Math.max(col, x.c);
+							left = false;
+							break OUTER;
+						}
+					}
+				} while (y.getChar() != player);
+				Space temp = x;
+				x = y;
+				y = temp;
 			}
 		}
-
-		return false;
 	}
 
 	@Override
