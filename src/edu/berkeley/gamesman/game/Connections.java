@@ -1,6 +1,7 @@
 package edu.berkeley.gamesman.game;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.util.Util;
 
 /**
  * The game Connections
@@ -9,9 +10,19 @@ import edu.berkeley.gamesman.core.Configuration;
  */
 public class Connections extends ConnectGame {
 	private class Edge {
-		Point[] xPoints;
-		Point[] oPoints;
-		private int charNum;
+		final Point[] xPoints;
+		// xPoints[0] == down or left
+		// xPoints[1] == up or right
+		final Point[] oPoints;
+		// oPoints[0] == down or left
+		// oPoints[1] == up or right
+		private final int charNum;
+
+		Edge(int charNum) {
+			xPoints = new Point[2];
+			oPoints = new Point[2];
+			this.charNum = charNum;
+		}
 
 		char getChar() {
 			return board[charNum];
@@ -23,16 +34,28 @@ public class Connections extends ConnectGame {
 	}
 
 	private class Point {
-		private char color;
-		private Edge[] edges;
+		private final Edge[] edges;
+		// 0 == down
+		// 1 == left
+		// 2 == up
+		// 3 == right
+		private final int row, col;
+
 		// List in clockwise order
+
+		Point(int row, int col) {
+			this.row = row;
+			this.col = col;
+			edges = new Edge[4];
+		}
 	}
 
 	private int boardSide;
 	private int boardSize;
 	private Point[][] xPoints;
 	private Point[][] oPoints;
-	private Edge[][] edges;
+	private Edge[][] vertEdges;
+	private Edge[][] horizEdges;
 	private char[] board;
 
 	/**
@@ -42,11 +65,67 @@ public class Connections extends ConnectGame {
 	public void initialize(Configuration conf) {
 		super.initialize(conf);
 		boardSide = conf.getInteger("game.sideLength", 4);
-		boardSize = boardSide * boardSide;
+		boardSize = boardSide * boardSide + (boardSide - 1) * (boardSide - 1);
 		xPoints = new Point[boardSide + 1][boardSide];
+		// Bottom to top; Left to right
 		oPoints = new Point[boardSide + 1][boardSide];
-		edges = new Edge[boardSide][boardSide];
+		// Left to right; Top to bottom
+		vertEdges = new Edge[boardSide][boardSide];
+		// Bottom to top; Left to right
+		horizEdges = new Edge[boardSide - 1][boardSide - 1];
+		// Bottom to top; Left to right (only shared edges)
 		board = new char[boardSize];
+		int sideSquare = boardSide * boardSide;
+		int ind = 0;
+		for (int row = 0; row < boardSide; row++) {
+			for (int col = 0; col < boardSide; col++) {
+				vertEdges[row][col] = new Edge(ind);
+				if (row < boardSide - 1 && col < boardSide - 1)
+					horizEdges[row][col] = new Edge(sideSquare + ind);
+				ind++;
+			}
+		}
+		for (int row = 0; row <= boardSide; row++) {
+			for (int col = 0; col < boardSide; col++) {
+				xPoints[row][col] = new Point(row, col);
+				oPoints[row][col] = new Point(row, col);
+				Edge nextXEdge = null;
+				Edge nextOEdge = null;
+				for (int i = 0; i < 4; i++) {
+					switch (i) {
+					case 0:
+						nextXEdge = Util.getElement(vertEdges, row - 1, col);
+						nextOEdge = Util.getElement(vertEdges, boardSide - 2
+								- col, row);
+						break;
+					case 1:
+						nextXEdge = Util.getElement(horizEdges, row - 1,
+								col - 1);
+						nextOEdge = Util.getElement(horizEdges, boardSide - 2
+								- col, row - 1);
+						break;
+					case 2:
+						nextXEdge = Util.getElement(vertEdges, row, col);
+						nextOEdge = Util.getElement(vertEdges, boardSide - 1
+								- col, row);
+						break;
+					case 3:
+						nextXEdge = Util.getElement(horizEdges, row - 1, col);
+						nextOEdge = Util.getElement(horizEdges, boardSide - 2
+								- col, row);
+						break;
+					}
+					if (nextXEdge != null) {
+						xPoints[row][col].edges[i] = nextXEdge;
+						nextXEdge.xPoints[i >> 1] = xPoints[row][col];
+					}
+					if (nextOEdge != null) {
+						oPoints[row][col].edges[i] = nextOEdge;
+						nextOEdge.oPoints[i >> 1] = oPoints[row][col];
+					}
+				}
+			}
+		}
 	}
 
 	@Override
@@ -80,7 +159,32 @@ public class Connections extends ConnectGame {
 
 	@Override
 	protected boolean isWin(char c) {
-		// TODO Auto-generated method stub
-		return false;
+		Point nextPoint = (c == 'X' ? xPoints[0][0] : oPoints[0][0]);
+		do {
+			nextPoint = testWin(c, nextPoint, c == 'X' ? 1 : 2);
+			nextPoint = Util.getElement(c == 'X' ? xPoints : oPoints, 0,
+					nextPoint.col + 1);
+		} while (nextPoint != null);
+		if (nextPoint == null)
+			return false;
+		else
+			return nextPoint.row == boardSide;
+	}
+
+	private Point testWin(char c, Point p, int dir) {
+		if (p.row == boardSide)
+			return p;
+		Edge e = p.edges[dir];
+		while (e == null || e.getChar() != c) {
+			if (e == null)
+				if ((c == 'X' && dir != 1) || (c == 'O' && dir != 2))
+					return p;
+			e = p.edges[++dir];
+		}
+		int ind = 1 - (dir >> 1);
+		if (c == 'X')
+			return testWin(c, e.xPoints[ind], (dir - 1) & 3);
+		else
+			return testWin(c, e.oPoints[ind], (dir - 1) & 3);
 	}
 }

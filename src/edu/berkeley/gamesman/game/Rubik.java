@@ -101,7 +101,7 @@ public class Rubik extends TwistyPuzzle<CubeState> {
 			hash /= 3;
 			totalorient += co[i];
 		}
-		co[6] = Util.positiveModulo((3 - totalorient), 3);
+		co[6] = Util.nonNegativeModulo((3 - totalorient), 3);
 		co[7] = 0;
 
 		// corner permutations

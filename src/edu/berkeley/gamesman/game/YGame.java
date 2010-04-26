@@ -1,6 +1,7 @@
 package edu.berkeley.gamesman.game;
 
 import edu.berkeley.gamesman.core.*;
+import edu.berkeley.gamesman.util.Util;
 
 /**
  * The game Y
@@ -11,11 +12,11 @@ public class YGame extends ConnectGame {
 	private final class Space {
 		// t = triangle, r = row c = column
 		final int t, r, c;
-		final int charNum;
+		private final int charNum;
 		int iter;
 		final boolean[] isOnEdge = new boolean[3];
-		final Space[] connectedSpaces;
-		
+		Space[] connectedSpaces;
+
 		Space(int t, int r, int c, int charNum) {
 			this.t = t;
 			this.r = r;
@@ -23,10 +24,7 @@ public class YGame extends ConnectGame {
 			// index into board
 			this.charNum = charNum;
 			this.iter = 0;
-			connectedSpaces = null; // TODO Correct this. First initiate with
-			// correct size, then fill it in (in
-			// constructor of YGame) when all spaces
-			// have been initialized
+			connectedSpaces = new Space[6];
 		}
 
 		char getChar() {
@@ -37,15 +35,15 @@ public class YGame extends ConnectGame {
 			board[charNum] = c;
 		}
 	}
-	
+
 	// Added a stack data structure for use in the isWin() function. - Rohit
 	private final class Stack {
-		
+
 		// stackNode object. Contains the Space and next pointer.
 		private final class stackNode {
 			Space data;
 			stackNode next;
-			
+
 			stackNode(Space s) {
 				data = s;
 				next = null;
@@ -53,33 +51,32 @@ public class YGame extends ConnectGame {
 		}
 
 		stackNode top;
-		
+
 		// Stack constructor
 		Stack() {
 			top = null;
 		}
-			
+
 		void push(Space s) {
-			if(top == null) {
+			if (top == null) {
 				top = new stackNode(s);
 				top.next = null;
-			}
-			else {
+			} else {
 				stackNode temp = new stackNode(s);
 				temp.next = top;
 				top = temp;
 			}
 		}
-			
+
 		Space pop() {
-			if(top == null)
+			if (top == null)
 				return null;
 			stackNode temp = top;
 			top = top.next;
 			return temp.data;
 		}
 	} // End stack class
-		
+
 	private Space[][][] yBoard;
 
 	private char[] board;
@@ -112,6 +109,13 @@ public class YGame extends ConnectGame {
 		}
 		boardSize = boardSide * (boardSide - 1) / 2 * 3;
 		board = new char[boardSize];
+		for (int t = 0; t < 3; t++) {
+			for (int i = 0; i < boardSide - 1; i++) {
+				for (int c = 0; c <= i; c++) {
+					yBoard[t][i][c].connectedSpaces = getNeighbors(t, i, c);
+				}
+			}
+		}
 	}
 
 	/**
@@ -135,7 +139,7 @@ public class YGame extends ConnectGame {
 				return Math.abs(s1.r - s2.r) == 1
 						&& (s1.r - s2.r == s1.c - s2.c);
 		}
-		
+
 		// if they are in separate triangles, switch them.
 		// add 3 because we don't want to mod a negative value.
 		// if they are in separate triangles, switch them.
@@ -158,49 +162,71 @@ public class YGame extends ConnectGame {
 	protected char[] getCharArray() {
 		return board;
 	}
-	
+
 	protected Space[] getNeighbors(int t, int r, int c) {
-		Space[] neighbors = new Space[6];
-		int charnum = yBoard[t][r][c].charNum; // don't know what this is atm...just pass it in to space constructor for now.
-		// probably the character piece at the neighbor so i'd have to look it up...
-		if(yBoard[t][r][c].isOnEdge[t]) {
-			neighbors[0] = new Space(t, r-1, c, charnum);
-			neighbors[1] = new Space(t, r, c+1, charnum);
-			neighbors[2] = new Space(t, r+1, c+1, charnum);
-			neighbors[3] = new Space(t, r+1, c, charnum);
-			neighbors[4] = new Space( (t-1+3) % 3, r, r, charnum);
-			neighbors[5] = new Space( (t-1+3) % 3, r-1, r-1, charnum);
-		}
-		else {
-			neighbors[0] = new Space(t, r-1, c, charnum);
-			neighbors[1] = new Space(t, r, c+1, charnum);
-			neighbors[2] = new Space(t, r+1, c+1, charnum);
-			neighbors[3] = new Space(t, r+1, c, charnum);
-			neighbors[4] = new Space(t, r, c-1, charnum);
-			neighbors[5] = new Space(t, r-1, c-1, charnum);
+		Space[] neighbors;
+		if (c == 0 && r == 0) {
+			neighbors = new Space[5];
+			neighbors[0] = getSpace(Util.nonNegativeModulo(t - 1, 3), 0, 0);
+			neighbors[1] = getSpace(Util.nonNegativeModulo(t + 1, 3), 0, 0);
+			neighbors[2] = getSpace(t, 1, 1);
+			neighbors[3] = getSpace(t, 1, 0);
+			neighbors[4] = getSpace(Util.nonNegativeModulo(t - 1, 3), 1, 1);
+		} else if (c == 0) {
+			neighbors = new Space[6];
+			neighbors[0] = getSpace(t, r - 1, c);
+			neighbors[1] = getSpace(t, r, c + 1);
+			neighbors[2] = getSpace(t, r + 1, c + 1);
+			neighbors[3] = getSpace(t, r + 1, c);
+			neighbors[4] = getSpace(Util.nonNegativeModulo(t - 1, 3), r, r);
+			neighbors[5] = getSpace(Util.nonNegativeModulo(t - 1, 3), r - 1,
+					r - 1);
+		} else if (c == r) {
+			neighbors = new Space[6];
+			neighbors[0] = getSpace(t, r - 1, c - 1);
+			neighbors[1] = getSpace(Util.nonNegativeModulo(t + 1, 3), r - 1, 0);
+			neighbors[2] = getSpace(Util.nonNegativeModulo(t + 1, 3), r, 0);
+			neighbors[3] = getSpace(t, r + 1, c + 1);
+			neighbors[4] = getSpace(t, r + 1, c);
+			neighbors[5] = getSpace(t, r, c - 1);
+		} else {
+			neighbors = new Space[6];
+			neighbors[0] = getSpace(t, r - 1, c);
+			neighbors[1] = getSpace(t, r, c + 1);
+			neighbors[2] = getSpace(t, r + 1, c + 1);
+			neighbors[3] = getSpace(t, r + 1, c);
+			neighbors[4] = getSpace(t, r, c - 1);
+			neighbors[5] = getSpace(t, r - 1, c - 1);
 		}
 		return neighbors;
-		
 	}
-	
+
+	private Space getSpace(int t, int r, int c) {
+		if (t >= 0 && t < 3 && r < boardSide - 1 && r >= 0 && c >= 0 && c <= r)
+			return yBoard[t][r][c];
+		else
+			return null;
+	}
+
 	@Override
 	// Uses the stack class in order to avoid recursion.
 	protected boolean isWin(char c) {
 		Stack spaces = new Stack();
 		// start point
 		int t = 0;
-		int r = 0;
-		int col = 0;		
-		
-		// Need to loop until an end condition i.e. until we know there is no path from all 3 sides.
-		
-		
-		if(yBoard[t][r][col].charNum == c) {
+		int r = boardSide - 2;
+		int col = 0;
+
+		// Need to loop until an end condition i.e. until we know there is no
+		// path from all 3 sides.
+
+		if (yBoard[t][r][col].charNum == c) {
 			// Push space on the stack.
 			spaces.push(yBoard[t][r][col]);
-			
-			// Need to check if the space is on the right or bottom triangle so we can set a boolean flag.
-			
+
+			// Need to check if the space is on the right or bottom triangle so
+			// we can set a boolean flag.
+
 			// Go to the next space.
 			t = yBoard[t][r][col].connectedSpaces[yBoard[t][r][col].iter].t;
 			r = yBoard[t][r][col].connectedSpaces[yBoard[t][r][col].iter].r;
@@ -209,18 +235,21 @@ public class YGame extends ConnectGame {
 		// No piece at its neighbor, so determine the next piece to try.
 		else {
 			Space prev = spaces.pop();
-			while(prev != null) {
+			while (prev != null) {
 				prev.iter++;
-				// Keep popping off the stack if iter >= 6 since that means we've exhausted all neighbors.
-				if(prev.iter < 6) {
+				// Keep popping off the stack if iter >= 6 since that means
+				// we've exhausted all neighbors.
+				if (prev.iter < 6) {
 					break;
 				}
 				prev = spaces.pop();
 			}
-			// If nothing is on the stack, then we just move to the next space on the left edge.
-			if(prev == null) {
+			// If nothing is on the stack, then we just move to the next space
+			// on the left edge.
+			if (prev == null) {
 				r++;
-				// need to move to a different triangle possibly...r++ may not be enough
+				// need to move to a different triangle possibly...r++ may not
+				// be enough
 			}
 			// Go to the next connected space.
 			else {
@@ -229,7 +258,7 @@ public class YGame extends ConnectGame {
 				col = prev.connectedSpaces[prev.iter].c;
 			}
 		}
-	
+
 		return false;
 	}
 
@@ -243,19 +272,25 @@ public class YGame extends ConnectGame {
 	@Override
 	public String displayState() {
 		StringBuffer s = new StringBuffer();
-		s.append("    "+yBoard[0][2][0]+" ----- "+yBoard[0][2][1]+" ----- "+yBoard[0][2][2]+"----"+yBoard[2][2][0]+"\n");
+		s
+				.append("    " + yBoard[0][2][0] + " ----- " + yBoard[0][2][1]
+						+ " ----- " + yBoard[0][2][2] + "----"
+						+ yBoard[2][2][0] + "\n");
 		s.append("   /  \\   /   \\   /  \\ / |\n");
-		s.append("   "+yBoard[1][2][2]+"--- "+yBoard[0][1][0]+"------ "+yBoard[0][1][1]+"    "+yBoard[2][1][0]+"   /\n");
+		s.append("   " + yBoard[1][2][2] + "--- " + yBoard[0][1][0] + "------ "
+				+ yBoard[0][1][1] + "    " + yBoard[2][1][0] + "   /\n");
 		s.append("   | \\ /  \\   /    /    /\n");
-		s.append("   \\   "+yBoard[1][1][1]+"    "+yBoard[0][0][0]+"----"+yBoard[2][0][0]+"     /\n");
-		s.append("    \\    \\ /  /  |    "+yBoard[2][2][1]+"\n");
-		s.append("     \\     "+yBoard[1][0][0]+"-----"+yBoard[2][1][1]+"   /\n");
-		s.append("      "+yBoard[1][2][1]+"    |  /  |  /\n");
-		s.append("       \\   "+yBoard[1][1][0]+"     | /\n");
-		s.append("        \\  |     "+yBoard[2][2][2]+"\n");
+		s.append("   \\   " + yBoard[1][1][1] + "    " + yBoard[0][0][0]
+				+ "----" + yBoard[2][0][0] + "     /\n");
+		s.append("    \\    \\ /  /  |    " + yBoard[2][2][1] + "\n");
+		s.append("     \\     " + yBoard[1][0][0] + "-----" + yBoard[2][1][1]
+				+ "   /\n");
+		s.append("      " + yBoard[1][2][1] + "    |  /  |  /\n");
+		s.append("       \\   " + yBoard[1][1][0] + "     | /\n");
+		s.append("        \\  |     " + yBoard[2][2][2] + "\n");
 		s.append("         \\ |  /\n");
-		s.append("           "+yBoard[1][2][0]+"  \n");
-		
+		s.append("           " + yBoard[1][2][0] + "  \n");
+
 		return s.toString();
 	}
 

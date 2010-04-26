@@ -602,7 +602,7 @@ public final class Util {
 	 * @return arr[i%arr.length]
 	 */
 	public static <H> H moduloAccess(H[] arr, int i) {
-		return arr[positiveModulo(i, arr.length)];
+		return arr[nonNegativeModulo(i, arr.length)];
 	}
 
 	/**
@@ -610,9 +610,9 @@ public final class Util {
 	 *            Numerator
 	 * @param b
 	 *            Denominator
-	 * @return a%b wrapped to always be positive
+	 * @return a%b wrapped to always be non-negative
 	 */
-	public static long positiveModulo(long a, long b) {
+	public static long nonNegativeModulo(long a, long b) {
 		long y = a % b;
 		if (y >= 0)
 			return y;
@@ -624,9 +624,9 @@ public final class Util {
 	 *            Numerator
 	 * @param b
 	 *            Denominator
-	 * @return a%b wrapped to always be positive
+	 * @return a%b wrapped to always be non-negative
 	 */
-	public static int positiveModulo(int a, int b) {
+	public static int nonNegativeModulo(int a, int b) {
 		int y = a % b;
 		if (y >= 0)
 			return y;
@@ -752,5 +752,23 @@ public final class Util {
 	 */
 	public static boolean debug(DebugFacility fac) {
 		return debugOpts.contains(fac) || debugOpts.contains(DebugFacility.ALL);
+	}
+
+	/**
+	 * @param <T>
+	 *            The type of the array
+	 * @param objs
+	 *            A 2D array of objects
+	 * @param i1
+	 *            First index
+	 * @param i2
+	 *            Second index
+	 * @return objs[i1][i2] if it's in bounds, otherwise null
+	 */
+	public static <T> T getElement(T[][] objs, int i1, int i2) {
+		if (i1 >= 0 && i1 < objs.length && i2 >= 0 && i2 < objs[i1].length)
+			return objs[i1][i2];
+		else
+			return null;
 	}
 }

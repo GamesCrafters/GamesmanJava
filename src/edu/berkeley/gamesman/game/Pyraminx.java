@@ -100,7 +100,7 @@ public class Pyraminx extends TwistyPuzzle<PyraminxState> {
 			totalorient += state.edgeOrientation[i];
 		}
 		// the number of flipped edges must be even!
-		state.edgeOrientation[edgeCount - 1] = Util.positiveModulo(
+		state.edgeOrientation[edgeCount - 1] = Util.nonNegativeModulo(
 				2 - totalorient, 2);
 		epHasher.unhash(hash, state.edgePermutation);
 	}
@@ -141,7 +141,7 @@ public class Pyraminx extends TwistyPuzzle<PyraminxState> {
 			for (int i = 0; i < arr.length; i++)
 				clone[i] = arr[i];
 		for (int i = 0; i < indices.length; i++)
-			arr[indices[Util.positiveModulo(i + offset, indices.length)]] = clone[indices[i]];
+			arr[indices[Util.nonNegativeModulo(i + offset, indices.length)]] = clone[indices[i]];
 	}
 
 	@Override
@@ -157,7 +157,7 @@ public class Pyraminx extends TwistyPuzzle<PyraminxState> {
 				int[] edgeIndices = EDGE_INDICES.get(axis).cdr;
 				for (int i = 0; i < dir; i++) {
 					cycle(next.edgePermutation, edgeIndices, 1);
-					next.centerOrientation[axis] = Util.positiveModulo(
+					next.centerOrientation[axis] = Util.nonNegativeModulo(
 							next.centerOrientation[axis] + 1, 3);
 					cycle(next.edgeOrientation, edgeIndices, 1);
 					// NOTE: we're updating the orientations *after* their
@@ -191,7 +191,7 @@ public class Pyraminx extends TwistyPuzzle<PyraminxState> {
 				int[] edgeIndices = EDGE_INDICES.get(axis).cdr;
 				for (int i = 0; i < dir; i++) {
 					cycle(next.edgePermutation, edgeIndices, 1);
-					next.centerOrientation[axis] = Util.positiveModulo(
+					next.centerOrientation[axis] = Util.nonNegativeModulo(
 							next.centerOrientation[axis] + 1, 3);
 					cycle(next.edgeOrientation, edgeIndices, 1);
 					// NOTE: we're updating the orientations *after* their
@@ -212,7 +212,7 @@ public class Pyraminx extends TwistyPuzzle<PyraminxState> {
 					}
 				}
 				String move = "" + EDGE_INDICES.get(axis).car;
-				if (Util.positiveModulo(dir, 3) == 2)
+				if (Util.nonNegativeModulo(dir, 3) == 2)
 					move += "'";
 				nextMoves.add(new Pair<String, PyraminxState>(move, next));
 			}

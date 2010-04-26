@@ -25,8 +25,8 @@ public class RecordDatabase extends Database {
 	private Record[] recordArray;
 
 	@Override
-	public Record getRecord(long loc) {
-		return recordArray[(int) loc].clone();
+	public void getRecord(long loc, Record r) {
+		r.set(recordArray[(int) loc]);
 	}
 
 	@Override
