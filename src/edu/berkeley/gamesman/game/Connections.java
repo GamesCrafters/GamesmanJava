@@ -71,14 +71,13 @@ public class Connections extends ConnectGame {
 		horizEdges = new Edge[boardSide - 1][boardSide - 1];
 		// Bottom to top; Left to right (only shared edges)
 		board = new char[boardSize];
-		int sideSquare = boardSide * boardSide;
 		int ind = 0;
+		int horizInd = boardSide * boardSide;
 		for (int row = 0; row < boardSide; row++) {
 			for (int col = 0; col < boardSide; col++) {
-				vertEdges[row][col] = new Edge(ind);
+				vertEdges[row][col] = new Edge(ind++);
 				if (row < boardSide - 1 && col < boardSide - 1)
-					horizEdges[row][col] = new Edge(sideSquare + ind);
-				ind++;
+					horizEdges[row][col] = new Edge(horizInd++);
 			}
 		}
 		for (int row = 0; row <= boardSide; row++) {
@@ -91,13 +90,13 @@ public class Connections extends ConnectGame {
 					switch (i) {
 					case 0:
 						nextXEdge = Util.getElement(vertEdges, row - 1, col);
-						nextOEdge = Util.getElement(vertEdges, boardSide - 2
-								- col, row);
+						nextOEdge = Util.getElement(vertEdges, boardSide - 1
+								- col, row - 1);
 						break;
 					case 1:
 						nextXEdge = Util.getElement(horizEdges, row - 1,
 								col - 1);
-						nextOEdge = Util.getElement(horizEdges, boardSide - 2
+						nextOEdge = Util.getElement(horizEdges, boardSide - 1
 								- col, row - 1);
 						break;
 					case 2:
@@ -108,7 +107,7 @@ public class Connections extends ConnectGame {
 					case 3:
 						nextXEdge = Util.getElement(horizEdges, row - 1, col);
 						nextOEdge = Util.getElement(horizEdges, boardSide - 2
-								- col, row);
+								- col, row - 1);
 						break;
 					}
 					if (nextXEdge != null) {
@@ -158,6 +157,8 @@ public class Connections extends ConnectGame {
 		Point nextPoint = (c == 'X' ? xPoints[0][0] : oPoints[0][0]);
 		do {
 			nextPoint = testWin(c, nextPoint, c == 'X' ? 1 : 2);
+			if (nextPoint.row == boardSide)
+				return true;
 			nextPoint = Util.getElement(c == 'X' ? xPoints : oPoints, 0,
 					nextPoint.col + 1);
 		} while (nextPoint != null);
@@ -168,19 +169,22 @@ public class Connections extends ConnectGame {
 	}
 
 	private Point testWin(char c, Point p, int dir) {
-		if (p.row == boardSide)
-			return p;
-		Edge e = p.edges[dir];
-		while (e == null || e.getChar() != c) {
-			if (e == null)
-				if ((c == 'X' && dir != 1) || (c == 'O' && dir != 2))
-					return p;
-			e = p.edges[++dir];
+		while (p.row != boardSide) {
+			Edge e = p.edges[dir];
+			while (e == null || e.getChar() != c) {
+				if (e == null)
+					if (dir != 1)
+						return p;
+				dir = ((dir + 1) & 3);
+				e = p.edges[dir];
+			}
+			int ind = 1 - (dir >> 1);
+			if (c == 'X')
+				p = e.xPoints[ind];
+			else
+				p = e.oPoints[ind];
+			dir = (dir - 1) & 3;
 		}
-		int ind = 1 - (dir >> 1);
-		if (c == 'X')
-			return testWin(c, e.xPoints[ind], (dir - 1) & 3);
-		else
-			return testWin(c, e.oPoints[ind], (dir - 1) & 3);
+		return p;
 	}
 }

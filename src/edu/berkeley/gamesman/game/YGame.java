@@ -1,6 +1,7 @@
 package edu.berkeley.gamesman.game;
 
 import edu.berkeley.gamesman.core.*;
+import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -9,6 +10,22 @@ import edu.berkeley.gamesman.util.Util;
  * @author dnspies
  */
 public class YGame extends ConnectGame {
+	String formatString = "\n                 220_\n"
+			+ "                /| \\\n" + "               / |  \\\n"
+			+ "              /  |   \\\n" + "             /   |    \\\n"
+			+ "            /    |     \\\n" + "           /    /       \\\n"
+			+ "          221----210__-------122\n"
+			+ "         /|  /  \\ \\_____ |\\\n"
+			+ "        / | / __200_______\\| \\\n"
+			+ "       /  |/_/ / \\_      111_ \\\n"
+			+ "      /  _211   /    \\_    |\\\\_\\\n"
+			+ "     /__/ |\\ /       \\_ /  \\ \\\\\n"
+			+ "    222   _/  000__--------100__ | _=121\n"
+			+ "   / \\ /___/   \\__ __/    \\|/   \\\n"
+			+ "  / __010---------__011__------110____ \\\n"
+			+ " /_/     \\__ __/     \\__ _/     \\_\\\n"
+			+ "020-----------021-----------022----------120\n";
+
 	private final class Space {
 		// t = triangle, r = row c = column
 		final int t, r, c;
@@ -27,6 +44,11 @@ public class YGame extends ConnectGame {
 
 		char getChar() {
 			return board[charNum];
+		}
+
+		@Override
+		public String toString() {
+			return String.valueOf(getChar());
 		}
 	}
 
@@ -58,7 +80,7 @@ public class YGame extends ConnectGame {
 			for (int c = 0; c <= i; c++) {
 				yBoard[t][i][c].isOnEdge[t] = true;
 			}
-			yBoard[t][i][i].isOnEdge[(t + 1) % 3] = true;
+			yBoard[t][i][0].isOnEdge[t == 0 ? 2 : (t - 1)] = true;
 		}
 		boardSize = boardSide * (boardSide - 1) / 2 * 3;
 		board = new char[boardSize];
@@ -85,36 +107,36 @@ public class YGame extends ConnectGame {
 		Space[] neighbors;
 		if (c == 0 && r == 0) {
 			neighbors = new Space[5];
-			neighbors[0] = getSpace(Util.nonNegativeModulo(t - 1, 3), 0, 0);
-			neighbors[1] = getSpace(Util.nonNegativeModulo(t + 1, 3), 0, 0);
-			neighbors[2] = getSpace(t, 1, 1);
-			neighbors[3] = getSpace(t, 1, 0);
-			neighbors[4] = getSpace(Util.nonNegativeModulo(t - 1, 3), 1, 1);
+			neighbors[0] = getSpace(Util.nonNegativeModulo(t - 1, 3), 1, 1);
+			neighbors[1] = getSpace(Util.nonNegativeModulo(t - 1, 3), 0, 0);
+			neighbors[2] = getSpace(Util.nonNegativeModulo(t + 1, 3), 0, 0);
+			neighbors[3] = getSpace(t, 1, 1);
+			neighbors[4] = getSpace(t, 1, 0);
 		} else if (c == 0) {
 			neighbors = new Space[6];
-			neighbors[0] = getSpace(t, r - 1, c);
-			neighbors[1] = getSpace(t, r, c + 1);
-			neighbors[2] = getSpace(t, r + 1, c + 1);
-			neighbors[3] = getSpace(t, r + 1, c);
-			neighbors[4] = getSpace(Util.nonNegativeModulo(t - 1, 3), r, r);
-			neighbors[5] = getSpace(Util.nonNegativeModulo(t - 1, 3), r - 1,
-					r - 1);
+			neighbors[0] = getSpace(Util.nonNegativeModulo(t - 1, 3), r + 1,
+					r + 1);
+			neighbors[1] = getSpace(Util.nonNegativeModulo(t - 1, 3), r, r);
+			neighbors[2] = getSpace(t, r - 1, c);
+			neighbors[3] = getSpace(t, r, c + 1);
+			neighbors[4] = getSpace(t, r + 1, c + 1);
+			neighbors[5] = getSpace(t, r + 1, c);
 		} else if (c == r) {
 			neighbors = new Space[6];
-			neighbors[0] = getSpace(t, r - 1, c - 1);
-			neighbors[1] = getSpace(Util.nonNegativeModulo(t + 1, 3), r - 1, 0);
-			neighbors[2] = getSpace(Util.nonNegativeModulo(t + 1, 3), r, 0);
-			neighbors[3] = getSpace(t, r + 1, c + 1);
-			neighbors[4] = getSpace(t, r + 1, c);
-			neighbors[5] = getSpace(t, r, c - 1);
+			neighbors[0] = getSpace(t, r, c - 1);
+			neighbors[1] = getSpace(t, r - 1, c - 1);
+			neighbors[2] = getSpace(Util.nonNegativeModulo(t + 1, 3), r - 1, 0);
+			neighbors[3] = getSpace(Util.nonNegativeModulo(t + 1, 3), r, 0);
+			neighbors[4] = getSpace(t, r + 1, c + 1);
+			neighbors[5] = getSpace(t, r + 1, c);
 		} else {
 			neighbors = new Space[6];
-			neighbors[0] = getSpace(t, r - 1, c);
-			neighbors[1] = getSpace(t, r, c + 1);
-			neighbors[2] = getSpace(t, r + 1, c + 1);
-			neighbors[3] = getSpace(t, r + 1, c);
-			neighbors[4] = getSpace(t, r, c - 1);
-			neighbors[5] = getSpace(t, r - 1, c - 1);
+			neighbors[0] = getSpace(t, r, c - 1);
+			neighbors[1] = getSpace(t, r - 1, c - 1);
+			neighbors[2] = getSpace(t, r - 1, c);
+			neighbors[3] = getSpace(t, r, c + 1);
+			neighbors[4] = getSpace(t, r + 1, c + 1);
+			neighbors[5] = getSpace(t, r + 1, c);
 		}
 		return neighbors;
 	}
@@ -127,28 +149,29 @@ public class YGame extends ConnectGame {
 	}
 
 	@Override
-	// Uses the stack class in order to avoid recursion.
 	protected boolean isWin(char player) {
-		// start point
+		assert Util.debug(DebugFacility.GAME, displayState());
 		boolean left = false;
-		Space x = yBoard[0][boardSize - 2][0];
+		Space x = yBoard[0][boardSide - 2][0];
 		Space y;
 
-		int col = 0;
+		int col = -1;
 		while (true) {
-			for (; col < boardSize - 1; col++) {
-				x = yBoard[0][boardSize - 2][col];
+			for (col++; col < boardSide - 1; col++) {
+				x = yBoard[0][boardSide - 2][col];
 				if (x.getChar() == player) {
 					break;
 				}
 			}
-			if (col == boardSize - 1) {
-				x = yBoard[1][boardSize - 2][0];
+			if (col == boardSide - 1) {
+				x = yBoard[1][boardSide - 2][0];
 				if (x.getChar() != player) {
 					return false;
 				}
 			}
-			y = x.connectedSpaces[x.connectedSpaces.length - 1];
+			if (col == 0)
+				left = true;
+			y = x.connectedSpaces[x.t]; // Test each case. It makes sense
 			OUTER: while (true) {
 				int i;
 				for (i = 0; i < x.connectedSpaces.length; i++) {
@@ -163,9 +186,13 @@ public class YGame extends ConnectGame {
 					}
 					y = x.connectedSpaces[i];
 					if (y == null) {
-						if (x.isOnEdge[2]) {
-							return left || x.isOnEdge[1];
-						} else if (x.isOnEdge[1]) {
+						if (x.isOnEdge[1]) {
+							return left || x.isOnEdge[2];
+						} else if (x.isOnEdge[0]) {
+							col = Math.max(col, x.c);
+							left = false;
+							break OUTER;
+						} else {
 							left = true;
 							while (y == null) {
 								i++;
@@ -173,10 +200,6 @@ public class YGame extends ConnectGame {
 									i = 0;
 								y = x.connectedSpaces[i];
 							}
-						} else {
-							col = Math.max(col, x.c);
-							left = false;
-							break OUTER;
 						}
 					}
 				} while (y.getChar() != player);
@@ -196,31 +219,27 @@ public class YGame extends ConnectGame {
 
 	@Override
 	public String displayState() {
-		StringBuffer s = new StringBuffer();
-		s
-				.append("    " + yBoard[0][2][0] + " ----- " + yBoard[0][2][1]
-						+ " ----- " + yBoard[0][2][2] + "----"
-						+ yBoard[2][2][0] + "\n");
-		s.append("   /  \\   /   \\   /  \\ / |\n");
-		s.append("   " + yBoard[1][2][2] + "--- " + yBoard[0][1][0] + "------ "
-				+ yBoard[0][1][1] + "    " + yBoard[2][1][0] + "   /\n");
-		s.append("   | \\ /  \\   /    /    /\n");
-		s.append("   \\   " + yBoard[1][1][1] + "    " + yBoard[0][0][0]
-				+ "----" + yBoard[2][0][0] + "     /\n");
-		s.append("    \\    \\ /  /  |    " + yBoard[2][2][1] + "\n");
-		s.append("     \\     " + yBoard[1][0][0] + "-----" + yBoard[2][1][1]
-				+ "   /\n");
-		s.append("      " + yBoard[1][2][1] + "    |  /  |  /\n");
-		s.append("       \\   " + yBoard[1][1][0] + "     | /\n");
-		s.append("        \\  |     " + yBoard[2][2][2] + "\n");
-		s.append("         \\ |  /\n");
-		s.append("           " + yBoard[1][2][0] + "  \n");
-
-		return s.toString();
+		StringBuilder sb = new StringBuilder(formatString.length() - 2
+				* boardSize);
+		for (int i = 0; i < formatString.length(); i++) {
+			if (formatString.charAt(i) >= '0' && formatString.charAt(i) <= '9') {
+				sb.append(yBoard[formatString.charAt(i) - '0'][formatString
+						.charAt(i + 1) - '0'][formatString.charAt(i + 2) - '0']
+						.getChar());
+				i += 2;
+			} else {
+				sb.append(formatString.charAt(i));
+			}
+		}
+		return sb.toString();
 	}
 
 	@Override
 	public String describe() {
-		return "Y - " + boardSide;
+		return "Y" + boardSide;
+	}
+
+	public String toString() {
+		return displayState();
 	}
 }

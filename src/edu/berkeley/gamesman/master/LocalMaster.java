@@ -78,7 +78,7 @@ public final class LocalMaster implements Master, TaskFactory {
 		}
 		ArrayList<Thread> myThreads = new ArrayList<Thread>(list.size());
 
-		ThreadGroup solverGroup = new ThreadGroup("Solver Group: " + game);
+		ThreadGroup solverGroup = new ThreadGroup("Solver Group: " + game.describe());
 		for (WorkUnit w : list) {
 			Thread t = new Thread(solverGroup, new LocalMasterRunnable(w));
 			t.start();

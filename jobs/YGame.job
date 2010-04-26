@@ -1,0 +1,9 @@
+gamesman.game = YGame
+game.sideLength = 3
+gamesman.hasher = TieredItergameHasher
+gamesman.solver = TierItergameSolver
+gamesman.database = MemoryCachedDatabase
+gamesman.db.uri = ygame.db
+gamesman.db.compression = gzip
+gamesman.debug.THREADING = true
+record.fields = VALUE,REMOTENESS

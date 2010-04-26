@@ -39,7 +39,7 @@ public final class TierItergameSolver extends TierSolver<ItergameState> {
 				inWrite.putRecord(current, newVal);
 				break;
 			case IMPOSSIBLE:
-				prim.value = PrimitiveValue.TIE;
+				prim.value = PrimitiveValue.LOSE;
 				inWrite.putRecord(current, prim);
 				break;
 			default:

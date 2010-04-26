@@ -1,11 +1,13 @@
 package edu.berkeley.gamesman.game;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.game.util.ItergameState;
 import edu.berkeley.gamesman.hasher.MMHasher;
+import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -17,6 +19,7 @@ import edu.berkeley.gamesman.util.Util;
  */
 public abstract class ConnectGame extends TieredIterGame {
 	private char turn;
+	private static final char[] testArray = "XXXXXXXOOOOOXOOXO ".toCharArray();
 
 	protected final ItergameState myState = newState();
 
@@ -87,12 +90,15 @@ public abstract class ConnectGame extends TieredIterGame {
 				tier++;
 		}
 		myState.tier = tier;
+		turn = ((tier & 1) == 1) ? 'O' : 'X';
 		myState.hash = MMHasher.hash(getCharArray());
 	}
 
 	private void gameMatchState() {
 		int tier = myState.tier;
 		MMHasher.unhash(myState.hash, getCharArray(), (tier + 1) / 2, tier / 2);
+		if (Arrays.equals(getCharArray(), testArray))
+			System.out.println("Here");
 	}
 
 	@Override
@@ -103,6 +109,7 @@ public abstract class ConnectGame extends TieredIterGame {
 			arr[i] = ' ';
 		setToCharArray(arr);
 		myState.tier = 0;
+		turn = 'X';
 		myState.hash = 0;
 	}
 
@@ -115,6 +122,7 @@ public abstract class ConnectGame extends TieredIterGame {
 	@Override
 	public void setTier(int tier) {
 		myState.tier = tier;
+		turn = ((tier & 1) == 1) ? 'O' : 'X';
 		myState.hash = 0;
 		gameMatchState();
 	}
@@ -224,10 +232,19 @@ public abstract class ConnectGame extends TieredIterGame {
 
 	@Override
 	public PrimitiveValue primitiveValue() {
+		PrimitiveValue result;
 		if ((myState.tier & 1) == 1)
-			return isWin('X') ? PrimitiveValue.LOSE : PrimitiveValue.UNDECIDED;
+			result = isWin('X') ? PrimitiveValue.LOSE
+					: PrimitiveValue.UNDECIDED;
 		else
-			return isWin('O') ? PrimitiveValue.LOSE : PrimitiveValue.UNDECIDED;
+			result = isWin('O') ? PrimitiveValue.LOSE
+					: PrimitiveValue.UNDECIDED;
+		assert Util.debug(DebugFacility.GAME, result.name() + "\n");
+		if (myState.tier == numberOfTiers() - 1
+				&& result == PrimitiveValue.UNDECIDED)
+			return PrimitiveValue.IMPOSSIBLE;
+		else
+			return result;
 	}
 
 	protected abstract boolean isWin(char c);

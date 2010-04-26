@@ -5,14 +5,14 @@ import edu.berkeley.gamesman.util.Util;
 public class MMHasher {
 
 	public static void main(String[] args) {
-		char[] input = "OOOXX X O OX OXO".toCharArray();
+		char[] input = "XXXXXXXOOOOOXOOXOO".toCharArray();
 		MMBoard test = new MMBoard(input);
 		// test.debugPrint();
 		System.out.println("HASHING:");
 		System.out.println(input);
 		System.out.println(test.xMajorHash);
 		System.out.println(test.oMinorHash);
-		unhash(test.hashX, input, 5, 7);
+		unhash(test.hashX, input, 9, 9);
 		System.out.println("UNHASH =");
 		System.out.println(input);
 	}

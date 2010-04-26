@@ -255,7 +255,7 @@ public class TierSolver<T extends State> extends Solver {
 			assert Util.debug(DebugFacility.SOLVER, "Started the solver... ("
 					+ index + ")");
 			Thread.currentThread().setName(
-					"Solver (" + index + "): " + conf.getGame().toString());
+					"Solver (" + index + "): " + conf.getGame().describe());
 			Pair<Long, Long> slice;
 			while ((slice = nextSlice(conf)) != null) {
 				thisSlice = slice;
