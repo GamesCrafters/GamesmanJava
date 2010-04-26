@@ -1,7 +1,6 @@
 package edu.berkeley.gamesman.game;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.*;
@@ -19,7 +18,6 @@ import edu.berkeley.gamesman.util.Util;
  */
 public abstract class ConnectGame extends TieredIterGame {
 	private char turn;
-	private static final char[] testArray = "XXXXXXXOOOOOXOOXO ".toCharArray();
 
 	protected final ItergameState myState = newState();
 
@@ -97,8 +95,6 @@ public abstract class ConnectGame extends TieredIterGame {
 	private void gameMatchState() {
 		int tier = myState.tier;
 		MMHasher.unhash(myState.hash, getCharArray(), (tier + 1) / 2, tier / 2);
-		if (Arrays.equals(getCharArray(), testArray))
-			System.out.println("Here");
 	}
 
 	@Override

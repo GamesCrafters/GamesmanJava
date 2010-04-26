@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.hasher;
 import edu.berkeley.gamesman.util.Util;
 
 public class MMHasher {
+	public static MMBoard board;
 
 	public static void main(String[] args) {
 		char[] input = "XXXXXXXOOOOOXOOXOO".toCharArray();
@@ -18,7 +19,10 @@ public class MMHasher {
 	}
 
 	public static long hash(char[] pieces) {
-		MMBoard board = new MMBoard(pieces);
+		if (board == null)
+			board = new MMBoard(pieces);
+		else
+			board.setPieces(pieces);
 		return board.hashX;
 	}
 
@@ -73,6 +77,10 @@ class MMBoard {
 	long hashO;
 
 	MMBoard(char[] pieces) {
+		setPieces(pieces);
+	}
+
+	void setPieces(char[] pieces) {
 		xMajorHash = 0;
 		xMinorHash = 0;
 		oMajorHash = 0;
@@ -88,7 +96,14 @@ class MMBoard {
 		MMBoardElement lastO = null;
 
 		for (int i = 0; i < pieces.length; i++) {
-			current = new MMBoardElement(pieces[i], i);
+			if (i == 0)
+				current = first;
+			else
+				current = current.next;
+			if (current == null)
+				current = new MMBoardElement(pieces[i], i);
+			else
+				current.reset(pieces[i]);
 			if (i == 0) {
 				first = current;
 			}
@@ -141,7 +156,6 @@ class MMBoard {
 		}
 		hashX = xMajorHash * Util.nCr(nonXCount + 1, numO) + oMinorHash;
 		hashO = oMajorHash * Util.nCr(nonOCount + 1, numX) + xMinorHash;
-
 	}
 
 	long getPartialXMajorHash(MMBoardElement e) {
@@ -277,6 +291,14 @@ class MMBoardElement {
 		this.index = index;
 		next = null;
 		prev = null;
+		nextX = null;
+		prevX = null;
+		nextO = null;
+		prevO = null;
+	}
+
+	public void reset(char value) {
+		this.value = value;
 		nextX = null;
 		prevX = null;
 		nextO = null;
