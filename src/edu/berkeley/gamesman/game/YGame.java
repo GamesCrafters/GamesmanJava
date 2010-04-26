@@ -12,15 +12,17 @@ public class YGame extends ConnectGame {
 		// t = triangle, r = row c = column
 		final int t, r, c;
 		final int charNum;
+		int iter;
 		final boolean[] isOnEdge = new boolean[3];
 		final Space[] connectedSpaces;
-
+		
 		Space(int t, int r, int c, int charNum) {
 			this.t = t;
 			this.r = r;
 			this.c = c;
 			// index into board
 			this.charNum = charNum;
+			this.iter = 0;
 			connectedSpaces = null; // TODO Correct this. First initiate with
 			// correct size, then fill it in (in
 			// constructor of YGame) when all spaces
@@ -35,7 +37,49 @@ public class YGame extends ConnectGame {
 			board[charNum] = c;
 		}
 	}
+	
+	// Added a stack data structure for use in the isWin() function. - Rohit
+	private final class Stack {
+		
+		// stackNode object. Contains the Space and next pointer.
+		private final class stackNode {
+			Space data;
+			stackNode next;
+			
+			stackNode(Space s) {
+				data = s;
+				next = null;
+			}
+		}
 
+		stackNode top;
+		
+		// Stack constructor
+		Stack() {
+			top = null;
+		}
+			
+		void push(Space s) {
+			if(top == null) {
+				top = new stackNode(s);
+				top.next = null;
+			}
+			else {
+				stackNode temp = new stackNode(s);
+				temp.next = top;
+				top = temp;
+			}
+		}
+			
+		Space pop() {
+			if(top == null)
+				return null;
+			stackNode temp = top;
+			top = top.next;
+			return temp.data;
+		}
+	} // End stack class
+		
 	private Space[][][] yBoard;
 
 	private char[] board;
@@ -91,7 +135,11 @@ public class YGame extends ConnectGame {
 				return Math.abs(s1.r - s2.r) == 1
 						&& (s1.r - s2.r == s1.c - s2.c);
 		}
+		
 		// if they are in separate triangles, switch them.
+		// add 3 because we don't want to mod a negative value.
+		// if they are in separate triangles, switch them.
+
 		else if ((s2.t + 3 - s1.t) % 3 == 2) {
 			Space temp = s2;
 			s2 = s1;
@@ -110,10 +158,78 @@ public class YGame extends ConnectGame {
 	protected char[] getCharArray() {
 		return board;
 	}
-
+	
+	protected Space[] getNeighbors(int t, int r, int c) {
+		Space[] neighbors = new Space[6];
+		int charnum = yBoard[t][r][c].charNum; // don't know what this is atm...just pass it in to space constructor for now.
+		// probably the character piece at the neighbor so i'd have to look it up...
+		if(yBoard[t][r][c].isOnEdge[t]) {
+			neighbors[0] = new Space(t, r-1, c, charnum);
+			neighbors[1] = new Space(t, r, c+1, charnum);
+			neighbors[2] = new Space(t, r+1, c+1, charnum);
+			neighbors[3] = new Space(t, r+1, c, charnum);
+			neighbors[4] = new Space( (t-1+3) % 3, r, r, charnum);
+			neighbors[5] = new Space( (t-1+3) % 3, r-1, r-1, charnum);
+		}
+		else {
+			neighbors[0] = new Space(t, r-1, c, charnum);
+			neighbors[1] = new Space(t, r, c+1, charnum);
+			neighbors[2] = new Space(t, r+1, c+1, charnum);
+			neighbors[3] = new Space(t, r+1, c, charnum);
+			neighbors[4] = new Space(t, r, c-1, charnum);
+			neighbors[5] = new Space(t, r-1, c-1, charnum);
+		}
+		return neighbors;
+		
+	}
+	
 	@Override
+	// Uses the stack class in order to avoid recursion.
 	protected boolean isWin(char c) {
-		// TODO Auto-generated method stub
+		Stack spaces = new Stack();
+		// start point
+		int t = 0;
+		int r = 0;
+		int col = 0;		
+		
+		// Need to loop until an end condition i.e. until we know there is no path from all 3 sides.
+		
+		
+		if(yBoard[t][r][col].charNum == c) {
+			// Push space on the stack.
+			spaces.push(yBoard[t][r][col]);
+			
+			// Need to check if the space is on the right or bottom triangle so we can set a boolean flag.
+			
+			// Go to the next space.
+			t = yBoard[t][r][col].connectedSpaces[yBoard[t][r][col].iter].t;
+			r = yBoard[t][r][col].connectedSpaces[yBoard[t][r][col].iter].r;
+			col = yBoard[t][r][col].connectedSpaces[yBoard[t][r][col].iter].c;
+		}
+		// No piece at its neighbor, so determine the next piece to try.
+		else {
+			Space prev = spaces.pop();
+			while(prev != null) {
+				prev.iter++;
+				// Keep popping off the stack if iter >= 6 since that means we've exhausted all neighbors.
+				if(prev.iter < 6) {
+					break;
+				}
+				prev = spaces.pop();
+			}
+			// If nothing is on the stack, then we just move to the next space on the left edge.
+			if(prev == null) {
+				r++;
+				// need to move to a different triangle possibly...r++ may not be enough
+			}
+			// Go to the next connected space.
+			else {
+				t = prev.connectedSpaces[prev.iter].t;
+				r = prev.connectedSpaces[prev.iter].r;
+				col = prev.connectedSpaces[prev.iter].c;
+			}
+		}
+	
 		return false;
 	}
 
