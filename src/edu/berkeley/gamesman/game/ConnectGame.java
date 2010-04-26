@@ -18,7 +18,7 @@ import edu.berkeley.gamesman.util.Util;
  */
 public abstract class ConnectGame extends TieredIterGame {
 	private char turn;
-
+	private MMHasher mmh;
 	protected final ItergameState myState = newState();
 
 	/**
@@ -27,6 +27,7 @@ public abstract class ConnectGame extends TieredIterGame {
 	 */
 	public void initialize(Configuration conf) {
 		super.initialize(conf);
+		mmh = new MMHasher();
 	}
 
 	protected abstract int getBoardSize();
@@ -89,12 +90,12 @@ public abstract class ConnectGame extends TieredIterGame {
 		}
 		myState.tier = tier;
 		turn = ((tier & 1) == 1) ? 'O' : 'X';
-		myState.hash = MMHasher.hash(getCharArray());
+		myState.hash = mmh.hash(getCharArray());
 	}
 
 	private void gameMatchState() {
 		int tier = myState.tier;
-		MMHasher.unhash(myState.hash, getCharArray(), (tier + 1) / 2, tier / 2);
+		mmh.unhash(myState.hash, getCharArray(), (tier + 1) / 2, tier / 2);
 	}
 
 	@Override

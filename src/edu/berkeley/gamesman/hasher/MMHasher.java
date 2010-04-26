@@ -3,7 +3,7 @@ package edu.berkeley.gamesman.hasher;
 import edu.berkeley.gamesman.util.Util;
 
 public class MMHasher {
-	public static MMBoard board;
+	public MMBoard board;
 
 	public static void main(String[] args) {
 		char[] input = "XXXXXXXOOOOOXOOXOO".toCharArray();
@@ -13,12 +13,13 @@ public class MMHasher {
 		System.out.println(input);
 		System.out.println(test.xMajorHash);
 		System.out.println(test.oMinorHash);
-		unhash(test.hashX, input, 9, 9);
+		MMHasher mmh = new MMHasher();
+		mmh.unhash(test.hashX, input, 9, 9);
 		System.out.println("UNHASH =");
 		System.out.println(input);
 	}
 
-	public static long hash(char[] pieces) {
+	public long hash(char[] pieces) {
 		if (board == null)
 			board = new MMBoard(pieces);
 		else
@@ -26,7 +27,7 @@ public class MMHasher {
 		return board.hashX;
 	}
 
-	public static void unhash(long hash, char[] pieces, int numX, int numO) {
+	public void unhash(long hash, char[] pieces, int numX, int numO) {
 		int numSpace = pieces.length - numX - numO;
 		long temp = Util.nCr(numO + numSpace, numO);
 		long xMajorHash = (long) hash / temp;

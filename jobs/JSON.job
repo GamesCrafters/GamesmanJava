@@ -13,3 +13,9 @@ json.fields.connect4 = width,height,pieces
 
 json.unsolved.pegsolitaire = jobs/TriangularPegSolitaire.job
 json.fields.pegsolitaire = size,start
+
+json.unsolved.y = jobs/YGame.job
+json.fields.y = side
+
+json.unsolved.connections = jobs/Connections.job
+json.fields.connections = side
