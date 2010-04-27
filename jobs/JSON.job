@@ -15,7 +15,7 @@ json.unsolved.pegsolitaire = jobs/TriangularPegSolitaire.job
 json.fields.pegsolitaire = size,start
 
 json.unsolved.y = jobs/YGame.job
-json.fields.y = side
+json.fields.y = centerRows,outerRows
 
 json.unsolved.connections = jobs/Connections.job
 json.fields.connections = side
