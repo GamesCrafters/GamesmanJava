@@ -2,6 +2,7 @@ package edu.berkeley.gamesman.database;
 
 import java.math.BigInteger;
 import java.util.Iterator;
+
 import edu.berkeley.gamesman.util.LongIterator;
 
 /**
@@ -10,16 +11,6 @@ import edu.berkeley.gamesman.util.LongIterator;
  * @author dnspies
  */
 public class SynchronizedMemoryDatabase extends MemoryDatabase {
-
-	@Override
-	public synchronized long getLongRecordGroup(long loc) {
-		return super.getLongRecordGroup(loc);
-	}
-
-	@Override
-	public synchronized BigInteger getBigIntRecordGroup(long loc) {
-		return super.getBigIntRecordGroup(loc);
-	}
 
 	@Override
 	public synchronized void putRecordGroups(long loc,
@@ -31,5 +22,20 @@ public class SynchronizedMemoryDatabase extends MemoryDatabase {
 	public synchronized void putRecordGroups(long loc,
 			Iterator<BigInteger> recordGroups, int numGroups) {
 		super.putRecordGroups(loc, recordGroups, numGroups);
+	}
+
+	@Override
+	public synchronized void putRecordGroup(long loc, long rg) {
+		super.putRecordGroup(loc, rg);
+	}
+
+	@Override
+	public synchronized void putRecordGroup(long loc, BigInteger rg) {
+		super.putRecordGroup(loc, rg);
+	}
+
+	@Override
+	public synchronized void putBytes(long loc, byte[] arr, int off, int len) {
+		super.putBytes(loc, arr, off, len);
 	}
 }

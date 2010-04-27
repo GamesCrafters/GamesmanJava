@@ -38,18 +38,24 @@ public class MemoryDatabase extends Database {
 	public void close() {
 	}
 
-	/**
-	 * Must be synchronized by caller
-	 */
+	@Override
+	public void getBytes(long loc, byte[] arr, int off, int len) {
+		for (int i = 0; i < len; i++)
+			arr[off++] = memoryStorage[(int) loc++];
+	}
+
 	@Override
 	public void getBytes(byte[] arr, int off, int len) {
 		for (int i = 0; i < len; i++)
 			arr[off++] = memoryStorage[nextPlace++];
 	}
 
-	/**
-	 * Must be synchronized by caller
-	 */
+	@Override
+	public void putBytes(long loc, byte[] arr, int off, int len) {
+		for (int i = 0; i < len; i++)
+			memoryStorage[(int) loc++] = arr[off++];
+	}
+
 	@Override
 	public void putBytes(byte[] arr, int off, int len) {
 		for (int i = 0; i < len; i++)
