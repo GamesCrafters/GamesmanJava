@@ -62,12 +62,12 @@ public class MemoryDatabase extends Database {
 	}
 
 	@Override
-	public synchronized long getLongRecordGroup(long loc) {
+	public long getLongRecordGroup(long loc) {
 		return RecordGroup.longRecordGroup(conf, memoryStorage, (int) loc);
 	}
 
 	@Override
-	public synchronized BigInteger getBigIntRecordGroup(long loc) {
+	public BigInteger getBigIntRecordGroup(long loc) {
 		return RecordGroup.bigIntRecordGroup(conf, memoryStorage, (int) loc);
 	}
 
@@ -94,8 +94,8 @@ public class MemoryDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void putRecordGroups(long loc,
-			LongIterator recordGroups, int numGroups) {
+	public void putRecordGroups(long loc, LongIterator recordGroups,
+			int numGroups) {
 		for (int i = 0; i < numGroups; i++) {
 			RecordGroup.toUnsignedByteArray(conf, recordGroups.next(),
 					memoryStorage, (int) loc);
@@ -104,8 +104,8 @@ public class MemoryDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void putRecordGroups(long loc,
-			Iterator<BigInteger> recordGroups, int numGroups) {
+	public void putRecordGroups(long loc, Iterator<BigInteger> recordGroups,
+			int numGroups) {
 		for (int i = 0; i < numGroups; i++) {
 			RecordGroup.toUnsignedByteArray(conf, recordGroups.next(),
 					memoryStorage, (int) loc);
