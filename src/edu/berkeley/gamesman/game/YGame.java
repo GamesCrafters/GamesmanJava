@@ -242,4 +242,52 @@ public class YGame extends ConnectGame {
 	public String toString() {
 		return displayState();
 	}
+
+	@Override
+	public char[] convertInString(String s) {
+		int triangleSize = boardSide * (boardSide - 1) / 2;
+		char[] charArray = new char[s.length()];
+		int i = 0;
+		for (int t = 0; t < 3; t++) {
+			charArray[t * triangleSize] = s.charAt(i++);
+		}
+		for (int row = boardSide - 2; row > 0; row--) {
+			for (int t = 2; t >= 0; t--) {
+				charArray[Util.nonNegativeModulo(t + 1, 3) * triangleSize + row
+						* (row + 1) / 2] = s.charAt(i++);
+				for (int col = row; col > 0; col--) {
+					charArray[t * triangleSize + row * (row + 1) / 2 + col] = s
+							.charAt(i++);
+				}
+			}
+		}
+		return charArray;
+	}
+
+	@Override
+	public String convertOutString(char[] charArray) {
+		int triangleSize = boardSide * (boardSide - 1) / 2;
+		StringBuilder s = new StringBuilder(charArray.length);
+		for (int t = 0; t < 3; t++) {
+			s.append(charArray[t * triangleSize]);
+		}
+		for (int row = boardSide - 2; row > 0; row--) {
+			for (int t = 2; t >= 0; t--) {
+				s.append(charArray[Util.nonNegativeModulo(t + 1, 3)
+						* triangleSize + row * (row + 1) / 2]);
+				for (int col = row; col > 0; col--) {
+					s.append(charArray[t * triangleSize + row * (row + 1) / 2
+							+ col]);
+				}
+			}
+		}
+		return s.toString();
+	}
+
+	public static void main(String[] args) {
+		YGame yg = new YGame();
+		yg.boardSide = 4;
+		String arr = yg.convertOutString(args[0].toCharArray());
+		System.out.println(arr);
+	}
 }

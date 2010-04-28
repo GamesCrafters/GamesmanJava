@@ -77,7 +77,7 @@ public abstract class ConnectGame extends TieredIterGame {
 
 	@Override
 	public void setFromString(String pos) {
-		setToCharArray(pos.toCharArray());
+		setToCharArray(convertInString(pos));
 		stateMatchGame();
 	}
 
@@ -222,8 +222,12 @@ public abstract class ConnectGame extends TieredIterGame {
 
 	@Override
 	public String stateToString() {
-		return new String(getCharArray());
+		return convertOutString(getCharArray());
 	}
+
+	public abstract char[] convertInString(String s);
+
+	public abstract String convertOutString(char[] charArray);
 
 	protected abstract void setToCharArray(char[] myPieces);
 

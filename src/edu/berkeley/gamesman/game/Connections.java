@@ -187,4 +187,14 @@ public class Connections extends ConnectGame {
 		}
 		return p;
 	}
+
+	@Override
+	public char[] convertInString(String s) {
+		return s.toCharArray();
+	}
+
+	@Override
+	public String convertOutString(char[] charArray) {
+		return charArray.toString();
+	}
 }
