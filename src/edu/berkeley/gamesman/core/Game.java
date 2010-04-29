@@ -386,4 +386,7 @@ public abstract class Game<S extends State> {
 		recArray = recs.toArray(recArray);
 		return combine(recArray, 0, recArray.length);
 	}
+
+	public void setInterperet(long recNum) {
+	}
 }

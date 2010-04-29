@@ -59,7 +59,12 @@ public class TDC4Hasher extends Hasher<C4State> {
 		return new C4State(numPieces, spaceArrangement, pieceArrangement);
 	}
 
-	private int getNumPieces(long hash) {
+	
+	/**
+	 * @param hash The game hash
+	 * @return The number of pieces in the game
+	 */
+	public int getNumPieces(long hash) {
 		if (offsets == null)
 			setOffsets();
 		int smallest = 0, largest = offsets.length - 1;

@@ -621,4 +621,9 @@ public final class Connect4 extends TieredIterGame {
 		else
 			return 3;
 	}
+
+	@Override
+	public void setInterperet(long hash) {
+		setTier(hashToTier(hash));
+	}
 }

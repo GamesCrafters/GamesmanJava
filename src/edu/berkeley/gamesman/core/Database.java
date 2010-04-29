@@ -20,6 +20,8 @@ public abstract class Database {
 
 	private byte[] groups;
 
+	private boolean solve;
+
 	protected int maxBytes;
 
 	/**
@@ -47,6 +49,7 @@ public abstract class Database {
 	 */
 	public final void initialize(String uri, Configuration config, boolean solve) {
 		conf = config;
+		this.solve = solve;
 		initialize(uri, solve);
 		maxBytes = 1024 - 1024 % conf.recordGroupByteLength;
 		assert Util.debug(DebugFacility.DATABASE, conf.recordsPerGroup
@@ -139,6 +142,8 @@ public abstract class Database {
 	 *            The record to store in
 	 */
 	public void getRecord(long recordIndex, Record r) {
+		if (!solve)
+			conf.getGame().setInterperet(recordIndex);
 		if (conf.superCompress) {
 			long group = recordIndex / conf.recordsPerGroup;
 			int num = (int) (recordIndex % conf.recordsPerGroup);

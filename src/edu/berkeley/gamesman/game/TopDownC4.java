@@ -9,6 +9,7 @@ import edu.berkeley.gamesman.game.util.BitSetBoard;
 import edu.berkeley.gamesman.game.util.C4State;
 import edu.berkeley.gamesman.game.util.TopDownPieceRearranger;
 import edu.berkeley.gamesman.hasher.TDC4Hasher;
+import edu.berkeley.gamesman.hasher.TieredHasher;
 import edu.berkeley.gamesman.util.*;
 
 /**
@@ -437,5 +438,11 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 	@Override
 	public C4State newState() {
 		return new C4State(0, 0, 0);
+	}
+
+	@Override
+	public void setInterperet(long l) {
+		TDC4Hasher th = (TDC4Hasher) conf.getHasher();
+		setNumPieces(th.getNumPieces(l));
 	}
 }

@@ -66,7 +66,11 @@ public class YGame extends ConnectGame {
 	 */
 	public void initialize(Configuration conf) {
 		super.initialize(conf);
-		boardSide = conf.getInteger("game.sideLength", 4);
+		initialize(conf.getInteger("game.sideLength", 4));
+	}
+
+	public void initialize(int boardSide) {
+		this.boardSide = boardSide;
 		yBoard = new Space[3][boardSide - 1][];
 		int n = 0;
 		for (int t = 0; t < 3; t++) {
