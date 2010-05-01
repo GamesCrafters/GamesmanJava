@@ -18,7 +18,7 @@ import edu.berkeley.gamesman.util.Util;
  */
 public abstract class ConnectGame extends TieredIterGame {
 	private char turn;
-	private MMHasher mmh;
+	protected MMHasher mmh;
 	protected final ItergameState myState = newState();
 
 	/**
@@ -60,9 +60,13 @@ public abstract class ConnectGame extends TieredIterGame {
 
 	@Override
 	public long numHashesForTier() {
-		char[] arr = getCharArray();
 		int tier = getTier();
-		return Util.nCr(arr.length, tier) * Util.nCr(tier, tier / 2);
+		return Util.nCr(getBoardSize(), tier) * Util.nCr(tier, tier / 2);
+	}
+
+	@Override
+	public long numHashesForTier(int tier) {
+		return Util.nCr(getBoardSize(), tier) * Util.nCr(tier, tier / 2);
 	}
 
 	@Override

@@ -139,4 +139,9 @@ public final class FileDatabase extends Database {
 		this.firstByte = firstByte;
 		this.numBytes = numBytes;
 	}
+
+	@Override
+	public long firstByte() {
+		return firstByte;
+	}
 }

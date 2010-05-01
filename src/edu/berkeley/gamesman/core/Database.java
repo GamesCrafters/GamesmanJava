@@ -786,4 +786,8 @@ public abstract class Database {
 			len -= groupsLength;
 		}
 	}
+
+	public long firstByte() {
+		return 0;
+	}
 }

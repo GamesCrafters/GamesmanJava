@@ -57,8 +57,8 @@ public class GZippedFileDatabase extends Database {
 	public synchronized void getBytes(long loc, byte[] arr, int off, int len) {
 		while (len > 0) {
 			long filePos = 0;
+			int entryNum = (int) (loc / entrySize);
 			try {
-				int entryNum = (int) (loc / entrySize);
 				if (isRemote) {
 					filePos = entryPoints[entryNum];
 					int endEntry = (int) ((loc + len + entrySize - 1) / entrySize);
@@ -85,11 +85,11 @@ public class GZippedFileDatabase extends Database {
 				Util.fatalError("IO Error", e);
 			}
 			int bytesRead = 0;
-			int nextEntry = (int) (loc / entrySize) + 1;
+			int nextEntry = entryNum + 1;
 			int sLen = (int) Math.min(len, nextEntry * entrySize - loc);
 			while (bytesRead < sLen)
 				try {
-					bytesRead += myStream.read(arr, off + bytesRead, len
+					bytesRead += myStream.read(arr, off + bytesRead, sLen
 							- bytesRead);
 				} catch (IOException e) {
 					Util.fatalError("IO Error", e);
@@ -142,36 +142,27 @@ public class GZippedFileDatabase extends Database {
 			}
 			entrySize = conf.getLong("zip.entryKB", 1 << 6) << 10;
 			bufferSize = conf.getInteger("zip.bufferKB", 1 << 6) << 10;
-			if (entrySize > 0L) {
-				int numEntries = (int) ((getByteSize() + entrySize - 1) / entrySize);
-				entryPoints = new long[numEntries];
-				byte[] entryBytes = new byte[numEntries << 3];
-				if (isRemote)
-					rdf.getBytes(8, entryBytes, 0, entryBytes.length);
-				else {
-					int bytesRead = 0;
-					while (bytesRead < entryBytes.length) {
-						int numBytes = fis.read(entryBytes, bytesRead,
-								entryBytes.length - bytesRead);
-						if (numBytes == -1)
-							break;
-						bytesRead += numBytes;
-					}
+			int numEntries = (int) ((getByteSize() + entrySize - 1) / entrySize);
+			entryPoints = new long[numEntries];
+			byte[] entryBytes = new byte[numEntries << 3];
+			if (isRemote)
+				rdf.getBytes(8, entryBytes, 0, entryBytes.length);
+			else {
+				int bytesRead = 0;
+				while (bytesRead < entryBytes.length) {
+					int numBytes = fis.read(entryBytes, bytesRead,
+							entryBytes.length - bytesRead);
+					if (numBytes == -1)
+						break;
+					bytesRead += numBytes;
 				}
-				int count = 0;
-				for (int i = 0; i < numEntries; i++) {
-					for (int bit = 56; bit >= 0; bit -= 8) {
-						entryPoints[i] <<= 8;
-						entryPoints[i] |= ((int) entryBytes[count++]) & 255;
-					}
+			}
+			int count = 0;
+			for (int i = 0; i < numEntries; i++) {
+				for (int bit = 56; bit >= 0; bit -= 8) {
+					entryPoints[i] <<= 8;
+					entryPoints[i] |= ((int) entryBytes[count++]) & 255;
 				}
-			} else {
-				entrySize = getByteSize();
-				entryPoints = new long[1];
-				if (isRemote)
-					entryPoints[0] = 0;
-				else
-					entryPoints[0] = confLength + 4;
 			}
 		} catch (IOException e) {
 			Util.fatalError("IO Error", e);
@@ -211,7 +202,7 @@ public class GZippedFileDatabase extends Database {
 	 * @param storeConf
 	 *            Should the configuration be stored as well?
 	 */
-	public static void createFromFile(FileDatabase readFrom, File writeTo,
+	public static void createFromFile(Database readFrom, File writeTo,
 			boolean storeConf) {
 		createFromFile(readFrom, writeTo, storeConf, 1 << 16);
 	}
@@ -230,7 +221,7 @@ public class GZippedFileDatabase extends Database {
 	 * @param entrySize
 	 *            The size of each GZipped portion of the database
 	 */
-	public static void createFromFile(FileDatabase readFrom, File writeTo,
+	public static void createFromFile(Database readFrom, File writeTo,
 			boolean storeConf, long entrySize) {
 		createFromFile(readFrom, writeTo, storeConf, entrySize, 1 << 16);
 	}
@@ -249,38 +240,30 @@ public class GZippedFileDatabase extends Database {
 	 * @param bufferSize
 	 *            The buffer size for the GZippedOutputStream
 	 */
-	public static void createFromFile(FileDatabase readFrom, File writeTo,
+	public static void createFromFile(Database readFrom, File writeTo,
 			boolean storeConf, long entrySize, int bufferSize) {
 		bufferSize = (int) Math.min(bufferSize, entrySize);
 		if (writeTo.exists())
 			writeTo.delete();
 		try {
 			writeTo.createNewFile();
-			FileInputStream fis = new FileInputStream(readFrom.myFile);
 			FileOutputStream fos = new FileOutputStream(writeTo);
-			int confLength = 0;
-			for (int i = 24; i >= 0; i -= 8) {
-				confLength <<= 8;
-				confLength |= fis.read();
-			}
-			byte[] confArray = null;
-			if (confLength > 0) {
-				confArray = new byte[confLength];
-				fis.read(confArray);
-			} else
-				storeConf = false;
+			byte[] confArray;
 			if (storeConf) {
-				Configuration conf = Configuration.load(confArray);
-				conf.setProperty("gamesman.database", "GZippedFileDatabase");
-				conf.setProperty("gamesman.db.uri", writeTo.getPath());
-				conf.setProperty("zip.entryKB", Long.toString(entrySize >> 10));
-				conf.setProperty("zip.bufferKB", Integer
+				Configuration conf = readFrom.getConfiguration();
+				Configuration outConf = conf.cloneAll();
+				outConf.setProperty("gamesman.database", "GZippedFileDatabase");
+				outConf.setProperty("gamesman.db.uri", writeTo.getPath());
+				outConf.setProperty("zip.entryKB", Long
+						.toString(entrySize >> 10));
+				outConf.setProperty("zip.bufferKB", Integer
 						.toString(bufferSize >> 10));
-				confArray = conf.store();
+				confArray = outConf.store();
 				for (int i = 24; i >= 0; i -= 8)
 					fos.write(confArray.length >> i);
 				fos.write(confArray);
 			} else {
+				confArray = new byte[0];
 				for (int i = 0; i < 4; i++)
 					fos.write(0);
 			}
@@ -289,67 +272,42 @@ public class GZippedFileDatabase extends Database {
 				fos.write((int) (numBytes >>> bit));
 			GZIPOutputStream gos;
 			byte[] tempArray = new byte[bufferSize];
-			if (entrySize == 0) {
-				gos = new GZIPOutputStream(fos, bufferSize);
-				long count = 0;
-				while (count < numBytes) {
-					int bytes = fis.read(tempArray);
-					if (bytes < 0) {
-						gos.write(tempArray, 0, (int) (numBytes - count));
-						break;
-					} else
-						gos.write(tempArray, 0, bytes);
+			int numPosits = (int) ((numBytes + entrySize - 1) / entrySize);
+			long[] posits = new long[numPosits];
+			long pos = fos.getChannel().position();
+			long count = 0;
+			fos.getChannel().position(pos + (numPosits << 3));
+			long byteNum = readFrom.firstByte();
+			readFrom.seek(byteNum);
+			for (int i = 0; i < numPosits; i++) {
+				pos = fos.getChannel().position();
+				posits[i] = pos;
+				gos = new GZIPOutputStream(fos);
+				long tot = Math.min((i + 1) * entrySize, numBytes);
+				while (count < tot) {
+					int bytes;
+					if (bufferSize < tot - count) {
+						bytes = tempArray.length;
+					} else {
+						bytes = (int) (tot - count);
+					}
+					readFrom.getBytes(tempArray, 0, bytes);
+					if (byteNum + bytes > 10712679 && byteNum < 10712679)
+						System.out.println("here");
+					byteNum += bytes;
+					gos.write(tempArray, 0, bytes);
 					count += bytes;
 				}
-				fis.close();
-				gos.close();
-			} else {
-				int numPosits = (int) ((numBytes + entrySize - 1) / entrySize);
-				long[] posits = new long[numPosits];
-				long pos = fos.getChannel().position();
-				long count = 0;
-				fos.getChannel().position(pos + (numPosits << 3));
-				/*
-				 * The parentheses were in the wrong place when I solved 6x6 and
-				 * 7x5. Now the databases contain a few extra empty bytes
-				 */
-				for (int i = 0; i < numPosits; i++) {
-					pos = fos.getChannel().position();
-					posits[i] = pos;
-					gos = new GZIPOutputStream(fos);
-					long tot = (i + 1) * entrySize;
-					while (count < tot) {
-						int bytes;
-						if (bufferSize < tot - count)
-							bytes = fis.read(tempArray);
-						else
-							bytes = fis.read(tempArray, 0, (int) (tot - count));
-						if (bytes < 0) {
-							if (numBytes > count)
-								gos.write(tempArray, 0,
-										(int) (numBytes - count));
-							count = numBytes;
-							break;
-						} else
-							gos.write(tempArray, 0, bytes);
-						count += bytes;
-					}
-					gos.finish();
-				}
-				if (storeConf)
-					fos.getChannel().position(confArray.length + 12);
-				else
-					fos.getChannel().position(12);
-				for (int i = 0; i < numPosits; i++) {
-					for (int bit = 56; bit >= 0; bit -= 8)
-						fos.write((int) (posits[i] >> bit));
-				}
-				fos.close();
+				gos.finish();
 			}
+			fos.getChannel().position(confArray.length + 12);
+			for (int i = 0; i < numPosits; i++) {
+				for (int bit = 56; bit >= 0; bit -= 8)
+					fos.write((int) (posits[i] >> bit));
+			}
+			fos.close();
 		} catch (IOException e) {
 			Util.fatalError("IO Error", e);
-		} catch (ClassNotFoundException e) {
-			Util.fatalError("This shouldn't happen", e);
 		}
 	}
 }

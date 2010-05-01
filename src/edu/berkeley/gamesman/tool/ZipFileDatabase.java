@@ -2,6 +2,8 @@ package edu.berkeley.gamesman.tool;
 
 import java.io.*;
 
+import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.database.FileDatabase;
 import edu.berkeley.gamesman.database.GZippedFileDatabase;
 
@@ -23,8 +25,18 @@ public class ZipFileDatabase {
 	 */
 	public static void main(String[] args) throws IOException,
 			ClassNotFoundException {
-		FileDatabase readFrom = new FileDatabase();
-		readFrom.initialize(args[0], false);
+		File readFromFile = new File(args[0]);
+		InputStream is = new FileInputStream(readFromFile);
+		int confLength = 0;
+		for (int i = 0; i < 4; i++) {
+			confLength <<= 8;
+			confLength |= is.read();
+		}
+		byte[] confBytes = new byte[confLength];
+		is.read(confBytes);
+		Configuration conf = Configuration.load(confBytes);
+		is.close();
+		Database readFrom = conf.openDatabase(false);
 		File writeTo = new File(args[0] + ".gz");
 		int bufferSize;
 		long entrySize;
