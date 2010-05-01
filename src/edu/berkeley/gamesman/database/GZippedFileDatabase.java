@@ -292,8 +292,6 @@ public class GZippedFileDatabase extends Database {
 						bytes = (int) (tot - count);
 					}
 					readFrom.getBytes(tempArray, 0, bytes);
-					if (byteNum + bytes > 10712679 && byteNum < 10712679)
-						System.out.println("here");
 					byteNum += bytes;
 					gos.write(tempArray, 0, bytes);
 					count += bytes;
