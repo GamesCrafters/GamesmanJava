@@ -12,7 +12,6 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.game.TieredGame;
-import edu.berkeley.gamesman.hasher.TieredHasher;
 import edu.berkeley.gamesman.parallel.ErrorThread;
 import edu.berkeley.gamesman.parallel.TierSlave;
 import edu.berkeley.gamesman.util.Pair;
@@ -84,29 +83,36 @@ public class DistributedDatabase extends Database {
 
 	private long fetchBytes(long location, byte[] arr, int off, int len) {
 		int firstTier, lastTier;
+		long nextTierOffset = 0;
 		TieredGame<?> g = null;
 		if (solve) {
 			firstTier = lastTier = tier;
 		} else {
 			g = (TieredGame<?>) conf.getGame();
+			for (int count = 0; count < conf.recordGroupByteLength; count++) {
+				arr[off + count] = 0;
+			}
 			firstTier = g.hashToTier(location / conf.recordGroupByteLength
 					* conf.recordsPerGroup);
 			lastTier = g.hashToTier((location + len)
 					/ conf.recordGroupByteLength * conf.recordsPerGroup - 1);
+			nextTierOffset = g.hashOffsetForTier(firstTier);
 		}
 		for (int tier = firstTier; tier <= lastTier; tier++) {
-			boolean combineFirst = !solve
-					&& g.hashOffsetForTier(tier) / conf.recordsPerGroup
-							* conf.recordGroupByteLength == location;
+			boolean combineFirst;
 			try {
 				String result;
 				if (solve) {
+					combineFirst = false;
 					synchronized (this) {
 						masterWrite.println("fetch files: " + location + " "
 								+ len);
 						result = scan.nextLine();
 					}
 				} else {
+					combineFirst = nextTierOffset / conf.recordsPerGroup
+							* conf.recordGroupByteLength == location;
+					nextTierOffset = g.hashOffsetForTier(tier + 1);
 					result = getFileList(files.get(tier), location, len);
 				}
 				String[] nodeFiles = result.split(" ");
@@ -128,12 +134,14 @@ public class DistributedDatabase extends Database {
 					} else if (tier == lastTier) {
 						nextStart = location + len;
 					} else {
-						TieredHasher<?> h = (TieredHasher<?>) conf.getHasher();
-						nextStart = (g.hashOffsetForTier(tier)
-								+ h.numHashesForTier(tier)
-								+ conf.recordsPerGroup - 1)
-								/ conf.recordsPerGroup
+						int nextTierMod = (int) (nextTierOffset % conf.recordsPerGroup);
+						nextStart = (nextTierOffset / conf.recordsPerGroup + (nextTierMod == 0 ? 0
+								: 1))
 								* conf.recordGroupByteLength;
+						if (nextTierMod == 0)
+							for (int byteCount = 0; byteCount < conf.recordGroupByteLength; byteCount++)
+								arr[(int) (nextStart - location) + off
+										+ byteCount] = 0;
 					}
 					if (lastZippedTier >= 0 && tier >= lastZippedTier
 							|| (zipped && TierSlave.jobFile != null)) {
@@ -159,13 +167,18 @@ public class DistributedDatabase extends Database {
 						new ErrorThread(p.getErrorStream(), nodeFile[0] + ":"
 								+ nodeFile[1]).start();
 						while (location < nextStart) {
+							byte[] group = null;
 							if (combineFirst) {
-								arr[off++] += byteReader.read();
-								location++;
-								len--;
+								group = new byte[conf.recordGroupByteLength];
+								for (int count = 0; count < conf.recordGroupByteLength; count++)
+									group[count] = arr[off + count];
 							}
 							int bytesRead = byteReader.read(arr, off,
 									(int) (nextStart - location));
+							if (combineFirst) {
+								for (int count = 0; count < conf.recordGroupByteLength; count++)
+									arr[off + count] += group[count];
+							}
 							if (bytesRead == -1)
 								Util.fatalError(nodeFile[0] + ":" + nodeFile[1]
 										+ ": No more bytes available");
@@ -229,6 +242,14 @@ public class DistributedDatabase extends Database {
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
+			}
+			if (tier != lastTier) {
+				if (!solve && nextTierOffset % conf.recordsPerGroup != 0) {
+					location -= conf.recordGroupByteLength;
+					off -= conf.recordGroupByteLength;
+					len += conf.recordGroupByteLength;
+				} else
+					arr[off] = 0;
 			}
 		}
 		return location;
