@@ -12,6 +12,7 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.game.TieredGame;
+import edu.berkeley.gamesman.hasher.TieredHasher;
 import edu.berkeley.gamesman.parallel.ErrorThread;
 import edu.berkeley.gamesman.parallel.TierSlave;
 import edu.berkeley.gamesman.util.Pair;
@@ -92,7 +93,6 @@ public class DistributedDatabase extends Database {
 					* conf.recordsPerGroup);
 			lastTier = g.hashToTier((location + len)
 					/ conf.recordGroupByteLength * conf.recordsPerGroup - 1);
-
 		}
 		for (int tier = firstTier; tier <= lastTier; tier++) {
 			boolean combineFirst = !solve
@@ -106,8 +106,9 @@ public class DistributedDatabase extends Database {
 								+ len);
 						result = scan.nextLine();
 					}
-				} else
+				} else {
 					result = getFileList(files.get(tier), location, len);
+				}
 				String[] nodeFiles = result.split(" ");
 				String[] nodeFile = nodeFiles[0].split(":");
 				String[] nextNodeFile = null;
@@ -124,10 +125,16 @@ public class DistributedDatabase extends Database {
 					if (i < nodeFiles.length - 1) {
 						nextNodeFile = nodeFiles[i + 1].split(":");
 						nextStart = Long.parseLong(nextNodeFile[1]);
-					} else if (tier == lastTier)
+					} else if (tier == lastTier) {
 						nextStart = location + len;
-					else
-						nextStart = g.hashOffsetForTier(tier + 1);
+					} else {
+						TieredHasher<?> h = (TieredHasher<?>) conf.getHasher();
+						nextStart = (g.hashOffsetForTier(tier)
+								+ h.numHashesForTier(tier)
+								+ conf.recordsPerGroup - 1)
+								/ conf.recordsPerGroup
+								* conf.recordGroupByteLength;
+					}
 					if (lastZippedTier >= 0 && tier >= lastZippedTier
 							|| (zipped && TierSlave.jobFile != null)) {
 						String gamesmanPath = conf.getProperty("gamesman.path");
