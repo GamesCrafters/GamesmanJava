@@ -1,9 +1,6 @@
 package edu.berkeley.gamesman.game;
 
 import edu.berkeley.gamesman.core.*;
-import edu.berkeley.gamesman.database.GZippedFileDatabase;
-import edu.berkeley.gamesman.database.MemoryCachedDatabase;
-import edu.berkeley.gamesman.hasher.MMHasher;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
@@ -289,20 +286,5 @@ public class YGame extends ConnectGame {
 			}
 		}
 		return s.toString();
-	}
-
-	public static void main(String[] args) {
-		GZippedFileDatabase gzfd = new GZippedFileDatabase();
-//		MemoryCachedDatabase gzfd = new MemoryCachedDatabase();
-		gzfd.initialize("ygame.db.gz", false);
-		Configuration conf = gzfd.getConfiguration();
-		YGame yg = (YGame) conf.getGame();
-		yg.setFromString("   XXXXOOOOX      ");
-		long hash = yg.myHasher.hashOffsetForTier(yg.myState.tier)
-				+ yg.myState.hash;
-		System.out.println(hash);
-		System.out.println(yg.displayState());
-		System.out.println(yg.primitiveValue());
-		System.out.println(gzfd.getRecord(hash));
 	}
 }

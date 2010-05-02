@@ -82,124 +82,147 @@ public class DistributedDatabase extends Database {
 	}
 
 	private long fetchBytes(long location, byte[] arr, int off, int len) {
-		try {
-			String result;
-			if (solve) {
-				synchronized (this) {
-					masterWrite.println("fetch files: " + location + " " + len);
-					result = scan.nextLine();
-				}
-			} else {
-				result = getFileList(files.get(tier), location, len);
-			}
-			String[] nodeFiles = result.split(" ");
-			String[] nodeFile = nodeFiles[0].split(":");
-			String[] nextNodeFile = null;
-			long fileStart = Long.parseLong(nodeFile[1]);
-			long nextStart = 0;
-			long fileLoc = location - fileStart + 4;
-			long fileBlocks = fileLoc >> 9;
-			int skipBytes = (int) (fileLoc & 511L);
-			for (int i = 0; i < nodeFiles.length; i++) {
-				if (i > 0) {
-					nodeFile = nextNodeFile;
-					fileStart = nextStart;
-				}
-				if (i < nodeFiles.length - 1) {
-					nextNodeFile = nodeFiles[i + 1].split(":");
-					nextStart = Long.parseLong(nextNodeFile[1]);
-				} else {
-					nextStart = location + len;
-				}
-				if (lastZippedTier >= 0 && tier >= lastZippedTier
-						|| (zipped && TierSlave.jobFile != null)) {
-					String gamesmanPath = conf.getProperty("gamesman.path");
-					StringBuilder sb = new StringBuilder("ssh ");
-					sb.append(nodeFile[0]);
-					sb.append(" java -cp ");
-					sb.append(gamesmanPath);
-					sb.append(File.separator);
-					sb
-							.append("bin edu.berkeley.gamesman.parallel.ReadZippedBytes ");
-					sb.append(TierSlave.jobFile);
-					sb.append(" ");
-					sb.append(tier);
-					sb.append(" ");
-					sb.append(nodeFile[1]);
-					sb.append(" ");
-					sb.append(location);
-					sb.append(" ");
-					sb.append(nextStart - location);
-					Process p = r.exec(sb.toString());
-					InputStream byteReader = p.getInputStream();
-					new ErrorThread(p.getErrorStream(), nodeFile[0] + ":"
-							+ nodeFile[1]).start();
-					while (location < nextStart) {
-						int bytesRead = byteReader.read(arr, off,
+		int firstTier, lastTier;
+		TieredGame<?> g = null;
+		if (solve) {
+			firstTier = lastTier = tier;
+		} else {
+			g = (TieredGame<?>) conf.getGame();
+			firstTier = g.hashToTier(location / conf.recordGroupByteLength
+					* conf.recordsPerGroup);
+			lastTier = g.hashToTier((location + len)
+					/ conf.recordGroupByteLength * conf.recordsPerGroup - 1);
+
+		}
+		for (int tier = firstTier; tier <= lastTier; tier++) {
+			boolean combineFirst = !solve
+					&& g.hashOffsetForTier(tier) / conf.recordsPerGroup
+							* conf.recordGroupByteLength == location;
+			try {
+				String result;
+				if (solve) {
+					synchronized (this) {
+						masterWrite.println("fetch files: " + location + " "
+								+ len);
+						result = scan.nextLine();
+					}
+				} else
+					result = getFileList(files.get(tier), location, len);
+				String[] nodeFiles = result.split(" ");
+				String[] nodeFile = nodeFiles[0].split(":");
+				String[] nextNodeFile = null;
+				long fileStart = Long.parseLong(nodeFile[1]);
+				long nextStart = 0;
+				long fileLoc = location - fileStart + 4;
+				long fileBlocks = fileLoc >> 9;
+				int skipBytes = (int) (fileLoc & 511L);
+				for (int i = 0; i < nodeFiles.length; i++) {
+					if (i > 0) {
+						nodeFile = nextNodeFile;
+						fileStart = nextStart;
+					}
+					if (i < nodeFiles.length - 1) {
+						nextNodeFile = nodeFiles[i + 1].split(":");
+						nextStart = Long.parseLong(nextNodeFile[1]);
+					} else if (tier == lastTier)
+						nextStart = location + len;
+					else
+						nextStart = g.hashOffsetForTier(tier + 1);
+					if (lastZippedTier >= 0 && tier >= lastZippedTier
+							|| (zipped && TierSlave.jobFile != null)) {
+						String gamesmanPath = conf.getProperty("gamesman.path");
+						StringBuilder sb = new StringBuilder("ssh ");
+						sb.append(nodeFile[0]);
+						sb.append(" java -cp ");
+						sb.append(gamesmanPath);
+						sb.append(File.separator);
+						sb
+								.append("bin edu.berkeley.gamesman.parallel.ReadZippedBytes ");
+						sb.append(TierSlave.jobFile);
+						sb.append(" ");
+						sb.append(tier);
+						sb.append(" ");
+						sb.append(nodeFile[1]);
+						sb.append(" ");
+						sb.append(location);
+						sb.append(" ");
+						sb.append(nextStart - location);
+						Process p = r.exec(sb.toString());
+						InputStream byteReader = p.getInputStream();
+						new ErrorThread(p.getErrorStream(), nodeFile[0] + ":"
+								+ nodeFile[1]).start();
+						while (location < nextStart) {
+							if (combineFirst) {
+								arr[off++] += byteReader.read();
+								location++;
+								len--;
+							}
+							int bytesRead = byteReader.read(arr, off,
+									(int) (nextStart - location));
+							if (bytesRead == -1)
+								Util.fatalError(nodeFile[0] + ":" + nodeFile[1]
+										+ ": No more bytes available");
+							location += bytesRead;
+							off += bytesRead;
+							len -= bytesRead;
+						}
+					} else if (zipped) {
+						GZippedFileDatabase myZipBase = new GZippedFileDatabase();
+						myZipBase.initialize(nodeFile[0] + ":" + parentPath
+								+ "t" + tier + File.separator + "s"
+								+ nodeFile[1] + ".db.gz", conf, false);
+						myZipBase.getBytes(location - fileStart, arr, off,
 								(int) (nextStart - location));
-						if (bytesRead == -1)
-							Util.fatalError(nodeFile[0] + ":" + nodeFile[1]
-									+ ": No more bytes available");
-						location += bytesRead;
-						off += bytesRead;
-						len -= bytesRead;
+						off += nextStart - location;
+						len -= nextStart - location;
+						location = nextStart;
+					} else {
+						StringBuilder sb = new StringBuilder("ssh ");
+						sb.append(nodeFile[0]);
+						sb.append(" dd if=");
+						sb.append(parentPath);
+						sb.append("t");
+						sb.append(tier);
+						sb.append(File.separator);
+						sb.append("s");
+						sb.append(nodeFile[1]);
+						sb.append(".db");
+						if (i == 0 && fileBlocks > 0) {
+							sb.append(" skip=");
+							sb.append(fileBlocks);
+						}
+						if (tier == lastTier && i == nodeFiles.length - 1) {
+							sb.append(" count=");
+							sb.append((len + skipBytes + 511) >> 9);
+						}
+						sb.append("\n");
+						Process p = r.exec(sb.toString());
+						InputStream byteReader = p.getInputStream();
+						while (skipBytes > 0) {
+							int bytesRead = byteReader.read(dumbArray, 0,
+									skipBytes);
+							if (bytesRead == -1)
+								Util.fatalError(nodeFile[0] + ":" + nodeFile[1]
+										+ ": No more bytes available");
+							skipBytes -= bytesRead;
+						}
+						skipBytes = 4;
+						while (location < nextStart) {
+							int bytesRead = byteReader.read(arr, off,
+									(int) (nextStart - location));
+							if (bytesRead == -1)
+								Util.fatalError(nodeFile[0] + ":" + nodeFile[1]
+										+ ": No more bytes available");
+							location += bytesRead;
+							off += bytesRead;
+							len -= bytesRead;
+						}
+						byteReader.close();
 					}
-				} else if (zipped) {
-					GZippedFileDatabase myZipBase = new GZippedFileDatabase();
-					myZipBase.initialize(nodeFile[0] + ":" + parentPath + "t"
-							+ tier + File.separator + "s" + nodeFile[1]
-							+ ".db.gz", conf, false);
-					myZipBase.getBytes(location - fileStart, arr, off,
-							(int) (nextStart - location));
-					off += nextStart - location;
-					len -= nextStart - location;
-					location = nextStart;
-				} else {
-					StringBuilder sb = new StringBuilder("ssh ");
-					sb.append(nodeFile[0]);
-					sb.append(" dd if=");
-					sb.append(parentPath);
-					sb.append("t");
-					sb.append(tier);
-					sb.append(File.separator);
-					sb.append("s");
-					sb.append(nodeFile[1]);
-					sb.append(".db");
-					if (i == 0 && fileBlocks > 0) {
-						sb.append(" skip=");
-						sb.append(fileBlocks);
-					}
-					if (i == nodeFiles.length - 1) {
-						sb.append(" count=");
-						sb.append((len + skipBytes + 511) >> 9);
-					}
-					sb.append("\n");
-					Process p = r.exec(sb.toString());
-					InputStream byteReader = p.getInputStream();
-					while (skipBytes > 0) {
-						int bytesRead = byteReader
-								.read(dumbArray, 0, skipBytes);
-						if (bytesRead == -1)
-							Util.fatalError(nodeFile[0] + ":" + nodeFile[1]
-									+ ": No more bytes available");
-						skipBytes -= bytesRead;
-					}
-					skipBytes = 4;
-					while (location < nextStart) {
-						int bytesRead = byteReader.read(arr, off,
-								(int) (nextStart - location));
-						if (bytesRead == -1)
-							Util.fatalError(nodeFile[0] + ":" + nodeFile[1]
-									+ ": No more bytes available");
-						location += bytesRead;
-						off += bytesRead;
-						len -= bytesRead;
-					}
-					byteReader.close();
 				}
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
 		return location;
 	}

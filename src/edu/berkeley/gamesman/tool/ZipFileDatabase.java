@@ -4,7 +4,6 @@ import java.io.*;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Database;
-import edu.berkeley.gamesman.database.FileDatabase;
 import edu.berkeley.gamesman.database.GZippedFileDatabase;
 
 /**
@@ -37,13 +36,13 @@ public class ZipFileDatabase {
 		Configuration conf = Configuration.load(confBytes);
 		is.close();
 		Database readFrom = conf.openDatabase(false);
-		File writeTo = new File(args[0] + ".gz");
+		File writeTo = new File(args[1]);
 		int bufferSize;
 		long entrySize;
-		if (args.length > 1) {
-			entrySize = Long.parseLong(args[1]) << 10;
-			if (args.length > 2)
-				bufferSize = Integer.parseInt(args[2]) << 10;
+		if (args.length > 2) {
+			entrySize = Long.parseLong(args[2]) << 10;
+			if (args.length > 3)
+				bufferSize = Integer.parseInt(args[3]) << 10;
 			else
 				bufferSize = 1 << 16;
 		} else {
