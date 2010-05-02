@@ -50,6 +50,6 @@ public class ZipFileDatabase {
 			bufferSize = 1 << 16;
 		}
 		GZippedFileDatabase.createFromFile(readFrom, writeTo, true, entrySize,
-				bufferSize);
+				bufferSize, System.out);
 	}
 }

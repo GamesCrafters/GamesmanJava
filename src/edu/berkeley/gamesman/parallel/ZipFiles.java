@@ -81,7 +81,7 @@ public class ZipFiles {
 							readFrom.initialize(filePath, conf, false);
 							File writeTo = new File(filePath + ".gz");
 							GZippedFileDatabase.createFromFile(readFrom,
-									writeTo, false, entrySize, bufferSize);
+									writeTo, false, entrySize, bufferSize, null);
 							readFrom.myFile.delete();
 						}
 						filePath = getTask();

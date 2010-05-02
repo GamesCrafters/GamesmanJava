@@ -192,41 +192,6 @@ public class GZippedFileDatabase extends Database {
 	}
 
 	/**
-	 * Creates a new GZippedFileDatabase from an existing FileDatabase. This is
-	 * equivalent to createFromFile(readFrom, writeTo, storeConf, 1 << 16)
-	 * 
-	 * @param readFrom
-	 *            A FileDatabase containing the records to be GZipped
-	 * @param writeTo
-	 *            The file to write the GZipped database to
-	 * @param storeConf
-	 *            Should the configuration be stored as well?
-	 */
-	public static void createFromFile(Database readFrom, File writeTo,
-			boolean storeConf) {
-		createFromFile(readFrom, writeTo, storeConf, 1 << 16);
-	}
-
-	/**
-	 * Creates a new GZippedFileDatabase from an existing FileDatabase. This is
-	 * equivalent to createFromFile(readFrom, writeTo, storeConf, entrySize,
-	 * 1<<16)
-	 * 
-	 * @param readFrom
-	 *            A FileDatabase containing the records to be GZipped
-	 * @param writeTo
-	 *            The file to write the GZipped database to
-	 * @param storeConf
-	 *            Should the configuration be stored as well?
-	 * @param entrySize
-	 *            The size of each GZipped portion of the database
-	 */
-	public static void createFromFile(Database readFrom, File writeTo,
-			boolean storeConf, long entrySize) {
-		createFromFile(readFrom, writeTo, storeConf, entrySize, 1 << 16);
-	}
-
-	/**
 	 * Creates a new GZippedFileDatabase from an existing FileDatabase
 	 * 
 	 * @param readFrom
@@ -239,9 +204,12 @@ public class GZippedFileDatabase extends Database {
 	 *            The size of each GZipped portion of the database
 	 * @param bufferSize
 	 *            The buffer size for the GZippedOutputStream
+	 * @param writeProgress
+	 *            An output stream to write progress to
 	 */
 	public static void createFromFile(Database readFrom, File writeTo,
-			boolean storeConf, long entrySize, int bufferSize) {
+			boolean storeConf, long entrySize, int bufferSize,
+			PrintStream writeProgress) {
 		bufferSize = (int) Math.min(bufferSize, entrySize);
 		if (writeTo.exists())
 			writeTo.delete();
@@ -279,11 +247,13 @@ public class GZippedFileDatabase extends Database {
 			fos.getChannel().position(pos + (numPosits << 3));
 			long byteNum = readFrom.firstByte();
 			readFrom.seek(byteNum);
+			long div = 0;
 			for (int i = 0; i < numPosits; i++) {
 				pos = fos.getChannel().position();
 				posits[i] = pos;
 				gos = new GZIPOutputStream(fos);
 				long tot = Math.min((i + 1) * entrySize, numBytes);
+				long lastDiv = div;
 				while (count < tot) {
 					int bytes;
 					if (bufferSize < tot - count) {
@@ -295,6 +265,13 @@ public class GZippedFileDatabase extends Database {
 					byteNum += bytes;
 					gos.write(tempArray, 0, bytes);
 					count += bytes;
+				}
+				if (writeProgress != null) {
+					div = count / 1000000;
+					if (div > lastDiv) {
+						writeProgress.println(count * 100F / numBytes
+								+ "% done");
+					}
 				}
 				gos.finish();
 			}
