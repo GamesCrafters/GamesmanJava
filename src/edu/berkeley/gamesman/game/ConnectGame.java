@@ -99,6 +99,7 @@ public abstract class ConnectGame extends TieredIterGame {
 
 	private void gameMatchState() {
 		int tier = myState.tier;
+		turn = ((tier & 1) == 1) ? 'O' : 'X';
 		mmh.unhash(myState.hash, getCharArray(), (tier + 1) / 2, tier / 2);
 	}
 
@@ -123,7 +124,6 @@ public abstract class ConnectGame extends TieredIterGame {
 	@Override
 	public void setTier(int tier) {
 		myState.tier = tier;
-		turn = ((tier & 1) == 1) ? 'O' : 'X';
 		myState.hash = 0;
 		gameMatchState();
 	}
@@ -143,6 +143,7 @@ public abstract class ConnectGame extends TieredIterGame {
 
 	@Override
 	public int validMoves(ItergameState[] moves) {
+		char turn = this.turn;
 		char[] pieces = getCharArray();
 		int c = 0;
 		for (int i = 0; i < pieces.length; i++) {
