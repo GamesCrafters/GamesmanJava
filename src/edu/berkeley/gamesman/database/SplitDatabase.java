@@ -62,7 +62,7 @@ public class SplitDatabase extends Database {
 		int low = 0, high = databases.length;
 		int guess;
 		while (high - low > 1) {
-			guess = low + high / 2;
+			guess = (low + high) / 2;
 			if (location < databases[guess].firstByte())
 				high = guess;
 			else
