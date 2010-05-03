@@ -192,13 +192,7 @@ public class JSONInterface extends GamesmanApplication {
 				fis.read(confBytes);
 				fis.close();
 				Configuration conf = Configuration.load(confBytes);
-				String dbString = conf.getProperty("gamesman.database");
-				if (!dbString.contains("."))
-					dbString = "edu.berkeley.gamesman.database." + dbString;
-				Class<? extends Database> dbClass = Util.checkedCast(Class
-						.forName(dbString));
-				conf.db = dbClass.getConstructor().newInstance();
-				conf.db.initialize(filename, conf, false);
+				conf.openDatabase(false);
 				return conf;
 			}
 		} catch (Exception e) {
@@ -399,7 +393,7 @@ public class JSONInterface extends GamesmanApplication {
 			Game<T> g = Util.checkedCast(conf.getGame());
 			if (db != null) {
 				synchronized (g) { // we don't assume that games are written to
-									// be multithreaded
+					// be multithreaded
 					rec = db.getRecord(g.stateToHash(state));
 				}
 			}
