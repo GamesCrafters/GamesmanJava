@@ -39,17 +39,22 @@ public class ZipFileDatabase {
 		File writeTo = new File(args[1]);
 		int bufferSize;
 		long entrySize;
+		long firstByte = 0, numBytes = -1;
 		if (args.length > 2) {
 			entrySize = Long.parseLong(args[2]) << 10;
-			if (args.length > 3)
+			if (args.length > 3) {
 				bufferSize = Integer.parseInt(args[3]) << 10;
-			else
+				if (args.length > 4) {
+					firstByte = Long.parseLong(args[4]);
+					numBytes = Long.parseLong(args[5]);
+				}
+			} else
 				bufferSize = 1 << 16;
 		} else {
 			entrySize = 1 << 16;
 			bufferSize = 1 << 16;
 		}
 		GZippedFileDatabase.createFromFile(readFrom, writeTo, true, entrySize,
-				bufferSize, System.out);
+				bufferSize, System.out, firstByte, numBytes);
 	}
 }
