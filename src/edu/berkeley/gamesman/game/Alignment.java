@@ -9,8 +9,15 @@ import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.util.Pair;
 
+
+
+/**
+ * @author Aloni & Brent
+ *
+ */
 public class Alignment extends Game<AlignmentState> {
-	private int gameWidth, gameHeight, piecesToWin;
+	private int gameWidth, gameHeight, piecesToWin; 
+	private AlignmentVariant variant;
 	private ArrayList<Pair<Integer, Integer>> openCells;
 
 	@Override
@@ -19,6 +26,7 @@ public class Alignment extends Game<AlignmentState> {
 		gameWidth = conf.getInteger("gamesman.game.width", 8);
 		gameHeight = conf.getInteger("gamesman.game.height", 8);
 		piecesToWin = conf.getInteger("gamesman.game.pieces", 5);
+		variant = AlignmentVariant.getVariant(conf.getInteger("gamesman.game.variant", 1));
 		for (int row = 0; row < gameHeight; row++) {
 			for (int col = 0; col < gameWidth; col++) {
 				// TODO Eliminate corners
@@ -30,17 +38,27 @@ public class Alignment extends Game<AlignmentState> {
 	@Override
 	public String describe() {
 		return "Alignment: " + gameWidth + "x" + gameHeight + " " + piecesToWin
-				+ " captures";
+		+ " captures " + variant.name();
 	}
 
 	@Override
 	public String displayState(AlignmentState pos) {
 		// TODO Return pretty-printed board
+		StringBuilder board = new StringBuilder(gameWidth * gameHeight); //adapted from Connect4.java;
+		int row = 0;
+		for (; row < gameHeight; row++) {
+			for (int col = 0; col < gameWidth; col++) {
+				board.append(pos.get(row, col) + " "); //could put '#' on invalid squares?
+			}
+		}
+		for (row = 0; row < gameHeight; row++) {
+			board.replace((2*gameWidth*(row+1) - 1), (2*gameWidth*(row+1)), "\n"); //is this correct?
+		}
 		return null;
 	}
 
 	@Override
-	public void hashToState(long hash, AlignmentState s) {
+	public void hashToState(long hash, AlignmentState s) { //do the hashes have to be dense?
 		// TODO Write hash into s
 
 	}
@@ -48,12 +66,13 @@ public class Alignment extends Game<AlignmentState> {
 	@Override
 	public int maxChildren() {
 		// TODO Maximum children for any position
+		// upperbound equals 2*number-of-squares (can be variant specific); can make one move or two, or place, or something elsse;
 		return 0;
 	}
 
 	@Override
 	public AlignmentState newState() {
-		return new AlignmentState(new char[gameWidth][gameHeight], 0, 0);
+		return new AlignmentState(new char[gameWidth][gameHeight], 0, 0, 'O');
 	}
 
 	@Override
@@ -65,7 +84,29 @@ public class Alignment extends Game<AlignmentState> {
 	@Override
 	public PrimitiveValue primitiveValue(AlignmentState pos) {
 		// TODO Auto-generated method stub
-		return null;
+		// Just check the number dead
+		if (pos.lastMove == 'X') {
+			if (pos.oDead >= piecesToWin) {
+				return PrimitiveValue.LOSE;
+			}
+			if (pos.xDead >= piecesToWin) {
+				return PrimitiveValue.WIN;
+			} else {
+				return PrimitiveValue.UNDECIDED;
+			}
+		}
+		if (pos.lastMove == 'O') {
+			if (pos.xDead >= piecesToWin) {
+				return PrimitiveValue.LOSE;
+			}
+			if (pos.oDead >= piecesToWin) {
+				return PrimitiveValue.WIN;
+			} else {
+				return PrimitiveValue.UNDECIDED;
+			}
+		} else {
+			throw new IllegalArgumentException("Last move cannot be " + pos.lastMove);
+		}
 	}
 
 	@Override
@@ -87,13 +128,33 @@ public class Alignment extends Game<AlignmentState> {
 	@Override
 	public String stateToString(AlignmentState pos) {
 		// TODO Machine-readable string
-		return null;
+		StringBuilder board = new StringBuilder(gameWidth * gameHeight); //adapted from Connect4.java;
+		for (int row = 0; row < gameHeight; row++) {
+			for (int col = 0; col < gameWidth; col++) {
+				board.append(pos.get(row, col));
+			}
+		}
+		board.append(pos.xDead + ":" + pos.lastMove + ":" + pos.oDead);
+		return board.toString();
 	}
 
 	@Override
 	public AlignmentState stringToState(String pos) {
 		// TODO Inverse of stateToString
-		return null;
+		char[][] board = new char[gameWidth][gameHeight];
+		int xDead, oDead;
+		char lastMove;
+		int square = 0;
+		for (int row = 0; row < gameHeight; row++) {
+			for (int col = 0; col < gameWidth; col++) {
+				board[row][col] = pos.charAt(square);
+				square++;
+			}
+		}
+		String[] auxData = pos.substring((gameWidth * gameHeight) - 1).split(":");
+		xDead = Integer.parseInt(auxData[0]); oDead = Integer.parseInt(auxData[2]);
+		lastMove = auxData[1].charAt(0);
+		return new AlignmentState(board, xDead, oDead, lastMove);
 	}
 
 	@Override
@@ -112,15 +173,35 @@ public class Alignment extends Game<AlignmentState> {
 	}
 }
 
+enum AlignmentVariant {
+	STANDARD, NO_SLIDE, DEAD_SQUARES; //STANDARD = 1, NO_SLIDE = 2, DEAD_SQUARES = 3;
+
+	static AlignmentVariant getVariant(int varNum) {
+		switch (varNum) {
+		case(1): 
+			return STANDARD;
+		case(2):
+			return NO_SLIDE;
+		case(3):
+			return DEAD_SQUARES;
+		default:
+			throw new IllegalArgumentException("No Alignment Variant exists for number " + varNum);
+		}
+
+	}
+}
+
 class AlignmentState implements State {
 	char[][] board; // chars are 'X', 'O' and ' ' (X plays first)
+	char lastMove;
 	int xDead;
 	int oDead;
 
-	public AlignmentState(char[][] board, int xDead, int oDead) {
+	public AlignmentState(char[][] board, int xDead, int oDead, char lastMove) {
 		this.board = board;
 		this.xDead = xDead;
 		this.oDead = oDead;
+		this.lastMove = lastMove;
 	}
 
 	public void set(State s) {
@@ -132,5 +213,10 @@ class AlignmentState implements State {
 		}
 		xDead = as.xDead;
 		oDead = as.oDead;
+		lastMove = as.lastMove;
+	}
+
+	char get(int row, int col) {
+		return board[row][col];
 	}
 }
