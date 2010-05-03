@@ -23,8 +23,8 @@ public class DatabaseCompare<S extends State> {
 		Configuration c1 = new Configuration(args[0]);
 		Configuration c2 = new Configuration(args[1]);
 
-		Database db1 = c1.openDatabase(false);
-		Database db2 = c2.openDatabase(false);
+		Database db1 = c1.openDatabase(null,false);
+		Database db2 = c2.openDatabase(null,false);
 
 		System.out
 				.println("Comparing the databases by walking through the hash space of d1...");

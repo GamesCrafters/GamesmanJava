@@ -48,8 +48,8 @@ public class SplitDatabase extends Database {
 						.firstByte());
 			else
 				nextStart = location + len;
-			databases[database]
-					.getBytes(location, arr, off, (int) (nextStart - location));
+			databases[database].getBytes(location, arr, off,
+					(int) (nextStart - location));
 			off += nextStart - location;
 			len -= nextStart - location;
 			location = nextStart;
@@ -110,8 +110,8 @@ public class SplitDatabase extends Database {
 				fis.read(confBytes);
 				fis.close();
 				Configuration dconf = Configuration.load(confBytes);
-				databases[d] = dconf.openDatabase(false, location, Long
-						.parseLong(dString[1]));
+				databases[d] = dconf.openDatabase(dString[0], false, location,
+						Long.parseLong(dString[1]));
 				location += databases[d].getByteSize();
 			} catch (IOException ioe) {
 				ioe.printStackTrace();

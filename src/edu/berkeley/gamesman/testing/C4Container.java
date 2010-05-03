@@ -111,8 +111,7 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 				fis.read(confBytes);
 				fis.close();
 				conf = Configuration.load(confBytes);
-				conf.setProperty("gamesman.db.uri", args[0]);
-				fd = conf.openDatabase(false);
+				fd = conf.openDatabase(args[0], false);
 			}
 		} catch (ClassNotFoundException e) {
 			Util.fatalError("failed to load class", e);

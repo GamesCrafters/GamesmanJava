@@ -73,7 +73,7 @@ public class DatabaseDump extends GamesmanApplication {
 		}
 		Database db;
 		try {
-			db = conf.openDatabase(false);
+			db = conf.openDatabase(null,false);
 		} catch (ClassNotFoundException e1) {
 			Util.fatalError("Failed to instantiantiate database class", e1);
 			return 1;

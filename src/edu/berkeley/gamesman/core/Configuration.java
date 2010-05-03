@@ -651,8 +651,9 @@ public class Configuration {
 	 * @throws ClassNotFoundException
 	 *             Could not load the database class
 	 */
-	public Database openDatabase(boolean solve) throws ClassNotFoundException {
-		return openDatabase(solve, 0, -1);
+	public Database openDatabase(String uri, boolean solve)
+			throws ClassNotFoundException {
+		return openDatabase(uri, solve, 0, -1);
 	}
 
 	/**
@@ -666,10 +667,12 @@ public class Configuration {
 	 * @throws ClassNotFoundException
 	 *             Could not load the database class
 	 */
-	public Database openDatabase(boolean solve, long firstByte, long numBytes)
-			throws ClassNotFoundException {
+	public Database openDatabase(String uri, boolean solve, long firstByte,
+			long numBytes) throws ClassNotFoundException {
 		if (db != null)
 			return db;
+		if (uri != null)
+			setProperty("gamesman.db.uri", uri);
 		String[] dbType = getProperty("gamesman.database").split(":");
 		if (dbType.length > 1 && dbType[0].trim().equals("cached")) {
 			db = Util.typedInstantiate("edu.berkeley.gamesman.database."

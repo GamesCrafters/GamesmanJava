@@ -35,7 +35,7 @@ public class ZipFileDatabase {
 		is.read(confBytes);
 		Configuration conf = Configuration.load(confBytes);
 		is.close();
-		Database readFrom = conf.openDatabase(false);
+		Database readFrom = conf.openDatabase(args[0], false);
 		File writeTo = new File(args[1]);
 		int bufferSize;
 		long entrySize;

@@ -173,7 +173,7 @@ public class JSONInterface extends GamesmanApplication {
 				System.out.println("Loading solved job " + solvedJob + ".");
 				Configuration config = new Configuration(solvedJob);
 				try {
-					config.openDatabase(false);
+					config.openDatabase(filename, false);
 				} catch (Exception e) {
 					Util.warn(
 							"Error when loading database for special configuration "
@@ -192,7 +192,7 @@ public class JSONInterface extends GamesmanApplication {
 				fis.read(confBytes);
 				fis.close();
 				Configuration conf = Configuration.load(confBytes);
-				conf.openDatabase(false);
+				conf.openDatabase(filename, false);
 				return conf;
 			}
 		} catch (ClassNotFoundException e) {
