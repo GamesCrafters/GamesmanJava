@@ -652,6 +652,22 @@ public class Configuration {
 	 *             Could not load the database class
 	 */
 	public Database openDatabase(boolean solve) throws ClassNotFoundException {
+		return openDatabase(solve, 0, -1);
+	}
+
+	/**
+	 * @param solve
+	 *            true for solving, false for playing
+	 * @param firstByte
+	 *            The index of the first byte this database contains
+	 * @param numBytes
+	 *            The number of bytes in this database
+	 * @return the Database used to store this particular solve
+	 * @throws ClassNotFoundException
+	 *             Could not load the database class
+	 */
+	public Database openDatabase(boolean solve, long firstByte, long numBytes)
+			throws ClassNotFoundException {
 		if (db != null)
 			return db;
 		String[] dbType = getProperty("gamesman.database").split(":");
@@ -662,6 +678,8 @@ public class Configuration {
 			db = Util.typedInstantiate("edu.berkeley.gamesman.database."
 					+ dbType[0], Database.class);
 		}
+		if (numBytes >= 0)
+			db.setRange(firstByte, numBytes);
 		db.initialize(getProperty("gamesman.db.uri"), this, solve);
 		return db;
 	}

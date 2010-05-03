@@ -16,6 +16,7 @@ import edu.berkeley.gamesman.util.Util;
  */
 public class MemoryDatabase extends Database {
 	/* Class Variables */
+
 	protected byte[] memoryStorage; // byte array to store the data
 
 	protected boolean readingOnly;
@@ -41,7 +42,7 @@ public class MemoryDatabase extends Database {
 	@Override
 	public void getBytes(long loc, byte[] arr, int off, int len) {
 		for (int i = 0; i < len; i++)
-			arr[off++] = memoryStorage[(int) loc++];
+			arr[off++] = memoryStorage[(int) (loc++ - firstByte())];
 	}
 
 	@Override
@@ -53,7 +54,7 @@ public class MemoryDatabase extends Database {
 	@Override
 	public void putBytes(long loc, byte[] arr, int off, int len) {
 		for (int i = 0; i < len; i++)
-			memoryStorage[(int) loc++] = arr[off++];
+			memoryStorage[(int) (loc++ - firstByte())] = arr[off++];
 	}
 
 	@Override
@@ -64,39 +65,43 @@ public class MemoryDatabase extends Database {
 
 	@Override
 	public void seek(long loc) {
-		nextPlace = (int) loc;
+		nextPlace = (int) (loc - firstByte());
 	}
 
 	@Override
 	public long getLongRecordGroup(long loc) {
-		return RecordGroup.longRecordGroup(conf, memoryStorage, (int) loc);
+		return RecordGroup.longRecordGroup(conf, memoryStorage,
+				(int) (loc - firstByte()));
 	}
 
 	@Override
 	public BigInteger getBigIntRecordGroup(long loc) {
-		return RecordGroup.bigIntRecordGroup(conf, memoryStorage, (int) loc);
+		return RecordGroup.bigIntRecordGroup(conf, memoryStorage,
+				(int) (loc - firstByte()));
 	}
 
 	@Override
 	public Iterator<BigInteger> getBigIntRecordGroups(long loc, int numGroups) {
-		return new BigIntRecordGroupByteIterator(memoryStorage, (int) loc,
-				numGroups);
+		return new BigIntRecordGroupByteIterator(memoryStorage,
+				(int) (loc - firstByte()), numGroups);
 	}
 
 	@Override
 	public LongIterator getLongRecordGroups(long loc, int numGroups) {
-		return new LongRecordGroupByteIterator(memoryStorage, (int) loc,
-				numGroups);
+		return new LongRecordGroupByteIterator(memoryStorage,
+				(int) (loc - firstByte()), numGroups);
 	}
 
 	@Override
 	public void putRecordGroup(long loc, long rg) {
-		RecordGroup.toUnsignedByteArray(conf, rg, memoryStorage, (int) loc);
+		RecordGroup.toUnsignedByteArray(conf, rg, memoryStorage,
+				(int) (loc - firstByte()));
 	}
 
 	@Override
 	public void putRecordGroup(long loc, BigInteger rg) {
-		RecordGroup.toUnsignedByteArray(conf, rg, memoryStorage, (int) loc);
+		RecordGroup.toUnsignedByteArray(conf, rg, memoryStorage,
+				(int) (loc - firstByte()));
 	}
 
 	@Override
@@ -104,7 +109,7 @@ public class MemoryDatabase extends Database {
 			int numGroups) {
 		for (int i = 0; i < numGroups; i++) {
 			RecordGroup.toUnsignedByteArray(conf, recordGroups.next(),
-					memoryStorage, (int) loc);
+					memoryStorage, (int) (loc - firstByte()));
 			loc += conf.recordGroupByteLength;
 		}
 	}
@@ -114,7 +119,7 @@ public class MemoryDatabase extends Database {
 			int numGroups) {
 		for (int i = 0; i < numGroups; i++) {
 			RecordGroup.toUnsignedByteArray(conf, recordGroups.next(),
-					memoryStorage, (int) loc);
+					memoryStorage, (int) (loc - firstByte()));
 			loc += conf.recordGroupByteLength;
 		}
 	}

@@ -76,12 +76,13 @@ public class ZipFiles {
 					while (filePath != null) {
 						File f = new File(filePath);
 						if (f.exists()) {
-							FileDatabase readFrom = new FileDatabase();
+							FileDatabase readFrom = new FileDatabase(false);
 							readFrom.setRange(0, f.length() - 4);
 							readFrom.initialize(filePath, conf, false);
 							File writeTo = new File(filePath + ".gz");
-							GZippedFileDatabase.createFromFile(readFrom,
-									writeTo, false, entrySize, bufferSize, null);
+							GZippedFileDatabase
+									.createFromFile(readFrom, writeTo, false,
+											entrySize, bufferSize, null);
 							readFrom.myFile.delete();
 						}
 						filePath = getTask();

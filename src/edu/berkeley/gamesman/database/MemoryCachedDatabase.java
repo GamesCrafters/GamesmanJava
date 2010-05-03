@@ -47,6 +47,13 @@ public class MemoryCachedDatabase extends MemoryDatabase {
 					int bufferSize = conf.getInteger("zip.bufferKB", 1 << 12) << 10;
 					fis = new GZIPInputStream(fis, bufferSize);
 				}
+				long firstByte = 0;
+				for (int i = 56; i >= 0; i -= 8) {
+					firstByte <<= 8;
+					firstByte |= fis.read();
+				}
+				while (firstByte < firstByte())
+					firstByte += fis.skip(firstByte() - firstByte);
 				int n = 0;
 				while (n >= 0 && n < maxBytes)
 					n += fis.read(memoryStorage, n, maxBytes - n);
@@ -74,6 +81,8 @@ public class MemoryCachedDatabase extends MemoryDatabase {
 					int bufferSize = conf.getInteger("zip.bufferKB", 1 << 12) << 10;
 					fos = new GZIPOutputStream(fos, bufferSize);
 				}
+				for (int i = 56; i >= 0; i -= 8)
+					fos.write((int) (firstByte() >>> i));
 				fos.write(memoryStorage);
 				fos.close();
 			} catch (IOException e) {

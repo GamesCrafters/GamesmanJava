@@ -30,8 +30,6 @@ public class GZippedFileDatabase extends Database {
 
 	private RemoteDatabase rdf;
 
-	private long numBytes;
-
 	@Override
 	public void close() {
 		if (isRemote)
@@ -126,7 +124,7 @@ public class GZippedFileDatabase extends Database {
 				if (conf == null)
 					conf = Configuration.load(b);
 			}
-			numBytes = 0;
+			long numBytes = 0;
 			if (isRemote) {
 				byte[] numBytesBytes = new byte[8];
 				rdf.getBytes(0, numBytesBytes, 0, 8);
@@ -140,9 +138,11 @@ public class GZippedFileDatabase extends Database {
 					numBytes |= fis.read();
 				}
 			}
+			if (numBytes < getByteSize())
+				setRange(firstByte(), numBytes);
 			entrySize = conf.getLong("zip.entryKB", 1 << 6) << 10;
 			bufferSize = conf.getInteger("zip.bufferKB", 1 << 6) << 10;
-			int numEntries = (int) ((getByteSize() + entrySize - 1) / entrySize);
+			int numEntries = (int) ((numBytes + entrySize - 1) / entrySize);
 			entryPoints = new long[numEntries];
 			byte[] entryBytes = new byte[numEntries << 3];
 			if (isRemote)
@@ -150,11 +150,11 @@ public class GZippedFileDatabase extends Database {
 			else {
 				int bytesRead = 0;
 				while (bytesRead < entryBytes.length) {
-					int numBytes = fis.read(entryBytes, bytesRead,
+					int fisRead = fis.read(entryBytes, bytesRead,
 							entryBytes.length - bytesRead);
-					if (numBytes == -1)
+					if (fisRead == -1)
 						break;
-					bytesRead += numBytes;
+					bytesRead += fisRead;
 				}
 			}
 			int count = 0;
@@ -184,11 +184,6 @@ public class GZippedFileDatabase extends Database {
 	@Override
 	public void seek(long loc) {
 		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public long getByteSize() {
-		return numBytes;
 	}
 
 	/**

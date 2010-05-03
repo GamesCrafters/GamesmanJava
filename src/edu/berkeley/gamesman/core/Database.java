@@ -24,6 +24,10 @@ public abstract class Database {
 
 	protected int maxBytes;
 
+	private long numBytes = -1;
+
+	private long firstByte;
+
 	/**
 	 * Initialize a Database given a URI and a Configuration. This method may
 	 * either open an existing database or create a new one. If a new one is
@@ -50,6 +54,11 @@ public abstract class Database {
 	public final void initialize(String uri, Configuration config, boolean solve) {
 		conf = config;
 		this.solve = solve;
+		if (numBytes == -1) {
+			firstByte = 0;
+			numBytes = (conf.getGame().numHashes() + conf.recordsPerGroup - 1)
+					/ conf.recordsPerGroup * conf.recordGroupByteLength;
+		}
 		initialize(uri, solve);
 		maxBytes = 1024 - 1024 % conf.recordGroupByteLength;
 		assert Util.debug(DebugFacility.DATABASE, conf.recordsPerGroup
@@ -354,18 +363,6 @@ public abstract class Database {
 		// The condition avoids an unecessary synchronized method call
 		RecordGroup.toUnsignedByteArray(conf, rg, groups, 0);
 		putBytes(loc, groups, 0, groupsLength);
-	}
-
-	/**
-	 * @return The number of bytes used to store all the records (This does not
-	 *         include the header size)
-	 */
-	public long getByteSize() {
-		return conf.superCompress ? (conf.getGame().numHashes()
-				+ conf.recordsPerGroup - 1)
-				/ conf.recordsPerGroup * conf.recordGroupByteLength : conf
-				.getGame().numHashes()
-				* conf.recordGroupByteLength;
 	}
 
 	private class LongRecordGroupIterator implements LongIterator {
@@ -787,7 +784,33 @@ public abstract class Database {
 		}
 	}
 
+	/**
+	 * @return The number of bytes used to store all the records (This does not
+	 *         include the header size)
+	 */
+	public long getByteSize() {
+		return numBytes;
+	}
+
+	/**
+	 * If this database only covers a particular range of hashes for a game,
+	 * call this method before initialize if creating the database
+	 * 
+	 * @param firstByte
+	 *            The first byte this database contains
+	 * @param numBytes
+	 *            The total number of bytes contained
+	 */
+	public void setRange(long firstByte, long numBytes) {
+		this.firstByte = firstByte;
+		this.numBytes = numBytes;
+	}
+
+	/**
+	 * @return The index of the first byte in this database (Will be zero if
+	 *         this database stores the entire game)
+	 */
 	public long firstByte() {
-		return 0;
+		return firstByte;
 	}
 }

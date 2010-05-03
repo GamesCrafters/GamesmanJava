@@ -28,9 +28,15 @@ public final class FileDatabase extends Database {
 
 	protected long offset;
 
-	private long numBytes = -1;
+	private final boolean storeConf;
 
-	private long firstByte = 0;
+	public FileDatabase() {
+		this(true);
+	}
+
+	public FileDatabase(boolean storeConf) {
+		this.storeConf = storeConf;
+	}
 
 	@Override
 	public void close() {
@@ -86,13 +92,12 @@ public final class FileDatabase extends Database {
 				if (conf == null)
 					Util
 							.fatalError("You must specify a configuration if the database is to be created");
-				if (numBytes >= 0)
-					fd.writeInt(0);
-				else {
+				if (storeConf) {
 					byte[] b = conf.store();
 					fd.writeInt(b.length);
 					fd.write(b);
-				}
+				}else
+				fd.writeInt(0);
 				offset = fd.getFilePointer();
 				fd.setLength(offset + getByteSize());
 			} else {
@@ -105,7 +110,7 @@ public final class FileDatabase extends Database {
 				}
 				offset = fd.getFilePointer();
 			}
-			offset -= firstByte;
+			offset -= firstByte();
 		} catch (IOException e) {
 			e.printStackTrace();
 			Util.fatalError(e.toString());
@@ -113,35 +118,5 @@ public final class FileDatabase extends Database {
 			e.printStackTrace();
 			Util.fatalError(e.toString());
 		}
-	}
-
-	@Override
-	public long getByteSize() {
-		if (numBytes < 0)
-			return super.getByteSize();
-		else {
-			return numBytes;
-		}
-	}
-
-	/**
-	 * If this database only covers a particular range of hashes for a game,
-	 * call this method before initialize
-	 * 
-	 * @param firstByte
-	 *            The first byte this database contains
-	 * @param numBytes
-	 *            The total number of bytes contained
-	 */
-	public void setRange(long firstByte, long numBytes) {
-		if (conf != null)
-			Util.fatalError("This must be called before initialize");
-		this.firstByte = firstByte;
-		this.numBytes = numBytes;
-	}
-
-	@Override
-	public long firstByte() {
-		return firstByte;
 	}
 }

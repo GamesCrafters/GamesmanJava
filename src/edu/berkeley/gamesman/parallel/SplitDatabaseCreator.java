@@ -63,7 +63,7 @@ public class SplitDatabaseCreator extends Database {
 	@Override
 	public synchronized Database beginWrite(int tier, long recordStart,
 			long recordEnd) {
-		openDb = new FileDatabase();
+		openDb = new FileDatabase(false);
 		long byteStart = recordStart / conf.recordsPerGroup
 				* conf.recordGroupByteLength;
 		long numBytes = (recordEnd + conf.recordsPerGroup - 1)
