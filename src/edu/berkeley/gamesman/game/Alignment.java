@@ -26,13 +26,21 @@ public class Alignment extends Game<AlignmentState> {
 		gameWidth = conf.getInteger("gamesman.game.width", 8);
 		gameHeight = conf.getInteger("gamesman.game.height", 8);
 		piecesToWin = conf.getInteger("gamesman.game.pieces", 5);
+		
 		variant = AlignmentVariant.getVariant(conf.getInteger("gamesman.game.variant", 1));
+		
 		for (int row = 0; row < gameHeight; row++) {
 			for (int col = 0; col < gameWidth; col++) {
-				// TODO Eliminate corners
+				
 				openCells.add(new Pair<Integer, Integer>(row, col));
 			}
 		}
+		//Removing corners
+		openCells.remove(0); openCells.remove(1); openCells.remove(gameWidth);
+		openCells.remove(gameWidth-1); openCells.remove(gameWidth-2); openCells.remove(2*gameWidth - 1);
+		openCells.remove((gameHeight-1)*gameWidth); openCells.remove((gameHeight-2)*gameWidth); openCells.remove((gameHeight-1)*gameWidth + 1);
+		openCells.remove((gameHeight-1)*gameWidth - 1); openCells.remove((gameHeight)*gameWidth - 1); openCells.remove((gameHeight)*gameWidth - 2);
+		
 	}
 
 	@Override
@@ -43,8 +51,8 @@ public class Alignment extends Game<AlignmentState> {
 
 	@Override
 	public String displayState(AlignmentState pos) {
-		// TODO Return pretty-printed board
-		StringBuilder board = new StringBuilder(gameWidth * gameHeight); //adapted from Connect4.java;
+		// TODO Return pretty-printed board 
+		StringBuilder board = new StringBuilder(2 * (gameWidth + 2) * gameHeight ); //adapted from Connect4.java;
 		int row = 0;
 		for (; row < gameHeight; row++) {
 			for (int col = 0; col < gameWidth; col++) {
@@ -58,15 +66,76 @@ public class Alignment extends Game<AlignmentState> {
 	}
 
 	@Override
-	public void hashToState(long hash, AlignmentState s) { //do the hashes have to be dense?
-		// TODO Write hash into s
+	public void hashToState(long hash, AlignmentState s) { //do the hashes have to be dense? am I modifying s instead of instantiating a new state?
+		// TODO Write hash into s     //HANDLE ODD DIMENSIONS
 
+		String sHash = "" + hash; //removes leading zeros, right?
+		String sBoard = sHash.substring(0, gameWidth*gameHeight);
+		String sAux = sHash.substring(gameWidth*gameHeight); //should be exactly 5 digits long 
+
+		char[] linearBoard = new char[gameWidth*gameHeight];
+		char[][] board = new char[gameWidth][gameHeight];
+		int xDead = Integer.parseInt(sAux.substring(0, 2));
+		char lastMove = sAux.charAt(2);
+		int oDead = Integer.parseInt(sAux.substring(3));
+
+		
+		for (int square = 0; square < gameWidth*gameHeight; square += 2) {
+			switch(sBoard.charAt(square/2)) {
+			case('0'):
+				linearBoard[square] = ' ';
+				linearBoard[square+1] = ' ';
+				break;
+			case('1'):
+				linearBoard[square] = ' ';
+				linearBoard[square+1] = 'X';
+				break;
+			case('2'):
+				linearBoard[square] = ' ';
+				linearBoard[square+1] = 'O';
+				break;
+			case('3'):
+				linearBoard[square] = 'X';
+				linearBoard[square+1] = ' ';
+				break;
+			case('4'):
+				linearBoard[square] = 'X';
+				linearBoard[square+1] = 'X';
+				break;	
+			case('5'):
+				linearBoard[square] = 'X';
+				linearBoard[square+1] = 'O';
+				break;
+			case('6'):
+				linearBoard[square] = 'O';
+				linearBoard[square+1] = ' ';
+				break;
+			case('7'):
+				linearBoard[square] = 'O';
+				linearBoard[square+1] = 'X';
+				break;
+			case('8'):
+				linearBoard[square] = 'O';
+				linearBoard[square+1] = 'O';
+				break;
+			}
+
+		}
+		for (int row = 0; row < gameHeight; row++) {
+			for (int col = 0; col < gameWidth; col++) {
+				board[row][col] = linearBoard[row*gameWidth + col];
+			}
+		}
+		s.set(board, xDead, oDead, lastMove);
 	}
 
 	@Override
 	public int maxChildren() {
 		// TODO Maximum children for any position
 		// upperbound equals 2*number-of-squares (can be variant specific); can make one move or two, or place, or something elsse;
+		// NO_SLIDE: gameWidth*gameHeight
+		// STANDARD: gameWidth*gameHeight*65 (very loose)
+		// DEAD_SQUARES: same as STANDARD
 		return 0;
 	}
 
@@ -128,7 +197,7 @@ public class Alignment extends Game<AlignmentState> {
 	@Override
 	public String stateToString(AlignmentState pos) {
 		// TODO Machine-readable string
-		StringBuilder board = new StringBuilder(gameWidth * gameHeight); //adapted from Connect4.java;
+		StringBuilder board = new StringBuilder(2 * (gameWidth + 2) * gameHeight ); //adapted from Connect4.java;
 		for (int row = 0; row < gameHeight; row++) {
 			for (int col = 0; col < gameWidth; col++) {
 				board.append(pos.get(row, col));
@@ -158,9 +227,8 @@ public class Alignment extends Game<AlignmentState> {
 	}
 
 	@Override
-	public Collection<Pair<String, AlignmentState>> validMoves(
-			AlignmentState pos) {
-		// TODO Return children
+	public Collection<Pair<String, AlignmentState>> validMoves(AlignmentState pos) {
+		// TODO Return children what string?
 		return null;
 	}
 
@@ -214,6 +282,13 @@ class AlignmentState implements State {
 		xDead = as.xDead;
 		oDead = as.oDead;
 		lastMove = as.lastMove;
+	}
+
+	public void set(char[][] board, int xDead, int oDead, char lastMove) {
+		this.board = board;
+		this.xDead = xDead;
+		this.oDead = oDead;
+		this.lastMove = lastMove;
 	}
 
 	char get(int row, int col) {
