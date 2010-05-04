@@ -195,10 +195,13 @@ public class JSONInterface extends GamesmanApplication {
 				conf.openDatabase(filename, false);
 				return conf;
 			}
-		} catch (ClassNotFoundException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
+			Util.warn("Failed to load database " + filename, e);
+		} catch (Util.FatalError fe) {
+			// These aren't actually fatal, so don't rethrow.
+			Util.warn("FatalError(TM) when loading database " + filename + ": "
+					+ fe.toString());
 		}
 		String unsolvedJob = serverConf.getProperty("json.unsolved." + game,
 				null);
