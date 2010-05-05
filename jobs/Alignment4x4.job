@@ -1,0 +1,5 @@
+gamesman.game = Alignment
+gamesman.game.width = 4
+gamesman.game.height = 4
+gamesman.game.pieces = 5
+gamesman.game.variant = 2
