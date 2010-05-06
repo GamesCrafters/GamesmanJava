@@ -572,6 +572,8 @@ public final class Connect4 extends TieredIterGame {
 				PrimitiveValue val = value;
 				if (val.equals(PrimitiveValue.TIE)) {
 					return gameSize + 1;
+				} else if (val.equals(PrimitiveValue.UNDECIDED)) {
+					return gameSize + 2;
 				} else {
 					return remoteness;
 				}
@@ -586,6 +588,8 @@ public final class Connect4 extends TieredIterGame {
 				if (state == gameSize + 1) {
 					value = PrimitiveValue.TIE;
 					remoteness = gameSize - pieces.size();
+				} else if (state == gameSize + 2) {
+					value = PrimitiveValue.UNDECIDED;
 				} else if ((state & 1L) > 0) {
 					value = PrimitiveValue.WIN;
 					remoteness = (int) state;
@@ -617,9 +621,9 @@ public final class Connect4 extends TieredIterGame {
 	@Override
 	public long recordStates() {
 		if (conf.remotenessStates > 0)
-			return gameSize + 2;
+			return gameSize + 2 + (conf.valueStates > 3 ? 1 : 0);
 		else
-			return 3;
+			return 3 + (conf.valueStates > 3 ? 1 : 0);
 	}
 
 	@Override

@@ -152,9 +152,4 @@ public abstract class TopDownMutaGame<S extends State> extends Game<S> {
 		undoMove();
 		return i;
 	}
-
-	/**
-	 * @return The maximum number of possible moves for any position
-	 */
-	public abstract int maxRemoteness();
 }

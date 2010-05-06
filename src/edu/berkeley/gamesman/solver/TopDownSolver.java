@@ -1,136 +1,122 @@
 package edu.berkeley.gamesman.solver;
 
-import java.util.*;
+import java.util.List;
 
 import edu.berkeley.gamesman.core.*;
-import edu.berkeley.gamesman.util.DebugFacility;
-import edu.berkeley.gamesman.util.Pair;
-import edu.berkeley.gamesman.util.Util;
+import edu.berkeley.gamesman.game.TopDownGame;
+import edu.berkeley.gamesman.game.TopDownMutaGame;
+import edu.berkeley.gamesman.util.*;
+import edu.berkeley.gamesman.util.qll.Factory;
+import edu.berkeley.gamesman.util.qll.RecycleLinkedList;
 
 /**
- * The top down solver is a simple solver that simply builds a game tree in
- * memory and solves it with a graph search.
+ * A solver for top-down mutable games
  * 
- * @author Steven Schlansker
- * @param <T>
- *            The game state
+ * @author dnspies
+ * 
+ * @param <S>
+ *            The state for the game
  */
-public class TopDownSolver<T extends State> extends Solver {
+public class TopDownSolver<S extends State> extends Solver {
+	protected boolean containsRemoteness;
 
-	Configuration conf;
+	protected RecycleLinkedList<Record[]> recordList;
 
-	// Game<Object> g;
+	public void initialize(Configuration conf) {
+		super.initialize(conf);
+		final Game<?> game = conf.getGame();
+		recordList = new RecycleLinkedList<Record[]>(new Factory<Record[]>() {
+			public Record[] newObject() {
+				Record[] retVal = new Record[game.maxChildren()];
+				for (int i = 0; i < retVal.length; i++)
+					retVal[i] = game.newRecord();
+				return retVal;
+			}
+
+			public void reset(Record[] t) {
+			}
+		});
+		containsRemoteness = conf.remotenessStates > 0;
+	}
 
 	@Override
-	public WorkUnit prepareSolve(Configuration config) {
-		conf = config;
-		Game<?> game = config.getGame();
-		long hashSpace = game.numHashes();
-		Record defaultRecord = game.newRecord(PrimitiveValue.UNDECIDED);
-		for (long index = 0; index < hashSpace; index++) {
-			writeDb.putRecord(index, defaultRecord);
-		}
-		writeDb.flush();
-		TopDownSolverWorkUnit wu = new TopDownSolverWorkUnit(Util
-				.<Game<T>, Game<?>> checkedCast(game));
-		return wu;
+	public WorkUnit prepareSolve(final Configuration conf) {
+		long hashSpace = conf.getGame().numHashes();
+		Record defaultRecord = conf.getGame().newRecord(
+				PrimitiveValue.UNDECIDED);
+		writeDb.fill(defaultRecord, 0, hashSpace);
+
+		return new WorkUnit() {
+
+			public void conquer() {
+				solve(conf);
+			}
+
+			public List<WorkUnit> divide(int num) {
+				throw new UnsupportedOperationException();
+			}
+
+		};
 	}
 
-	class TopDownSolverWorkUnit implements WorkUnit {
-
-		final private Game<T> game;
-
-		public TopDownSolverWorkUnit(Game<T> g) {
-			game = g;
+	/**
+	 * The method that solves the game
+	 * 
+	 * @param conf
+	 *            The configuration object
+	 */
+	public void solve(Configuration conf) {
+		Game<?> g = conf.getGame();
+		TopDownMutaGame<S> game;
+		if (g instanceof TopDownMutaGame<?>) {
+			game = Util.checkedCast(g);
+		}else{
+			game = new TopDownGame<S>(Util.<Game<S>,Game<?>>checkedCast(g));
 		}
-
-		public void conquer() {
-			// HashMap<T, BigInteger> cache = new HashMap<T, BigInteger>();
-			HashSet<Long> seen = new HashSet<Long>();
-
-			LinkedList<T> workList = new LinkedList<T>();
-			LinkedList<T> dependencies = new LinkedList<T>();
-			ArrayList<Record> recs = new ArrayList<Record>();
-			int maxRemoteness = 0;
-			for (T s : game.startingPositions()) {
-				workList.add(s);
-				seen.add(game.stateToHash(s));
-			}
-			while (!workList.isEmpty()
-					|| (dependencies != null && !dependencies.isEmpty())) {
-				recs.clear();
-				T state;
-				if (workList.isEmpty()) {
-					workList = dependencies;
-					dependencies = null;
-				}
-				state = workList.removeLast();
-				Collection<Pair<String, T>> children = game.validMoves(state);
-				assert Util.debug(DebugFacility.SOLVER, "Looking at state "
-						+ game.stateToString(state));
-				// assert Util.debug(DebugFacility.SOLVER, "Worklist is now " +
-				// Util.mapStateToString(game,workList));
-
-				boolean insertBefore = false;
-
-				for (Pair<String, T> child : children) {
-					long loc = game.stateToHash(child.cdr);
-					Record r;
-
-					r = readDb.getRecord(loc);
-					if (r.value == PrimitiveValue.UNDECIDED) {
-						assert Util.debug(DebugFacility.SOLVER,
-								"Not seen child state "
-										+ game.stateToString(child.cdr)
-										+ " before, coming back later...");
-						insertBefore = true;
-						workList.add(child.cdr);
-					} else {
-						recs.add(r);
-					}
-				}
-
-				if (insertBefore != false) {
-					assert Util.debug(DebugFacility.SOLVER,
-							"One of the children hasn't been solved yet, revisiting "
-									+ game.stateToString(state) + " later");
-					dependencies.add(state);
-					continue;
-				}
-
-				long loc = game.stateToHash(state);
-				Record next;
-				PrimitiveValue prim = game.primitiveValue(state);
-				if ((!prim.equals(PrimitiveValue.UNDECIDED))
-						|| children.isEmpty()) {
-					assert Util.debug(DebugFacility.SOLVER,
-							"Getting primitive value for state "
-									+ game.stateToString(state) + ": " + prim);
-					next = game.newRecord(prim);
-					next.score = game.primitiveScore(state);
-				} else {
-					next = game.combine(recs);
-					int remoteness = (int) next.remoteness;
-					if (remoteness > maxRemoteness) {
-						System.out.println("Found remoteness: " + remoteness);
-						maxRemoteness = remoteness;
-					}
-					assert Util.debug(DebugFacility.SOLVER, "COMBINE " + recs
-							+ " => " + next + "; children size = "
-							+ children.size());
-				}
-				writeDb.putRecord(loc, next);
-				assert Util.debug(DebugFacility.SOLVER, "Solved state \n"
-						+ game.displayState(state) + " to " + next);
-			}
+		for (S s : game.startingPositions()) {
+			game.setToState(s);
+			long currentTimeMillis = System.currentTimeMillis();
+			solve(game, game.newRecord(), 0);
+			System.out.println(Util.millisToETA(System.currentTimeMillis()
+					- currentTimeMillis)
+					+ " time to complete");
 		}
-
-		public List<WorkUnit> divide(int num) {
-			List<WorkUnit> a = new ArrayList<WorkUnit>();
-			a.add(this);
-			return a;
-		}
-
 	}
 
+	private void solve(TopDownMutaGame<S> game, Record value, int depth) {
+		if (depth < 3)
+			assert Util.debug(DebugFacility.SOLVER, game.toString());
+		long hash = game.getHash();
+		readDb.getRecord(hash, value);
+		if (value.value != PrimitiveValue.UNDECIDED)
+			return;
+		PrimitiveValue pv = game.primitiveValue();
+		switch (pv) {
+		case UNDECIDED:
+			Record[] recs = recordList.addFirst();
+			boolean made = game.makeMove();
+			int i = 0;
+			while (made) {
+				solve(game, value, depth + 1);
+				recs[i].set(value);
+				recs[i].previousPosition();
+				++i;
+				made = game.changeMove();
+			}
+			if (i > 0)
+				game.undoMove();
+			Record best = game.combine(recs, 0, i);
+			value.set(best);
+			recordList.remove();
+			break;
+		case IMPOSSIBLE:
+			Util
+					.fatalError("Top-down solve should not reach impossible positions");
+		default:
+			value.value = pv;
+			if (containsRemoteness)
+				value.remoteness = 0;
+		}
+		writeDb.putRecord(hash, value);
+	}
 }

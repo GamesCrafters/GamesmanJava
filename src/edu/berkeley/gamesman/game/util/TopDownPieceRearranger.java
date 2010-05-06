@@ -1,6 +1,9 @@
 package edu.berkeley.gamesman.game.util;
 
 import edu.berkeley.gamesman.util.*;
+import edu.berkeley.gamesman.util.qll.Factory;
+import edu.berkeley.gamesman.util.qll.Node;
+import edu.berkeley.gamesman.util.qll.RecycleLinkedList;
 
 /**
  * A binary rearranger which is structured to match the format of top-down
@@ -9,12 +12,12 @@ import edu.berkeley.gamesman.util.*;
  * @author dnspies
  */
 public class TopDownPieceRearranger {
-	private static class Piece {
-		long hash;
+	public static class Piece {
+		private long hash;
 
-		int index, numOs;
+		private int index, numOs;
 
-		char player;
+		private char player;
 
 		public String toString() {
 			return String.valueOf(player);
@@ -27,15 +30,15 @@ public class TopDownPieceRearranger {
 
 	private final Piece beforePiece;
 
-	private final QuickLinkedList<Piece> pieces;
+	private final RecycleLinkedList<Piece> pieces;
 
-	private final QuickLinkedList<Piece>.QuickLinkedIterator pieceIterator;
+	private final RecycleLinkedList<Piece>.RLLIterator pieceIterator;
 
 	private final TDPRIter myCharIter;
 
 	private final class TDPRIter implements CharIterator {
 
-		private final QuickLinkedList<Piece>.QuickLinkedIterator myIterator = pieces
+		private final RecycleLinkedList<Piece>.RLLIterator myIterator = pieces
 				.listIterator();
 
 		public boolean hasNext() {
@@ -47,7 +50,7 @@ public class TopDownPieceRearranger {
 		}
 
 		public void reset() {
-			myIterator.reset(false);
+			myIterator.toIndex(0);
 		}
 
 	}
@@ -58,11 +61,13 @@ public class TopDownPieceRearranger {
 	 *            game begins with no pieces on the board)
 	 */
 	public TopDownPieceRearranger(int numSpaces) {
-		Piece[] pieceArray = new Piece[numSpaces];
-		QuickLinkedList<Piece> myPieces = null;
-		myPieces = new QuickLinkedList<Piece>(pieceArray, new Factory<Piece>() {
-			public Piece newElement() {
+		RecycleLinkedList<Piece> myPieces = null;
+		myPieces = new RecycleLinkedList<Piece>(new Factory<Piece>() {
+			public Piece newObject() {
 				return new Piece();
+			}
+
+			public void reset(Piece t) {
 			}
 		});
 		pieces = myPieces;
@@ -90,8 +95,8 @@ public class TopDownPieceRearranger {
 	 *            The number of steps back you wish to move it
 	 * @return The new serial of the piece being moved
 	 */
-	public int changeMove(int serial, int stepsBack) {
-		pieceIterator.jumpSerial(serial);
+	public Node<Piece> changeMove(Node<Piece> serial, int stepsBack) {
+		pieceIterator.toNode(serial);
 		Piece move = pieceIterator.next();
 		char player = move.player;
 		if (player == 'O')
@@ -139,9 +144,7 @@ public class TopDownPieceRearranger {
 			hash += newMove.hash;
 		pieceIterator.previous();
 
-		serial = pieceIterator.nextSerial();
-
-		return serial;
+		return pieceIterator.nextSerial();
 	}
 
 	// private void checkHash() {
@@ -175,9 +178,9 @@ public class TopDownPieceRearranger {
 	 *            The number of steps from the end
 	 * @return The serial of the added piece
 	 */
-	public int makeMove(char player, int stepsBack) {
+	public Node<Piece> makeMove(char player, int stepsBack) {
 
-		pieceIterator.reset(true);
+		pieceIterator.toIndex(pieces.size());
 		Piece p = afterPiece;
 		for (int i = 0; i <= stepsBack; i++) {
 			++p.index;
@@ -214,7 +217,7 @@ public class TopDownPieceRearranger {
 			hash += newMove.hash;
 		pieceIterator.previous();
 
-		int serial = pieceIterator.nextSerial();
+		Node<Piece> serial = pieceIterator.nextSerial();
 		return serial;
 	}
 
@@ -224,9 +227,9 @@ public class TopDownPieceRearranger {
 	 * @param serial
 	 *            The serial of the piece to remove
 	 */
-	public void undoMove(int serial) {
+	public void undoMove(Node<Piece> serial) {
 
-		pieceIterator.jumpSerial(serial);
+		pieceIterator.toNode(serial);
 		Piece move = pieceIterator.next();
 		char player = move.player;
 		if (player == 'O')
@@ -303,7 +306,7 @@ public class TopDownPieceRearranger {
 			} else
 				p.player = 'X';
 		}
-		pieceIterator.reset(false);
+		pieceIterator.toIndex(0);
 	}
 
 	/**
@@ -357,6 +360,6 @@ public class TopDownPieceRearranger {
 			p.hash = 1;
 		else
 			p.hash = lastPiece.hash * numPieces / (numPieces - numOs);
-		pieceIterator.reset(false);
+		pieceIterator.toIndex(0);
 	}
 }

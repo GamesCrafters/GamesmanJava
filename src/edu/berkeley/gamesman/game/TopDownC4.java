@@ -9,8 +9,10 @@ import edu.berkeley.gamesman.game.util.BitSetBoard;
 import edu.berkeley.gamesman.game.util.C4State;
 import edu.berkeley.gamesman.game.util.TopDownPieceRearranger;
 import edu.berkeley.gamesman.hasher.TDC4Hasher;
-import edu.berkeley.gamesman.hasher.TieredHasher;
 import edu.berkeley.gamesman.util.*;
+import edu.berkeley.gamesman.util.qll.Factory;
+import edu.berkeley.gamesman.util.qll.Node;
+import edu.berkeley.gamesman.util.qll.RecycleLinkedList;
 
 /**
  * The game for solving Connect4 top down
@@ -26,7 +28,7 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 		int piecesLeft;
 
-		int moveSerial;
+		Node<TopDownPieceRearranger.Piece> moveSerial;
 
 		public Move() {
 			openColumns = new int[gameWidth];
@@ -57,7 +59,7 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 	 */
 	public ExpCoefs ec;
 
-	private QuickLinkedList<Move> moves;
+	private RecycleLinkedList<Move> moves;
 
 	private TopDownPieceRearranger arranger;
 
@@ -76,13 +78,16 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 		gameHeight = conf.getInteger("gamesman.game.height", 4);
 		gameSize = gameWidth * gameHeight;
 		colHeights = new int[gameWidth];
-		Move[] moveArray = new Move[gameSize];
-		QuickLinkedList<Move> myMoves = null;
-		myMoves = new QuickLinkedList<Move>(moveArray, new Factory<Move>() {
-			public Move newElement() {
-				return new Move();
-			}
-		});
+		RecycleLinkedList<Move> myMoves = new RecycleLinkedList<Move>(
+				new Factory<Move>() {
+
+					public Move newObject() {
+						return new Move();
+					}
+
+					public void reset(Move t) {
+					}
+				});
 		moves = myMoves;
 		myState = new C4State(0, 0, 0);
 		for (int i = 0; i < gameWidth; i++)
@@ -163,11 +168,6 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 	@Override
 	public int maxChildren() {
 		return gameWidth;
-	}
-
-	@Override
-	public int maxRemoteness() {
-		return gameSize;
 	}
 
 	@Override

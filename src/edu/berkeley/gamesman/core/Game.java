@@ -141,7 +141,7 @@ public abstract class Game<S extends State> {
 	 *            The hash given
 	 * @return the State represented
 	 */
-	public S hashToState(long hash) {
+	public final S hashToState(long hash) {
 		S res = newState();
 		hashToState(hash, res);
 		return res;
@@ -381,7 +381,7 @@ public abstract class Game<S extends State> {
 	 * @return The best of the records
 	 * @see Game#combine(Record[], int, int)
 	 */
-	public Record combine(List<Record> recs) {
+	public final Record combine(List<Record> recs) {
 		Record[] recArray = new Record[recs.size()];
 		recArray = recs.toArray(recArray);
 		return combine(recArray, 0, recArray.length);
