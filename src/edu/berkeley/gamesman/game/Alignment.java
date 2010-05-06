@@ -152,7 +152,6 @@ public class Alignment extends Game<AlignmentState> {
 	public long numHashes() {
 		return(2^((gameWidth*gameHeight/2) + 6) + 1);
 	}
-
 	@Override
 	public PrimitiveValue primitiveValue(AlignmentState pos) {
 		if (pos.lastMove == 'X') {
@@ -161,7 +160,11 @@ public class Alignment extends Game<AlignmentState> {
 			}
 			if (pos.xDead >= piecesToWin) {
 				return PrimitiveValue.WIN;
-			} else {
+			}
+			if (pos.full()) {
+				return PrimitiveValue.TIE;
+			}
+			else {
 				return PrimitiveValue.UNDECIDED;
 			}
 		}
@@ -171,6 +174,9 @@ public class Alignment extends Game<AlignmentState> {
 			}
 			if (pos.oDead >= piecesToWin) {
 				return PrimitiveValue.WIN;
+			} 
+			if (pos.full()) {
+				return PrimitiveValue.TIE;
 			} else {
 				return PrimitiveValue.UNDECIDED;
 			}
@@ -178,7 +184,6 @@ public class Alignment extends Game<AlignmentState> {
 			throw new IllegalArgumentException("Last move cannot be " + pos.lastMove);
 		}
 	}
-
 	@Override
 	public Collection<AlignmentState> startingPositions() {
 		AlignmentState as = newState();
@@ -332,7 +337,6 @@ public class Alignment extends Game<AlignmentState> {
 
 	@Override
 	public Collection<Pair<String, AlignmentState>> validMoves(AlignmentState pos) {
-		// TODO Return children what string?
 		AlignmentState s = new AlignmentState(pos);
 		Collection<String> strings = new ArrayList<String>();
 		Collection<AlignmentState> states = new ArrayList<AlignmentState>();
@@ -344,7 +348,7 @@ public class Alignment extends Game<AlignmentState> {
 				for (int col = 0; col < gameWidth; col++) {
 					if (' ' == pos.get(row, col)) {
 						s.put(row, col, opposite(pos.lastMove));
-						strings.add(stateToString(s));
+						strings.add("row: " + row + " col: " + col);
 						states.add(new AlignmentState(s));
 					}
 				}
@@ -557,7 +561,7 @@ enum AlignmentVariant {
 }
 
 class AlignmentState implements State {
-	char[][] board; // chars are 'X', 'O' and ' ' (X plays first)
+	char[][] board; // chars are 'X', 'O' and ' ' (X plays first) should be char[] to accomodate Dead_squares and no corners
 	char lastMove;
 	int xDead;
 	int oDead;
@@ -597,6 +601,17 @@ class AlignmentState implements State {
 
 	char get(int row, int col) {
 		return board[row][col];
+	}
+	
+	Boolean full() {
+		for (int row = 0; row < board.length; row++){
+			for (int col = 0; col < board[0].length; col++) {
+				if (board[row][col] == ' '){
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 
 	void put(int row, int col, char piece) {
