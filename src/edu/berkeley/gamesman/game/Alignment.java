@@ -11,6 +11,7 @@ import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.util.Pair;
+import edu.berkeley.gamesman.util.Util;
 
 
 
@@ -47,7 +48,7 @@ public class Alignment extends Game<AlignmentState> {
 			openCells.remove((gameHeight-1)*gameWidth); openCells.remove((gameHeight-2)*gameWidth); openCells.remove((gameHeight-1)*gameWidth + 1);
 			openCells.remove((gameHeight-1)*gameWidth - 1); openCells.remove((gameHeight)*gameWidth - 1); openCells.remove((gameHeight)*gameWidth - 2);
 		}
-		*/
+		 */
 	}
 
 	@Override
@@ -76,15 +77,16 @@ public class Alignment extends Game<AlignmentState> {
 	public void hashToState(long hash, AlignmentState s) { 
 
 		String sHash = "" + hash; //removes leading zeros, right?
+		while (sHash.length() < (gameWidth*gameHeight + 5)) { //makes sHash (gameWidth*gameHeight + 5) long
+			sHash = "0" + sHash;
+		}
 		String sBoard = sHash.substring(0, gameWidth*gameHeight);
 		String sAux = sHash.substring(gameWidth*gameHeight); //should be exactly 5 digits long 
-
-		char[] linearBoard = new char[gameWidth*gameHeight];
 		char[][] board = new char[gameWidth][gameHeight];
 		int xDead = Integer.parseInt(sAux.substring(0, 2));
 		char lastMove =' ';
 		switch(sAux.charAt(2)){
-		case(0):
+		case(2):
 			lastMove = 'O';
 		break;
 		case(1):
@@ -95,52 +97,22 @@ public class Alignment extends Game<AlignmentState> {
 		int oDead = Integer.parseInt(sAux.substring(3));
 
 
-		try {
-			for (int square = 0; square < gameWidth*gameHeight; square += 2) {
-				switch(sBoard.charAt(square/2)) {
+
+
+		for (int row = 0; row < gameHeight; row++) {
+			for (int col = 0; col < gameWidth; col++) {
+				switch(sHash.charAt(row*gameWidth + col)) {
 				case('0'):
-					linearBoard[square] = ' ';
-				linearBoard[square+1] = ' ';
+					board[row][col] = ' ';
 				break;
 				case('1'):
-					linearBoard[square] = ' ';
-				linearBoard[square+1] = 'X';
+					board[row][col] = 'X';
 				break;
 				case('2'):
-					linearBoard[square] = ' ';
-				linearBoard[square+1] = 'O';
-				break;
-				case('3'):
-					linearBoard[square] = 'X';
-				linearBoard[square+1] = ' ';
-				break;
-				case('4'):
-					linearBoard[square] = 'X';
-				linearBoard[square+1] = 'X';
-				break;	
-				case('5'):
-					linearBoard[square] = 'X';
-				linearBoard[square+1] = 'O';
-				break;
-				case('6'):
-					linearBoard[square] = 'O';
-				linearBoard[square+1] = ' ';
-				break;
-				case('7'):
-					linearBoard[square] = 'O';
-				linearBoard[square+1] = 'X';
-				break;
-				case('8'):
-					linearBoard[square] = 'O';
-				linearBoard[square+1] = 'O';
+					board[row][col] = 'O';
 				break;
 				}
 
-			}
-		} catch (ArrayIndexOutOfBoundsException e) {	}
-		for (int row = 0; row < gameHeight; row++) {
-			for (int col = 0; col < gameWidth; col++) {
-				board[row][col] = linearBoard[row*gameWidth + col];
 			}
 		}
 		s.set(board, xDead, oDead, lastMove);
@@ -162,7 +134,7 @@ public class Alignment extends Game<AlignmentState> {
 
 	@Override
 	public long numHashes() {
-		return(1<<((gameWidth*gameHeight/2) + 6) + 1);
+		return (Util.longpow(3, gameWidth*gameHeight + 5) + 2);   //(3^(gameWidth*gameHeighT + 5));
 	}
 	@Override
 	public PrimitiveValue primitiveValue(AlignmentState pos) {
@@ -209,116 +181,41 @@ public class Alignment extends Game<AlignmentState> {
 	@Override
 	public long stateToHash(AlignmentState pos) {
 		StringBuilder sHash = new StringBuilder(64);
-
-		char[] linearBoard = new char[gameWidth*gameHeight];
 		char[][] board = pos.board;
 
 		for (int row = 0; row < gameHeight; row++) {
 			for (int col = 0; col < gameWidth; col++) {
-				linearBoard[row*gameWidth + col] = board[row][col];
-			}
-		}
-
-		int square = 0;
-		try {
-			for (; square < gameWidth*gameHeight-1; square += 2) {
-				switch(linearBoard[square]) {
+				switch(pos.board[row][col]) {
 				case(' '):
-					linearBoard[square] = ' ';
-					switch(linearBoard[square+1]) {
-					case(' '):
-						sHash.append("0");
-						break;
-					case('X'):
-						sHash.append("1");
-						break;
-					case('O'):
-						sHash.append("2");
-						break;
-					}
-					break;
+					sHash.append("0");
+				break;
 				case('X'):
-					linearBoard[square] = ' ';
-					switch(linearBoard[square+1]) {
-					case(' '):
-						sHash.append("3");
-						break;
-					case('X'):
-						sHash.append("4");
-						break;
-					case('O'):
-						sHash.append("5");
-						break;
-					}
-					break;
+					sHash.append("1");
+				break;
 				case('O'):
-					linearBoard[square] = ' ';
-					switch(linearBoard[square+1]) {
-					case(' '):
-						sHash.append("6");
-						break;
-					case('X'):
-						sHash.append("7");
-						break;
-					case('O'):
-						sHash.append("8");
-						break;
-					}
-					break;
-				case('1'):
-					linearBoard[square] = ' ';
-				linearBoard[square+1] = 'X';
-				break;
-				case('2'):
-					linearBoard[square] = ' ';
-				linearBoard[square+1] = 'O';
-				break;
-				case('3'):
-					linearBoard[square] = 'X';
-				linearBoard[square+1] = ' ';
-				break;
-				case('4'):
-					linearBoard[square] = 'X';
-				linearBoard[square+1] = 'X';
-				break;	
-				case('5'):
-					linearBoard[square] = 'X';
-				linearBoard[square+1] = 'O';
-				break;
-				case('6'):
-					linearBoard[square] = 'O';
-				linearBoard[square+1] = ' ';
-				break;
-				case('7'):
-					linearBoard[square] = 'O';
-				linearBoard[square+1] = 'X';
-				break;
-				case('8'):
-					linearBoard[square] = 'O';
-				linearBoard[square+1] = 'O';
+					sHash.append("2");
 				break;
 				}
 			}
-		} catch (ArrayIndexOutOfBoundsException e) {	}
-		if (square == gameWidth*gameHeight - 1){
-			
-			
 		}
-		
-		if (pos.xDead < 10) {
+
+
+		if (pos.xDead < 3) {
 			sHash.append("0");
-		} else {sHash.append(pos.xDead);}
-		
+			sHash.append(Integer.toString(pos.xDead,3));
+		} else {sHash.append(Integer.toString(pos.xDead,3));}
+
 		if (pos.lastMove == 'O') {
-			sHash.append("0");
+			sHash.append("2");
 		}
 		else if (pos.lastMove == 'X') {
 			sHash.append("1");
 		}
-		if (pos.oDead < 10) {
+		if (pos.oDead < 3) {
 			sHash.append("0");
-		} else {sHash.append(pos.oDead);}
-		
+			sHash.append(Integer.toString(pos.xDead,3));
+		} else {sHash.append(Integer.toString(pos.xDead,3));}
+
 		System.out.printf("Hash Code: %s\n", sHash.toString());
 		return Long.parseLong(sHash.toString());
 	}
@@ -536,7 +433,7 @@ public class Alignment extends Game<AlignmentState> {
 						myBoard[x][y] = ' ';
 						deathCount++;
 					}
-					
+
 				}
 			}
 		}
@@ -590,7 +487,7 @@ class AlignmentState implements State {
 		this.oDead = oDead;
 		this.lastMove = lastMove;
 	}
-	
+
 	public AlignmentState(AlignmentState pos) {
 		this.board = pos.board;
 		this.xDead = pos.xDead;
@@ -620,7 +517,7 @@ class AlignmentState implements State {
 	char get(int row, int col) {
 		return board[row][col];
 	}
-	
+
 	Boolean full() {
 		for (int row = 0; row < board.length; row++){
 			for (int col = 0; col < board[0].length; col++) {
