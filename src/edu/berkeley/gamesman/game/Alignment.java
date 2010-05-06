@@ -26,6 +26,7 @@ public class Alignment extends Game<AlignmentState> {
 	@Override
 	public void initialize(Configuration conf) {
 		super.initialize(conf);
+		openCells = new ArrayList<Pair<Integer,Integer>>();
 		gameWidth = conf.getInteger("gamesman.game.width", 8);
 		gameHeight = conf.getInteger("gamesman.game.height", 8);
 		piecesToWin = conf.getInteger("gamesman.game.pieces", 5);
@@ -39,12 +40,14 @@ public class Alignment extends Game<AlignmentState> {
 			}
 		}
 		//Removing corners
+		/* Not compatible yet
 		if (gameWidth > 4 && gameHeight > 4) {
 			openCells.remove(0); openCells.remove(1); openCells.remove(gameWidth);
 			openCells.remove(gameWidth-1); openCells.remove(gameWidth-2); openCells.remove(2*gameWidth - 1);
 			openCells.remove((gameHeight-1)*gameWidth); openCells.remove((gameHeight-2)*gameWidth); openCells.remove((gameHeight-1)*gameWidth + 1);
 			openCells.remove((gameHeight-1)*gameWidth - 1); openCells.remove((gameHeight)*gameWidth - 1); openCells.remove((gameHeight)*gameWidth - 2);
 		}
+		*/
 	}
 
 	@Override
@@ -79,7 +82,16 @@ public class Alignment extends Game<AlignmentState> {
 		char[] linearBoard = new char[gameWidth*gameHeight];
 		char[][] board = new char[gameWidth][gameHeight];
 		int xDead = Integer.parseInt(sAux.substring(0, 2));
-		char lastMove = sAux.charAt(2);
+		char lastMove =' ';
+		switch(sAux.charAt(2)){
+		case(0):
+			lastMove = 'O';
+		break;
+		case(1):
+			lastMove = 'X';
+		break;
+		}
+
 		int oDead = Integer.parseInt(sAux.substring(3));
 
 
@@ -150,7 +162,7 @@ public class Alignment extends Game<AlignmentState> {
 
 	@Override
 	public long numHashes() {
-		return(2^((gameWidth*gameHeight/2) + 6) + 1);
+		return(1<<((gameWidth*gameHeight/2) + 6) + 1);
 	}
 	@Override
 	public PrimitiveValue primitiveValue(AlignmentState pos) {
@@ -297,11 +309,17 @@ public class Alignment extends Game<AlignmentState> {
 			sHash.append("0");
 		} else {sHash.append(pos.xDead);}
 		
-		sHash.append(pos.lastMove);
+		if (pos.lastMove == 'O') {
+			sHash.append("0");
+		}
+		else if (pos.lastMove == 'X') {
+			sHash.append("1");
+		}
 		if (pos.oDead < 10) {
 			sHash.append("0");
 		} else {sHash.append(pos.oDead);}
 		
+		System.out.printf("Hash Code: %s\n", sHash.toString());
 		return Long.parseLong(sHash.toString());
 	}
 
