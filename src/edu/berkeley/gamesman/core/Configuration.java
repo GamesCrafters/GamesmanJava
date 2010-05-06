@@ -155,17 +155,17 @@ public class Configuration {
 				states = 0;
 			if (splt[0].trim().equalsIgnoreCase("VALUE")) {
 				if (states == 0)
-					valueStates = 4;
+					valueStates = g.defaultValueStates();
 				else
 					valueStates = states;
 			} else if (splt[0].trim().equalsIgnoreCase("REMOTENESS")) {
 				if (states == 0)
-					remotenessStates = 2 << 6;
+					remotenessStates = g.defaultRemotenessStates();
 				else
 					remotenessStates = states;
 			} else if (splt[0].trim().equalsIgnoreCase("SCORE")) {
 				if (states == 0)
-					scoreStates = 2 << 4;
+					scoreStates = g.defaultScoreStates();
 				else
 					scoreStates = states;
 			}

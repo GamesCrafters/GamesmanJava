@@ -630,4 +630,14 @@ public final class Connect4 extends TieredIterGame {
 	public void setInterperet(long hash) {
 		setTier(hashToTier(hash));
 	}
+
+	@Override
+	public int defaultValueStates() {
+		return 3;
+	}
+
+	@Override
+	public int defaultRemotenessStates() {
+		return gameSize + 1;
+	}
 }

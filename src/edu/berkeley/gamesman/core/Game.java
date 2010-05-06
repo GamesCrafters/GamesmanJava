@@ -389,4 +389,16 @@ public abstract class Game<S extends State> {
 
 	public void setInterperet(long recNum) {
 	}
+
+	public int defaultValueStates() {
+		return 4;
+	}
+
+	public int defaultRemotenessStates() {
+		return 64;
+	}
+
+	public int defaultScoreStates() {
+		return 1;
+	}
 }
