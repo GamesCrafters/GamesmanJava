@@ -10,6 +10,8 @@ import edu.berkeley.gamesman.util.Util;
  * @author dnspies
  */
 public class YGame extends ConnectGame {
+	private int[] translateOutArray;
+
 	String formatString = "\n                 220_\n"
 			+ "                /| \\\n" + "               / |  \\\n"
 			+ "              /  |   \\\n" + "             /   |    \\\n"
@@ -92,6 +94,22 @@ public class YGame extends ConnectGame {
 			for (int i = 0; i < boardSide - 1; i++) {
 				for (int c = 0; c <= i; c++) {
 					yBoard[t][i][c].connectedSpaces = getNeighbors(t, i, c);
+				}
+			}
+		}
+		int triangleSize = boardSide * (boardSide - 1) / 2;
+		int i = 0;
+		translateOutArray = new int[boardSize];
+		for (int t = 0; t < 3; t++) {
+			translateOutArray[i++] = t * triangleSize;
+		}
+		for (int row = boardSide - 2; row > 0; row--) {
+			for (int t = 2; t >= 0; t--) {
+				translateOutArray[i++] = Util.nonNegativeModulo(t + 1, 3)
+						* triangleSize + row * (row + 1) / 2;
+				for (int col = row; col > 0; col--) {
+					translateOutArray[i++] = t * triangleSize + row * (row + 1)
+							/ 2 + col;
 				}
 			}
 		}
@@ -249,42 +267,22 @@ public class YGame extends ConnectGame {
 
 	@Override
 	public char[] convertInString(String s) {
-		int triangleSize = boardSide * (boardSide - 1) / 2;
-		char[] charArray = new char[s.length()];
-		int i = 0;
-		for (int t = 0; t < 3; t++) {
-			charArray[t * triangleSize] = s.charAt(i++);
-		}
-		for (int row = boardSide - 2; row > 0; row--) {
-			for (int t = 2; t >= 0; t--) {
-				charArray[Util.nonNegativeModulo(t + 1, 3) * triangleSize + row
-						* (row + 1) / 2] = s.charAt(i++);
-				for (int col = row; col > 0; col--) {
-					charArray[t * triangleSize + row * (row + 1) / 2 + col] = s
-							.charAt(i++);
-				}
-			}
-		}
+		char[] charArray = new char[boardSize];
+		for (int i = 0; i < boardSize; i++)
+			charArray[translateOutArray[i]] = s.charAt(i);
 		return charArray;
 	}
 
 	@Override
 	public String convertOutString(char[] charArray) {
-		int triangleSize = boardSide * (boardSide - 1) / 2;
-		StringBuilder s = new StringBuilder(charArray.length);
-		for (int t = 0; t < 3; t++) {
-			s.append(charArray[t * triangleSize]);
-		}
-		for (int row = boardSide - 2; row > 0; row--) {
-			for (int t = 2; t >= 0; t--) {
-				s.append(charArray[Util.nonNegativeModulo(t + 1, 3)
-						* triangleSize + row * (row + 1) / 2]);
-				for (int col = row; col > 0; col--) {
-					s.append(charArray[t * triangleSize + row * (row + 1) / 2
-							+ col]);
-				}
-			}
-		}
-		return s.toString();
+		StringBuilder sb = new StringBuilder(boardSize);
+		for (int i = 0; i < boardSize; i++)
+			sb.append(charArray[translateOutArray[i]]);
+		return sb.toString();
+	}
+
+	@Override
+	public int translateOut(int i) {
+		return translateOutArray[i];
 	}
 }

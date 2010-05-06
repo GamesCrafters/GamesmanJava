@@ -2,6 +2,7 @@ package edu.berkeley.gamesman.game;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.game.util.ItergameState;
@@ -130,15 +131,30 @@ public abstract class ConnectGame extends TieredIterGame {
 
 	@Override
 	public Collection<Pair<String, ItergameState>> validMoves() {
-		ItergameState[] moves = new ItergameState[maxChildren()];
-		int totalMoves = validMoves(moves);
-		ArrayList<Pair<String, ItergameState>> resultMoves = new ArrayList<Pair<String, ItergameState>>(
-				totalMoves);
-		for (int i = 0; i < totalMoves; i++) {
-			resultMoves.add(new Pair<String, ItergameState>(
-					Integer.toString(i), moves[i]));
+		char turn = this.turn;
+		char[] pieces = getCharArray();
+		ArrayList<Pair<String, ItergameState>> moves = new ArrayList<Pair<String, ItergameState>>(
+				pieces.length);
+		for (int i = 0; i < pieces.length; i++) {
+			if (pieces[i] == ' ') {
+				pieces[i] = turn;
+				stateMatchGame();
+				moves.add(new Pair<String, ItergameState>(Integer
+						.toString(translateOut(i)), myState.clone()));
+				pieces[i] = ' ';
+			}
 		}
-		return resultMoves;
+		stateMatchGame();
+		return moves;
+	}
+
+	/**
+	 * @param i
+	 *            The index into the char array
+	 * @return The index into the passed game string.
+	 */
+	public int translateOut(int i) {
+		return i;
 	}
 
 	@Override
@@ -230,9 +246,13 @@ public abstract class ConnectGame extends TieredIterGame {
 		return convertOutString(getCharArray());
 	}
 
-	public abstract char[] convertInString(String s);
+	public char[] convertInString(String s){
+		return s.toCharArray();
+	}
 
-	public abstract String convertOutString(char[] charArray);
+	public String convertOutString(char[] charArray){
+		return new String(charArray);
+	}
 
 	protected abstract void setToCharArray(char[] myPieces);
 

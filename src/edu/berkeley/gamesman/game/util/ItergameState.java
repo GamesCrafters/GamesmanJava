@@ -7,7 +7,7 @@ import edu.berkeley.gamesman.core.State;
  * 
  * @author DNSpies
  */
-public final class ItergameState implements State {
+public final class ItergameState implements State, Cloneable {
 
 	/**
 	 * The tier
@@ -31,7 +31,17 @@ public final class ItergameState implements State {
 	}
 
 	/**
-	 * Creates an empty state
+	 * Creates a new state exactly like state
+	 * 
+	 * @param state
+	 *            Another state to copy
+	 */
+	public ItergameState(ItergameState state) {
+		set(state);
+	}
+
+	/**
+	 * Creates a new emptyState
 	 */
 	public ItergameState() {
 		this(0, 0);
@@ -58,5 +68,9 @@ public final class ItergameState implements State {
 			return tier == other.tier && hash == other.hash;
 		} else
 			return false;
+	}
+
+	public ItergameState clone() {
+		return new ItergameState(this);
 	}
 }
