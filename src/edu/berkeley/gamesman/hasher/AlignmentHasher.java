@@ -25,7 +25,7 @@ public class AlignmentHasher extends Hasher<AlignmentState> {
 					int totalPieces = pieces + xCaptured + oCaptured;
 					int xPieces = (totalPieces + 1) / 2 - xCaptured;
 					int oPieces = totalPieces / 2 - oCaptured;
-					offset += Util.nCr(16, xPieces + oPieces)
+					offset += Util.nCr(game.openCells.size(), xPieces + oPieces)
 							* Util.nCr(xPieces + oPieces, oPieces);
 				}
 			}
