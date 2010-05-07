@@ -258,4 +258,9 @@ public final class TopDownGame<S extends State> extends TopDownMutaGame<S> {
 	public Collection<Pair<String, S>> validMoves(S pos) {
 		return myGame.validMoves(pos);
 	}
+
+	@Override
+	public String toString() {
+		return "\n"+displayState();
+	}
 }
