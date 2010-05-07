@@ -2,11 +2,11 @@ package edu.berkeley.gamesman.util.qll;
 
 import java.lang.reflect.Array;
 import java.util.Collection;
-import java.util.Deque;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Queue;
 
-public class QuickLinkedList<T> implements List<T>, Deque<T> {
+public class QuickLinkedList<T> implements List<T>, Queue<T> {
 
 	public class QLLIterator implements ListIterator<T> {
 		Node<T> nextNode;
