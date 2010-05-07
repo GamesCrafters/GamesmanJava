@@ -13,9 +13,11 @@ public class AlignmentHasher extends Hasher<AlignmentState> {
 	private long numHashes;
 	private MMHasher mmh = new MMHasher();
 
+	
+	
 	public void initializeOffsets() {
 		game = (Alignment) conf.getGame();
-		offsets = new long[game.piecesToWin][game.piecesToWin][game.openCells
+		offsets = new long[game.piecesToWin+1][game.piecesToWin+1][game.openCells
 				.size() + 1];
 		long offset = 0;
 		for (int xCaptured = 0; xCaptured < game.piecesToWin; xCaptured++) {

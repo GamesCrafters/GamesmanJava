@@ -4,14 +4,15 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import edu.berkeley.gamesman.core.State;
+import edu.berkeley.gamesman.game.Alignment;
 import edu.berkeley.gamesman.game.util.Bullet;
+import edu.berkeley.gamesman.util.DebugFacility;
+import edu.berkeley.gamesman.util.Util;
 
 public class AlignmentState implements State {
-	
 	Boolean[] guns = new Boolean[]{false, false, false, false};
 	private ArrayList<Bullet> myBullets = new ArrayList<Bullet>();;
-	public char[][] board; // chars are 'X', 'O' and ' ' (X plays first) should be
-	// char[] to accomodate Dead_squares and no corners
+	public char[][] board; // chars are 'X', 'O' and ' ' (X plays first) should be char[] to accomodate Dead_squares and no corners
 	public char lastMove;
 	public int xDead;
 	public int oDead;
@@ -172,7 +173,7 @@ public class AlignmentState implements State {
 	/** Only the guns of the player whose turn it currently is 
 	 * fire at the end of a given turn.  Finds and fires guns, returning
 	 * the number of enemies removed from the board. Destructive*/
-	public void fireGuns () {
+	public void fireGuns (int piecesToWin) {
 		makeBullets();
 		char whoseTurn = opposite(lastMove);
 		Iterator<Bullet> iter = myBullets.iterator();
@@ -205,12 +206,15 @@ public class AlignmentState implements State {
 		}
 		switch(whoseTurn) {
 		case('X'):
-			oDead -= deathCount;
+			oDead = Math.min(oDead + deathCount,piecesToWin );
+			System.out.println("oDead = " + oDead);
 		break;
 		case('O'):
-			xDead -= deathCount;
+			xDead = Math.min(xDead + deathCount,piecesToWin );
+		System.out.println("xDead = " + xDead);
 		break;
 		}
+		
 		myBullets = new ArrayList<Bullet>();
 	}
 	

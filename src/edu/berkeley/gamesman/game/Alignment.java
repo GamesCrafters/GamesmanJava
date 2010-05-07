@@ -58,8 +58,8 @@ public class Alignment extends Game<AlignmentState> {
 	public void initialize(Configuration conf) {
 		super.initialize(conf);
 		openCells = new ArrayList<Pair<Integer,Integer>>();
-		gameWidth = conf.getInteger("gamesman.game.width", 3);
-		gameHeight = conf.getInteger("gamesman.game.height", 3);
+		gameWidth = conf.getInteger("gamesman.game.width", 4);
+		gameHeight = conf.getInteger("gamesman.game.height", 4);
 		piecesToWin = conf.getInteger("gamesman.game.pieces", 5);
 
 		variant = AlignmentVariant.getVariant(conf.getInteger("gamesman.game.variant", 2)); 
@@ -245,7 +245,7 @@ public class Alignment extends Game<AlignmentState> {
 					if (' ' == pos.get(row, col)) {
 						children[moves].set(pos);
 						children[moves].put(row, col, opposite(pos.lastMove)); 
-						children[moves].fireGuns();
+						children[moves].fireGuns(piecesToWin);
 						children[moves].setLastMove(opposite(pos.lastMove));
 						moves++;
 					}
@@ -281,138 +281,6 @@ public class Alignment extends Game<AlignmentState> {
 		return gameHeight;
 	}
 
-
-
-
-
-
-
-
-	//=======================================================================================
-
-
-	// Will never be called on a square without a non-emptcol, non-valid piece. REturns arracol of bools [N W E S]
-	void checkGun(int row, int col, Boolean[] guns, AlignmentState pos) { // Catch ArrayIndexOutOfBound 
-		char[][] board = pos.board;
-		char base = board[row][col];
-		char NW = ' ';
-		char NE = ' ';
-		char SW = ' ';
-		char SE =  ' ';
-		try {
-			NW = board[row-1][col-1];
-		} catch (ArrayIndexOutOfBoundsException e) {	}
-
-		try {
-			NE = board[row+1][col-1];
-		} catch (ArrayIndexOutOfBoundsException e) {	}
-
-		try {
-			SW = board[row-1][col+1];
-		} catch (ArrayIndexOutOfBoundsException e) {	}
-
-		try {
-			SE = board[row+1][col+1];
-		} catch (ArrayIndexOutOfBoundsException e) {	}
-
-		if (SE == base && SW == base){ guns[0] = true; }
-		if (NE == base && SE == base){ guns[1] = true; }
-		if (NW == base && SW == base){ guns[2] = true; }
-		if (NE == base && NW == base){ guns[3] = true; }
-
-	}
-
-	/**
-	 * Populates myBullets with all bullets of the current 
-	 * player's color.  Does not alter the board in any way.
-	 * 
-	 * return
-	 */
-	void makeBullets(AlignmentState pos) {
-		Boolean[] guns = new Boolean[4];
-		char[][] board = pos.board;
-		for (int row = 0; row < gameHeight; row++) {
-			for (int col = 0; col< gameWidth; col++) {
-				if (board[row][col] == opposite(pos.lastMove)) {
-					checkGun(row, col, guns, pos);
-					for (int dir  = 0; dir < 4; dir++) {
-						if (guns[dir]) {
-							myBullets.add(new Bullet(row,col,dir,opposite(pos.lastMove)));
-						}
-					}
-				}
-			}
-		}
-
-	}
-
-	/**
-	 * moves the piece at (x0,y0) to (x1, y1)
-	 */
-	Boolean movePiece (int row0, int col0, int row1, int col1, AlignmentState pos) {
-		if (pos.legalMove(row0,col0,row1,col1)) {
-			pos.board[row1][col1] = pos.board[row0][col0];
-			pos.board[row0][col0] = ' ';
-			return true;
-		}
-		return false;
-	}
-
-
-	/** true if the square (x0,y0) is one of 8 points adjacent to (x1, y1) */
-	Boolean adjacent (int x0, int y0, int x1, int y1) {
-		return (Math.abs(y1-y0)<=1 && Math.abs(x1-x0)<=1 && !(x1==x0 && y1==y0));
-	}
-
-	/** Only the guns of the player whose turn it currently is 
-	 * fire at the end of a given turn.  Finds and fires guns, returning
-	 * the number of enemies removed from the board. Destructive*/
-	void fireGuns (AlignmentState pos) {
-		makeBullets(pos);
-		char whoseTurn = opposite(pos.lastMove);
-		int xDead = pos.xDead;
-		int oDead = pos.oDead;
-		char[][] myBoard = pos.board;
-		Iterator<Bullet> iter = myBullets.iterator();
-		int deathCount = 0;
-		while (iter.hasNext()) {
-			Bullet b = iter.next();
-			int row = b.row(); int col = b.col(); int drow = b.drow(); int dcol = b.dcol();
-			Boolean stillGoing = true;
-			while(stillGoing) {
-				row += drow; col += dcol;
-				if (myBoard[row][col] == whoseTurn){// Catch ArrayException
-					stillGoing = false;
-					continue;
-				}
-				else {
-					if (myBoard[row][col] == whoseTurn) {
-						stillGoing = false;
-					}
-					else if (myBoard[row][col] == opposite(whoseTurn)) {
-						myBoard[row][col] = ' ';
-						deathCount++;
-					}
-
-				}
-			}
-		}
-		switch(whoseTurn) {
-		case('X'):
-			oDead -= deathCount;
-		break;
-		case('O'):
-			xDead -= deathCount;
-		break;
-		}
-		pos.set(myBoard, xDead, oDead, whoseTurn);
-	}
-	private ArrayList<Bullet> myBullets;
-
-
-
-
-	//=======================================================================================
 
 
 }
