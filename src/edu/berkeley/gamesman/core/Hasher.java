@@ -1,5 +1,7 @@
 package edu.berkeley.gamesman.core;
 
+import edu.berkeley.gamesman.game.util.AlignmentState;
+
 /**
  * A Hasher converts between a game board and a long hash in a space- and
  * time-efficient manner.
@@ -51,5 +53,9 @@ public abstract class Hasher<S extends State> {
 	 *         pieces if appropriate, etc)
 	 */
 	public abstract String describe();
+
+	public void unhash(long hash, AlignmentState state) {
+		state.set(unhash(hash));
+	}
 
 }

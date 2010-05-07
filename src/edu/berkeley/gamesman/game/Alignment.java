@@ -9,7 +9,8 @@ import java.util.Iterator;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.PrimitiveValue;
-import edu.berkeley.gamesman.core.State;
+import edu.berkeley.gamesman.game.util.AlignmentState;
+import edu.berkeley.gamesman.hasher.AlignmentHasher;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -20,9 +21,10 @@ import edu.berkeley.gamesman.util.Util;
  *
  */
 public class Alignment extends Game<AlignmentState> {
-	private int gameWidth, gameHeight, piecesToWin; 
+	private int gameWidth, gameHeight;
+	public int piecesToWin; 
 	private AlignmentVariant variant; //should be an enum?
-	private ArrayList<Pair<Integer, Integer>> openCells;
+	public ArrayList<Pair<Integer, Integer>> openCells;
 
 	@Override
 	public void initialize(Configuration conf) {
@@ -74,53 +76,8 @@ public class Alignment extends Game<AlignmentState> {
 	}
 
 	@Override
-	public void hashToState(long hash, AlignmentState s) { 
-		int Xs = 0; int Os = 0;
-		String sHash = "" + hash; //removes leading zeros, right?
-		while (sHash.length() < (gameWidth*gameHeight + 5)) { //makes sHash (gameWidth*gameHeight + 5) long
-			sHash = "0" + sHash;
-		}
-		String sBoard = sHash.substring(0, gameWidth*gameHeight);
-		String sAux = sHash.substring(gameWidth*gameHeight); //should be exactly 5 digits long 
-		char[][] board = new char[gameWidth][gameHeight];
-		int xDead = Integer.parseInt(sAux.substring(0, 2));
-		char lastMove =' ';
-		
-
-		int oDead = Integer.parseInt(sAux.substring(3));
-
-
-
-
-		for (int row = 0; row < gameHeight; row++) {
-			for (int col = 0; col < gameWidth; col++) {
-				switch(sHash.charAt(row*gameWidth + col)) {
-				case('0'):
-					board[row][col] = ' ';
-					Os++;
-				break;
-				case('1'):
-					board[row][col] = 'X';
-					Xs++;
-				break;
-				case('2'):
-					board[row][col] = 'O';
-				break;
-				}
-
-			}
-		}
-		Xs += xDead; Os += oDead;
-		if (Xs == Os) {
-			lastMove = 'O';
-		}
-		else if (Xs == Os+1) {
-			lastMove = 'X';
-		}
-		else {
-			throw new IllegalArgumentException("Invalid hash" + hash);
-		}
-		s.set(board, xDead, oDead, lastMove);
+	public void hashToState(long hash, AlignmentState s) {
+		((AlignmentHasher) conf.getHasher()).unhash(hash, s);
 	}
 
 	@Override
@@ -139,10 +96,9 @@ public class Alignment extends Game<AlignmentState> {
 
 	@Override
 	public long numHashes() {
-		System.out.println(Util.longpow(3, gameWidth*gameHeight + 4) + 2);
-		System.out.println(Integer.MAX_VALUE);
-		return (Util.longpow(3, gameWidth*gameHeight + 5) + 2);   //(3^(gameWidth*gameHeighT + 5));
+		return conf.getHasher().numHashes();
 	}
+
 	@Override
 	public PrimitiveValue primitiveValue(AlignmentState pos) {
 		if (pos.lastMove == 'X') {
@@ -179,7 +135,7 @@ public class Alignment extends Game<AlignmentState> {
 	public Collection<AlignmentState> startingPositions() {
 		AlignmentState as = newState();
 		for (Pair<Integer, Integer> place : openCells)
-			as.board[place.car][place.cdr] = ' ';
+			as.put(place.car,place.cdr,' ');
 		ArrayList<AlignmentState> retVal = new ArrayList<AlignmentState>(1);
 		retVal.add(as);
 		return retVal;
@@ -187,44 +143,7 @@ public class Alignment extends Game<AlignmentState> {
 
 	@Override
 	public long stateToHash(AlignmentState pos) {
-		StringBuilder sHash = new StringBuilder(64);
-		char[][] board = pos.board;
-
-		for (int row = 0; row < gameHeight; row++) {
-			for (int col = 0; col < gameWidth; col++) {
-				switch(pos.board[row][col]) {
-				case(' '):
-					sHash.append("0");
-				break;
-				case('X'):
-					sHash.append("1");
-				break;
-				case('O'):
-					sHash.append("2");
-				break;
-				}
-			}
-		}
-
-
-		if (pos.xDead < 3) {
-			sHash.append("0");
-			sHash.append(Integer.toString(pos.xDead,3));
-		} else {sHash.append(Integer.toString(pos.xDead,3));}
-
-		/*if (pos.lastMove == 'O') {
-			sHash.append("2");
-		}
-		else if (pos.lastMove == 'X') {
-			sHash.append("1");
-		}*/
-		if (pos.oDead < 3) {
-			sHash.append("0");
-			sHash.append(Integer.toString(pos.xDead,3));
-		} else {sHash.append(Integer.toString(pos.xDead,3));}
-
-		System.out.printf("Hash Code: %s\n", sHash.toString());
-		return Long.parseLong(sHash.toString(),3);
+		return ((AlignmentHasher) conf.getHasher()).hash(pos);
 	}
 
 	@Override
@@ -396,10 +315,10 @@ public class Alignment extends Game<AlignmentState> {
 	/**
 	 * moves the piece at (x0,y0) to (x1, y1)
 	 */
-	Boolean movePiece (int x0, int y0, int x1, int y1, AlignmentState pos) {
-		if (pos.legalMove(x0,y0,x1,y1)) {
-			pos.board[x1][y1] = pos.board[x0][y0];
-			pos.board[x0][y0] = ' ';
+	Boolean movePiece (int row0, int col0, int row1, int col1, AlignmentState pos) {
+		if (pos.legalMove(row0,col0,row1,col1)) {
+			pos.board[row1][col1] = pos.board[row0][col0];
+			pos.board[row0][col0] = ' ';
 			return true;
 		}
 		return false;
@@ -479,78 +398,6 @@ enum AlignmentVariant {
 			throw new IllegalArgumentException("No Alignment Variant exists for number " + varNum);
 		}
 
-	}
-}
-
-class AlignmentState implements State {
-	char[][] board; // chars are 'X', 'O' and ' ' (X plays first) should be char[] to accomodate Dead_squares and no corners
-	char lastMove;
-	int xDead;
-	int oDead;
-
-	public AlignmentState(char[][] board, int xDead, int oDead, char lastMove) {
-		this.board = board;
-		this.xDead = xDead;
-		this.oDead = oDead;
-		this.lastMove = lastMove;
-	}
-
-	public AlignmentState(AlignmentState pos) {
-		this.board = pos.board;
-		this.xDead = pos.xDead;
-		this.oDead = pos.oDead;
-		this.lastMove = pos.lastMove;
-	}
-
-	public void set(State s) {
-		AlignmentState as = (AlignmentState) s;
-		for (int row = 0; row < board.length; row++) {
-			for (int col = 0; col < board[row].length; col++) {
-				board[row][col] = as.board[row][col];
-			}
-		}
-		xDead = as.xDead;
-		oDead = as.oDead;
-		lastMove = as.lastMove;
-	}
-
-	public void set(char[][] board, int xDead, int oDead, char lastMove) {
-		this.board = board;
-		this.xDead = xDead;
-		this.oDead = oDead;
-		this.lastMove = lastMove;
-	}
-
-	char get(int row, int col) {
-		return board[row][col];
-	}
-
-	Boolean full() {
-		for (int row = 0; row < board.length; row++){
-			for (int col = 0; col < board[0].length; col++) {
-				if (board[row][col] == ' '){
-					return false;
-				}
-			}
-		}
-		return true;
-	}
-
-	void put(int row, int col, char piece) {
-		board[row][col] = piece;
-	}	
-
-
-	/** Returns true if the piece at (x0,y0) can be moved to (x1,y1))*/
-	Boolean legalMove(int x0, int y0, int x1, int y1) {
-		return 		adjacent(x0, y0, x1, y1) 
-		&& (board[x1][y1] == ' ');
-	}	
-
-
-	/** true if the square (x0,y0) is one of 8 points adjacent to (x1, y1) */
-	static Boolean adjacent (int x0, int y0, int x1, int y1) {
-		return (Math.abs(y1-y0)<=1 && Math.abs(x1-x0)<=1 && !(x1==x0 && y1==y0));
 	}
 }
 
