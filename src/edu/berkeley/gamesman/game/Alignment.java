@@ -75,7 +75,7 @@ public class Alignment extends Game<AlignmentState> {
 
 	@Override
 	public void hashToState(long hash, AlignmentState s) { 
-
+		int Xs = 0; int Os = 0;
 		String sHash = "" + hash; //removes leading zeros, right?
 		while (sHash.length() < (gameWidth*gameHeight + 5)) { //makes sHash (gameWidth*gameHeight + 5) long
 			sHash = "0" + sHash;
@@ -85,14 +85,7 @@ public class Alignment extends Game<AlignmentState> {
 		char[][] board = new char[gameWidth][gameHeight];
 		int xDead = Integer.parseInt(sAux.substring(0, 2));
 		char lastMove =' ';
-		switch(sAux.charAt(2)){
-		case(2):
-			lastMove = 'O';
-		break;
-		case(1):
-			lastMove = 'X';
-		break;
-		}
+		
 
 		int oDead = Integer.parseInt(sAux.substring(3));
 
@@ -104,9 +97,11 @@ public class Alignment extends Game<AlignmentState> {
 				switch(sHash.charAt(row*gameWidth + col)) {
 				case('0'):
 					board[row][col] = ' ';
+					Os++;
 				break;
 				case('1'):
 					board[row][col] = 'X';
+					Xs++;
 				break;
 				case('2'):
 					board[row][col] = 'O';
@@ -114,6 +109,16 @@ public class Alignment extends Game<AlignmentState> {
 				}
 
 			}
+		}
+		Xs += xDead; Os += oDead;
+		if (Xs == Os) {
+			lastMove = 'O';
+		}
+		else if (Xs == Os+1) {
+			lastMove = 'X';
+		}
+		else {
+			throw new IllegalArgumentException("Invalid hash" + hash);
 		}
 		s.set(board, xDead, oDead, lastMove);
 	}
@@ -134,6 +139,8 @@ public class Alignment extends Game<AlignmentState> {
 
 	@Override
 	public long numHashes() {
+		System.out.println(Util.longpow(3, gameWidth*gameHeight + 4) + 2);
+		System.out.println(Integer.MAX_VALUE);
 		return (Util.longpow(3, gameWidth*gameHeight + 5) + 2);   //(3^(gameWidth*gameHeighT + 5));
 	}
 	@Override
@@ -205,19 +212,19 @@ public class Alignment extends Game<AlignmentState> {
 			sHash.append(Integer.toString(pos.xDead,3));
 		} else {sHash.append(Integer.toString(pos.xDead,3));}
 
-		if (pos.lastMove == 'O') {
+		/*if (pos.lastMove == 'O') {
 			sHash.append("2");
 		}
 		else if (pos.lastMove == 'X') {
 			sHash.append("1");
-		}
+		}*/
 		if (pos.oDead < 3) {
 			sHash.append("0");
 			sHash.append(Integer.toString(pos.xDead,3));
 		} else {sHash.append(Integer.toString(pos.xDead,3));}
 
 		System.out.printf("Hash Code: %s\n", sHash.toString());
-		return Long.parseLong(sHash.toString());
+		return Long.parseLong(sHash.toString(),3);
 	}
 
 	@Override
