@@ -1,8 +1,15 @@
 package edu.berkeley.gamesman.game.util;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+
 import edu.berkeley.gamesman.core.State;
+import edu.berkeley.gamesman.game.util.Bullet;
 
 public class AlignmentState implements State {
+	
+	Boolean[] guns = new Boolean[]{false, false, false, false};
+	private ArrayList<Bullet> myBullets = new ArrayList<Bullet>();;
 	public char[][] board; // chars are 'X', 'O' and ' ' (X plays first) should be
 	// char[] to accomodate Dead_squares and no corners
 	public char lastMove;
@@ -71,8 +78,145 @@ public class AlignmentState implements State {
 		return adjacent(row0, col0, row1, col1) && (board[row1][col1] == ' ');
 	}
 
-	/** true if the square (x0,y0) is one of 8 points adjacent to (x1, y1) */
-	static Boolean adjacent(int row0, int col0, int row1, int col1) {
-		return (Math.abs(row1 - row0) <= 1 && Math.abs(col1 - col0) <= 1 && !(col1 == col0 && row1 == row0));
+	
+	
+	//=======================================================================================
+
+
+	// Will never be called on a square without a non-emptcol, non-valid piece. REturns arracol of bools [N W E S]
+	void checkGun(int row, int col) { // Catch ArrayIndexOutOfBound 
+		
+		char base = board[row][col];
+		char NW = ' ';
+		char NE = ' ';
+		char SW = ' ';
+		char SE =  ' ';
+		try {
+			NW = board[row-1][col-1];
+		} catch (ArrayIndexOutOfBoundsException e) {	}
+
+		try {
+			NE = board[row+1][col-1];
+		} catch (ArrayIndexOutOfBoundsException e) {	}
+
+		try {
+			SW = board[row-1][col+1];
+		} catch (ArrayIndexOutOfBoundsException e) {	}
+
+		try {
+			SE = board[row+1][col+1];
+		} catch (ArrayIndexOutOfBoundsException e) {	}
+
+		if (SE == base && SW == base){ guns[0] = true; }
+		if (NE == base && SE == base){ guns[1] = true; }
+		if (NW == base && SW == base){ guns[2] = true; }
+		if (NE == base && NW == base){ guns[3] = true; }
+
 	}
+
+	/**
+	 * Populates myBullets with all bullets of the current 
+	 * player's color.  Does not alter the board in any way.
+	 * 
+	 * return
+	 */
+	void makeBullets() {
+		for (int row = 0; row < board.length; row++) {
+			for (int col = 0; col< board[0].length; col++) {
+				if (board[row][col] == opposite(lastMove)) {
+					checkGun(row, col);
+					for (int dir  = 0; dir < 4; dir++) {
+						if (guns[dir]) {
+							myBullets.add(new Bullet(row,col,dir,opposite(lastMove)));
+						}
+					}
+					for (Boolean b:guns) { //reset guns
+						b = false;
+					}
+				}
+			}
+		}
+
+	}
+	
+
+	static char opposite(char player) {
+		switch(player) {
+		case('X'):
+			return 'O';
+		case('O'):
+			return 'X';
+		default:
+			return player;
+		}
+	}
+
+	/**
+	 * moves the piece at (x0,y0) to (x1, y1)
+	 */
+	Boolean movePiece (int row0, int col0, int row1, int col1, AlignmentState pos) {
+		if (pos.legalMove(row0,col0,row1,col1)) {
+			pos.board[row1][col1] = pos.board[row0][col0];
+			pos.board[row0][col0] = ' ';
+			return true;
+		}
+		return false;
+	}
+
+
+	/** true if the square (x0,y0) is one of 8 points adjacent to (x1, y1) */
+	Boolean adjacent (int x0, int y0, int x1, int y1) {
+		return (Math.abs(y1-y0)<=1 && Math.abs(x1-x0)<=1 && !(x1==x0 && y1==y0));
+	}
+
+	/** Only the guns of the player whose turn it currently is 
+	 * fire at the end of a given turn.  Finds and fires guns, returning
+	 * the number of enemies removed from the board. Destructive*/
+	public void fireGuns () {
+		makeBullets();
+		char whoseTurn = opposite(lastMove);
+		Iterator<Bullet> iter = myBullets.iterator();
+		int deathCount = 0;
+		while (iter.hasNext()) {
+			Bullet b = iter.next();
+			int row = b.row(); int col = b.col(); int drow = b.drow(); int dcol = b.dcol();
+			Boolean stillGoing = true;
+			while(stillGoing) {
+				row += drow; col += dcol;
+				try {
+					if (board[row][col] == whoseTurn){// Catch ArrayException
+						stillGoing = false;
+						continue;
+					}
+					else {
+						if (board[row][col] == whoseTurn) {
+							stillGoing = false;
+						}
+						else if (board[row][col] == opposite(whoseTurn)) {
+							board[row][col] = ' ';
+							deathCount++;
+						}
+
+					}
+				} catch (ArrayIndexOutOfBoundsException e) {
+					stillGoing = false;
+				}
+			}
+		}
+		switch(whoseTurn) {
+		case('X'):
+			oDead -= deathCount;
+		break;
+		case('O'):
+			xDead -= deathCount;
+		break;
+		}
+		myBullets = new ArrayList<Bullet>();
+	}
+	
+
+
+
+	//=======================================================================================
+
 }

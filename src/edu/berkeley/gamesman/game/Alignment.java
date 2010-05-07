@@ -10,6 +10,7 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.game.util.AlignmentState;
+import edu.berkeley.gamesman.game.util.Bullet;
 import edu.berkeley.gamesman.hasher.AlignmentHasher;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
@@ -18,7 +19,7 @@ import edu.berkeley.gamesman.util.Util;
 
 
 /**
- * @author Aloni & Brent
+ * @author Aloni, Brent, and DNSpies
  *
  */
 public class Alignment extends Game<AlignmentState> {
@@ -27,6 +28,32 @@ public class Alignment extends Game<AlignmentState> {
 	private AlignmentVariant variant; //should be an enum?
 	public ArrayList<Pair<Integer, Integer>> openCells;
 
+	public void initialize(int gameWidth, int gameHeight, int piecesToWin, int variant) {
+		
+		openCells = new ArrayList<Pair<Integer,Integer>>();
+		this.gameWidth = gameWidth;
+		this.gameHeight = gameHeight;
+		this.piecesToWin = piecesToWin;
+
+		this.variant = AlignmentVariant.getVariant(variant); 
+
+		for (int row = 0; row < gameHeight; row++) {
+			for (int col = 0; col < gameWidth; col++) {
+
+				openCells.add(new Pair<Integer, Integer>(row, col));
+			}
+		}
+		//Removing corners
+		/* Not compatible with AlignmentState and this removal is incorrect.
+		if (gameWidth > 4 && gameHeight > 4) {
+			openCells.remove(0); openCells.remove(1); openCells.remove(gameWidth);
+			openCells.remove(gameWidth-1); openCells.remove(gameWidth-2); openCells.remove(2*gameWidth - 1);
+			openCells.remove((gameHeight-1)*gameWidth); openCells.remove((gameHeight-2)*gameWidth); openCells.remove((gameHeight-1)*gameWidth + 1);
+			openCells.remove((gameHeight-1)*gameWidth - 1); openCells.remove((gameHeight)*gameWidth - 1); openCells.remove((gameHeight)*gameWidth - 2);
+		}
+		 */
+	}
+	
 	@Override
 	public void initialize(Configuration conf) {
 		super.initialize(conf);
@@ -218,6 +245,7 @@ public class Alignment extends Game<AlignmentState> {
 					if (' ' == pos.get(row, col)) {
 						children[moves].set(pos);
 						children[moves].put(row, col, opposite(pos.lastMove)); 
+						children[moves].fireGuns();
 						children[moves].setLastMove(opposite(pos.lastMove));
 						moves++;
 					}
@@ -407,93 +435,3 @@ enum AlignmentVariant {
 	}
 }
 
-
-class Bullet {
-
-	Bullet(int row, int col, int dir_num, char owner) {
-		this.row = row;
-		this.col = col;
-		this.owner = owner;
-		switch(dir_num) {
-		case(0):
-			dir = 'n';
-		break;
-		case(1):
-			dir = 'w';
-		break;
-		case(2):
-			dir = 'e';
-		break;
-		case(3):
-			dir = 's';
-		break;
-		}			
-	}
-
-	void set(int row, int col, int dir_num, char owner) {
-		this.row = row;
-		this.col = col;
-		this.owner = owner;
-		switch(dir_num) {
-		case(0):
-			dir = 'n';
-		break;
-		case(1):
-			dir = 'w';
-		break;
-		case(2):
-			dir = 'e';
-		break;
-		case(3):
-			dir = 's';
-		break;
-		}			
-	}
-
-	char owner() {
-		return owner;
-	}
-
-	int row() {
-		return row;
-	}
-
-	int col() {
-		return col;
-	}
-
-	int drow() {
-		switch(dir) {
-		case('n'):
-			return -1;
-		case('w'):
-			return 0;
-		case('e'):
-			return 0;
-		case('s'):
-			return 1;
-		default:
-			throw new IllegalArgumentException("bad direction " + dir);
-		}			
-	}
-
-	int dcol() {
-		switch(dir) {
-		case('n'):
-			return 0;
-		case('w'):
-			return -1;
-		case('e'):
-			return 1;
-		case('s'):
-			return 0;
-		default:
-			throw new IllegalArgumentException("bad direction " + dir);
-		}			
-	}
-
-	private int row;
-	private int col;
-	private char dir; //
-	private char owner;
-}
