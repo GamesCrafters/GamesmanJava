@@ -8,17 +8,23 @@ import edu.berkeley.gamesman.game.util.Bullet;
 
 public class AlignmentState implements State {
 	Boolean[] guns = new Boolean[]{false, false, false, false};
-	private ArrayList<Bullet> myBullets = new ArrayList<Bullet>();;
+	//private ArrayList<Bullet> myBullets = new ArrayList<Bullet>();
 	public char[][] board; // chars are 'X', 'O' and ' ' (X plays first) should be char[] to accomodate Dead_squares and no corners
 	public char lastMove;
 	public int xDead;
 	public int oDead;
+	private Bullet[] bullets;
 
 	public AlignmentState(char[][] board, int xDead, int oDead, char lastMove) {
 		this.board = board;
 		this.xDead = xDead;
 		this.oDead = oDead;
 		this.lastMove = lastMove;
+		bullets =  new Bullet[board.length * board[0].length * 4];
+		for(int b = 0; b < bullets.length; b++) {
+			bullets[b] = new Bullet(0,0,0,'O');
+			System.out.println("Calling slow line");
+		}
 	}
 	
 	public AlignmentState(AlignmentState pos) {
@@ -26,6 +32,7 @@ public class AlignmentState implements State {
 		this.xDead = pos.xDead;
 		this.oDead = pos.oDead;
 		this.lastMove = pos.lastMove;
+		bullets =  new Bullet[board.length * board[0].length * 4];
 	}
 
 	public void set(State s) {
@@ -118,14 +125,17 @@ public class AlignmentState implements State {
 	 * 
 	 * return
 	 */
-	void makeBullets() {
+	int makeBullets() {
+		int numBullets = 0;
 		for (int row = 0; row < board.length; row++) {
 			for (int col = 0; col< board[0].length; col++) {
 				if (board[row][col] == opposite(lastMove)) {
 					checkGun(row, col);
 					for (int dir  = 0; dir < 4; dir++) {
 						if (guns[dir]) {
-							myBullets.add(new Bullet(row,col,dir,opposite(lastMove)));
+							bullets[numBullets] = bullets[numBullets].set(row, col, dir, opposite(lastMove));
+							numBullets++;
+							//myBullets.add(new Bullet(row,col,dir,opposite(lastMove)));
 						}
 					}
 					for (int i = 0; i < 4; i++) { //reset guns
@@ -136,6 +146,7 @@ public class AlignmentState implements State {
 				
 			}
 		}
+		return numBullets;
 
 	}
 	
@@ -173,12 +184,11 @@ public class AlignmentState implements State {
 	 * fire at the end of a given turn.  Finds and fires guns, returning
 	 * the number of enemies removed from the board. Destructive*/
 	public void fireGuns (int piecesToWin) {
-		makeBullets();
+		int numBullets = makeBullets();
 		char whoseTurn = opposite(lastMove);
-		Iterator<Bullet> iter = myBullets.iterator();
 		int deathCount = 0;
-		while (iter.hasNext()) {
-			Bullet b = iter.next();
+		while (numBullets > 0) {
+			Bullet b = bullets[numBullets - 1];
 			int row = b.row(); int col = b.col(); int drow = b.drow(); int dcol = b.dcol();
 			Boolean stillGoing = true;
 			while(stillGoing) {
@@ -211,7 +221,7 @@ public class AlignmentState implements State {
 			xDead = Math.min(xDead + deathCount,piecesToWin );
 		break;
 		}
-		myBullets = new ArrayList<Bullet>();
+		//myBullets = new ArrayList<Bullet>();
 	}
 	
 

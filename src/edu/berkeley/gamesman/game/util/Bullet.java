@@ -23,7 +23,7 @@ public class Bullet {
 		}			
 	}
 
-	public void set(int row, int col, int dir_num, char owner) {
+	public Bullet set(int row, int col, int dir_num, char owner) {
 		this.row = row;
 		this.col = col;
 		this.owner = owner;
@@ -40,7 +40,8 @@ public class Bullet {
 		case(3):
 			dir = 's';
 		break;
-		}			
+		}		
+		return this;
 	}
 
 	public char owner() {
