@@ -262,7 +262,7 @@ public class Alignment extends Game<AlignmentState> {
 
 	}
 
-	static char opposite(char player) {
+	public static char opposite(char player) {
 		switch(player) {
 		case('X'):
 			return 'O';

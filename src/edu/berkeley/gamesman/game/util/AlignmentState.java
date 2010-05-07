@@ -207,11 +207,9 @@ public class AlignmentState implements State {
 		switch(whoseTurn) {
 		case('X'):
 			oDead = Math.min(oDead + deathCount,piecesToWin );
-			System.out.println("oDead = " + oDead);
 		break;
 		case('O'):
 			xDead = Math.min(xDead + deathCount,piecesToWin );
-		System.out.println("xDead = " + xDead);
 		break;
 		}
 		
