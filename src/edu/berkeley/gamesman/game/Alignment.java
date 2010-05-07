@@ -30,11 +30,11 @@ public class Alignment extends Game<AlignmentState> {
 	public void initialize(Configuration conf) {
 		super.initialize(conf);
 		openCells = new ArrayList<Pair<Integer,Integer>>();
-		gameWidth = conf.getInteger("gamesman.game.width", 8);
-		gameHeight = conf.getInteger("gamesman.game.height", 8);
+		gameWidth = conf.getInteger("gamesman.game.width", 3);
+		gameHeight = conf.getInteger("gamesman.game.height", 3);
 		piecesToWin = conf.getInteger("gamesman.game.pieces", 5);
 
-		variant = AlignmentVariant.getVariant(conf.getInteger("gamesman.game.variant", 1)); 
+		variant = AlignmentVariant.getVariant(conf.getInteger("gamesman.game.variant", 2)); 
 
 		for (int row = 0; row < gameHeight; row++) {
 			for (int col = 0; col < gameWidth; col++) {
@@ -43,7 +43,7 @@ public class Alignment extends Game<AlignmentState> {
 			}
 		}
 		//Removing corners
-		/* Not compatible yet
+		/* Not compatible with AlignmentState and this removal is incorrect.
 		if (gameWidth > 4 && gameHeight > 4) {
 			openCells.remove(0); openCells.remove(1); openCells.remove(gameWidth);
 			openCells.remove(gameWidth-1); openCells.remove(gameWidth-2); openCells.remove(2*gameWidth - 1);
@@ -78,6 +78,7 @@ public class Alignment extends Game<AlignmentState> {
 	@Override
 	public void hashToState(long hash, AlignmentState s) {
 		((AlignmentHasher) conf.getHasher()).unhash(hash, s);
+		System.out.println("The newest state is " + stateToString(s));
 	}
 
 	@Override
@@ -91,7 +92,7 @@ public class Alignment extends Game<AlignmentState> {
 
 	@Override
 	public AlignmentState newState() {
-		return new AlignmentState(new char[gameWidth][gameHeight], 0, 0, 'O');
+		return new AlignmentState(new char[gameHeight][gameWidth], 0, 0, 'O');
 	}
 
 	@Override
@@ -160,7 +161,7 @@ public class Alignment extends Game<AlignmentState> {
 
 	@Override
 	public AlignmentState stringToState(String pos) {
-		char[][] board = new char[gameWidth][gameHeight];
+		char[][] board = new char[gameHeight][gameWidth];
 		int xDead, oDead;
 		char lastMove;
 		int square = 0;
@@ -215,6 +216,7 @@ public class Alignment extends Game<AlignmentState> {
 					if (' ' == pos.get(row, col)) {
 						children[moves].set(pos);
 						children[moves].put(row, col, opposite(pos.lastMove)); 
+						children[moves].setLastMove(opposite(pos.lastMove));
 						moves++;
 					}
 				}
@@ -224,6 +226,7 @@ public class Alignment extends Game<AlignmentState> {
 		else if (variant == AlignmentVariant.DEAD_SQUARES) {
 			throw new UnsupportedOperationException ("DEAD_SQUARES variant not complete");
 		}
+		System.out.printf("%c just moved\n%d moves possible", opposite(pos.lastMove), moves);
 		return moves;
 
 	}
@@ -343,20 +346,20 @@ public class Alignment extends Game<AlignmentState> {
 		int deathCount = 0;
 		while (iter.hasNext()) {
 			Bullet b = iter.next();
-			int x = b.x(); int y = b.y(); int dx = b.dx(); int dy = b.dy();
+			int row = b.row(); int col = b.col(); int drow = b.drow(); int dcol = b.dcol();
 			Boolean stillGoing = true;
 			while(stillGoing) {
-				x += dx; y += dy;
-				if (myBoard[x][y] == whoseTurn){// Catch ArrayException
+				row += drow; col += dcol;
+				if (myBoard[row][col] == whoseTurn){// Catch ArrayException
 					stillGoing = false;
 					continue;
 				}
 				else {
-					if (myBoard[x][y] == whoseTurn) {
+					if (myBoard[row][col] == whoseTurn) {
 						stillGoing = false;
 					}
-					else if (myBoard[x][y] == opposite(whoseTurn)) {
-						myBoard[x][y] = ' ';
+					else if (myBoard[row][col] == opposite(whoseTurn)) {
+						myBoard[row][col] = ' ';
 						deathCount++;
 					}
 
@@ -404,9 +407,9 @@ enum AlignmentVariant {
 
 class Bullet {
 
-	Bullet(int x, int y, int dir_num, char owner) {
-		this.x = x;
-		this.y = y;
+	Bullet(int row, int col, int dir_num, char owner) {
+		this.row = row;
+		this.col = col;
 		this.owner = owner;
 		switch(dir_num) {
 		case(0):
@@ -424,9 +427,9 @@ class Bullet {
 		}			
 	}
 
-	void set(int x, int y, int dir_num, char owner) {
-		this.x = x;
-		this.y = y;
+	void set(int row, int col, int dir_num, char owner) {
+		this.row = row;
+		this.col = col;
 		this.owner = owner;
 		switch(dir_num) {
 		case(0):
@@ -448,15 +451,15 @@ class Bullet {
 		return owner;
 	}
 
-	int x() {
-		return x;
+	int row() {
+		return row;
 	}
 
-	int y() {
-		return y;
+	int col() {
+		return col;
 	}
 
-	int dy() {
+	int drow() {
 		switch(dir) {
 		case('n'):
 			return -1;
@@ -471,7 +474,7 @@ class Bullet {
 		}			
 	}
 
-	int dx() {
+	int dcol() {
 		switch(dir) {
 		case('n'):
 			return 0;
@@ -486,8 +489,8 @@ class Bullet {
 		}			
 	}
 
-	private int x;
-	private int y;
+	private int row;
+	private int col;
 	private char dir; //
 	private char owner;
 }

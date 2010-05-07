@@ -15,7 +15,7 @@ public class AlignmentState implements State {
 		this.oDead = oDead;
 		this.lastMove = lastMove;
 	}
-
+	
 	public AlignmentState(AlignmentState pos) {
 		this.board = pos.board;
 		this.xDead = pos.xDead;
@@ -59,6 +59,11 @@ public class AlignmentState implements State {
 
 	public void put(int row, int col, char piece) {
 		board[row][col] = piece;
+	}
+	
+
+	public void setLastMove(char player) {
+		this.lastMove = player;
 	}
 
 	/** Returns true if the piece at (x0,y0) can be moved to (x1,y1)) */
