@@ -214,7 +214,6 @@ public class AlignmentState implements State {
 			xDead = Math.min(xDead + deathCount,piecesToWin );
 		break;
 		}
-		System.out.println(deathCount + " have died");
 		myBullets = new ArrayList<Bullet>();
 	}
 	
