@@ -1,13 +1,10 @@
 package edu.berkeley.gamesman.testing;
 
 import java.io.BufferedReader;
-import java.io.Console;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.PrimitiveValue;
-import edu.berkeley.gamesman.database.MemoryCachedDatabase;
 import edu.berkeley.gamesman.game.Alignment;
 import edu.berkeley.gamesman.game.util.AlignmentState;
 

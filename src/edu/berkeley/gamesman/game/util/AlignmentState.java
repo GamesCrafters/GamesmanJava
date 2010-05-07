@@ -4,10 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import edu.berkeley.gamesman.core.State;
-import edu.berkeley.gamesman.game.Alignment;
 import edu.berkeley.gamesman.game.util.Bullet;
-import edu.berkeley.gamesman.util.DebugFacility;
-import edu.berkeley.gamesman.util.Util;
 
 public class AlignmentState implements State {
 	Boolean[] guns = new Boolean[]{false, false, false, false};
