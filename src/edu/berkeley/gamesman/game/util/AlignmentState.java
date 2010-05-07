@@ -23,10 +23,9 @@ public class AlignmentState implements State {
 		bullets =  new Bullet[board.length * board[0].length * 4];
 		for(int b = 0; b < bullets.length; b++) {
 			bullets[b] = new Bullet(0,0,0,'O');
-			System.out.println("Calling slow line");
 		}
 	}
-	
+
 	public AlignmentState(AlignmentState pos) {
 		this.board = pos.board;
 		this.xDead = pos.xDead;
@@ -72,7 +71,7 @@ public class AlignmentState implements State {
 	public void put(int row, int col, char piece) {
 		board[row][col] = piece;
 	}
-	
+
 
 	public void setLastMove(char player) {
 		this.lastMove = player;
@@ -83,34 +82,37 @@ public class AlignmentState implements State {
 		return adjacent(row0, col0, row1, col1) && (board[row1][col1] == ' ');
 	}
 
-	
-	
+
+
 	//=======================================================================================
 
 
 	// Will never be called on a square without a non-emptcol, non-valid piece. REturns arracol of bools [N W E S]
 	void checkGun(int row, int col) { // Catch ArrayIndexOutOfBound 
-		
+
 		char base = board[row][col];
 		char NW = ' ';
 		char NE = ' ';
 		char SW = ' ';
 		char SE =  ' ';
-		try {
-			NW = board[row-1][col-1];
-		} catch (ArrayIndexOutOfBoundsException e) {	}
 
-		try {
-			NE = board[row-1][col+1];
-		} catch (ArrayIndexOutOfBoundsException e) {	}
+		if (row-1 >= 0) {
+			if (col-1 >= 0) {
+				NW = board[row-1][col-1];
+			}
+			if (col+1 < board[0].length) {
+				NE = board[row-1][col+1];
+			}
+		}
+		if (row+1 < board.length) {
+			if (col-1 >= 0) {
+				SW = board[row+1][col-1];
+			}
+			if (col+1 < board[0].length) {
+				SE = board[row+1][col+1];
+			}
+		}
 
-		try {
-			SW = board[row+1][col-1];
-		} catch (ArrayIndexOutOfBoundsException e) {	}
-
-		try {
-			SE = board[row+1][col+1];
-		} catch (ArrayIndexOutOfBoundsException e) {	}
 
 		if (SE == base && SW == base){ guns[0] = true;}
 		if (NE == base && SE == base){ guns[1] = true;}
@@ -141,15 +143,15 @@ public class AlignmentState implements State {
 					for (int i = 0; i < 4; i++) { //reset guns
 						guns[i] = false;
 					}
-					
+
 				}
-				
+
 			}
 		}
 		return numBullets;
 
 	}
-	
+
 
 	static char opposite(char player) {
 		switch(player) {
@@ -193,7 +195,10 @@ public class AlignmentState implements State {
 			Boolean stillGoing = true;
 			while(stillGoing) {
 				row += drow; col += dcol;
-				try {
+
+				if (row >= 0 && col >= 0 && row < board.length && col < board[0].length) {
+
+
 					if (board[row][col] == whoseTurn){// Catch ArrayException
 						stillGoing = false;
 						continue;
@@ -208,7 +213,8 @@ public class AlignmentState implements State {
 						}
 
 					}
-				} catch (ArrayIndexOutOfBoundsException e) {
+				}
+				else {
 					stillGoing = false;
 				}
 			}
@@ -223,7 +229,7 @@ public class AlignmentState implements State {
 		}
 		//myBullets = new ArrayList<Bullet>();
 	}
-	
+
 
 
 
