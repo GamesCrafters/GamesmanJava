@@ -11,6 +11,7 @@ import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.game.util.AlignmentState;
 import edu.berkeley.gamesman.hasher.AlignmentHasher;
+import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -78,7 +79,8 @@ public class Alignment extends Game<AlignmentState> {
 	@Override
 	public void hashToState(long hash, AlignmentState s) {
 		((AlignmentHasher) conf.getHasher()).unhash(hash, s);
-		System.out.println("The newest state is " + stateToString(s));
+		assert Util.debug(DebugFacility.GAME, "The newest state is "
+				+ stateToString(s));
 	}
 
 	@Override
@@ -226,7 +228,8 @@ public class Alignment extends Game<AlignmentState> {
 		else if (variant == AlignmentVariant.DEAD_SQUARES) {
 			throw new UnsupportedOperationException ("DEAD_SQUARES variant not complete");
 		}
-		System.out.printf("%c just moved\n%d moves possible", opposite(pos.lastMove), moves);
+		assert Util.debug(DebugFacility.GAME, (opposite(pos.lastMove)
+				+ " just moved\n" + moves + " moves possible"));
 		return moves;
 
 	}
