@@ -91,9 +91,16 @@ public class Alignment extends Game<AlignmentState> {
 	public String displayState(AlignmentState pos) {
 		StringBuilder board = new StringBuilder(2 * (gameWidth + 2) * gameHeight );
 		int row = 0;
+		char nextSquare;
 		for (; row < gameHeight; row++) {
 			for (int col = 0; col < gameWidth; col++) {
-				board.append(pos.get(row, col) + " ");
+				nextSquare = pos.get(row, col);
+				if (nextSquare == ' ') {
+					board.append('_' + " ");
+				} else {
+					board.append(pos.get(row, col) + " ");
+				}
+				
 			}
 		}
 		for (row = 0; row < gameHeight; row++) {
@@ -121,7 +128,13 @@ public class Alignment extends Game<AlignmentState> {
 
 	@Override
 	public AlignmentState newState() {
-		return new AlignmentState(new char[gameHeight][gameWidth], 0, 0, 'O');
+		char[][] board = new char[gameHeight][gameWidth];
+		for (int row = 0; row < gameHeight; row++ ) {
+			for (int col = 0; col < gameWidth; col++) {
+				board[row][col] = ' ';
+			}
+		}
+		return new AlignmentState(board, 0, 0, 'O');
 	}
 
 	@Override

@@ -108,10 +108,10 @@ public class AlignmentState implements State {
 			SE = board[row+1][col+1];
 		} catch (ArrayIndexOutOfBoundsException e) {	}
 
-		if (SE == base && SW == base){ guns[0] = true; 		System.out.println("Gun 0");}
-		if (NE == base && SE == base){ guns[1] = true; System.out.println("Gun 1");}
-		if (NW == base && SW == base){ guns[2] = true; System.out.println("Gun 2");}
-		if (NE == base && NW == base){ guns[3] = true; System.out.println("Gun 3");}
+		if (SE == base && SW == base){ guns[0] = true;}
+		if (NE == base && SE == base){ guns[1] = true;}
+		if (NW == base && SW == base){ guns[2] = true;}
+		if (NE == base && NW == base){ guns[3] = true;}
 
 	}
 
@@ -128,7 +128,6 @@ public class AlignmentState implements State {
 					checkGun(row, col);
 					for (int dir  = 0; dir < 4; dir++) {
 						if (guns[dir]) {
-							System.out.println(dir + " " + guns[dir]);
 							myBullets.add(new Bullet(row,col,dir,opposite(lastMove)));
 						}
 					}
@@ -177,9 +176,7 @@ public class AlignmentState implements State {
 	 * fire at the end of a given turn.  Finds and fires guns, returning
 	 * the number of enemies removed from the board. Destructive*/
 	public void fireGuns (int piecesToWin) {
-		System.out.println("Start with bullets: " + myBullets.size());
 		makeBullets();
-		System.out.println("End with bullets: " + myBullets.size());
 		char whoseTurn = opposite(lastMove);
 		Iterator<Bullet> iter = myBullets.iterator();
 		int deathCount = 0;
@@ -215,7 +212,6 @@ public class AlignmentState implements State {
 		break;
 		case('O'):
 			xDead = Math.min(xDead + deathCount,piecesToWin );
-		System.out.println("xDead = " + xDead);
 		break;
 		}
 		
