@@ -218,6 +218,7 @@ public class AlignmentState implements State {
 					stillGoing = false;
 				}
 			}
+			numBullets--;
 		}
 		switch(whoseTurn) {
 		case('X'):
