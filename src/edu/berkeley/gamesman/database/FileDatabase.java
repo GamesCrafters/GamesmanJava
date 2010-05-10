@@ -58,7 +58,7 @@ public final class FileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void seek(long loc) {
+	public void seek(long loc) {
 		try {
 			fd.seek(loc + offset);
 		} catch (IOException e) {
@@ -67,7 +67,7 @@ public final class FileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void getBytes(byte[] arr, int off, int len) {
+	public void getBytes(byte[] arr, int off, int len) {
 		try {
 			fd.read(arr, off, len);
 		} catch (IOException e) {
@@ -76,7 +76,7 @@ public final class FileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void putBytes(byte[] arr, int off, int len) {
+	public void putBytes(byte[] arr, int off, int len) {
 		try {
 			fd.write(arr, off, len);
 		} catch (IOException e) {
