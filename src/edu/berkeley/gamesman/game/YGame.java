@@ -10,6 +10,8 @@ import edu.berkeley.gamesman.util.Util;
  * @author dnspies
  */
 public class YGame extends ConnectGame {
+	private int[] translateInArray;
+
 	private int[] translateOutArray;
 
 	String formatString = "\n                 220_\n"
@@ -99,19 +101,24 @@ public class YGame extends ConnectGame {
 		}
 		int triangleSize = boardSide * (boardSide - 1) / 2;
 		int i = 0;
-		translateOutArray = new int[boardSize];
+		translateInArray = new int[boardSize];
 		for (int t = 0; t < 3; t++) {
-			translateOutArray[i++] = t * triangleSize;
+			translateInArray[i++] = t * triangleSize;
 		}
 		for (int row = boardSide - 2; row > 0; row--) {
 			for (int t = 2; t >= 0; t--) {
-				translateOutArray[i++] = Util.nonNegativeModulo(t + 1, 3)
+				translateInArray[i++] = Util.nonNegativeModulo(t + 1, 3)
 						* triangleSize + row * (row + 1) / 2;
 				for (int col = row; col > 0; col--) {
-					translateOutArray[i++] = t * triangleSize + row * (row + 1)
+					translateInArray[i++] = t * triangleSize + row * (row + 1)
 							/ 2 + col;
 				}
 			}
+		}
+
+		translateOutArray = new int[boardSize];
+		for (i = 0; i < boardSize; i++) {
+			translateOutArray[translateInArray[i]] = i;
 		}
 	}
 
@@ -269,7 +276,7 @@ public class YGame extends ConnectGame {
 	public char[] convertInString(String s) {
 		char[] charArray = new char[boardSize];
 		for (int i = 0; i < boardSize; i++)
-			charArray[translateOutArray[i]] = s.charAt(i);
+			charArray[translateInArray[i]] = s.charAt(i);
 		return charArray;
 	}
 
@@ -277,7 +284,7 @@ public class YGame extends ConnectGame {
 	public String convertOutString(char[] charArray) {
 		StringBuilder sb = new StringBuilder(boardSize);
 		for (int i = 0; i < boardSize; i++)
-			sb.append(charArray[translateOutArray[i]]);
+			sb.append(charArray[translateInArray[i]]);
 		return sb.toString();
 	}
 
