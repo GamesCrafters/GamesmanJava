@@ -220,12 +220,8 @@ public class JSONInterface extends GamesmanApplication {
 				}
 				props.setProperty("gamesman.game." + key, val);
 			}
-			props.setProperty("gamesman.hasher", "NullHasher");
-			String gamename = props.getProperty("gamesman.game");
-			Configuration config = null;
 			try {
-				config = new Configuration(props, true);
-				config.initialize(gamename, "NullHasher");
+				return new Configuration(props);
 			} catch (ClassNotFoundException e) {
 				Util.warn("Failed to load the game class.", e);
 				throw new RuntimeException("Failed to load the game class.", e);
@@ -233,7 +229,6 @@ public class JSONInterface extends GamesmanApplication {
 				throw new RuntimeException(
 						"FatalError when loading configuration for " + game);
 			}
-			return config;
 		} else {
 			// throw new
 			// RuntimeException("Failed to find an appropriate job file for " +
