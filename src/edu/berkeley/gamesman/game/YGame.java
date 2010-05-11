@@ -70,11 +70,11 @@ public class YGame extends ConnectGame {
 	 */
 	public void initialize(Configuration conf) {
 		super.initialize(conf);
-		initialize(conf.getInteger("gamesman.game.side", 4));
+		initialize(conf.getInteger("gamesman.game.outerRows", 2));
 	}
 
-	private void initialize(int boardSide) {
-		this.boardSide = boardSide;
+	private void initialize(int outerRows) {
+		this.boardSide = outerRows + 2;
 		yBoard = new Space[3][boardSide - 1][];
 		int n = 0;
 		for (int t = 0; t < 3; t++) {

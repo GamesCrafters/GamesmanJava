@@ -1,5 +1,5 @@
 gamesman.game = YGame
-gamesman.game.side = 4
+gamesman.game.outerRows = 2
 gamesman.hasher = TieredItergameHasher
 gamesman.solver = TierItergameSolver
 gamesman.database = MemoryCachedDatabase

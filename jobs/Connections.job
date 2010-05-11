@@ -1,5 +1,5 @@
 gamesman.game = Connections
-game.sideLength = 3
+gamesman.game.sideLength = 3
 gamesman.hasher = TieredItergameHasher
 gamesman.solver = TierItergameSolver
 gamesman.database = MemoryCachedDatabase
