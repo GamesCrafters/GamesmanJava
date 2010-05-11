@@ -70,7 +70,7 @@ public class YGame extends ConnectGame {
 	 */
 	public void initialize(Configuration conf) {
 		super.initialize(conf);
-		initialize(conf.getInteger("game.sideLength", 4));
+		initialize(conf.getInteger("gamesman.game.side", 4));
 	}
 
 	private void initialize(int boardSide) {
