@@ -253,7 +253,7 @@ public class JSONInterface extends GamesmanApplication {
 				response.setResponse(getNextMoveValues_core(game, params));
 				response.setStatus("ok");
 			} catch (RuntimeException e) {
-				System.err.println(e.getMessage());
+				e.printStackTrace();
 				response.setStatus("error");
 				response.setMessage(e.getMessage());
 			}
@@ -270,7 +270,7 @@ public class JSONInterface extends GamesmanApplication {
 				response.setResponse(getMoveValue_core(game, params));
 				response.setStatus("ok");
 			} catch (RuntimeException e) {
-				System.err.println(e.getMessage());
+				e.printStackTrace();
 				response.setStatus("error");
 				response.setMessage(e.getMessage());
 			}
