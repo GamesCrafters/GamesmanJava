@@ -462,10 +462,12 @@ public class Configuration {
 	 */
 	public int getInteger(String key, int dfl) {
 		String value = props.getProperty(key);
-		if (value == null)
-			return dfl;
-		else
+		if (value != null) {
+		    try {
 			return Integer.parseInt(value);
+		    } catch (NumberFormatException e) { }
+		}
+		return dfl;
 	}
 
 	/**
