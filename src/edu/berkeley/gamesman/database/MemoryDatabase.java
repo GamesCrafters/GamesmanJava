@@ -1,12 +1,10 @@
 package edu.berkeley.gamesman.database;
 
 import java.math.BigInteger;
-import java.util.Iterator;
 
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.RecordGroup;
 import edu.berkeley.gamesman.util.DebugFacility;
-import edu.berkeley.gamesman.util.LongIterator;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -80,18 +78,6 @@ public class MemoryDatabase extends Database {
 	}
 
 	@Override
-	public Iterator<BigInteger> getBigIntRecordGroups(long loc, int numGroups) {
-		return new BigIntRecordGroupByteIterator(memoryStorage,
-				(int) (loc - firstByte()), numGroups);
-	}
-
-	@Override
-	public LongIterator getLongRecordGroups(long loc, int numGroups) {
-		return new LongRecordGroupByteIterator(memoryStorage,
-				(int) (loc - firstByte()), numGroups);
-	}
-
-	@Override
 	public void putRecordGroup(long loc, long rg) {
 		RecordGroup.toUnsignedByteArray(conf, rg, memoryStorage,
 				(int) (loc - firstByte()));
@@ -101,25 +87,5 @@ public class MemoryDatabase extends Database {
 	public void putRecordGroup(long loc, BigInteger rg) {
 		RecordGroup.toUnsignedByteArray(conf, rg, memoryStorage,
 				(int) (loc - firstByte()));
-	}
-
-	@Override
-	public void putRecordGroups(long loc, LongIterator recordGroups,
-			int numGroups) {
-		for (int i = 0; i < numGroups; i++) {
-			RecordGroup.toUnsignedByteArray(conf, recordGroups.next(),
-					memoryStorage, (int) (loc - firstByte()));
-			loc += conf.recordGroupByteLength;
-		}
-	}
-
-	@Override
-	public void putRecordGroups(long loc, Iterator<BigInteger> recordGroups,
-			int numGroups) {
-		for (int i = 0; i < numGroups; i++) {
-			RecordGroup.toUnsignedByteArray(conf, recordGroups.next(),
-					memoryStorage, (int) (loc - firstByte()));
-			loc += conf.recordGroupByteLength;
-		}
 	}
 }

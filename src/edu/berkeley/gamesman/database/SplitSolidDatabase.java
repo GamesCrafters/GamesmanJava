@@ -4,7 +4,6 @@ import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.database.util.SplitDatabaseWritable;
 import edu.berkeley.gamesman.database.util.SplitDatabaseWritableList;
-import edu.berkeley.gamesman.util.LongIterator;
 import edu.berkeley.gamesman.util.Util;
 
 import java.util.List;
@@ -312,12 +311,5 @@ public class SplitSolidDatabase extends Database {
 	public void getBytes(byte[] arr, int offset, int length) {
 		throw new UnsupportedOperationException(
 				"HadoopSplitDatabase requires a position argument to getBytes");
-	}
-
-	@Override
-	public LongIterator getLongRecordGroups(long recordGroupByteLocation,
-			int numGroups) {
-		throw new UnsupportedOperationException(
-				"getLongRecordGroups is not yet implemented.");
 	}
 }
