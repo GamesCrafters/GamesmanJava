@@ -60,7 +60,7 @@ public class Connections extends ConnectGame {
 	 */
 	public void initialize(Configuration conf) {
 		super.initialize(conf);
-		boardSide = conf.getInteger("gamesman.game.sideLength", 4);
+		boardSide = conf.getInteger("gamesman.game.side", 4);
 		boardSize = boardSide * boardSide + (boardSide - 1) * (boardSide - 1);
 		xPoints = new Point[boardSide + 1][boardSide];
 		// Bottom to top; Left to right

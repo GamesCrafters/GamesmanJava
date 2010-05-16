@@ -18,4 +18,4 @@ json.unsolved.y = jobs/YGame.job
 json.fields.y = centerRows,outerRows
 
 json.unsolved.connections = jobs/Connections.job
-json.fields.connections = sideLength
+json.fields.connections = side
