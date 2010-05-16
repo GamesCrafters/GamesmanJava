@@ -181,7 +181,7 @@ public class JSONInterface extends GamesmanApplication {
 				}
 				return config;
 			} else if (filename != null && f.exists()) {
-				System.out.println("Loading solved database " + filename + ".");
+				System.out.println("Loading solved database " + filename);
 				int confLength = 0;
 				FileInputStream fis = new FileInputStream(f);
 				for (int i = 0; i < 4; i++) {

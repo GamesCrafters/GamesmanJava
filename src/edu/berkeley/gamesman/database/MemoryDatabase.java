@@ -25,8 +25,7 @@ public class MemoryDatabase extends Database {
 
 	@Override
 	public void initialize(String location, boolean solve) {
-		maxBytes = (int) getByteSize();
-		memoryStorage = new byte[maxBytes];
+		memoryStorage = new byte[(int) getByteSize()];
 	}
 
 	@Override

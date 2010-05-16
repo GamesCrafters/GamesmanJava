@@ -22,7 +22,7 @@ public abstract class Database {
 
 	private boolean solve;
 
-	protected int maxBytes;
+	private int maxBytes;
 
 	private long numBytes = -1;
 

@@ -56,8 +56,8 @@ public class SynchronizedMemoryCachedDatabase extends
 				while (firstByte < firstByte())
 					firstByte += fis.skip(firstByte() - firstByte);
 				int n = 0;
-				while (n >= 0 && n < maxBytes)
-					n += fis.read(memoryStorage, n, maxBytes - n);
+				while (n >= 0 && n < getByteSize())
+					n += fis.read(memoryStorage, n, (int) (getByteSize() - n));
 				fis.close();
 			} catch (IOException e) {
 				Util.fatalError("IO Error", e);
