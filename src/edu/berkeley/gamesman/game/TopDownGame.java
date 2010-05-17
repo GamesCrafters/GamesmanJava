@@ -200,28 +200,13 @@ public final class TopDownGame<S extends State> extends TopDownMutaGame<S> {
 	}
 
 	@Override
-	public Record newRecord(PrimitiveValue pv) {
-		return myGame.newRecord(pv);
-	}
-
-	@Override
 	public Record newRecord() {
 		return myGame.newRecord();
 	}
 
 	@Override
-	public Record newRecord(long val) {
-		return myGame.newRecord(val);
-	}
-
-	@Override
 	public long recordStates() {
 		return myGame.recordStates();
-	}
-
-	@Override
-	public void setInterperet(long recNum) {
-		myGame.setInterperet(recNum);
 	}
 
 	@Override

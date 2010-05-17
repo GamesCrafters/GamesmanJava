@@ -387,11 +387,10 @@ public class JSONInterface extends GamesmanApplication {
 				Configuration conf, T state, boolean isChildState) {
 			GamestateResponse request = new GamestateResponse();
 			Database db = conf.db;
-			Record rec = conf.getGame().newRecord();
 			DatabaseHandle dh = db.getHandle();
 			Game<T> g = Util.checkedCast(conf.getGame());
 			if (db != null) {
-				db.getRecord(dh, g.stateToHash(state), rec);
+				Record rec = db.getRecord(g.stateToHash(state));
 				if (conf.valueStates > 0) {
 					PrimitiveValue pv = rec.value;
 					if (g.getPlayerCount() > 1 && isChildState) {

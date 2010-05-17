@@ -2,7 +2,6 @@ package edu.berkeley.gamesman.game;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Map;
 
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.game.util.ItergameState;
@@ -180,15 +179,6 @@ public abstract class ConnectGame extends TieredGame {
 			super(conf);
 		}
 
-		protected ConnectRecord(long state) {
-			super(conf);
-			set(state);
-		}
-
-		protected ConnectRecord(PrimitiveValue pVal) {
-			super(conf, pVal);
-		}
-
 		@Override
 		public long getState() {
 			if (conf.remotenessStates > 0) {
@@ -217,18 +207,8 @@ public abstract class ConnectGame extends TieredGame {
 	}
 
 	@Override
-	public Record newRecord(PrimitiveValue pv) {
-		return new ConnectRecord(pv);
-	}
-
-	@Override
 	public Record newRecord() {
 		return new ConnectRecord();
-	}
-
-	@Override
-	public Record newRecord(long val) {
-		return new ConnectRecord(val);
 	}
 
 	@Override

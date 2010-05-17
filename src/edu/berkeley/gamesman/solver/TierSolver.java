@@ -76,21 +76,22 @@ public class TierSolver extends Solver {
 				Record r;
 				for (int i = 0; i < len; i++) {
 					r = vals[i];
-					readDb.getRecord(readDh, game.stateToHash(children[i]), r);
+					r.set(readDb.getRecord(readDh, game
+							.stateToHash(children[i])));
 					r.previousPosition();
 				}
 				Record newVal = game.combine(vals, 0, len);
-				writeDb.putRecord(writeDh, current, newVal);
+				writeDb.putRecord(writeDh, current, newVal.getState());
 				break;
 			case IMPOSSIBLE:
 				prim.value = PrimitiveValue.LOSE;
-				writeDb.putRecord(writeDh, current, prim);
+				writeDb.putRecord(writeDh, current, prim.getState());
 				break;
 			default:
 				if (conf.remotenessStates > 0)
 					prim.remoteness = 0;
 				prim.value = pv;
-				writeDb.putRecord(writeDh, current, prim);
+				writeDb.putRecord(writeDh, current, prim.getState());
 			}
 			if (count < hashes - 1)
 				game.nextHashInTier();

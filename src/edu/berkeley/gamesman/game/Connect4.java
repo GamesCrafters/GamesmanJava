@@ -557,15 +557,6 @@ public final class Connect4 extends TieredGame {
 			super(conf);
 		}
 
-		protected C4Record(long state) {
-			super(conf);
-			set(state);
-		}
-
-		protected C4Record(PrimitiveValue pVal) {
-			super(conf, pVal);
-		}
-
 		@Override
 		public long getState() {
 			if (conf.remotenessStates > 0) {
@@ -604,18 +595,8 @@ public final class Connect4 extends TieredGame {
 	}
 
 	@Override
-	public Record newRecord(PrimitiveValue pv) {
-		return new C4Record(pv);
-	}
-
-	@Override
 	public Record newRecord() {
 		return new C4Record();
-	}
-
-	@Override
-	public Record newRecord(long val) {
-		return new C4Record(val);
 	}
 
 	@Override
@@ -624,11 +605,6 @@ public final class Connect4 extends TieredGame {
 			return gameSize + 2 + (conf.valueStates > 3 ? 1 : 0);
 		else
 			return 3 + (conf.valueStates > 3 ? 1 : 0);
-	}
-
-	@Override
-	public void setInterperet(long hash) {
-		setTier(hashToTier(hash));
 	}
 
 	@Override

@@ -23,36 +23,6 @@ public class Record {
 	 */
 	public int score;
 
-	protected Record(Configuration conf, long state) {
-		this.conf = conf;
-		int fieldStates = 1;
-		if (conf.valueStates > 0) {
-			fieldStates = conf.valueStates;
-			value = PrimitiveValue.values[(int) (state % fieldStates)];
-		}
-		if (conf.remotenessStates > 0) {
-			state /= fieldStates;
-			fieldStates = conf.remotenessStates;
-			remoteness = (int) (state % fieldStates);
-		}
-		if (conf.scoreStates > 0) {
-			state /= fieldStates;
-			score = (int) state;
-		}
-	}
-
-	/**
-	 * @param conf
-	 *            The configuration object
-	 * @param pVal
-	 *            Just the primitive value. All other fields are initialized to
-	 *            zero.
-	 */
-	protected Record(Configuration conf, PrimitiveValue pVal) {
-		this.conf = conf;
-		value = pVal;
-	}
-
 	/**
 	 * Creates an empty record that can be written to.
 	 * 

@@ -25,16 +25,6 @@ public abstract class TwistyPuzzle<S extends State> extends Game<S> {
 	public int getPlayerCount() {
 		return 1;
 	}
-	
-	@Override
-	public Record newRecord(long val) {
-		return new TwistyPuzzleRecord(conf, val);
-	}
-
-	@Override
-	public Record newRecord(PrimitiveValue pv) {
-		return new TwistyPuzzleRecord(conf, pv);
-	}
 
 	@Override
 	public long recordStates() {

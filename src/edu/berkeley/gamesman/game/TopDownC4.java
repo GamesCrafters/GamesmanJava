@@ -348,15 +348,6 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 			super(conf);
 		}
 
-		protected C4Record(long state) {
-			super(conf);
-			set(state);
-		}
-
-		protected C4Record(PrimitiveValue pVal) {
-			super(conf, pVal);
-		}
-
 		@Override
 		public long getState() {
 			if (conf.remotenessStates > 0) {
@@ -395,18 +386,8 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 	}
 
 	@Override
-	public Record newRecord(PrimitiveValue pv) {
-		return new C4Record(pv);
-	}
-
-	@Override
 	public Record newRecord() {
 		return new C4Record();
-	}
-
-	@Override
-	public Record newRecord(long val) {
-		return new C4Record(val);
 	}
 
 	/**
@@ -438,11 +419,5 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 	@Override
 	public C4State newState() {
 		return new C4State(0, 0, 0);
-	}
-
-	@Override
-	public void setInterperet(long l) {
-		TDC4Hasher th = (TDC4Hasher) conf.getHasher();
-		setNumPieces(th.getNumPieces(l));
 	}
 }

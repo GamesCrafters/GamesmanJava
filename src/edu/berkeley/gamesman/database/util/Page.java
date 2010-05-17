@@ -3,7 +3,6 @@ package edu.berkeley.gamesman.database.util;
 import java.math.BigInteger;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.RecordGroup;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
@@ -46,15 +45,14 @@ public class Page {
 	 *            The index into this page of the desired group
 	 * @param recordNum
 	 *            The index into the group of the desired record
-	 * @param rec
-	 *            A record to store the result in
 	 */
-	public void get(int groupNum, int recordNum, Record rec) {
+	public long get(int groupNum, int recordNum) {
 		if (conf.recordGroupUsesLong)
-			RecordGroup.getRecord(conf, getLongGroup(groupNum), recordNum, rec);
+			return RecordGroup.getRecord(conf, getLongGroup(groupNum),
+					recordNum);
 		else
-			RecordGroup.getRecord(conf, getBigIntGroup(groupNum), recordNum,
-					rec);
+			return RecordGroup.getRecord(conf, getBigIntGroup(groupNum),
+					recordNum);
 	}
 
 	/**
@@ -64,16 +62,16 @@ public class Page {
 	 *            The index into this page of the desired group
 	 * @param recordNum
 	 *            The index into the group of the desired record
-	 * @param rec
+	 * @param r
 	 *            The record
 	 */
-	public void set(int groupNum, int recordNum, Record rec) {
+	public void set(int groupNum, int recordNum, long r) {
 		if (conf.recordGroupUsesLong)
 			setGroup(groupNum, RecordGroup.setRecord(conf,
-					getLongGroup(groupNum), recordNum, rec));
+					getLongGroup(groupNum), recordNum, r));
 		else
 			setGroup(groupNum, RecordGroup.setRecord(conf,
-					getBigIntGroup(groupNum), recordNum, rec));
+					getBigIntGroup(groupNum), recordNum, r));
 		dirty = true;
 	}
 
@@ -177,8 +175,8 @@ public class Page {
 	 * @param r
 	 *            A record to store the result in
 	 */
-	public void getRecord(long hashGroup, int num, Record r) {
-		get((int) (hashGroup - firstGroup), num, r);
+	public long getRecord(long hashGroup, int num) {
+		return get((int) (hashGroup - firstGroup), num);
 	}
 
 	/**
@@ -191,7 +189,7 @@ public class Page {
 	 * @param r
 	 *            The record
 	 */
-	public void putRecord(long hashGroup, int num, Record r) {
+	public void putRecord(long hashGroup, int num, long r) {
 		set((int) (hashGroup - firstGroup), num, r);
 	}
 
@@ -237,7 +235,8 @@ public class Page {
 	 * @param neededGroups
 	 *            The new minimum number of groups on the page
 	 */
-	public void extendDown(Database db, DatabaseHandle dh, long hashGroup, int neededGroups) {
+	public void extendDown(Database db, DatabaseHandle dh, long hashGroup,
+			int neededGroups) {
 		int numAdd = (int) (firstGroup - hashGroup);
 		int totGroups = numGroups + numAdd;
 		int oldSize = numGroups * conf.recordGroupByteLength;

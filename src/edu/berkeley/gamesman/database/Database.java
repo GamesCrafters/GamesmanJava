@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.database;
 import java.math.BigInteger;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.RecordGroup;
 import edu.berkeley.gamesman.util.DebugFacility;
@@ -24,8 +25,6 @@ public abstract class Database {
 	private long numBytes = -1;
 
 	private long firstByte;
-
-	private long position;
 
 	private long location;
 
@@ -101,9 +100,10 @@ public abstract class Database {
 	 * @return The stored Record
 	 */
 	public Record getRecord(long recordIndex) {
-		Record r = conf.getGame().newRecord();
-		getRecord(getHandle(), recordIndex, r);
-		return r;
+		Game<?> game = conf.getGame();
+		Record rec = game.newRecord();
+		game.getRecord(recordIndex, getRecord(getHandle(), recordIndex), rec);
+		return rec;
 	}
 
 	/**
@@ -114,22 +114,20 @@ public abstract class Database {
 	 * @param r
 	 *            The record to store in
 	 */
-	public void getRecord(DatabaseHandle dh, long recordIndex, Record r) {
-		if (!solve)
-			conf.getGame().setInterperet(recordIndex);
+	public long getRecord(DatabaseHandle dh, long recordIndex) {
 		if (conf.superCompress) {
 			long group = recordIndex / conf.recordsPerGroup;
 			int num = (int) (recordIndex % conf.recordsPerGroup);
 			long byteOffset = group * conf.recordGroupByteLength;
 			if (conf.recordGroupUsesLong)
-				RecordGroup.getRecord(conf, getLongRecordGroup(dh, byteOffset),
-						num, r);
+				return RecordGroup.getRecord(conf, getLongRecordGroup(dh,
+						byteOffset), num);
 			else
-				RecordGroup.getRecord(conf,
-						getBigIntRecordGroup(dh, byteOffset), num, r);
+				return RecordGroup.getRecord(conf, getBigIntRecordGroup(dh,
+						byteOffset), num);
 		} else
-			RecordGroup.getRecord(conf, getLongRecordGroup(dh, recordIndex
-					* conf.recordGroupByteLength), 0, r);
+			return RecordGroup.getRecord(conf, getLongRecordGroup(dh,
+					recordIndex * conf.recordGroupByteLength), 0);
 	}
 
 	/**
@@ -140,7 +138,7 @@ public abstract class Database {
 	 * @param r
 	 *            The Record to store
 	 */
-	public void putRecord(DatabaseHandle dh, long recordIndex, Record r) {
+	public void putRecord(DatabaseHandle dh, long recordIndex, long r) {
 		if (conf.superCompress) {
 			int num = (int) (recordIndex % conf.recordsPerGroup);
 			long byteOffset = recordIndex / conf.recordsPerGroup
@@ -155,8 +153,7 @@ public abstract class Database {
 				putRecordGroup(dh, byteOffset, rg);
 			}
 		} else
-			putRecordGroup(dh, recordIndex * conf.recordGroupByteLength, r
-					.getState());
+			putRecordGroup(dh, recordIndex * conf.recordGroupByteLength, r);
 	}
 
 	/**
@@ -258,7 +255,7 @@ public abstract class Database {
 	 *            The number of bytes to write
 	 */
 	public synchronized void putBytes(byte[] arr, int off, int len) {
-		if(myHandle==null)
+		if (myHandle == null)
 			myHandle = getHandle();
 		putBytes(myHandle, location, arr, off, len);
 		location += len;
@@ -275,7 +272,7 @@ public abstract class Database {
 	 *            The number of bytes to read
 	 */
 	public synchronized void getBytes(byte[] arr, int off, int len) {
-		if(myHandle==null)
+		if (myHandle == null)
 			myHandle = getHandle();
 		putBytes(myHandle, location, arr, off, len);
 		location += len;
@@ -291,8 +288,8 @@ public abstract class Database {
 	 * @param len
 	 *            The number of bytes to fill
 	 */
-	public void fill(Record r, long offset, long len) {
-		Record[] recs = new Record[conf.recordsPerGroup];
+	public void fill(long r, long offset, long len) {
+		long[] recs = new long[conf.recordsPerGroup];
 		for (int i = 0; i < conf.recordsPerGroup; i++)
 			recs[i] = r;
 		seek(offset);

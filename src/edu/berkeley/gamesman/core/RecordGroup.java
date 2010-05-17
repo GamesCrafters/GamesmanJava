@@ -54,16 +54,15 @@ public abstract class RecordGroup {
 	 *            The offset into the array. len = conf.recordsPerGroup
 	 * @return A long representing the created RecordGroup
 	 */
-	public static long longRecordGroup(Configuration conf, Record[] recs,
+	public static long longRecordGroup(Configuration conf, long[] recs,
 			int offset) {
 		if (conf.superCompress) {
 			long longValues = 0;
 			for (int i = 0; i < conf.recordsPerGroup; i++)
-				longValues += recs[offset++].getState()
-						* conf.longMultipliers[i];
+				longValues += recs[offset++] * conf.longMultipliers[i];
 			return longValues;
 		} else
-			return recs[0].getState();
+			return recs[0];
 	}
 
 	/**
@@ -75,93 +74,16 @@ public abstract class RecordGroup {
 	 *            The offset into the array. len = conf.recordsPerGroup
 	 * @return A BigInteger representing the created RecordGroup
 	 */
-	public static BigInteger bigIntRecordGroup(Configuration conf,
-			Record[] recs, int offset) {
+	public static BigInteger bigIntRecordGroup(Configuration conf, long[] recs,
+			int offset) {
 		if (conf.superCompress) {
 			BigInteger values = BigInteger.ZERO;
 			for (int i = 0; i < conf.recordsPerGroup; i++)
-				values = values.add(BigInteger.valueOf(
-						recs[offset++].getState())
+				values = values.add(BigInteger.valueOf(recs[offset++])
 						.multiply(conf.multipliers[i]));
 			return values;
 		} else
-			return BigInteger.valueOf(recs[0].getState());
-	}
-
-	/**
-	 * @param conf
-	 *            The configuration object
-	 * @param recordIterator
-	 *            An iterator over the records to use to construct this group
-	 * @return A long representing the created RecordGroup
-	 */
-	public static long longRecordGroup(Configuration conf,
-			Iterator<Record> recordIterator) {
-		if (conf.superCompress) {
-			long longValues = 0L;
-			for (int i = 0; i < conf.recordsPerGroup; i++)
-				longValues += recordIterator.next().getState()
-						* conf.longMultipliers[i];
-			return longValues;
-		} else
-			return recordIterator.next().getState();
-	}
-
-	/**
-	 * @param conf
-	 *            The configuration object
-	 * @param recordIterator
-	 *            An iterator over the records to use to construct this group
-	 * @return A BigInteger representing the created RecordGroup
-	 */
-	public static BigInteger bigIntRecordGroup(Configuration conf,
-			Iterator<Record> recordIterator) {
-		if (conf.superCompress) {
-			BigInteger values = BigInteger.ZERO;
-			for (int i = 0; i < conf.recordsPerGroup; i++) {
-				values = values.add(BigInteger.valueOf(
-						recordIterator.next().getState()).multiply(
-						conf.multipliers[i]));
-			}
-			return values;
-		} else
-			return BigInteger.valueOf(recordIterator.next().getState());
-	}
-
-	/**
-	 * @param conf
-	 *            The configuration object
-	 * @param recordGroup
-	 *            The Record Group
-	 * @param num
-	 *            The index of the desired record
-	 * @return The record
-	 */
-	public static Record getRecord(Configuration conf, long recordGroup, int num) {
-		if (conf.superCompress)
-			return conf.getGame().newRecord(
-					recordGroup / conf.longMultipliers[num] % conf.totalStates);
-		else
-			return conf.getGame().newRecord(recordGroup);
-	}
-
-	/**
-	 * @param conf
-	 *            The configuration object
-	 * @param recordGroup
-	 *            The Record Group
-	 * @param num
-	 *            The index of the desired record
-	 * @return The record
-	 */
-	public static Record getRecord(Configuration conf, BigInteger recordGroup,
-			int num) {
-		if (conf.superCompress) {
-			return conf.getGame().newRecord(
-					recordGroup.divide(conf.multipliers[num]).mod(
-							conf.bigIntTotalStates).longValue());
-		} else
-			return conf.getGame().newRecord(recordGroup.longValue());
+			return BigInteger.valueOf(recs[0]);
 	}
 
 	/**
@@ -177,15 +99,15 @@ public abstract class RecordGroup {
 	 *            The offset into the array
 	 */
 	public static void getRecords(Configuration conf, long recordGroup,
-			Record[] recs, int offset) {
+			long[] recs, int offset) {
 		if (conf.superCompress) {
 			for (int i = 0; i < conf.recordsPerGroup; i++) {
 				long mod = recordGroup % conf.totalStates;
 				recordGroup /= conf.totalStates;
-				recs[offset++].set(mod);
+				recs[offset++] = mod;
 			}
 		} else
-			recs[0].set(recordGroup);
+			recs[0] = recordGroup;
 	}
 
 	/**
@@ -201,15 +123,15 @@ public abstract class RecordGroup {
 	 *            The offset into the array
 	 */
 	public static void getRecords(Configuration conf, BigInteger recordGroup,
-			Record[] recs, int offset) {
+			long[] recs, int offset) {
 		if (conf.superCompress) {
 			for (int i = 0; i < conf.recordsPerGroup; i++) {
 				long mod = recordGroup.mod(conf.bigIntTotalStates).longValue();
 				recordGroup = recordGroup.divide(conf.bigIntTotalStates);
-				recs[offset++].set(mod);
+				recs[offset++] = mod;
 			}
 		} else
-			recs[0].set(recordGroup.longValue());
+			recs[0] = recordGroup.longValue();
 	}
 
 	/**
@@ -226,16 +148,16 @@ public abstract class RecordGroup {
 	 * @return The resulting Record Group
 	 */
 	public static long setRecord(Configuration conf, long recordGroup, int num,
-			Record r) {
+			long r) {
 		if (conf.superCompress) {
 			long multiplier = conf.longMultipliers[num];
 			long zeroOut = conf.longMultipliers[num + 1];
 			recordGroup = recordGroup
 					- ((recordGroup % zeroOut) - (recordGroup % multiplier))
-					+ (r.getState() * multiplier);
+					+ (r * multiplier);
 			return recordGroup;
 		} else
-			return r.getState();
+			return r;
 	}
 
 	/**
@@ -252,17 +174,17 @@ public abstract class RecordGroup {
 	 * @return The resulting Record Group
 	 */
 	public static BigInteger setRecord(Configuration conf,
-			BigInteger recordGroup, int num, Record r) {
+			BigInteger recordGroup, int num, long r) {
 		if (conf.superCompress) {
 			BigInteger multiplier = conf.multipliers[num];
 			BigInteger zeroOut = conf.multipliers[num + 1];
 			recordGroup = recordGroup.subtract(
 					recordGroup.mod(zeroOut).subtract(
 							recordGroup.mod(multiplier))).add(
-					BigInteger.valueOf(r.getState()).multiply(multiplier));
+					BigInteger.valueOf(r).multiply(multiplier));
 			return recordGroup;
 		} else
-			return BigInteger.valueOf(r.getState());
+			return BigInteger.valueOf(r);
 	}
 
 	/**
@@ -272,15 +194,12 @@ public abstract class RecordGroup {
 	 *            The Record Group
 	 * @param num
 	 *            The index of the desired record
-	 * @param r
-	 *            The Record to store in.
 	 */
-	public static void getRecord(Configuration conf, long recordGroup, int num,
-			Record r) {
+	public static long getRecord(Configuration conf, long recordGroup, int num) {
 		if (conf.superCompress)
-			r.set(recordGroup / conf.longMultipliers[num] % conf.totalStates);
+			return recordGroup / conf.longMultipliers[num] % conf.totalStates;
 		else
-			r.set(recordGroup);
+			return recordGroup;
 	}
 
 	/**
@@ -290,16 +209,14 @@ public abstract class RecordGroup {
 	 *            The Record Group
 	 * @param num
 	 *            The index of the desired record
-	 * @param r
-	 *            The Record to store in.
 	 */
-	public static void getRecord(Configuration conf, BigInteger recordGroup,
-			int num, Record r) {
+	public static long getRecord(Configuration conf, BigInteger recordGroup,
+			int num) {
 		if (conf.superCompress)
-			r.set(recordGroup.divide(conf.multipliers[num]).mod(
-					conf.bigIntTotalStates).longValue());
+			return recordGroup.divide(conf.multipliers[num]).mod(
+					conf.bigIntTotalStates).longValue();
 		else
-			r.set(recordGroup.longValue());
+			return recordGroup.longValue();
 	}
 
 	/**

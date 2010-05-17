@@ -19,9 +19,11 @@ public class RandomDatabase extends Database {
 	Random rand;
 
 	@Override
-	public void getRecord(DatabaseHandle dh, long loc, Record r) {
+	public Record getRecord(long loc) {
+		Record r = conf.getGame().newRecord();
 		r.remoteness = rand.nextInt(conf.remotenessStates);
 		r.value = PrimitiveValue.values[rand.nextInt(conf.valueStates)];
+		return r;
 	}
 
 	@Override

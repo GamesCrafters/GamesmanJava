@@ -307,28 +307,10 @@ public abstract class Game<S extends State> {
 	}
 
 	/**
-	 * @param pv
-	 *            The primitive value
-	 * @return A new record containing the given primitive value
-	 */
-	public Record newRecord(PrimitiveValue pv) {
-		return new Record(conf, pv);
-	}
-
-	/**
 	 * @return An empty new Record
 	 */
 	public Record newRecord() {
 		return new Record(conf);
-	}
-
-	/**
-	 * @param val
-	 *            The state index of this record
-	 * @return A new record with the given state
-	 */
-	public Record newRecord(long val) {
-		return new Record(conf, val);
 	}
 
 	/**
@@ -387,9 +369,6 @@ public abstract class Game<S extends State> {
 		return combine(recArray, 0, recArray.length);
 	}
 
-	public void setInterperet(long recNum) {
-	}
-
 	public int defaultValueStates() {
 		return 4;
 	}
@@ -400,5 +379,9 @@ public abstract class Game<S extends State> {
 
 	public int defaultScoreStates() {
 		return 1;
+	}
+
+	public void getRecord(long recordIndex, long record, Record toStore) {
+		toStore.set(record);
 	}
 }

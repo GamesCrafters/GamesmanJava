@@ -7,7 +7,6 @@ import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.database.util.Page;
-import edu.berkeley.gamesman.database.util.SequentialPage;
 import edu.berkeley.gamesman.game.Connect4;
 import edu.berkeley.gamesman.game.util.ItergameState;
 import edu.berkeley.gamesman.util.DebugFacility;
@@ -36,7 +35,7 @@ public class C4IntegratedSolver extends TierSolver {
 		int numPages = 0;
 		Page[] childPages = null;
 		int[] whichPage = null;
-		SequentialPage writePage = null;
+		Page writePage = null;
 		long currentGroup = 0L;
 		int currentNum = 0;
 		boolean hasRemoteness = conf.remotenessStates > 0;
@@ -47,7 +46,7 @@ public class C4IntegratedSolver extends TierSolver {
 			int writeLen = (int) (endGroup + 1 - currentGroup);
 			childPages = new Page[game.maxChildren()];
 			whichPage = new int[game.maxChildren()];
-			writePage = new SequentialPage(conf);
+			writePage = new Page(conf);
 			writePage.loadPage(currentGroup, writeLen);
 			if (!parallelSolving && (start + hashes) % conf.recordsPerGroup > 0) {
 				if (conf.recordGroupUsesLong)
@@ -90,7 +89,7 @@ public class C4IntegratedSolver extends TierSolver {
 					r = vals[i];
 					long hash = game.stateToHash(children[i]);
 					if (directRead) {
-						readDb.getRecord(readDh, hash, r);
+						r.set(readDb.getRecord(readDh, hash));
 					} else {
 						long hashGroup = hash / conf.recordsPerGroup;
 						int col = game.openColumn[i];
@@ -202,32 +201,32 @@ public class C4IntegratedSolver extends TierSolver {
 									whichPage[c] = lowPage;
 							}
 						}
-						childPages[whichPage[col]].getRecord(hashGroup,
-								(int) (hash % conf.recordsPerGroup), r);
+						r.set(childPages[whichPage[col]].getRecord(hashGroup,
+								(int) (hash % conf.recordsPerGroup)));
 					}
 					r.previousPosition();
 				}
 				Record newVal = game.combine(vals, 0, len);
 				if (directRead)
-					writeDb.putRecord(writeDh, current, newVal);
+					writeDb.putRecord(writeDh, current, newVal.getState());
 				else
-					writePage.putRecord(currentGroup, currentNum, newVal);
+					writePage.putRecord(currentGroup, currentNum, newVal.getState());
 				break;
 			case IMPOSSIBLE:
 				prim.value = PrimitiveValue.TIE;
 				if (directRead)
-					writeDb.putRecord(writeDh, current, prim);
+					writeDb.putRecord(writeDh, current, prim.getState());
 				else
-					writePage.putRecord(currentGroup, currentNum, prim);
+					writePage.putRecord(currentGroup, currentNum, prim.getState());
 				break;
 			default:
 				if (hasRemoteness)
 					prim.remoteness = 0;
 				prim.value = pv;
 				if (directRead)
-					writeDb.putRecord(writeDh, current, prim);
+					writeDb.putRecord(writeDh, current, prim.getState());
 				else
-					writePage.putRecord(currentGroup, currentNum, prim);
+					writePage.putRecord(currentGroup, currentNum, prim.getState());
 			}
 			if (count < hashes - 1)
 				game.nextHashInTier();

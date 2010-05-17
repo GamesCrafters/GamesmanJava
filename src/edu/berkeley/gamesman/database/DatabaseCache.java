@@ -2,7 +2,6 @@ package edu.berkeley.gamesman.database;
 
 import java.util.Arrays;
 
-import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.database.util.Page;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
@@ -42,50 +41,8 @@ public final class DatabaseCache extends Database {
 	}
 
 	@Override
-	public Record getRecord(long recordIndex) {
-		long tag = recordIndex;
-		int recordNum = (int) (tag % conf.recordsPerGroup);
-		tag /= conf.recordsPerGroup;
-		int offset = (int) (tag & (pageSize - 1));
-		tag >>= offsetBits;
-		int index = (int) (tag & (indices - 1));
-		tag >>= indexBits;
-		int i;
-		long lowest = Long.MAX_VALUE;
-		int lowUsed = 0;
-		for (i = 0; i < nWayAssociative; i++) {
-			if (used[index][i] == 0) {
-				loadPage(tag, index, i);
-				break;
-			} else if (tags[index][i] == tag) {
-				break;
-			} else if (used[index][i] < lowest) {
-				lowest = used[index][i];
-				lowUsed = i;
-			}
-		}
-		if (i >= nWayAssociative) {
-			i = lowUsed;
-			loadPage(tag, index, i);
-		}
-		Record rec = conf.getGame().newRecord();
-		boolean failedCheck;
-		synchronized (records[index][i]) {
-			if (tags[index][i] == tag) {
-				records[index][i].get(offset, recordNum, rec);
-				used[index][i] = ++current[index];
-				failedCheck = false;
-			} else
-				failedCheck = true;
-		}
-		if (failedCheck)
-			return getRecord(recordIndex);
-		else
-			return rec;
-	}
-
-	@Override
-	public void getRecord(DatabaseHandle dh, long recordIndex, Record r) {
+	public long getRecord(DatabaseHandle dh, long recordIndex) {
+		long result = -1;
 		long tag = recordIndex;
 		int recordNum = (int) (tag % conf.recordsPerGroup);
 		tag /= conf.recordsPerGroup;
@@ -114,18 +71,19 @@ public final class DatabaseCache extends Database {
 		boolean failedCheck;
 		synchronized (records[index][i]) {
 			if (tags[index][i] == tag) {
-				records[index][i].get(offset, recordNum, r);
+				result = records[index][i].get(offset, recordNum);
 				used[index][i] = ++current[index];
 				failedCheck = false;
 			} else
 				failedCheck = true;
 		}
 		if (failedCheck)
-			getRecord(dh, recordIndex, r);
+			result = getRecord(dh, recordIndex);
+		return result;
 	}
 
 	@Override
-	public void putRecord(DatabaseHandle dh, long recordIndex, Record r) {
+	public void putRecord(DatabaseHandle dh, long recordIndex, long r) {
 		long tag = recordIndex;
 		int recordNum = (int) (tag % conf.recordsPerGroup);
 		tag /= conf.recordsPerGroup;

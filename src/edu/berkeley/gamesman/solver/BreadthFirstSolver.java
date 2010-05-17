@@ -35,15 +35,18 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 		int maxRemoteness = conf.getInteger("gamesman.solver.maxRemoteness",
 				conf.remotenessStates);
 		hashSpace = game.numHashes();
-		Record defaultRecord = game.newRecord(PrimitiveValue.UNDECIDED);
-		writeDb.fill(defaultRecord, 0, hashSpace);
+		Record defaultRecord = game.newRecord();
+		defaultRecord.value = PrimitiveValue.UNDECIDED;
+		writeDb.fill(defaultRecord.getState(), 0, hashSpace);
 		DatabaseHandle dh = writeDb.getHandle();
 		long numPositionsZero = 0;
+		Record rec = game.newRecord();
 		for (T s : game.startingPositions()) {
 			long hash = game.stateToHash(s);
-			PrimitiveValue win = game.primitiveValue(s);
-			Record rec = game.newRecord(win);
-			writeDb.putRecord(dh, hash, rec);
+			PrimitiveValue isWin = game.primitiveValue(s);
+			rec.value = isWin;
+			rec.remoteness = 0;
+			writeDb.putRecord(dh, hash, rec.getState());
 			numPositionsZero++;
 		}
 		assert Util.debug(DebugFacility.SOLVER,
@@ -98,7 +101,7 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 				HashSet<Long> setValues = new HashSet<Long>();
 				numPositionsInLevel = 0;
 				for (long hash = firstHash; hash < lastHashPlusOne; hash++) {
-					readDb.getRecord(readDh, hash, rec);
+					rec.set(readDb.getRecord(readDh, hash));
 					if (rec.value != PrimitiveValue.UNDECIDED
 							&& rec.remoteness == remoteness) {
 						// System.out.println("Found! "+hash+"="+rec);
@@ -116,7 +119,7 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 								childrec.value = rec.value;
 								childrec.remoteness = remoteness + 1;
 								// System.out.println("Setting child "+childhash+"="+childrec);
-								writeDb.putRecord(writeDh, childhash, childrec);
+								writeDb.putRecord(writeDh, childhash, childrec.getState());
 								numPositionsInLevel++;
 								numPositionsSeen++;
 								setValues.add(childhash);

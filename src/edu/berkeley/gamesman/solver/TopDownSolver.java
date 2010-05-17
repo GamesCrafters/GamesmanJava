@@ -43,9 +43,9 @@ public class TopDownSolver<S extends State> extends Solver {
 	@Override
 	public WorkUnit prepareSolve(final Configuration conf) {
 		long hashSpace = conf.getGame().numHashes();
-		Record defaultRecord = conf.getGame().newRecord(
-				PrimitiveValue.UNDECIDED);
-		writeDb.fill(defaultRecord, 0, hashSpace);
+		Record defaultRecord = conf.getGame().newRecord();
+		defaultRecord.value = PrimitiveValue.UNDECIDED;
+		writeDb.fill(defaultRecord.getState(), 0, hashSpace);
 
 		return new WorkUnit() {
 
@@ -90,7 +90,7 @@ public class TopDownSolver<S extends State> extends Solver {
 		if (depth < 3)
 			assert Util.debug(DebugFacility.SOLVER, game.toString());
 		long hash = game.getHash();
-		readDb.getRecord(readDh, hash, value);
+		value.set(readDb.getRecord(readDh, hash));
 		if (value.value != PrimitiveValue.UNDECIDED)
 			return;
 		PrimitiveValue pv = game.primitiveValue();
@@ -117,9 +117,8 @@ public class TopDownSolver<S extends State> extends Solver {
 					.fatalError("Top-down solve should not reach impossible positions");
 		default:
 			value.value = pv;
-			if (containsRemoteness)
-				value.remoteness = 0;
+			value.remoteness = 0;
 		}
-		writeDb.putRecord(writeDh, hash, value);
+		writeDb.putRecord(writeDh, hash, value.getState());
 	}
 }
