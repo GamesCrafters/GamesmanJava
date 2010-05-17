@@ -1,5 +1,7 @@
 package edu.berkeley.gamesman.core;
 
+import edu.berkeley.gamesman.database.Database;
+
 
 /**
  * A Master is responsible for coordinating the interaction between the Game, Solver, Hasher, and Database while solving a game.

@@ -17,7 +17,7 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author dnspies
  */
-public abstract class ConnectGame extends TieredIterGame {
+public abstract class ConnectGame extends TieredGame {
 	private char turn;
 	protected MMHasher mmh;
 	protected final ItergameState myState = newState();

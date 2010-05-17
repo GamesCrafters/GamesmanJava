@@ -10,17 +10,19 @@ import java.math.BigInteger;
 public class SynchronizedMemoryDatabase extends MemoryDatabase {
 
 	@Override
-	public synchronized void putRecordGroup(long loc, long rg) {
-		super.putRecordGroup(loc, rg);
+	public synchronized void putRecordGroup(DatabaseHandle dh, long loc, long rg) {
+		super.putRecordGroup(dh, loc, rg);
 	}
 
 	@Override
-	public synchronized void putRecordGroup(long loc, BigInteger rg) {
-		super.putRecordGroup(loc, rg);
+	public synchronized void putRecordGroup(DatabaseHandle dh, long loc,
+			BigInteger rg) {
+		super.putRecordGroup(dh, loc, rg);
 	}
 
 	@Override
-	public synchronized void putBytes(long loc, byte[] arr, int off, int len) {
-		super.putBytes(loc, arr, off, len);
+	public synchronized void putBytes(DatabaseHandle dh, long loc, byte[] arr,
+			int off, int len) {
+		super.putBytes(dh, loc, arr, off, len);
 	}
 }

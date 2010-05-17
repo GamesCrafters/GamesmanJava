@@ -8,7 +8,6 @@ import java.util.Properties;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Solver;
-import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.database.DistributedDatabase;
 import edu.berkeley.gamesman.game.TieredGame;
@@ -42,13 +41,13 @@ public class TierSlave {
 	 */
 	public static void main(String[] args) throws ClassNotFoundException,
 			IllegalAccessException, InstantiationException, IOException {
-		jobFile = args[0];
 		int tier;
 		long firstHash, numHashes;
+		jobFile = args[0];
 		tier = Integer.parseInt(args[1]);
 		firstHash = Long.parseLong(args[2]);
 		numHashes = Long.parseLong(args[3]);
-		Properties props = Configuration.readProperties(jobFile);
+		Properties props = Configuration.readProperties(args[0]);
 		EnumSet<DebugFacility> debugOpts = EnumSet.noneOf(DebugFacility.class);
 		ClassLoader cl = ClassLoader.getSystemClassLoader();
 		cl.setDefaultAssertionStatus(false);
@@ -73,7 +72,7 @@ public class TierSlave {
 		String solverName = conf.getProperty("gamesman.solver");
 		Class<? extends Solver> s = Util.typedForName(
 				"edu.berkeley.gamesman.solver." + solverName, Solver.class);
-		TierSolver<? extends State> solver = Util.checkedCast(s.newInstance());
+		TierSolver solver = Util.checkedCast(s.newInstance());
 		solver.initialize(conf);
 		DistributedDatabase readDb = new DistributedDatabase(System.in,
 				System.out);
@@ -96,8 +95,7 @@ public class TierSlave {
 			list.add(wu);
 		}
 		ArrayList<Thread> myThreads = new ArrayList<Thread>(list.size());
-		TieredGame<? extends State> game = (TieredGame<? extends State>) conf
-				.getGame();
+		TieredGame game = (TieredGame) conf.getGame();
 		ThreadGroup solverGroup = new ThreadGroup("Solver Group: " + game);
 		for (WorkUnit w : list) {
 			Thread t = new Thread(solverGroup, new TierSlaveRunnable(w));

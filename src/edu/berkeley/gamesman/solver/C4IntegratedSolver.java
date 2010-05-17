@@ -4,6 +4,8 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 import edu.berkeley.gamesman.core.*;
+import edu.berkeley.gamesman.database.Database;
+import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.database.util.Page;
 import edu.berkeley.gamesman.database.util.SequentialPage;
 import edu.berkeley.gamesman.game.Connect4;
@@ -16,12 +18,13 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author dnspies
  */
-public class C4IntegratedSolver extends TierSolver<ItergameState> {
+public class C4IntegratedSolver extends TierSolver {
 	private boolean directRead;
 
 	@Override
 	protected void solvePartialTier(Configuration conf, long start,
-			long hashes, TierSolverUpdater t, Database readDb, Database writeDb) {
+			long hashes, TierSolverUpdater t, Database readDb,
+			DatabaseHandle readDh, Database writeDb, DatabaseHandle writeDh) {
 		Connect4 game = Util.checkedCast(conf.getGame());
 		long current = start;
 		Record[] vals = new Record[game.maxChildren()];
@@ -48,12 +51,11 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 			writePage.loadPage(currentGroup, writeLen);
 			if (!parallelSolving && (start + hashes) % conf.recordsPerGroup > 0) {
 				if (conf.recordGroupUsesLong)
-					writePage.setGroup(writeLen - 1, readDb
-							.getLongRecordGroup(endGroup
-									* conf.recordGroupByteLength));
+					writePage.setGroup(writeLen - 1, readDb.getLongRecordGroup(
+							readDh, endGroup * conf.recordGroupByteLength));
 				else
 					writePage.setGroup(writeLen - 1, readDb
-							.getBigIntRecordGroup(endGroup
+							.getBigIntRecordGroup(readDh, endGroup
 									* conf.recordGroupByteLength));
 			}
 			// assert Util.debug(DebugFacility.SOLVER, "Loading " + currentGroup
@@ -88,7 +90,7 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 					r = vals[i];
 					long hash = game.stateToHash(children[i]);
 					if (directRead) {
-						readDb.getRecord(hash, r);
+						readDb.getRecord(readDh, hash, r);
 					} else {
 						long hashGroup = hash / conf.recordsPerGroup;
 						int col = game.openColumn[i];
@@ -166,7 +168,8 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 								else
 									lowPage = whichPage[col];
 								childPages[lowPage] = new Page(conf);
-								childPages[lowPage].loadPage(readDb, pageStart,
+								childPages[lowPage].loadPage(readDb, readDh,
+										pageStart,
 										(int) (pageEnd - pageStart) + 1);
 							}
 							Page thePage = childPages[lowPage];
@@ -175,7 +178,7 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 								thePage
 										.ensureCapacity((int) (pageEnd - pageStart) + 1);
 							} else {
-								thePage.extendDown(readDb, hashGroup,
+								thePage.extendDown(readDb, readDh, hashGroup,
 										(int) (pageEnd - pageStart) + 1);
 							}
 							long min = pageEnd + 1;
@@ -188,10 +191,10 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 									}
 								}
 								pageList.remove(nextPage);
-								thePage.extendUp(readDb, nextPage);
+								thePage.extendUp(readDb, readDh, nextPage);
 							}
 							if (thePage.firstGroup + thePage.numGroups <= pageEnd)
-								thePage.extendUp(readDb, pageEnd);
+								thePage.extendUp(readDb, readDh, pageEnd);
 							whichPage[col] = lowPage;
 							for (int c = 0; c < whichPage.length; c++) {
 								if (whichPage[c] >= 0
@@ -206,14 +209,14 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 				}
 				Record newVal = game.combine(vals, 0, len);
 				if (directRead)
-					writeDb.putRecord(current, newVal);
+					writeDb.putRecord(writeDh, current, newVal);
 				else
 					writePage.putRecord(currentGroup, currentNum, newVal);
 				break;
 			case IMPOSSIBLE:
 				prim.value = PrimitiveValue.TIE;
 				if (directRead)
-					writeDb.putRecord(current, prim);
+					writeDb.putRecord(writeDh, current, prim);
 				else
 					writePage.putRecord(currentGroup, currentNum, prim);
 				break;
@@ -222,7 +225,7 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 					prim.remoteness = 0;
 				prim.value = pv;
 				if (directRead)
-					writeDb.putRecord(current, prim);
+					writeDb.putRecord(writeDh, current, prim);
 				else
 					writePage.putRecord(currentGroup, currentNum, prim);
 			}
@@ -248,7 +251,7 @@ public class C4IntegratedSolver extends TierSolver<ItergameState> {
 			// assert Util.debug(DebugFacility.SOLVER, "Writing "
 			// + writePage.firstGroup + " - "
 			// + (writePage.firstGroup + writePage.numGroups - 1));
-			writePage.writeBack(writeDb);
+			writePage.writeBack(writeDb, writeDh);
 		}
 	}
 

@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.core.Master;
 import edu.berkeley.gamesman.core.Solver;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.core.WorkUnit;
+import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseCache;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Task;
@@ -78,7 +78,8 @@ public final class LocalMaster implements Master, TaskFactory {
 		}
 		ArrayList<Thread> myThreads = new ArrayList<Thread>(list.size());
 
-		ThreadGroup solverGroup = new ThreadGroup("Solver Group: " + game.describe());
+		ThreadGroup solverGroup = new ThreadGroup("Solver Group: "
+				+ game.describe());
 		for (WorkUnit w : list) {
 			Thread t = new Thread(solverGroup, new LocalMasterRunnable(w));
 			t.start();
@@ -91,11 +92,8 @@ public final class LocalMaster implements Master, TaskFactory {
 			} catch (InterruptedException e) {
 				Util.warn("Interrupted while joined on thread " + t);
 			}
-		if (closeDB) {
+		if (closeDB)
 			database.close();
-		} else {
-			database.flush();
-		}
 		assert Util.debug(DebugFacility.MASTER, "Finished master run");
 	}
 

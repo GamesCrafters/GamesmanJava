@@ -2,7 +2,6 @@ package edu.berkeley.gamesman.database;
 
 import java.util.Arrays;
 
-import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.database.util.Page;
 import edu.berkeley.gamesman.util.DebugFacility;
@@ -31,12 +30,15 @@ public final class DatabaseCache extends Database {
 
 	private final Database db;
 
+	private final DatabaseHandle dh;
+
 	/**
 	 * @param db
 	 *            The inner database to be used.
 	 */
 	public DatabaseCache(Database db) {
 		this.db = db;
+		dh = db.getHandle();
 	}
 
 	@Override
@@ -83,7 +85,7 @@ public final class DatabaseCache extends Database {
 	}
 
 	@Override
-	public void getRecord(long recordIndex, Record r) {
+	public void getRecord(DatabaseHandle dh, long recordIndex, Record r) {
 		long tag = recordIndex;
 		int recordNum = (int) (tag % conf.recordsPerGroup);
 		tag /= conf.recordsPerGroup;
@@ -119,11 +121,11 @@ public final class DatabaseCache extends Database {
 				failedCheck = true;
 		}
 		if (failedCheck)
-			getRecord(recordIndex, r);
+			getRecord(dh, recordIndex, r);
 	}
 
 	@Override
-	public void putRecord(long recordIndex, Record r) {
+	public void putRecord(DatabaseHandle dh, long recordIndex, Record r) {
 		long tag = recordIndex;
 		int recordNum = (int) (tag % conf.recordsPerGroup);
 		tag /= conf.recordsPerGroup;
@@ -159,7 +161,7 @@ public final class DatabaseCache extends Database {
 				failedCheck = true;
 		}
 		if (failedCheck)
-			putRecord(recordIndex, r);
+			putRecord(dh, recordIndex, r);
 	}
 
 	private void loadPage(long tag, int index, int i) {
@@ -172,17 +174,17 @@ public final class DatabaseCache extends Database {
 			assert Util.debug(DebugFacility.DATABASE, "Loading " + pageNum);
 			long firstGroup = pageNum << offsetBits;
 			if (firstGroup + pageSize > maxGroups)
-				records[index][i].loadPage(db, firstGroup,
+				records[index][i].loadPage(db, dh, firstGroup,
 						(int) (maxGroups - firstGroup));
 			else
-				records[index][i].loadPage(db, firstGroup, pageSize);
+				records[index][i].loadPage(db, dh, firstGroup, pageSize);
 		}
 	}
 
 	private void writeBack(int index, int i) {
 		assert Util.debug(DebugFacility.DATABASE, "Writing "
 				+ ((tags[index][i] << indexBits) | index));
-		records[index][i].writeBack(db);
+		records[index][i].writeBack(db, dh);
 	}
 
 	@Override
@@ -191,13 +193,11 @@ public final class DatabaseCache extends Database {
 		db.close();
 	}
 
-	@Override
 	public void flush() {
 		for (int index = 0; index < indices; index++)
 			for (int i = 0; i < nWayAssociative; i++)
 				if (records[index][i].isDirty())
 					writeBack(index, i);
-		db.flush();
 	}
 
 	@Override
@@ -243,17 +243,14 @@ public final class DatabaseCache extends Database {
 	}
 
 	@Override
-	public void getBytes(byte[] arr, int off, int len) {
+	public void getBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
+			int len) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void putBytes(byte[] arr, int off, int len) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void seek(long loc) {
+	public void putBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
+			int len) {
 		throw new UnsupportedOperationException();
 	}
 }

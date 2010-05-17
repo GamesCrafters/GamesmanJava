@@ -5,16 +5,8 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.util.Util;
 
-/**
- * The FileDatabase is a database designed to write directly to a local file.
- * The file format is not well defined at the moment, perhaps this should be
- * changed later.
- * 
- * @author Steven Schlansker
- */
 public final class FileDatabase extends Database {
 
 	/**
@@ -48,17 +40,7 @@ public final class FileDatabase extends Database {
 	}
 
 	@Override
-	public void flush() {
-		// try {
-		// fd.getFD().sync();
-		// fd.getChannel().force(true);
-		// } catch (IOException e) {
-		// Util.fatalError("Error while writing to database: " + e);
-		// }
-	}
-
-	@Override
-	public void seek(long loc) {
+	public synchronized void seek(long loc) {
 		try {
 			fd.seek(loc + offset);
 		} catch (IOException e) {
@@ -67,7 +49,7 @@ public final class FileDatabase extends Database {
 	}
 
 	@Override
-	public void getBytes(byte[] arr, int off, int len) {
+	public synchronized void getBytes(byte[] arr, int off, int len) {
 		try {
 			fd.read(arr, off, len);
 		} catch (IOException e) {
@@ -76,7 +58,7 @@ public final class FileDatabase extends Database {
 	}
 
 	@Override
-	public void putBytes(byte[] arr, int off, int len) {
+	public synchronized void putBytes(byte[] arr, int off, int len) {
 		try {
 			fd.write(arr, off, len);
 		} catch (IOException e) {
@@ -119,5 +101,19 @@ public final class FileDatabase extends Database {
 			e.printStackTrace();
 			Util.fatalError(e.toString());
 		}
+	}
+
+	@Override
+	public synchronized void getBytes(DatabaseHandle dh, long loc, byte[] arr,
+			int off, int len) {
+		seek(loc);
+		getBytes(arr, off, len);
+	}
+
+	@Override
+	public synchronized void putBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
+			int len) {
+		seek(loc);
+		putBytes(arr, off, len);
 	}
 }

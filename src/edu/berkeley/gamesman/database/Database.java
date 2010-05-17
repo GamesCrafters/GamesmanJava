@@ -1,7 +1,10 @@
-package edu.berkeley.gamesman.core;
+package edu.berkeley.gamesman.database;
 
 import java.math.BigInteger;
 
+import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.Record;
+import edu.berkeley.gamesman.core.RecordGroup;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
@@ -16,15 +19,17 @@ public abstract class Database {
 
 	protected Configuration conf;
 
-	private byte[] groups;
-
 	private boolean solve;
-
-	private int maxBytes;
 
 	private long numBytes = -1;
 
 	private long firstByte;
+
+	private long position;
+
+	private long location;
+
+	protected DatabaseHandle myHandle;
 
 	/**
 	 * Initialize a Database given a URI and a Configuration. This method may
@@ -58,7 +63,6 @@ public abstract class Database {
 					/ conf.recordsPerGroup * conf.recordGroupByteLength;
 		}
 		initialize(uri, solve);
-		maxBytes = 1024 - 1024 % conf.recordGroupByteLength;
 		assert Util.debug(DebugFacility.DATABASE, conf.recordsPerGroup
 				+ " records per group\n" + conf.recordGroupByteLength
 				+ " bytes per group");
@@ -73,12 +77,6 @@ public abstract class Database {
 	 *            true for solving, false for playing
 	 */
 	public abstract void initialize(String uri, boolean solve);
-
-	/**
-	 * Ensure all buffers are flushed to disk. The on-disk state should be
-	 * consistent after this call returns.
-	 */
-	public abstract void flush();
 
 	/**
 	 * Close this Database, flush to disk, and release all associated resources.
@@ -96,38 +94,6 @@ public abstract class Database {
 	}
 
 	/**
-	 * Notifies the database that a thread has begun writing. The solver will
-	 * write to this range of records, and will be writing sequentially witin
-	 * this range until recordEnd-1.
-	 * 
-	 * @param tier
-	 *            Which tier this task belongs to (if solving all tiers at once)
-	 * @param recordStart
-	 *            The first record that will be written. Must be group-aligned.
-	 * @param recordEnd
-	 *            1 plus lastRecord
-	 * @return A database that I can write this chunk to
-	 */
-	public Database beginWrite(int tier, long recordStart, long recordEnd) {
-		return this;
-	}
-
-	/**
-	 * Notifies the database that a thread has finished writing.
-	 * 
-	 * @param tier
-	 *            Which tier this task belongs to (if solving all tiers at once)
-	 * @param db
-	 *            The sub-database to which the chunk was written
-	 * @param recordStart
-	 *            The first record that will be written. Must be group-aligned.
-	 * @param recordEnd
-	 *            1 plus lastRecord
-	 */
-	public void endWrite(int tier, Database db, long recordStart, long recordEnd) {
-	}
-
-	/**
 	 * Return the Nth Record in the Database
 	 * 
 	 * @param recordIndex
@@ -136,7 +102,7 @@ public abstract class Database {
 	 */
 	public Record getRecord(long recordIndex) {
 		Record r = conf.getGame().newRecord();
-		getRecord(recordIndex, r);
+		getRecord(new DatabaseHandle(), recordIndex, r);
 		return r;
 	}
 
@@ -148,7 +114,7 @@ public abstract class Database {
 	 * @param r
 	 *            The record to store in
 	 */
-	public void getRecord(long recordIndex, Record r) {
+	public void getRecord(DatabaseHandle dh, long recordIndex, Record r) {
 		if (!solve)
 			conf.getGame().setInterperet(recordIndex);
 		if (conf.superCompress) {
@@ -156,13 +122,13 @@ public abstract class Database {
 			int num = (int) (recordIndex % conf.recordsPerGroup);
 			long byteOffset = group * conf.recordGroupByteLength;
 			if (conf.recordGroupUsesLong)
-				RecordGroup.getRecord(conf, getLongRecordGroup(byteOffset),
+				RecordGroup.getRecord(conf, getLongRecordGroup(dh, byteOffset),
 						num, r);
 			else
-				RecordGroup.getRecord(conf, getBigIntRecordGroup(byteOffset),
-						num, r);
+				RecordGroup.getRecord(conf,
+						getBigIntRecordGroup(dh, byteOffset), num, r);
 		} else
-			RecordGroup.getRecord(conf, getLongRecordGroup(recordIndex
+			RecordGroup.getRecord(conf, getLongRecordGroup(dh, recordIndex
 					* conf.recordGroupByteLength), 0, r);
 	}
 
@@ -174,22 +140,22 @@ public abstract class Database {
 	 * @param r
 	 *            The Record to store
 	 */
-	public void putRecord(long recordIndex, Record r) {
+	public void putRecord(DatabaseHandle dh, long recordIndex, Record r) {
 		if (conf.superCompress) {
 			int num = (int) (recordIndex % conf.recordsPerGroup);
 			long byteOffset = recordIndex / conf.recordsPerGroup
 					* conf.recordGroupByteLength;
 			if (conf.recordGroupUsesLong) {
-				long rg = getLongRecordGroup(byteOffset);
+				long rg = getLongRecordGroup(dh, byteOffset);
 				rg = RecordGroup.setRecord(conf, rg, num, r);
-				putRecordGroup(byteOffset, rg);
+				putRecordGroup(dh, byteOffset, rg);
 			} else {
-				BigInteger rg = getBigIntRecordGroup(byteOffset);
+				BigInteger rg = getBigIntRecordGroup(dh, byteOffset);
 				rg = RecordGroup.setRecord(conf, rg, num, r);
-				putRecordGroup(byteOffset, rg);
+				putRecordGroup(dh, byteOffset, rg);
 			}
 		} else
-			putRecordGroup(recordIndex * conf.recordGroupByteLength, r
+			putRecordGroup(dh, recordIndex * conf.recordGroupByteLength, r
 					.getState());
 	}
 
@@ -198,12 +164,9 @@ public abstract class Database {
 	 *            The index of the byte the group begins on
 	 * @return The group beginning at loc
 	 */
-	public long getLongRecordGroup(long loc) {
-		int groupsLength = conf.recordGroupByteLength;
-		if (groups == null || groups.length < groupsLength)
-			ensureGroupsLength(groupsLength);
-		// The condition avoids an unecessary synchronized method call
-		getBytes(loc, groups, 0, groupsLength);
+	public long getLongRecordGroup(DatabaseHandle dh, long loc) {
+		byte[] groups = dh.getRecordGroupBytes(conf.recordGroupByteLength);
+		getBytes(dh, loc, groups, 0, conf.recordGroupByteLength);
 		long v = RecordGroup.longRecordGroup(conf, groups, 0);
 		return v;
 	}
@@ -213,12 +176,9 @@ public abstract class Database {
 	 *            The index of the byte the group begins on
 	 * @return The group beginning at loc
 	 */
-	public BigInteger getBigIntRecordGroup(long loc) {
-		int groupsLength = conf.recordGroupByteLength;
-		if (groups == null || groups.length < groupsLength)
-			ensureGroupsLength(groupsLength);
-		// The condition avoids an unecessary synchronized method call
-		getBytes(loc, groups, 0, groupsLength);
+	public BigInteger getBigIntRecordGroup(DatabaseHandle dh, long loc) {
+		byte[] groups = dh.getRecordGroupBytes(conf.recordGroupByteLength);
+		getBytes(dh, loc, groups, 0, conf.recordGroupByteLength);
 		BigInteger v = RecordGroup.bigIntRecordGroup(conf, groups, 0);
 		return v;
 	}
@@ -229,13 +189,10 @@ public abstract class Database {
 	 * @param rg
 	 *            The record group to store
 	 */
-	public void putRecordGroup(long loc, long rg) {
-		int groupsLength = conf.recordGroupByteLength;
-		if (groups == null || groups.length < groupsLength)
-			ensureGroupsLength(groupsLength);
-		// The condition avoids an unecessary synchronized method call
+	public void putRecordGroup(DatabaseHandle dh, long loc, long rg) {
+		byte[] groups = dh.getRecordGroupBytes(conf.recordGroupByteLength);
 		RecordGroup.toUnsignedByteArray(conf, rg, groups, 0);
-		putBytes(loc, groups, 0, groupsLength);
+		putBytes(dh, loc, groups, 0, conf.recordGroupByteLength);
 	}
 
 	/**
@@ -244,13 +201,10 @@ public abstract class Database {
 	 * @param rg
 	 *            The record group to store
 	 */
-	public void putRecordGroup(long loc, BigInteger rg) {
-		int groupsLength = conf.recordGroupByteLength;
-		if (groups == null || groups.length < groupsLength)
-			ensureGroupsLength(groupsLength);
-		// The condition avoids an unecessary synchronized method call
+	public void putRecordGroup(DatabaseHandle dh, long loc, BigInteger rg) {
+		byte[] groups = dh.getRecordGroupBytes(conf.recordGroupByteLength);
 		RecordGroup.toUnsignedByteArray(conf, rg, groups, 0);
-		putBytes(loc, groups, 0, groupsLength);
+		putBytes(dh, loc, groups, 0, conf.recordGroupByteLength);
 	}
 
 	/**
@@ -265,10 +219,8 @@ public abstract class Database {
 	 * @param len
 	 *            The number of bytes to write
 	 */
-	public synchronized void putBytes(long loc, byte[] arr, int off, int len) {
-		seek(loc);
-		putBytes(arr, off, len);
-	}
+	public abstract void putBytes(DatabaseHandle dh, long loc, byte[] arr,
+			int off, int len);
 
 	/**
 	 * Seek to this location and read len bytes from the database into an array
@@ -282,10 +234,8 @@ public abstract class Database {
 	 * @param len
 	 *            The number of bytes to read
 	 */
-	public synchronized void getBytes(long loc, byte[] arr, int off, int len) {
-		seek(loc);
-		getBytes(arr, off, len);
-	}
+	public abstract void getBytes(DatabaseHandle dh, long loc, byte[] arr,
+			int off, int len);
 
 	/**
 	 * Seek to this location in the database
@@ -293,7 +243,9 @@ public abstract class Database {
 	 * @param loc
 	 *            The location to seek to
 	 */
-	public abstract void seek(long loc);
+	public synchronized void seek(long loc) {
+		location = loc;
+	}
 
 	/**
 	 * Writes len bytes from the array into the database
@@ -305,7 +257,12 @@ public abstract class Database {
 	 * @param len
 	 *            The number of bytes to write
 	 */
-	public abstract void putBytes(byte[] arr, int off, int len);
+	public synchronized void putBytes(byte[] arr, int off, int len) {
+		if(myHandle==null)
+			myHandle = getHandle();
+		putBytes(myHandle, location, arr, off, len);
+		location += len;
+	}
 
 	/**
 	 * Reads len bytes from the database into an array
@@ -317,11 +274,11 @@ public abstract class Database {
 	 * @param len
 	 *            The number of bytes to read
 	 */
-	public abstract void getBytes(byte[] arr, int off, int len);
-
-	private final synchronized void ensureGroupsLength(int length) {
-		if (groups == null || groups.length < length)
-			groups = new byte[length];
+	public synchronized void getBytes(byte[] arr, int off, int len) {
+		if(myHandle==null)
+			myHandle = getHandle();
+		putBytes(myHandle, location, arr, off, len);
+		location += len;
 	}
 
 	/**
@@ -339,11 +296,12 @@ public abstract class Database {
 		for (int i = 0; i < conf.recordsPerGroup; i++)
 			recs[i] = r;
 		seek(offset);
+		int maxBytes = 1024 - 1024 % conf.recordGroupByteLength;
+		byte[] groups = new byte[maxBytes];
 		while (len > 0) {
 			int groupsLength = (int) Math.min(len, maxBytes);
 			int numGroups = groupsLength / conf.recordGroupByteLength;
 			groupsLength = numGroups * conf.recordGroupByteLength;
-			ensureGroupsLength(groupsLength);
 			int onByte = 0;
 			if (conf.recordGroupUsesLong) {
 				long recordGroup = RecordGroup.longRecordGroup(conf, recs, 0);
@@ -395,5 +353,16 @@ public abstract class Database {
 	 */
 	public long firstByte() {
 		return firstByte;
+	}
+
+	public DatabaseHandle getHandle() {
+		return new DatabaseHandle();
+	}
+
+	public void closeHandle(DatabaseHandle dh) {
+	}
+
+	public DatabaseHandle getHandle(long recordStart, long numRecords) {
+		return getHandle();
 	}
 }

@@ -1,7 +1,7 @@
 gamesman.game = YGame
 gamesman.game.outerRows = 2
 gamesman.hasher = TieredItergameHasher
-gamesman.solver = TierItergameSolver
+gamesman.solver = TierSolver
 gamesman.database = MemoryCachedDatabase
 gamesman.db.uri = ygame.db
 gamesman.debug.THREADING = true

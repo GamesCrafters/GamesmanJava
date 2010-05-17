@@ -5,6 +5,7 @@ import java.net.*;
 import java.util.*;
 
 import edu.berkeley.gamesman.core.*;
+import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;

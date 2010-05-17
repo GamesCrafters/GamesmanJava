@@ -1,9 +1,10 @@
 package edu.berkeley.gamesman.database.util;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.RecordGroup;
+import edu.berkeley.gamesman.database.Database;
+import edu.berkeley.gamesman.database.DatabaseHandle;
 
 /**
  * A page that remembers the last record group accessed. If stepping through a
@@ -20,7 +21,8 @@ public class SequentialPage extends Page {
 	boolean lastDirty;
 
 	/**
-	 * @param conf The configuration object
+	 * @param conf
+	 *            The configuration object
 	 */
 	public SequentialPage(Configuration conf) {
 		super(conf);
@@ -79,7 +81,7 @@ public class SequentialPage extends Page {
 	}
 
 	@Override
-	public void writeBack(Database db) {
+	public void writeBack(Database db, DatabaseHandle dh) {
 		if (lastDirty) {
 			if (conf.recordGroupUsesLong)
 				setGroup(lastGroupNum, RecordGroup.longRecordGroup(conf,
@@ -89,13 +91,14 @@ public class SequentialPage extends Page {
 						lastGroup, 0));
 			lastDirty = false;
 		}
-		super.writeBack(db);
+		super.writeBack(db, dh);
 	}
 
 	@Override
-	public void loadPage(Database db, long firstGroup, int numGroups) {
+	public void loadPage(Database db, DatabaseHandle dh, long firstGroup,
+			int numGroups) {
 		lastGroupNum = -1;
 		lastDirty = false;
-		super.loadPage(db, firstGroup, numGroups);
+		super.loadPage(db, dh, firstGroup, numGroups);
 	}
 }

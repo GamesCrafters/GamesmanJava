@@ -7,7 +7,6 @@ import java.util.Properties;
 import java.util.Random;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
 
@@ -20,7 +19,7 @@ public class RandomDatabase extends Database {
 	Random rand;
 
 	@Override
-	public void getRecord(long loc, Record r) {
+	public void getRecord(DatabaseHandle dh, long loc, Record r) {
 		r.remoteness = rand.nextInt(conf.remotenessStates);
 		r.value = PrimitiveValue.values[rand.nextInt(conf.valueStates)];
 	}
@@ -30,26 +29,7 @@ public class RandomDatabase extends Database {
 	}
 
 	@Override
-	public void flush() {
-	}
-
-	@Override
 	public void initialize(String uri, boolean solve) {
-	}
-
-	@Override
-	public void getBytes(byte[] arr, int off, int len) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void putBytes(byte[] arr, int off, int len) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void seek(long loc) {
-		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -72,5 +52,17 @@ public class RandomDatabase extends Database {
 		}
 		fos.write(confBytes);
 		fos.close();
+	}
+
+	@Override
+	public void getBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
+			int len) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void putBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
+			int len) {
+		throw new UnsupportedOperationException();
 	}
 }

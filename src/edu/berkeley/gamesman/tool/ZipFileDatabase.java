@@ -3,7 +3,7 @@ package edu.berkeley.gamesman.tool;
 import java.io.*;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Database;
+import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.GZippedFileDatabase;
 
 /**

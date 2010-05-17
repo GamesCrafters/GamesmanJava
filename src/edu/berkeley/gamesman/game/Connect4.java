@@ -17,7 +17,7 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author DNSpies
  */
-public final class Connect4 extends TieredIterGame {
+public final class Connect4 extends TieredGame {
 	private int[][] indices;
 
 	private int[] colHeights;

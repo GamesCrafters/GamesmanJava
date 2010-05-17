@@ -11,7 +11,7 @@ import java.io.IOException;
 import javax.swing.*;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Database;
+import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.GZippedFileDatabase;
 import edu.berkeley.gamesman.util.Util;
 

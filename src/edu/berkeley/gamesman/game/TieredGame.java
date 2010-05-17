@@ -1,28 +1,21 @@
 package edu.berkeley.gamesman.game;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Game;
-import edu.berkeley.gamesman.core.State;
-import edu.berkeley.gamesman.hasher.TieredHasher;
+import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.game.util.ItergameState;
+import edu.berkeley.gamesman.hasher.TieredItergameHasher;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
 /**
- * Superclass of Tiered games. Each game state falls into a logical tier. As an
- * example, you can represent TicTacToe as a tiered game with the tier being the
- * number of pieces placed.
- * 
- * The important invariant is that any board's value must depend only on (a)
- * primitives or (b) boards in a later tier. This allows us to solve from the
- * last tier up to the top at tier 0 (the starting state) in a very efficient
- * manner
- * 
- * @author Steven Schlansker
- * @param <S>
- *            The type that you use to represent your States
+ * @author DNSpies
  */
-public abstract class TieredGame<S extends State> extends Game<S> {
-	protected TieredHasher<S> myHasher;
+public abstract class TieredGame extends Game<ItergameState> {
+	protected TieredItergameHasher myHasher;
 
 	@Override
 	public void initialize(Configuration conf) {
@@ -31,7 +24,7 @@ public abstract class TieredGame<S extends State> extends Game<S> {
 	}
 
 	@Override
-	public void hashToState(long hash, S state) {
+	public void hashToState(long hash, ItergameState state) {
 		int tier = hashToTier(hash);
 		myHasher.gameStateForTierAndOffset(tier,
 				hash - hashOffsetForTier(tier), state);
@@ -59,19 +52,6 @@ public abstract class TieredGame<S extends State> extends Game<S> {
 		return low;
 	}
 
-	@Override
-	public long stateToHash(S pos) {
-		Pair<Integer, Long> p = myHasher.tierIndexForState(pos);
-		return myHasher.hashOffsetForTier(p.car) + p.cdr;
-	}
-
-	/**
-	 * @return the number of Tiers in this particular game
-	 */
-	public int numberOfTiers() {
-		return myHasher.numberOfTiers();
-	}
-
 	/**
 	 * @param tier
 	 *            the Tier we're interested in
@@ -84,5 +64,188 @@ public abstract class TieredGame<S extends State> extends Game<S> {
 	@Override
 	public long numHashes() {
 		return myHasher.numHashes();
+	}
+
+	@Override
+	public synchronized PrimitiveValue primitiveValue(ItergameState pos) {
+		setState(pos);
+		return primitiveValue();
+	}
+
+	/**
+	 * Assumes the given state.
+	 * 
+	 * @param pos
+	 *            The position to assume
+	 */
+	public abstract void setState(ItergameState pos);
+
+	/**
+	 * @return The "primitive value" of the current position.
+	 */
+	public abstract PrimitiveValue primitiveValue();
+
+	@Override
+	public synchronized Collection<Pair<String, ItergameState>> validMoves(
+			ItergameState pos) {
+		setState(pos);
+		return validMoves();
+	}
+
+	@Override
+	public synchronized int validMoves(ItergameState pos,
+			ItergameState[] children) {
+		setState(pos);
+		return validMoves(children);
+	}
+
+	/**
+	 * @return The states of all the possible moves from this position.
+	 */
+	public abstract Collection<Pair<String, ItergameState>> validMoves();
+
+	/**
+	 * @return Whether there is another position.
+	 */
+	public boolean hasNext() {
+		return hasNextHashInTier() || getTier() < numberOfTiers();
+	}
+
+	/**
+	 * @return The tier of this position
+	 */
+	public abstract int getTier();
+
+	/**
+	 * Cycle to the next position.
+	 */
+	public void next() {
+		if (hasNextHashInTier())
+			nextHashInTier();
+		else
+			setTier(getTier() + 1);
+	}
+
+	@Override
+	public synchronized String stateToString(ItergameState pos) {
+		setState(pos);
+		return stateToString();
+	}
+
+	/**
+	 * @return A string representation of this position.
+	 */
+	public abstract String stateToString();
+
+	@Override
+	public synchronized ItergameState stringToState(String pos) {
+		setFromString(pos);
+		return getState();
+	}
+
+	/**
+	 * @param pos
+	 *            A string representing this position
+	 */
+	public abstract void setFromString(String pos);
+
+	/**
+	 * Returns a state object for this position
+	 * 
+	 * @return The state of this position
+	 */
+	public abstract ItergameState getState();
+
+	@Override
+	public synchronized String displayState(ItergameState pos) {
+		setState(pos);
+		return displayState();
+	}
+
+	/**
+	 * @param tier
+	 *            The tier in question
+	 * @return The number of hashes in the tier
+	 */
+	public synchronized long numHashesForTier(int tier) {
+		setTier(tier);
+		return numHashesForTier();
+	}
+
+	/**
+	 * Sets this game to the given tier.
+	 * 
+	 * @param tier
+	 *            The tier to set to.
+	 */
+	public abstract void setTier(int tier);
+
+	/**
+	 * Pretty-print's the current position
+	 * 
+	 * @return a string of the position
+	 */
+	public abstract String displayState();
+
+	/**
+	 * @return The number of hashes in this tier.
+	 */
+	public abstract long numHashesForTier();
+
+	@Override
+	public synchronized Collection<ItergameState> startingPositions() {
+		ArrayList<ItergameState> positions = new ArrayList<ItergameState>();
+		for (int i = 0; i < numStartingPositions(); i++) {
+			setStartingPosition(i);
+			positions.add(getState());
+		}
+		return positions;
+	}
+
+	/**
+	 * Sets this board to a starting position.
+	 * 
+	 * @param n
+	 *            The number position to set to
+	 */
+	public abstract void setStartingPosition(int n);
+
+	/**
+	 * @return The number of possible starting positions.
+	 */
+	public abstract int numStartingPositions();
+
+	/**
+	 * @return Is there another hash for this tier?
+	 */
+	public abstract boolean hasNextHashInTier();
+
+	/**
+	 * Cycles to the next hash in this tier
+	 */
+	public abstract void nextHashInTier();
+
+	@Override
+	public long stateToHash(ItergameState pos) {
+		return myHasher.hashOffsetForTier(pos.tier) + pos.hash;
+	}
+
+	public abstract int numberOfTiers();
+
+	@Override
+	public abstract int maxChildren();
+
+	/**
+	 * Stores all the valid moves for this position in moves
+	 * 
+	 * @param moves
+	 *            An array to store to
+	 * @return The number of moves stored
+	 */
+	public abstract int validMoves(ItergameState[] moves);
+
+	@Override
+	public ItergameState newState() {
+		return new ItergameState();
 	}
 }

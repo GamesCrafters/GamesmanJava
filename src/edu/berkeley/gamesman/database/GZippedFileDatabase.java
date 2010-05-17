@@ -5,7 +5,6 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -47,12 +46,8 @@ public class GZippedFileDatabase extends Database {
 	}
 
 	@Override
-	public void flush() {
-		Util.fatalError("GZippedFileDatabase is Read Only");
-	}
-
-	@Override
-	public synchronized void getBytes(long loc, byte[] arr, int off, int len) {
+	public synchronized void getBytes(DatabaseHandle dh, long loc, byte[] arr,
+			int off, int len) {
 		while (len > 0) {
 			long filePos = 0;
 			int entryNum = (int) (loc / entrySize);
@@ -127,7 +122,9 @@ public class GZippedFileDatabase extends Database {
 			long numBytes = 0;
 			if (isRemote) {
 				byte[] numBytesBytes = new byte[8];
-				rdf.getBytes(0, numBytesBytes, 0, 8);
+				if (myHandle == null)
+					myHandle = getHandle();
+				rdf.getBytes(myHandle, 0, numBytesBytes, 0, 8);
 				for (int i = 0; i < 8; i++) {
 					numBytes <<= 8;
 					numBytes |= (numBytesBytes[i] & 255);
@@ -146,7 +143,7 @@ public class GZippedFileDatabase extends Database {
 			entryPoints = new long[numEntries];
 			byte[] entryBytes = new byte[numEntries << 3];
 			if (isRemote)
-				rdf.getBytes(8, entryBytes, 0, entryBytes.length);
+				rdf.getBytes(myHandle, 8, entryBytes, 0, entryBytes.length);
 			else {
 				int bytesRead = 0;
 				while (bytesRead < entryBytes.length) {
@@ -169,21 +166,6 @@ public class GZippedFileDatabase extends Database {
 		} catch (ClassNotFoundException e) {
 			Util.fatalError("Class Not Found", e);
 		}
-	}
-
-	@Override
-	public void putBytes(byte[] arr, int off, int len) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void getBytes(byte[] arr, int off, int len) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void seek(long loc) {
-		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -288,5 +270,11 @@ public class GZippedFileDatabase extends Database {
 		} catch (IOException e) {
 			Util.fatalError("IO Error", e);
 		}
+	}
+
+	@Override
+	public void putBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
+			int len) {
+		throw new UnsupportedOperationException();
 	}
 }

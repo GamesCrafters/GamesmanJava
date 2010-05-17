@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.solver;
 import java.util.List;
 
 import edu.berkeley.gamesman.core.*;
+import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.TopDownGame;
 import edu.berkeley.gamesman.game.TopDownMutaGame;
 import edu.berkeley.gamesman.util.*;
@@ -70,24 +71,26 @@ public class TopDownSolver<S extends State> extends Solver {
 		TopDownMutaGame<S> game;
 		if (g instanceof TopDownMutaGame<?>) {
 			game = Util.checkedCast(g);
-		}else{
-			game = new TopDownGame<S>(Util.<Game<S>,Game<?>>checkedCast(g));
+		} else {
+			game = new TopDownGame<S>(Util.<Game<S>, Game<?>> checkedCast(g));
 		}
 		for (S s : game.startingPositions()) {
 			game.setToState(s);
 			long currentTimeMillis = System.currentTimeMillis();
-			solve(game, game.newRecord(), 0);
+			solve(game, game.newRecord(), 0, readDb.getHandle(), writeDb
+					.getHandle());
 			System.out.println(Util.millisToETA(System.currentTimeMillis()
 					- currentTimeMillis)
 					+ " time to complete");
 		}
 	}
 
-	private void solve(TopDownMutaGame<S> game, Record value, int depth) {
+	private void solve(TopDownMutaGame<S> game, Record value, int depth,
+			DatabaseHandle readDh, DatabaseHandle writeDh) {
 		if (depth < 3)
 			assert Util.debug(DebugFacility.SOLVER, game.toString());
 		long hash = game.getHash();
-		readDb.getRecord(hash, value);
+		readDb.getRecord(readDh, hash, value);
 		if (value.value != PrimitiveValue.UNDECIDED)
 			return;
 		PrimitiveValue pv = game.primitiveValue();
@@ -97,7 +100,7 @@ public class TopDownSolver<S extends State> extends Solver {
 			boolean made = game.makeMove();
 			int i = 0;
 			while (made) {
-				solve(game, value, depth + 1);
+				solve(game, value, depth + 1, readDh, writeDh);
 				recs[i].set(value);
 				recs[i].previousPosition();
 				++i;
@@ -117,6 +120,6 @@ public class TopDownSolver<S extends State> extends Solver {
 			if (containsRemoteness)
 				value.remoteness = 0;
 		}
-		writeDb.putRecord(hash, value);
+		writeDb.putRecord(writeDh, hash, value);
 	}
 }

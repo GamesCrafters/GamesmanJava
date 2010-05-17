@@ -5,25 +5,25 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
 import edu.berkeley.gamesman.core.*;
+import edu.berkeley.gamesman.database.Database;
+import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.TieredGame;
-import edu.berkeley.gamesman.hasher.TieredHasher;
-import edu.berkeley.gamesman.util.*;
+import edu.berkeley.gamesman.game.util.ItergameState;
+import edu.berkeley.gamesman.hasher.TieredItergameHasher;
+import edu.berkeley.gamesman.util.DebugFacility;
+import edu.berkeley.gamesman.util.Pair;
+import edu.berkeley.gamesman.util.Task;
+import edu.berkeley.gamesman.util.Util;
 
 /**
- * TierSolver documentation stub
- * 
- * @author Steven Schlansker
- * @param <T>
- *            The state type for the game
+ * @author DNSpies
  */
-public class TierSolver<T extends State> extends Solver {
+public class TierSolver extends Solver {
 
 	protected static final double SAFETY_MARGIN = 2.0;
 
@@ -53,13 +53,57 @@ public class TierSolver<T extends State> extends Solver {
 
 	protected long timesUsed = 0;
 
+	protected void solvePartialTier(Configuration conf, long start,
+			long hashes, TierSolverUpdater t, Database readDb,
+			DatabaseHandle readDh, Database writeDb, DatabaseHandle writeDh) {
+		TieredGame game = (TieredGame) conf.getGame();
+		long current = start;
+		game.setState(game.hashToState(start));
+		Record[] vals = new Record[game.maxChildren()];
+		for (int i = 0; i < vals.length; i++)
+			vals[i] = game.newRecord();
+		Record prim = game.newRecord();
+		ItergameState[] children = new ItergameState[game.maxChildren()];
+		for (int i = 0; i < children.length; i++)
+			children[i] = new ItergameState();
+		for (long count = 0L; count < hashes; count++) {
+			if (current % STEP_SIZE == 0)
+				t.calculated(STEP_SIZE);
+			PrimitiveValue pv = game.primitiveValue();
+			switch (pv) {
+			case UNDECIDED:
+				int len = game.validMoves(children);
+				Record r;
+				for (int i = 0; i < len; i++) {
+					r = vals[i];
+					readDb.getRecord(readDh, game.stateToHash(children[i]), r);
+					r.previousPosition();
+				}
+				Record newVal = game.combine(vals, 0, len);
+				writeDb.putRecord(writeDh, current, newVal);
+				break;
+			case IMPOSSIBLE:
+				prim.value = PrimitiveValue.LOSE;
+				writeDb.putRecord(writeDh, current, prim);
+				break;
+			default:
+				if (conf.remotenessStates > 0)
+					prim.remoteness = 0;
+				prim.value = pv;
+				writeDb.putRecord(writeDh, current, prim);
+			}
+			if (count < hashes - 1)
+				game.nextHashInTier();
+			++current;
+		}
+	}
+
 	@Override
 	public WorkUnit prepareSolve(Configuration inconf) {
 		String msf = inconf.getProperty("gamesman.minSolvedFile", null);
 		strictSafety = inconf.getBoolean("gamesman.solver.strictMemory", false);
 		if (msf == null)
-			tier = Util.<TieredGame<T>, Game<?>> checkedCast(inconf.getGame())
-					.numberOfTiers();
+			tier = ((TieredGame) inconf.getGame()).numberOfTiers();
 		else {
 			minSolvedFile = new File(msf);
 			if (minSolvedFile.exists()) {
@@ -71,8 +115,7 @@ public class TierSolver<T extends State> extends Solver {
 					Util.fatalError("This should never happen", e);
 				}
 			} else {
-				tier = Util.<TieredGame<T>, Game<?>> checkedCast(
-						inconf.getGame()).numberOfTiers();
+				tier = ((TieredGame) inconf.getGame()).numberOfTiers();
 				try {
 					minSolvedFile.createNewFile();
 					FileWriter fw = new FileWriter(minSolvedFile);
@@ -90,44 +133,6 @@ public class TierSolver<T extends State> extends Solver {
 		return new TierSolverWorkUnit(inconf);
 	}
 
-	protected void solvePartialTier(Configuration conf, long start,
-			long hashes, TierSolverUpdater t, Database inRead, Database inWrite) {
-		long current = start;
-		TieredGame<T> game = Util.checkedCast(conf.getGame());
-		for (long i = 0L; i < hashes; i++) {
-			if (current % STEP_SIZE == 0)
-				t.calculated(STEP_SIZE);
-
-			T state = game.hashToState(current);
-
-			PrimitiveValue pv = game.primitiveValue(state);
-
-			if (pv.equals(PrimitiveValue.UNDECIDED)) {
-				assert Util.debug(DebugFacility.SOLVER,
-						"Primitive value for state " + current
-								+ " is undecided");
-				Collection<Pair<String, T>> children = game.validMoves(state);
-				ArrayList<Record> vals = new ArrayList<Record>(children.size());
-				for (Pair<String, T> child : children) {
-					vals.add(inRead.getRecord(game.stateToHash(child.cdr)));
-				}
-				Record[] theVals = new Record[vals.size()];
-				Record newVal = game.combine(vals.toArray(theVals), 0,
-						theVals.length);
-				inWrite.putRecord(current, newVal);
-			} else {
-				Record prim = game.newRecord();
-				prim.value = pv;
-				assert Util.debug(DebugFacility.SOLVER,
-						"Primitive value for state " + current + " is " + prim);
-				inWrite.putRecord(current, prim);
-			}
-			++current;
-		}
-		assert Util.debug(DebugFacility.THREADING,
-				"Reached end of partial tier at " + (start + hashes));
-	}
-
 	protected int nextIndex = 0;
 
 	protected TierSolverUpdater updater;
@@ -136,9 +141,6 @@ public class TierSolver<T extends State> extends Solver {
 
 	private final Runnable flusher = new Runnable() {
 		public void run() {
-			if (writeDb != null) {
-				writeDb.flush();
-			}
 			if (minSolvedFile != null) {
 				try {
 					FileWriter fw;
@@ -162,12 +164,14 @@ public class TierSolver<T extends State> extends Solver {
 			} else {
 				if (barr != null)
 					needs2Reset = true;
-				TieredGame<T> game = Util.checkedCast(conf.getGame());
+				TieredGame game = (TieredGame) conf.getGame();
 				long fullStart = game.hashOffsetForTier(tier);
-				TieredHasher<T> h = Util.checkedCast(conf.getHasher());
+				TieredItergameHasher h = (TieredItergameHasher) conf
+						.getHasher();
 				long fullSize = h.numHashesForTier(tier);
 				long neededMem = memNeededForTier(conf);
-				TieredHasher<T> hasher = Util.checkedCast(conf.getHasher());
+				TieredItergameHasher hasher = (TieredItergameHasher) conf
+						.getHasher();
 				prevToCurFraction = (tier >= game.numberOfTiers() - 1) ? 0
 						: ((double) hasher.numHashesForTier(tier + 1) / hasher
 								.numHashesForTier(tier));
@@ -261,12 +265,13 @@ public class TierSolver<T extends State> extends Solver {
 				thisSlice = slice;
 				if (parallelSolving) {
 					try {
-						Database myWrite = writeDb.beginWrite(tier, slice.car,
-								slice.car + slice.cdr);
+						DatabaseHandle myWrite = writeDb.getHandle(slice.car,
+								slice.cdr);
+						DatabaseHandle readHandle = readDb.getHandle();
 						solvePartialTier(conf, slice.car, slice.cdr, updater,
-								readDb, myWrite);
-						writeDb.endWrite(tier, myWrite, slice.car, slice.car
-								+ slice.cdr);
+								readDb, readHandle, writeDb, myWrite);
+						readDb.closeHandle(readHandle);
+						writeDb.closeHandle(myWrite);
 					} catch (Util.FatalError e) {
 						e.printStackTrace(System.out);
 						throw e;
@@ -276,7 +281,8 @@ public class TierSolver<T extends State> extends Solver {
 					}
 				} else
 					solvePartialTier(conf, slice.car, slice.cdr, updater,
-							readDb, writeDb);
+							readDb, readDb.getHandle(), writeDb, writeDb
+									.getHandle());
 			}
 			if (barr != null)
 				try {
@@ -288,7 +294,7 @@ public class TierSolver<T extends State> extends Solver {
 				}
 		}
 
-		public List<WorkUnit> divide(int num) {
+		public ArrayList<WorkUnit> divide(int num) {
 			ArrayList<WorkUnit> arr = new ArrayList<WorkUnit>(num);
 			arr.add(this);
 			for (int i = 1; i < num; i++)
@@ -323,7 +329,7 @@ public class TierSolver<T extends State> extends Solver {
 		}
 
 		TierSolverUpdater(long totalProgress) {
-			TieredGame<T> myGame = Util.checkedCast(conf.getGame());
+			TieredGame myGame = (TieredGame) conf.getGame();
 			t = Task.beginTask("Tier solving \"" + myGame.describe() + "\"");
 			t.setTotal(totalProgress);
 		}
@@ -367,10 +373,10 @@ public class TierSolver<T extends State> extends Solver {
 		this.tier = tier;
 		updater = new TierSolverUpdater(endHash - startHash);
 		parallelSolving = true;
-		TieredGame<T> game = Util.checkedCast(conf.getGame());
+		TieredGame game = (TieredGame) conf.getGame();
 		long fullSize = endHash - startHash;
 		long neededMem = memNeededForRange(conf, fullSize);
-		TieredHasher<T> hasher = Util.checkedCast(conf.getHasher());
+		TieredItergameHasher hasher = (TieredItergameHasher) conf.getHasher();
 		prevToCurFraction = (tier >= game.numberOfTiers() - 1) ? 0
 				: ((double) hasher.numHashesForTier(tier + 1) / hasher
 						.numHashesForTier(tier));
@@ -382,8 +388,8 @@ public class TierSolver<T extends State> extends Solver {
 	}
 
 	private long memNeededForRange(Configuration conf, long fullSize) {
-		TieredHasher<T> hasher = Util.checkedCast(conf.getHasher());
-		TieredGame<T> game = Util.checkedCast(conf.getGame());
+		TieredItergameHasher hasher = (TieredItergameHasher) conf.getHasher();
+		TieredGame game = (TieredGame) conf.getGame();
 		long tierHashes = hasher.numHashesForTier(tier);
 		return (long) ((tierHashes + game.maxChildren()
 				* (tier == game.numberOfTiers() - 1 ? 0 : hasher
@@ -392,8 +398,8 @@ public class TierSolver<T extends State> extends Solver {
 	}
 
 	private long memNeededForTier(Configuration conf) {
-		TieredHasher<T> hasher = Util.checkedCast(conf.getHasher());
-		TieredGame<T> game = Util.checkedCast(conf.getGame());
+		TieredItergameHasher hasher = (TieredItergameHasher) conf.getHasher();
+		TieredGame game = (TieredGame) conf.getGame();
 		return (long) ((hasher.numHashesForTier(tier) + game.maxChildren()
 				* (tier == game.numberOfTiers() - 1 ? 0 : hasher
 						.numHashesForTier(tier + 1)) * SAFETY_MARGIN)

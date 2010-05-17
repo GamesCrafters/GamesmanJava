@@ -3,9 +3,10 @@ package edu.berkeley.gamesman.database.util;
 import java.math.BigInteger;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.RecordGroup;
+import edu.berkeley.gamesman.database.Database;
+import edu.berkeley.gamesman.database.DatabaseHandle;
 
 /**
  * A page for caching RecordGroups
@@ -145,9 +146,10 @@ public class Page {
 	 * @param numGroups
 	 *            The number of groups to load
 	 */
-	public void loadPage(Database db, long firstGroup, int numGroups) {
+	public void loadPage(Database db, DatabaseHandle dh, long firstGroup,
+			int numGroups) {
 		loadPage(firstGroup, numGroups);
-		db.getBytes(firstGroup * conf.recordGroupByteLength, groups, 0,
+		db.getBytes(dh, firstGroup * conf.recordGroupByteLength, groups, 0,
 				numGroups * conf.recordGroupByteLength);
 		dirty = false;
 	}
@@ -158,11 +160,10 @@ public class Page {
 	 * @param db
 	 *            The database
 	 */
-	public void writeBack(Database db) {
+	public void writeBack(Database db, DatabaseHandle dh) {
 		int arrSize = numGroups * conf.recordGroupByteLength;
-		db
-				.putBytes(firstGroup * conf.recordGroupByteLength, groups, 0,
-						arrSize);
+		db.putBytes(dh, firstGroup * conf.recordGroupByteLength, groups, 0,
+				arrSize);
 		dirty = false;
 	}
 
@@ -202,14 +203,14 @@ public class Page {
 	 * @param hashGroup
 	 *            The group to extend up to (inclusive)
 	 */
-	public void extendUp(Database db, long hashGroup) {
+	public void extendUp(Database db, DatabaseHandle dh, long hashGroup) {
 		long first = firstGroup + numGroups;
 		int numAdd = (int) (hashGroup - first + 1);
 		int neededGroups = numGroups + numAdd;
 		int oldSize = numGroups * conf.recordGroupByteLength;
 		int remainSize = numAdd * conf.recordGroupByteLength;
 		ensureCapacity(neededGroups);
-		db.getBytes(first * conf.recordGroupByteLength, groups, oldSize,
+		db.getBytes(dh, first * conf.recordGroupByteLength, groups, oldSize,
 				remainSize);
 		numGroups = neededGroups;
 	}
@@ -222,8 +223,8 @@ public class Page {
 	 * @param hashGroup
 	 *            The group to extend down to (inclusive)
 	 */
-	public void extendDown(Database db, long hashGroup) {
-		extendDown(db, hashGroup, -1);
+	public void extendDown(Database db, DatabaseHandle dh, long hashGroup) {
+		extendDown(db, dh, hashGroup, -1);
 	}
 
 	/**
@@ -236,7 +237,7 @@ public class Page {
 	 * @param neededGroups
 	 *            The new minimum number of groups on the page
 	 */
-	public void extendDown(Database db, long hashGroup, int neededGroups) {
+	public void extendDown(Database db, DatabaseHandle dh, long hashGroup, int neededGroups) {
 		int numAdd = (int) (firstGroup - hashGroup);
 		int totGroups = numGroups + numAdd;
 		int oldSize = numGroups * conf.recordGroupByteLength;
@@ -257,7 +258,7 @@ public class Page {
 				groups[i + remainSize] = groups[i];
 			}
 		}
-		db.getBytes(hashGroup * conf.recordGroupByteLength, groups, 0,
+		db.getBytes(dh, hashGroup * conf.recordGroupByteLength, groups, 0,
 				remainSize);
 		numGroups = totGroups;
 		firstGroup = hashGroup;
@@ -271,10 +272,10 @@ public class Page {
 	 * @param p
 	 *            The other page
 	 */
-	public void extendUp(Database db, Page p) {
+	public void extendUp(Database db, DatabaseHandle dh, Page p) {
 		int neededGroups = p.numGroups + (int) (p.firstGroup - firstGroup);
 		ensureCapacity(neededGroups);
-		extendUp(db, p.firstGroup - 1L);
+		extendUp(db, dh, p.firstGroup - 1L);
 		int numAdd = p.numGroups;
 		int totGroups = numGroups + numAdd;
 		int oldSize = numGroups * conf.recordGroupByteLength;

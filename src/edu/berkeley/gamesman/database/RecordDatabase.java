@@ -1,6 +1,5 @@
 package edu.berkeley.gamesman.database;
 
-import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Record;
 
 /**
@@ -25,12 +24,12 @@ public class RecordDatabase extends Database {
 	private Record[] recordArray;
 
 	@Override
-	public void getRecord(long loc, Record r) {
+	public void getRecord(DatabaseHandle dh, long loc, Record r) {
 		r.set(recordArray[(int) loc]);
 	}
 
 	@Override
-	public void putRecord(long loc, Record r) {
+	public void putRecord(DatabaseHandle dh, long loc, Record r) {
 		recordArray[(int) loc] = r.clone();
 	}
 
@@ -39,26 +38,19 @@ public class RecordDatabase extends Database {
 	}
 
 	@Override
-	public void flush() {
-	}
-
-	@Override
 	public void initialize(String uri, boolean solve) {
 		recordArray = new Record[(int) (conf.getGame().numHashes())];
 	}
 
 	@Override
-	public void getBytes(byte[] arr, int off, int len) {
+	public void getBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
+			int len) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public void putBytes(byte[] arr, int off, int len) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void seek(long loc) {
+	public void putBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
+			int len) {
 		throw new UnsupportedOperationException();
 	}
 }

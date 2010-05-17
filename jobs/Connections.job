@@ -1,7 +1,7 @@
 gamesman.game = Connections
 gamesman.game.side = 3
 gamesman.hasher = TieredItergameHasher
-gamesman.solver = TierItergameSolver
+gamesman.solver = TierSolver
 gamesman.database = MemoryCachedDatabase
 gamesman.db.uri = connections.db
 gamesman.db.compression = gzip

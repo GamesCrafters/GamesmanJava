@@ -19,7 +19,7 @@ public class DistributedSizeMaster {
 		DistributedDatabase dd = new DistributedDatabase();
 		dd.initialize(args[0], false);
 		Configuration conf = dd.getConfiguration();
-		int tiers = ((TieredGame<?>) conf.getGame()).numberOfTiers();
+		int tiers = ((TieredGame) conf.getGame()).numberOfTiers();
 		LinkedList<Thread> watchers = new LinkedList<Thread>();
 		ArrayList<HashMap<String, Long>> values = new ArrayList<HashMap<String, Long>>();
 		for (int tier = 0; tier < tiers; tier++) {

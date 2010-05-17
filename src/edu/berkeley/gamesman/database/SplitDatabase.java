@@ -6,12 +6,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Database;
 
 public class SplitDatabase extends Database {
 	Database[] databases;
-	private long location;
-	private int databaseNum;
 
 	@Override
 	public void close() {
@@ -21,25 +18,13 @@ public class SplitDatabase extends Database {
 	}
 
 	@Override
-	public void flush() {
-		throw new UnsupportedOperationException();
+	public void getBytes(DatabaseHandle dh, long location, byte[] arr, int off,
+			int len) {
+		fetchBytes(dh, getDatabase(location), location, arr, off, len);
 	}
 
-	@Override
-	public void getBytes(long location, byte[] arr, int off, int len) {
-		fetchBytes(getDatabase(location), location, arr, off, len);
-	}
-
-	@Override
-	public void getBytes(byte[] arr, int off, int len) {
-		location = fetchBytes(databaseNum, location, arr, off, len);
-		while (databaseNum < databases.length - 1
-				&& location >= databases[databaseNum + 1].firstByte())
-			databaseNum++;
-	}
-
-	private long fetchBytes(int firstDatabase, long location, byte[] arr,
-			int off, int len) {
+	private long fetchBytes(DatabaseHandle dh, int firstDatabase,
+			long location, byte[] arr, int off, int len) {
 		long nextStart;
 		int database = firstDatabase;
 		while (len > 0) {
@@ -48,8 +33,8 @@ public class SplitDatabase extends Database {
 						.firstByte());
 			else
 				nextStart = location + len;
-			databases[database].getBytes(location, arr, off,
-					(int) (nextStart - location));
+			databases[database].getBytes(((SplitHandle) dh).handles[database],
+					location, arr, off, (int) (nextStart - location));
 			off += nextStart - location;
 			len -= nextStart - location;
 			location = nextStart;
@@ -95,7 +80,7 @@ public class SplitDatabase extends Database {
 			}
 		}
 		databases = new Database[dbs.length];
-		location = firstByte();
+		long location = firstByte();
 		for (int d = 0; d < databases.length; d++) {
 			String[] dString = dbs[d].split("-");
 			try {
@@ -120,18 +105,22 @@ public class SplitDatabase extends Database {
 			}
 		}
 		location = firstByte();
-		databaseNum = 0;
+	}
+
+	private class SplitHandle extends DatabaseHandle {
+		private final DatabaseHandle[] handles;
+
+		private SplitHandle() {
+			handles = new DatabaseHandle[databases.length];
+			for (int i = 0; i < databases.length; i++) {
+				handles[i] = databases[i].getHandle();
+			}
+		}
 	}
 
 	@Override
-	public void putBytes(byte[] arr, int off, int len) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void seek(long loc) {
-		location = loc;
-		databaseNum = getDatabase(loc);
+	public DatabaseHandle getHandle() {
+		return new DatabaseHandle();
 	}
 
 	public static void main(String[] args) throws ClassNotFoundException,
@@ -145,5 +134,11 @@ public class SplitDatabase extends Database {
 			fos.write(confBytes.length >> i);
 		fos.write(confBytes);
 		fos.close();
+	}
+
+	@Override
+	public void putBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
+			int len) {
+		throw new UnsupportedOperationException();
 	}
 }

@@ -18,4 +18,4 @@ gamesman.db.compression = gzip
 record.compression = 90
 gamesman.compSplits = 1
 gamesman.path = GamesmanJava
-gamesman.db.lastZippedTier = 21
+gamesman.confFile = jobs/Connect4_76_Parallel.job

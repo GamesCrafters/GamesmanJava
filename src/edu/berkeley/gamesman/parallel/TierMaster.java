@@ -9,10 +9,9 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.database.DistributedDatabase;
 import edu.berkeley.gamesman.game.TieredGame;
-import edu.berkeley.gamesman.hasher.TieredHasher;
+import edu.berkeley.gamesman.hasher.TieredItergameHasher;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -330,8 +329,7 @@ public class TierMaster {
 				"gzip");
 		d64 = conf.getBoolean("gamesman.64Bit", false);
 		slaveDbFolder = conf.getProperty("gamesman.slaveDbFolder");
-		TieredGame<? extends State> game = (TieredGame<? extends State>) conf
-				.getGame();
+		TieredGame game = (TieredGame) conf.getGame();
 		int numTiers = game.numberOfTiers();
 		if (dbFile.exists()) {
 			FileInputStream fis = new FileInputStream(dbFile);
@@ -375,13 +373,12 @@ public class TierMaster {
 	 * a tiered game across multiple machines.
 	 */
 	public void solve() {
-		TieredGame<? extends State> game = (TieredGame<? extends State>) conf
-				.getGame();
+		TieredGame game = (TieredGame) conf.getGame();
 		tierFileList = new ArrayList<Pair<Long, String>>();
 		long startTime = System.currentTimeMillis();
 		for (tier = startTier; tier >= 0; tier--) {
 			long tierOffset = game.hashOffsetForTier(tier);
-			long tierLength = ((TieredHasher<? extends State>) conf.getHasher())
+			long tierLength = ((TieredItergameHasher) conf.getHasher())
 					.numHashesForTier(tier);
 			splits = Util.groupAlignedTasks(
 					(int) (watchers.length * compMultiple), tierOffset,

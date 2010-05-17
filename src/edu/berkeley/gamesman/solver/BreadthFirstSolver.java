@@ -7,6 +7,7 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
 import edu.berkeley.gamesman.core.*;
+import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.util.*;
 
 /**
@@ -36,18 +37,18 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 		hashSpace = game.numHashes();
 		Record defaultRecord = game.newRecord(PrimitiveValue.UNDECIDED);
 		writeDb.fill(defaultRecord, 0, hashSpace);
+		DatabaseHandle dh = writeDb.getHandle();
 		long numPositionsZero = 0;
 		for (T s : game.startingPositions()) {
 			long hash = game.stateToHash(s);
 			PrimitiveValue win = game.primitiveValue(s);
 			Record rec = game.newRecord(win);
-			writeDb.putRecord(hash, rec);
+			writeDb.putRecord(dh, hash, rec);
 			numPositionsZero++;
 		}
 		assert Util.debug(DebugFacility.SOLVER,
 				"Number of states at remoteness 0: " + numPositionsZero);
 		lastTier = 0;
-		writeDb.flush();
 
 		return new BreadthFirstWorkUnit(game, maxRemoteness);
 	}
@@ -91,11 +92,13 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 			Record childrec;
 			T currentPos = game.newState();
 			T[] childPositions = game.newStateArray(game.maxChildren());
+			DatabaseHandle readDh = readDb.getHandle();
+			DatabaseHandle writeDh = writeDb.getHandle();
 			while (lastTier >= remoteness && remoteness <= maxRemoteness) {
 				HashSet<Long> setValues = new HashSet<Long>();
 				numPositionsInLevel = 0;
 				for (long hash = firstHash; hash < lastHashPlusOne; hash++) {
-					readDb.getRecord(hash, rec);
+					readDb.getRecord(readDh, hash, rec);
 					if (rec.value != PrimitiveValue.UNDECIDED
 							&& rec.remoteness == remoteness) {
 						// System.out.println("Found! "+hash+"="+rec);
@@ -113,7 +116,7 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 								childrec.value = rec.value;
 								childrec.remoteness = remoteness + 1;
 								// System.out.println("Setting child "+childhash+"="+childrec);
-								writeDb.putRecord(childhash, childrec);
+								writeDb.putRecord(writeDh, childhash, childrec);
 								numPositionsInLevel++;
 								numPositionsSeen++;
 								setValues.add(childhash);
@@ -132,7 +135,6 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 						"Number of states at remoteness " + remoteness + ": "
 								+ numPositionsInLevel);
 				try {
-					writeDb.flush();
 					if (barr != null)
 						barr.await();
 				} catch (InterruptedException e) {

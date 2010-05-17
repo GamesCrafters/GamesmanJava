@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.game.TieredGame;
 import edu.berkeley.gamesman.parallel.ErrorThread;
@@ -27,7 +26,6 @@ import edu.berkeley.gamesman.util.Util;
 public class DistributedDatabase extends Database {
 	private final Scanner scan;
 	private final PrintStream masterWrite;
-	private long curLoc;
 	private Runtime r = Runtime.getRuntime();
 	private byte[] dumbArray = new byte[512];
 	private String parentPath;
@@ -67,28 +65,19 @@ public class DistributedDatabase extends Database {
 	}
 
 	@Override
-	public void flush() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void getBytes(byte[] arr, int off, int len) {
-		curLoc = fetchBytes(curLoc, arr, off, len);
-	}
-
-	@Override
-	public void getBytes(long location, byte[] arr, int off, int len) {
+	public void getBytes(DatabaseHandle dh, long location, byte[] arr, int off,
+			int len) {
 		fetchBytes(location, arr, off, len);
 	}
 
 	private long fetchBytes(long location, byte[] arr, int off, int len) {
 		int firstTier, lastTier;
 		long nextTierOffset = 0;
-		TieredGame<?> g = null;
+		TieredGame g = null;
 		if (solve) {
 			firstTier = lastTier = tier;
 		} else {
-			g = (TieredGame<?>) conf.getGame();
+			g = (TieredGame) conf.getGame();
 			for (int count = 0; count < conf.recordGroupByteLength; count++) {
 				arr[off + count] = 0;
 			}
@@ -188,10 +177,11 @@ public class DistributedDatabase extends Database {
 						}
 					} else if (zipped) {
 						GZippedFileDatabase myZipBase = new GZippedFileDatabase();
+						DatabaseHandle dh = myZipBase.getHandle();
 						myZipBase.initialize(nodeFile[0] + ":" + parentPath
 								+ "t" + tier + File.separator + "s"
 								+ nodeFile[1] + ".db.gz", conf, false);
-						myZipBase.getBytes(location - fileStart, arr, off,
+						myZipBase.getBytes(dh, location - fileStart, arr, off,
 								(int) (nextStart - location));
 						off += nextStart - location;
 						len -= nextStart - location;
@@ -256,10 +246,10 @@ public class DistributedDatabase extends Database {
 	}
 
 	@Override
-	public void getRecord(long recordIndex, Record r) {
+	public void getRecord(DatabaseHandle dh, long recordIndex, Record r) {
 		if (!solve)
-			setTier(((TieredGame<?>) conf.getGame()).hashToTier(recordIndex));
-		super.getRecord(recordIndex, r);
+			setTier(((TieredGame) conf.getGame()).hashToTier(recordIndex));
+		super.getRecord(dh, recordIndex, r);
 	}
 
 	@Override
@@ -322,16 +312,6 @@ public class DistributedDatabase extends Database {
 		return result;
 	}
 
-	@Override
-	public void putBytes(byte[] arr, int off, int len) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void seek(long loc) {
-		curLoc = loc;
-	}
-
 	/**
 	 * Sets the tier for read-only mode. This avoids group conflicts at tier
 	 * edges. When in read-only mode, make sure call this before calling
@@ -390,5 +370,11 @@ public class DistributedDatabase extends Database {
 	 */
 	public ArrayList<Pair<Long, String>> getFiles(int i) {
 		return files.get(i);
+	}
+
+	@Override
+	public void putBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
+			int len) {
+		throw new UnsupportedOperationException();
 	}
 }

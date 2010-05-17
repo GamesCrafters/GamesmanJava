@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.util.Scanner;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Database;
 import edu.berkeley.gamesman.parallel.ErrorThread;
 import edu.berkeley.gamesman.util.Util;
 
@@ -17,7 +16,6 @@ import edu.berkeley.gamesman.util.Util;
  * @author dnspies
  */
 public class RemoteDatabase extends Database {
-	private long fileLoc;
 	private Runtime r = Runtime.getRuntime();
 	private byte[] dumbArray = new byte[512];
 	private String filePath;
@@ -33,13 +31,10 @@ public class RemoteDatabase extends Database {
 	}
 
 	@Override
-	public void flush() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public synchronized void getBytes(byte[] arr, int off, int len) {
+	public synchronized void getBytes(DatabaseHandle dh, long location,
+			byte[] arr, int off, int len) {
 		try {
+			long fileLoc = location + offset;
 			long fileBlocks = fileLoc >> 9;
 			int skipBytes = (int) (fileLoc & 511L);
 			StringBuilder sb = new StringBuilder("ssh ");
@@ -55,8 +50,7 @@ public class RemoteDatabase extends Database {
 			sb.append("\n");
 			Process p = r.exec(sb.toString());
 			InputStream byteReader = p.getInputStream();
-			new ErrorThread(p.getErrorStream(), host + ":"
-					+ filePath).start();
+			new ErrorThread(p.getErrorStream(), host + ":" + filePath).start();
 			while (skipBytes > 0) {
 				int bytesRead = byteReader.read(dumbArray, 0, skipBytes);
 				if (bytesRead == -1)
@@ -88,8 +82,7 @@ public class RemoteDatabase extends Database {
 					+ " count=1";
 			Process p = r.exec(infoGetter);
 			InputStream is = p.getInputStream();
-			new ErrorThread(p.getErrorStream(), host + ":"
-					+ filePath).start();
+			new ErrorThread(p.getErrorStream(), host + ":" + filePath).start();
 			confLength = 0;
 			for (int i = 0; i < 4; i++) {
 				confLength <<= 8;
@@ -109,8 +102,8 @@ public class RemoteDatabase extends Database {
 					p = r.exec("ssh " + host + " dd if=" + filePath
 							+ " skip=1 count=" + moreBlocks);
 					is = p.getInputStream();
-					new ErrorThread(p.getErrorStream(), host + ":"
-							+ filePath).start();
+					new ErrorThread(p.getErrorStream(), host + ":" + filePath)
+							.start();
 					len = confLength - 508;
 					while (len > 0) {
 						int bytesRead = is.read(confBytes, off, len);
@@ -129,23 +122,13 @@ public class RemoteDatabase extends Database {
 		}
 	}
 
-	@Override
-	public void putBytes(byte[] arr, int off, int len) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void seek(long loc) {
-		fileLoc = loc + offset;
-	}
-
 	/**
 	 * @param loc
 	 *            The actual file position to seek to (rather than the byte
 	 *            associated with a given record)
 	 */
 	public void seekInFile(long loc) {
-		fileLoc = loc;
+		seek(loc - offset);
 	}
 
 	/**
@@ -158,8 +141,8 @@ public class RemoteDatabase extends Database {
 				Process p;
 				p = r.exec(infoGetter);
 				Scanner scan = new Scanner(p.getInputStream());
-				new ErrorThread(p.getErrorStream(), host + ":"
-						+ filePath).start();
+				new ErrorThread(p.getErrorStream(), host + ":" + filePath)
+						.start();
 				for (int i = 0; i < 4; i++) {
 					scan.next();
 				}
@@ -170,5 +153,11 @@ public class RemoteDatabase extends Database {
 			}
 		}
 		return fileSize;
+	}
+
+	@Override
+	public void putBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
+			int len) {
+		throw new UnsupportedOperationException();
 	}
 }

@@ -1,5 +1,7 @@
 package edu.berkeley.gamesman.core;
 
+import edu.berkeley.gamesman.database.Database;
+
 /**
  * A Solver is responsible for solving a Game and storing the result to a
  * Database
