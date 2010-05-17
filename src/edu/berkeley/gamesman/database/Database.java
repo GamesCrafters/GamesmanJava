@@ -102,7 +102,7 @@ public abstract class Database {
 	 */
 	public Record getRecord(long recordIndex) {
 		Record r = conf.getGame().newRecord();
-		getRecord(new DatabaseHandle(), recordIndex, r);
+		getRecord(getHandle(), recordIndex, r);
 		return r;
 	}
 
