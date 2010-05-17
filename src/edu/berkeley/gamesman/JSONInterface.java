@@ -392,22 +392,6 @@ public class JSONInterface extends GamesmanApplication {
 			Game<T> g = Util.checkedCast(conf.getGame());
 			if (db != null) {
 				db.getRecord(dh, g.stateToHash(state), rec);
-				PrimitiveValue pv = g.primitiveValue(state);
-				if (pv != PrimitiveValue.UNDECIDED) {
-					if (g.getPlayerCount() > 1 && isChildState) {
-						if (pv == PrimitiveValue.WIN)
-							pv = PrimitiveValue.LOSE;
-						else if (pv == PrimitiveValue.LOSE)
-							pv = PrimitiveValue.WIN;
-					}
-					request.setValue(pv.name().toLowerCase());
-
-				}
-				int score = g.primitiveScore(state);
-				if (score > 0) {
-					request.setScore(score);
-				}
-			} else {
 				if (conf.valueStates > 0) {
 					PrimitiveValue pv = rec.value;
 					if (g.getPlayerCount() > 1 && isChildState) {
@@ -423,6 +407,22 @@ public class JSONInterface extends GamesmanApplication {
 				}
 				if (conf.scoreStates > 0) {
 					request.setScore(rec.score);
+				}
+			} else {
+				PrimitiveValue pv = g.primitiveValue(state);
+				if (pv != PrimitiveValue.UNDECIDED) {
+					if (g.getPlayerCount() > 1 && isChildState) {
+						if (pv == PrimitiveValue.WIN)
+							pv = PrimitiveValue.LOSE;
+						else if (pv == PrimitiveValue.LOSE)
+							pv = PrimitiveValue.WIN;
+					}
+					request.setValue(pv.name().toLowerCase());
+
+				}
+				int score = g.primitiveScore(state);
+				if (score > 0) {
+					request.setScore(score);
 				}
 			}
 			request.setBoard(g.stateToString(state));
