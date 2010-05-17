@@ -6,6 +6,7 @@ import java.util.*;
 
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.database.Database;
+import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
@@ -386,15 +387,27 @@ public class JSONInterface extends GamesmanApplication {
 				Configuration conf, T state, boolean isChildState) {
 			GamestateResponse request = new GamestateResponse();
 			Database db = conf.db;
-			Record rec = null;
+			Record rec = conf.getGame().newRecord();
+			DatabaseHandle dh = db.getHandle();
 			Game<T> g = Util.checkedCast(conf.getGame());
 			if (db != null) {
-				synchronized (g) { // we don't assume that games are written to
-					// be multithreaded
-					rec = db.getRecord(g.stateToHash(state));
+				db.getRecord(dh, g.stateToHash(state), rec);
+				PrimitiveValue pv = g.primitiveValue(state);
+				if (pv != PrimitiveValue.UNDECIDED) {
+					if (g.getPlayerCount() > 1 && isChildState) {
+						if (pv == PrimitiveValue.WIN)
+							pv = PrimitiveValue.LOSE;
+						else if (pv == PrimitiveValue.LOSE)
+							pv = PrimitiveValue.WIN;
+					}
+					request.setValue(pv.name().toLowerCase());
+
 				}
-			}
-			if (rec != null) {
+				int score = g.primitiveScore(state);
+				if (score > 0) {
+					request.setScore(score);
+				}
+			} else {
 				if (conf.valueStates > 0) {
 					PrimitiveValue pv = rec.value;
 					if (g.getPlayerCount() > 1 && isChildState) {
@@ -411,25 +424,8 @@ public class JSONInterface extends GamesmanApplication {
 				if (conf.scoreStates > 0) {
 					request.setScore(rec.score);
 				}
-			} else {
-				PrimitiveValue pv = g.primitiveValue(state);
-				if (pv != PrimitiveValue.UNDECIDED) {
-					if (g.getPlayerCount() > 1 && isChildState) {
-						if (pv == PrimitiveValue.WIN)
-							pv = PrimitiveValue.LOSE;
-						else if (pv == PrimitiveValue.LOSE)
-							pv = PrimitiveValue.WIN;
-					}
-					request.setValue(pv.name().toLowerCase());
-
-				}
-				int score = g.primitiveScore(state);
-				if (score > 0) {
-					request.setScore(score);
-				}
 			}
 			request.setBoard(g.stateToString(state));
-
 			return request;
 		}
 	}
