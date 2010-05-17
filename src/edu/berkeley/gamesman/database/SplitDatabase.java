@@ -120,7 +120,7 @@ public class SplitDatabase extends Database {
 
 	@Override
 	public DatabaseHandle getHandle() {
-		return new DatabaseHandle();
+		return new SplitHandle();
 	}
 
 	public static void main(String[] args) throws ClassNotFoundException,
