@@ -72,7 +72,10 @@ public class GZippedFileDatabase extends Database {
 		try {
 			myFile = new File(location);
 			fis = new FileInputStream(myFile);
-			conf = Configuration.load(fis);
+			if (conf == null)
+				conf = Configuration.load(fis);
+			else
+				Configuration.skipConf(fis);
 			long numBytes = 0;
 			for (int i = 56; i >= 0; i -= 8) {
 				numBytes <<= 8;
