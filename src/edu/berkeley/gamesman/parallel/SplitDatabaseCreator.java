@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.database.FileDatabase;
-import edu.berkeley.gamesman.game.TieredGame;
+import edu.berkeley.gamesman.game.TierGame;
 
 /**
  * @author dnspies
@@ -69,7 +69,7 @@ public class SplitDatabaseCreator extends Database {
 
 	@Override
 	public DatabaseHandle getHandle(long recordStart, long numRecords) {
-		return new SplitHandle(((TieredGame) conf.getGame())
+		return new SplitHandle(((TierGame) conf.getGame())
 				.hashToTier(recordStart), recordStart, numRecords);
 	}
 

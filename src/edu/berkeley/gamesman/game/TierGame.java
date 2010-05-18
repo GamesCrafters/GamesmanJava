@@ -4,26 +4,24 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.PrimitiveValue;
-import edu.berkeley.gamesman.game.util.ItergameState;
-import edu.berkeley.gamesman.hasher.TieredItergameHasher;
+import edu.berkeley.gamesman.game.util.TierState;
+import edu.berkeley.gamesman.hasher.TierHasher;
 import edu.berkeley.gamesman.util.Pair;
 
 /**
  * @author DNSpies
  */
-public abstract class TieredGame extends Game<ItergameState> {
-	protected TieredItergameHasher myHasher;
+public abstract class TierGame extends Game<TierState> {
+	protected TierHasher myHasher;
 
-	@Override
-	public void initialize(Configuration conf) {
-		super.initialize(conf);
-		myHasher = new TieredItergameHasher(this);
+	public TierGame(Configuration conf) {
+		super(conf);
+		myHasher = new TierHasher(this);
 	}
 
 	@Override
-	public void hashToState(long hash, ItergameState state) {
+	public void hashToState(long hash, TierState state) {
 		int tier = hashToTier(hash);
 		myHasher.gameStateForTierAndOffset(tier,
 				hash - hashOffsetForTier(tier), state);
@@ -66,7 +64,7 @@ public abstract class TieredGame extends Game<ItergameState> {
 	}
 
 	@Override
-	public synchronized PrimitiveValue primitiveValue(ItergameState pos) {
+	public synchronized PrimitiveValue primitiveValue(TierState pos) {
 		setState(pos);
 		return primitiveValue();
 	}
@@ -77,7 +75,7 @@ public abstract class TieredGame extends Game<ItergameState> {
 	 * @param pos
 	 *            The position to assume
 	 */
-	public abstract void setState(ItergameState pos);
+	public abstract void setState(TierState pos);
 
 	/**
 	 * @return The "primitive value" of the current position.
@@ -85,15 +83,15 @@ public abstract class TieredGame extends Game<ItergameState> {
 	public abstract PrimitiveValue primitiveValue();
 
 	@Override
-	public synchronized Collection<Pair<String, ItergameState>> validMoves(
-			ItergameState pos) {
+	public synchronized Collection<Pair<String, TierState>> validMoves(
+			TierState pos) {
 		setState(pos);
 		return validMoves();
 	}
 
 	@Override
-	public synchronized int validMoves(ItergameState pos,
-			ItergameState[] children) {
+	public synchronized int validMoves(TierState pos,
+			TierState[] children) {
 		setState(pos);
 		return validMoves(children);
 	}
@@ -101,7 +99,7 @@ public abstract class TieredGame extends Game<ItergameState> {
 	/**
 	 * @return The states of all the possible moves from this position.
 	 */
-	public abstract Collection<Pair<String, ItergameState>> validMoves();
+	public abstract Collection<Pair<String, TierState>> validMoves();
 
 	/**
 	 * @return Whether there is another position.
@@ -126,7 +124,7 @@ public abstract class TieredGame extends Game<ItergameState> {
 	}
 
 	@Override
-	public synchronized String stateToString(ItergameState pos) {
+	public synchronized String stateToString(TierState pos) {
 		setState(pos);
 		return stateToString();
 	}
@@ -137,7 +135,7 @@ public abstract class TieredGame extends Game<ItergameState> {
 	public abstract String stateToString();
 
 	@Override
-	public synchronized ItergameState stringToState(String pos) {
+	public synchronized TierState stringToState(String pos) {
 		setFromString(pos);
 		return getState();
 	}
@@ -153,10 +151,10 @@ public abstract class TieredGame extends Game<ItergameState> {
 	 * 
 	 * @return The state of this position
 	 */
-	public abstract ItergameState getState();
+	public abstract TierState getState();
 
 	@Override
-	public synchronized String displayState(ItergameState pos) {
+	public synchronized String displayState(TierState pos) {
 		setState(pos);
 		return displayState();
 	}
@@ -192,8 +190,8 @@ public abstract class TieredGame extends Game<ItergameState> {
 	public abstract long numHashesForTier();
 
 	@Override
-	public synchronized Collection<ItergameState> startingPositions() {
-		ArrayList<ItergameState> positions = new ArrayList<ItergameState>();
+	public synchronized Collection<TierState> startingPositions() {
+		ArrayList<TierState> positions = new ArrayList<TierState>();
 		for (int i = 0; i < numStartingPositions(); i++) {
 			setStartingPosition(i);
 			positions.add(getState());
@@ -225,7 +223,7 @@ public abstract class TieredGame extends Game<ItergameState> {
 	public abstract void nextHashInTier();
 
 	@Override
-	public long stateToHash(ItergameState pos) {
+	public long stateToHash(TierState pos) {
 		return myHasher.hashOffsetForTier(pos.tier) + pos.hash;
 	}
 
@@ -241,10 +239,10 @@ public abstract class TieredGame extends Game<ItergameState> {
 	 *            An array to store to
 	 * @return The number of moves stored
 	 */
-	public abstract int validMoves(ItergameState[] moves);
+	public abstract int validMoves(TierState[] moves);
 
 	@Override
-	public ItergameState newState() {
-		return new ItergameState();
+	public TierState newState() {
+		return new TierState();
 	}
 }

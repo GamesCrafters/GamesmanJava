@@ -5,13 +5,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Game;
-import edu.berkeley.gamesman.core.Master;
-import edu.berkeley.gamesman.core.Solver;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseWrapper;
+import edu.berkeley.gamesman.game.Game;
+import edu.berkeley.gamesman.solver.Solver;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Task;
 import edu.berkeley.gamesman.util.TaskFactory;

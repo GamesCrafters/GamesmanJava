@@ -73,8 +73,8 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 	 * @param conf
 	 *            The configuration object
 	 */
-	public void initialize(Configuration conf) {
-		super.initialize(conf);
+	public TopDownC4(Configuration conf) {
+		super(conf);
 		piecesToWin = conf.getInteger("gamesman.game.pieces", 4);
 		gameWidth = conf.getInteger("gamesman.game.width", 5);
 		gameHeight = conf.getInteger("gamesman.game.height", 4);

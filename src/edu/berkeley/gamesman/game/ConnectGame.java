@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.*;
-import edu.berkeley.gamesman.game.util.ItergameState;
+import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.hasher.MMHasher;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
@@ -16,24 +16,24 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author dnspies
  */
-public abstract class ConnectGame extends TieredGame {
+public abstract class ConnectGame extends TierGame {
 	private char turn;
 	protected MMHasher mmh;
-	protected final ItergameState myState = newState();
+	protected final TierState myState = newState();
 
 	/**
 	 * @param conf
 	 *            The configuration object
 	 */
-	public void initialize(Configuration conf) {
-		super.initialize(conf);
+	public ConnectGame(Configuration conf) {
+		super(conf);
 		mmh = new MMHasher();
 	}
 
 	protected abstract int getBoardSize();
 
 	@Override
-	public ItergameState getState() {
+	public TierState getState() {
 		return myState;
 	}
 
@@ -116,7 +116,7 @@ public abstract class ConnectGame extends TieredGame {
 	}
 
 	@Override
-	public void setState(ItergameState pos) {
+	public void setState(TierState pos) {
 		myState.set(pos);
 		gameMatchState();
 	}
@@ -129,16 +129,16 @@ public abstract class ConnectGame extends TieredGame {
 	}
 
 	@Override
-	public Collection<Pair<String, ItergameState>> validMoves() {
+	public Collection<Pair<String, TierState>> validMoves() {
 		char turn = this.turn;
 		char[] pieces = getCharArray();
-		ArrayList<Pair<String, ItergameState>> moves = new ArrayList<Pair<String, ItergameState>>(
+		ArrayList<Pair<String, TierState>> moves = new ArrayList<Pair<String, TierState>>(
 				pieces.length);
 		for (int i = 0; i < pieces.length; i++) {
 			if (pieces[i] == ' ') {
 				pieces[i] = turn;
 				stateMatchGame();
-				moves.add(new Pair<String, ItergameState>(Integer
+				moves.add(new Pair<String, TierState>(Integer
 						.toString(translateOut(i)), myState.clone()));
 				pieces[i] = ' ';
 			}
@@ -157,7 +157,7 @@ public abstract class ConnectGame extends TieredGame {
 	}
 
 	@Override
-	public int validMoves(ItergameState[] moves) {
+	public int validMoves(TierState[] moves) {
 		char turn = this.turn;
 		char[] pieces = getCharArray();
 		int c = 0;
@@ -226,11 +226,11 @@ public abstract class ConnectGame extends TieredGame {
 		return convertOutString(getCharArray());
 	}
 
-	public char[] convertInString(String s){
+	public char[] convertInString(String s) {
 		return s.toCharArray();
 	}
 
-	public String convertOutString(char[] charArray){
+	public String convertOutString(char[] charArray) {
 		return new String(charArray);
 	}
 

@@ -1,6 +1,8 @@
 package edu.berkeley.gamesman.database;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
@@ -71,35 +73,35 @@ public final class FileDatabase extends Database {
 		try {
 			myFile = new File(loc);
 			if (solve) {
-				fd = new RandomAccessFile(myFile, "rw");
+				FileOutputStream fos = new FileOutputStream(myFile);
 				if (conf == null)
 					Util
 							.fatalError("You must specify a configuration if the database is to be created");
 				if (storeConf) {
-					byte[] b = conf.store();
-					fd.writeInt(b.length);
-					fd.write(b);
+					conf.store(fos);
 				} else
-					fd.writeInt(0);
-				offset = fd.getFilePointer();
+					Configuration.storeNone(fos);
+				offset = fos.getChannel().position();
+				fos.close();
+				fd = new RandomAccessFile(myFile, "rw");
 				fd.setLength(offset + getByteSize());
 			} else {
+				FileInputStream fis = new FileInputStream(myFile);
+				if (conf == null)
+					conf = Configuration.load(fis);
+				else
+					Configuration.skipConf(fis);
+				offset = fis.getChannel().position();
+				fis.close();
 				fd = new RandomAccessFile(myFile, "r");
-				int headerLen = fd.readInt();
-				byte[] header = new byte[headerLen];
-				fd.readFully(header);
-				if (conf == null) {
-					conf = Configuration.load(header);
-				}
-				offset = fd.getFilePointer();
 			}
 			offset -= firstByte();
 		} catch (IOException e) {
 			e.printStackTrace();
-			Util.fatalError(e.toString());
+			Util.fatalError("IO Error", e);
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
-			Util.fatalError(e.toString());
+			Util.fatalError("IO Error", e);
 		}
 	}
 
@@ -111,8 +113,8 @@ public final class FileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void putBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
-			int len) {
+	public synchronized void putBytes(DatabaseHandle dh, long loc, byte[] arr,
+			int off, int len) {
 		seek(loc);
 		putBytes(arr, off, len);
 	}

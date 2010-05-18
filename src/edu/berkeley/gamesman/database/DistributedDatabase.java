@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.game.TieredGame;
+import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.parallel.ErrorThread;
 import edu.berkeley.gamesman.parallel.TierSlave;
 import edu.berkeley.gamesman.util.Pair;
@@ -71,11 +71,11 @@ public class DistributedDatabase extends Database {
 	private long fetchBytes(long location, byte[] arr, int off, int len) {
 		int firstTier, lastTier;
 		long nextTierOffset = 0;
-		TieredGame g = null;
+		TierGame g = null;
 		if (solve) {
 			firstTier = lastTier = tier;
 		} else {
-			g = (TieredGame) conf.getGame();
+			g = (TierGame) conf.getGame();
 			for (int count = 0; count < conf.recordGroupByteLength; count++) {
 				arr[off + count] = 0;
 			}
@@ -257,17 +257,7 @@ public class DistributedDatabase extends Database {
 			try {
 				files = new ArrayList<ArrayList<Pair<Long, String>>>();
 				FileInputStream fis = new FileInputStream(uri);
-				int fileLength = 0;
-				for (int i = 24; i >= 0; i -= 8) {
-					fileLength <<= 8;
-					fileLength |= fis.read();
-				}
-				byte[] cBytes = new byte[fileLength];
-				fis.read(cBytes);
-				if (conf == null) {
-					conf = Configuration.load(cBytes);
-					conf.db = this;
-				}
+				conf = Configuration.load(fis);
 				Scanner scan = new Scanner(fis);
 				scan.nextLine();
 				while (scan.hasNext())

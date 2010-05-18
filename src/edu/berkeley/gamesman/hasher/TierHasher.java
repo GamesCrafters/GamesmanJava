@@ -2,8 +2,8 @@ package edu.berkeley.gamesman.hasher;
 
 import java.util.Arrays;
 
-import edu.berkeley.gamesman.game.TieredGame;
-import edu.berkeley.gamesman.game.util.ItergameState;
+import edu.berkeley.gamesman.game.TierGame;
+import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
@@ -11,12 +11,12 @@ import edu.berkeley.gamesman.util.Util;
 /**
  * @author DNSpies Hasher for Tiered Cycle Games
  */
-public final class TieredItergameHasher {
+public final class TierHasher {
 	private long tierOffsets[] = null;
 
-	private final TieredGame myGame;
+	private final TierGame myGame;
 
-	public TieredItergameHasher(TieredGame g) {
+	public TierHasher(TierGame g) {
 		myGame = g;
 	}
 
@@ -45,7 +45,7 @@ public final class TieredItergameHasher {
 		return hashOffsetForTier(numberOfTiers());
 	}
 
-	public void gameStateForTierAndOffset(int tier, long index, ItergameState s) {
+	public void gameStateForTierAndOffset(int tier, long index, TierState s) {
 		s.tier = tier;
 		s.hash = index;
 	}
@@ -58,7 +58,7 @@ public final class TieredItergameHasher {
 		return myGame.numberOfTiers();
 	}
 
-	public Pair<Integer, Long> tierIndexForState(ItergameState state) {
+	public Pair<Integer, Long> tierIndexForState(TierState state) {
 		return new Pair<Integer, Long>(state.tier, state.hash);
 	}
 
@@ -67,11 +67,11 @@ public final class TieredItergameHasher {
 		return null;
 	}
 
-	public long hash(ItergameState state) {
+	public long hash(TierState state) {
 		return hashOffsetForTier(state.tier) + state.hash;
 	}
 
-	public ItergameState unhash(long hash) {
+	public TierState unhash(long hash) {
 		return myGame.hashToState(hash);
 	}
 }

@@ -3,6 +3,7 @@ package edu.berkeley.gamesman;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Properties;
@@ -107,8 +108,14 @@ public final class JythonInterface extends GamesmanApplication {
 	/**
 	 * Simple main function to run JythonInterface directly.
 	 * @param args program args
+	 * @throws NoSuchMethodException 
+	 * @throws InvocationTargetException 
+	 * @throws IllegalAccessException 
+	 * @throws InstantiationException 
+	 * @throws SecurityException 
+	 * @throws IllegalArgumentException 
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
 		String []newArgs = new String[args.length + 1];
 		newArgs[0] = "JythonInterface";
 		System.arraycopy(args, 0, newArgs, 1, args.length);

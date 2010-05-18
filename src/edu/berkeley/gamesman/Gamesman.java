@@ -1,5 +1,6 @@
 package edu.berkeley.gamesman;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Properties;
@@ -33,8 +34,16 @@ public class Gamesman {
 	/**
 	 * @param args
 	 *            The command line arguments. Should just be a job file.
+	 * @throws NoSuchMethodException
+	 * @throws InvocationTargetException
+	 * @throws IllegalAccessException
+	 * @throws InstantiationException
+	 * @throws SecurityException
+	 * @throws IllegalArgumentException
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IllegalArgumentException,
+			SecurityException, InstantiationException, IllegalAccessException,
+			InvocationTargetException, NoSuchMethodException {
 		String jobFile = null, entryPoint = null;
 		if (args.length == 1) {
 			String arg = args[0];
@@ -98,12 +107,8 @@ public class Gamesman {
 			Util.fatalError("Class could not be found!", e1);
 			return;
 		}
-		try {
-			GamesmanApplication ga = cls.getConstructor().newInstance();
-			ga.run(props);
-		} catch (Exception e) {
-			Util.fatalError("Could not construct " + cls.getName(), e);
-		}
+		GamesmanApplication ga = cls.getConstructor().newInstance();
+		ga.run(props);
 	}
 
 	// This is a copy of Util.parseBoolean().

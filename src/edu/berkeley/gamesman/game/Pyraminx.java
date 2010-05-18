@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.hasher.PermutationHash;
@@ -16,6 +17,10 @@ import edu.berkeley.gamesman.util.Util;
  * 
  */
 public class Pyraminx extends TwistyPuzzle<PyraminxState> {
+
+	public Pyraminx(Configuration conf) {
+		super(conf);
+	}
 
 	@Override
 	public String describe() {

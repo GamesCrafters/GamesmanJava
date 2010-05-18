@@ -9,7 +9,7 @@ import java.util.Scanner;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.database.DistributedDatabase;
-import edu.berkeley.gamesman.game.TieredGame;
+import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.parallel.ErrorThread;
 import edu.berkeley.gamesman.util.Pair;
 
@@ -19,7 +19,7 @@ public class DistributedSizeMaster {
 		DistributedDatabase dd = new DistributedDatabase();
 		dd.initialize(args[0], false);
 		Configuration conf = dd.getConfiguration();
-		int tiers = ((TieredGame) conf.getGame()).numberOfTiers();
+		int tiers = ((TierGame) conf.getGame()).numberOfTiers();
 		LinkedList<Thread> watchers = new LinkedList<Thread>();
 		ArrayList<HashMap<String, Long>> values = new ArrayList<HashMap<String, Long>>();
 		for (int tier = 0; tier < tiers; tier++) {

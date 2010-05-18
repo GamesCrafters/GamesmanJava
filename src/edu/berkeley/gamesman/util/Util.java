@@ -450,31 +450,6 @@ public final class Util {
 	}
 
 	/**
-	 * Like Class.forName(name).newInstance() but with type checking
-	 * 
-	 * @param <T>
-	 *            The type requested
-	 * @param name
-	 *            The name of the class to instantiate
-	 * @param baseClass
-	 *            Usually equals the template param
-	 * @return A new instance (created with the default constructor)
-	 * @throws ClassNotFoundException
-	 *             If the class could not be instantiated.
-	 */
-	public static <T> T typedInstantiate(String name, Class<T> baseClass)
-			throws ClassNotFoundException {
-		try {
-			return typedForName(name, baseClass).getConstructor().newInstance();
-		} catch (ClassNotFoundException e) {
-			throw e;
-		} catch (Exception e) {
-			throw new ClassNotFoundException(
-					"Uncaught exception while instantiating " + name, e);
-		}
-	}
-
-	/**
 	 * Handy method for working with 'unchecked' casts - send them here and it
 	 * will throw a RuntimeException instead of giving you a compiler warning.
 	 * DO NOT USE unless you are sure there's no other options! Use generics

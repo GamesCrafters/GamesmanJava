@@ -12,9 +12,10 @@ import java.util.concurrent.CyclicBarrier;
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
-import edu.berkeley.gamesman.game.TieredGame;
-import edu.berkeley.gamesman.game.util.ItergameState;
-import edu.berkeley.gamesman.hasher.TieredItergameHasher;
+import edu.berkeley.gamesman.game.Record;
+import edu.berkeley.gamesman.game.TierGame;
+import edu.berkeley.gamesman.game.util.TierState;
+import edu.berkeley.gamesman.hasher.TierHasher;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Task;
@@ -56,16 +57,16 @@ public class TierSolver extends Solver {
 	protected void solvePartialTier(Configuration conf, long start,
 			long hashes, TierSolverUpdater t, Database readDb,
 			DatabaseHandle readDh, Database writeDb, DatabaseHandle writeDh) {
-		TieredGame game = (TieredGame) conf.getGame();
+		TierGame game = (TierGame) conf.getGame();
 		long current = start;
 		game.setState(game.hashToState(start));
 		Record[] vals = new Record[game.maxChildren()];
 		for (int i = 0; i < vals.length; i++)
 			vals[i] = game.newRecord();
 		Record prim = game.newRecord();
-		ItergameState[] children = new ItergameState[game.maxChildren()];
+		TierState[] children = new TierState[game.maxChildren()];
 		for (int i = 0; i < children.length; i++)
-			children[i] = new ItergameState();
+			children[i] = new TierState();
 		for (long count = 0L; count < hashes; count++) {
 			if (current % STEP_SIZE == 0)
 				t.calculated(STEP_SIZE);
@@ -104,7 +105,7 @@ public class TierSolver extends Solver {
 		String msf = inconf.getProperty("gamesman.minSolvedFile", null);
 		strictSafety = inconf.getBoolean("gamesman.solver.strictMemory", false);
 		if (msf == null)
-			tier = ((TieredGame) inconf.getGame()).numberOfTiers();
+			tier = ((TierGame) inconf.getGame()).numberOfTiers();
 		else {
 			minSolvedFile = new File(msf);
 			if (minSolvedFile.exists()) {
@@ -116,7 +117,7 @@ public class TierSolver extends Solver {
 					Util.fatalError("This should never happen", e);
 				}
 			} else {
-				tier = ((TieredGame) inconf.getGame()).numberOfTiers();
+				tier = ((TierGame) inconf.getGame()).numberOfTiers();
 				try {
 					minSolvedFile.createNewFile();
 					FileWriter fw = new FileWriter(minSolvedFile);
@@ -165,7 +166,7 @@ public class TierSolver extends Solver {
 			} else {
 				if (barr != null)
 					needs2Reset = true;
-				TieredGame game = (TieredGame) conf.getGame();
+				TierGame game = (TierGame) conf.getGame();
 				long fullStart = game.hashOffsetForTier(tier);
 				long fullSize = game.numHashesForTier(tier);
 				long neededMem = memNeededForTier(conf);
@@ -326,7 +327,7 @@ public class TierSolver extends Solver {
 		}
 
 		TierSolverUpdater(long totalProgress) {
-			TieredGame myGame = (TieredGame) conf.getGame();
+			TierGame myGame = (TierGame) conf.getGame();
 			t = Task.beginTask("Tier solving \"" + myGame.describe() + "\"");
 			t.setTotal(totalProgress);
 		}
@@ -370,7 +371,7 @@ public class TierSolver extends Solver {
 		this.tier = tier;
 		updater = new TierSolverUpdater(endHash - startHash);
 		parallelSolving = true;
-		TieredGame game = (TieredGame) conf.getGame();
+		TierGame game = (TierGame) conf.getGame();
 		long fullSize = endHash - startHash;
 		long neededMem = memNeededForRange(conf, fullSize);
 		prevToCurFraction = (tier >= game.numberOfTiers() - 1) ? 0
@@ -384,7 +385,7 @@ public class TierSolver extends Solver {
 	}
 
 	private long memNeededForRange(Configuration conf, long fullSize) {
-		TieredGame game = (TieredGame) conf.getGame();
+		TierGame game = (TierGame) conf.getGame();
 		long tierHashes = game.numHashesForTier(tier);
 		return (long) ((tierHashes + game.maxChildren()
 				* (tier == game.numberOfTiers() - 1 ? 0 : game
@@ -393,7 +394,7 @@ public class TierSolver extends Solver {
 	}
 
 	private long memNeededForTier(Configuration conf) {
-		TieredGame game = (TieredGame) conf.getGame();
+		TierGame game = (TierGame) conf.getGame();
 		return (long) ((game.numHashesForTier(tier) + game.maxChildren()
 				* (tier == game.numberOfTiers() - 1 ? 0 : game
 						.numHashesForTier(tier + 1)) * SAFETY_MARGIN)

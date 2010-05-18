@@ -5,12 +5,12 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Game;
-import edu.berkeley.gamesman.core.Master;
-import edu.berkeley.gamesman.core.Solver;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseWrapper;
+import edu.berkeley.gamesman.game.Game;
+import edu.berkeley.gamesman.master.Master;
+import edu.berkeley.gamesman.solver.Solver;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
@@ -74,10 +74,6 @@ public final class GamesmanMain extends GamesmanApplication {
 		if (solverName == null)
 			Util
 					.fatalError("You must specify a solver with the property gamesman.solver");
-		hasherName = conf.getProperty("gamesman.hasher");
-		if (hasherName == null)
-			Util
-					.fatalError("You must specify a hasher with the property gamesman.hasher");
 		String[] dbType = conf.getProperty("gamesman.database").split(":");
 
 		Class<? extends Solver> s = null;
@@ -124,12 +120,7 @@ public final class GamesmanMain extends GamesmanApplication {
 			}
 		} else {
 			assert Util.debug(DebugFacility.CORE, "Defaulting to solve...");
-			try {
-				m.initialize(conf, s, d, wrappers);
-			} catch (Exception e) {
-				Util.fatalError(
-						"Exception while instantiating and initializing", e);
-			}
+			m.initialize(conf, s, d, wrappers);
 			m.run();
 		}
 

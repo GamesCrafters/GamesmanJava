@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.game.util.AlignmentState;
 import edu.berkeley.gamesman.hasher.AlignmentHasher;
@@ -57,9 +56,8 @@ public class Alignment extends Game<AlignmentState> {
 		 */
 	}
 
-	@Override
-	public void initialize(Configuration conf) {
-		super.initialize(conf);
+	public Alignment(Configuration conf) {
+		super(conf);
 		openCells = new ArrayList<Pair<Integer, Integer>>();
 		gameWidth = conf.getInteger("gamesman.game.width", 4);
 		gameHeight = conf.getInteger("gamesman.game.height", 4);

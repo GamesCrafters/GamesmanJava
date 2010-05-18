@@ -1,5 +1,7 @@
-package edu.berkeley.gamesman.core;
+package edu.berkeley.gamesman.solver;
 
+import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.database.Database;
 
 /**

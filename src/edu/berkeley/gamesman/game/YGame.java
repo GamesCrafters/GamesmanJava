@@ -68,8 +68,8 @@ public class YGame extends ConnectGame {
 	 * @param conf
 	 *            The configuration object
 	 */
-	public void initialize(Configuration conf) {
-		super.initialize(conf);
+	public YGame(Configuration conf) {
+		super(conf);
 		initialize(conf.getInteger("gamesman.game.outerRows", 2));
 	}
 

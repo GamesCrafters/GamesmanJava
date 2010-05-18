@@ -1,10 +1,13 @@
-package edu.berkeley.gamesman.core;
+package edu.berkeley.gamesman.game;
 
 import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -18,7 +21,7 @@ import edu.berkeley.gamesman.util.Util;
  */
 public abstract class Game<S extends State> {
 
-	protected Configuration conf;
+	protected final Configuration conf;
 
 	private Record[] valsBest = new Record[1];
 
@@ -27,19 +30,9 @@ public abstract class Game<S extends State> {
 	private Record[] valsBestRemoteness = new Record[1];
 
 	/**
-	 * Default constructor
+	 * @param conf The configuratino object
 	 */
-	public Game() {
-
-	}
-
-	/**
-	 * Initialize game width/height NB: when this constructor is called
-	 * 
-	 * @param conf
-	 *            configuration
-	 */
-	public void initialize(Configuration conf) {
+	public Game(Configuration conf) {
 		this.conf = conf;
 	}
 

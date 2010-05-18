@@ -3,9 +3,7 @@ package edu.berkeley.gamesman.game;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.PrimitiveValue;
-import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.qll.Factory;
@@ -30,7 +28,8 @@ public final class TopDownGame<S extends State> extends TopDownMutaGame<S> {
 	 * @param g
 	 *            The game to wrap
 	 */
-	public TopDownGame(Game<S> g) {
+	public TopDownGame(Configuration conf, Game<S> g) {
+		super(conf);
 		myGame = g;
 		moveLists = new RecycleLinkedList<RecycleLinkedList<S>>(
 				new Factory<RecycleLinkedList<S>>() {
@@ -165,11 +164,6 @@ public final class TopDownGame<S extends State> extends TopDownMutaGame<S> {
 	}
 
 	@Override
-	public void initialize(Configuration conf) {
-		myGame.initialize(conf);
-	}
-
-	@Override
 	public int validMoves(S pos, S[] children) {
 		return myGame.validMoves(pos, children);
 	}
@@ -246,6 +240,6 @@ public final class TopDownGame<S extends State> extends TopDownMutaGame<S> {
 
 	@Override
 	public String toString() {
-		return "\n"+displayState();
+		return "\n" + displayState();
 	}
 }

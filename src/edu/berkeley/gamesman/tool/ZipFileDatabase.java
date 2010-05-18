@@ -26,14 +26,7 @@ public class ZipFileDatabase {
 			ClassNotFoundException {
 		File readFromFile = new File(args[0]);
 		InputStream is = new FileInputStream(readFromFile);
-		int confLength = 0;
-		for (int i = 0; i < 4; i++) {
-			confLength <<= 8;
-			confLength |= is.read();
-		}
-		byte[] confBytes = new byte[confLength];
-		is.read(confBytes);
-		Configuration conf = Configuration.load(confBytes);
+		Configuration conf = Configuration.load(is);
 		is.close();
 		Database readFrom = conf.openDatabase(args[0], false);
 		File writeTo = new File(args[1]);

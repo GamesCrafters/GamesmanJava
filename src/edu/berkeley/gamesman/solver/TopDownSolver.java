@@ -4,6 +4,8 @@ import java.util.List;
 
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.database.DatabaseHandle;
+import edu.berkeley.gamesman.game.Game;
+import edu.berkeley.gamesman.game.Record;
 import edu.berkeley.gamesman.game.TopDownGame;
 import edu.berkeley.gamesman.game.TopDownMutaGame;
 import edu.berkeley.gamesman.util.*;
@@ -72,7 +74,8 @@ public class TopDownSolver<S extends State> extends Solver {
 		if (g instanceof TopDownMutaGame<?>) {
 			game = Util.checkedCast(g);
 		} else {
-			game = new TopDownGame<S>(Util.<Game<S>, Game<?>> checkedCast(g));
+			game = new TopDownGame<S>(conf, Util
+					.<Game<S>, Game<?>> checkedCast(g));
 		}
 		for (S s : game.startingPositions()) {
 			game.setToState(s);

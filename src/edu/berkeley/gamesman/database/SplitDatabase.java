@@ -63,15 +63,8 @@ public class SplitDatabase extends Database {
 			try {
 				File f = new File(uri);
 				FileInputStream fis = new FileInputStream(f);
-				int confLength = 0;
-				for (int i = 0; i < 4; i++) {
-					confLength <<= 8;
-					confLength |= fis.read();
-				}
-				byte[] confBytes = new byte[confLength];
-				fis.read(confBytes);
+				conf = Configuration.load(fis);
 				fis.close();
-				conf = Configuration.load(confBytes);
 				dbs = conf.getProperty("gamesman.db.uri").split(";");
 			} catch (IOException ioe) {
 				ioe.printStackTrace();
@@ -86,15 +79,8 @@ public class SplitDatabase extends Database {
 			try {
 				File f = new File(dString[0]);
 				FileInputStream fis = new FileInputStream(f);
-				int confLength = 0;
-				for (int i = 0; i < 4; i++) {
-					confLength <<= 8;
-					confLength |= fis.read();
-				}
-				byte[] confBytes = new byte[confLength];
-				fis.read(confBytes);
+				Configuration dconf = Configuration.load(fis);
 				fis.close();
-				Configuration dconf = Configuration.load(confBytes);
 				databases[d] = dconf.openDatabase(dString[0], false, location,
 						Long.parseLong(dString[1]));
 				location += databases[d].getByteSize();
@@ -127,12 +113,9 @@ public class SplitDatabase extends Database {
 			IOException {
 		Configuration conf = new Configuration(Configuration
 				.readProperties(args[0]));
-		byte[] confBytes = conf.store();
 		File confFile = new File(args[1]);
 		FileOutputStream fos = new FileOutputStream(confFile);
-		for (int i = 24; i >= 0; i -= 8)
-			fos.write(confBytes.length >> i);
-		fos.write(confBytes);
+		conf.store(fos);
 		fos.close();
 	}
 

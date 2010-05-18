@@ -7,7 +7,7 @@ import edu.berkeley.gamesman.core.State;
  * 
  * @author DNSpies
  */
-public final class ItergameState implements State, Cloneable {
+public final class TierState implements State, Cloneable {
 
 	/**
 	 * The tier
@@ -25,7 +25,7 @@ public final class ItergameState implements State, Cloneable {
 	 * @param hash
 	 *            The hash
 	 */
-	public ItergameState(int tier, long hash) {
+	public TierState(int tier, long hash) {
 		this.tier = tier;
 		this.hash = hash;
 	}
@@ -36,14 +36,14 @@ public final class ItergameState implements State, Cloneable {
 	 * @param state
 	 *            Another state to copy
 	 */
-	public ItergameState(ItergameState state) {
+	public TierState(TierState state) {
 		set(state);
 	}
 
 	/**
 	 * Creates a new emptyState
 	 */
-	public ItergameState() {
+	public TierState() {
 		this(0, 0);
 	}
 
@@ -53,8 +53,8 @@ public final class ItergameState implements State, Cloneable {
 	}
 
 	public void set(State s) {
-		if (s instanceof ItergameState) {
-			ItergameState is = (ItergameState) s;
+		if (s instanceof TierState) {
+			TierState is = (TierState) s;
 			tier = is.tier;
 			hash = is.hash;
 		} else
@@ -63,14 +63,14 @@ public final class ItergameState implements State, Cloneable {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof ItergameState) {
-			ItergameState other = (ItergameState) obj;
+		if (obj instanceof TierState) {
+			TierState other = (TierState) obj;
 			return tier == other.tier && hash == other.hash;
 		} else
 			return false;
 	}
 
-	public ItergameState clone() {
-		return new ItergameState(this);
+	public TierState clone() {
+		return new TierState(this);
 	}
 }

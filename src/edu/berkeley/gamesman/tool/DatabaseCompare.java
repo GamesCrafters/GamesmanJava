@@ -2,6 +2,8 @@ package edu.berkeley.gamesman.tool;
 
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.database.Database;
+import edu.berkeley.gamesman.game.Game;
+import edu.berkeley.gamesman.game.Record;
 import edu.berkeley.gamesman.util.Util;
 
 /**

@@ -7,10 +7,10 @@ import java.util.List;
 import java.util.Properties;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Solver;
 import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.database.DistributedDatabase;
-import edu.berkeley.gamesman.game.TieredGame;
+import edu.berkeley.gamesman.game.TierGame;
+import edu.berkeley.gamesman.solver.Solver;
 import edu.berkeley.gamesman.solver.TierSolver;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Task;
@@ -95,7 +95,7 @@ public class TierSlave {
 			list.add(wu);
 		}
 		ArrayList<Thread> myThreads = new ArrayList<Thread>(list.size());
-		TieredGame game = (TieredGame) conf.getGame();
+		TierGame game = (TierGame) conf.getGame();
 		ThreadGroup solverGroup = new ThreadGroup("Solver Group: " + game);
 		for (WorkUnit w : list) {
 			Thread t = new Thread(solverGroup, new TierSlaveRunnable(w));

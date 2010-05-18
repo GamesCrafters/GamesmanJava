@@ -1,9 +1,7 @@
 package edu.berkeley.gamesman.game;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.PrimitiveValue;
-import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.State;
 
 /**
@@ -16,11 +14,15 @@ import edu.berkeley.gamesman.core.State;
  */
 public abstract class TwistyPuzzle<S extends State> extends Game<S> {
 
+	public TwistyPuzzle(Configuration conf) {
+		super(conf);
+	}
+
 	@Override
 	public Record newRecord() {
 		return new TwistyPuzzleRecord(conf);
 	}
-	
+
 	@Override
 	public int getPlayerCount() {
 		return 1;

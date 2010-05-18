@@ -24,14 +24,8 @@ public class Rubik extends TwistyPuzzle<CubeState> {
 
 	String[] VALID_FACES;
 
-	/**
-	 * Initializes a Cuboid
-	 * 
-	 * @param conf
-	 *            the configuration
-	 */
-	public void initialize(Configuration conf) {
-		super.initialize(conf);
+	public Rubik(Configuration conf) {
+		super(conf);
 		WIDTH = conf.getInteger("gamesman.game.width", 2);
 		HEIGHT = conf.getInteger("gamesman.game.height", 2);
 		DEPTH = conf.getInteger("gamesman.game.depth", 2);
@@ -66,8 +60,9 @@ public class Rubik extends TwistyPuzzle<CubeState> {
 
 	private static final long[] THREE_TO_X = new long[cornerCount];
 
-	//not thread safe for this to be static
-	private final PermutationHash cpHasher = new PermutationHash(cornerCount - 1, false);
+	// not thread safe for this to be static
+	private final PermutationHash cpHasher = new PermutationHash(
+			cornerCount - 1, false);
 	static { // memoize some useful values for (un)hashing
 		THREE_TO_X[0] = 1;
 		for (int i = 1; i < cornerCount; i++)

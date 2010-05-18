@@ -102,15 +102,8 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 			} else {
 				File dataFile = new File(args[0]);
 				FileInputStream fis = new FileInputStream(dataFile);
-				int confLength = 0;
-				for (int i = 28; i >= 0; i -= 8) {
-					confLength <<= 8;
-					confLength |= fis.read();
-				}
-				byte[] confBytes = new byte[confLength];
-				fis.read(confBytes);
+				conf = Configuration.load(fis);
 				fis.close();
-				conf = Configuration.load(confBytes);
 				fd = conf.openDatabase(args[0], false);
 			}
 		} catch (ClassNotFoundException e) {

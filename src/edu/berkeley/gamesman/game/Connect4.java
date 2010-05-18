@@ -6,7 +6,7 @@ import java.util.Collection;
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.game.util.BitSetBoard;
 import edu.berkeley.gamesman.game.util.Connect4ReducerBoard;
-import edu.berkeley.gamesman.game.util.ItergameState;
+import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.game.util.PieceRearranger;
 import edu.berkeley.gamesman.util.ExpCoefs;
 import edu.berkeley.gamesman.util.Pair;
@@ -17,7 +17,7 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author DNSpies
  */
-public final class Connect4 extends TieredGame {
+public final class Connect4 extends TierGame {
 	private int[][] indices;
 
 	private int[] colHeights;
@@ -66,8 +66,8 @@ public final class Connect4 extends TieredGame {
 	 * @param conf
 	 *            The configuration object
 	 */
-	public void initialize(Configuration conf) {
-		super.initialize(conf);
+	public Connect4(Configuration conf) {
+		super(conf);
 		gameWidth = conf.getInteger("gamesman.game.width", 7);
 		gameHeight = conf.getInteger("gamesman.game.height", 6);
 		piecesToWin = conf.getInteger("gamesman.game.pieces", 4);
@@ -105,8 +105,8 @@ public final class Connect4 extends TieredGame {
 	}
 
 	@Override
-	public ItergameState getState() {
-		return new ItergameState(pieces.size(), pieceArrangement
+	public TierState getState() {
+		return new TierState(pieces.size(), pieceArrangement
 				* iah.colorArrangements + iah.getHash());
 	}
 
@@ -238,7 +238,7 @@ public final class Connect4 extends TieredGame {
 	}
 
 	@Override
-	public void setState(ItergameState pos) {
+	public void setState(TierState pos) {
 		setTier(pos.tier);
 		long mult = iah.colorArrangements;
 		long hash = pos.hash;
@@ -391,18 +391,18 @@ public final class Connect4 extends TieredGame {
 	}
 
 	@Override
-	public Collection<Pair<String, ItergameState>> validMoves() {
+	public Collection<Pair<String, TierState>> validMoves() {
 		int lenChildren = iah.getChildren(pieces.size() % 2 == 1 ? 'O' : 'X',
 				children);
 		int nextNumPieces = pieces.size() + 1;
-		ArrayList<Pair<String, ItergameState>> moves = new ArrayList<Pair<String, ItergameState>>(
+		ArrayList<Pair<String, TierState>> moves = new ArrayList<Pair<String, TierState>>(
 				lenChildren);
 		int col = 0;
 		for (int i = 0; i < lenChildren; i++) {
 			while (colHeights[col] == gameHeight)
 				col++;
-			moves.add(new Pair<String, ItergameState>(String.valueOf(col),
-					new ItergameState(nextNumPieces, moveArrangement[col]
+			moves.add(new Pair<String, TierState>(String.valueOf(col),
+					new TierState(nextNumPieces, moveArrangement[col]
 							* multiplier[nextNumPieces] + children[i])));
 			col++;
 		}
@@ -410,7 +410,7 @@ public final class Connect4 extends TieredGame {
 	}
 
 	@Override
-	public int validMoves(ItergameState[] moves) {
+	public int validMoves(TierState[] moves) {
 		int lenChildren = iah.getChildren(pieces.size() % 2 == 1 ? 'O' : 'X',
 				children);
 		int nextNumPieces = pieces.size() + 1;
@@ -431,7 +431,7 @@ public final class Connect4 extends TieredGame {
 	 *            Returns the value of the last time of move was possible in
 	 *            each column
 	 */
-	public void lastMoves(ItergameState[] moves) {
+	public void lastMoves(TierState[] moves) {
 		char nextPiece = pieces.size() % 2 == 1 ? 'O' : 'X';
 		int easyChildren = iah.getChildren(nextPiece, children);
 		int nextNumPieces = pieces.size() + 1;

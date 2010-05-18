@@ -7,12 +7,12 @@ import java.util.Collection;
 import java.util.Random;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.game.Connect4;
+import edu.berkeley.gamesman.game.Record;
 import edu.berkeley.gamesman.game.TopDownC4;
 import edu.berkeley.gamesman.game.util.C4State;
-import edu.berkeley.gamesman.game.util.ItergameState;
+import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.util.Pair;
 
 /**
@@ -109,7 +109,7 @@ class ConnectFour implements MouseListener {
 	}
 
 	void makeMove(int move) {
-		if (columnHeight[move] >= 6 || win())
+		if (columnHeight[move] >= gameHeight || win())
 			return;
 		board[columnHeight[move]][move] = turn;
 		if (turn == 'O')
@@ -184,15 +184,15 @@ class ConnectFour implements MouseListener {
 				makeMove(chosenMove.car.charAt(0) - '0');
 			} else {
 				game.setFromString(arrToString(board));
-				Collection<Pair<String, ItergameState>> moves = game
+				Collection<Pair<String, TierState>> moves = game
 						.validMoves();
-				ArrayList<Pair<String, ItergameState>> listMoves = new ArrayList<Pair<String, ItergameState>>(
+				ArrayList<Pair<String, TierState>> listMoves = new ArrayList<Pair<String, TierState>>(
 						moves.size());
 				listMoves.addAll(moves);
 				long[] moveHashes = new long[listMoves.size()];
 				Record[] records = new Record[listMoves.size()];
 				for (int i = 0; i < listMoves.size(); i++) {
-					ItergameState state = listMoves.get(i).cdr;
+					TierState state = listMoves.get(i).cdr;
 					moveHashes[i] = game.stateToHash(state);
 					if (game.getTier() != state.tier)
 						game.setTier(state.tier);
@@ -201,14 +201,14 @@ class ConnectFour implements MouseListener {
 				for (Record r : records)
 					r.previousPosition();
 				Record bestRecord = game.combine(records, 0, records.length);
-				ArrayList<Pair<String, ItergameState>> bestMoves = new ArrayList<Pair<String, ItergameState>>(
+				ArrayList<Pair<String, TierState>> bestMoves = new ArrayList<Pair<String, TierState>>(
 						listMoves.size());
 
 				for (int i = 0; i < records.length; i++) {
 					if (records[i].equals(bestRecord))
 						bestMoves.add(listMoves.get(i));
 				}
-				Pair<String, ItergameState> chosenMove = bestMoves.get(r
+				Pair<String, TierState> chosenMove = bestMoves.get(r
 						.nextInt(bestMoves.size()));
 				nextRecord = bestRecord;
 				nextRecord.nextPosition();

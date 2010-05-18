@@ -9,6 +9,7 @@ import java.util.Set;
 
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseWrapper;
+import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -107,25 +108,10 @@ public class Configuration {
 	 * @throws ClassNotFoundException
 	 *             Could not find game class or hasher class
 	 */
-	public Configuration(Properties props, boolean initLater)
-			throws ClassNotFoundException {
-		this.props = props;
-		if (!initLater) {
-			String gamename = getProperty("gamesman.game");
-			initialize(gamename);
-		}
-	}
-
-	/**
-	 * Given a Properties, will construct a Configuration
-	 * 
-	 * @param props
-	 *            A Properties object (probably constructed from a job file).
-	 * @throws ClassNotFoundException
-	 *             Could not find game class or hasher class
-	 */
 	public Configuration(Properties props) throws ClassNotFoundException {
-		this(props, false);
+		this.props = props;
+		String gamename = getProperty("gamesman.game");
+		initialize(gamename);
 	}
 
 	/**
@@ -137,7 +123,7 @@ public class Configuration {
 	 *             Could not find game class or hasher class
 	 */
 	public Configuration(String path) throws ClassNotFoundException {
-		this(readProperties(path), false);
+		this(readProperties(path));
 	}
 
 	// To specify the size, use ':' followed by the number of possible
@@ -184,7 +170,6 @@ public class Configuration {
 	 */
 	public void initialize(Game<?> newG) {
 		g = newG;
-		g.initialize(this);
 		initializeStoredFields();
 		totalStates = g.recordStates();
 		double requiredCompression = Double.parseDouble(getProperty(
@@ -266,8 +251,7 @@ public class Configuration {
 	 * @throws ClassNotFoundException
 	 *             Could not load either the hasher or game class
 	 */
-	public void initialize(final String in_gamename)
-			throws ClassNotFoundException {
+	public void initialize(final String in_gamename) {
 		String gamename = in_gamename;
 
 		// Python classes end with ".py"
@@ -275,7 +259,24 @@ public class Configuration {
 			gamename = "edu.berkeley.gamesman.game." + gamename;
 		}
 		setProperty("gamesman.game", gamename);
-		Game<?> g = Util.typedInstantiate(gamename, Game.class);
+		try {
+			g = Class.forName(gamename).asSubclass(Game.class).getConstructor(
+					Configuration.class).newInstance(this);
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		} catch (InstantiationException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			e.getCause().printStackTrace();
+		} catch (NoSuchMethodException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
 		initialize(g);
 	}
 
@@ -284,88 +285,6 @@ public class Configuration {
 	 */
 	public Game<?> getGame() {
 		return g;
-	}
-
-	/**
-	 * Unserialize a configuration from a byte array
-	 * 
-	 * @param barr
-	 *            Bytes to deserialize
-	 * @return a Configuration
-	 * @throws ClassNotFoundException
-	 *             Could not find game class or hasher class
-	 */
-	public static Configuration load(byte[] barr) throws ClassNotFoundException {
-		try {
-			DataInputStream instream = new DataInputStream(
-					new ByteArrayInputStream(barr));
-			Properties props = new Properties();
-
-			byte[] t = new byte[instream.readInt()];
-			instream.readFully(t);
-			ByteArrayInputStream bin = new ByteArrayInputStream(t);
-			props.load(bin);
-			Configuration conf = new Configuration(props, true);
-
-			// assert Util.debug(DebugFacility.CORE, "Deserialized
-			// properties:\n"+props);
-
-			String gamename = instream.readUTF();
-
-			conf.valueStates = instream.readInt();
-			conf.remotenessStates = instream.readInt();
-			conf.scoreStates = instream.readInt();
-
-			try {
-				conf.g = Util.typedInstantiate(gamename, Game.class);
-			} catch (ClassNotFoundException e) {
-				conf.g = Util.typedInstantiate(conf
-						.getProperty("gamesman.game"), Game.class);
-			}
-			conf.initialize(conf.g);
-			return conf;
-		} catch (IOException e) {
-			Util.fatalError(
-					"Could not resuscitate Configuration from bytes :(\n"
-							+ new String(barr), e);
-		}
-		return null;
-	}
-
-	/**
-	 * Return a serialized version of the Configuration suitable for storing
-	 * persistently
-	 * 
-	 * @return a String with the Configuration information
-	 */
-	public byte[] store() {
-
-		try {
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			DataOutputStream out = new DataOutputStream(baos);
-
-			ByteArrayOutputStream baos2 = new ByteArrayOutputStream();
-
-			props.store(baos2, null);
-
-			out.writeInt(baos2.size());
-			out.write(baos2.toByteArray());
-
-			baos2.close();
-
-			out.writeUTF(g.getClass().getCanonicalName());
-
-			out.writeInt(valueStates);
-			out.writeInt(remotenessStates);
-			out.writeInt(scoreStates);
-
-			out.close();
-
-			return baos.toByteArray();
-		} catch (IOException e) {
-			Util.fatalError("IO Exception shouldn't have happened here", e);
-			return null;
-		}
 	}
 
 	public String toString() {
@@ -690,7 +609,7 @@ public class Configuration {
 	 */
 	public Configuration cloneAll() {
 		try {
-			Configuration newConf = new Configuration(props, false);
+			Configuration newConf = new Configuration(props);
 			newConf.db = db;
 			return newConf;
 		} catch (ClassNotFoundException e) {
@@ -712,5 +631,44 @@ public class Configuration {
 			return dfl;
 		else
 			return Util.parseIntegers(iString.split(", *"));
+	}
+
+	public static void storeNone(OutputStream os) throws IOException {
+		for (int i = 0; i < 4; i++)
+			os.write(0);
+	}
+
+	public static void skipConf(InputStream is) throws IOException {
+		int confLength = 0;
+		for (int i = 0; i < 4; i++) {
+			confLength <<= 8;
+			confLength |= is.read();
+		}
+		byte[] skippedBytes = new byte[confLength];
+		is.read(skippedBytes);
+	}
+
+	public void store(OutputStream os) throws IOException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		props.store(baos, "");
+		byte[] confBytes = baos.toByteArray();
+		for (int i = 24; i >= 0; i -= 8) {
+			os.write(confBytes.length >> i);
+		}
+		os.write(confBytes);
+	}
+
+	public static Configuration load(InputStream is) throws IOException,
+			ClassNotFoundException {
+		int confLength = 0;
+		for (int i = 0; i < 4; i++) {
+			confLength <<= 8;
+			confLength |= is.read();
+		}
+		byte[] confBytes = new byte[confLength];
+		is.read(confBytes);
+		Properties props = new Properties();
+		props.load(new ByteArrayInputStream(confBytes));
+		return new Configuration(props);
 	}
 }

@@ -8,7 +8,8 @@ import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.database.util.Page;
 import edu.berkeley.gamesman.game.Connect4;
-import edu.berkeley.gamesman.game.util.ItergameState;
+import edu.berkeley.gamesman.game.Record;
+import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
@@ -30,7 +31,7 @@ public class C4IntegratedSolver extends TierSolver {
 		for (int i = 0; i < vals.length; i++)
 			vals[i] = game.newRecord();
 		Record prim = game.newRecord();
-		ItergameState[] children = null;
+		TierState[] children = null;
 		long[] ends = null;
 		int numPages = 0;
 		Page[] childPages = null;
@@ -62,9 +63,9 @@ public class C4IntegratedSolver extends TierSolver {
 			game.setState(game.hashToState(start + hashes - 1));
 		}
 		if (tier < game.numberOfTiers() - 1) {
-			children = new ItergameState[game.maxChildren()];
+			children = new TierState[game.maxChildren()];
 			for (int i = 0; i < children.length; i++) {
-				children[i] = new ItergameState();
+				children[i] = new TierState();
 			}
 			if (!directRead) {
 				game.lastMoves(children);

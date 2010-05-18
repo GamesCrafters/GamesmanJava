@@ -58,8 +58,8 @@ public class Connections extends ConnectGame {
 	 * @param conf
 	 *            The configuration object
 	 */
-	public void initialize(Configuration conf) {
-		super.initialize(conf);
+	public Connections(Configuration conf) {
+		super(conf);
 		boardSide = conf.getInteger("gamesman.game.side", 4);
 		boardSize = boardSide * boardSide + (boardSide - 1) * (boardSide - 1);
 		xPoints = new Point[boardSide + 1][boardSide];

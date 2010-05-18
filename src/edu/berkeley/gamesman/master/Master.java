@@ -1,9 +1,11 @@
-package edu.berkeley.gamesman.core;
+package edu.berkeley.gamesman.master;
 
 import java.util.List;
 
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseWrapper;
+import edu.berkeley.gamesman.solver.Solver;
 
 /**
  * A Master is responsible for coordinating the interaction between the Game,

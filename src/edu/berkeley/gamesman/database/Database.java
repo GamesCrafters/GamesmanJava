@@ -3,9 +3,9 @@ package edu.berkeley.gamesman.database;
 import java.math.BigInteger;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Game;
-import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.RecordGroup;
+import edu.berkeley.gamesman.game.Game;
+import edu.berkeley.gamesman.game.Record;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 

@@ -6,7 +6,8 @@ import java.util.*;
 
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.database.Database;
-import edu.berkeley.gamesman.database.DatabaseHandle;
+import edu.berkeley.gamesman.game.Game;
+import edu.berkeley.gamesman.game.Record;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
@@ -184,16 +185,9 @@ public class JSONInterface extends GamesmanApplication {
 				return config;
 			} else if (filename != null && f.exists()) {
 				System.out.println("Loading solved database " + filename);
-				int confLength = 0;
 				FileInputStream fis = new FileInputStream(f);
-				for (int i = 0; i < 4; i++) {
-					confLength <<= 8;
-					confLength |= fis.read();
-				}
-				byte[] confBytes = new byte[confLength];
-				fis.read(confBytes);
+				Configuration conf = Configuration.load(fis);
 				fis.close();
-				Configuration conf = Configuration.load(confBytes);
 				conf.openDatabase(filename, false);
 				return conf;
 			}
@@ -387,7 +381,6 @@ public class JSONInterface extends GamesmanApplication {
 				Configuration conf, T state, boolean isChildState) {
 			GamestateResponse request = new GamestateResponse();
 			Database db = conf.db;
-			DatabaseHandle dh = db.getHandle();
 			Game<T> g = Util.checkedCast(conf.getGame());
 			if (db != null) {
 				Record rec = db.getRecord(g.stateToHash(state));
