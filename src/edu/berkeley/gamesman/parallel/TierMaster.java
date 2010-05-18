@@ -378,8 +378,7 @@ public class TierMaster {
 		long startTime = System.currentTimeMillis();
 		for (tier = startTier; tier >= 0; tier--) {
 			long tierOffset = game.hashOffsetForTier(tier);
-			long tierLength = ((TieredItergameHasher) conf.getHasher())
-					.numHashesForTier(tier);
+			long tierLength = game.numHashesForTier(tier);
 			splits = Util.groupAlignedTasks(
 					(int) (watchers.length * compMultiple), tierOffset,
 					tierLength, conf.recordsPerGroup);

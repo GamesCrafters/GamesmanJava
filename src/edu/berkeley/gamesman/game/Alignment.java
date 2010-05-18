@@ -3,38 +3,35 @@ package edu.berkeley.gamesman.game;
 import java.util.ArrayList;
 import java.util.Collection;
 
-
-
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Game;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.game.util.AlignmentState;
-import edu.berkeley.gamesman.game.util.Bullet;
 import edu.berkeley.gamesman.hasher.AlignmentHasher;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
-
-
 /**
  * @author Aloni, Brent, and DNSpies
- *
+ * 
  */
 public class Alignment extends Game<AlignmentState> {
 	private int gameWidth, gameHeight;
-	public int piecesToWin; 
-	private AlignmentVariant variant; //should be an enum?
+	public int piecesToWin;
+	private AlignmentVariant variant; // should be an enum?
 	public ArrayList<Pair<Integer, Integer>> openCells;
+	private AlignmentHasher myHasher;
 
-	public void initialize(int gameWidth, int gameHeight, int piecesToWin, int variant) {
-		
-		openCells = new ArrayList<Pair<Integer,Integer>>();
+	public void initialize(int gameWidth, int gameHeight, int piecesToWin,
+			int variant) {
+
+		openCells = new ArrayList<Pair<Integer, Integer>>();
 		this.gameWidth = gameWidth;
 		this.gameHeight = gameHeight;
 		this.piecesToWin = piecesToWin;
 
-		this.variant = AlignmentVariant.getVariant(variant); 
+		this.variant = AlignmentVariant.getVariant(variant);
 
 		for (int row = 0; row < gameHeight; row++) {
 			for (int col = 0; col < gameWidth; col++) {
@@ -42,26 +39,34 @@ public class Alignment extends Game<AlignmentState> {
 				openCells.add(new Pair<Integer, Integer>(row, col));
 			}
 		}
-		//Removing corners
-		/* Not compatible with AlignmentState and this removal is incorrect.
-		if (gameWidth > 4 && gameHeight > 4) {
-			openCells.remove(0); openCells.remove(1); openCells.remove(gameWidth);
-			openCells.remove(gameWidth-1); openCells.remove(gameWidth-2); openCells.remove(2*gameWidth - 1);
-			openCells.remove((gameHeight-1)*gameWidth); openCells.remove((gameHeight-2)*gameWidth); openCells.remove((gameHeight-1)*gameWidth + 1);
-			openCells.remove((gameHeight-1)*gameWidth - 1); openCells.remove((gameHeight)*gameWidth - 1); openCells.remove((gameHeight)*gameWidth - 2);
-		}
+
+		myHasher = new AlignmentHasher(this);
+		// Removing corners
+		/*
+		 * Not compatible with AlignmentState and this removal is incorrect. if
+		 * (gameWidth > 4 && gameHeight > 4) { openCells.remove(0);
+		 * openCells.remove(1); openCells.remove(gameWidth);
+		 * openCells.remove(gameWidth-1); openCells.remove(gameWidth-2);
+		 * openCells.remove(2*gameWidth - 1);
+		 * openCells.remove((gameHeight-1)*gameWidth);
+		 * openCells.remove((gameHeight-2)*gameWidth);
+		 * openCells.remove((gameHeight-1)*gameWidth + 1);
+		 * openCells.remove((gameHeight-1)*gameWidth - 1);
+		 * openCells.remove((gameHeight)*gameWidth - 1);
+		 * openCells.remove((gameHeight)*gameWidth - 2); }
 		 */
 	}
-	
+
 	@Override
 	public void initialize(Configuration conf) {
 		super.initialize(conf);
-		openCells = new ArrayList<Pair<Integer,Integer>>();
+		openCells = new ArrayList<Pair<Integer, Integer>>();
 		gameWidth = conf.getInteger("gamesman.game.width", 4);
 		gameHeight = conf.getInteger("gamesman.game.height", 4);
 		piecesToWin = conf.getInteger("gamesman.game.pieces", 5);
 
-		variant = AlignmentVariant.getVariant(conf.getInteger("gamesman.game.variant", 2)); 
+		variant = AlignmentVariant.getVariant(conf.getInteger(
+				"gamesman.game.variant", 2));
 
 		for (int row = 0; row < gameHeight; row++) {
 			for (int col = 0; col < gameWidth; col++) {
@@ -69,26 +74,32 @@ public class Alignment extends Game<AlignmentState> {
 				openCells.add(new Pair<Integer, Integer>(row, col));
 			}
 		}
-		//Removing corners
-		/* Not compatible with AlignmentState and this removal is incorrect.
-		if (gameWidth > 4 && gameHeight > 4) {
-			openCells.remove(0); openCells.remove(1); openCells.remove(gameWidth);
-			openCells.remove(gameWidth-1); openCells.remove(gameWidth-2); openCells.remove(2*gameWidth - 1);
-			openCells.remove((gameHeight-1)*gameWidth); openCells.remove((gameHeight-2)*gameWidth); openCells.remove((gameHeight-1)*gameWidth + 1);
-			openCells.remove((gameHeight-1)*gameWidth - 1); openCells.remove((gameHeight)*gameWidth - 1); openCells.remove((gameHeight)*gameWidth - 2);
-		}
+		// Removing corners
+		/*
+		 * Not compatible with AlignmentState and this removal is incorrect. if
+		 * (gameWidth > 4 && gameHeight > 4) { openCells.remove(0);
+		 * openCells.remove(1); openCells.remove(gameWidth);
+		 * openCells.remove(gameWidth-1); openCells.remove(gameWidth-2);
+		 * openCells.remove(2*gameWidth - 1);
+		 * openCells.remove((gameHeight-1)*gameWidth);
+		 * openCells.remove((gameHeight-2)*gameWidth);
+		 * openCells.remove((gameHeight-1)*gameWidth + 1);
+		 * openCells.remove((gameHeight-1)*gameWidth - 1);
+		 * openCells.remove((gameHeight)*gameWidth - 1);
+		 * openCells.remove((gameHeight)*gameWidth - 2); }
 		 */
 	}
 
 	@Override
 	public String describe() {
 		return "Alignment: " + gameWidth + "x" + gameHeight + " " + piecesToWin
-		+ " captures " + variant;
+				+ " captures " + variant;
 	}
 
 	@Override
 	public String displayState(AlignmentState pos) {
-		StringBuilder board = new StringBuilder(2 * (gameWidth + 2) * gameHeight );
+		StringBuilder board = new StringBuilder(2 * (gameWidth + 2)
+				* gameHeight);
 		int row = 0;
 		char nextSquare;
 		for (; row < gameHeight; row++) {
@@ -99,19 +110,21 @@ public class Alignment extends Game<AlignmentState> {
 				} else {
 					board.append(pos.get(row, col) + " ");
 				}
-				
+
 			}
 		}
 		for (row = 0; row < gameHeight; row++) {
-			board.replace((2*gameWidth*(row+1) - 1), (2*gameWidth*(row+1)), "\n"); //is this correct?
+			board.replace((2 * gameWidth * (row + 1) - 1),
+					(2 * gameWidth * (row + 1)), "\n"); // is this correct?
 		}
-		board.append("xDead: " + pos.xDead + " oDead: " + pos.oDead + " " + opposite(pos.lastMove) + "\'s turn");
+		board.append("xDead: " + pos.xDead + " oDead: " + pos.oDead + " "
+				+ opposite(pos.lastMove) + "\'s turn");
 		return board.toString();
 	}
 
 	@Override
 	public void hashToState(long hash, AlignmentState s) {
-		((AlignmentHasher) conf.getHasher()).unhash(hash, s);
+		myHasher.unhash(hash, s);
 		assert Util.debug(DebugFacility.GAME, "The newest state is "
 				+ stateToString(s));
 	}
@@ -119,16 +132,17 @@ public class Alignment extends Game<AlignmentState> {
 	@Override
 	public int maxChildren() {
 		if (variant == AlignmentVariant.NO_SLIDE) {
-			return gameWidth*gameHeight;
+			return gameWidth * gameHeight;
+		} else {
+			return gameHeight * 65;
 		}
-		else {return gameHeight*65;}
 
 	}
 
 	@Override
 	public AlignmentState newState() {
 		char[][] board = new char[gameHeight][gameWidth];
-		for (int row = 0; row < gameHeight; row++ ) {
+		for (int row = 0; row < gameHeight; row++) {
 			for (int col = 0; col < gameWidth; col++) {
 				board[row][col] = ' ';
 			}
@@ -138,7 +152,7 @@ public class Alignment extends Game<AlignmentState> {
 
 	@Override
 	public long numHashes() {
-		return conf.getHasher().numHashes();
+		return myHasher.numHashes();
 	}
 
 	@Override
@@ -152,8 +166,7 @@ public class Alignment extends Game<AlignmentState> {
 			}
 			if (pos.full()) {
 				return PrimitiveValue.TIE;
-			}
-			else {
+			} else {
 				return PrimitiveValue.UNDECIDED;
 			}
 		}
@@ -163,21 +176,23 @@ public class Alignment extends Game<AlignmentState> {
 			}
 			if (pos.oDead >= piecesToWin) {
 				return PrimitiveValue.WIN;
-			} 
+			}
 			if (pos.full()) {
 				return PrimitiveValue.TIE;
 			} else {
 				return PrimitiveValue.UNDECIDED;
 			}
 		} else {
-			throw new IllegalArgumentException("Last move cannot be " + pos.lastMove);
+			throw new IllegalArgumentException("Last move cannot be "
+					+ pos.lastMove);
 		}
 	}
+
 	@Override
 	public Collection<AlignmentState> startingPositions() {
 		AlignmentState as = newState();
 		for (Pair<Integer, Integer> place : openCells)
-			as.put(place.car,place.cdr,' ');
+			as.put(place.car, place.cdr, ' ');
 		ArrayList<AlignmentState> retVal = new ArrayList<AlignmentState>(1);
 		retVal.add(as);
 		return retVal;
@@ -185,12 +200,13 @@ public class Alignment extends Game<AlignmentState> {
 
 	@Override
 	public long stateToHash(AlignmentState pos) {
-		return ((AlignmentHasher) conf.getHasher()).hash(pos);
+		return myHasher.hash(pos);
 	}
 
 	@Override
 	public String stateToString(AlignmentState pos) {
-		StringBuilder board = new StringBuilder(2 * (gameWidth + 2) * gameHeight );
+		StringBuilder board = new StringBuilder(2 * (gameWidth + 2)
+				* gameHeight);
 		for (int row = 0; row < gameHeight; row++) {
 			for (int col = 0; col < gameWidth; col++) {
 				board.append(pos.get(row, col));
@@ -213,20 +229,22 @@ public class Alignment extends Game<AlignmentState> {
 			}
 		}
 		String[] auxData = pos.substring(gameWidth * gameHeight).split(":");
-		xDead = Integer.parseInt(auxData[0]); oDead = Integer.parseInt(auxData[2]);
+		xDead = Integer.parseInt(auxData[0]);
+		oDead = Integer.parseInt(auxData[2]);
 		lastMove = auxData[1].charAt(0);
 		return new AlignmentState(board, xDead, oDead, lastMove);
 	}
 
 	@Override
-	public Collection<Pair<String, AlignmentState>> validMoves(AlignmentState pos) {
+	public Collection<Pair<String, AlignmentState>> validMoves(
+			AlignmentState pos) {
 		AlignmentState s = new AlignmentState(pos);
 		Collection<String> strings = new ArrayList<String>();
 		Collection<AlignmentState> states = new ArrayList<AlignmentState>();
 		if (variant == AlignmentVariant.STANDARD) {
-			throw new UnsupportedOperationException ("STANDARD variant not complete");
-		}
-		else if (variant == AlignmentVariant.NO_SLIDE) {
+			throw new UnsupportedOperationException(
+					"STANDARD variant not complete");
+		} else if (variant == AlignmentVariant.NO_SLIDE) {
 			for (int row = 0; row < gameHeight; row++) {
 				for (int col = 0; col < gameWidth; col++) {
 					if (' ' == pos.get(row, col)) {
@@ -237,9 +255,9 @@ public class Alignment extends Game<AlignmentState> {
 				}
 			}
 			return Pair.zip(strings, states);
-		}
-		else if (variant == AlignmentVariant.DEAD_SQUARES) {
-			throw new UnsupportedOperationException ("DEAD_SQUARES variant not complete");
+		} else if (variant == AlignmentVariant.DEAD_SQUARES) {
+			throw new UnsupportedOperationException(
+					"DEAD_SQUARES variant not complete");
 		}
 
 		return null;
@@ -249,14 +267,14 @@ public class Alignment extends Game<AlignmentState> {
 	public int validMoves(AlignmentState pos, AlignmentState[] children) {
 		int moves = 0;
 		if (variant == AlignmentVariant.STANDARD) {
-			throw new UnsupportedOperationException ("STANDARD variant not complete");
-		}
-		else if (variant == AlignmentVariant.NO_SLIDE) {
+			throw new UnsupportedOperationException(
+					"STANDARD variant not complete");
+		} else if (variant == AlignmentVariant.NO_SLIDE) {
 			for (int row = 0; row < gameHeight; row++) {
 				for (int col = 0; col < gameWidth; col++) {
 					if (' ' == pos.get(row, col)) {
 						children[moves].set(pos);
-						children[moves].put(row, col, opposite(pos.lastMove)); 
+						children[moves].put(row, col, opposite(pos.lastMove));
 						children[moves].fireGuns(piecesToWin);
 						children[moves].setLastMove(opposite(pos.lastMove));
 						moves++;
@@ -264,9 +282,9 @@ public class Alignment extends Game<AlignmentState> {
 				}
 			}
 
-		}
-		else if (variant == AlignmentVariant.DEAD_SQUARES) {
-			throw new UnsupportedOperationException ("DEAD_SQUARES variant not complete");
+		} else if (variant == AlignmentVariant.DEAD_SQUARES) {
+			throw new UnsupportedOperationException(
+					"DEAD_SQUARES variant not complete");
 		}
 		assert Util.debug(DebugFacility.GAME, (opposite(pos.lastMove)
 				+ " just moved\n" + moves + " moves possible"));
@@ -275,10 +293,10 @@ public class Alignment extends Game<AlignmentState> {
 	}
 
 	public static char opposite(char player) {
-		switch(player) {
-		case('X'):
+		switch (player) {
+		case ('X'):
 			return 'O';
-		case('O'):
+		case ('O'):
 			return 'X';
 		default:
 			return player;
@@ -293,25 +311,24 @@ public class Alignment extends Game<AlignmentState> {
 		return gameHeight;
 	}
 
-
-
 }
 
 enum AlignmentVariant {
-	STANDARD, NO_SLIDE, DEAD_SQUARES; //STANDARD = 1, NO_SLIDE = 2, DEAD_SQUARES = 3;
+	STANDARD, NO_SLIDE, DEAD_SQUARES; // STANDARD = 1, NO_SLIDE = 2,
+	// DEAD_SQUARES = 3;
 
 	static AlignmentVariant getVariant(int varNum) {
 		switch (varNum) {
-		case(1): 
+		case (1):
 			return STANDARD;
-		case(2):
+		case (2):
 			return NO_SLIDE;
-		case(3):
+		case (3):
 			return DEAD_SQUARES;
 		default:
-			throw new IllegalArgumentException("No Alignment Variant exists for number " + varNum);
+			throw new IllegalArgumentException(
+					"No Alignment Variant exists for number " + varNum);
 		}
 
 	}
 }
-

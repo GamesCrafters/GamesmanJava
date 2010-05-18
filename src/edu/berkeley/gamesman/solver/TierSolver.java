@@ -167,14 +167,10 @@ public class TierSolver extends Solver {
 					needs2Reset = true;
 				TieredGame game = (TieredGame) conf.getGame();
 				long fullStart = game.hashOffsetForTier(tier);
-				TieredItergameHasher h = (TieredItergameHasher) conf
-						.getHasher();
-				long fullSize = h.numHashesForTier(tier);
+				long fullSize = game.numHashesForTier(tier);
 				long neededMem = memNeededForTier(conf);
-				TieredItergameHasher hasher = (TieredItergameHasher) conf
-						.getHasher();
 				prevToCurFraction = (tier >= game.numberOfTiers() - 1) ? 0
-						: ((double) hasher.numHashesForTier(tier + 1) / hasher
+						: ((double) game.numHashesForTier(tier + 1) / game
 								.numHashesForTier(tier));
 				splits = Math.max(minSplit,
 						(int) (neededMem * numThreads / maxMem));
@@ -377,9 +373,8 @@ public class TierSolver extends Solver {
 		TieredGame game = (TieredGame) conf.getGame();
 		long fullSize = endHash - startHash;
 		long neededMem = memNeededForRange(conf, fullSize);
-		TieredItergameHasher hasher = (TieredItergameHasher) conf.getHasher();
 		prevToCurFraction = (tier >= game.numberOfTiers() - 1) ? 0
-				: ((double) hasher.numHashesForTier(tier + 1) / hasher
+				: ((double) game.numHashesForTier(tier + 1) / game
 						.numHashesForTier(tier));
 		splits = Math.max(minSplit, (int) (neededMem * numThreads / maxMem));
 		strainingMemory = strictSafety && splits > minSplit;
@@ -389,20 +384,18 @@ public class TierSolver extends Solver {
 	}
 
 	private long memNeededForRange(Configuration conf, long fullSize) {
-		TieredItergameHasher hasher = (TieredItergameHasher) conf.getHasher();
 		TieredGame game = (TieredGame) conf.getGame();
-		long tierHashes = hasher.numHashesForTier(tier);
+		long tierHashes = game.numHashesForTier(tier);
 		return (long) ((tierHashes + game.maxChildren()
-				* (tier == game.numberOfTiers() - 1 ? 0 : hasher
+				* (tier == game.numberOfTiers() - 1 ? 0 : game
 						.numHashesForTier(tier + 1)) * SAFETY_MARGIN)
 				/ conf.recordsPerGroup * conf.recordGroupByteLength * (fullSize / (double) tierHashes));
 	}
 
 	private long memNeededForTier(Configuration conf) {
-		TieredItergameHasher hasher = (TieredItergameHasher) conf.getHasher();
 		TieredGame game = (TieredGame) conf.getGame();
-		return (long) ((hasher.numHashesForTier(tier) + game.maxChildren()
-				* (tier == game.numberOfTiers() - 1 ? 0 : hasher
+		return (long) ((game.numHashesForTier(tier) + game.maxChildren()
+				* (tier == game.numberOfTiers() - 1 ? 0 : game
 						.numHashesForTier(tier + 1)) * SAFETY_MARGIN)
 				* conf.recordGroupByteLength / conf.recordsPerGroup);
 	}

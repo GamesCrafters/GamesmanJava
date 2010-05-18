@@ -22,8 +22,6 @@ import edu.berkeley.gamesman.util.Util;
 public class Configuration {
 	private Game<?> g;
 
-	private Hasher<?> h;
-
 	protected long totalStates;
 
 	protected BigInteger bigIntTotalStates;
@@ -114,8 +112,7 @@ public class Configuration {
 		this.props = props;
 		if (!initLater) {
 			String gamename = getProperty("gamesman.game");
-			String hashname = getProperty("gamesman.hasher");
-			initialize(gamename, hashname);
+			initialize(gamename);
 		}
 	}
 
@@ -185,11 +182,9 @@ public class Configuration {
 	 * @param newH
 	 *            The Hasher associated with this configuration.
 	 */
-	public void initialize(Game<?> newG, Hasher<?> newH) {
+	public void initialize(Game<?> newG) {
 		g = newG;
-		h = newH;
 		g.initialize(this);
-		h.initialize(this);
 		initializeStoredFields();
 		totalStates = g.recordStates();
 		double requiredCompression = Double.parseDouble(getProperty(
@@ -271,22 +266,17 @@ public class Configuration {
 	 * @throws ClassNotFoundException
 	 *             Could not load either the hasher or game class
 	 */
-	public void initialize(final String in_gamename, final String in_hashname)
+	public void initialize(final String in_gamename)
 			throws ClassNotFoundException {
-		String gamename = in_gamename, hashname = in_hashname;
+		String gamename = in_gamename;
 
 		// Python classes end with ".py"
 		if (gamename.indexOf('.') == -1) {
 			gamename = "edu.berkeley.gamesman.game." + gamename;
 		}
 		setProperty("gamesman.game", gamename);
-		if (hashname.indexOf('.') == -1) {
-			hashname = "edu.berkeley.gamesman.hasher." + hashname;
-		}
-		setProperty("gamesman.hasher", hashname);
 		Game<?> g = Util.typedInstantiate(gamename, Game.class);
-		Hasher<?> h = Util.typedInstantiate(hashname, Hasher.class);
-		initialize(g, h);
+		initialize(g);
 	}
 
 	/**
@@ -321,7 +311,6 @@ public class Configuration {
 			// properties:\n"+props);
 
 			String gamename = instream.readUTF();
-			String hashername = instream.readUTF();
 
 			conf.valueStates = instream.readInt();
 			conf.remotenessStates = instream.readInt();
@@ -333,13 +322,7 @@ public class Configuration {
 				conf.g = Util.typedInstantiate(conf
 						.getProperty("gamesman.game"), Game.class);
 			}
-			try {
-				conf.h = Util.typedInstantiate(hashername, Hasher.class);
-			} catch (ClassNotFoundException e) {
-				conf.h = Util.typedInstantiate(conf
-						.getProperty("gamesman.hasher"), Hasher.class);
-			}
-			conf.initialize(conf.g, conf.h);
+			conf.initialize(conf.g);
 			return conf;
 		} catch (IOException e) {
 			Util.fatalError(
@@ -371,7 +354,6 @@ public class Configuration {
 			baos2.close();
 
 			out.writeUTF(g.getClass().getCanonicalName());
-			out.writeUTF(h.getClass().getCanonicalName());
 
 			out.writeInt(valueStates);
 			out.writeInt(remotenessStates);
@@ -386,24 +368,8 @@ public class Configuration {
 		}
 	}
 
-	@Override
-	public boolean equals(Object o) {
-		if (!(o instanceof Configuration))
-			return false;
-		Configuration c = (Configuration) o;
-		return c.props.equals(props) && c.g.getClass().equals(g.getClass())
-				&& c.h.getClass().equals(h.getClass());
-	}
-
-	/**
-	 * @return the Hasher this Configuration is using
-	 */
-	public Hasher<?> getHasher() {
-		return h;
-	}
-
 	public String toString() {
-		return "Config[" + props + "," + g + "," + h + "]";
+		return "Config[" + props + "," + g + "]";
 	}
 
 	/**

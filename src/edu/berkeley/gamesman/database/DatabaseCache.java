@@ -196,7 +196,7 @@ public final class DatabaseCache extends Database {
 				+ " indices each " + nWayAssociative + "-way associative");
 		assert Util.debug(DebugFacility.DATABASE, nWayAssociative * indices
 				+ " pages");
-		maxGroups = (conf.getHasher().numHashes() + conf.recordsPerGroup - 1)
+		maxGroups = (conf.getGame().numHashes() + conf.recordsPerGroup - 1)
 				/ conf.recordsPerGroup;
 	}
 

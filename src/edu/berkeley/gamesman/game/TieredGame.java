@@ -9,7 +9,6 @@ import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.game.util.ItergameState;
 import edu.berkeley.gamesman.hasher.TieredItergameHasher;
 import edu.berkeley.gamesman.util.Pair;
-import edu.berkeley.gamesman.util.Util;
 
 /**
  * @author DNSpies
@@ -20,7 +19,7 @@ public abstract class TieredGame extends Game<ItergameState> {
 	@Override
 	public void initialize(Configuration conf) {
 		super.initialize(conf);
-		myHasher = Util.checkedCast(conf.getHasher());
+		myHasher = new TieredItergameHasher(this);
 	}
 
 	@Override

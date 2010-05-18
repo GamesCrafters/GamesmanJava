@@ -1,6 +1,5 @@
 package edu.berkeley.gamesman.hasher;
 
-import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.game.TopDownC4;
 import edu.berkeley.gamesman.game.util.C4State;
 import edu.berkeley.gamesman.util.ExpCoefs;
@@ -10,19 +9,13 @@ import edu.berkeley.gamesman.util.ExpCoefs;
  * 
  * @author dnspies
  */
-public class TDC4Hasher extends Hasher<C4State> {
+public class TDC4Hasher {
 
-	private long[] offsets;
+	private final long[] offsets;
 
-	private long[] arrangeLengths;
+	private final long[] arrangeLengths;
 
-	@Override
-	public String describe() {
-		return "Top-down Connect 4 hasher";
-	}
-
-	private void setOffsets() {
-		TopDownC4 game = (TopDownC4) conf.getGame();
+	public TDC4Hasher(TopDownC4 game) {
 		offsets = new long[game.gameSize + 2];
 		arrangeLengths = new long[game.gameSize + 2];
 		ExpCoefs ec = game.ec;
@@ -35,22 +28,15 @@ public class TDC4Hasher extends Hasher<C4State> {
 		}
 	}
 
-	@Override
 	public long hash(C4State board) {
-		if (offsets == null)
-			setOffsets();
 		return offsets[board.numPieces] + arrangeLengths[board.numPieces]
 				* board.spaceArrangement + board.pieceArrangement;
 	}
 
-	@Override
 	public long numHashes() {
-		if (offsets == null)
-			setOffsets();
 		return offsets[offsets.length - 1];
 	}
 
-	@Override
 	public C4State unhash(long hash) {
 		int numPieces = getNumPieces(hash);
 		long newHash = hash - offsets[numPieces];
@@ -59,14 +45,12 @@ public class TDC4Hasher extends Hasher<C4State> {
 		return new C4State(numPieces, spaceArrangement, pieceArrangement);
 	}
 
-	
 	/**
-	 * @param hash The game hash
+	 * @param hash
+	 *            The game hash
 	 * @return The number of pieces in the game
 	 */
 	public int getNumPieces(long hash) {
-		if (offsets == null)
-			setOffsets();
 		int smallest = 0, largest = offsets.length - 1;
 		int guess = (smallest + largest) / 2;
 		while (guess != smallest) {

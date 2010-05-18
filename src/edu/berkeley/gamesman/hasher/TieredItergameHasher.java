@@ -2,7 +2,6 @@ package edu.berkeley.gamesman.hasher;
 
 import java.util.Arrays;
 
-import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.game.TieredGame;
 import edu.berkeley.gamesman.game.util.ItergameState;
 import edu.berkeley.gamesman.util.DebugFacility;
@@ -12,8 +11,14 @@ import edu.berkeley.gamesman.util.Util;
 /**
  * @author DNSpies Hasher for Tiered Cycle Games
  */
-public final class TieredItergameHasher extends Hasher<ItergameState> {
+public final class TieredItergameHasher {
 	private long tierOffsets[] = null;
+
+	private final TieredGame myGame;
+
+	public TieredItergameHasher(TieredGame g) {
+		myGame = g;
+	}
 
 	/**
 	 * Return the first hashed value in a given tier
@@ -36,7 +41,6 @@ public final class TieredItergameHasher extends Hasher<ItergameState> {
 		return tierOffsets[tier];
 	}
 
-	@Override
 	public long numHashes() {
 		return hashOffsetForTier(numberOfTiers());
 	}
@@ -47,30 +51,27 @@ public final class TieredItergameHasher extends Hasher<ItergameState> {
 	}
 
 	public long numHashesForTier(int tier) {
-		return ((TieredGame) conf.getGame()).numHashesForTier(tier);
+		return myGame.numHashesForTier(tier);
 	}
 
 	public int numberOfTiers() {
-		return ((TieredGame) conf.getGame()).numberOfTiers();
+		return myGame.numberOfTiers();
 	}
 
 	public Pair<Integer, Long> tierIndexForState(ItergameState state) {
 		return new Pair<Integer, Long>(state.tier, state.hash);
 	}
 
-	@Override
 	public String describe() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public long hash(ItergameState state) {
 		return hashOffsetForTier(state.tier) + state.hash;
 	}
 
-	@Override
 	public ItergameState unhash(long hash) {
-		return ((TieredGame) conf.getGame()).hashToState(hash);
+		return myGame.hashToState(hash);
 	}
 }

@@ -67,6 +67,8 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 	private C4State myState;
 
+	private TDC4Hasher myHasher;
+
 	/**
 	 * @param conf
 	 *            The configuration object
@@ -96,6 +98,7 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 		bsb = new BitSetBoard(gameHeight, gameWidth);
 		arranger = new TopDownPieceRearranger(gameSize);
 		turn = 'X';
+		myHasher = new TDC4Hasher(this);
 	}
 
 	@Override
@@ -127,7 +130,7 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 	@Override
 	public long getHash() {
-		return ((TDC4Hasher) conf.getHasher()).hash(myState);
+		return myHasher.hash(myState);
 	}
 
 	@Override
@@ -201,7 +204,7 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 	@Override
 	public void setToHash(long hash) {
-		setToState(((TDC4Hasher) conf.getHasher()).unhash(hash));
+		setToState(myHasher.unhash(hash));
 	}
 
 	@Override
@@ -306,7 +309,7 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 	@Override
 	public long numHashes() {
-		return ((TDC4Hasher) conf.getHasher()).numHashes();
+		return (myHasher.numHashes());
 	}
 
 	@Override
@@ -413,7 +416,7 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
 	@Override
 	public long stateToHash(C4State pos) {
-		return ((TDC4Hasher) conf.getHasher()).hash(pos);
+		return myHasher.hash(pos);
 	}
 
 	@Override

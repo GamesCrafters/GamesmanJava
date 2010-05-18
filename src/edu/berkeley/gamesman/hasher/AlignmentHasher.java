@@ -1,23 +1,23 @@
 package edu.berkeley.gamesman.hasher;
 
-import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.game.Alignment;
 import edu.berkeley.gamesman.game.util.AlignmentState;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
-public class AlignmentHasher extends Hasher<AlignmentState> {
+public class AlignmentHasher {
 	private Alignment game;
 	private char[] myArray = null;
 	private long[][][] offsets;
 	private long numHashes;
 	private MMHasher mmh = new MMHasher();
 
-	
-	
+	public AlignmentHasher(Alignment game) {
+		this.game = game;
+	}
+
 	public void initializeOffsets() {
-		game = (Alignment) conf.getGame();
-		offsets = new long[game.piecesToWin+1][game.piecesToWin+1][game.openCells
+		offsets = new long[game.piecesToWin + 1][game.piecesToWin + 1][game.openCells
 				.size() + 1];
 		long offset = 0;
 		for (int xCaptured = 0; xCaptured < game.piecesToWin; xCaptured++) {
@@ -27,7 +27,8 @@ public class AlignmentHasher extends Hasher<AlignmentState> {
 					int totalPieces = pieces + xCaptured + oCaptured;
 					int xPieces = (totalPieces + 1) / 2 - xCaptured;
 					int oPieces = totalPieces / 2 - oCaptured;
-					offset += Util.nCr(game.openCells.size(), xPieces + oPieces)
+					offset += Util
+							.nCr(game.openCells.size(), xPieces + oPieces)
 							* Util.nCr(xPieces + oPieces, oPieces);
 				}
 			}
@@ -35,12 +36,6 @@ public class AlignmentHasher extends Hasher<AlignmentState> {
 		numHashes = offset;
 	}
 
-	@Override
-	public String describe() {
-		return "Alignment Hasher";
-	}
-
-	@Override
 	public long hash(AlignmentState state) {
 		if (myArray == null)
 			myArray = new char[game.openCells.size()];
@@ -58,14 +53,12 @@ public class AlignmentHasher extends Hasher<AlignmentState> {
 		return offsets[state.xDead][state.oDead][numPieces] + mmh.hash(myArray);
 	}
 
-	@Override
 	public long numHashes() {
 		if (offsets == null)
 			initializeOffsets();
 		return numHashes;
 	}
 
-	@Override
 	public void unhash(long hash, AlignmentState state) {
 		state.xDead = guessXDead(hash);
 		state.oDead = guessODead(hash, state.xDead);
@@ -123,7 +116,6 @@ public class AlignmentHasher extends Hasher<AlignmentState> {
 		return low;
 	}
 
-	@Override
 	public AlignmentState unhash(long hash) {
 		AlignmentState as = game.newState();
 		unhash(hash, as);

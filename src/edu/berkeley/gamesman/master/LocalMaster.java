@@ -6,7 +6,6 @@ import java.util.List;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Game;
-import edu.berkeley.gamesman.core.Hasher;
 import edu.berkeley.gamesman.core.Master;
 import edu.berkeley.gamesman.core.Solver;
 import edu.berkeley.gamesman.core.State;
@@ -29,8 +28,6 @@ public final class LocalMaster implements Master, TaskFactory {
 
 	Solver solver;
 
-	Hasher<?> hasher;
-
 	Database database;
 
 	Configuration conf;
@@ -44,7 +41,6 @@ public final class LocalMaster implements Master, TaskFactory {
 		try {
 			game = Util.checkedCast(conf.getGame());
 			solver = solverc.newInstance();
-			hasher = conf.getHasher();
 			database = databasec.newInstance();
 			for (Class<? extends DatabaseWrapper> wrapper : wrappers) {
 				database = wrapper.getConstructor(Database.class).newInstance(
