@@ -41,7 +41,6 @@ public class GZippedFileDatabase extends Database {
 	public synchronized void getBytes(DatabaseHandle dh, long loc, byte[] arr,
 			int off, int len) {
 		while (len > 0) {
-			long filePos = 0;
 			int entryNum = (int) (loc / entrySize);
 			try {
 				fis.getChannel().position(entryPoints[entryNum]);
@@ -73,7 +72,6 @@ public class GZippedFileDatabase extends Database {
 		try {
 			myFile = new File(location);
 			fis = new FileInputStream(myFile);
-			int confLength = 0;
 			conf = Configuration.load(fis);
 			long numBytes = 0;
 			for (int i = 56; i >= 0; i -= 8) {
@@ -152,7 +150,6 @@ public class GZippedFileDatabase extends Database {
 			} else {
 				Configuration.storeNone(fos);
 			}
-			int confLength = (int) fos.getChannel().position();
 			if (totalBytes < 0) {
 				firstByte = readFrom.firstByte();
 				totalBytes = readFrom.getByteSize();
@@ -164,14 +161,14 @@ public class GZippedFileDatabase extends Database {
 			byte[] tempArray = new byte[bufferSize];
 			int numPosits = (int) ((numBytes + entrySize - 1) / entrySize);
 			long[] posits = new long[numPosits];
-			long pos = fos.getChannel().position();
+			long tablePos = fos.getChannel().position();
 			long count = 0;
-			fos.getChannel().position(pos + (numPosits << 3));
+			fos.getChannel().position(tablePos + (numPosits << 3));
 			long byteNum = firstByte;
 			readFrom.seek(byteNum);
 			long div = 0;
 			for (int i = 0; i < numPosits; i++) {
-				pos = fos.getChannel().position();
+				long pos = fos.getChannel().position();
 				posits[i] = pos;
 				gos = new GZIPOutputStream(fos);
 				long tot = Math.min((i + 1) * entrySize, numBytes);
@@ -197,7 +194,7 @@ public class GZippedFileDatabase extends Database {
 				}
 				gos.finish();
 			}
-			fos.getChannel().position(confLength + 12);
+			fos.getChannel().position(tablePos);
 			for (int i = 0; i < numPosits; i++) {
 				for (int bit = 56; bit >= 0; bit -= 8)
 					fos.write((int) (posits[i] >> bit));
