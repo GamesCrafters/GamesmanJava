@@ -20,7 +20,7 @@ public class DatabaseWrapper extends Database {
 
 	@Override
 	public void initialize(String uri, boolean solve) {
-		db.initialize(uri, solve);
+		db.initialize(uri, conf, solve);
 	}
 
 	@Override

@@ -1,12 +1,14 @@
 package edu.berkeley.gamesman.core;
 
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Set;
 
 import edu.berkeley.gamesman.database.Database;
+import edu.berkeley.gamesman.database.DatabaseWrapper;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -685,12 +687,31 @@ public class Configuration {
 		if (uri != null)
 			setProperty("gamesman.db.uri", uri);
 		String[] dbType = getProperty("gamesman.database").split(":");
-		if (dbType.length > 1 && dbType[0].trim().equals("cached")) {
-			db = Util.typedInstantiate("edu.berkeley.gamesman.database."
-					+ dbType[1], Database.class);
-		} else {
-			db = Util.typedInstantiate("edu.berkeley.gamesman.database."
-					+ dbType[0], Database.class);
+		try {
+			Class<? extends Database> dbClass = Util.checkedCast(Class
+					.forName("edu.berkeley.gamesman.database."
+							+ dbType[dbType.length - 1]));
+			db = dbClass.newInstance();
+			for (int i = dbType.length - 2; i >= 0; i--) {
+				Class<? extends DatabaseWrapper> wrapperClass = Util
+						.checkedCast(Class
+								.forName("edu.berkeley.gamesman.database."
+										+ dbType[i]));
+				db = wrapperClass.getConstructor(Database.class)
+						.newInstance(db);
+			}
+		} catch (InstantiationException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			e.getCause().printStackTrace();
+		} catch (NoSuchMethodException e) {
+			e.printStackTrace();
 		}
 		if (numBytes >= 0)
 			db.setRange(firstByte, numBytes);

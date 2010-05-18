@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.game.TieredGame;
 import edu.berkeley.gamesman.parallel.ErrorThread;
 import edu.berkeley.gamesman.parallel.TierSlave;
@@ -30,7 +29,6 @@ public class DistributedDatabase extends Database {
 	private byte[] dumbArray = new byte[512];
 	private String parentPath;
 	private ArrayList<ArrayList<Pair<Long, String>>> files;
-	private boolean solve;
 	private int tier;
 	private int lastZippedTier = -1;
 	private boolean zipped = false;
@@ -252,7 +250,6 @@ public class DistributedDatabase extends Database {
 
 	@Override
 	public void initialize(String uri, boolean solve) {
-		this.solve = solve;
 		if (solve) {
 			parentPath = uri + File.separator;
 			lastZippedTier = conf.getInteger("gamesman.db.lastZippedTier", -1);

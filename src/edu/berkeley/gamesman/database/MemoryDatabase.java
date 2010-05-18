@@ -9,32 +9,61 @@ import edu.berkeley.gamesman.core.RecordGroup;
  * 
  * @author dnspies
  */
-public class MemoryDatabase extends Database {
-	/* Class Variables */
+public class MemoryDatabase extends DatabaseWrapper {
 
-	protected byte[] memoryStorage; // byte array to store the data
+	public MemoryDatabase(Database db) {
+		super(db);
+	}
+
+	protected byte[] memoryStorage;
 
 	protected boolean readingOnly;
 
+	DatabaseHandle myHandle;
+
 	@Override
-	public void initialize(String location, boolean solve) {
+	public void initialize(String uri, boolean solve) {
+		super.initialize(uri, solve);
 		memoryStorage = new byte[(int) getByteSize()];
+		if (myHandle == null) {
+			long firstRecord = firstByte() / conf.recordGroupByteLength
+					* conf.recordsPerGroup;
+			long lastRecord = (firstByte() + getByteSize()
+					+ conf.recordGroupByteLength - 1)
+					/ conf.recordGroupByteLength * conf.recordsPerGroup;
+			myHandle = db.getHandle(firstRecord, lastRecord - firstRecord);
+		}
+		db.getBytes(myHandle, firstByte(), memoryStorage, 0,
+				(int) getByteSize());
 	}
 
 	@Override
 	public void close() {
+		if (solve) {
+			if (myHandle == null) {
+				long firstRecord = firstByte() / conf.recordGroupByteLength
+						* conf.recordsPerGroup;
+				long lastRecord = (firstByte() + getByteSize()
+						+ conf.recordGroupByteLength - 1)
+						/ conf.recordGroupByteLength * conf.recordsPerGroup;
+				myHandle = db.getHandle(firstRecord, lastRecord - firstRecord);
+			}
+			db.putBytes(myHandle, firstByte(), memoryStorage, 0,
+					(int) getByteSize());
+		}
+		super.close();
 	}
 
 	@Override
-	public void getBytes(DatabaseHandle dh, long loc, byte[] arr, int off, int len) {
-		for (int i = 0; i < len; i++)
-			arr[off++] = memoryStorage[(int) (loc++ - firstByte())];
+	public void getBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
+			int len) {
+		System.arraycopy(memoryStorage, (int) loc, arr, off, len);
 	}
 
 	@Override
-	public void putBytes(DatabaseHandle dh, long loc, byte[] arr, int off, int len) {
-		for (int i = 0; i < len; i++)
-			memoryStorage[(int) (loc++ - firstByte())] = arr[off++];
+	public void putBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
+			int len) {
+		System.arraycopy(arr, off, memoryStorage, (int) loc, len);
 	}
 
 	@Override

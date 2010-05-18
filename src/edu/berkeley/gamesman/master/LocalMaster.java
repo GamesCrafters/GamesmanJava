@@ -1,5 +1,6 @@
 package edu.berkeley.gamesman.master;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,7 +12,7 @@ import edu.berkeley.gamesman.core.Solver;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.database.Database;
-import edu.berkeley.gamesman.database.DatabaseCache;
+import edu.berkeley.gamesman.database.DatabaseWrapper;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Task;
 import edu.berkeley.gamesman.util.TaskFactory;
@@ -34,29 +35,39 @@ public final class LocalMaster implements Master, TaskFactory {
 
 	Configuration conf;
 
-	public void initialize(Configuration inconf,
-			Class<? extends Solver> solverc,
-			Class<? extends Database> databasec, boolean cached) {
+	public void initialize(Configuration conf, Class<? extends Solver> solverc,
+			Class<? extends Database> databasec,
+			List<Class<? extends DatabaseWrapper>> wrappers) {
 
 		Task.setTaskFactory(this);
 
 		try {
-			game = Util.checkedCast(inconf.getGame());
+			game = Util.checkedCast(conf.getGame());
 			solver = solverc.newInstance();
-			hasher = inconf.getHasher();
+			hasher = conf.getHasher();
 			database = databasec.newInstance();
-			if (cached)
-				database = new DatabaseCache(database);
-			inconf.db = database;
+			for (Class<? extends DatabaseWrapper> wrapper : wrappers) {
+				database = wrapper.getConstructor(Database.class).newInstance(
+						database);
+			}
+			conf.db = this.database;
 		} catch (IllegalAccessException e) {
-			Util.fatalError("Fatal error while initializing", e);
+			e.printStackTrace();
 		} catch (InstantiationException e) {
-			Util.fatalError("Fatal error while initializing", e);
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			e.getCause().printStackTrace();
+		} catch (NoSuchMethodException e) {
+			e.printStackTrace();
 		}
 
-		conf = inconf;
+		this.conf = conf;
 
-		database.initialize(conf.getProperty("gamesman.db.uri"), inconf, true);
+		database.initialize(conf.getProperty("gamesman.db.uri"), conf, true);
 
 		solver.initialize(conf);
 

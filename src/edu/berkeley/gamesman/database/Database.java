@@ -20,7 +20,7 @@ public abstract class Database {
 
 	protected Configuration conf;
 
-	private boolean solve;
+	protected boolean solve;
 
 	private long numBytes = -1;
 
