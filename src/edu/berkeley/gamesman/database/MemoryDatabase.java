@@ -23,7 +23,7 @@ public class MemoryDatabase extends DatabaseWrapper {
 
 	@Override
 	public void initialize(String uri, boolean solve) {
-		super.initialize(uri, solve);
+		db.initialize(uri, conf, solve);
 		memoryStorage = new byte[(int) getByteSize()];
 		if (myHandle == null) {
 			long firstRecord = firstByte() / conf.recordGroupByteLength
@@ -51,7 +51,7 @@ public class MemoryDatabase extends DatabaseWrapper {
 			db.putBytes(myHandle, firstByte(), memoryStorage, 0,
 					(int) getByteSize());
 		}
-		super.close();
+		db.close();
 	}
 
 	@Override

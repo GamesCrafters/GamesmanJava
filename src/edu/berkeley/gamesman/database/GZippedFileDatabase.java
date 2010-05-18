@@ -133,7 +133,7 @@ public class GZippedFileDatabase extends Database {
 	 */
 	public static void createFromFile(Database readFrom, File writeTo,
 			boolean storeConf, long entrySize, int bufferSize,
-			PrintStream writeProgress, long firstByte, long totalBytes) {
+			PrintStream writeProgress, long firstByte, long numBytes) {
 		bufferSize = (int) Math.min(bufferSize, entrySize);
 		if (writeTo.exists())
 			writeTo.delete();
@@ -153,11 +153,10 @@ public class GZippedFileDatabase extends Database {
 			} else {
 				Configuration.storeNone(fos);
 			}
-			if (totalBytes < 0) {
+			if (numBytes < 0) {
 				firstByte = readFrom.firstByte();
-				totalBytes = readFrom.getByteSize();
+				numBytes = readFrom.getByteSize();
 			}
-			long numBytes = totalBytes;
 			for (int bit = 56; bit >= 0; bit -= 8)
 				fos.write((int) (numBytes >>> bit));
 			GZIPOutputStream gos;

@@ -274,7 +274,7 @@ public abstract class Database {
 	public synchronized void getBytes(byte[] arr, int off, int len) {
 		if (myHandle == null)
 			myHandle = getHandle();
-		putBytes(myHandle, location, arr, off, len);
+		getBytes(myHandle, location, arr, off, len);
 		location += len;
 	}
 
