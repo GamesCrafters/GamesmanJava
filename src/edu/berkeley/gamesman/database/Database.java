@@ -99,7 +99,7 @@ public abstract class Database {
 	 *            The record number
 	 * @return The stored Record
 	 */
-	public Record getRecord(long recordIndex) {
+	public final Record getRecord(long recordIndex) {
 		Game<?> game = conf.getGame();
 		Record rec = game.newRecord();
 		game.getRecord(recordIndex, getRecord(getHandle(), recordIndex), rec);
