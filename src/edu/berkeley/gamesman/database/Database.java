@@ -127,7 +127,7 @@ public abstract class Database {
 						byteOffset), num);
 		} else
 			return RecordGroup.getRecord(conf, getLongRecordGroup(dh,
-					recordIndex * conf.recordGroupByteLength), 0);
+					recordIndex << conf.recordGroupByteBits), 0);
 	}
 
 	/**
@@ -153,7 +153,7 @@ public abstract class Database {
 				putRecordGroup(dh, byteOffset, rg);
 			}
 		} else
-			putRecordGroup(dh, recordIndex * conf.recordGroupByteLength, r);
+			putRecordGroup(dh, recordIndex << conf.recordGroupByteBits, r);
 	}
 
 	/**

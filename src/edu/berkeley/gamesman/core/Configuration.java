@@ -40,6 +40,8 @@ public class Configuration {
 	 */
 	public int recordGroupByteLength;
 
+	public int recordGroupByteBits;
+
 	/**
 	 * The number of possible states for value. When zero, the record does not
 	 * contain value.
@@ -197,6 +199,13 @@ public class Configuration {
 			if ((1 << bits) < totalStates)
 				++bits;
 			recordGroupByteLength = (bits + 7) >> 3;
+			recordGroupByteBits = 0;
+			recordGroupByteLength >>= 1;
+			while (recordGroupByteLength > 0) {
+				recordGroupByteBits++;
+				recordGroupByteLength >>= 1;
+			}
+			recordGroupByteLength = 1 << recordGroupByteBits;
 			recordsPerGroup = 1;
 		} else {
 			superCompress = true;
@@ -234,6 +243,7 @@ public class Configuration {
 			}
 			recordGroupByteLength = (bigIntTotalStates.pow(recordsPerGroup)
 					.bitLength() + 7) >> 3;
+			recordGroupByteBits = -1;
 		}
 		if (recordGroupByteLength < 8) {
 			recordGroupUsesLong = true;
