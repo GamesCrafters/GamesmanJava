@@ -1,10 +1,7 @@
 gamesman.game = Pyraminx
 gamesman.solver = BreadthFirstSolver
-gamesman.hasher = NullHasher
 gamesman.db.uri = pyraminx.db
 gamesman.database = MemoryDatabase:FileDatabase
-gamesman.dotty.uri = databasePyraminx.dot
 gamesman.debug.SOLVER = true
-record.fields = VALUE,REMOTENESS:11
+record.fields = VALUE,REMOTENESS:12
 gamesman.threads = 1
-gamesman.db.compression = gzip

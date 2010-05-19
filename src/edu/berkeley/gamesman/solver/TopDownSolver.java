@@ -4,8 +4,8 @@ import java.util.List;
 
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.database.DatabaseHandle;
+import edu.berkeley.gamesman.database.Record;
 import edu.berkeley.gamesman.game.Game;
-import edu.berkeley.gamesman.game.Record;
 import edu.berkeley.gamesman.game.TopDownGame;
 import edu.berkeley.gamesman.game.TopDownMutaGame;
 import edu.berkeley.gamesman.util.*;
@@ -25,14 +25,14 @@ public class TopDownSolver<S extends State> extends Solver {
 
 	protected RecycleLinkedList<Record[]> recordList;
 
-	public void initialize(Configuration conf) {
+	public void initialize(final Configuration conf) {
 		super.initialize(conf);
 		final Game<?> game = conf.getGame();
 		recordList = new RecycleLinkedList<Record[]>(new Factory<Record[]>() {
 			public Record[] newObject() {
 				Record[] retVal = new Record[game.maxChildren()];
 				for (int i = 0; i < retVal.length; i++)
-					retVal[i] = game.newRecord();
+					retVal[i] = new Record(conf);
 				return retVal;
 			}
 
@@ -45,9 +45,10 @@ public class TopDownSolver<S extends State> extends Solver {
 	@Override
 	public WorkUnit prepareSolve(final Configuration conf) {
 		long hashSpace = conf.getGame().numHashes();
-		Record defaultRecord = conf.getGame().newRecord();
+		Record defaultRecord = new Record(conf);
 		defaultRecord.value = PrimitiveValue.UNDECIDED;
-		writeDb.fill(defaultRecord.getState(), 0, hashSpace);
+		writeDb.fill(conf.getGame().getRecord(null, defaultRecord), 0,
+				hashSpace);
 
 		return new WorkUnit() {
 
@@ -80,7 +81,7 @@ public class TopDownSolver<S extends State> extends Solver {
 		for (S s : game.startingPositions()) {
 			game.setToState(s);
 			long currentTimeMillis = System.currentTimeMillis();
-			solve(game, game.newRecord(), 0, readDb.getHandle(), writeDb
+			solve(game, s, new Record(conf), 0, readDb.getHandle(), writeDb
 					.getHandle());
 			System.out.println(Util.millisToETA(System.currentTimeMillis()
 					- currentTimeMillis)
@@ -88,29 +89,29 @@ public class TopDownSolver<S extends State> extends Solver {
 		}
 	}
 
-	private void solve(TopDownMutaGame<S> game, Record value, int depth,
+	private void solve(TopDownMutaGame<S> game, S curState, Record value, int depth,
 			DatabaseHandle readDh, DatabaseHandle writeDh) {
 		if (depth < 3)
 			assert Util.debug(DebugFacility.SOLVER, game.toString());
 		long hash = game.getHash();
-		value.set(readDb.getRecord(readDh, hash));
+		game.recordFromLong(curState, readDb.getRecord(readDh, hash), value);
 		if (value.value != PrimitiveValue.UNDECIDED)
 			return;
 		PrimitiveValue pv = game.primitiveValue();
 		switch (pv) {
 		case UNDECIDED:
 			Record[] recs = recordList.addFirst();
-			boolean made = game.makeMove();
+			boolean made = game.makeMove(curState);
 			int i = 0;
 			while (made) {
-				solve(game, value, depth + 1, readDh, writeDh);
+				solve(game, curState, value, depth + 1, readDh, writeDh);
 				recs[i].set(value);
 				recs[i].previousPosition();
 				++i;
-				made = game.changeMove();
+				made = game.changeMove(curState);
 			}
 			if (i > 0)
-				game.undoMove();
+				game.undoMove(curState);
 			Record best = game.combine(recs, 0, i);
 			value.set(best);
 			recordList.remove();
@@ -122,6 +123,6 @@ public class TopDownSolver<S extends State> extends Solver {
 			value.value = pv;
 			value.remoteness = 0;
 		}
-		writeDb.putRecord(writeDh, hash, value.getState());
+		writeDb.putRecord(writeDh, hash, game.getRecord(curState, value));
 	}
 }

@@ -110,19 +110,19 @@ public abstract class TopDownMutaGame<S extends State> extends Game<S> {
 	 * 
 	 * @return Whether there are any possible moves to be made
 	 */
-	public abstract boolean makeMove();
+	public abstract boolean makeMove(S curState);
 
 	/**
 	 * Changes the last move made to the next possible move in the list
 	 * 
 	 * @return If there are any more moves to be tried
 	 */
-	public abstract boolean changeMove();
+	public abstract boolean changeMove(S curState);
 
 	/**
 	 * Undoes the last move made
 	 */
-	public abstract void undoMove();
+	public abstract void undoMove(S curState);
 
 	@Override
 	public Collection<Pair<String, S>> validMoves(S pos) {
@@ -134,26 +134,26 @@ public abstract class TopDownMutaGame<S extends State> extends Game<S> {
 	 * @return All the possible moves for the current position
 	 */
 	public Collection<Pair<String, S>> validMoves() {
-		boolean made = makeMove();
+		boolean made = makeMove(null);
 		int i = 0;
 		ArrayList<Pair<String, S>> validMoves = new ArrayList<Pair<String, S>>();
 		while (made) {
 			validMoves.add(new Pair<String, S>(Integer.toString(i++),
 					getState()));
-			made = changeMove();
+			made = changeMove(null);
 		}
-		undoMove();
+		undoMove(null);
 		return validMoves;
 	}
 
 	public int validMoves(S pos, S[] childArray) {
-		boolean made = makeMove();
+		boolean made = makeMove(null);
 		int i;
 		for (i = 0; made; i++) {
 			childArray[i] = getState();
-			made = changeMove();
+			made = changeMove(null);
 		}
-		undoMove();
+		undoMove(null);
 		return i;
 	}
 }

@@ -12,10 +12,9 @@ import java.util.concurrent.CyclicBarrier;
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
-import edu.berkeley.gamesman.game.Record;
+import edu.berkeley.gamesman.database.Record;
 import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.game.util.TierState;
-import edu.berkeley.gamesman.hasher.TierHasher;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Task;
@@ -59,11 +58,12 @@ public class TierSolver extends Solver {
 			DatabaseHandle readDh, Database writeDb, DatabaseHandle writeDh) {
 		TierGame game = (TierGame) conf.getGame();
 		long current = start;
-		game.setState(game.hashToState(start));
+		TierState curState = game.hashToState(start);
+		game.setState(curState);
 		Record[] vals = new Record[game.maxChildren()];
 		for (int i = 0; i < vals.length; i++)
-			vals[i] = game.newRecord();
-		Record prim = game.newRecord();
+			vals[i] = new Record(conf);
+		Record prim = new Record(conf);
 		TierState[] children = new TierState[game.maxChildren()];
 		for (int i = 0; i < children.length; i++)
 			children[i] = new TierState();
@@ -74,28 +74,27 @@ public class TierSolver extends Solver {
 			switch (pv) {
 			case UNDECIDED:
 				int len = game.validMoves(children);
-				Record r;
 				for (int i = 0; i < len; i++) {
-					r = vals[i];
-					r.set(readDb.getRecord(readDh, game
-							.stateToHash(children[i])));
-					r.previousPosition();
+					game.recordFromLong(children[i], readDb.getRecord(readDh,
+							game.stateToHash(children[i])), vals[i]);
+					vals[i].previousPosition();
 				}
 				Record newVal = game.combine(vals, 0, len);
-				writeDb.putRecord(writeDh, current, newVal.getState());
+				writeDb.putRecord(writeDh, current, game.getRecord(
+						curState, newVal));
 				break;
 			case IMPOSSIBLE:
-				prim.value = PrimitiveValue.LOSE;
-				writeDb.putRecord(writeDh, current, prim.getState());
 				break;
 			default:
-				if (conf.remotenessStates > 0)
-					prim.remoteness = 0;
+				prim.remoteness = 0;
 				prim.value = pv;
-				writeDb.putRecord(writeDh, current, prim.getState());
+				writeDb.putRecord(writeDh, current, game.getRecord(
+						curState, prim));
 			}
-			if (count < hashes - 1)
+			if (count < hashes - 1) {
 				game.nextHashInTier();
+				curState.hash++;
+			}
 			++current;
 		}
 	}

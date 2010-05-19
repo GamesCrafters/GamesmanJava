@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 
 import edu.berkeley.gamesman.core.*;
+import edu.berkeley.gamesman.database.Record;
 import edu.berkeley.gamesman.game.util.BitSetBoard;
 import edu.berkeley.gamesman.game.util.C4State;
 import edu.berkeley.gamesman.game.util.TopDownPieceRearranger;
@@ -102,8 +103,7 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 	}
 
 	@Override
-	public boolean changeMove() {
-
+	public boolean changeMove(C4State state) {
 		Move myMove = moves.element();
 		if (myMove.columnIndex == 0)
 			return false;
@@ -124,7 +124,8 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 		++colHeights[col];
 		myState.spaceArrangement += ec.getCoef(col, myMove.piecesLeft);
 		myState.pieceArrangement = arranger.getHash();
-
+		if (state != null)
+			state.set(myState);
 		return true;
 	}
 
@@ -139,7 +140,7 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 	}
 
 	@Override
-	public boolean makeMove() {
+	public boolean makeMove(C4State state) {
 		Move newMove = moves.addFirst();
 		int i = 0;
 		for (int col = 0; col < gameWidth; col++) {
@@ -165,6 +166,8 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 		turn = oppositeTurn();
 		myState.spaceArrangement += ec.getCoef(col, newMove.piecesLeft);
 		myState.pieceArrangement = arranger.getHash();
+		if (state != null)
+			state.set(myState);
 		return true;
 	}
 
@@ -268,7 +271,7 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 	}
 
 	@Override
-	public void undoMove() {
+	public void undoMove(C4State state) {
 		Move myMove = moves.remove();
 		int col = myMove.openColumns[myMove.columnIndex];
 		--colHeights[col];
@@ -283,6 +286,8 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 		turn = oppositeTurn();
 		--myState.numPieces;
 		myState.pieceArrangement = arranger.getHash();
+		if (state != null)
+			state.set(myState);
 	}
 
 	// private void checkArrangement() {
@@ -330,7 +335,7 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 		int col = gameWidth - 1;
 		while (col >= 0 && colHeights[col] == gameHeight)
 			col--;
-		boolean made = makeMove();
+		boolean made = makeMove(null);
 		while (made) {
 			moves.addFirst(new Pair<String, C4State>(Integer.toString(col),
 					getState().clone()));
@@ -339,58 +344,11 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 				col--;
 			if (col < 0)
 				break;
-			made = changeMove();
+			made = changeMove(null);
 		}
 		if (made)
-			undoMove();
+			undoMove(null);
 		return moves;
-	}
-
-	private class C4Record extends Record {
-		protected C4Record() {
-			super(conf);
-		}
-
-		@Override
-		public long getState() {
-			if (conf.remotenessStates > 0) {
-				PrimitiveValue val = value;
-				if (val.equals(PrimitiveValue.TIE)) {
-					return gameSize + 1;
-				} else if (val.equals(PrimitiveValue.UNDECIDED)) {
-					return gameSize + 2;
-				} else {
-					return remoteness;
-				}
-			} else {
-				return value.value;
-			}
-		}
-
-		@Override
-		public void set(long state) {
-			if (conf.remotenessStates > 0) {
-				if (state == gameSize + 1) {
-					value = PrimitiveValue.TIE;
-					remoteness = gameSize - myState.numPieces;
-				} else if (state == gameSize + 2) {
-					value = PrimitiveValue.UNDECIDED;
-				} else if ((state & 1L) > 0) {
-					value = PrimitiveValue.WIN;
-					remoteness = (int) state;
-				} else {
-					value = PrimitiveValue.LOSE;
-					remoteness = (int) state;
-				}
-			} else {
-				value = PrimitiveValue.values[(int) state];
-			}
-		}
-	}
-
-	@Override
-	public Record newRecord() {
-		return new C4Record();
 	}
 
 	/**
@@ -422,5 +380,40 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 	@Override
 	public C4State newState() {
 		return new C4State(0, 0, 0);
+	}
+
+	@Override
+	public void recordFromLong(C4State recordState, long state, Record toStore) {
+		if (conf.remotenessStates > 0) {
+			if (state == gameSize + 1) {
+				toStore.value = PrimitiveValue.TIE;
+				toStore.remoteness = gameSize - recordState.numPieces;
+			} else if (state == gameSize + 2) {
+				toStore.value = PrimitiveValue.UNDECIDED;
+			} else if ((state & 1L) > 0) {
+				toStore.value = PrimitiveValue.WIN;
+				toStore.remoteness = (int) state;
+			} else {
+				toStore.value = PrimitiveValue.LOSE;
+				toStore.remoteness = (int) state;
+			}
+		} else {
+			toStore.value = PrimitiveValue.values[(int) state];
+		}
+	}
+
+	@Override
+	public long getRecord(C4State recordState, Record fromRecord) {
+		if (conf.remotenessStates > 0) {
+			if (fromRecord.value.equals(PrimitiveValue.TIE)) {
+				return gameSize + 1;
+			} else if (fromRecord.value.equals(PrimitiveValue.UNDECIDED)) {
+				return gameSize + 2;
+			} else {
+				return fromRecord.remoteness;
+			}
+		} else {
+			return fromRecord.value.value;
+		}
 	}
 }

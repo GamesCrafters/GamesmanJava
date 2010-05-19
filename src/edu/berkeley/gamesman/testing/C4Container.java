@@ -13,6 +13,9 @@ import javax.swing.*;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.GZippedFileDatabase;
+import edu.berkeley.gamesman.database.Record;
+import edu.berkeley.gamesman.game.Connect4;
+import edu.berkeley.gamesman.game.TopDownC4;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -115,7 +118,17 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 		}
 		int width = conf.getInteger("gamesman.game.width", 7);
 		int height = conf.getInteger("gamesman.game.height", 6);
-		System.out.println(fd.getRecord(0));
+		Record r = new Record(conf);
+		if (conf.getGame() instanceof Connect4) {
+			Connect4 g = (Connect4) conf.getGame();
+			g.recordFromLong(g.hashToState(0), fd.getRecord(fd.getHandle(), 0),
+					r);
+		} else {
+			TopDownC4 g = (TopDownC4) conf.getGame();
+			g.recordFromLong(g.hashToState(0), fd.getRecord(fd.getHandle(), 0),
+					r);
+		}
+		System.out.println(r);
 		DisplayFour df = new DisplayFour(height, width);
 		ConnectFour cf = new ConnectFour(conf, df);
 		JFrame jf = new JFrame();

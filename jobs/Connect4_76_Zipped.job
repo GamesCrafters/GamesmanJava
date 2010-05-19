@@ -1,7 +1,0 @@
-gamesman.game = Connect4
-gamesman.game.width = 7
-gamesman.game.height = 6
-gamesman.game.pieces = 4
-gamesman.database = GZippedFileDatabase
-record.fields = VALUE
-record.compression = 90

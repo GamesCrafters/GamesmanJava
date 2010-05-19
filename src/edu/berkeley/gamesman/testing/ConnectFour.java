@@ -8,8 +8,8 @@ import java.util.Random;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.database.Database;
+import edu.berkeley.gamesman.database.Record;
 import edu.berkeley.gamesman.game.Connect4;
-import edu.berkeley.gamesman.game.Record;
 import edu.berkeley.gamesman.game.TopDownC4;
 import edu.berkeley.gamesman.game.util.C4State;
 import edu.berkeley.gamesman.game.util.TierState;
@@ -49,6 +49,8 @@ class ConnectFour implements MouseListener {
 
 	final int gameHeight;
 
+	private final Configuration conf;
+
 	private Record nextRecord = null;
 
 	/**
@@ -73,6 +75,7 @@ class ConnectFour implements MouseListener {
 	 */
 	public ConnectFour(Configuration conf, DisplayFour disfour, boolean cX,
 			boolean cO) {
+		this.conf = conf;
 		topDown = conf.getProperty("gamesman.game").contains("TopDownC4");
 		if (topDown) {
 			game = null;
@@ -125,13 +128,17 @@ class ConnectFour implements MouseListener {
 					System.out.println(nextRecord);
 					nextRecord = null;
 				} else if (topDown) {
-					tdgame.setFromString(arrToString(board));
-					System.out.println(fd.getRecord(tdgame.stateToHash(tdgame
-							.getState())));
+					C4State state = tdgame.stringToState(arrToString(board));
+					Record r = new Record(conf);
+					tdgame.recordFromLong(state, fd.getRecord(fd.getHandle(),
+							tdgame.stateToHash(state)), r);
+					System.out.println(r);
 				} else {
-					game.setFromString(arrToString(board));
-					System.out.println(fd.getRecord(game.stateToHash(game
-							.getState())));
+					TierState state = game.stringToState(arrToString(board));
+					Record r = new Record(conf);
+					game.recordFromLong(state, fd.getRecord(fd.getHandle(),
+							game.stateToHash(state)), r);
+					System.out.println(r);
 				}
 				if (!win())
 					new Thread() {
@@ -165,7 +172,9 @@ class ConnectFour implements MouseListener {
 					moveHashes[i] = tdgame.stateToHash(state);
 					if (tdgame.getState().numPieces != state.numPieces)
 						tdgame.setNumPieces(state.numPieces);
-					records[i] = fd.getRecord(moveHashes[i]);
+					records[i] = new Record(conf);
+					tdgame.recordFromLong(state, fd.getRecord(fd.getHandle(),
+							moveHashes[i]), records[i]);
 				}
 				for (Record r : records)
 					r.previousPosition();
@@ -184,8 +193,7 @@ class ConnectFour implements MouseListener {
 				makeMove(chosenMove.car.charAt(0) - '0');
 			} else {
 				game.setFromString(arrToString(board));
-				Collection<Pair<String, TierState>> moves = game
-						.validMoves();
+				Collection<Pair<String, TierState>> moves = game.validMoves();
 				ArrayList<Pair<String, TierState>> listMoves = new ArrayList<Pair<String, TierState>>(
 						moves.size());
 				listMoves.addAll(moves);
@@ -196,7 +204,9 @@ class ConnectFour implements MouseListener {
 					moveHashes[i] = game.stateToHash(state);
 					if (game.getTier() != state.tier)
 						game.setTier(state.tier);
-					records[i] = fd.getRecord(moveHashes[i]);
+					records[i] = new Record(conf);
+					game.recordFromLong(state, fd.getRecord(fd.getHandle(),
+							moveHashes[i]), records[i]);
 				}
 				for (Record r : records)
 					r.previousPosition();

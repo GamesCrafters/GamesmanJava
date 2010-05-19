@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.*;
+import edu.berkeley.gamesman.database.Record;
 import edu.berkeley.gamesman.game.util.BitSetBoard;
 import edu.berkeley.gamesman.game.util.Connect4ReducerBoard;
 import edu.berkeley.gamesman.game.util.TierState;
@@ -552,53 +553,6 @@ public final class Connect4 extends TierGame {
 		return gameWidth + "x" + gameHeight + " Connect " + piecesToWin;
 	}
 
-	private class C4Record extends Record {
-		protected C4Record() {
-			super(conf);
-		}
-
-		@Override
-		public long getState() {
-			if (conf.remotenessStates > 0) {
-				PrimitiveValue val = value;
-				if (val.equals(PrimitiveValue.TIE)) {
-					return gameSize + 1;
-				} else if (val.equals(PrimitiveValue.UNDECIDED)) {
-					return gameSize + 2;
-				} else {
-					return remoteness;
-				}
-			} else {
-				return value.value;
-			}
-		}
-
-		@Override
-		public void set(long state) {
-			if (conf.remotenessStates > 0) {
-				if (state == gameSize + 1) {
-					value = PrimitiveValue.TIE;
-					remoteness = gameSize - pieces.size();
-				} else if (state == gameSize + 2) {
-					value = PrimitiveValue.UNDECIDED;
-				} else if ((state & 1L) > 0) {
-					value = PrimitiveValue.WIN;
-					remoteness = (int) state;
-				} else {
-					value = PrimitiveValue.LOSE;
-					remoteness = (int) state;
-				}
-			} else {
-				value = PrimitiveValue.values[(int) state];
-			}
-		}
-	}
-
-	@Override
-	public Record newRecord() {
-		return new C4Record();
-	}
-
 	@Override
 	public long recordStates() {
 		if (conf.remotenessStates > 0)
@@ -615,5 +569,40 @@ public final class Connect4 extends TierGame {
 	@Override
 	public int defaultRemotenessStates() {
 		return gameSize + 1;
+	}
+
+	@Override
+	public void recordFromLong(TierState recordState, long state, Record toStore) {
+		if (conf.remotenessStates > 0) {
+			if (state == gameSize + 1) {
+				toStore.value = PrimitiveValue.TIE;
+				toStore.remoteness = gameSize - recordState.tier;
+			} else if (state == gameSize + 2) {
+				toStore.value = PrimitiveValue.UNDECIDED;
+			} else if ((state & 1L) > 0) {
+				toStore.value = PrimitiveValue.WIN;
+				toStore.remoteness = (int) state;
+			} else {
+				toStore.value = PrimitiveValue.LOSE;
+				toStore.remoteness = (int) state;
+			}
+		} else {
+			toStore.value = PrimitiveValue.values[(int) state];
+		}
+	}
+
+	@Override
+	public long getRecord(TierState recordState, Record fromRecord) {
+		if (conf.remotenessStates > 0) {
+			if (fromRecord.value.equals(PrimitiveValue.TIE)) {
+				return gameSize + 1;
+			} else if (fromRecord.value.equals(PrimitiveValue.UNDECIDED)) {
+				return gameSize + 2;
+			} else {
+				return fromRecord.remoteness;
+			}
+		} else {
+			return fromRecord.value.value;
+		}
 	}
 }

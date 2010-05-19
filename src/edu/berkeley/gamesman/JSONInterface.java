@@ -6,8 +6,8 @@ import java.util.*;
 
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.database.Database;
+import edu.berkeley.gamesman.database.Record;
 import edu.berkeley.gamesman.game.Game;
-import edu.berkeley.gamesman.game.Record;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
@@ -383,7 +383,9 @@ public class JSONInterface extends GamesmanApplication {
 			Database db = conf.db;
 			Game<T> g = Util.checkedCast(conf.getGame());
 			if (db != null) {
-				Record rec = db.getRecord(g.stateToHash(state));
+				Record rec = new Record(conf);
+				g.recordFromLong(state, db.getRecord(db.getHandle(), g
+						.stateToHash(state)), rec);
 				if (conf.valueStates > 0) {
 					PrimitiveValue pv = rec.value;
 					if (g.getPlayerCount() > 1 && isChildState) {

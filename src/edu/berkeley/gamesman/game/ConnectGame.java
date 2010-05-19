@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.*;
+import edu.berkeley.gamesman.database.Record;
 import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.hasher.MMHasher;
 import edu.berkeley.gamesman.util.DebugFacility;
@@ -174,43 +175,6 @@ public abstract class ConnectGame extends TierGame {
 		return c;
 	}
 
-	private final class ConnectRecord extends Record {
-		protected ConnectRecord() {
-			super(conf);
-		}
-
-		@Override
-		public long getState() {
-			if (conf.remotenessStates > 0) {
-				return remoteness;
-			} else {
-				switch (value) {
-				case LOSE:
-					return 0L;
-				case WIN:
-					return 1L;
-				default:
-					return 0L;
-				}
-			}
-		}
-
-		@Override
-		public void set(long state) {
-			if ((state & 1) == 1)
-				value = PrimitiveValue.WIN;
-			else
-				value = PrimitiveValue.LOSE;
-			if (conf.remotenessStates > 0)
-				remoteness = (int) state;
-		}
-	}
-
-	@Override
-	public Record newRecord() {
-		return new ConnectRecord();
-	}
-
 	@Override
 	public long recordStates() {
 		if (conf.remotenessStates > 0)
@@ -251,6 +215,32 @@ public abstract class ConnectGame extends TierGame {
 			return PrimitiveValue.IMPOSSIBLE;
 		else
 			return result;
+	}
+
+	@Override
+	public long getRecord(TierState recordState, Record fromRecord) {
+		if (conf.remotenessStates > 0) {
+			return fromRecord.remoteness;
+		} else {
+			switch (fromRecord.value) {
+			case LOSE:
+				return 0L;
+			case WIN:
+				return 1L;
+			default:
+				return 0L;
+			}
+		}
+	}
+
+	@Override
+	public void recordFromLong(TierState recordState, long state, Record toStore) {
+		if ((state & 1) == 1)
+			toStore.value = PrimitiveValue.WIN;
+		else
+			toStore.value = PrimitiveValue.LOSE;
+		if (conf.remotenessStates > 0)
+			toStore.remoteness = (int) state;
 	}
 
 	protected abstract boolean isWin(char c);

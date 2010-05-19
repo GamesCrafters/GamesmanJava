@@ -1,15 +1,14 @@
 package edu.berkeley.gamesman.solver;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.database.DatabaseHandle;
+import edu.berkeley.gamesman.database.Record;
 import edu.berkeley.gamesman.game.Game;
-import edu.berkeley.gamesman.game.Record;
 import edu.berkeley.gamesman.util.*;
 
 /**
@@ -31,24 +30,24 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 	volatile int lastTier = 0;
 
 	@Override
-	public WorkUnit prepareSolve(Configuration config) {
-		conf = config;
-		Game<T> game = Util.checkedCast(config.getGame());
+	public WorkUnit prepareSolve(Configuration conf) {
+		this.conf = conf;
+		Game<T> game = Util.checkedCast(conf.getGame());
 		int maxRemoteness = conf.getInteger("gamesman.solver.maxRemoteness",
 				conf.remotenessStates);
 		hashSpace = game.numHashes();
-		Record defaultRecord = game.newRecord();
+		Record defaultRecord = new Record(conf);
 		defaultRecord.value = PrimitiveValue.UNDECIDED;
-		writeDb.fill(defaultRecord.getState(), 0, hashSpace);
+		writeDb.fill(game.getRecord(null, defaultRecord), 0, hashSpace);
 		DatabaseHandle dh = writeDb.getHandle();
 		long numPositionsZero = 0;
-		Record rec = game.newRecord();
+		Record rec = new Record(conf);
 		for (T s : game.startingPositions()) {
 			long hash = game.stateToHash(s);
 			PrimitiveValue isWin = game.primitiveValue(s);
 			rec.value = isWin;
 			rec.remoteness = 0;
-			writeDb.putRecord(dh, hash, rec.getState());
+			writeDb.putRecord(dh, hash, game.getRecord(s, rec));
 			numPositionsZero++;
 		}
 		assert Util.debug(DebugFacility.SOLVER,
@@ -93,44 +92,41 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 					game.describe()));
 			solveTask.setTotal(lastHashPlusOne - firstHash);
 			solveTask.setProgress(0);
-			Record rec = game.newRecord();
-			Record childrec;
+			Record rec = new Record(conf);
+			Record childrec = new Record(conf);
 			T currentPos = game.newState();
 			T[] childPositions = game.newStateArray(game.maxChildren());
 			DatabaseHandle readDh = readDb.getHandle();
 			DatabaseHandle writeDh = writeDb.getHandle();
 			while (lastTier >= remoteness && remoteness <= maxRemoteness) {
-				HashSet<Long> setValues = new HashSet<Long>();
 				numPositionsInLevel = 0;
 				for (long hash = firstHash; hash < lastHashPlusOne; hash++) {
-					rec.set(readDb.getRecord(readDh, hash));
+					game.recordFromLong(null, readDb.getRecord(readDh, hash), rec);
+					// TODO: Figure out when this is allowed to be null
 					if (rec.value != PrimitiveValue.UNDECIDED
 							&& rec.remoteness == remoteness) {
-						// System.out.println("Found! "+hash+"="+rec);
 						game.hashToState(hash, currentPos);
 						int numChildren = game.validMoves(currentPos,
 								childPositions);
 						for (int i = 0; i < numChildren; i++) {
 							long childhash = game
 									.stateToHash(childPositions[i]);
-							if (setValues.contains(childhash)) {
-								continue;
-							}
-							childrec = readDb.getRecord(childhash);
+							game.recordFromLong(childPositions[i], readDb.getRecord(
+									readDh, childhash), childrec);
 							if (childrec.value == PrimitiveValue.UNDECIDED) {
 								childrec.value = rec.value;
 								childrec.remoteness = remoteness + 1;
 								// System.out.println("Setting child "+childhash+"="+childrec);
-								writeDb.putRecord(writeDh, childhash, childrec.getState());
+								writeDb
+										.putRecord(writeDh, childhash, game
+												.getRecord(childPositions[i],
+														childrec));
 								numPositionsInLevel++;
 								numPositionsSeen++;
-								setValues.add(childhash);
 								lastTier = remoteness + 1;
 								if (numPositionsSeen % STEP_SIZE == 0) {
 									solveTask.setProgress(numPositionsSeen);
 								}
-							} else {
-								// System.out.println("Get child "+childhash+"="+childrec);
 							}
 						}
 					}

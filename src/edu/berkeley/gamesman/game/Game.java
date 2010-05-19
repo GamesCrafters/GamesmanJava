@@ -8,6 +8,7 @@ import java.util.List;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.State;
+import edu.berkeley.gamesman.database.Record;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -30,7 +31,8 @@ public abstract class Game<S extends State> {
 	private Record[] valsBestRemoteness = new Record[1];
 
 	/**
-	 * @param conf The configuratino object
+	 * @param conf
+	 *            The configuratino object
 	 */
 	public Game(Configuration conf) {
 		this.conf = conf;
@@ -66,13 +68,7 @@ public abstract class Game<S extends State> {
 	 *            The array to store all valid board states one move forward
 	 * @return The number of children for this position
 	 */
-	public int validMoves(S pos, S[] children) {
-		Collection<Pair<String, S>> vm = validMoves(pos);
-		Iterator<Pair<String, S>> iter = vm.iterator();
-		for (int i = 0; iter.hasNext(); i++)
-			children[i] = iter.next().cdr;
-		return vm.size();
-	}
+	public abstract int validMoves(S pos, S[] children);
 
 	/**
 	 * @return The maximum number of child states for any position
@@ -211,36 +207,43 @@ public abstract class Game<S extends State> {
 	 *            The number of records to read through
 	 * @return The record with the best possible outcome
 	 */
-	public Record combine(Record[] recordArray, int offset, int len) {
-		int size = 0;
-		PrimitiveValue bestPrim = PrimitiveValue.LOSE;
-		for (int i = 0; i < len; i++) {
-			PrimitiveValue pv = recordArray[i].value;
-			if (pv.isPreferableTo(bestPrim)) {
-				size = 1;
-				valsBest[0] = recordArray[i];
-				bestPrim = pv;
-			} else if (pv.equals(bestPrim)) {
-				if (valsBest.length <= size) {
-					Record[] temp = valsBest;
-					valsBest = new Record[size + 1];
-					for (int c = 0; c < temp.length; c++)
-						valsBest[c] = temp[c];
-				}
-				valsBest[size++] = recordArray[i];
-			}
-		}
-		Record[] arrVals = valsBest;
+	public final Record combine(Record[] recordArray, int offset, int len) {
+		int size = len;
 		int lastSize;
+		Record[] arrVals = recordArray;
+		PrimitiveValue bestVal = PrimitiveValue.WIN;
+		if (conf.valueStates > 0) {
+			lastSize = size;
+			size = 0;
+			bestVal = PrimitiveValue.LOSE;
+			for (int i = 0; i < lastSize; i++) {
+				PrimitiveValue value = arrVals[i + offset].value;
+				if (value.isPreferableTo(bestVal)) {
+					size = 1;
+					valsBest[0] = arrVals[i + offset];
+					bestVal = value;
+				} else if (value.equals(bestVal)) {
+					if (valsBest.length <= size) {
+						Record[] temp = valsBest;
+						valsBest = new Record[size + 1];
+						for (int c = 0; c < temp.length; c++)
+							valsBest[c] = temp[c];
+					}
+					valsBest[size++] = arrVals[i + offset];
+				}
+			}
+			arrVals = valsBest;
+			offset = 0;
+		}
 		if (conf.scoreStates > 0) {
 			lastSize = size;
 			size = 0;
 			int bestScore = Integer.MIN_VALUE;
 			for (int i = 0; i < lastSize; i++) {
-				int score = arrVals[i].score;
+				int score = arrVals[i + offset].score;
 				if (score > bestScore) {
 					size = 1;
-					valsBestScore[0] = arrVals[i];
+					valsBestScore[0] = arrVals[i + offset];
 					bestScore = score;
 				} else if (score == bestScore) {
 					if (valsBestScore.length <= size) {
@@ -249,21 +252,22 @@ public abstract class Game<S extends State> {
 						for (int c = 0; c < temp.length; c++)
 							valsBestScore[c] = temp[c];
 					}
-					valsBestScore[size++] = arrVals[i];
+					valsBestScore[size++] = arrVals[i + offset];
 				}
 			}
 			arrVals = valsBestScore;
+			offset = 0;
 		}
 		if (conf.remotenessStates > 0) {
 			lastSize = size;
 			size = 0;
-			if (bestPrim.equals(PrimitiveValue.LOSE)) {
+			if (bestVal.equals(PrimitiveValue.LOSE)) {
 				int bestRemoteness = 0;
 				for (int i = 0; i < lastSize; i++) {
-					int remoteness = arrVals[i].remoteness;
+					int remoteness = arrVals[i + offset].remoteness;
 					if (remoteness > bestRemoteness) {
 						size = 1;
-						valsBestRemoteness[0] = arrVals[i];
+						valsBestRemoteness[0] = arrVals[i + offset];
 						bestRemoteness = remoteness;
 					} else if (remoteness == bestRemoteness) {
 						if (valsBestRemoteness.length <= size) {
@@ -272,7 +276,7 @@ public abstract class Game<S extends State> {
 							for (int c = 0; c < temp.length; c++)
 								valsBestRemoteness[c] = temp[c];
 						}
-						valsBestRemoteness[size++] = arrVals[i];
+						valsBestRemoteness[size++] = arrVals[i + offset];
 					}
 				}
 			} else {
@@ -297,13 +301,6 @@ public abstract class Game<S extends State> {
 			arrVals = valsBestRemoteness;
 		}
 		return arrVals[0];
-	}
-
-	/**
-	 * @return An empty new Record
-	 */
-	public Record newRecord() {
-		return new Record(conf);
 	}
 
 	/**
@@ -374,7 +371,39 @@ public abstract class Game<S extends State> {
 		return 1;
 	}
 
-	public void getRecord(long recordIndex, long record, Record toStore) {
-		toStore.set(record);
+	public void recordFromLong(S recordState, long record, Record toStore) {
+		int fieldStates = 1;
+		if (conf.valueStates > 0) {
+			fieldStates = conf.valueStates;
+			toStore.value = PrimitiveValue.values[(int) (record % fieldStates)];
+		}
+		if (conf.remotenessStates > 0) {
+			record /= fieldStates;
+			fieldStates = conf.remotenessStates;
+			toStore.remoteness = (int) (record % fieldStates);
+		}
+		if (conf.scoreStates > 0) {
+			record /= fieldStates;
+			toStore.score = (int) record;
+		}
+	}
+
+	public long getRecord(S recordState, Record fromRecord) {
+		int fieldStates = 1;
+		long totalState = 0;
+		if (conf.scoreStates > 0) {
+			totalState += fromRecord.score;
+			fieldStates = conf.scoreStates;
+		}
+		if (conf.remotenessStates > 0) {
+			totalState *= fieldStates;
+			totalState += fromRecord.remoteness;
+			fieldStates = conf.remotenessStates;
+		}
+		if (conf.valueStates > 0) {
+			totalState *= fieldStates;
+			totalState += fromRecord.value.value;
+		}
+		return totalState;
 	}
 }

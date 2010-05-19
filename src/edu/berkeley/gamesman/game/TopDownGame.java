@@ -5,6 +5,7 @@ import java.util.Collection;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.State;
+import edu.berkeley.gamesman.database.Record;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.qll.Factory;
 import edu.berkeley.gamesman.util.qll.RLLFactory;
@@ -67,11 +68,12 @@ public final class TopDownGame<S extends State> extends TopDownMutaGame<S> {
 	}
 
 	@Override
-	public boolean changeMove() {
+	public boolean changeMove(S state) {
 		if (moveLists.getLast().isEmpty())
 			return false;
 		S m = moveLists.getLast().removeFirst();
 		stateList.getLast().set(m);
+		state.set(m);
 		return true;
 	}
 
@@ -91,7 +93,7 @@ public final class TopDownGame<S extends State> extends TopDownMutaGame<S> {
 	}
 
 	@Override
-	public boolean makeMove() {
+	public boolean makeMove(S state) {
 		RecycleLinkedList<S> moves = moveLists.addLast();
 		int numMoves = myGame.validMoves(stateList.getLast(), possibleMoves);
 		if (numMoves == 0) {
@@ -104,6 +106,7 @@ public final class TopDownGame<S extends State> extends TopDownMutaGame<S> {
 			}
 			S curState = stateList.addLast();
 			curState.set(moves.removeFirst());
+			state.set(curState);
 			return true;
 		}
 	}
@@ -133,9 +136,10 @@ public final class TopDownGame<S extends State> extends TopDownMutaGame<S> {
 	}
 
 	@Override
-	public void undoMove() {
+	public void undoMove(S state) {
 		moveLists.removeLast();
 		stateList.removeLast();
+		state.set(stateList.getLast());
 	}
 
 	@Override
@@ -189,16 +193,6 @@ public final class TopDownGame<S extends State> extends TopDownMutaGame<S> {
 	}
 
 	@Override
-	public Record combine(Record[] recordArray, int offset, int len) {
-		return myGame.combine(recordArray, offset, len);
-	}
-
-	@Override
-	public Record newRecord() {
-		return myGame.newRecord();
-	}
-
-	@Override
 	public long recordStates() {
 		return myGame.recordStates();
 	}
@@ -241,5 +235,13 @@ public final class TopDownGame<S extends State> extends TopDownMutaGame<S> {
 	@Override
 	public String toString() {
 		return "\n" + displayState();
+	}
+
+	public void recordFromLong(S recordState, long record, Record toStore) {
+		myGame.recordFromLong(recordState, record, toStore);
+	}
+
+	public long getRecord(S recordState, Record fromRecord) {
+		return myGame.getRecord(recordState, fromRecord);
 	}
 }

@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.game;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.State;
+import edu.berkeley.gamesman.database.Record;
 
 /**
  * A superclass for twisty puzzles
@@ -19,11 +20,6 @@ public abstract class TwistyPuzzle<S extends State> extends Game<S> {
 	}
 
 	@Override
-	public Record newRecord() {
-		return new TwistyPuzzleRecord(conf);
-	}
-
-	@Override
 	public int getPlayerCount() {
 		return 1;
 	}
@@ -33,43 +29,21 @@ public abstract class TwistyPuzzle<S extends State> extends Game<S> {
 		return conf.remotenessStates + 1;
 	}
 
-}
-
-class TwistyPuzzleRecord extends Record {
-	public TwistyPuzzleRecord(Configuration conf) {
-		super(conf);
-	}
-
-	public TwistyPuzzleRecord(Configuration conf, long state) {
-		super(conf);
-		set(state);
-	}
-
-	public TwistyPuzzleRecord(Configuration conf, int remoteness) {
-		super(conf);
-		this.remoteness = remoteness;
-	}
-
-	public TwistyPuzzleRecord(Configuration conf, PrimitiveValue pv) {
-		super(conf);
-		value = pv;
-	}
-
 	@Override
-	public long getState() {
-		if (value.equals(PrimitiveValue.UNDECIDED))
+	public long getRecord(S recordState, Record fromRecord) {
+		if (fromRecord.value.equals(PrimitiveValue.UNDECIDED))
 			return 0;
 		else
-			return remoteness + 1;
+			return fromRecord.remoteness + 1;
 	}
 
 	@Override
-	public void set(long state) {
-		if (state == 0)
-			value = PrimitiveValue.UNDECIDED;
+	public void recordFromLong(S recordState, long record, Record toStore) {
+		if (record == 0)
+			toStore.value = PrimitiveValue.UNDECIDED;
 		else {
-			value = PrimitiveValue.WIN;
-			remoteness = (int) (state - 1);
+			toStore.value = PrimitiveValue.WIN;
+			toStore.remoteness = (int) (record - 1);
 		}
 	}
 }

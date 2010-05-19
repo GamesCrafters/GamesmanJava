@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.game;
+package edu.berkeley.gamesman.database;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;
@@ -8,7 +8,7 @@ import edu.berkeley.gamesman.core.PrimitiveValue;
  * 
  * @author dnspies
  */
-public class Record {
+public final class Record {
 	private final Configuration conf;
 
 	/**
@@ -32,7 +32,7 @@ public class Record {
 	 * @param conf
 	 *            The configuration object
 	 */
-	protected Record(Configuration conf) {
+	public Record(Configuration conf) {
 		this.conf = conf;
 	}
 
@@ -46,28 +46,6 @@ public class Record {
 		value = record.value;
 		remoteness = record.remoteness;
 		score = record.score;
-	}
-
-	/**
-	 * @return The integer value of this record
-	 */
-	public long getState() {
-		int fieldStates = 1;
-		long totalState = 0;
-		if (conf.scoreStates > 0) {
-			totalState += score;
-			fieldStates = conf.scoreStates;
-		}
-		if (conf.remotenessStates > 0) {
-			totalState *= fieldStates;
-			totalState += remoteness;
-			fieldStates = conf.remotenessStates;
-		}
-		if (conf.valueStates > 0) {
-			totalState *= fieldStates;
-			totalState += value.value;
-		}
-		return totalState;
 	}
 
 	/**
@@ -115,29 +93,6 @@ public class Record {
 	@Override
 	public Record clone() {
 		return new Record(this);
-	}
-
-	/**
-	 * Derives all the fields from the passed long value
-	 * 
-	 * @param state
-	 *            The state to derive the fields from
-	 */
-	public void set(long state) {
-		int fieldStates = 1;
-		if (conf.valueStates > 0) {
-			fieldStates = conf.valueStates;
-			value = PrimitiveValue.values[(int) (state % fieldStates)];
-		}
-		if (conf.remotenessStates > 0) {
-			state /= fieldStates;
-			fieldStates = conf.remotenessStates;
-			remoteness = (int) (state % fieldStates);
-		}
-		if (conf.scoreStates > 0) {
-			state /= fieldStates;
-			score = (int) state;
-		}
 	}
 
 	/**

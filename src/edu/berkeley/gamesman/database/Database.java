@@ -4,8 +4,6 @@ import java.math.BigInteger;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.RecordGroup;
-import edu.berkeley.gamesman.game.Game;
-import edu.berkeley.gamesman.game.Record;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
@@ -90,20 +88,6 @@ public abstract class Database {
 	 */
 	public final Configuration getConfiguration() {
 		return conf;
-	}
-
-	/**
-	 * Return the Nth Record in the Database
-	 * 
-	 * @param recordIndex
-	 *            The record number
-	 * @return The stored Record
-	 */
-	public final Record getRecord(long recordIndex) {
-		Game<?> game = conf.getGame();
-		Record rec = game.newRecord();
-		game.getRecord(recordIndex, getRecord(getHandle(), recordIndex), rec);
-		return rec;
 	}
 
 	/**
