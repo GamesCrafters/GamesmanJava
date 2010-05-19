@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.*;
-import edu.berkeley.gamesman.database.Record;
 import edu.berkeley.gamesman.game.util.BitSetBoard;
 import edu.berkeley.gamesman.game.util.Connect4ReducerBoard;
 import edu.berkeley.gamesman.game.util.TierState;

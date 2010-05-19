@@ -12,7 +12,6 @@ import java.util.concurrent.CyclicBarrier;
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
-import edu.berkeley.gamesman.database.Record;
 import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.util.DebugFacility;

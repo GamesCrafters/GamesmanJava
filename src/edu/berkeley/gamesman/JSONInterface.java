@@ -6,7 +6,6 @@ import java.util.*;
 
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.database.Database;
-import edu.berkeley.gamesman.database.Record;
 import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;

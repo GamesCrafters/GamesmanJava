@@ -1,7 +1,5 @@
-package edu.berkeley.gamesman.database;
+package edu.berkeley.gamesman.core;
 
-import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.PrimitiveValue;
 
 /**
  * Stores information about a game state

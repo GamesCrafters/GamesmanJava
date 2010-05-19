@@ -2,8 +2,8 @@ package edu.berkeley.gamesman.game;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.State;
-import edu.berkeley.gamesman.database.Record;
 
 /**
  * A superclass for twisty puzzles

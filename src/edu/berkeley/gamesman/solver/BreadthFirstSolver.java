@@ -7,7 +7,6 @@ import java.util.concurrent.CyclicBarrier;
 
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.database.DatabaseHandle;
-import edu.berkeley.gamesman.database.Record;
 import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.util.*;
 

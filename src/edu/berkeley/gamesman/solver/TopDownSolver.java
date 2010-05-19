@@ -4,7 +4,6 @@ import java.util.List;
 
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.database.DatabaseHandle;
-import edu.berkeley.gamesman.database.Record;
 import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.game.TopDownGame;
 import edu.berkeley.gamesman.game.TopDownMutaGame;

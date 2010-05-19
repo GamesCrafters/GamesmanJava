@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.LinkedList;
 
 import edu.berkeley.gamesman.core.*;
-import edu.berkeley.gamesman.database.Record;
 import edu.berkeley.gamesman.game.util.BitSetBoard;
 import edu.berkeley.gamesman.game.util.C4State;
 import edu.berkeley.gamesman.game.util.TopDownPieceRearranger;

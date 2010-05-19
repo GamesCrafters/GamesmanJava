@@ -4,8 +4,8 @@ import java.util.Collection;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.State;
-import edu.berkeley.gamesman.database.Record;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.qll.Factory;
 import edu.berkeley.gamesman.util.qll.RLLFactory;
