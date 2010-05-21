@@ -100,13 +100,12 @@ public class Pyraminx extends TwistyPuzzle<PyraminxState> {
 		}
 		int totalorient = 0;
 		for (int i = 0; i < edgeCount - 1; i++) {
-			state.edgeOrientation[i] = (int) (hash % 2);
-			hash /= 2;
+			state.edgeOrientation[i] = (int) (hash & 1);
+			hash >>= 1;
 			totalorient += state.edgeOrientation[i];
 		}
 		// the number of flipped edges must be even!
-		state.edgeOrientation[edgeCount - 1] = Util.nonNegativeModulo(
-				2 - totalorient, 2);
+		state.edgeOrientation[edgeCount - 1] = (2 - totalorient) & 1;
 		epHasher.unhash(hash, state.edgePermutation);
 	}
 
@@ -153,7 +152,10 @@ public class Pyraminx extends TwistyPuzzle<PyraminxState> {
 	public int validMoves(PyraminxState pos, PyraminxState[] moves) {
 		int countMoves = 0;
 		for (int axis : EDGE_INDICES.keySet()) {
-			for (int dir : new int[] { 1, 2 }) {
+			// TODO: Bad! Instantiates a very expensive iterator. (You'll be
+			// shocked if you run under debugger and see just how much effort
+			// that one line requires)
+			for (int dir = 1; dir <= 2; dir++) {
 				if (moves[countMoves] == null)
 					moves[countMoves] = new PyraminxState(edgeCount,
 							centerCount);

@@ -48,7 +48,7 @@ public class PermutationHash {
 		// basically, we're counting the number of swaps to
 		// get back to the identity permutation, so if we had
 		// an even number of swaps, we have an even permutation
-		return count % 2 == 0;
+		return (count & 1) == 0;
 	}
 
 	// public static void main(String[] args) {
