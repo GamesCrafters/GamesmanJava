@@ -272,10 +272,15 @@ public abstract class Database {
 	}
 
 	protected void putRecordsAsBytes(DatabaseHandle dh, long recordIndex,
-			byte[] arr, int off, int numRecords) {
+			byte[] arr, int off, int numRecords, boolean overwriteEdgesOk) {
+		long byteIndex = toByte(recordIndex);
+		if (overwriteEdgesOk) {
+			long lastByte = lastByte(recordIndex + numRecords);
+			putBytes(dh, byteIndex, arr, off, (int) (lastByte - byteIndex));
+			return;
+		}
 		long lastRecord = recordIndex + numRecords;
 		long lastByte = toByte(lastRecord);
-		long byteIndex = toByte(recordIndex);
 		int num = toNum(recordIndex);
 		if (num > 0) {
 			long firstRecord = recordIndex - num;
@@ -351,7 +356,7 @@ public abstract class Database {
 			int numRecords, long rg) {
 		byte[] groupBytes = dh.getRecordGroupBytes();
 		toUnsignedByteArray(rg, groupBytes, 0);
-		putRecordsAsBytes(dh, recordIndex, groupBytes, 0, numRecords);
+		putRecordsAsBytes(dh, recordIndex, groupBytes, 0, numRecords, false);
 		dh.releaseBytes(groupBytes);
 	}
 
@@ -359,7 +364,7 @@ public abstract class Database {
 			int numRecords, BigInteger rg) {
 		byte[] groupBytes = dh.getRecordGroupBytes();
 		toUnsignedByteArray(rg, groupBytes, 0);
-		putRecordsAsBytes(dh, recordIndex, groupBytes, 0, numRecords);
+		putRecordsAsBytes(dh, recordIndex, groupBytes, 0, numRecords, false);
 		dh.releaseBytes(groupBytes);
 	}
 

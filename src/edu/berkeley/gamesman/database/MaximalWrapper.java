@@ -33,8 +33,8 @@ public class MaximalWrapper extends DatabaseWrapper {
 
 	@Override
 	protected void putRecordsAsBytes(DatabaseHandle dh, long recordIndex,
-			byte[] arr, int off, int numRecords) {
-		db.putRecordsAsBytes(dh, recordIndex, arr, off, numRecords);
+			byte[] arr, int off, int numRecords, boolean overwriteEdgesOk) {
+		db.putRecordsAsBytes(dh, recordIndex, arr, off, numRecords, overwriteEdgesOk);
 	}
 
 	@Override
