@@ -1,12 +1,10 @@
-package edu.berkeley.gamesman.parallel;
+package edu.berkeley.gamesman.database;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.database.DatabaseHandle;
-import edu.berkeley.gamesman.database.GZippedFileDatabase;
 
 public class ReadZippedBytes {
 	public static void main(String[] args) throws ClassNotFoundException,

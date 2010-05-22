@@ -34,16 +34,9 @@ public class Gamesman {
 	/**
 	 * @param args
 	 *            The command line arguments. Should just be a job file.
-	 * @throws NoSuchMethodException
-	 * @throws InvocationTargetException
-	 * @throws IllegalAccessException
-	 * @throws InstantiationException
-	 * @throws SecurityException
-	 * @throws IllegalArgumentException
+	 * @throws Throwable
 	 */
-	public static void main(String[] args) throws IllegalArgumentException,
-			SecurityException, InstantiationException, IllegalAccessException,
-			InvocationTargetException, NoSuchMethodException {
+	public static void main(String[] args) throws Throwable {
 		String jobFile = null, entryPoint = null;
 		if (args.length == 1) {
 			String arg = args[0];
@@ -107,7 +100,12 @@ public class Gamesman {
 			Util.fatalError("Class could not be found!", e1);
 			return;
 		}
-		GamesmanApplication ga = cls.getConstructor().newInstance();
+		GamesmanApplication ga;
+		try {
+			ga = cls.getConstructor().newInstance();
+		} catch (InvocationTargetException e) {
+			throw e.getCause();
+		}
 		ga.run(props);
 	}
 

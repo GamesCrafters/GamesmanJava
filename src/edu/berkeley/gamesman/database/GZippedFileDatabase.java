@@ -38,8 +38,8 @@ public class GZippedFileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void getBytes(DatabaseHandle dh, long loc, byte[] arr,
-			int off, int len) {
+	protected synchronized void getBytes(DatabaseHandle dh, long loc,
+			byte[] arr, int off, int len) {
 		while (len > 0) {
 			int entryNum = (int) (loc / entrySize);
 			try {
@@ -76,16 +76,17 @@ public class GZippedFileDatabase extends Database {
 				conf = Configuration.load(fis);
 			else
 				Configuration.skipConf(fis);
-			long numBytes = 0;
+			long numRecords = 0;
 			for (int i = 56; i >= 0; i -= 8) {
-				numBytes <<= 8;
-				numBytes |= fis.read();
+				numRecords <<= 8;
+				numRecords |= fis.read();
 			}
-			if (numBytes < getByteSize())
-				setRange(firstByte(), numBytes);
+			if (numRecords < numRecords())
+				setRange(firstRecord(), numRecords);
 			entrySize = conf.getLong("zip.entryKB", 1 << 6) << 10;
 			bufferSize = conf.getInteger("zip.bufferKB", 1 << 6) << 10;
-			int numEntries = (int) ((numBytes + entrySize - 1) / entrySize);
+			int numEntries = (int) ((numBytes(firstRecord(), numRecords)
+					+ entrySize - 1) / entrySize);
 			entryPoints = new long[numEntries];
 			byte[] entryBytes = new byte[numEntries << 3];
 			int bytesRead = 0;
@@ -154,8 +155,8 @@ public class GZippedFileDatabase extends Database {
 				Configuration.storeNone(fos);
 			}
 			if (numBytes < 0) {
-				firstByte = readFrom.firstByte();
-				numBytes = readFrom.getByteSize();
+				firstByte = readFrom.firstRecord();
+				numBytes = readFrom.numRecords();
 			}
 			for (int bit = 56; bit >= 0; bit -= 8)
 				fos.write((int) (numBytes >>> bit));

@@ -11,7 +11,6 @@ import java.util.concurrent.CountDownLatch;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.database.DistributedDatabase;
 import edu.berkeley.gamesman.game.TierGame;
-import edu.berkeley.gamesman.hasher.TierHasher;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
@@ -364,8 +363,7 @@ public class TierMaster {
 	}
 
 	/**
-	 * This method is completely useless... Unless you're interested in solving
-	 * a tiered game across multiple machines.
+	 * This method is the main solve method for parallel solves
 	 */
 	public void solve() {
 		TierGame game = (TierGame) conf.getGame();
@@ -376,7 +374,7 @@ public class TierMaster {
 			long tierLength = game.numHashesForTier(tier);
 			splits = Util.groupAlignedTasks(
 					(int) (watchers.length * compMultiple), tierOffset,
-					tierLength, conf.recordsPerGroup);
+					tierLength, 1);
 			for (int i = 0; i < splits.length - 1; i++)
 				remainingTasks.add(i);
 			cdl = new CountDownLatch(1);

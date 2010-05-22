@@ -9,6 +9,7 @@ import java.util.Properties;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.database.DistributedDatabase;
+import edu.berkeley.gamesman.database.SplitDatabaseCreator;
 import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.solver.Solver;
 import edu.berkeley.gamesman.solver.TierSolver;

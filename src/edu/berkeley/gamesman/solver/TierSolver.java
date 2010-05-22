@@ -1,9 +1,6 @@
 package edu.berkeley.gamesman.solver;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.concurrent.BrokenBarrierException;
@@ -14,10 +11,7 @@ import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.game.util.TierState;
-import edu.berkeley.gamesman.util.DebugFacility;
-import edu.berkeley.gamesman.util.Pair;
-import edu.berkeley.gamesman.util.Task;
-import edu.berkeley.gamesman.util.Util;
+import edu.berkeley.gamesman.util.*;
 
 /**
  * @author DNSpies
@@ -32,25 +26,19 @@ public class TierSolver extends Solver {
 
 	private int splits;
 
-	private long maxMem;
-
 	private int count;
 
 	private int numThreads;
 
 	private int minSplit;
 
+	private long maxMem;
+
 	private long[] starts;
 
 	private File minSolvedFile = null;
 
 	boolean parallelSolving;
-
-	protected double prevToCurFraction;
-
-	protected double marginVarSum = 0;
-
-	protected long timesUsed = 0;
 
 	protected void solvePartialTier(Configuration conf, long start,
 			long hashes, TierSolverUpdater t, Database readDb,
@@ -67,6 +55,7 @@ public class TierSolver extends Solver {
 		for (int i = 0; i < children.length; i++)
 			children[i] = new TierState();
 		for (long count = 0L; count < hashes; count++) {
+			//TODO Get rid of unnecessary mod
 			if (current % STEP_SIZE == 0)
 				t.calculated(STEP_SIZE);
 			PrimitiveValue pv = game.primitiveValue();
@@ -79,16 +68,16 @@ public class TierSolver extends Solver {
 					vals[i].previousPosition();
 				}
 				Record newVal = game.combine(vals, 0, len);
-				writeDb.putRecord(writeDh, current, game.getRecord(
-						curState, newVal));
+				writeDb.putRecord(writeDh, current, game.getRecord(curState,
+						newVal));
 				break;
 			case IMPOSSIBLE:
 				break;
 			default:
 				prim.remoteness = 0;
 				prim.value = pv;
-				writeDb.putRecord(writeDh, current, game.getRecord(
-						curState, prim));
+				writeDb.putRecord(writeDh, current, game.getRecord(curState,
+						prim));
 			}
 			if (count < hashes - 1) {
 				game.nextHashInTier();
@@ -157,25 +146,21 @@ public class TierSolver extends Solver {
 				updater.complete();
 				if (minSolvedFile != null)
 					minSolvedFile.delete();
-				if (timesUsed > 0)
-					assert Util.debug(DebugFacility.SOLVER,
-							"Standard Deviation = "
-									+ Math.sqrt(marginVarSum / timesUsed));
 			} else {
 				if (barr != null)
 					needs2Reset = true;
 				TierGame game = (TierGame) conf.getGame();
 				long fullStart = game.hashOffsetForTier(tier);
 				long fullSize = game.numHashesForTier(tier);
-				long neededMem = memNeededForTier(conf);
-				prevToCurFraction = (tier >= game.numberOfTiers() - 1) ? 0
-						: ((double) game.numHashesForTier(tier + 1) / game
-								.numHashesForTier(tier));
+				long neededMem = writeDb.requiredMem(game
+						.numHashesForTier(tier))
+						+ (tier < (game.numberOfTiers() - 1) ? readDb
+								.requiredMem(game.numHashesForTier(tier + 1))
+								: 0);
 				splits = Math.max(minSplit,
 						(int) (neededMem * numThreads / maxMem));
 				strainingMemory = strictSafety && splits > minSplit;
-				starts = Util.groupAlignedTasks(splits, fullStart, fullSize,
-						conf.recordsPerGroup);
+				starts = writeDb.splitRange(fullStart, fullSize, splits);
 			}
 		}
 	};
@@ -371,31 +356,13 @@ public class TierSolver extends Solver {
 		parallelSolving = true;
 		TierGame game = (TierGame) conf.getGame();
 		long fullSize = endHash - startHash;
-		long neededMem = memNeededForRange(conf, fullSize);
-		prevToCurFraction = (tier >= game.numberOfTiers() - 1) ? 0
-				: ((double) game.numHashesForTier(tier + 1) / game
-						.numHashesForTier(tier));
+		double tierFrac = ((double) game.numHashesForTier(tier + 1))
+				/ game.numHashesForTier(tier);
+		long neededMem = writeDb.requiredMem(endHash - startHash)
+				+ readDb.requiredMem((long) ((endHash - startHash) * tierFrac));
 		splits = Math.max(minSplit, (int) (neededMem * numThreads / maxMem));
 		strainingMemory = strictSafety && splits > minSplit;
-		starts = Util.groupAlignedTasks(splits, startHash, fullSize,
-				conf.recordsPerGroup);
+		starts = writeDb.splitRange(startHash, fullSize, splits);
 		return new TierSolverWorkUnit(conf);
-	}
-
-	private long memNeededForRange(Configuration conf, long fullSize) {
-		TierGame game = (TierGame) conf.getGame();
-		long tierHashes = game.numHashesForTier(tier);
-		return (long) ((tierHashes + game.maxChildren()
-				* (tier == game.numberOfTiers() - 1 ? 0 : game
-						.numHashesForTier(tier + 1)) * SAFETY_MARGIN)
-				/ conf.recordsPerGroup * conf.recordGroupByteLength * (fullSize / (double) tierHashes));
-	}
-
-	private long memNeededForTier(Configuration conf) {
-		TierGame game = (TierGame) conf.getGame();
-		return (long) ((game.numHashesForTier(tier) + game.maxChildren()
-				* (tier == game.numberOfTiers() - 1 ? 0 : game
-						.numHashesForTier(tier + 1)) * SAFETY_MARGIN)
-				* conf.recordGroupByteLength / conf.recordsPerGroup);
 	}
 }

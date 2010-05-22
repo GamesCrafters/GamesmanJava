@@ -23,26 +23,6 @@ import edu.berkeley.gamesman.util.Util;
 public class Configuration {
 	private Game<?> g;
 
-	protected long totalStates;
-
-	protected BigInteger bigIntTotalStates;
-
-	BigInteger[] multipliers;
-
-	long[] longMultipliers;
-
-	/**
-	 * The number of records contained in a Record Group
-	 */
-	public int recordsPerGroup;
-
-	/**
-	 * The number of bytes in a RecordGroup
-	 */
-	public int recordGroupByteLength;
-
-	public int recordGroupByteBits;
-
 	/**
 	 * The number of possible states for value. When zero, the record does not
 	 * contain value.
@@ -60,13 +40,6 @@ public class Configuration {
 	public int scoreStates;
 
 	/**
-	 * Whether the record group size is small enough to fit in a long. If this
-	 * is not true, solving is slowed immensely
-	 */
-	// TODO: Use mutable big integers when false
-	public boolean recordGroupUsesLong;
-
-	/**
 	 * The database associated with this configuration
 	 */
 	public Database db;
@@ -75,12 +48,6 @@ public class Configuration {
 	 * The properties used to create this configuration
 	 */
 	public final Properties props;
-
-	/**
-	 * Should records be compressed by grouping them as integers of the
-	 * appropriate base?
-	 */
-	public boolean superCompress;
 
 	/**
 	 * Reads the key value pairs from the given job file into a Properties
@@ -165,80 +132,10 @@ public class Configuration {
 	 * 
 	 * @param newG
 	 *            The Game associated with this configuration.
-	 * @param newH
-	 *            The Hasher associated with this configuration.
 	 */
 	public void initialize(Game<?> newG) {
 		g = newG;
 		initializeStoredFields();
-		totalStates = g.recordStates();
-		double requiredCompression = Double.parseDouble(getProperty(
-				"record.compression", "0")) / 100;
-		double compression;
-		if (requiredCompression == 0D) {
-			superCompress = false;
-			int bits = (int) (Math.log(totalStates) / Math.log(2));
-			if ((1 << bits) < totalStates)
-				++bits;
-			recordGroupByteLength = (bits + 7) >> 3;
-			recordGroupByteBits = 0;
-			recordGroupByteLength >>= 1;
-			while (recordGroupByteLength > 0) {
-				recordGroupByteBits++;
-				recordGroupByteLength >>= 1;
-			}
-			recordGroupByteLength = 1 << recordGroupByteBits;
-			recordsPerGroup = 1;
-		} else {
-			superCompress = true;
-			int recordGuess;
-			int bitLength;
-			double log2;
-			log2 = Math.log(totalStates) / Math.log(2);
-			if (log2 > 8) {
-				recordGuess = 1;
-				bitLength = (int) Math.ceil(log2);
-				compression = (log2 / 8) / ((bitLength + 7) >> 3);
-				while (compression < requiredCompression) {
-					recordGuess++;
-					bitLength = (int) Math.ceil(recordGuess * log2);
-					compression = (recordGuess * log2 / 8)
-							/ ((bitLength + 7) >> 3);
-				}
-			} else {
-				bitLength = 8;
-				recordGuess = (int) (8D / log2);
-				compression = recordGuess * log2 / 8;
-				while (compression < requiredCompression) {
-					bitLength += 8;
-					recordGuess = (int) (bitLength / log2);
-					compression = (recordGuess * log2 / 8) / (bitLength >> 3);
-				}
-			}
-			recordsPerGroup = recordGuess;
-			multipliers = new BigInteger[recordsPerGroup + 1];
-			BigInteger multiplier = BigInteger.ONE;
-			bigIntTotalStates = BigInteger.valueOf(totalStates);
-			for (int i = 0; i <= recordsPerGroup; i++) {
-				multipliers[i] = multiplier;
-				multiplier = multiplier.multiply(bigIntTotalStates);
-			}
-			recordGroupByteLength = (bigIntTotalStates.pow(recordsPerGroup)
-					.bitLength() + 7) >> 3;
-			recordGroupByteBits = -1;
-		}
-		if (recordGroupByteLength < 8) {
-			recordGroupUsesLong = true;
-			longMultipliers = new long[recordsPerGroup + 1];
-			long longMultiplier = 1;
-			for (int i = 0; i <= recordsPerGroup; i++) {
-				longMultipliers[i] = longMultiplier;
-				longMultiplier *= totalStates;
-			}
-		} else {
-			recordGroupUsesLong = false;
-			longMultipliers = null;
-		}
 	}
 
 	/**
@@ -557,16 +454,16 @@ public class Configuration {
 	/**
 	 * @param solve
 	 *            true for solving, false for playing
-	 * @param firstByte
-	 *            The index of the first byte this database contains
-	 * @param numBytes
-	 *            The number of bytes in this database
+	 * @param firstRecord
+	 *            The index of the first record this database contains
+	 * @param numRecord
+	 *            The number of records in this database
 	 * @return the Database used to store this particular solve
 	 * @throws ClassNotFoundException
 	 *             Could not load the database class
 	 */
-	public Database openDatabase(String uri, boolean solve, long firstByte,
-			long numBytes) throws ClassNotFoundException {
+	public Database openDatabase(String uri, boolean solve, long firstRecord,
+			long numRecord) throws ClassNotFoundException {
 		if (db != null)
 			return db;
 		if (uri != null)
@@ -598,8 +495,8 @@ public class Configuration {
 		} catch (NoSuchMethodException e) {
 			e.printStackTrace();
 		}
-		if (numBytes >= 0)
-			db.setRange(firstByte, numBytes);
+		if (numRecord >= 0)
+			db.setRange(firstRecord, numRecord);
 		db.initialize(getProperty("gamesman.db.uri"), this, solve);
 		return db;
 	}

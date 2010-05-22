@@ -42,7 +42,7 @@ public final class FileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void seek(long loc) {
+	protected synchronized void seek(long loc) {
 		try {
 			fd.seek(loc + offset);
 		} catch (IOException e) {
@@ -51,7 +51,7 @@ public final class FileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void getBytes(byte[] arr, int off, int len) {
+	protected synchronized void getBytes(byte[] arr, int off, int len) {
 		try {
 			fd.read(arr, off, len);
 		} catch (IOException e) {
@@ -60,7 +60,7 @@ public final class FileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void putBytes(byte[] arr, int off, int len) {
+	protected synchronized void putBytes(byte[] arr, int off, int len) {
 		try {
 			fd.write(arr, off, len);
 		} catch (IOException e) {
@@ -84,7 +84,7 @@ public final class FileDatabase extends Database {
 				offset = fos.getChannel().position();
 				fos.close();
 				fd = new RandomAccessFile(myFile, "rw");
-				fd.setLength(offset + getByteSize());
+				fd.setLength(offset + numRecords());
 			} else {
 				FileInputStream fis = new FileInputStream(myFile);
 				if (conf == null)
@@ -95,7 +95,7 @@ public final class FileDatabase extends Database {
 				fis.close();
 				fd = new RandomAccessFile(myFile, "r");
 			}
-			offset -= firstByte();
+			offset -= firstRecord();
 		} catch (IOException e) {
 			e.printStackTrace();
 			Util.fatalError("IO Error", e);
@@ -106,15 +106,15 @@ public final class FileDatabase extends Database {
 	}
 
 	@Override
-	public synchronized void getBytes(DatabaseHandle dh, long loc, byte[] arr,
-			int off, int len) {
+	protected synchronized void getBytes(DatabaseHandle dh, long loc,
+			byte[] arr, int off, int len) {
 		seek(loc);
 		getBytes(arr, off, len);
 	}
 
 	@Override
-	public synchronized void putBytes(DatabaseHandle dh, long loc, byte[] arr,
-			int off, int len) {
+	protected synchronized void putBytes(DatabaseHandle dh, long loc,
+			byte[] arr, int off, int len) {
 		seek(loc);
 		putBytes(arr, off, len);
 	}

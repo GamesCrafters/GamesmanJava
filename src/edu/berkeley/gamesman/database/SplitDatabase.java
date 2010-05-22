@@ -20,17 +20,12 @@ public class SplitDatabase extends Database {
 	@Override
 	public void getBytes(DatabaseHandle dh, long location, byte[] arr, int off,
 			int len) {
-		fetchBytes(dh, getDatabase(location), location, arr, off, len);
-	}
-
-	private long fetchBytes(DatabaseHandle dh, int firstDatabase,
-			long location, byte[] arr, int off, int len) {
 		long nextStart;
-		int database = firstDatabase;
+		int database = getDatabase(location);
 		while (len > 0) {
 			if (database < databases.length - 1)
 				nextStart = Math.min(location + len, databases[database + 1]
-						.firstByte());
+						.firstRecord());
 			else
 				nextStart = location + len;
 			databases[database].getBytes(((SplitHandle) dh).handles[database],
@@ -40,7 +35,6 @@ public class SplitDatabase extends Database {
 			location = nextStart;
 			database++;
 		}
-		return location;
 	}
 
 	private int getDatabase(long location) {
@@ -48,7 +42,7 @@ public class SplitDatabase extends Database {
 		int guess;
 		while (high - low > 1) {
 			guess = (low + high) / 2;
-			if (location < databases[guess].firstByte())
+			if (location < databases[guess].firstRecord())
 				high = guess;
 			else
 				low = guess;
@@ -73,7 +67,7 @@ public class SplitDatabase extends Database {
 			}
 		}
 		databases = new Database[dbs.length];
-		long location = firstByte();
+		long location = firstRecord();
 		for (int d = 0; d < databases.length; d++) {
 			String[] dString = dbs[d].split("-");
 			try {
@@ -83,20 +77,21 @@ public class SplitDatabase extends Database {
 				fis.close();
 				databases[d] = dconf.openDatabase(dString[0], false, location,
 						Long.parseLong(dString[1]));
-				location += databases[d].getByteSize();
+				location += databases[d].numRecords();
 			} catch (IOException ioe) {
 				ioe.printStackTrace();
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
 			}
 		}
-		location = firstByte();
+		location = firstRecord();
 	}
 
 	private class SplitHandle extends DatabaseHandle {
 		private final DatabaseHandle[] handles;
 
 		private SplitHandle() {
+			super(null);
 			handles = new DatabaseHandle[databases.length];
 			for (int i = 0; i < databases.length; i++) {
 				handles[i] = databases[i].getHandle();

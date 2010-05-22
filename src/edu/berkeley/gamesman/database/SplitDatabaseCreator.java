@@ -1,11 +1,8 @@
-package edu.berkeley.gamesman.parallel;
+package edu.berkeley.gamesman.database;
 
 import java.io.File;
 import java.util.ArrayList;
 
-import edu.berkeley.gamesman.database.Database;
-import edu.berkeley.gamesman.database.DatabaseHandle;
-import edu.berkeley.gamesman.database.FileDatabase;
 import edu.berkeley.gamesman.game.TierGame;
 
 /**
@@ -16,6 +13,7 @@ public class SplitDatabaseCreator extends Database {
 	private File tierPath;
 	private ArrayList<FileDatabase> openDbs = new ArrayList<FileDatabase>();
 	private ArrayList<Long> starts = new ArrayList<Long>();
+	private int tier;
 
 	@Override
 	public void close() {
@@ -25,7 +23,7 @@ public class SplitDatabaseCreator extends Database {
 	}
 
 	@Override
-	public void getBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
+	protected void getBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
 			int len) {
 		((SplitHandle) dh).openDb.getBytes(((SplitHandle) dh).innerHandle, loc,
 				arr, off, len);
@@ -36,10 +34,13 @@ public class SplitDatabaseCreator extends Database {
 		parent = new File(uri);
 		if (!parent.exists())
 			parent.mkdir();
+		tierPath = new File(parent, "t" + tier);
+		if (!tierPath.exists())
+			tierPath.mkdir();
 	}
 
 	@Override
-	public void putBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
+	protected void putBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
 			int len) {
 		((SplitHandle) dh).openDb.putBytes(((SplitHandle) dh).innerHandle, loc,
 				arr, off, len);
@@ -50,16 +51,11 @@ public class SplitDatabaseCreator extends Database {
 		DatabaseHandle innerHandle;
 
 		public SplitHandle(int tier, long recordStart, long numRecords) {
+			super(null);
 			openDb = new FileDatabase(false);
-			long byteStart = recordStart / conf.recordsPerGroup
-					* conf.recordGroupByteLength;
-			long numBytes = (recordStart + numRecords + conf.recordsPerGroup - 1)
-					/ conf.recordsPerGroup
-					* conf.recordGroupByteLength
-					- byteStart;
-			openDb.setRange(byteStart, numBytes);
-			String fileName = "s" + Long.toString(byteStart) + ".db";
-			starts.add(byteStart);
+			openDb.setRange(recordStart, numRecords);
+			String fileName = "s" + Long.toString(recordStart) + ".db";
+			starts.add(numRecords);
 			openDb.initialize(tierPath.getPath() + File.separator + fileName,
 					conf, true);
 			innerHandle = openDb.getHandle();
@@ -99,8 +95,8 @@ public class SplitDatabaseCreator extends Database {
 	 *            The tier for solving in
 	 */
 	public void setTier(int tier) {
-		tierPath = new File(parent, "t" + tier);
-		if (!tierPath.exists())
-			tierPath.mkdir();
+		this.tier = tier;
+		TierGame g = (TierGame) conf.getGame();
+		setRange(g.hashOffsetForTier(tier), g.numHashesForTier());
 	}
 }

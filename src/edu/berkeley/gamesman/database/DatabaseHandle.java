@@ -1,11 +1,37 @@
 package edu.berkeley.gamesman.database;
 
-public class DatabaseHandle {
-	private byte[] recordGroupBytes = null;
+import edu.berkeley.gamesman.util.qll.Factory;
+import edu.berkeley.gamesman.util.qll.Pool;
 
-	byte[] getRecordGroupBytes(int minLength) {
-		if (recordGroupBytes == null || recordGroupBytes.length < minLength)
-			recordGroupBytes = new byte[minLength];
-		return recordGroupBytes;
+/**
+ * Each thread reading from a database should use a separate instance of this
+ * class
+ * 
+ * @author dnspies
+ */
+public class DatabaseHandle {
+	private final Pool<byte[]> recordGroupBytes;
+
+	public DatabaseHandle(final int recordGroupByteLength) {
+		recordGroupBytes = new Pool<byte[]>(new Factory<byte[]>() {
+			public byte[] newObject() {
+				return new byte[recordGroupByteLength];
+			}
+
+			public void reset(byte[] t) {
+			}
+		});
+	}
+
+	protected DatabaseHandle(Pool<byte[]> bytePool) {
+		recordGroupBytes = bytePool;
+	}
+
+	public byte[] getRecordGroupBytes() {
+		return recordGroupBytes.get();
+	}
+
+	public void releaseBytes(byte[] b) {
+		recordGroupBytes.release(b);
 	}
 }

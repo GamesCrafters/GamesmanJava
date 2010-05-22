@@ -1,11 +1,24 @@
 package edu.berkeley.gamesman.database;
 
-import java.math.BigInteger;
-
 public class MaximalWrapper extends DatabaseWrapper {
 
 	public MaximalWrapper(Database db) {
 		super(db);
+	}
+
+	@Override
+	protected void initialize(String uri, boolean solve) {
+		db.initialize(uri, solve);
+	}
+
+	@Override
+	public void flush() {
+		db.flush();
+	}
+
+	@Override
+	public void close() {
+		db.close();
 	}
 
 	@Override
@@ -19,37 +32,43 @@ public class MaximalWrapper extends DatabaseWrapper {
 	}
 
 	@Override
-	public long getLongRecordGroup(DatabaseHandle dh, long loc) {
-		return db.getLongRecordGroup(dh, loc);
+	protected void putRecordsAsBytes(DatabaseHandle dh, long recordIndex,
+			byte[] arr, int off, int numRecords) {
+		db.putRecordsAsBytes(dh, recordIndex, arr, off, numRecords);
 	}
 
 	@Override
-	public BigInteger getBigIntRecordGroup(DatabaseHandle dh, long loc) {
-		return db.getBigIntRecordGroup(dh, loc);
+	protected void putBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
+			int len) {
+		db.putBytes(dh, loc, arr, off, len);
 	}
 
 	@Override
-	public void putRecordGroup(DatabaseHandle dh, long loc, long rg) {
-		db.putRecordGroup(dh, loc, rg);
+	protected void getRecordsAsBytes(DatabaseHandle dh, long recordIndex,
+			byte[] arr, int off, int numRecords, boolean overwriteOk) {
+		db
+				.getRecordsAsBytes(dh, recordIndex, arr, off, numRecords,
+						overwriteOk);
 	}
 
 	@Override
-	public void putRecordGroup(DatabaseHandle dh, long loc, BigInteger rg) {
-		db.putRecordGroup(dh, loc, rg);
+	protected void getBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
+			int len) {
+		db.getBytes(dh, loc, arr, off, len);
 	}
 
 	@Override
-	public void seek(long loc) {
+	protected synchronized void seek(long loc) {
 		db.seek(loc);
 	}
 
 	@Override
-	public void putBytes(byte[] arr, int off, int len) {
+	protected synchronized void putBytes(byte[] arr, int off, int len) {
 		db.putBytes(arr, off, len);
 	}
 
 	@Override
-	public void getBytes(byte[] arr, int off, int len) {
+	protected synchronized void getBytes(byte[] arr, int off, int len) {
 		db.getBytes(arr, off, len);
 	}
 
@@ -59,8 +78,8 @@ public class MaximalWrapper extends DatabaseWrapper {
 	}
 
 	@Override
-	public long getByteSize() {
-		return db.getByteSize();
+	public long numRecords() {
+		return db.numRecords();
 	}
 
 	@Override
@@ -69,13 +88,8 @@ public class MaximalWrapper extends DatabaseWrapper {
 	}
 
 	@Override
-	public long firstByte() {
-		return db.firstByte();
-	}
-
-	@Override
-	public DatabaseHandle getHandle(long recordStart, long numRecords) {
-		return db.getHandle(recordStart, numRecords);
+	public long firstRecord() {
+		return db.firstRecord();
 	}
 
 	@Override
@@ -89,24 +103,12 @@ public class MaximalWrapper extends DatabaseWrapper {
 	}
 
 	@Override
-	public void close() {
-		db.close();
+	public DatabaseHandle getHandle(long recordStart, long numRecords) {
+		return db.getHandle(recordStart, numRecords);
 	}
 
 	@Override
-	public void getBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
-			int len) {
-		db.getBytes(dh, loc, arr, off, len);
-	}
-
-	@Override
-	public void initialize(String uri, boolean solve) {
-		db.initialize(uri, solve);
-	}
-
-	@Override
-	public void putBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
-			int len) {
-		db.putBytes(dh, loc, arr, off, len);
+	public long[] splitRange(long firstRecord, long numRecords, int numSplits) {
+		return db.splitRange(firstRecord, numRecords, numSplits);
 	}
 }

@@ -76,13 +76,13 @@ public class DistributedDatabase extends Database {
 			firstTier = lastTier = tier;
 		} else {
 			g = (TierGame) conf.getGame();
-			for (int count = 0; count < conf.recordGroupByteLength; count++) {
+			for (int count = 0; count < recordGroupByteLength; count++) {
 				arr[off + count] = 0;
 			}
-			firstTier = g.hashToTier(location / conf.recordGroupByteLength
-					* conf.recordsPerGroup);
+			firstTier = g.hashToTier(location / recordGroupByteLength
+					* recordsPerGroup);
 			lastTier = g.hashToTier((location + len)
-					/ conf.recordGroupByteLength * conf.recordsPerGroup - 1);
+					/ recordGroupByteLength * recordsPerGroup - 1);
 			nextTierOffset = g.hashOffsetForTier(firstTier);
 		}
 		for (int tier = firstTier; tier <= lastTier; tier++) {
@@ -97,8 +97,8 @@ public class DistributedDatabase extends Database {
 						result = scan.nextLine();
 					}
 				} else {
-					combineFirst = nextTierOffset / conf.recordsPerGroup
-							* conf.recordGroupByteLength == location;
+					combineFirst = nextTierOffset / recordsPerGroup
+							* recordGroupByteLength == location;
 					nextTierOffset = g.hashOffsetForTier(tier + 1);
 					result = getFileList(files.get(tier), location, len);
 				}
@@ -121,12 +121,12 @@ public class DistributedDatabase extends Database {
 					} else if (tier == lastTier) {
 						nextStart = location + len;
 					} else {
-						int nextTierMod = (int) (nextTierOffset % conf.recordsPerGroup);
-						nextStart = (nextTierOffset / conf.recordsPerGroup + (nextTierMod == 0 ? 0
+						int nextTierMod = (int) (nextTierOffset % recordsPerGroup);
+						nextStart = (nextTierOffset / recordsPerGroup + (nextTierMod == 0 ? 0
 								: 1))
-								* conf.recordGroupByteLength;
+								* recordGroupByteLength;
 						if (nextTierMod == 0)
-							for (int byteCount = 0; byteCount < conf.recordGroupByteLength; byteCount++)
+							for (int byteCount = 0; byteCount < recordGroupByteLength; byteCount++)
 								arr[(int) (nextStart - location) + off
 										+ byteCount] = 0;
 					}
@@ -156,14 +156,14 @@ public class DistributedDatabase extends Database {
 						while (location < nextStart) {
 							byte[] group = null;
 							if (combineFirst) {
-								group = new byte[conf.recordGroupByteLength];
-								for (int count = 0; count < conf.recordGroupByteLength; count++)
+								group = new byte[recordGroupByteLength];
+								for (int count = 0; count < recordGroupByteLength; count++)
 									group[count] = arr[off + count];
 							}
 							int bytesRead = byteReader.read(arr, off,
 									(int) (nextStart - location));
 							if (combineFirst) {
-								for (int count = 0; count < conf.recordGroupByteLength; count++)
+								for (int count = 0; count < recordGroupByteLength; count++)
 									arr[off + count] += group[count];
 							}
 							if (bytesRead == -1)
@@ -232,10 +232,10 @@ public class DistributedDatabase extends Database {
 				e.printStackTrace();
 			}
 			if (tier != lastTier) {
-				if (!solve && nextTierOffset % conf.recordsPerGroup != 0) {
-					location -= conf.recordGroupByteLength;
-					off -= conf.recordGroupByteLength;
-					len += conf.recordGroupByteLength;
+				if (!solve && nextTierOffset % recordsPerGroup != 0) {
+					location -= recordGroupByteLength;
+					off -= recordGroupByteLength;
+					len += recordGroupByteLength;
 				} else
 					arr[off] = 0;
 			}

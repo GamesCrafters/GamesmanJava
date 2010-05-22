@@ -98,7 +98,7 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 		try {
 			if (args[0].contains(":")) {
 				Database theBase = new GZippedFileDatabase();
-				theBase.initialize(args[0], false);
+				theBase.initialize(args[0], null, false);
 				conf = theBase.getConfiguration();
 				fd = theBase;
 				conf.db = theBase;

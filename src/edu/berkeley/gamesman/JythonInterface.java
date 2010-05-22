@@ -108,14 +108,9 @@ public final class JythonInterface extends GamesmanApplication {
 	/**
 	 * Simple main function to run JythonInterface directly.
 	 * @param args program args
-	 * @throws NoSuchMethodException 
-	 * @throws InvocationTargetException 
-	 * @throws IllegalAccessException 
-	 * @throws InstantiationException 
-	 * @throws SecurityException 
-	 * @throws IllegalArgumentException 
+	 * @throws Throwable 
 	 */
-	public static void main(String[] args) throws IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+	public static void main(String[] args) throws Throwable {
 		String []newArgs = new String[args.length + 1];
 		newArgs[0] = "JythonInterface";
 		System.arraycopy(args, 0, newArgs, 1, args.length);
