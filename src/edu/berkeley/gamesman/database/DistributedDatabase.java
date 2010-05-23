@@ -139,7 +139,7 @@ public class DistributedDatabase extends Database {
 						sb.append(gamesmanPath);
 						sb.append(File.separator);
 						sb
-								.append("bin edu.berkeley.gamesman.parallel.ReadZippedBytes ");
+								.append("bin edu.berkeley.gamesman.database.ReadZippedBytes ");
 						sb.append(TierSlave.jobFile);
 						sb.append(" ");
 						sb.append(tier);
