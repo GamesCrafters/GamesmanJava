@@ -306,48 +306,48 @@ public class JSONObject {
     	Method[] methods = (includeSuperClass) ? 
     			klass.getMethods() : klass.getDeclaredMethods();
         for (int i = 0; i < methods.length; i += 1) {
-			Method method = methods[i];
-			String name = method.getName();
-			String key = "";
-			if (name.startsWith("get")) {
-				key = name.substring(3);
-			} else if (name.startsWith("is")) {
-				key = name.substring(2);
-			}
-			if (key.length() > 0 && Character.isUpperCase(key.charAt(0))
-					&& method.getParameterTypes().length == 0) {
-				if (key.length() == 1) {
-					key = key.toLowerCase();
-				} else if (!Character.isUpperCase(key.charAt(1))) {
-					key = key.substring(0, 1).toLowerCase() + key.substring(1);
-				}
-
-				Object result = method.invoke(bean, (Object[]) null);
-				if (result == null) {
-					map.put(key, NULL);
-				} else if (result.getClass().isArray()) {
-					map.put(key, new JSONArray(result, includeSuperClass));
-				} else if (result instanceof Collection) { // List or Set
-					map.put(key, new JSONArray((Collection) result,
-							includeSuperClass));
-				} else if (result instanceof Map) {
-					map.put(key,
-							new JSONObject((Map) result, includeSuperClass));
-				} else if (isStandardProperty(result.getClass())) { // Primitives,
-					// String
-					// and
-					// Wrapper
-					map.put(key, result);
-				} else {
-					if (result.getClass().getPackage().getName().startsWith(
-							"java")
-							|| result.getClass().getClassLoader() == null) {
-						map.put(key, result.toString());
-					} else { // User defined Objects
-						map.put(key, new JSONObject(result, includeSuperClass));
-					}
-				}
-			}
+            try {
+                Method method = methods[i];
+                String name = method.getName();
+                String key = "";
+                if (name.startsWith("get")) {
+                    key = name.substring(3);
+                } else if (name.startsWith("is")) {
+                    key = name.substring(2);
+                }
+                if (key.length() > 0 &&
+                        Character.isUpperCase(key.charAt(0)) &&
+                        method.getParameterTypes().length == 0) {
+                    if (key.length() == 1) {
+                        key = key.toLowerCase();
+                    } else if (!Character.isUpperCase(key.charAt(1))) {
+                        key = key.substring(0, 1).toLowerCase() +
+                            key.substring(1);
+                    }
+                    
+                    Object result = method.invoke(bean, (Object[])null);
+                    if (result == null){
+                    	map.put(key, NULL);
+                    }else if (result.getClass().isArray()) {
+                    	map.put(key, new JSONArray(result,includeSuperClass));
+                    }else if (result instanceof Collection) { //List or Set
+                    	map.put(key, new JSONArray((Collection)result,includeSuperClass));
+                    }else if (result instanceof Map) {
+                    	map.put(key, new JSONObject((Map)result,includeSuperClass));
+                    }else if (isStandardProperty(result.getClass())) { //Primitives, String and Wrapper
+                    	map.put(key, result);
+                    }else{
+                    	if (result.getClass().getPackage().getName().startsWith("java") || 
+                    			result.getClass().getClassLoader() == null) { 
+                    		map.put(key, result.toString());
+                    	} else { //User defined Objects
+                    		map.put(key, new JSONObject(result,includeSuperClass));
+                    	}
+                    }
+                }
+            } catch (Exception e) {
+            	throw new RuntimeException(e);
+            }
         }
     }
     
