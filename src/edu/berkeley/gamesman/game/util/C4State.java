@@ -51,7 +51,7 @@ public class C4State implements Cloneable, State {
 			spaceArrangement = pos.spaceArrangement;
 			pieceArrangement = pos.pieceArrangement;
 		} else
-			throw new RuntimeException("Type mismatch");
+			throw new Error("Type mismatch");
 	}
 
 	public String toString() {

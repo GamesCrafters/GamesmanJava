@@ -5,18 +5,15 @@ import edu.berkeley.gamesman.game.util.AlignmentState;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
-public class AlignmentHasher {
-	private Alignment game;
-	private char[] myArray = null;
-	private long[][][] offsets;
+public final class AlignmentHasher {
+	private final Alignment game;
+	private final char[] myArray;
+	private final long[][][] offsets;
 	private long numHashes;
 	private MMHasher mmh = new MMHasher();
 
 	public AlignmentHasher(Alignment game) {
 		this.game = game;
-	}
-
-	public void initializeOffsets() {
 		offsets = new long[game.piecesToWin + 1][game.piecesToWin + 1][game.openCells
 				.size() + 1];
 		long offset = 0;
@@ -34,11 +31,10 @@ public class AlignmentHasher {
 			}
 		}
 		numHashes = offset;
+		myArray = new char[game.openCells.size()];
 	}
 
 	public long hash(AlignmentState state) {
-		if (myArray == null)
-			myArray = new char[game.openCells.size()];
 		int numPieces = 0;
 		for (int i = 0; i < myArray.length; i++) {
 			Pair<Integer, Integer> openCell = game.openCells.get(i);
@@ -48,14 +44,10 @@ public class AlignmentHasher {
 			if (myArray[i] != ' ')
 				numPieces++;
 		}
-		if (offsets == null)
-			initializeOffsets();
 		return offsets[state.xDead][state.oDead][numPieces] + mmh.hash(myArray);
 	}
 
 	public long numHashes() {
-		if (offsets == null)
-			initializeOffsets();
 		return numHashes;
 	}
 
@@ -66,10 +58,6 @@ public class AlignmentHasher {
 		int totalPieces = numPieces + state.xDead + state.oDead;
 		int xPieces = (totalPieces + 1) / 2 - state.xDead;
 		int oPieces = totalPieces / 2 - state.oDead;
-		if (myArray == null)
-			myArray = new char[game.openCells.size()];
-		if (offsets == null)
-			initializeOffsets();
 		mmh.unhash(hash - offsets[state.xDead][state.oDead][numPieces],
 				myArray, xPieces, oPieces);
 		for (int i = 0; i < myArray.length; i++) {

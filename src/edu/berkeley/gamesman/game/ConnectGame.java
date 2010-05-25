@@ -18,7 +18,7 @@ import edu.berkeley.gamesman.util.Util;
  */
 public abstract class ConnectGame extends TierGame {
 	private char turn;
-	protected MMHasher mmh;
+	protected final MMHasher mmh;
 	protected final TierState myState = newState();
 
 	/**

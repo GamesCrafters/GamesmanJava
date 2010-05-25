@@ -27,7 +27,6 @@ public class AlignmentTester {
 		Configuration conf = new Configuration(Configuration
 				.readProperties(args[0]));
 		Alignment game = (Alignment) conf.getGame();
-		game.initialize(5, 5, 5, 2);
 		AlignmentState state = game.newState();
 		System.out.println("The board is full of " + state.board[0][0]);
 		System.out.println(game.displayState(state));

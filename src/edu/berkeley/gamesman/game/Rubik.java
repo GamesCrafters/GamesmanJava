@@ -18,11 +18,11 @@ import edu.berkeley.gamesman.util.Util;
  * @author Jeremy Fleischman
  */
 public class Rubik extends TwistyPuzzle<CubeState> {
-	int WIDTH, HEIGHT, DEPTH;
+	private final int WIDTH, HEIGHT, DEPTH;
 
-	int[] VALID_DIRS;
+	private final int[] VALID_DIRS;
 
-	String[] VALID_FACES;
+	private final String[] VALID_FACES;
 
 	public Rubik(Configuration conf) {
 		super(conf);
@@ -363,7 +363,7 @@ class CubeState implements State {
 			for (int i = 0; i < orientations.length; i++)
 				orientations[i] = cs.orientations[i];
 		} else
-			throw new RuntimeException("Type mismatch");
+			throw new Error("Type mismatch");
 	}
 
 	public boolean equals(CubeState other) {

@@ -20,7 +20,6 @@ import edu.berkeley.gamesman.util.Util;
  */
 public final class GamesmanMain extends GamesmanApplication {
 	private Configuration conf;
-	private Game<State> gm;
 
 	/**
 	 * No arg constructor
@@ -33,47 +32,22 @@ public final class GamesmanMain extends GamesmanApplication {
 		try {
 			this.conf = new Configuration(props);
 		} catch (ClassNotFoundException e) {
-			Util
-					.fatalError(
-							"Configuration contains unknown game or hasher ", e);
+			throw new Error("Configuration contains unknown game or hasher ", e);
 		}
-		gm = Util.checkedCast(conf.getGame());
 		Thread.currentThread().setName("Gamesman");
-		String masterName = conf.getProperty("gamesman.master", "LocalMaster");
-
-		Object omaster = null;
-		try {
-			omaster = Class.forName(
-					"edu.berkeley.gamesman.master." + masterName).newInstance();
-		} catch (ClassNotFoundException cnfe) {
-			Util.fatalError("Could not load master controller '" + masterName
-					+ "': " + cnfe);
-		} catch (IllegalAccessException iae) {
-			Util.fatalError("Not allowed to access requested master '"
-					+ masterName + "': " + iae);
-		} catch (InstantiationException ie) {
-			Util.fatalError("Master failed to instantiate: " + ie);
-		}
-
-		if (!(omaster instanceof Master)) {
-			Util
-					.fatalError("Master does not implement master.Master interface");
-		}
-
-		Master m = (Master) omaster;
 
 		assert Util.debug(DebugFacility.CORE, "Preloading classes...");
 
-		String gameName, solverName, hasherName;
+		String gameName, solverName;
 
 		gameName = conf.getProperty("gamesman.game");
 		if (gameName == null)
-			Util
-					.fatalError("You must specify a game with the property gamesman.game");
+			throw new Error(
+					"You must specify a game with the property gamesman.game");
 		solverName = conf.getProperty("gamesman.solver");
 		if (solverName == null)
-			Util
-					.fatalError("You must specify a solver with the property gamesman.solver");
+			throw new Error(
+					"You must specify a solver with the property gamesman.solver");
 		String[] dbType = conf.getProperty("gamesman.database").split(":");
 
 		Class<? extends Solver> s = null;
@@ -120,7 +94,7 @@ public final class GamesmanMain extends GamesmanApplication {
 			}
 		} else {
 			assert Util.debug(DebugFacility.CORE, "Defaulting to solve...");
-			m.initialize(conf, s, d, wrappers);
+			Master m = new Master(conf, s, d, wrappers);
 			m.run();
 		}
 
@@ -131,8 +105,9 @@ public final class GamesmanMain extends GamesmanApplication {
 	/**
 	 * Diagnostic call to unhash an arbitrary value to a game board
 	 */
-	public void executeunhash() {
-		State state = gm.hashToState(Long.parseLong(conf
+	public <T extends State> void executeunhash() {
+		Game<T> gm = conf.getCheckedGame();
+		T state = gm.hashToState(Long.parseLong(conf
 				.getProperty("gamesman.hash")));
 		System.out.println(gm.displayState(state));
 	}
@@ -140,10 +115,11 @@ public final class GamesmanMain extends GamesmanApplication {
 	/**
 	 * Diagnostic call to view all child moves of a given hashed game state
 	 */
-	public void executegenmoves() {
-		State state = gm.hashToState(Long.parseLong(conf
+	public <T extends State> void executegenmoves() {
+		Game<T> gm = conf.getCheckedGame();
+		T state = gm.hashToState(Long.parseLong(conf
 				.getProperty("gamesman.hash")));
-		for (Pair<String, State> nextstate : gm.validMoves(state)) {
+		for (Pair<String, T> nextstate : gm.validMoves(state)) {
 			System.out.println(gm.stateToHash(nextstate.cdr));
 			System.out.println(gm.displayState(nextstate.cdr));
 		}
@@ -152,20 +128,22 @@ public final class GamesmanMain extends GamesmanApplication {
 	/**
 	 * Hash a single board with the given hasher and print it.
 	 */
-	public void executehash() {
+	public <T extends State> void executehash() {
+		Game<T> gm = conf.getCheckedGame();
 		String str = conf.getProperty("board");
 		if (str == null)
-			Util.fatalError("Please specify a board to hash");
+			throw new Error("Please specify a board to hash");
 		System.out.println(gm.stateToHash(gm.stringToState(str.toUpperCase())));
 	}
 
 	/**
 	 * Evaluate a single board and return its primitive value.
 	 */
-	public void executeevaluate() {
+	public <T extends State> void executeevaluate() {
+		Game<T> gm = conf.getCheckedGame();
 		String board = conf.getProperty("gamesman.board");
 		if (board == null)
-			Util.fatalError("Please specify a hash to evaluate");
+			throw new Error("Please specify a hash to evaluate");
 		long val = Long.parseLong(board);
 		System.out.println(gm.primitiveValue(gm.hashToState(val)));
 	}

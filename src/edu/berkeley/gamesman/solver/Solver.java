@@ -29,7 +29,7 @@ public abstract class Solver {
 	 * @param conf
 	 *            The configuration object
 	 */
-	public void initialize(Configuration conf) {
+	public Solver(Configuration conf) {
 		readDb = conf.db;
 		writeDb = conf.db;
 		this.conf = conf;

@@ -126,7 +126,7 @@ public class Pyraminx extends TwistyPuzzle<PyraminxState> {
 
 	private static final int UP = 0, RIGHT = 1, LEFT = 2, BACK = 3;
 
-	private static HashMap<Integer, Pair<Character, int[]>> EDGE_INDICES = new HashMap<Integer, Pair<Character, int[]>>();
+	private static final HashMap<Integer, Pair<Character, int[]>> EDGE_INDICES = new HashMap<Integer, Pair<Character, int[]>>();
 	static {
 		EDGE_INDICES.put(UP, new Pair<Character, int[]>('U', new int[] { 0, 1,
 				2 }));
@@ -276,6 +276,6 @@ class PyraminxState implements State {
 			for (int i = 0; i < centerOrientation.length; i++)
 				centerOrientation[i] = p.centerOrientation[i];
 		} else
-			throw new RuntimeException("Type mismatch");
+			throw new Error("Type mismatch");
 	}
 }

@@ -1,6 +1,6 @@
 package edu.berkeley.gamesman.database;
 
-import java.math.BigInteger;
+import edu.berkeley.gamesman.core.Configuration;
 
 /**
  * Stores the entire database as an array of bytes
@@ -9,52 +9,53 @@ import java.math.BigInteger;
  */
 public class MemoryDatabase extends DatabaseWrapper {
 
-	public MemoryDatabase(Database db) {
-		super(db);
+	public MemoryDatabase(Database db, String uri, Configuration conf,
+			boolean solve, long firstRecord, long numRecords) {
+		this(db, uri, conf, solve, firstRecord, numRecords, true);
 	}
 
-	protected byte[] memoryStorage;
-
-	protected boolean readingOnly;
-
-	private DatabaseHandle myHandle;
-
-	@Override
-	public void initialize(String uri, boolean solve) {
-		db.initialize(uri, conf, solve);
-		memoryStorage = new byte[(int) numRecords()];
-		myHandle = db.getHandle(firstRecord(), numRecords());
-		long firstRecord = Math.max(firstRecord(), db.firstRecord());
-		long lastRecord = Math.min(firstRecord() + numRecords(), db
-				.firstRecord()
-				+ db.numRecords());
-		setRange(firstRecord, lastRecord - firstRecord);
-		db.getBytes(myHandle, firstRecord(), memoryStorage, 0,
-				(int) numRecords());
+	public MemoryDatabase(Database db, String uri, Configuration conf,
+			boolean solve, long firstRecord, long numRecords,
+			boolean backChanges) {
+		super(db, uri, conf, solve, firstRecord, numRecords);
+		memoryStorage = new byte[(int) numBytes(firstRecord(), numRecords())];
+		firstByte = toByte(firstRecord);
+		if (backChanges) {
+			myHandle = db.getHandle(firstRecord(), numRecords());
+			db.getRecordsAsBytes(myHandle, firstRecord(), memoryStorage, 0,
+					(int) numRecords(), true);
+		} else
+			myHandle = null;
 	}
 
+	protected final byte[] memoryStorage;
+
+	private final DatabaseHandle myHandle;
+
+	private final long firstByte;
+
 	@Override
-	public void close() {
+	protected void closeDatabase() {
 		finish();
 		db.close();
 	}
 
 	public void finish() {
-		if (solve) {
-			db.putBytes(myHandle, firstRecord(), memoryStorage, 0,
-					(int) numRecords());
+		if (solve && myHandle != null) {
+			db.putRecordsAsBytes(myHandle, firstRecord(), memoryStorage, 0,
+					(int) numRecords(), false);
 		}
 	}
 
 	@Override
 	protected void getBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
 			int len) {
-		System.arraycopy(memoryStorage, (int) loc, arr, off, len);
+		System.arraycopy(memoryStorage, (int) (loc - firstByte), arr, off, len);
 	}
 
 	@Override
 	protected void putBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
 			int len) {
-		System.arraycopy(arr, off, memoryStorage, (int) loc, len);
+		System.arraycopy(arr, off, memoryStorage, (int) (loc - firstByte), len);
 	}
 }

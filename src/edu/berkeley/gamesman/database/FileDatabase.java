@@ -7,37 +7,54 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.util.Util;
 
 public final class FileDatabase extends Database {
 
 	/**
 	 * The file contained in this FileDatabase
 	 */
-	public File myFile;
+	public final File myFile;
 
-	protected RandomAccessFile fd;
+	protected final RandomAccessFile fd;
 
-	protected int groupsLength;
+	protected final long offset;
 
-	protected long offset;
-
-	private final boolean storeConf;
-
-	public FileDatabase() {
-		this(true);
+	public FileDatabase(String uri, Configuration config, boolean solve,
+			long firstRecord, long numRecords) throws IOException {
+		this(uri, config, solve, firstRecord, numRecords, true);
 	}
 
-	public FileDatabase(boolean storeConf) {
-		this.storeConf = storeConf;
+	public FileDatabase(String uri, Configuration config, boolean solve,
+			long firstRecord, long numRecords, boolean storeConf)
+			throws IOException {
+		super(uri, config, solve, firstRecord, numRecords);
+		myFile = new File(uri);
+		if (solve) {
+			FileOutputStream fos = new FileOutputStream(myFile);
+			if (storeConf) {
+				store(fos);
+			} else
+				storeNone(fos);
+			offset = fos.getChannel().position() - firstContainedRecord;
+			fos.close();
+			fd = new RandomAccessFile(myFile, "rw");
+			fd.setLength(offset + numContainedRecords);
+		} else {
+			FileInputStream fis = new FileInputStream(myFile);
+			skipHeader(fis);
+			offset = fis.getChannel().position() - firstContainedRecord;
+			fis.close();
+			fd = new RandomAccessFile(myFile, "r");
+		}
 	}
 
 	@Override
-	public void close() {
+	protected void closeDatabase() {
 		try {
 			fd.close();
 		} catch (IOException e) {
-			Util.warn("Error while closing input stream for database: " + e);
+			new Error("Error while closing input stream for database: ", e)
+					.printStackTrace();
 		}
 	}
 
@@ -46,7 +63,7 @@ public final class FileDatabase extends Database {
 		try {
 			fd.seek(loc + offset);
 		} catch (IOException e) {
-			Util.fatalError("IO Error", e);
+			throw new Error(e);
 		}
 	}
 
@@ -55,7 +72,7 @@ public final class FileDatabase extends Database {
 		try {
 			fd.read(arr, off, len);
 		} catch (IOException e) {
-			Util.fatalError("IO Error", e);
+			throw new Error(e);
 		}
 	}
 
@@ -64,44 +81,7 @@ public final class FileDatabase extends Database {
 		try {
 			fd.write(arr, off, len);
 		} catch (IOException e) {
-			Util.fatalError("IO Error", e);
-		}
-	}
-
-	@Override
-	public void initialize(String loc, boolean solve) {
-		try {
-			myFile = new File(loc);
-			if (solve) {
-				FileOutputStream fos = new FileOutputStream(myFile);
-				if (conf == null)
-					Util
-							.fatalError("You must specify a configuration if the database is to be created");
-				if (storeConf) {
-					conf.store(fos);
-				} else
-					Configuration.storeNone(fos);
-				offset = fos.getChannel().position();
-				fos.close();
-				fd = new RandomAccessFile(myFile, "rw");
-				fd.setLength(offset + numRecords());
-			} else {
-				FileInputStream fis = new FileInputStream(myFile);
-				if (conf == null)
-					conf = Configuration.load(fis);
-				else
-					Configuration.skipConf(fis);
-				offset = fis.getChannel().position();
-				fis.close();
-				fd = new RandomAccessFile(myFile, "r");
-			}
-			offset -= firstRecord();
-		} catch (IOException e) {
-			e.printStackTrace();
-			Util.fatalError("IO Error", e);
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-			Util.fatalError("IO Error", e);
+			throw new Error(e);
 		}
 	}
 

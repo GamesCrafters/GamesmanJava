@@ -30,11 +30,11 @@ public final class TierHasher {
 	 */
 	public final long hashOffsetForTier(int tier) {
 		if (tierOffsets == null) {
-			int tiers = numberOfTiers();
+			int tiers = myGame.numberOfTiers();
 			tierOffsets = new long[tiers + 1];
 			tierOffsets[0] = 0;
 			for (int i = 0; i < tiers; i++)
-				tierOffsets[i + 1] = tierOffsets[i] + numHashesForTier(i);
+				tierOffsets[i + 1] = tierOffsets[i] + myGame.numHashesForTier(i);
 			assert Util.debug(DebugFacility.HASHER, "Created offset table: "
 					+ Arrays.toString(tierOffsets));
 		}
@@ -42,7 +42,7 @@ public final class TierHasher {
 	}
 
 	public long numHashes() {
-		return hashOffsetForTier(numberOfTiers());
+		return hashOffsetForTier(myGame.numberOfTiers());
 	}
 
 	public void gameStateForTierAndOffset(int tier, long index, TierState s) {
@@ -50,28 +50,7 @@ public final class TierHasher {
 		s.hash = index;
 	}
 
-	public long numHashesForTier(int tier) {
-		return myGame.numHashesForTier(tier);
-	}
-
-	public int numberOfTiers() {
-		return myGame.numberOfTiers();
-	}
-
 	public Pair<Integer, Long> tierIndexForState(TierState state) {
 		return new Pair<Integer, Long>(state.tier, state.hash);
-	}
-
-	public String describe() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public long hash(TierState state) {
-		return hashOffsetForTier(state.tier) + state.hash;
-	}
-
-	public TierState unhash(long hash) {
-		return myGame.hashToState(hash);
 	}
 }

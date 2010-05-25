@@ -337,9 +337,10 @@ public abstract class Game<S extends State> {
 	 *            The number of states
 	 * @return A new array with len states
 	 */
+	@SuppressWarnings("unchecked")
 	public final S[] newStateArray(int len) {
 		S oneState = newState();
-		S[] arr = Util.checkedCast(Array.newInstance(oneState.getClass(), len));
+		S[] arr = (S[]) Array.newInstance(oneState.getClass(), len);
 		if (len > 0)
 			arr[0] = oneState;
 		for (int i = 1; i < len; i++)

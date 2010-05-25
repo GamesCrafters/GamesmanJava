@@ -8,8 +8,8 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author dnspies
  */
-public class Connections extends ConnectGame {
-	private class Edge {
+public final class Connections extends ConnectGame {
+	private final class Edge {
 		final Point[] xPoints;
 		// xPoints[0] == down or left
 		// xPoints[1] == up or right
@@ -29,7 +29,7 @@ public class Connections extends ConnectGame {
 		}
 	}
 
-	private class Point {
+	private final class Point {
 		private final Edge[] edges;
 		// 0 == down
 		// 1 == left
@@ -46,13 +46,13 @@ public class Connections extends ConnectGame {
 		}
 	}
 
-	private int boardSide;
-	private int boardSize;
-	private Point[][] xPoints;
-	private Point[][] oPoints;
-	private Edge[][] vertEdges;
-	private Edge[][] horizEdges;
-	private char[] board;
+	private final int boardSide;
+	private final int boardSize;
+	private final Point[][] xPoints;
+	private final Point[][] oPoints;
+	private final Edge[][] vertEdges;
+	private final Edge[][] horizEdges;
+	private final char[] board;
 
 	/**
 	 * @param conf

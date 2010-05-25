@@ -1,5 +1,10 @@
 package edu.berkeley.gamesman.database;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 
 import edu.berkeley.gamesman.core.Configuration;
@@ -10,140 +15,188 @@ import edu.berkeley.gamesman.util.Util;
  * A Database is the abstract superclass of all data storage methods used in
  * Gamesman. Each particular Database is responsible for the persistent storage
  * of Records derived from solving games.
- * 
- * @author Steven Schlansker
  */
 public abstract class Database {
 
-	protected Configuration conf;
+	protected final Configuration conf;
 
-	protected boolean solve;
+	protected final boolean solve;
 
-	private long numRecords = -1;
+	private final long numRecords;
 
-	private long firstRecord;
+	protected final long numContainedRecords;
 
-	private long location;
+	private final long firstRecord;
 
-	protected DatabaseHandle myHandle;
+	protected final long firstContainedRecord;
 
-	protected long totalStates;
+	protected long location;
 
-	protected BigInteger bigIntTotalStates;
+	protected final DatabaseHandle myHandle;
 
-	protected BigInteger[] multipliers;
+	protected final long totalStates;
 
-	protected long[] longMultipliers;
+	protected final BigInteger bigIntTotalStates;
 
-	protected int recordsPerGroup;
+	protected final BigInteger[] multipliers;
 
-	protected int recordGroupByteLength;
+	protected final long[] longMultipliers;
 
-	private int recordGroupByteBits;
+	protected final int recordsPerGroup;
 
-	private boolean superCompress;
+	protected final int recordGroupByteLength;
 
-	protected boolean recordGroupUsesLong;
+	private final int recordGroupByteBits;
 
-	/**
-	 * Initialize a Database given a URI and a Configuration. This method may
-	 * either open an existing database or create a new one. If a new one is
-	 * created, the Configuration should be stored. If one is opened, the
-	 * Configuration should be checked to ensure it matches that already stored.
-	 * This method must be called exactly once before any other methods are
-	 * called. The URI must be in the URI syntax, ex:
-	 * file:///absolute/path/to/file.db or gdfp://server:port/dbname If config
-	 * is null, it will use whatever is in the database. It is recommended that
-	 * you pass in the configuration that you are expecting to ensure you don't
-	 * load a db for a different game.
-	 * 
-	 * Note (By Alex Trofimov) I've updated the file Database to accept Relative
-	 * URL, so instead of file:/// you can just put the filename, and it will
-	 * create a file in the working directory (tested under windows & ubuntu).
-	 * 
-	 * @param uri
-	 *            The URI that the Database is associated with
-	 * @param config
-	 *            The Configuration that is relevant
-	 * @param solve
-	 *            true for solving, false for playing
-	 */
-	public final void initialize(String uri, Configuration config, boolean solve) {
-		conf = config;
-		this.solve = solve;
-		totalStates = conf.getGame().recordStates();
-		double requiredCompression = Double.parseDouble(conf.getProperty(
-				"record.compression", "0")) / 100;
-		double compression;
-		if (requiredCompression == 0D) {
-			superCompress = false;
-			int bits = (int) (Math.log(totalStates) / Math.log(2));
-			if ((1 << bits) < totalStates)
-				++bits;
-			recordGroupByteLength = (bits + 7) >> 3;
-			recordGroupByteBits = 0;
-			recordGroupByteLength >>= 1;
-			while (recordGroupByteLength > 0) {
-				recordGroupByteBits++;
-				recordGroupByteLength >>= 1;
-			}
-			recordGroupByteLength = 1 << recordGroupByteBits;
-			recordsPerGroup = 1;
-		} else {
-			superCompress = true;
-			int recordGuess;
-			int bitLength;
-			double log2;
-			log2 = Math.log(totalStates) / Math.log(2);
-			if (log2 > 8) {
-				recordGuess = 1;
-				bitLength = (int) Math.ceil(log2);
-				compression = (log2 / 8) / ((bitLength + 7) >> 3);
-				while (compression < requiredCompression) {
-					recordGuess++;
-					bitLength = (int) Math.ceil(recordGuess * log2);
-					compression = (recordGuess * log2 / 8)
-							/ ((bitLength + 7) >> 3);
-				}
-			} else {
-				bitLength = 8;
-				recordGuess = (int) (8D / log2);
-				compression = recordGuess * log2 / 8;
-				while (compression < requiredCompression) {
-					bitLength += 8;
-					recordGuess = (int) (bitLength / log2);
-					compression = (recordGuess * log2 / 8) / (bitLength >> 3);
-				}
-			}
-			recordsPerGroup = recordGuess;
-			multipliers = new BigInteger[recordsPerGroup + 1];
-			BigInteger multiplier = BigInteger.ONE;
-			bigIntTotalStates = BigInteger.valueOf(totalStates);
-			for (int i = 0; i <= recordsPerGroup; i++) {
-				multipliers[i] = multiplier;
-				multiplier = multiplier.multiply(bigIntTotalStates);
-			}
-			recordGroupByteLength = (bigIntTotalStates.pow(recordsPerGroup)
-					.bitLength() + 7) >> 3;
-			recordGroupByteBits = -1;
-		}
-		if (recordGroupByteLength < 8) {
-			recordGroupUsesLong = true;
-			longMultipliers = new long[recordsPerGroup + 1];
-			long longMultiplier = 1;
-			for (int i = 0; i <= recordsPerGroup; i++) {
-				longMultipliers[i] = longMultiplier;
-				longMultiplier *= totalStates;
-			}
-		} else {
-			recordGroupUsesLong = false;
-			longMultipliers = null;
-		}
+	private final boolean superCompress;
+
+	protected final boolean recordGroupUsesLong;
+
+	protected Database(String uri, Configuration conf, boolean solve,
+			long firstRecord, long numRecords, Database innerDb) {
+		byte[] dbInfo = null;
 		if (numRecords == -1) {
 			firstRecord = 0;
 			numRecords = conf.getGame().numHashes();
 		}
-		initialize(uri, solve);
+		if (innerDb == null)
+			if (!solve)
+				try {
+					FileInputStream fis = new FileInputStream(uri);
+					dbInfo = new byte[18];
+					fis.read(dbInfo);
+					if (conf == null)
+						conf = Configuration.load(fis);
+					fis.close();
+				} catch (ClassNotFoundException e) {
+					throw new Error(e);
+				} catch (IOException e) {
+					throw new Error(e);
+				}
+		this.conf = conf;
+		this.solve = solve;
+		totalStates = conf.getGame().recordStates();
+		bigIntTotalStates = BigInteger.valueOf(totalStates);
+		if (innerDb != null) {
+			recordGroupByteBits = innerDb.recordGroupByteBits;
+			recordGroupByteLength = innerDb.recordGroupByteLength;
+			recordsPerGroup = innerDb.recordsPerGroup;
+			superCompress = innerDb.superCompress;
+			firstContainedRecord = innerDb.firstRecord;
+			this.firstRecord = Math.max(firstRecord, firstContainedRecord);
+			numContainedRecords = innerDb.numRecords;
+			this.numRecords = Math.min(firstRecord + numRecords,
+					firstContainedRecord + numContainedRecords)
+					- this.firstRecord;
+			recordGroupUsesLong = innerDb.recordGroupUsesLong;
+			multipliers = innerDb.multipliers;
+			longMultipliers = innerDb.longMultipliers;
+		} else {
+			if (solve) {
+				double requiredCompression = Double.parseDouble(conf
+						.getProperty("record.compression", "0")) / 100;
+				double compression;
+				if (requiredCompression == 0D) {
+					superCompress = false;
+					int bits = (int) (Math.log(totalStates) / Math.log(2));
+					if ((1 << bits) < totalStates)
+						++bits;
+					int recordGroupByteLength = (bits + 7) >> 3;
+					int recordGroupByteBits = 0;
+					recordGroupByteLength >>= 1;
+					while (recordGroupByteLength > 0) {
+						recordGroupByteBits++;
+						recordGroupByteLength >>= 1;
+					}
+					this.recordGroupByteBits = recordGroupByteBits;
+					this.recordGroupByteLength = 1 << recordGroupByteBits;
+					recordsPerGroup = 1;
+				} else {
+					superCompress = true;
+					int recordGuess;
+					int bitLength;
+					double log2;
+					log2 = Math.log(totalStates) / Math.log(2);
+					if (log2 > 8) {
+						recordGuess = 1;
+						bitLength = (int) Math.ceil(log2);
+						compression = (log2 / 8) / ((bitLength + 7) >> 3);
+						while (compression < requiredCompression) {
+							recordGuess++;
+							bitLength = (int) Math.ceil(recordGuess * log2);
+							compression = (recordGuess * log2 / 8)
+									/ ((bitLength + 7) >> 3);
+						}
+					} else {
+						bitLength = 8;
+						recordGuess = (int) (8D / log2);
+						compression = recordGuess * log2 / 8;
+						while (compression < requiredCompression) {
+							bitLength += 8;
+							recordGuess = (int) (bitLength / log2);
+							compression = (recordGuess * log2 / 8)
+									/ (bitLength >> 3);
+						}
+					}
+					recordsPerGroup = recordGuess;
+					recordGroupByteLength = (bigIntTotalStates.pow(
+							recordsPerGroup).bitLength() + 7) >> 3;
+					recordGroupByteBits = -1;
+				}
+				firstContainedRecord = this.firstRecord = firstRecord;
+				numContainedRecords = this.numRecords = numRecords;
+			} else {
+				long firstContainedRecord = 0;
+				for (int i = 0; i < 8; i++) {
+					firstContainedRecord <<= 8;
+					firstContainedRecord |= (dbInfo[i] & 255);
+				}
+				this.firstContainedRecord = firstContainedRecord;
+				this.firstRecord = Math.max(firstRecord, firstContainedRecord);
+				long numContainedRecords = 0;
+				for (int i = 8; i < 16; i++) {
+					numContainedRecords <<= 8;
+					numContainedRecords |= (dbInfo[i] & 255);
+				}
+				this.numContainedRecords = numContainedRecords;
+				this.numRecords = Math.min(firstContainedRecord
+						+ numContainedRecords, firstRecord + numRecords)
+						- this.firstRecord;
+				int firstByte = dbInfo[16];
+				int secondByte = 255 & dbInfo[17];
+				if (firstByte < 0) {
+					superCompress = false;
+					recordsPerGroup = 1;
+					recordGroupByteBits = secondByte;
+					recordGroupByteLength = 1 << secondByte;
+				} else {
+					superCompress = true;
+					recordsPerGroup = (firstByte << 2) | (secondByte >> 6);
+					recordGroupByteLength = secondByte & 63;
+					recordGroupByteBits = -1;
+				}
+			}
+			if (recordGroupByteLength < 8) {
+				recordGroupUsesLong = true;
+				multipliers = null;
+				longMultipliers = new long[recordsPerGroup + 1];
+				long longMultiplier = 1;
+				for (int i = 0; i <= recordsPerGroup; i++) {
+					longMultipliers[i] = longMultiplier;
+					longMultiplier *= totalStates;
+				}
+			} else {
+				recordGroupUsesLong = false;
+				longMultipliers = null;
+				multipliers = new BigInteger[recordsPerGroup + 1];
+				BigInteger multiplier = BigInteger.ONE;
+				for (int i = 0; i <= recordsPerGroup; i++) {
+					multipliers[i] = multiplier;
+					multiplier = multiplier.multiply(bigIntTotalStates);
+				}
+			}
+		}
+		myHandle = getHandle();
 		assert Util.debug(DebugFacility.DATABASE, recordsPerGroup
 				+ " records per group\n" + recordGroupByteLength
 				+ " bytes per group");
@@ -151,14 +204,22 @@ public abstract class Database {
 	}
 
 	/**
-	 * Initializes as above, but when the confiration is already specified
+	 * Initialize a Database given a URI and a Configuration. This method may
+	 * either open an existing database or create a new one. If a new one is
+	 * created, the Configuration should be stored. If config is null, it will
+	 * use whatever is in the database.
 	 * 
 	 * @param uri
 	 *            The URI that the Database is associated with
+	 * @param conf
+	 *            The Configuration that is relevant
 	 * @param solve
 	 *            true for solving, false for playing
 	 */
-	protected abstract void initialize(String uri, boolean solve);
+	public Database(String uri, Configuration conf, boolean solve,
+			long firstRecord, long numRecords) {
+		this(uri, conf, solve, firstRecord, numRecords, null);
+	}
 
 	/**
 	 * Ensure that all threads reading from this database have access to the
@@ -172,7 +233,12 @@ public abstract class Database {
 	 * Close this Database, flush to disk, and release all associated resources.
 	 * This object should not be used again after making this call.
 	 */
-	public abstract void close();
+	public final void close() {
+		closeDatabase();
+		closeHandle(myHandle);
+	}
+
+	protected abstract void closeDatabase();
 
 	/**
 	 * Retrieve the Configuration associated with this Database.
@@ -368,7 +434,7 @@ public abstract class Database {
 		dh.releaseBytes(groupBytes);
 	}
 
-	private long splice(long group1, long group2, int num) {
+	protected final long splice(long group1, long group2, int num) {
 		if (superCompress)
 			return group1 % longMultipliers[num]
 					+ (group2 - group2 % longMultipliers[num]);
@@ -378,7 +444,8 @@ public abstract class Database {
 			return group1;
 	}
 
-	private BigInteger splice(BigInteger group1, BigInteger group2, int num) {
+	protected final BigInteger splice(BigInteger group1, BigInteger group2,
+			int num) {
 		if (superCompress)
 			return group1.mod(multipliers[num]).add(
 					group2.subtract(group2.mod(multipliers[num])));
@@ -525,8 +592,6 @@ public abstract class Database {
 	 *            The number of bytes to write
 	 */
 	protected synchronized void putBytes(byte[] arr, int off, int len) {
-		if (myHandle == null)
-			myHandle = getHandle();
 		putBytes(myHandle, location, arr, off, len);
 		location += len;
 	}
@@ -542,8 +607,6 @@ public abstract class Database {
 	 *            The number of bytes to read
 	 */
 	protected synchronized void getBytes(byte[] arr, int off, int len) {
-		if (myHandle == null)
-			myHandle = getHandle();
 		getBytes(myHandle, location, arr, off, len);
 		location += len;
 	}
@@ -593,30 +656,20 @@ public abstract class Database {
 	 * @return The number of bytes used to store all the records (This does not
 	 *         include the header size)
 	 */
-	public long numRecords() {
+	public final long numRecords() {
 		return numRecords;
-	}
-
-	/**
-	 * If this database only covers a particular range of hashes for a game,
-	 * call this method before initialize if creating the database
-	 * 
-	 * @param firstRecord
-	 *            The first byte this database contains
-	 * @param numRecords
-	 *            The total number of bytes contained
-	 */
-	public void setRange(long firstRecord, long numRecords) {
-		this.firstRecord = firstRecord;
-		this.numRecords = numRecords;
 	}
 
 	/**
 	 * @return The index of the first byte in this database (Will be zero if
 	 *         this database stores the entire game)
 	 */
-	public long firstRecord() {
+	public final long firstRecord() {
 		return firstRecord;
+	}
+
+	public final boolean containsRecord(long hash) {
+		return hash >= firstRecord() && hash < firstRecord() + numRecords();
 	}
 
 	public DatabaseHandle getHandle() {
@@ -630,21 +683,21 @@ public abstract class Database {
 		return getHandle();
 	}
 
-	private final long toByte(long recordIndex) {
+	protected final long toByte(long recordIndex) {
 		if (superCompress)
 			return recordIndex / recordsPerGroup * recordGroupByteLength;
 		else
 			return recordIndex << recordGroupByteBits;
 	}
 
-	private long toFirstRecord(long byteIndex) {
+	protected final long toFirstRecord(long byteIndex) {
 		if (superCompress)
 			return byteIndex / recordGroupByteLength * recordsPerGroup;
 		else
 			return byteIndex >> recordGroupByteBits;
 	}
 
-	private final int toNum(long recordIndex) {
+	protected final int toNum(long recordIndex) {
 		if (superCompress)
 			return (int) (recordIndex % recordsPerGroup);
 		else
@@ -655,8 +708,8 @@ public abstract class Database {
 		return toByte(lastRecord + recordsPerGroup - 1);
 	}
 
-	protected final long numBytes(long firstRecord, long lastRecord) {
-		return lastByte(lastRecord) - toByte(firstRecord);
+	protected final long numBytes(long firstRecord, long numRecords) {
+		return lastByte(firstRecord + numRecords) - toByte(firstRecord);
 	}
 
 	protected final long longRecordGroup(byte[] values, int offset) {
@@ -675,7 +728,7 @@ public abstract class Database {
 		return new BigInteger(1, bigIntByte);
 	}
 
-	private long longRecordGroup(long[] recs, int offset) {
+	protected final long longRecordGroup(long[] recs, int offset) {
 		if (superCompress) {
 			long longValues = 0;
 			for (int i = 0; i < recordsPerGroup; i++)
@@ -685,7 +738,7 @@ public abstract class Database {
 			return recs[0];
 	}
 
-	private BigInteger bigIntRecordGroup(long[] recs, int offset) {
+	protected final BigInteger bigIntRecordGroup(long[] recs, int offset) {
 		if (superCompress) {
 			BigInteger values = BigInteger.ZERO;
 			for (int i = 0; i < recordsPerGroup; i++)
@@ -696,7 +749,7 @@ public abstract class Database {
 			return BigInteger.valueOf(recs[0]);
 	}
 
-	private void getRecords(long recordGroup, long[] recs, int offset) {
+	protected final void getRecords(long recordGroup, long[] recs, int offset) {
 		if (superCompress) {
 			for (int i = 0; i < recordsPerGroup; i++) {
 				long mod = recordGroup % totalStates;
@@ -707,7 +760,8 @@ public abstract class Database {
 			recs[0] = recordGroup;
 	}
 
-	private void getRecords(BigInteger recordGroup, long[] recs, int offset) {
+	protected final void getRecords(BigInteger recordGroup, long[] recs,
+			int offset) {
 		if (superCompress) {
 			for (int i = 0; i < recordsPerGroup; i++) {
 				long mod = recordGroup.mod(bigIntTotalStates).longValue();
@@ -718,7 +772,7 @@ public abstract class Database {
 			recs[0] = recordGroup.longValue();
 	}
 
-	private long setRecord(long recordGroup, int num, long r) {
+	protected final long setRecord(long recordGroup, int num, long r) {
 		if (superCompress) {
 			long multiplier = longMultipliers[num];
 			long zeroOut = longMultipliers[num + 1];
@@ -730,7 +784,7 @@ public abstract class Database {
 			return r;
 	}
 
-	private BigInteger setRecord(BigInteger recordGroup, int num, long r) {
+	protected final BigInteger setRecord(BigInteger recordGroup, int num, long r) {
 		if (superCompress) {
 			BigInteger multiplier = multipliers[num];
 			BigInteger zeroOut = multipliers[num + 1];
@@ -743,14 +797,14 @@ public abstract class Database {
 			return BigInteger.valueOf(r);
 	}
 
-	private long getRecord(long recordGroup, int num) {
+	protected final long getRecord(long recordGroup, int num) {
 		if (superCompress)
 			return recordGroup / longMultipliers[num] % totalStates;
 		else
 			return recordGroup;
 	}
 
-	private long getRecord(BigInteger recordGroup, int num) {
+	protected final long getRecord(BigInteger recordGroup, int num) {
 		if (superCompress)
 			return recordGroup.divide(multipliers[num]).mod(bigIntTotalStates)
 					.longValue();
@@ -785,5 +839,123 @@ public abstract class Database {
 
 	public final long requiredMem(long numHashes) {
 		return toByte(numHashes);
+	}
+
+	public static Database openDatabase(String uri, boolean solve) {
+		return openDatabase(uri, null, solve);
+	}
+
+	public static Database openDatabase(String uri, boolean solve,
+			long firstRecord, long numRecords) {
+		return openDatabase(uri, null, solve, firstRecord, numRecords);
+	}
+
+	/**
+	 * @param solve
+	 *            true for solving, false for playing
+	 * @return the Database used to store this particular solve
+	 */
+	public static Database openDatabase(String uri, Configuration conf,
+			boolean solve) {
+		return openDatabase(uri, conf, solve, 0, -1);
+	}
+
+	/**
+	 * @param solve
+	 *            true for solving, false for playing
+	 * @param firstRecord
+	 *            The index of the first record this database contains
+	 * @param numRecords
+	 *            The number of records in this database
+	 * @return the Database used to store this particular solve Could not load
+	 *         the database class
+	 */
+	public static Database openDatabase(String uri, Configuration conf,
+			boolean solve, long firstRecord, long numRecords) {
+		if (conf == null)
+			try {
+				FileInputStream fis = new FileInputStream(uri);
+				fis.skip(18);
+				conf = Configuration.load(fis);
+				fis.close();
+			} catch (ClassNotFoundException e) {
+				throw new Error(e);
+			} catch (IOException e) {
+				throw new Error(e);
+			}
+		if (uri != null)
+			conf.setProperty("gamesman.db.uri", uri);
+		String[] dbType = conf.getProperty("gamesman.database").split(":");
+		try {
+			Class<? extends Database> dbClass = Class.forName(
+					"edu.berkeley.gamesman.database."
+							+ dbType[dbType.length - 1]).asSubclass(
+					Database.class);
+			conf.db = dbClass.getConstructor(String.class, Configuration.class,
+					Boolean.TYPE, Long.TYPE, Long.TYPE).newInstance(
+					conf.getProperty("gamesman.db.uri"), conf, solve,
+					firstRecord, numRecords);
+			for (int i = dbType.length - 2; i >= 0; i--) {
+				Class<? extends DatabaseWrapper> wrapperClass = Class.forName(
+						"edu.berkeley.gamesman.database." + dbType[i])
+						.asSubclass(DatabaseWrapper.class);
+				conf.db = wrapperClass.getConstructor(Database.class,
+						String.class, Configuration.class, Boolean.TYPE,
+						Long.TYPE, Long.TYPE).newInstance(conf.db,
+						conf.getProperty("gamesman.db.uri"), conf, solve,
+						firstRecord, numRecords);
+			}
+		} catch (InstantiationException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			e.getCause().printStackTrace();
+		} catch (NoSuchMethodException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		return conf.db;
+	}
+
+	protected final void storeNone(OutputStream os) throws IOException {
+		storeInfo(os);
+		Configuration.storeNone(os);
+	}
+
+	protected final void store(OutputStream os) throws IOException {
+		storeInfo(os);
+		conf.store(os);
+	}
+
+	protected final void skipHeader(InputStream is) throws IOException {
+		skipInfo(is);
+		Configuration.skipConf(is);
+	}
+
+	protected final void storeInfo(OutputStream os) throws IOException {
+		for (int i = 56; i >= 0; i -= 8)
+			os.write((int) (firstRecord >>> i));
+		for (int i = 56; i >= 0; i -= 8)
+			os.write((int) (numRecords >>> i));
+		if (superCompress) {
+			os.write(recordsPerGroup >>> 2);
+			os.write(((recordsPerGroup & 3) << 6) | recordGroupByteLength);
+		} else {
+			os.write(-1);
+			os.write(recordGroupByteBits);
+		}
+	}
+
+	private void skipInfo(InputStream is) throws IOException {
+		byte[] b = new byte[18];
+		int len = 18;
+		while (len > 0)
+			len -= is.read(b, 0, len);
 	}
 }

@@ -24,8 +24,8 @@ public class TopDownSolver<S extends State> extends Solver {
 
 	protected RecycleLinkedList<Record[]> recordList;
 
-	public void initialize(final Configuration conf) {
-		super.initialize(conf);
+	public TopDownSolver(final Configuration conf) {
+		super(conf);
 		final Game<?> game = conf.getGame();
 		recordList = new RecycleLinkedList<Record[]>(new Factory<Record[]>() {
 			public Record[] newObject() {
@@ -69,27 +69,29 @@ public class TopDownSolver<S extends State> extends Solver {
 	 *            The configuration object
 	 */
 	public void solve(Configuration conf) {
-		Game<?> g = conf.getGame();
+		Game<S> g = conf.getCheckedGame();
 		TopDownMutaGame<S> game;
 		if (g instanceof TopDownMutaGame<?>) {
-			game = Util.checkedCast(g);
+			game = (TopDownMutaGame<S>) g;
 		} else {
-			game = new TopDownGame<S>(conf, Util
-					.<Game<S>, Game<?>> checkedCast(g));
+			game = new TopDownGame<S>(conf, (Game<S>) g);
 		}
 		for (S s : game.startingPositions()) {
 			game.setToState(s);
 			long currentTimeMillis = System.currentTimeMillis();
-			solve(game, s, new Record(conf), 0, readDb.getHandle(), writeDb
-					.getHandle());
+			DatabaseHandle readHandle = readDb.getHandle();
+			DatabaseHandle writeHandle = writeDb.getHandle();
+			solve(game, s, new Record(conf), 0, readHandle, writeHandle);
+			readDb.closeHandle(readHandle);
+			writeDb.closeHandle(writeHandle);
 			System.out.println(Util.millisToETA(System.currentTimeMillis()
 					- currentTimeMillis)
 					+ " time to complete");
 		}
 	}
 
-	private void solve(TopDownMutaGame<S> game, S curState, Record value, int depth,
-			DatabaseHandle readDh, DatabaseHandle writeDh) {
+	private void solve(TopDownMutaGame<S> game, S curState, Record value,
+			int depth, DatabaseHandle readDh, DatabaseHandle writeDh) {
 		if (depth < 3)
 			assert Util.debug(DebugFacility.SOLVER, game.toString());
 		long hash = game.getHash();
@@ -116,8 +118,8 @@ public class TopDownSolver<S extends State> extends Solver {
 			recordList.remove();
 			break;
 		case IMPOSSIBLE:
-			Util
-					.fatalError("Top-down solve should not reach impossible positions");
+			throw new Error(
+					"Top-down solve should not reach impossible positions");
 		default:
 			value.value = pv;
 			value.remoteness = 0;

@@ -1,18 +1,11 @@
 package edu.berkeley.gamesman.util;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Iterator;
-import java.util.List;
 
 /**
  * Various utility functions accessible from any class
@@ -25,132 +18,12 @@ public final class Util {
 	private Util() {
 	}
 
-	protected static class AssertionFailedError extends Error {
-		private static final long serialVersionUID = 2545784238123111405L;
-	}
-
-	/**
-	 * A FatalError means that some part of Gamesman has barfed and it is about
-	 * to exit ungracefully.
-	 * 
-	 * Be sure to rethrow it if you catch it to clean up but do not explicitly
-	 * fix the error condition
-	 * 
-	 * @author Steven Schlansker
-	 */
-	public static class FatalError extends Error {
-
-		FatalError(String s, Throwable throwable) {
-			super(s, throwable);
-		}
-
-		private static final long serialVersionUID = -5642903706572262719L;
-	}
-
-	protected static class Warning extends Error {
-
-		public Warning(String s, Exception cause) {
-			super(s, cause);
-		}
-
-		private static final long serialVersionUID = -4160479272744795242L;
-	}
-
 	public static byte[] decodeBase64(String in) {
 		return Base64.decode(in);
 	}
 
 	public static String encodeBase64(byte[] in) {
 		return Base64.encodeBytes(in);
-	}
-
-	/**
-	 * Throws a fatal Error if a required condition is not satisfied
-	 * 
-	 * @param b
-	 *            The boolean (expression) that must be true
-	 * @param reason
-	 *            The reason to give if we fail
-	 */
-	public static void assertTrue(boolean b, String reason) {
-		if (!b) {
-			Util.fatalError("Assertion failed: " + reason);
-		}
-	}
-
-	/**
-	 * Throw a fatal error and print stack trace
-	 * 
-	 * @param s
-	 *            The reason for failure
-	 */
-	public static void fatalError(String s) {
-		System.err.println("FATAL: (" + Thread.currentThread().getName() + ") "
-				+ s);
-		System.err.println("Stack trace follows:");
-		try {
-			throw new FatalError(s, null);
-		} catch (FatalError e) {
-			e.printStackTrace(System.err);
-			throw e;
-		}
-	}
-
-	/**
-	 * Throw a fatal error and print stack trace
-	 * 
-	 * @param s
-	 *            The reason for failure
-	 * @param throwable
-	 *            An exception that caused this fatal error
-	 */
-	public static void fatalError(String s, Throwable throwable) {
-		System.err.println("FATAL: (" + Thread.currentThread().getName() + ") "
-				+ s);
-		System.err.println(throwable.getMessage());
-		throwable.printStackTrace(System.err);
-		try {
-			throw new FatalError(s, throwable);
-		} catch (FatalError e) {
-			e.printStackTrace(System.err);
-			throw e;
-		}
-	}
-
-	/**
-	 * Print a non-fatal warning and continue
-	 * 
-	 * @param s
-	 *            The condition that caused this warning
-	 */
-	public static void warn(String s) {
-		System.err.println("WARN: (" + Thread.currentThread().getName() + ") "
-				+ s);
-		System.err.println("Stack trace follows:");
-		try {
-			throw new Warning(s, null);
-		} catch (Warning e) {
-			e.printStackTrace(System.err);
-		}
-	}
-
-	/**
-	 * Print a non-fatal warning and continue
-	 * 
-	 * @param s
-	 *            The condition that caused this warning
-	 * @param ex
-	 *            The exception that caused the warning
-	 */
-	public static void warn(String s, Exception ex) {
-		System.err.println("WARN: (" + Thread.currentThread().getName() + ") "
-				+ s);
-		System.err.println("Stack trace follows:");
-		try {
-			throw new Warning(s, ex);
-		} catch (Warning e) {
-			e.printStackTrace(System.err);
-		}
 	}
 
 	static EnumSet<DebugFacility> debugOpts = EnumSet
@@ -380,51 +253,6 @@ public final class Util {
 	}
 
 	/**
-	 * Deserialize an object stored in a byte array
-	 * 
-	 * @param <T>
-	 *            the type of the object stored
-	 * @param bytes
-	 *            the array it is stored in
-	 * @return the object stored
-	 */
-	@SuppressWarnings("unchecked")
-	public static <T> T deserialize(byte[] bytes) {
-		ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-		ObjectInputStream ois;
-		try {
-			ois = new ObjectInputStream(bais); // TODO why is this broken on
-			// nyc?
-			// return checkedCast(ois.readObject());
-			return (T) checkedCast(ois.readObject());
-		} catch (ClassCastException e) {
-			Util.fatalError("Could not deserialize object", e);
-		} catch (Exception e) {
-			Util.fatalError("Could not deserialize object", e);
-		}
-		return null;
-	}
-
-	/**
-	 * Serialize and object and return it in a new byte array
-	 * 
-	 * @param obj
-	 *            The object to serialize (must be Serializable)
-	 * @return a byte array
-	 */
-	public static byte[] serialize(Serializable obj) {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try {
-			ObjectOutputStream oos = new ObjectOutputStream(baos);
-			oos.writeObject(obj);
-			oos.close();
-		} catch (IOException e) {
-			Util.fatalError("Could not serialize object", e);
-		}
-		return baos.toByteArray();
-	}
-
-	/**
 	 * Like Class.forName but checks for casting errors
 	 * 
 	 * @param <T>
@@ -449,24 +277,24 @@ public final class Util {
 		return cls;
 	}
 
-	/**
-	 * Handy method for working with 'unchecked' casts - send them here and it
-	 * will throw a RuntimeException instead of giving you a compiler warning.
-	 * DO NOT USE unless you are sure there's no other options! Use generics
-	 * instead if at all possible
-	 * 
-	 * @param <T>
-	 *            The type to cast to
-	 * @param <V>
-	 *            The type we're casting from
-	 * @param in
-	 *            The object to cast
-	 * @return A casted object
-	 */
-	@SuppressWarnings("unchecked")
-	public static <T, V> T checkedCast(V in) {
-		return (T) in;
-	}
+	//
+	// /**
+	// * Handy method for working with 'unchecked' casts - send them here and it
+	// * will throw a RuntimeException instead of giving you a compiler warning.
+	// * DO NOT USE unless you are sure there's no other options! Use generics
+	// * instead if at all possible
+	// *
+	// * @param <T>
+	// * The type to cast to
+	// * @param <V>
+	// * The type we're casting from
+	// * @param in
+	// * The object to cast
+	// * @return A casted object
+	// */
+	// public static <T, V> T checkedCast(V in) {
+	// return (T) in;
+	// }
 
 	/**
 	 * Method to join the elements of arr, separated by separator.
@@ -479,11 +307,8 @@ public final class Util {
 	 * @return The toString() of each element of arr, separated by separator
 	 */
 	public static String join(String separator, Object arr) {
-		if (!arr.getClass().isArray()) {
-			fatalError("join() needs an Array");
-			return null;
-		}
-
+		if (!arr.getClass().isArray())
+			throw new RuntimeException("join() needs an Array");
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < Array.getLength(arr); i++)
 			sb.append(separator).append(Array.get(arr, i));
@@ -637,18 +462,6 @@ public final class Util {
 	}
 
 	/**
-	 * @param <H>
-	 *            The type of the array
-	 * @param list
-	 *            The list of objects
-	 * @return An array with the same objects
-	 */
-	public static <H> H[] toArray(List<H> list) {
-		return list.toArray(Util.<H[], Object> checkedCast(Array.newInstance(
-				list.get(0).getClass(), list.size())));
-	}
-
-	/**
 	 * @param index
 	 *            The index to search for
 	 * @param rangeEnds
@@ -663,8 +476,8 @@ public final class Util {
 			p = (r - l) / 2;
 
 			if (p == 0 && rangeEnds[p].compareTo(index) < 0)
-				Util.fatalError("Index " + index + " not in binary search "
-						+ Arrays.toString(rangeEnds));
+				throw new RuntimeException("Index " + index
+						+ " not in binary search " + Arrays.toString(rangeEnds));
 			p += l;
 			// System.out.print(p);
 			if (rangeEnds[p].compareTo(index) >= 0) {

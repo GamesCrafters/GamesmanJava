@@ -4,4 +4,3 @@ gamesman.db.uri = pyraminx.db
 gamesman.database = MemoryDatabase:FileDatabase
 gamesman.debug.SOLVER = true
 record.fields = VALUE,REMOTENESS:12
-gamesman.threads = 1

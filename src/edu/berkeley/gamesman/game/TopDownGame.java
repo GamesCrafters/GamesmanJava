@@ -21,9 +21,9 @@ import edu.berkeley.gamesman.util.qll.RecycleLinkedList;
  */
 public final class TopDownGame<S extends State> extends TopDownMutaGame<S> {
 	private final Game<S> myGame;
-	private RecycleLinkedList<RecycleLinkedList<S>> moveLists;
-	private RecycleLinkedList<S> stateList;
-	private S[] possibleMoves;
+	private final RecycleLinkedList<RecycleLinkedList<S>> moveLists;
+	private final RecycleLinkedList<S> stateList;
+	private final S[] possibleMoves;
 
 	/**
 	 * @param g

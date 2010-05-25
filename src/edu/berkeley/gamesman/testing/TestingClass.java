@@ -2,7 +2,6 @@ package edu.berkeley.gamesman.testing;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Random;
@@ -10,34 +9,13 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.database.DistributedDatabase;
 import edu.berkeley.gamesman.game.Connect4;
 import edu.berkeley.gamesman.game.util.TierState;
 
 public class TestingClass {
 	static Random r = new Random();
 
-	public static void main(String[] args) throws IOException,
-			ClassNotFoundException {
-//		FileInputStream fis = new FileInputStream("database76.db");
-//		int confLength = 0;
-//		for (int i = 0; i < 4; i++) {
-//			confLength <<= 8;
-//			confLength |= fis.read();
-//		}
-//		byte[] confBytes = new byte[confLength];
-//		fis.read(confBytes);
-//		fis.close();
-//		Configuration conf = Configuration.load(confBytes);
-//		DistributedDatabase dd = new DistributedDatabase();
-//		dd.initialize("database76.db", conf, false);
-//		System.out.println(DistributedDatabase.getFileList(
-//				dd.getFiles(1), Long.parseLong(args[0]),
-//				Integer.parseInt(args[1])));
-//		dd.close();
-	}
-
-	public static void newerMain(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException {
 		ByteArrayInputStream bais;
 		GZIPInputStream pis = null;
 		ByteArrayOutputStream pos = null;

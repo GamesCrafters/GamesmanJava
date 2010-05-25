@@ -2,13 +2,12 @@ package edu.berkeley.gamesman.core;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Set;
 
 import edu.berkeley.gamesman.database.Database;
-import edu.berkeley.gamesman.database.DatabaseWrapper;
+import edu.berkeley.gamesman.game.Connect4;
 import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.util.Util;
 
@@ -21,7 +20,7 @@ import edu.berkeley.gamesman.util.Util;
  * @author Steven Schlansker
  */
 public class Configuration {
-	private Game<?> g;
+	private final Game<?> g;
 
 	/**
 	 * The number of possible states for value. When zero, the record does not
@@ -69,33 +68,33 @@ public class Configuration {
 	 * 
 	 * @param props
 	 *            A Properties object (probably constructed from a job file).
-	 * @param initLater
-	 *            You must call initialize() once you have created the
-	 *            appropriate Game and Hasher objects.
 	 * @throws ClassNotFoundException
 	 *             Could not find game class or hasher class
 	 */
 	public Configuration(Properties props) throws ClassNotFoundException {
 		this.props = props;
 		String gamename = getProperty("gamesman.game");
-		initialize(gamename);
-	}
-
-	/**
-	 * Calls new Configuration(Configuration.readProperties(path))
-	 * 
-	 * @param path
-	 *            The path to the job file to read
-	 * @throws ClassNotFoundException
-	 *             Could not find game class or hasher class
-	 */
-	public Configuration(String path) throws ClassNotFoundException {
-		this(readProperties(path));
-	}
-
-	// To specify the size, use ':' followed by the number of possible
-	// states
-	private void initializeStoredFields() {
+		// Python classes end with ".py"
+		if (gamename.indexOf('.') == -1) {
+			gamename = "edu.berkeley.gamesman.game." + gamename;
+		}
+		setProperty("gamesman.game", gamename);
+		try {
+			g = Class.forName(gamename).asSubclass(Game.class).getConstructor(
+					Configuration.class).newInstance(this);
+		} catch (IllegalArgumentException e) {
+			throw new Error(e);
+		} catch (SecurityException e) {
+			throw new Error(e);
+		} catch (InstantiationException e) {
+			throw new Error(e);
+		} catch (IllegalAccessException e) {
+			throw new Error(e);
+		} catch (InvocationTargetException e) {
+			throw new Error(e.getCause());
+		} catch (NoSuchMethodException e) {
+			throw new Error(e);
+		}
 		String fields = getProperty("record.fields", "VALUE,REMOTENESS");
 		int states;
 		String[] splitFields = fields.split(",");
@@ -127,61 +126,16 @@ public class Configuration {
 		}
 	}
 
-	/**
-	 * Initialize the Configuration with a game and a hasher object.
-	 * 
-	 * @param newG
-	 *            The Game associated with this configuration.
-	 */
-	public void initialize(Game<?> newG) {
-		g = newG;
-		initializeStoredFields();
-	}
-
-	/**
-	 * Initialize the Configuration with a game and a hasher object.
-	 * 
-	 * @param in_gamename
-	 *            The Game associated with this configuration.
-	 * @param in_hashname
-	 *            The Hasher associated with this configuration.
-	 * @throws ClassNotFoundException
-	 *             Could not load either the hasher or game class
-	 */
-	public void initialize(final String in_gamename) {
-		String gamename = in_gamename;
-
-		// Python classes end with ".py"
-		if (gamename.indexOf('.') == -1) {
-			gamename = "edu.berkeley.gamesman.game." + gamename;
-		}
-		setProperty("gamesman.game", gamename);
-		try {
-			g = Class.forName(gamename).asSubclass(Game.class).getConstructor(
-					Configuration.class).newInstance(this);
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		} catch (SecurityException e) {
-			e.printStackTrace();
-		} catch (InstantiationException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		} catch (InvocationTargetException e) {
-			e.getCause().printStackTrace();
-		} catch (NoSuchMethodException e) {
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-		initialize(g);
+	public Configuration(String solvedJob) throws ClassNotFoundException {
+		this(readProperties(solvedJob));
 	}
 
 	/**
 	 * @return the Game this configuration plays
 	 */
-	public Game<?> getGame() {
-		return g;
+	@SuppressWarnings("unchecked")
+	public <T extends State> Game<T> getCheckedGame() {
+		return (Game<T>) g;
 	}
 
 	public String toString() {
@@ -198,9 +152,7 @@ public class Configuration {
 	public String getProperty(String key) {
 		String s = props.getProperty(key);
 		if (s == null)
-			Util
-					.fatalError("Property " + key
-							+ " is unset and has no default!");
+			throw new Error("Property " + key + " is unset and has no default!");
 		return s;
 	}
 
@@ -355,7 +307,7 @@ public class Configuration {
 		try {
 			r = new LineNumberReader(new FileReader(path));
 		} catch (FileNotFoundException e) {
-			Util.fatalError("Could not open property file", e);
+			throw new Error("Could not open property file", e);
 		}
 		String line;
 		try {
@@ -373,7 +325,7 @@ public class Configuration {
 				props.setProperty(arr[0].trim(), arr[1].trim());
 			}
 		} catch (IOException e) {
-			Util.fatalError("Could not read from property file", e);
+			throw new Error("Could not read from property file", e);
 		}
 	}
 
@@ -389,8 +341,9 @@ public class Configuration {
 			if (line.equals(""))
 				continue;
 			String[] arr = line.split("\\s+=\\s+");
-			Util.assertTrue(arr.length == 2,
-					"Malformed property file at line \"" + line + "\"");
+			if (arr.length != 2)
+				throw new Error("Malformed property file at line \"" + line
+						+ "\"");
 			setProperty(arr[0], arr[1]);
 		}
 	}
@@ -432,73 +385,10 @@ public class Configuration {
 			try {
 				return in.readLine();
 			} catch (IOException e) {
-				Util.fatalError("Could not read a line from console", e);
-				return null;
+				throw new Error("Could not read a line from console", e);
 			}
 		}
 		return s;
-	}
-
-	/**
-	 * @param solve
-	 *            true for solving, false for playing
-	 * @return the Database used to store this particular solve
-	 * @throws ClassNotFoundException
-	 *             Could not load the database class
-	 */
-	public Database openDatabase(String uri, boolean solve)
-			throws ClassNotFoundException {
-		return openDatabase(uri, solve, 0, -1);
-	}
-
-	/**
-	 * @param solve
-	 *            true for solving, false for playing
-	 * @param firstRecord
-	 *            The index of the first record this database contains
-	 * @param numRecord
-	 *            The number of records in this database
-	 * @return the Database used to store this particular solve
-	 * @throws ClassNotFoundException
-	 *             Could not load the database class
-	 */
-	public Database openDatabase(String uri, boolean solve, long firstRecord,
-			long numRecord) throws ClassNotFoundException {
-		if (db != null)
-			return db;
-		if (uri != null)
-			setProperty("gamesman.db.uri", uri);
-		String[] dbType = getProperty("gamesman.database").split(":");
-		try {
-			Class<? extends Database> dbClass = Util.checkedCast(Class
-					.forName("edu.berkeley.gamesman.database."
-							+ dbType[dbType.length - 1]));
-			db = dbClass.newInstance();
-			for (int i = dbType.length - 2; i >= 0; i--) {
-				Class<? extends DatabaseWrapper> wrapperClass = Util
-						.checkedCast(Class
-								.forName("edu.berkeley.gamesman.database."
-										+ dbType[i]));
-				db = wrapperClass.getConstructor(Database.class)
-						.newInstance(db);
-			}
-		} catch (InstantiationException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		} catch (SecurityException e) {
-			e.printStackTrace();
-		} catch (InvocationTargetException e) {
-			e.getCause().printStackTrace();
-		} catch (NoSuchMethodException e) {
-			e.printStackTrace();
-		}
-		if (numRecord >= 0)
-			db.setRange(firstRecord, numRecord);
-		db.initialize(getProperty("gamesman.db.uri"), this, solve);
-		return db;
 	}
 
 	/**
@@ -530,6 +420,10 @@ public class Configuration {
 			return Util.parseIntegers(iString.split(", *"));
 	}
 
+	public Game<? extends State> getGame() {
+		return g;
+	}
+	
 	public static void storeNone(OutputStream os) throws IOException {
 		for (int i = 0; i < 4; i++)
 			os.write(0);

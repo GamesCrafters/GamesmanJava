@@ -13,7 +13,7 @@ import edu.berkeley.gamesman.util.Pair;
  * @author DNSpies
  */
 public abstract class TierGame extends Game<TierState> {
-	protected TierHasher myHasher;
+	private final TierHasher myHasher;
 
 	public TierGame(Configuration conf) {
 		super(conf);
@@ -33,7 +33,7 @@ public abstract class TierGame extends Game<TierState> {
 	 * @return The tier this hash is contained in
 	 */
 	public int hashToTier(long hash) {
-		int tiers = myHasher.numberOfTiers();
+		int tiers = numberOfTiers();
 		int guess = tiers / 2, low = 0, high = tiers;
 		while (high > low + 1) {
 			long offset = myHasher.hashOffsetForTier(guess);

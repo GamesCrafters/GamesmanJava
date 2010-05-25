@@ -5,7 +5,6 @@ import java.util.Collection;
 
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.game.util.BitSetBoard;
-import edu.berkeley.gamesman.game.util.Connect4ReducerBoard;
 import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.game.util.PieceRearranger;
 import edu.berkeley.gamesman.util.ExpCoefs;
@@ -18,30 +17,30 @@ import edu.berkeley.gamesman.util.Util;
  * @author DNSpies
  */
 public final class Connect4 extends TierGame {
-	private int[][] indices;
+	private final int[][] indices;
 
-	private int[] colHeights;
+	private final int[] colHeights;
 
-	private int piecesToWin;
+	private final int piecesToWin;
 
-	private int gameHeight, gameWidth, gameSize;
+	private final int gameHeight, gameWidth, gameSize;
 
-	private ArrayList<Place> pieces;
+	private final ArrayList<Place> pieces;
 
-	private long[] multiplier;
+	private final long[] multiplier;
 
-	private long[] moveArrangement;
+	private final long[] moveArrangement;
 
 	/**
 	 * A list of the columns which are not full
 	 */
-	public int[] openColumn;
+	public final int[] openColumn;
 
-	private long[] children;
+	private final long[] children;
 
-	private BitSetBoard bsb;
+	private final BitSetBoard bsb;
 
-	private ExpCoefs ec;
+	private final ExpCoefs ec;
 
 	private long pieceArrangement;
 
@@ -49,7 +48,7 @@ public final class Connect4 extends TierGame {
 
 	private PieceRearranger iah;
 
-	private int[] groupSizes;
+	private final int[] groupSizes;
 
 	private int numMoves;
 
@@ -79,10 +78,7 @@ public final class Connect4 extends TierGame {
 		pieces = new ArrayList<Place>(gameSize);
 		moveArrangement = new long[gameWidth];
 		colHeights = new int[gameWidth];
-		if (conf.getBoolean("gamesman.game.reduceWins", false))
-			bsb = new Connect4ReducerBoard(gameHeight, gameWidth);
-		else
-			bsb = new BitSetBoard(gameHeight, gameWidth);
+		bsb = new BitSetBoard(gameHeight, gameWidth);
 		ec = new ExpCoefs(gameHeight, gameWidth + 1);
 		multiplier = new long[gameSize + 1];
 		multiplier[0] = 1;
@@ -506,10 +502,8 @@ public final class Connect4 extends TierGame {
 		if (newHeights[col] >= gameHeight) {
 			for (i = 0; i < col; i++)
 				piecesCount += newHeights[i];
-			if (piecesCount >= col * gameHeight) {
-				Util.fatalError("There should be space");
-				return -1;
-			}
+			if (piecesCount >= col * gameHeight)
+				throw new Error("There should be space");
 			++piecesCount;
 			--newHeights[col];
 			for (--i; i >= 0; --i) {

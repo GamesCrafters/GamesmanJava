@@ -9,6 +9,7 @@ import java.util.Random;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.database.Database;
+import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.Connect4;
 import edu.berkeley.gamesman.game.TopDownC4;
 import edu.berkeley.gamesman.game.util.C4State;
@@ -130,14 +131,18 @@ class ConnectFour implements MouseListener {
 				} else if (topDown) {
 					C4State state = tdgame.stringToState(arrToString(board));
 					Record r = new Record(conf);
-					tdgame.recordFromLong(state, fd.getRecord(fd.getHandle(),
-							tdgame.stateToHash(state)), r);
+					DatabaseHandle fdHandle = fd.getHandle();
+					tdgame.recordFromLong(state, fd.getRecord(fdHandle, tdgame
+							.stateToHash(state)), r);
+					fd.closeHandle(fdHandle);
 					System.out.println(r);
 				} else {
 					TierState state = game.stringToState(arrToString(board));
 					Record r = new Record(conf);
-					game.recordFromLong(state, fd.getRecord(fd.getHandle(),
-							game.stateToHash(state)), r);
+					DatabaseHandle fdHandle = fd.getHandle();
+					game.recordFromLong(state, fd.getRecord(fdHandle, game
+							.stateToHash(state)), r);
+					fd.closeHandle(fdHandle);
 					System.out.println(r);
 				}
 				if (!win())
@@ -173,8 +178,10 @@ class ConnectFour implements MouseListener {
 					if (tdgame.getState().numPieces != state.numPieces)
 						tdgame.setNumPieces(state.numPieces);
 					records[i] = new Record(conf);
-					tdgame.recordFromLong(state, fd.getRecord(fd.getHandle(),
+					DatabaseHandle fdHandle = fd.getHandle();
+					tdgame.recordFromLong(state, fd.getRecord(fdHandle,
 							moveHashes[i]), records[i]);
+					fd.closeHandle(fdHandle);
 				}
 				for (Record r : records)
 					r.previousPosition();
@@ -199,15 +206,17 @@ class ConnectFour implements MouseListener {
 				listMoves.addAll(moves);
 				long[] moveHashes = new long[listMoves.size()];
 				Record[] records = new Record[listMoves.size()];
+				DatabaseHandle fdHandle = fd.getHandle();
 				for (int i = 0; i < listMoves.size(); i++) {
 					TierState state = listMoves.get(i).cdr;
 					moveHashes[i] = game.stateToHash(state);
 					if (game.getTier() != state.tier)
 						game.setTier(state.tier);
 					records[i] = new Record(conf);
-					game.recordFromLong(state, fd.getRecord(fd.getHandle(),
+					game.recordFromLong(state, fd.getRecord(fdHandle,
 							moveHashes[i]), records[i]);
 				}
+				fd.closeHandle(fdHandle);
 				for (Record r : records)
 					r.previousPosition();
 				Record bestRecord = game.combine(records, 0, records.length);

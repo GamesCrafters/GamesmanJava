@@ -4,19 +4,15 @@ import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.GridLayout;
 import java.awt.event.*;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 
 import javax.swing.*;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.database.Database;
-import edu.berkeley.gamesman.database.GZippedFileDatabase;
+import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.Connect4;
 import edu.berkeley.gamesman.game.TopDownC4;
-import edu.berkeley.gamesman.util.Util;
 
 /**
  * A testing class for playing against a perfect play database
@@ -89,45 +85,26 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 	 *            The job file
 	 */
 	public static void main(String[] args) {
-		if (args.length != 1) {
-			Util.fatalError("Please specify a jobfile as the only argument");
-		}
+		if (args.length != 1)
+			throw new Error(
+					"Please specify a database file as the only argument");
 		Configuration conf;
 		Database fd;
-
-		try {
-			if (args[0].contains(":")) {
-				Database theBase = new GZippedFileDatabase();
-				theBase.initialize(args[0], null, false);
-				conf = theBase.getConfiguration();
-				fd = theBase;
-				conf.db = theBase;
-			} else {
-				File dataFile = new File(args[0]);
-				FileInputStream fis = new FileInputStream(dataFile);
-				conf = Configuration.load(fis);
-				fis.close();
-				fd = conf.openDatabase(args[0], false);
-			}
-		} catch (ClassNotFoundException e) {
-			Util.fatalError("failed to load class", e);
-			return;
-		} catch (IOException e) {
-			Util.fatalError("IO Error", e);
-			return;
-		}
+		fd = Database.openDatabase(args[0], false);
+		conf = fd.getConfiguration();
 		int width = conf.getInteger("gamesman.game.width", 7);
 		int height = conf.getInteger("gamesman.game.height", 6);
 		Record r = new Record(conf);
+		DatabaseHandle fdHandle = fd.getHandle();
 		if (conf.getGame() instanceof Connect4) {
 			Connect4 g = (Connect4) conf.getGame();
-			g.recordFromLong(g.hashToState(0), fd.getRecord(fd.getHandle(), 0),
-					r);
+			g.recordFromLong(g.hashToState(0), fd.getRecord(fdHandle, 0), r);
 		} else {
 			TopDownC4 g = (TopDownC4) conf.getGame();
-			g.recordFromLong(g.hashToState(0), fd.getRecord(fd.getHandle(), 0),
+			g.recordFromLong(g.hashToState(0), fd.getRecord(fdHandle, 0),
 					r);
 		}
+		fd.closeHandle(fdHandle);
 		System.out.println(r);
 		DisplayFour df = new DisplayFour(height, width);
 		ConnectFour cf = new ConnectFour(conf, df);

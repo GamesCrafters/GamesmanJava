@@ -34,9 +34,8 @@ public class Gamesman {
 	/**
 	 * @param args
 	 *            The command line arguments. Should just be a job file.
-	 * @throws Throwable
 	 */
-	public static void main(String[] args) throws Throwable {
+	public static void main(String[] args) {
 		String jobFile = null, entryPoint = null;
 		if (args.length == 1) {
 			String arg = args[0];
@@ -93,18 +92,25 @@ public class Gamesman {
 		}
 
 		Class<? extends GamesmanApplication> cls;
+		GamesmanApplication ga;
 		try {
 			cls = Util.typedForName(APPLICATION_MAP.get(entryPoint),
 					GamesmanApplication.class);
-		} catch (ClassNotFoundException e1) {
-			Util.fatalError("Class could not be found!", e1);
-			return;
-		}
-		GamesmanApplication ga;
-		try {
 			ga = cls.getConstructor().newInstance();
+		} catch (IllegalArgumentException e) {
+			throw new Error(e);
+		} catch (SecurityException e) {
+			throw new Error(e);
+		} catch (InstantiationException e) {
+			throw new Error(e);
+		} catch (IllegalAccessException e) {
+			throw new Error(e);
 		} catch (InvocationTargetException e) {
-			throw e.getCause();
+			throw new Error(e.getCause());
+		} catch (NoSuchMethodException e) {
+			throw new Error(e);
+		} catch (ClassNotFoundException e) {
+			throw new Error(e);
 		}
 		ga.run(props);
 	}

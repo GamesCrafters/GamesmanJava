@@ -155,7 +155,7 @@ public final class PieceRearranger implements Cloneable {
 
 	private boolean hasNext;
 
-	private HashPiece[] pieces;
+	private final HashPiece[] pieces;
 
 	private final HashPiece lowPiece = new HashPiece(-1, 0, 0, 'O', null);
 

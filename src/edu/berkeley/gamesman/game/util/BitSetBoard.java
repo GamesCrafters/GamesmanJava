@@ -14,11 +14,11 @@ public class BitSetBoard {
 
 	protected long oPlayerLong;
 
-	protected int height;
+	protected final int height;
 
-	protected int width;
+	protected final int width;
 
-	protected boolean usesLong;
+	protected final boolean usesLong;
 
 	/**
 	 * @param gameHeight

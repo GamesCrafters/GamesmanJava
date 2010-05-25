@@ -9,12 +9,12 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author dnspies
  */
-public class YGame extends ConnectGame {
-	private int[] translateInArray;
+public final class YGame extends ConnectGame {
+	private final int[] translateInArray;
 
-	private int[] translateOutArray;
+	private final int[] translateOutArray;
 
-	String formatString = "\n                 220_\n"
+	private static final String formatString = "\n                 220_\n"
 			+ "                /| \\\n" + "               / |  \\\n"
 			+ "              /  |   \\\n" + "             /   |    \\\n"
 			+ "            /    |     \\\n" + "           /    /       \\\n"
@@ -56,13 +56,13 @@ public class YGame extends ConnectGame {
 		}
 	}
 
-	private Space[][][] yBoard;
+	private final Space[][][] yBoard;
 
-	private char[] board;
+	private final char[] board;
 
-	private int boardSide;
+	private final int boardSide;
 
-	private int boardSize;
+	private final int boardSize;
 
 	/**
 	 * @param conf
@@ -70,10 +70,7 @@ public class YGame extends ConnectGame {
 	 */
 	public YGame(Configuration conf) {
 		super(conf);
-		initialize(conf.getInteger("gamesman.game.outerRows", 2));
-	}
-
-	private void initialize(int outerRows) {
+		int outerRows = conf.getInteger("gamesman.game.outerRows", 2);
 		this.boardSide = outerRows + 2;
 		yBoard = new Space[3][boardSide - 1][];
 		int n = 0;

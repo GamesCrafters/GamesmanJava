@@ -1,17 +1,27 @@
 package edu.berkeley.gamesman.database;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
 import edu.berkeley.gamesman.core.Configuration;
 
-public class SplitDatabase extends Database {
-	Database[] databases;
+public final class SplitDatabase extends Database {
+	public SplitDatabase(String uri, Configuration conf, boolean solve,
+			long firstRecord, long numRecords) {
+		super(uri, conf, solve, firstRecord, numRecords);
+		String[] dbs = conf.getProperty("gamesman.db.uris").split(";");
+		databases = new Database[dbs.length];
+		long location = firstRecord();
+		for (int d = 0; d < databases.length; d++) {
+			String[] dString = dbs[d].split("-");
+			databases[d] = Database.openDatabase(dString[0], false, location,
+					Long.parseLong(dString[1]));
+			location += databases[d].numRecords();
+		}
+		location = firstRecord();
+	}
+
+	private final Database[] databases;
 
 	@Override
-	public void close() {
+	protected void closeDatabase() {
 		for (int i = 0; i < databases.length; i++) {
 			databases[i].close();
 		}
@@ -50,43 +60,6 @@ public class SplitDatabase extends Database {
 		return low;
 	}
 
-	@Override
-	public void initialize(String uri, boolean solve) {
-		String[] dbs = uri.split(";");
-		if (dbs.length == 1) {
-			try {
-				File f = new File(uri);
-				FileInputStream fis = new FileInputStream(f);
-				conf = Configuration.load(fis);
-				fis.close();
-				dbs = conf.getProperty("gamesman.db.uri").split(";");
-			} catch (IOException ioe) {
-				ioe.printStackTrace();
-			} catch (ClassNotFoundException e) {
-				e.printStackTrace();
-			}
-		}
-		databases = new Database[dbs.length];
-		long location = firstRecord();
-		for (int d = 0; d < databases.length; d++) {
-			String[] dString = dbs[d].split("-");
-			try {
-				File f = new File(dString[0]);
-				FileInputStream fis = new FileInputStream(f);
-				Configuration dconf = Configuration.load(fis);
-				fis.close();
-				databases[d] = dconf.openDatabase(dString[0], false, location,
-						Long.parseLong(dString[1]));
-				location += databases[d].numRecords();
-			} catch (IOException ioe) {
-				ioe.printStackTrace();
-			} catch (ClassNotFoundException e) {
-				e.printStackTrace();
-			}
-		}
-		location = firstRecord();
-	}
-
 	private class SplitHandle extends DatabaseHandle {
 		private final DatabaseHandle[] handles;
 
@@ -104,14 +77,11 @@ public class SplitDatabase extends Database {
 		return new SplitHandle();
 	}
 
-	public static void main(String[] args) throws ClassNotFoundException,
-			IOException {
-		Configuration conf = new Configuration(Configuration
-				.readProperties(args[0]));
-		File confFile = new File(args[1]);
-		FileOutputStream fos = new FileOutputStream(confFile);
-		conf.store(fos);
-		fos.close();
+	@Override
+	public void closeHandle(DatabaseHandle dh) {
+		SplitHandle sh = (SplitHandle) dh;
+		for (int i = 0; i < sh.handles.length; i++)
+			databases[i].closeHandle(sh.handles[i]);
 	}
 
 	@Override

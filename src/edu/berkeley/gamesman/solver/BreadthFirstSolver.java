@@ -22,6 +22,10 @@ import edu.berkeley.gamesman.util.*;
  */
 public class BreadthFirstSolver<T extends State> extends Solver {
 
+	public BreadthFirstSolver(Configuration conf) {
+		super(conf);
+	}
+
 	long hashSpace;
 
 	protected CyclicBarrier barr;
@@ -31,7 +35,7 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 	@Override
 	public WorkUnit prepareSolve(Configuration conf) {
 		this.conf = conf;
-		Game<T> game = Util.checkedCast(conf.getGame());
+		Game<T> game = conf.getCheckedGame();
 		int maxRemoteness = conf.getInteger("gamesman.solver.maxRemoteness",
 				conf.remotenessStates);
 		hashSpace = game.numHashes();
@@ -49,6 +53,7 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 			writeDb.putRecord(dh, hash, game.getRecord(s, rec));
 			numPositionsZero++;
 		}
+		writeDb.closeHandle(dh);
 		assert Util.debug(DebugFacility.SOLVER,
 				"Number of states at remoteness 0: " + numPositionsZero);
 		lastTier = 0;
@@ -77,7 +82,7 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 		// For divide()
 		private BreadthFirstWorkUnit(Configuration conf, long firstHash,
 				long lastHashPlusOne, int maxRemoteness) {
-			game = Util.checkedCast(conf.getGame());
+			game = conf.getCheckedGame();
 			this.maxRemoteness = maxRemoteness;
 			this.firstHash = firstHash;
 			this.lastHashPlusOne = lastHashPlusOne;
@@ -100,7 +105,8 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 			while (lastTier >= remoteness && remoteness <= maxRemoteness) {
 				numPositionsInLevel = 0;
 				for (long hash = firstHash; hash < lastHashPlusOne; hash++) {
-					game.recordFromLong(null, readDb.getRecord(readDh, hash), rec);
+					game.recordFromLong(null, readDb.getRecord(readDh, hash),
+							rec);
 					// TODO: Figure out when this is allowed to be null
 					if (rec.value != PrimitiveValue.UNDECIDED
 							&& rec.remoteness == remoteness) {
@@ -110,8 +116,8 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 						for (int i = 0; i < numChildren; i++) {
 							long childhash = game
 									.stateToHash(childPositions[i]);
-							game.recordFromLong(childPositions[i], readDb.getRecord(
-									readDh, childhash), childrec);
+							game.recordFromLong(childPositions[i], readDb
+									.getRecord(readDh, childhash), childrec);
 							if (childrec.value == PrimitiveValue.UNDECIDED) {
 								childrec.value = rec.value;
 								childrec.remoteness = remoteness + 1;
@@ -143,6 +149,8 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 					e.printStackTrace();
 				}
 			}
+			readDb.closeHandle(readDh);
+			writeDb.closeHandle(writeDh);
 			solveTask.complete();
 			assert Util.debug(DebugFacility.SOLVER,
 					"Solving finished!!! Max remoteness is " + (remoteness - 1)

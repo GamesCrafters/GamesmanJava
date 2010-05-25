@@ -5,8 +5,8 @@ package edu.berkeley.gamesman.game.util;
  * 
  * @author dnspies
  */
-public class TopDownSpaceRearranger {
-	private class Space {
+public final class TopDownSpaceRearranger {
+	private final class Space {
 		boolean isFilled;
 		int countPieces;
 		long hash;

@@ -11,8 +11,8 @@ import edu.berkeley.gamesman.util.qll.RecycleLinkedList;
  * 
  * @author dnspies
  */
-public class TopDownPieceRearranger {
-	public static class Piece {
+public final class TopDownPieceRearranger {
+	public final static class Piece {
 		private long hash;
 
 		private int index, numOs;

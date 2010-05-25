@@ -21,7 +21,7 @@ import edu.berkeley.gamesman.util.qll.RecycleLinkedList;
  */
 public final class TopDownC4 extends TopDownMutaGame<C4State> {
 
-	private class Move {
+	private final class Move {
 		final int[] openColumns;
 
 		int columnIndex;
@@ -35,39 +35,39 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 		}
 	}
 
-	private BitSetBoard bsb;
+	private final BitSetBoard bsb;
 
-	private int piecesToWin;
+	private final int piecesToWin;
 
 	/**
 	 * The width of the game
 	 */
-	public int gameWidth;
+	public final int gameWidth;
 	/**
 	 * The height of the game
 	 */
-	public int gameHeight;
+	public final int gameHeight;
 	/**
 	 * gameWidth * gameHeight
 	 */
-	public int gameSize;
+	public final int gameSize;
 
-	private int[] colHeights;
+	private final int[] colHeights;
 
 	/**
 	 * An ExpCoefs object of degree gameHeight for making hash calculations
 	 */
-	public ExpCoefs ec;
+	public final ExpCoefs ec;
 
-	private RecycleLinkedList<Move> moves;
+	private final RecycleLinkedList<Move> moves;
 
-	private TopDownPieceRearranger arranger;
+	private final TopDownPieceRearranger arranger;
 
 	private char turn;
 
-	private C4State myState;
+	private final C4State myState;
 
-	private TDC4Hasher myHasher;
+	private final TDC4Hasher myHasher;
 
 	/**
 	 * @param conf
@@ -188,8 +188,7 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 		case -1:
 			return PrimitiveValue.IMPOSSIBLE;
 		default:
-			Util.fatalError("This shouldn't happen");
-			return null;
+			throw new Error("This shouldn't happen");
 		}
 	}
 
@@ -200,7 +199,7 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 		case 'O':
 			return 'X';
 		default:
-			throw new RuntimeException("This should never happen");
+			throw new Error("This should never happen");
 		}
 	}
 

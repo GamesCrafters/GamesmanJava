@@ -16,21 +16,36 @@ import edu.berkeley.gamesman.util.Util;
  * 
  */
 public class Alignment extends Game<AlignmentState> {
-	private int gameWidth, gameHeight;
-	public int piecesToWin;
-	private AlignmentVariant variant; // should be an enum?
-	public ArrayList<Pair<Integer, Integer>> openCells;
-	private AlignmentHasher myHasher;
+	private final int gameWidth, gameHeight;
+	public final int piecesToWin;
+	private final AlignmentVariant variant; // should be an enum?
+	public final ArrayList<Pair<Integer, Integer>> openCells;
+	private final AlignmentHasher myHasher;
 
-	public void initialize(int gameWidth, int gameHeight, int piecesToWin,
-			int variant) {
+	public Alignment(Configuration conf) {
+		super(conf);
+		gameWidth = conf.getInteger("gamesman.game.width", 4);
+		gameHeight = conf.getInteger("gamesman.game.height", 4);
+		piecesToWin = conf.getInteger("gamesman.game.pieces", 5);
+
+		variant = AlignmentVariant.getVariant(conf.getInteger(
+				"gamesman.game.variant", 2));
+		// Removing corners
+		/*
+		 * Not compatible with AlignmentState and this removal is incorrect. if
+		 * (gameWidth > 4 && gameHeight > 4) { openCells.remove(0);
+		 * openCells.remove(1); openCells.remove(gameWidth);
+		 * openCells.remove(gameWidth-1); openCells.remove(gameWidth-2);
+		 * openCells.remove(2*gameWidth - 1);
+		 * openCells.remove((gameHeight-1)*gameWidth);
+		 * openCells.remove((gameHeight-2)*gameWidth);
+		 * openCells.remove((gameHeight-1)*gameWidth + 1);
+		 * openCells.remove((gameHeight-1)*gameWidth - 1);
+		 * openCells.remove((gameHeight)*gameWidth - 1);
+		 * openCells.remove((gameHeight)*gameWidth - 2); }
+		 */
 
 		openCells = new ArrayList<Pair<Integer, Integer>>();
-		this.gameWidth = gameWidth;
-		this.gameHeight = gameHeight;
-		this.piecesToWin = piecesToWin;
-
-		this.variant = AlignmentVariant.getVariant(variant);
 
 		for (int row = 0; row < gameHeight; row++) {
 			for (int col = 0; col < gameWidth; col++) {
@@ -40,52 +55,6 @@ public class Alignment extends Game<AlignmentState> {
 		}
 
 		myHasher = new AlignmentHasher(this);
-		// Removing corners
-		/*
-		 * Not compatible with AlignmentState and this removal is incorrect. if
-		 * (gameWidth > 4 && gameHeight > 4) { openCells.remove(0);
-		 * openCells.remove(1); openCells.remove(gameWidth);
-		 * openCells.remove(gameWidth-1); openCells.remove(gameWidth-2);
-		 * openCells.remove(2*gameWidth - 1);
-		 * openCells.remove((gameHeight-1)*gameWidth);
-		 * openCells.remove((gameHeight-2)*gameWidth);
-		 * openCells.remove((gameHeight-1)*gameWidth + 1);
-		 * openCells.remove((gameHeight-1)*gameWidth - 1);
-		 * openCells.remove((gameHeight)*gameWidth - 1);
-		 * openCells.remove((gameHeight)*gameWidth - 2); }
-		 */
-	}
-
-	public Alignment(Configuration conf) {
-		super(conf);
-		openCells = new ArrayList<Pair<Integer, Integer>>();
-		gameWidth = conf.getInteger("gamesman.game.width", 4);
-		gameHeight = conf.getInteger("gamesman.game.height", 4);
-		piecesToWin = conf.getInteger("gamesman.game.pieces", 5);
-
-		variant = AlignmentVariant.getVariant(conf.getInteger(
-				"gamesman.game.variant", 2));
-
-		for (int row = 0; row < gameHeight; row++) {
-			for (int col = 0; col < gameWidth; col++) {
-
-				openCells.add(new Pair<Integer, Integer>(row, col));
-			}
-		}
-		// Removing corners
-		/*
-		 * Not compatible with AlignmentState and this removal is incorrect. if
-		 * (gameWidth > 4 && gameHeight > 4) { openCells.remove(0);
-		 * openCells.remove(1); openCells.remove(gameWidth);
-		 * openCells.remove(gameWidth-1); openCells.remove(gameWidth-2);
-		 * openCells.remove(2*gameWidth - 1);
-		 * openCells.remove((gameHeight-1)*gameWidth);
-		 * openCells.remove((gameHeight-2)*gameWidth);
-		 * openCells.remove((gameHeight-1)*gameWidth + 1);
-		 * openCells.remove((gameHeight-1)*gameWidth - 1);
-		 * openCells.remove((gameHeight)*gameWidth - 1);
-		 * openCells.remove((gameHeight)*gameWidth - 2); }
-		 */
 	}
 
 	@Override

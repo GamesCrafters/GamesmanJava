@@ -6,6 +6,7 @@ import java.util.*;
 
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.database.Database;
+import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
@@ -52,7 +53,7 @@ public class JSONInterface extends GamesmanApplication {
 			port = Integer
 					.parseInt(serverConf.getProperty("json.port", "4242"));
 		} catch (NumberFormatException e) {
-			Util.fatalError("Port must be an integer", e);
+			throw new Error("Port must be an integer", e);
 		}
 		reallyRun(port);
 		return 0;
@@ -83,8 +84,7 @@ public class JSONInterface extends GamesmanApplication {
 			threaded.serve();
 
 		} catch (TTransportException e) {
-			Util.fatalError("Could not start server on port " + port, e);
-			e.printStackTrace();
+			throw new Error("Could not start server on port " + port, e);
 		}
 	}
 
@@ -157,8 +157,6 @@ public class JSONInterface extends GamesmanApplication {
 
 	synchronized Configuration addDatabase(Map<String, String> params,
 			String game, String filename) {
-		String solvedJob = serverConf.getProperty("json.solved." + filename,
-				null);
 		String dbPath = serverConf.getProperty("json.databasedirectory", "");
 		if (dbPath != null && dbPath.length() > 0) {
 			if (dbPath.charAt(dbPath.length() - 1) != '/') {
@@ -171,33 +169,13 @@ public class JSONInterface extends GamesmanApplication {
 		}
 		try {
 			File f = new File(filename);
-			if (solvedJob != null && solvedJob.length() > 0) {
-				System.out.println("Loading solved job " + solvedJob + ".");
-				Configuration config = new Configuration(solvedJob);
-				try {
-					config.openDatabase(filename, false);
-				} catch (Exception e) {
-					Util.warn(
-							"Error when loading database for special configuration "
-									+ filename, e);
-				}
-				return config;
-			} else if (filename != null && f.exists()) {
+			if (filename != null && f.exists()) {
 				System.out.println("Loading solved database " + filename);
-				FileInputStream fis = new FileInputStream(f);
-				Configuration conf = Configuration.load(fis);
-				fis.close();
-				conf.openDatabase(filename, false);
-				return conf;
+				Database db = Database.openDatabase(filename, false);
+				return db.getConfiguration();
 			}
-		} catch (Util.FatalError fe) {
-			// These aren't actually fatal, so don't rethrow.
-			Util.warn("FatalError(TM) when loading database " + filename + ": "
-					+ fe.toString());
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
+		} catch (Error fe) {
+			fe.printStackTrace();
 		}
 		String unsolvedJob = serverConf.getProperty("json.unsolved." + game,
 				null);
@@ -219,16 +197,12 @@ public class JSONInterface extends GamesmanApplication {
 			try {
 				return new Configuration(props);
 			} catch (ClassNotFoundException e) {
-				Util.warn("Failed to load the game class.", e);
-				throw new RuntimeException("Failed to load the game class.", e);
-			} catch (Util.FatalError fe) {
-				throw new RuntimeException(
-						"FatalError when loading configuration for " + game);
+				e.printStackTrace();
+				return null;
 			}
 		} else {
-			// throw new
-			// RuntimeException("Failed to find an appropriate job file for " +
-			// game);
+			new Error("Failed to find an appropriate job file for " + game)
+					.printStackTrace();
 			return null;
 		}
 	}
@@ -281,7 +255,7 @@ public class JSONInterface extends GamesmanApplication {
 				throw new TException("This game does not exist.");
 			}
 			// Database db = config.getDatabase();
-			Game<T> game = Util.checkedCast(config.getGame());
+			Game<T> game = config.getCheckedGame();
 
 			T state = game.stringToState(board);
 
@@ -342,7 +316,7 @@ public class JSONInterface extends GamesmanApplication {
 			}
 
 			// Database db = config.getDatabase();
-			Game<T> game = Util.checkedCast(config.getGame());
+			Game<T> game = config.getCheckedGame();
 
 			T state = game.stringToState(board);
 
@@ -380,11 +354,13 @@ public class JSONInterface extends GamesmanApplication {
 				Configuration conf, T state, boolean isChildState) {
 			GamestateResponse request = new GamestateResponse();
 			Database db = conf.db;
-			Game<T> g = Util.checkedCast(conf.getGame());
+			Game<T> g = conf.getCheckedGame();
 			if (db != null) {
 				Record rec = new Record(conf);
-				g.recordFromLong(state, db.getRecord(db.getHandle(), g
+				DatabaseHandle handle = db.getHandle();
+				g.recordFromLong(state, db.getRecord(handle, g
 						.stateToHash(state)), rec);
+				db.closeHandle(handle);
 				if (conf.valueStates > 0) {
 					PrimitiveValue pv = rec.value;
 					if (g.getPlayerCount() > 1 && isChildState) {

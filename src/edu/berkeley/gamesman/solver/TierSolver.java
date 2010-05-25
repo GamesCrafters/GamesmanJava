@@ -18,6 +18,13 @@ import edu.berkeley.gamesman.util.*;
  */
 public class TierSolver extends Solver {
 
+	public TierSolver(Configuration conf) {
+		super(conf);
+		maxMem = conf.getLong("gamesman.memory", Integer.MAX_VALUE);
+		numThreads = conf.getInteger("gamesman.threads", 1);
+		minSplit = conf.getInteger("gamesman.split", numThreads);
+	}
+
 	protected static final double SAFETY_MARGIN = 2.0;
 
 	private boolean strictSafety;
@@ -28,11 +35,11 @@ public class TierSolver extends Solver {
 
 	private int count;
 
-	private int numThreads;
+	protected int numThreads;
 
 	private int minSplit;
 
-	private long maxMem;
+	protected long maxMem;
 
 	private long[] starts;
 
@@ -45,6 +52,7 @@ public class TierSolver extends Solver {
 			DatabaseHandle readDh, Database writeDb, DatabaseHandle writeDh) {
 		TierGame game = (TierGame) conf.getGame();
 		long current = start;
+		long stepNum = current % STEP_SIZE;
 		TierState curState = game.hashToState(start);
 		game.setState(curState);
 		Record[] vals = new Record[game.maxChildren()];
@@ -55,9 +63,10 @@ public class TierSolver extends Solver {
 		for (int i = 0; i < children.length; i++)
 			children[i] = new TierState();
 		for (long count = 0L; count < hashes; count++) {
-			//TODO Get rid of unnecessary mod
-			if (current % STEP_SIZE == 0)
+			if (stepNum == STEP_SIZE) {
 				t.calculated(STEP_SIZE);
+				stepNum = 0;
+			}
 			PrimitiveValue pv = game.primitiveValue();
 			switch (pv) {
 			case UNDECIDED:
@@ -84,6 +93,7 @@ public class TierSolver extends Solver {
 				curState.hash++;
 			}
 			++current;
+			++stepNum;
 		}
 	}
 
@@ -101,7 +111,7 @@ public class TierSolver extends Solver {
 					tier = scan.nextInt();
 					scan.close();
 				} catch (FileNotFoundException e) {
-					Util.fatalError("This should never happen", e);
+					throw new Error("This should never happen", e);
 				}
 			} else {
 				tier = ((TierGame) inconf.getGame()).numberOfTiers();
@@ -111,7 +121,7 @@ public class TierSolver extends Solver {
 					fw.write(Integer.toString(tier));
 					fw.close();
 				} catch (IOException e) {
-					Util.fatalError("IO Error", e);
+					throw new Error(e);
 				}
 			}
 		}
@@ -192,12 +202,11 @@ public class TierSolver extends Solver {
 							}
 						}
 					} catch (InterruptedException e) {
-						Util
-								.fatalError(
-										"TierSolver thread was interrupted while waiting!",
-										e);
+						throw new Error(
+								"TierSolver thread was interrupted while waiting!",
+								e);
 					} catch (BrokenBarrierException e) {
-						Util.fatalError("Barrier Broken", e);
+						throw new Error("Barrier Broken", e);
 					}
 				}
 			}
@@ -244,26 +253,13 @@ public class TierSolver extends Solver {
 			Pair<Long, Long> slice;
 			while ((slice = nextSlice(conf)) != null) {
 				thisSlice = slice;
-				if (parallelSolving) {
-					try {
-						DatabaseHandle myWrite = writeDb.getHandle(slice.car,
-								slice.cdr);
-						DatabaseHandle readHandle = readDb.getHandle();
-						solvePartialTier(conf, slice.car, slice.cdr, updater,
-								readDb, readHandle, writeDb, myWrite);
-						readDb.closeHandle(readHandle);
-						writeDb.closeHandle(myWrite);
-					} catch (Util.FatalError e) {
-						e.printStackTrace(System.out);
-						throw e;
-					} catch (Throwable e) {
-						e.printStackTrace(System.out);
-						throw new RuntimeException(e);
-					}
-				} else
-					solvePartialTier(conf, slice.car, slice.cdr, updater,
-							readDb, readDb.getHandle(), writeDb, writeDb
-									.getHandle());
+				DatabaseHandle myWrite = writeDb
+						.getHandle(slice.car, slice.cdr);
+				DatabaseHandle readHandle = readDb.getHandle();
+				solvePartialTier(conf, slice.car, slice.cdr, updater, readDb,
+						readHandle, writeDb, myWrite);
+				readDb.closeHandle(readHandle);
+				writeDb.closeHandle(myWrite);
 			}
 			if (barr != null)
 				try {
@@ -327,14 +323,6 @@ public class TierSolver extends Solver {
 				t.complete();
 			t = null;
 		}
-	}
-
-	@Override
-	public void initialize(Configuration conf) {
-		super.initialize(conf);
-		maxMem = conf.getLong("gamesman.memory", Integer.MAX_VALUE);
-		numThreads = conf.getInteger("gamesman.threads", 1);
-		minSplit = conf.getInteger("gamesman.split", numThreads);
 	}
 
 	/**

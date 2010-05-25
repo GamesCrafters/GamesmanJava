@@ -4,11 +4,8 @@ gamesman.game.height = 3
 gamesman.game.pieces = 5
 gamesman.game.variant = 2
 gamesman.solver = TopDownSolver
-gamesman.hasher = AlignmentHasher
 record.fields = VALUE,REMOTENESS
 gamesman.db.uri = Alignment33.db
 gamesman.database = MemoryDatabase:FileDatabase
-gamesman.db.compression = gzip
 gamesman.debug.SOLVER = true
-gamesman.threads = 1
 

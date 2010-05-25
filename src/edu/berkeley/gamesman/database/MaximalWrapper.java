@@ -1,14 +1,14 @@
 package edu.berkeley.gamesman.database;
 
+import java.math.BigInteger;
+
+import edu.berkeley.gamesman.core.Configuration;
+
 public class MaximalWrapper extends DatabaseWrapper {
 
-	public MaximalWrapper(Database db) {
-		super(db);
-	}
-
-	@Override
-	protected void initialize(String uri, boolean solve) {
-		db.initialize(uri, solve);
+	public MaximalWrapper(Database db, String uri, Configuration config,
+			boolean solve, long firstRecord, long numRecords) {
+		super(db, uri, config, solve, firstRecord, numRecords);
 	}
 
 	@Override
@@ -17,7 +17,7 @@ public class MaximalWrapper extends DatabaseWrapper {
 	}
 
 	@Override
-	public void close() {
+	protected void closeDatabase() {
 		db.close();
 	}
 
@@ -32,9 +32,42 @@ public class MaximalWrapper extends DatabaseWrapper {
 	}
 
 	@Override
+	protected long getLongRecordGroup(DatabaseHandle dh, long loc) {
+		return db.getLongRecordGroup(dh, loc);
+	}
+
+	@Override
+	protected BigInteger getBigIntRecordGroup(DatabaseHandle dh, long loc) {
+		return db.getBigIntRecordGroup(dh, loc);
+	}
+
+	@Override
+	protected void putRecordGroup(DatabaseHandle dh, long loc, long rg) {
+		db.putRecordGroup(dh, loc, rg);
+	}
+
+	@Override
+	protected void putRecordGroup(DatabaseHandle dh, long loc, BigInteger rg) {
+		db.putRecordGroup(dh, loc, rg);
+	}
+
+	@Override
 	protected void putRecordsAsBytes(DatabaseHandle dh, long recordIndex,
 			byte[] arr, int off, int numRecords, boolean overwriteEdgesOk) {
-		db.putRecordsAsBytes(dh, recordIndex, arr, off, numRecords, overwriteEdgesOk);
+		db.putRecordsAsBytes(dh, recordIndex, arr, off, numRecords,
+				overwriteEdgesOk);
+	}
+
+	@Override
+	protected void putRecordsAsGroup(DatabaseHandle dh, long recordIndex,
+			int numRecords, long rg) {
+		db.putRecordsAsGroup(dh, recordIndex, numRecords, rg);
+	}
+
+	@Override
+	protected void putRecordsAsGroup(DatabaseHandle dh, long recordIndex,
+			int numRecords, BigInteger rg) {
+		db.putRecordsAsGroup(dh, recordIndex, numRecords, rg);
 	}
 
 	@Override
@@ -45,10 +78,21 @@ public class MaximalWrapper extends DatabaseWrapper {
 
 	@Override
 	protected void getRecordsAsBytes(DatabaseHandle dh, long recordIndex,
-			byte[] arr, int off, int numRecords, boolean overwriteOk) {
-		db
-				.getRecordsAsBytes(dh, recordIndex, arr, off, numRecords,
-						overwriteOk);
+			byte[] arr, int off, int numRecords, boolean overwriteEdgesOk) {
+		db.getRecordsAsBytes(dh, recordIndex, arr, off, numRecords,
+				overwriteEdgesOk);
+	}
+
+	@Override
+	protected long getRecordsAsLongGroup(DatabaseHandle dh, long recordIndex,
+			int numRecords) {
+		return db.getRecordsAsLongGroup(dh, recordIndex, numRecords);
+	}
+
+	@Override
+	protected BigInteger getRecordsAsBigIntGroup(DatabaseHandle dh,
+			long recordIndex, int numRecords) {
+		return db.getRecordsAsBigIntGroup(dh, recordIndex, numRecords);
 	}
 
 	@Override
@@ -75,21 +119,6 @@ public class MaximalWrapper extends DatabaseWrapper {
 	@Override
 	public void fill(long r, long offset, long len) {
 		db.fill(r, offset, len);
-	}
-
-	@Override
-	public long numRecords() {
-		return db.numRecords();
-	}
-
-	@Override
-	public void setRange(long firstByte, long numBytes) {
-		db.setRange(firstByte, numBytes);
-	}
-
-	@Override
-	public long firstRecord() {
-		return db.firstRecord();
 	}
 
 	@Override
