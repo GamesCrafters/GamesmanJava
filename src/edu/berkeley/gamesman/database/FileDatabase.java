@@ -35,14 +35,15 @@ public final class FileDatabase extends Database {
 				store(fos);
 			} else
 				storeNone(fos);
-			offset = fos.getChannel().position() - firstContainedRecord;
+			long lastByte = lastByte(firstContainedRecord + numContainedRecords);
+			offset = fos.getChannel().position() - toByte(firstContainedRecord);
 			fos.close();
 			fd = new RandomAccessFile(myFile, "rw");
-			fd.setLength(offset + numContainedRecords);
+			fd.setLength(offset + lastByte);
 		} else {
 			FileInputStream fis = new FileInputStream(myFile);
 			skipHeader(fis);
-			offset = fis.getChannel().position() - firstContainedRecord;
+			offset = fis.getChannel().position() - toByte(firstContainedRecord);
 			fis.close();
 			fd = new RandomAccessFile(myFile, "r");
 		}
