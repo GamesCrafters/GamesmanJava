@@ -140,4 +140,14 @@ public class MaximalWrapper extends DatabaseWrapper {
 	public long[] splitRange(long firstRecord, long numRecords, int numSplits) {
 		return db.splitRange(firstRecord, numRecords, numSplits);
 	}
+	
+	@Override
+	public long numRecords() {
+		return db.numRecords();
+	}
+
+	@Override
+	public long firstRecord() {
+		return db.firstRecord();
+	}
 }

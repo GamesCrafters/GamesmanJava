@@ -5,6 +5,8 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.util.qll.Factory;
+import edu.berkeley.gamesman.util.qll.Pool;
 import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 
 /**
@@ -51,9 +53,10 @@ public class GZippedFileDatabase extends Database {
 		}
 		waitingCaches = null;
 		waitingCachesIter = null;
+		handlePool = null;
 	}
 
-	public GZippedFileDatabase(String uri, Configuration conf,
+	public GZippedFileDatabase(String uri, final Configuration conf,
 			Database readFrom, boolean storeConf) throws IOException {
 		super(uri, conf, true, readFrom.firstRecord(), readFrom.numRecords(),
 				readFrom);
@@ -81,6 +84,16 @@ public class GZippedFileDatabase extends Database {
 		tableOffset = fos.getChannel().position();
 		fos.getChannel().position(tableOffset + (numEntries << 3));
 		seek(toByte(firstRecord()));
+		final GZippedFileDatabase gzfd = this;
+		handlePool = new Pool<MemoryDatabase>(new Factory<MemoryDatabase>() {
+
+			public MemoryDatabase newObject() {
+				return new MemoryDatabase(gzfd, null, conf, true, 0, 0, false);
+			}
+
+			public void reset(MemoryDatabase t) {
+			}
+		});
 	}
 
 	private final File myFile;
@@ -112,6 +125,8 @@ public class GZippedFileDatabase extends Database {
 	private boolean hasNextHandle = true;
 
 	private final long tableOffset;
+
+	private final Pool<MemoryDatabase> handlePool;
 
 	private GZIPOutputStream gzo;
 
@@ -213,25 +228,25 @@ public class GZippedFileDatabase extends Database {
 	private class WriteHandle extends DatabaseHandle {
 		private final MemoryDatabase myStorage;
 
-		protected WriteHandle(GZippedFileDatabase gzfd, long firstRecord,
-				long numRecords) {
+		WriteHandle(MemoryDatabase storage) {
 			super(null);
-			myStorage = new MemoryDatabase(gzfd, null, conf, true, firstRecord,
-					numRecords, false);
+			myStorage = storage;
 		}
-
 	}
 
 	public synchronized WriteHandle getNextHandle() {
 		if (!hasNextHandle)
 			return null;
 		long firstRecord = toFirstRecord((handleEntry++) * entrySize);
-		long largest = toFirstRecord(handleEntry * entrySize);
-		if (largest >= firstRecord() + numRecords()) {
-			largest = firstRecord() + numRecords();
+		long lastRecord = toFirstRecord(handleEntry * entrySize);
+		if (lastRecord >= firstRecord() + numRecords()) {
+			lastRecord = firstRecord() + numRecords();
 			hasNextHandle = false;
 		}
-		return new WriteHandle(this, firstRecord, largest - firstRecord);
+		WriteHandle retVal = new WriteHandle(handlePool.get());
+		retVal.myStorage
+				.setRange(firstRecord, (int) (lastRecord - firstRecord));
+		return retVal;
 	}
 
 	@Override
@@ -268,6 +283,7 @@ public class GZippedFileDatabase extends Database {
 					bytesToRead -= numBytes;
 					off += numBytes;
 				}
+				handlePool.release(thisCache);
 				try {
 					gzo.finish();
 				} catch (IOException e) {
@@ -360,5 +376,4 @@ public class GZippedFileDatabase extends Database {
 	private ZipRunnable getRunnable(Database readFrom, DatabaseHandle readHandle) {
 		return new ZipRunnable(readFrom, readHandle);
 	}
-
 }

@@ -15,6 +15,6 @@ gamesman.slaveDbFolder = /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/database76
 gamesman.64Bit = true
 gamesman.db.compression = gzip
 record.compression = 90
-gamesman.compSplits = 2
+gamesman.compSplits = 5
 gamesman.path = GamesmanJava
 gamesman.confFile = jobs/Connect4_76_Parallel.job

@@ -64,13 +64,18 @@ public class C4CachedSolver extends TierSolver {
 					if (readPages[col] == null
 							|| !readPages[col].containsRecord(childHash)) {
 						if (readPages[col] != null) {
-							readPages[col].closeHandle(readHandles[col]);
-							readPages[col].finish();
+							readPages[col].flush();
+							readPages[col]
+									.setRange(childHash, (int) Math.min(
+											lastChildren[col] + 1 - childHash,
+											maxPage));
+						} else {
+							readPages[col] = new MemoryDatabase(readDb, null,
+									conf, false, childHash, Math.min(
+											lastChildren[col] + 1 - childHash,
+											maxPage));
+							readHandles[col] = readPages[col].getHandle();
 						}
-						readPages[col] = new MemoryDatabase(readDb, null, conf,
-								false, childHash, Math.min(lastChildren[col]
-										+ 1 - childHash, maxPage));
-						readHandles[col] = readPages[col].getHandle();
 					}
 					game.recordFromLong(children[i], readPages[col].getRecord(
 							readHandles[col], childHash), vals[i]);
@@ -99,9 +104,9 @@ public class C4CachedSolver extends TierSolver {
 			for (int i = 0; i < readPages.length; i++)
 				if (readPages[i] != null) {
 					readPages[i].closeHandle(readHandles[i]);
-					readPages[i].finish();
+					readPages[i].flush();
 				}
 		writePage.closeHandle(writePageDh);
-		writePage.finish();
+		writePage.flush();
 	}
 }

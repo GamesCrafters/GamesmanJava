@@ -656,7 +656,7 @@ public abstract class Database {
 	 * @return The number of bytes used to store all the records (This does not
 	 *         include the header size)
 	 */
-	public final long numRecords() {
+	public long numRecords() {
 		return numRecords;
 	}
 
@@ -664,7 +664,7 @@ public abstract class Database {
 	 * @return The index of the first byte in this database (Will be zero if
 	 *         this database stores the entire game)
 	 */
-	public final long firstRecord() {
+	public long firstRecord() {
 		return firstRecord;
 	}
 
@@ -940,9 +940,9 @@ public abstract class Database {
 
 	protected final void storeInfo(OutputStream os) throws IOException {
 		for (int i = 56; i >= 0; i -= 8)
-			os.write((int) (firstRecord >>> i));
+			os.write((int) (firstRecord() >>> i));
 		for (int i = 56; i >= 0; i -= 8)
-			os.write((int) (numRecords >>> i));
+			os.write((int) (numRecords() >>> i));
 		if (superCompress) {
 			os.write(recordsPerGroup >>> 2);
 			os.write(((recordsPerGroup & 3) << 6) | recordGroupByteLength);

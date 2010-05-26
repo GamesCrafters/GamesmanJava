@@ -9,7 +9,7 @@ public class Pool<T> {
 		this.fact = fact;
 	}
 
-	public T get() {
+	public synchronized T get() {
 		if (firstNode == null)
 			return fact.newObject();
 		else {
@@ -22,7 +22,7 @@ public class Pool<T> {
 		}
 	}
 
-	public void release(T el) {
+	public synchronized void release(T el) {
 		Node<T> changeNode;
 		if (firstNullNode == null)
 			changeNode = new Node<T>();
