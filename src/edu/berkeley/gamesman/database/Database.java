@@ -30,7 +30,7 @@ public abstract class Database {
 
 	protected final long firstContainedRecord;
 
-	protected long location;
+	private long location;
 
 	protected final DatabaseHandle myHandle;
 
