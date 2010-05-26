@@ -3,22 +3,43 @@ package edu.berkeley.gamesman.solver;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.PrimitiveValue;
 import edu.berkeley.gamesman.core.Record;
-import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.database.MemoryDatabase;
 import edu.berkeley.gamesman.game.Connect4;
 import edu.berkeley.gamesman.game.util.TierState;
+import edu.berkeley.gamesman.util.qll.Factory;
+import edu.berkeley.gamesman.util.qll.Pool;
 
 public class C4CachedSolver extends TierSolver {
+	private final Pool<MemoryDatabase> readPagePool;
+	private final Pool<MemoryDatabase> writePagePool;
 
-	public C4CachedSolver(Configuration conf) {
+	public C4CachedSolver(final Configuration conf) {
 		super(conf);
+		readPagePool = new Pool<MemoryDatabase>(new Factory<MemoryDatabase>() {
+
+			public MemoryDatabase newObject() {
+				return new MemoryDatabase(readDb, null, conf, false, 0, 0, true);
+			}
+
+			public void reset(MemoryDatabase t) {
+			}
+		});
+		writePagePool = new Pool<MemoryDatabase>(new Factory<MemoryDatabase>() {
+
+			public MemoryDatabase newObject() {
+				return new MemoryDatabase(writeDb, null, conf, true, 0, 0, true);
+			}
+
+			public void reset(MemoryDatabase t) {
+			}
+		});
 	}
 
 	@Override
 	protected void solvePartialTier(Configuration conf, long start,
-			long hashes, TierSolverUpdater t, Database readDb,
-			DatabaseHandle readDh, Database writeDb, DatabaseHandle writeDh) {
+			long hashes, TierSolverUpdater t, DatabaseHandle readDh,
+			DatabaseHandle writeDh) {
 		Connect4 game = (Connect4) conf.getGame();
 		long current = start;
 		long stepNum = current % STEP_SIZE;
@@ -38,8 +59,8 @@ public class C4CachedSolver extends TierSolver {
 			for (int i = 0; i < children.length; i++)
 				lastChildren[i] = game.stateToHash(children[i]);
 		}
-		MemoryDatabase writePage = new MemoryDatabase(writeDb, null, conf,
-				true, start, hashes);
+		MemoryDatabase writePage = writePagePool.get();
+		writePage.setRange(start, (int) hashes);
 		DatabaseHandle writePageDh = writePage.getHandle();
 		int maxPage = (int) (maxMem / (numThreads * game.maxChildren()));
 
@@ -70,8 +91,9 @@ public class C4CachedSolver extends TierSolver {
 											lastChildren[col] + 1 - childHash,
 											maxPage));
 						} else {
-							readPages[col] = new MemoryDatabase(readDb, null,
-									conf, false, childHash, Math.min(
+							readPages[col] = readPagePool.get();
+							readPages[col]
+									.setRange(childHash, (int) Math.min(
 											lastChildren[col] + 1 - childHash,
 											maxPage));
 							readHandles[col] = readPages[col].getHandle();
@@ -105,8 +127,10 @@ public class C4CachedSolver extends TierSolver {
 				if (readPages[i] != null) {
 					readPages[i].closeHandle(readHandles[i]);
 					readPages[i].flush();
+					readPagePool.release(readPages[i]);
 				}
 		writePage.closeHandle(writePageDh);
 		writePage.flush();
+		writePagePool.release(writePage);
 	}
 }

@@ -7,7 +7,6 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
 import edu.berkeley.gamesman.core.*;
-import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.game.util.TierState;
@@ -48,8 +47,8 @@ public class TierSolver extends Solver {
 	boolean parallelSolving;
 
 	protected void solvePartialTier(Configuration conf, long start,
-			long hashes, TierSolverUpdater t, Database readDb,
-			DatabaseHandle readDh, Database writeDb, DatabaseHandle writeDh) {
+			long hashes, TierSolverUpdater t, DatabaseHandle readDh,
+			DatabaseHandle writeDh) {
 		TierGame game = (TierGame) conf.getGame();
 		long current = start;
 		long stepNum = current % STEP_SIZE;
@@ -256,8 +255,8 @@ public class TierSolver extends Solver {
 				DatabaseHandle myWrite = writeDb
 						.getHandle(slice.car, slice.cdr);
 				DatabaseHandle readHandle = readDb.getHandle();
-				solvePartialTier(conf, slice.car, slice.cdr, updater, readDb,
-						readHandle, writeDb, myWrite);
+				solvePartialTier(conf, slice.car, slice.cdr, updater,
+						readHandle, myWrite);
 				readDb.closeHandle(readHandle);
 				writeDb.closeHandle(myWrite);
 			}
