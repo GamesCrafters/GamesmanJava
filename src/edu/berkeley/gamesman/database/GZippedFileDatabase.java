@@ -240,7 +240,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		WriteHandle(Database readFrom) {
 			super(null);
 			myStorage = new MemoryDatabase(readFrom, null, conf, false,
-					firstRecord(), numRecords(), true);
+					0, 0, true);
 		}
 
 		void setRange(ByteArrayOutputStream baos, long firstRecord,
