@@ -1,6 +1,7 @@
 package edu.berkeley.gamesman.database;
 
 import java.io.*;
+import java.util.concurrent.Semaphore;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -54,10 +55,12 @@ public class GZippedFileDatabase extends Database {
 		waitingCaches = null;
 		waitingCachesIter = null;
 		handlePool = null;
+		memoryConstraint = null;
 	}
 
 	public GZippedFileDatabase(String uri, final Configuration conf,
-			Database readFrom, boolean storeConf) throws IOException {
+			Database readFrom, boolean storeConf, long maxMem)
+			throws IOException {
 		super(uri, conf, true, readFrom.firstRecord(), readFrom.numRecords(),
 				readFrom);
 		myFile = new File(uri);
@@ -94,6 +97,7 @@ public class GZippedFileDatabase extends Database {
 			public void reset(MemoryDatabase t) {
 			}
 		});
+		memoryConstraint = new Semaphore((int) (maxMem / entrySize));
 	}
 
 	private final File myFile;
@@ -129,6 +133,10 @@ public class GZippedFileDatabase extends Database {
 	private final Pool<MemoryDatabase> handlePool;
 
 	private GZIPOutputStream gzo;
+
+	private final Semaphore memoryConstraint;
+
+	private int threadsHere = 0;
 
 	@Override
 	protected void closeDatabase() {
@@ -204,18 +212,15 @@ public class GZippedFileDatabase extends Database {
 			throw new UnsupportedOperationException();
 		try {
 			if (gzo == null) {
-				if (thisEntry % 100 == 0) {
+				if (thisEntry > 0 && thisEntry % 100 == 0) {
 					System.out.println("Starting entry " + thisEntry + "/"
-							+ numEntries + " with "
-							+ toByte(waitingCaches.getFirst().firstRecord())
-							/ entrySize + " at the front.");
+							+ numEntries);
 				}
 				entryPoints[(int) ((thisEntry++) - firstEntry)] = fos
 						.getChannel().position();
 				gzo = new GZIPOutputStream(fos, bufferSize);
 			}
 			gzo.write(arr, off, len);
-			location += len;
 		} catch (IOException e) {
 			throw new Error(e);
 		}
@@ -240,19 +245,30 @@ public class GZippedFileDatabase extends Database {
 		}
 	}
 
-	public synchronized WriteHandle getNextHandle() {
+	public WriteHandle getNextHandle() {
 		if (!hasNextHandle)
 			return null;
-		long firstRecord = toFirstRecord((handleEntry++) * entrySize);
-		long lastRecord = toFirstRecord(handleEntry * entrySize);
-		if (lastRecord >= firstRecord() + numRecords()) {
-			lastRecord = firstRecord() + numRecords();
-			hasNextHandle = false;
+		try {
+			memoryConstraint.acquire();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
-		WriteHandle retVal = new WriteHandle(handlePool.get());
-		retVal.myStorage
-				.setRange(firstRecord, (int) (lastRecord - firstRecord));
-		return retVal;
+		synchronized (this) {
+			if (!hasNextHandle) {
+				memoryConstraint.release();
+				return null;
+			}
+			long firstRecord = toFirstRecord((handleEntry++) * entrySize);
+			long lastRecord = toFirstRecord(handleEntry * entrySize);
+			if (lastRecord >= firstRecord() + numRecords()) {
+				lastRecord = firstRecord() + numRecords();
+				hasNextHandle = false;
+			}
+			WriteHandle retVal = new WriteHandle(handlePool.get());
+			retVal.myStorage.setRange(firstRecord,
+					(int) (lastRecord - firstRecord));
+			return retVal;
+		}
 	}
 
 	@Override
@@ -278,15 +294,18 @@ public class GZippedFileDatabase extends Database {
 					return;
 				}
 			}
+			memoryConstraint.release();
 			while (true) {
 				thisCache.seek(storByte);
 				long bytesToRead = numBytes(thisCache.firstRecord(), thisCache
 						.numRecords());
+				long bytesRead = 0;
 				int off = 0;
-				while (bytesToRead > 0) {
-					int numBytes = (int) Math.min(bytesToRead, bufferSize);
+				while (bytesRead < bytesToRead) {
+					int numBytes = (int) Math.min(bytesToRead - bytesRead,
+							bufferSize);
 					putBytes(thisCache.memoryStorage, off, numBytes);
-					bytesToRead -= numBytes;
+					bytesRead += numBytes;
 					off += numBytes;
 				}
 				handlePool.release(thisCache);
@@ -297,6 +316,7 @@ public class GZippedFileDatabase extends Database {
 				}
 				gzo = null;
 				synchronized (this) {
+					location += bytesRead;
 					if (waitingCaches.isEmpty())
 						break;
 					thisCache = waitingCaches.getFirst();
@@ -304,6 +324,7 @@ public class GZippedFileDatabase extends Database {
 					if (location != storByte)
 						break;
 					waitingCaches.removeFirst();
+					memoryConstraint.release();
 				}
 			}
 		} else
@@ -348,8 +369,13 @@ public class GZippedFileDatabase extends Database {
 			entryKB = Integer.parseInt(args[3]);
 		else
 			entryKB = 64;
+		long maxMem;
 		if (args.length > 4)
-			bufferKB = Integer.parseInt(args[4]);
+			maxMem = ((long) Integer.parseInt(args[4])) << 10;
+		else
+			maxMem = 1 << 25;
+		if (args.length > 5)
+			bufferKB = Integer.parseInt(args[5]);
 		else
 			bufferKB = 4;
 		Database readFrom = Database.openDatabase(db1, false);
@@ -359,7 +385,7 @@ public class GZippedFileDatabase extends Database {
 		outConf.setProperty("zip.entryKB", Integer.toString(entryKB));
 		outConf.setProperty("zip.bufferKB", Integer.toString(bufferKB));
 		GZippedFileDatabase writeTo = new GZippedFileDatabase(zipDb, outConf,
-				readFrom, true);
+				readFrom, true, maxMem);
 		Thread[] threadList = new Thread[numThreads];
 		DatabaseHandle[] readHandle = new DatabaseHandle[numThreads];
 		for (int i = 0; i < numThreads; i++) {
