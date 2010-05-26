@@ -204,6 +204,9 @@ public class GZippedFileDatabase extends Database {
 			throw new UnsupportedOperationException();
 		try {
 			if (gzo == null) {
+				if (thisEntry % 10 == 0)
+					System.out.println("Starting entry " + thisEntry + "/"
+							+ numEntries);
 				entryPoints[(int) ((thisEntry++) - firstEntry)] = fos
 						.getChannel().position();
 				gzo = new GZIPOutputStream(fos, bufferSize);
