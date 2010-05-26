@@ -8,6 +8,7 @@ import java.util.zip.GZIPOutputStream;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.util.qll.Factory;
 import edu.berkeley.gamesman.util.Pair;
+import edu.berkeley.gamesman.util.Util;
 import edu.berkeley.gamesman.util.qll.Pool;
 import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 
@@ -239,8 +240,8 @@ public class GZippedFileDatabase extends Database implements Runnable {
 
 		WriteHandle(Database readFrom) {
 			super(null);
-			myStorage = new MemoryDatabase(readFrom, null, conf, false,
-					0, 0, true);
+			myStorage = new MemoryDatabase(readFrom, null, conf, false, 0, 0,
+					true);
 		}
 
 		void setRange(ByteArrayOutputStream baos, long firstRecord,
@@ -355,6 +356,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 
 	public static void main(String[] args) throws IOException,
 			ClassNotFoundException {
+		long time = System.currentTimeMillis();
 		String db1 = args[0];
 		String zipDb = args[1];
 		int entryKB, bufferKB;
@@ -400,5 +402,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 				}
 		}
 		writeTo.close();
+		System.out.println("Zipped in "
+				+ Util.millisToETA(System.currentTimeMillis() - time));
 	}
 }
