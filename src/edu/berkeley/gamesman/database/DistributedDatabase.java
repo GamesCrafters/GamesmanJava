@@ -1,5 +1,6 @@
 package edu.berkeley.gamesman.database;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -7,8 +8,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Scanner;
+import java.util.zip.GZIPInputStream;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.parallel.ErrorThread;
 import edu.berkeley.gamesman.util.Pair;
 
 public class DistributedDatabase extends Database {
@@ -27,6 +30,7 @@ public class DistributedDatabase extends Database {
 	private final String gamesmanPath;
 	private final String jobFile;
 	private final boolean zipped;
+	private final boolean zippedTransfer;
 
 	public DistributedDatabase(InputStream in, PrintStream out,
 			String parentUri, Configuration conf) {
@@ -46,6 +50,7 @@ public class DistributedDatabase extends Database {
 		this.parentUri = parentUri;
 		this.jobFile = jobFile;
 		zipped = conf.getBoolean("gamesman.immediateZip", false);
+		zippedTransfer = conf.getBoolean("gamesman.zippedTransfer", false);
 	}
 
 	public DistributedDatabase(String uri, Configuration conf, boolean solve,
@@ -53,13 +58,22 @@ public class DistributedDatabase extends Database {
 		super(uri, conf, solve, firstRecord, numRecords);
 		nodeNameStream = null;
 		requestStream = null;
-		fileList = new ArrayList<Pair<String, Long>>();
 		if (solve) {
+			fileList = new ArrayList<Pair<String, Long>>();
 			thisTier = new ArrayList<Pair<String, Long>>();
 			lastTier = new ArrayList<Pair<String, Long>>();
 			parentUri = null;
 			user = null;
 		} else {
+			try {
+				FileInputStream fis = new FileInputStream(uri);
+				skipHeader(fis);
+				String listString = new Scanner(fis).nextLine();
+				fis.close();
+				fileList = parseList(listString);
+			} catch (IOException e) {
+				throw new Error(e);
+			}
 			thisTier = null;
 			lastTier = null;
 			parentUri = conf.getProperty("gamesman.slaveDbFolder");
@@ -67,7 +81,24 @@ public class DistributedDatabase extends Database {
 		}
 		gamesmanPath = conf.getProperty("gamesman.path");
 		jobFile = conf.getProperty("gamesman.confFile");
-		zipped = !solve;
+		zipped = conf.getProperty("gamesman.db.compression", "none").equals(
+				"gzip");
+		zippedTransfer = conf.getBoolean("gamesman.zippedTransfer", false);
+	}
+
+	private ArrayList<Pair<String, Long>> parseList(String stringFiles) {
+		stringFiles = stripOuter(stringFiles, "[", "]");
+		String[] fileSplits = stringFiles
+				.substring(1, stringFiles.length() - 1).split(", ");
+		ArrayList<Pair<String, Long>> nodeFiles = new ArrayList<Pair<String, Long>>();
+		for (int i = 0; i < fileSplits.length; i++) {
+			String pairString = stripOuter(fileSplits[i], "(", ")");
+			int splitPoint = pairString.lastIndexOf(".");
+			nodeFiles.add(new Pair<String, Long>(pairString.substring(0,
+					splitPoint), Long.parseLong(pairString
+					.substring(splitPoint + 1))));
+		}
+		return nodeFiles;
 	}
 
 	@Override
@@ -78,7 +109,7 @@ public class DistributedDatabase extends Database {
 	protected void getBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
 			int len) {
 		long firstRecord = toFirstRecord(loc);
-		getRecordsAsBytes(dh, firstRecord, arr, off, (int) (toFirstRecord(loc
+		getRecordsAsBytes(dh, firstRecord, arr, off, (int) (toLastRecord(loc
 				+ len) - firstRecord), true);
 	}
 
@@ -92,22 +123,13 @@ public class DistributedDatabase extends Database {
 				requestStream.println("get " + firstRecord + "-" + numRecords);
 				stringFiles = nodeNameStream.nextLine();
 			}
-			stringFiles = stripOuter(stringFiles, "[", "]");
-			String[] fileSplits = stringFiles.substring(1,
-					stringFiles.length() - 1).split(", ");
-			nodeFiles = new ArrayList<Pair<String, Long>>();
-			for (int i = 0; i < fileSplits.length; i++) {
-				String pairString = stripOuter(fileSplits[i], "(", ")");
-				int splitPoint = pairString.lastIndexOf(".");
-				nodeFiles.add(new Pair<String, Long>(pairString.substring(0,
-						splitPoint), Long.parseLong(pairString
-						.substring(splitPoint + 1))));
-			}
+			nodeFiles = parseList(stringFiles);
 		} else
 			nodeFiles = getNodes(firstRecord, numRecords);
-		long nextStart = nodeFiles.get(0).cdr;
+		long nextStart = firstRecord;
 		for (int i = 0; i < nodeFiles.size(); i++) {
-			long nodeStart = nextStart;
+			long nodeStart = nodeFiles.get(i).cdr;
+			long thisStart = nextStart;
 			if (i < nodeFiles.size() - 1)
 				nextStart = nodeFiles.get(i + 1).cdr;
 			else
@@ -124,9 +146,20 @@ public class DistributedDatabase extends Database {
 				command.append(parentUri + "/s" + nodeStart + ".db");
 				if (zipped)
 					command.append(".gz");
-				command.append(" " + nodeStart + " " + nextStart);
+				command.append(" " + thisStart + " " + nextStart);
 				Process p = Runtime.getRuntime().exec(command.toString());
-				//TODO Finish method
+				InputStream is = p.getInputStream();
+				if (zippedTransfer)
+					is = new GZIPInputStream(is);
+				new ErrorThread(p.getErrorStream(), nodeFiles.get(i).car)
+						.start();
+				int bytesToRead = (int) numBytes(thisStart, nextStart);
+				while (bytesToRead > 0) {
+					int bytesRead = is.read(arr, off, bytesToRead);
+					bytesToRead -= bytesRead;
+					off += bytesRead;
+				}
+				is.close();
 			} catch (IOException e) {
 				throw new Error(e);
 			}

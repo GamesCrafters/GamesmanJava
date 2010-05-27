@@ -30,7 +30,7 @@ public abstract class Database {
 
 	protected final long firstContainedRecord;
 
-	private long location;
+	protected long location;
 
 	protected final DatabaseHandle myHandle;
 
@@ -695,6 +695,10 @@ public abstract class Database {
 			return byteIndex / recordGroupByteLength * recordsPerGroup;
 		else
 			return byteIndex >> recordGroupByteBits;
+	}
+
+	protected long toLastRecord(long byteIndex) {
+		return toFirstRecord(byteIndex + recordGroupByteLength - 1);
 	}
 
 	protected final int toNum(long recordIndex) {

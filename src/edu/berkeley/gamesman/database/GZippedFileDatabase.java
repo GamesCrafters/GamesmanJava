@@ -155,6 +155,8 @@ public class GZippedFileDatabase extends Database implements Runnable {
 
 	private final Semaphore memoryConstraint;
 
+	private long nextStart;
+
 	@Override
 	protected void closeDatabase() {
 		if (solve) {
@@ -186,33 +188,42 @@ public class GZippedFileDatabase extends Database implements Runnable {
 	@Override
 	protected synchronized void getBytes(DatabaseHandle dh, long loc,
 			byte[] arr, int off, int len) {
-		if (solve)
-			throw new UnsupportedOperationException();
+		seek(loc);
+		getBytes(arr, off, len);
+	}
+
+	@Override
+	protected synchronized void getBytes(byte[] arr, int off, int len) {
 		while (len > 0) {
-			long entryNum = loc / entrySize;
-			try {
-				fis.getChannel().position(
-						entryPoints[(int) (entryNum - firstEntry)]);
-				myStream = new GZIPInputStream(fis, bufferSize);
-				long currentPos = loc - loc % entrySize;
-				while (currentPos < loc)
-					currentPos += myStream.skip(loc - currentPos);
-			} catch (IOException e) {
-				throw new Error(e);
-			}
-			int bytesRead = 0;
-			long nextEntry = entryNum + 1;
-			int sLen = (int) Math.min(len, nextEntry * entrySize - loc);
-			while (bytesRead < sLen)
+			int bytesToRead = (int) Math.min(len, nextStart - location);
+			while (bytesToRead > 0) {
 				try {
-					bytesRead += myStream.read(arr, off + bytesRead, sLen
-							- bytesRead);
+					int bytesRead = myStream.read(arr, off, bytesToRead);
+					bytesToRead -= bytesRead;
+					len -= bytesRead;
+					location += bytesRead;
+					off += bytesRead;
 				} catch (IOException e) {
 					throw new Error(e);
 				}
-			loc += bytesRead;
-			off += bytesRead;
-			len -= bytesRead;
+			}
+			seek(location);
+		}
+	}
+
+	@Override
+	protected synchronized void seek(long location) {
+		thisEntry = location / entrySize;
+		nextStart = (thisEntry + 1) * entrySize;
+		try {
+			fis.getChannel().position(
+					entryPoints[(int) (thisEntry - firstEntry)]);
+			myStream = new GZIPInputStream(fis, bufferSize);
+			this.location = thisEntry * entrySize;
+			while (this.location < location)
+				this.location += myStream.skip(location - this.location);
+		} catch (IOException e) {
+			throw new Error(e);
 		}
 	}
 
