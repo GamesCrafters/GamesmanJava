@@ -38,15 +38,8 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		fis = new FileInputStream(myFile);
 		skipHeader(fis);
 		tableOffset = fis.getChannel().position();
-		int bytesRead = 0;
 		byte[] entryBytes = new byte[numEntries << 3];
-		while (bytesRead < entryBytes.length) {
-			int fisRead = fis.read(entryBytes, bytesRead, entryBytes.length
-					- bytesRead);
-			if (fisRead == -1)
-				break;
-			bytesRead += fisRead;
-		}
+		readFully(fis, entryBytes, 0, entryBytes.length);
 		int count = 0;
 		for (int i = 0; i < numEntries; i++) {
 			for (int bit = 56; bit >= 0; bit -= 8) {

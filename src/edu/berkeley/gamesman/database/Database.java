@@ -958,8 +958,19 @@ public abstract class Database {
 
 	private void skipInfo(InputStream is) throws IOException {
 		byte[] b = new byte[18];
-		int len = 18;
-		while (len > 0)
-			len -= is.read(b, 0, len);
+		readFully(is, b, 0, 18);
+	}
+
+	public static final void readFully(InputStream is, byte[] arr, int off, int len)
+			throws IOException {
+		while (len > 0) {
+			int bytesRead = is.read(arr, off, len);
+			if (bytesRead < 0)
+				break;
+			else {
+				off += bytesRead;
+				len -= bytesRead;
+			}
+		}
 	}
 }
