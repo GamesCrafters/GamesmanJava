@@ -2,7 +2,6 @@ package edu.berkeley.gamesman.database;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -196,8 +195,9 @@ public class DistributedDatabase extends Database {
 				command.append(" ");
 				command.append(thisStart);
 				command.append(" ");
-				command.append(nextStart);
+				command.append(nextStart - thisStart);
 				Process p = Runtime.getRuntime().exec(command.toString());
+				p.waitFor();
 				InputStream is = p.getInputStream();
 				if (zippedTransfer)
 					is = new GZIPInputStream(is);
@@ -223,6 +223,8 @@ public class DistributedDatabase extends Database {
 				remainNum = toNum(nextStart);
 			} catch (IOException e) {
 				throw new Error(e);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 		}
 		return totalBytes;
