@@ -24,11 +24,14 @@ public class MemoryDatabase extends DatabaseWrapper {
 		this.myNumRecords = super.numRecords();
 		memoryStorage = new byte[(int) numBytes(firstRecord(), numRecords())];
 		firstByte = toByte(this.myFirstRecord);
+		firstNum = toNum(firstRecord());
+		numBytes = (int) (lastByte(firstRecord() + numRecords()) - firstByte);
+		lastNum = toNum(firstRecord() + numRecords());
 		this.backChanges = backChanges;
 		if (backChanges) {
 			myHandle = db.getHandle(firstRecord(), numRecords());
-			db.getRecordsAsBytes(myHandle, firstRecord(), memoryStorage, 0,
-					(int) numRecords(), true);
+			db.getRecordsAsBytes(myHandle, firstByte, firstNum, memoryStorage,
+					0, numBytes, lastNum, true);
 		} else
 			myHandle = null;
 	}
@@ -38,6 +41,12 @@ public class MemoryDatabase extends DatabaseWrapper {
 	private final DatabaseHandle myHandle;
 
 	private long firstByte;
+
+	private int firstNum;
+
+	private int numBytes;
+
+	private int lastNum;
 
 	private long myFirstRecord;
 
@@ -54,8 +63,8 @@ public class MemoryDatabase extends DatabaseWrapper {
 	@Override
 	public void flush() {
 		if (solve && myHandle != null) {
-			db.putRecordsAsBytes(myHandle, firstRecord(), memoryStorage, 0,
-					(int) numRecords(), false);
+			db.putRecordsAsBytes(myHandle, firstByte, firstNum, memoryStorage,
+					0, numBytes, lastNum, false);
 		}
 	}
 
@@ -72,9 +81,9 @@ public class MemoryDatabase extends DatabaseWrapper {
 	}
 
 	@Override
-	protected long getRecordsAsLongGroup(DatabaseHandle dh, long recordIndex,
-			int numRecords) {
-		return getLongRecordGroup(dh, toByte(recordIndex));
+	protected long getRecordsAsLongGroup(DatabaseHandle dh, long byteIndex,
+			int firstNum, int lastNum) {
+		return longRecordGroup(memoryStorage, (int) (byteIndex - firstByte));
 	}
 
 	@Override
@@ -84,8 +93,8 @@ public class MemoryDatabase extends DatabaseWrapper {
 
 	@Override
 	protected BigInteger getRecordsAsBigIntGroup(DatabaseHandle dh,
-			long recordIndex, int numRecords) {
-		return getBigIntRecordGroup(dh, toByte(recordIndex));
+			long byteIndex, int firstNum, int lastNum) {
+		return bigIntRecordGroup(memoryStorage, (int) (byteIndex - firstByte));
 	}
 
 	@Override
@@ -95,14 +104,16 @@ public class MemoryDatabase extends DatabaseWrapper {
 
 	public void setRange(long firstRecord, int numRecords) {
 		this.myFirstRecord = firstRecord;
-		this.firstByte = toByte(firstRecord);
 		this.myNumRecords = numRecords;
-		int numBytes = (int) numBytes(firstRecord, numRecords);
+		firstByte = toByte(firstRecord);
+		firstNum = toNum(firstRecord);
+		numBytes = (int) (lastByte(firstRecord + numRecords) - firstByte);
+		lastNum = toNum(firstRecord + numRecords);
 		if (memoryStorage == null || memoryStorage.length < numBytes)
 			memoryStorage = new byte[numBytes];
 		if (backChanges) {
-			db.getRecordsAsBytes(myHandle, firstRecord, memoryStorage, 0,
-					numRecords, true);
+			db.getRecordsAsBytes(myHandle, firstByte, firstNum, memoryStorage,
+					0, numBytes, lastNum, true);
 		}
 	}
 
