@@ -424,7 +424,8 @@ public abstract class Database {
 		}
 		if (lastNum > 0)
 			numBytes -= recordGroupByteLength;
-		putBytes(dh, byteIndex, arr, off, numBytes);
+		if (numBytes > 0)
+			putBytes(dh, byteIndex, arr, off, numBytes);
 		if (lastNum > 0) {
 			byteIndex += numBytes;
 			off += numBytes;
@@ -745,14 +746,20 @@ public abstract class Database {
 
 	protected final long toByte(long recordIndex) {
 		if (superCompress)
-			return recordIndex / recordsPerGroup * recordGroupByteLength;
+			if (recordGroupByteLength > 1)
+				return recordIndex / recordsPerGroup * recordGroupByteLength;
+			else
+				return recordIndex / recordsPerGroup;
 		else
 			return recordIndex << recordGroupByteBits;
 	}
 
 	protected final long toFirstRecord(long byteIndex) {
 		if (superCompress)
-			return byteIndex / recordGroupByteLength * recordsPerGroup;
+			if (recordGroupByteLength > 1)
+				return byteIndex / recordGroupByteLength * recordsPerGroup;
+			else
+				return byteIndex * recordsPerGroup;
 		else
 			return byteIndex >> recordGroupByteBits;
 	}
@@ -795,8 +802,11 @@ public abstract class Database {
 	protected final long longRecordGroup(long[] recs, int offset) {
 		if (superCompress) {
 			long longValues = 0;
-			for (int i = 0; i < recordsPerGroup; i++)
-				longValues += recs[offset++] * longMultipliers[i];
+			for (int i = offset + recordsPerGroup - 1; i >= offset; i--) {
+				if (longValues > 0)
+					longValues *= totalStates;
+				longValues += recs[i];
+			}
 			return longValues;
 		} else
 			return recs[0];
@@ -804,11 +814,13 @@ public abstract class Database {
 
 	protected final BigInteger bigIntRecordGroup(long[] recs, int offset) {
 		if (superCompress) {
-			BigInteger values = BigInteger.ZERO;
-			for (int i = 0; i < recordsPerGroup; i++)
-				values = values.add(BigInteger.valueOf(recs[offset++])
-						.multiply(multipliers[i]));
-			return values;
+			BigInteger bigIntValues = BigInteger.ZERO;
+			for (int i = offset + recordsPerGroup - 1; i >= offset; i--) {
+				if (bigIntValues.compareTo(BigInteger.ZERO) > 0)
+					bigIntValues = bigIntValues.multiply(bigIntTotalStates);
+				bigIntValues = bigIntValues.add(BigInteger.valueOf(recs[i]));
+			}
+			return bigIntValues;
 		} else
 			return BigInteger.valueOf(recs[0]);
 	}
@@ -828,9 +840,10 @@ public abstract class Database {
 			int offset) {
 		if (superCompress) {
 			for (int i = 0; i < recordsPerGroup; i++) {
-				long mod = recordGroup.mod(bigIntTotalStates).longValue();
-				recordGroup = recordGroup.divide(bigIntTotalStates);
-				recs[offset++] = mod;
+				BigInteger[] results = recordGroup
+						.divideAndRemainder(bigIntTotalStates);
+				recordGroup = results[0];
+				recs[offset++] = results[1].longValue();
 			}
 		} else
 			recs[0] = recordGroup.longValue();
@@ -838,40 +851,60 @@ public abstract class Database {
 
 	protected final long setRecord(long recordGroup, int num, long r) {
 		if (superCompress) {
-			long multiplier = longMultipliers[num];
-			long zeroOut = longMultipliers[num + 1];
-			recordGroup = recordGroup
-					- ((recordGroup % zeroOut) - (recordGroup % multiplier))
-					+ (r * multiplier);
-			return recordGroup;
+			if (recordGroup == 0) {
+				if (num == 0)
+					return r;
+				else {
+					return r * longMultipliers[num];
+				}
+			}
+			return (num < recordsPerGroup - 1 ? recordGroup - recordGroup
+					% longMultipliers[num + 1] : 0)
+					+ (num > 0 ? (recordGroup % longMultipliers[num] + r
+							* longMultipliers[num]) : r);
 		} else
 			return r;
 	}
 
 	protected final BigInteger setRecord(BigInteger recordGroup, int num, long r) {
 		if (superCompress) {
-			BigInteger multiplier = multipliers[num];
-			BigInteger zeroOut = multipliers[num + 1];
-			recordGroup = recordGroup.subtract(
-					recordGroup.mod(zeroOut).subtract(
-							recordGroup.mod(multiplier))).add(
-					BigInteger.valueOf(r).multiply(multiplier));
-			return recordGroup;
+			if (recordGroup.equals(BigInteger.ZERO)) {
+				if (num == 0)
+					return BigInteger.valueOf(r);
+				else {
+					return BigInteger.valueOf(r).multiply(multipliers[num]);
+				}
+			}
+			return (num < recordsPerGroup - 1 ? recordGroup
+					.subtract(recordGroup.mod(multipliers[num + 1]))
+					: BigInteger.ZERO).add(num > 0 ? (recordGroup
+					.mod(multipliers[num]).add(BigInteger.valueOf(r).multiply(
+					multipliers[num]))) : BigInteger.valueOf(r));
 		} else
 			return BigInteger.valueOf(r);
 	}
 
 	protected final long getRecord(long recordGroup, int num) {
-		if (superCompress)
-			return recordGroup / longMultipliers[num] % totalStates;
-		else
+		if (superCompress) {
+			if (num == 0)
+				return recordGroup % totalStates;
+			else if (num == recordsPerGroup - 1)
+				return recordGroup / longMultipliers[num];
+			else
+				return recordGroup / longMultipliers[num] % totalStates;
+		} else
 			return recordGroup;
 	}
 
 	protected final long getRecord(BigInteger recordGroup, int num) {
 		if (superCompress)
-			return recordGroup.divide(multipliers[num]).mod(bigIntTotalStates)
-					.longValue();
+			if (num == 0)
+				return recordGroup.mod(bigIntTotalStates).longValue();
+			else if (num == recordsPerGroup - 1)
+				return recordGroup.divide(multipliers[num]).longValue();
+			else
+				return recordGroup.divide(multipliers[num]).mod(
+						bigIntTotalStates).longValue();
 		else
 			return recordGroup.longValue();
 	}

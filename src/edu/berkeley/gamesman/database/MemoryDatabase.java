@@ -103,6 +103,38 @@ public class MemoryDatabase extends DatabaseWrapper {
 		return bigIntRecordGroup(memoryStorage, (int) (loc - firstByte));
 	}
 
+	@Override
+	protected void putRecordGroup(DatabaseHandle dh, long loc, long r) {
+		toUnsignedByteArray(r, memoryStorage, (int) (loc - firstByte));
+	}
+
+	@Override
+	protected void putRecordsAsGroup(DatabaseHandle dh, long byteIndex,
+			int firstNum, int lastNum, long r) {
+		long group1 = getRecordsAsLongGroup(dh, byteIndex, 0, firstNum);
+		long group3 = getRecordsAsLongGroup(dh, byteIndex, lastNum,
+				recordsPerGroup);
+		r = splice(group1, r, firstNum);
+		r = splice(r, group3, lastNum);
+		toUnsignedByteArray(r, memoryStorage, (int) (byteIndex - firstByte));
+	}
+
+	@Override
+	protected void putRecordGroup(DatabaseHandle dh, long loc, BigInteger r) {
+		toUnsignedByteArray(r, memoryStorage, (int) (loc - firstByte));
+	}
+
+	@Override
+	protected void putRecordsAsGroup(DatabaseHandle dh, long byteIndex,
+			int firstNum, int lastNum, BigInteger r) {
+		BigInteger group1 = getRecordsAsBigIntGroup(dh, byteIndex, 0, firstNum);
+		BigInteger group3 = getRecordsAsBigIntGroup(dh, byteIndex, lastNum,
+				recordsPerGroup);
+		r = splice(group1, r, firstNum);
+		r = splice(r, group3, lastNum);
+		toUnsignedByteArray(r, memoryStorage, (int) (byteIndex - firstByte));
+	}
+
 	public void setRange(long firstRecord, int numRecords) {
 		this.myFirstRecord = firstRecord;
 		this.myNumRecords = numRecords;
