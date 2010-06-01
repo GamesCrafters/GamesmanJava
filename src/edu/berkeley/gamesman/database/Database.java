@@ -349,8 +349,31 @@ public abstract class Database {
 			putBytes(dh, byteIndex, arr, off, numBytes);
 			return;
 		}
+		if (numBytes < recordGroupByteLength) {
+			if (recordNum > 0) {
+				byte[] groupBytes = dh.getRecordGroupBytes();
+				System.arraycopy(arr, off, groupBytes, 0, numBytes);
+				if (!overwriteEdgesOk)
+					getRecordsAsBytes(dh, byteIndex, 0, groupBytes, 0,
+							recordGroupByteLength, recordNum, overwriteEdgesOk);
+				putBytes(dh, byteIndex, groupBytes, 0, numBytes);
+				dh.releaseBytes(groupBytes);
+			} else if (lastNum > 0) {
+				byte[] groupBytes = dh.getRecordGroupBytes();
+				int byteNum = recordGroupByteLength - numBytes;
+				System.arraycopy(arr, off, groupBytes, byteNum, numBytes);
+				if (!overwriteEdgesOk)
+					getRecordsAsBytes(dh, byteIndex - byteNum, lastNum,
+							groupBytes, 0, recordGroupByteLength, 0,
+							overwriteEdgesOk);
+				putBytes(dh, byteIndex, groupBytes, byteNum, numBytes);
+				dh.releaseBytes(groupBytes);
+			} else
+				putBytes(dh, byteIndex, arr, off, numBytes);
+			return;
+		}
 		if (recordNum > 0) {
-			if (numBytes <= recordGroupByteLength) {
+			if (numBytes == recordGroupByteLength) {
 				if (lastNum == 0)
 					lastNum = recordsPerGroup;
 				if (recordGroupUsesLong) {
@@ -493,6 +516,29 @@ public abstract class Database {
 			boolean overwriteEdgesOk) {
 		if (overwriteEdgesOk) {
 			getBytes(dh, byteIndex, arr, off, numBytes);
+			return;
+		}
+		if (numBytes < recordGroupByteLength) {
+			if (recordNum > 0) {
+				byte[] groupBytes = dh.getRecordGroupBytes();
+				if (!overwriteEdgesOk)
+					System.arraycopy(arr, off, groupBytes, 0, numBytes);
+				getRecordsAsBytes(dh, byteIndex, recordNum, groupBytes, 0,
+						recordGroupByteLength, lastNum, overwriteEdgesOk);
+				System.arraycopy(arr, off, groupBytes, 0, numBytes);
+				dh.releaseBytes(groupBytes);
+			} else if (lastNum > 0) {
+				byte[] groupBytes = dh.getRecordGroupBytes();
+				int byteNum = recordGroupByteLength - numBytes;
+				if (!overwriteEdgesOk)
+					System.arraycopy(arr, off, groupBytes, byteNum, numBytes);
+				getRecordsAsBytes(dh, byteIndex - byteNum, recordNum,
+						groupBytes, 0, recordGroupByteLength, lastNum,
+						overwriteEdgesOk);
+				System.arraycopy(arr, off, groupBytes, byteNum, numBytes);
+				dh.releaseBytes(groupBytes);
+			} else
+				getBytes(dh, byteIndex, arr, off, numBytes);
 			return;
 		}
 		if (recordNum > 0) {
