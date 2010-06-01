@@ -30,10 +30,6 @@ public abstract class Database {
 
 	protected final long firstContainedRecord;
 
-	protected long location;
-
-	protected final DatabaseHandle myHandle;
-
 	protected final long totalStates;
 
 	protected final BigInteger bigIntTotalStates;
@@ -196,7 +192,6 @@ public abstract class Database {
 				}
 			}
 		}
-		myHandle = getHandle();
 		assert Util.debug(DebugFacility.DATABASE, recordsPerGroup
 				+ " records per group\n" + recordGroupByteLength
 				+ " bytes per group");
@@ -235,7 +230,6 @@ public abstract class Database {
 	 */
 	public final void close() {
 		closeDatabase();
-		closeHandle(myHandle);
 	}
 
 	protected abstract void closeDatabase();
@@ -344,8 +338,8 @@ public abstract class Database {
 
 	protected void putRecordsAsBytes(DatabaseHandle dh, long byteIndex,
 			int recordNum, byte[] arr, int off, int numBytes, int lastNum,
-			boolean overwriteEdgesOk) {
-		if (overwriteEdgesOk) {
+			boolean edgesAreCorrect) {
+		if (edgesAreCorrect) {
 			putBytes(dh, byteIndex, arr, off, numBytes);
 			return;
 		}
@@ -353,26 +347,26 @@ public abstract class Database {
 			if (recordNum > 0) {
 				byte[] groupBytes = dh.getRecordGroupBytes();
 				System.arraycopy(arr, off, groupBytes, 0, numBytes);
-				if (!overwriteEdgesOk)
+				if (!edgesAreCorrect)
 					getRecordsAsBytes(dh, byteIndex, 0, groupBytes, 0,
-							recordGroupByteLength, recordNum, overwriteEdgesOk);
-				putBytes(dh, byteIndex, groupBytes, 0, numBytes);
+							recordGroupByteLength, recordNum, false);
+				putRecordsAsBytes(dh, byteIndex, recordNum, groupBytes, 0,
+						numBytes, lastNum, true);
 				dh.releaseBytes(groupBytes);
 			} else if (lastNum > 0) {
 				byte[] groupBytes = dh.getRecordGroupBytes();
 				int byteNum = recordGroupByteLength - numBytes;
 				System.arraycopy(arr, off, groupBytes, byteNum, numBytes);
-				if (!overwriteEdgesOk)
+				if (!edgesAreCorrect)
 					getRecordsAsBytes(dh, byteIndex - byteNum, lastNum,
-							groupBytes, 0, recordGroupByteLength, 0,
-							overwriteEdgesOk);
-				putBytes(dh, byteIndex, groupBytes, byteNum, numBytes);
+							groupBytes, 0, recordGroupByteLength, 0, false);
+				putRecordsAsBytes(dh, byteIndex, recordNum, groupBytes,
+						byteNum, numBytes, lastNum, true);
 				dh.releaseBytes(groupBytes);
 			} else
 				putBytes(dh, byteIndex, arr, off, numBytes);
 			return;
-		}
-		if (recordNum > 0) {
+		} else if (recordNum > 0) {
 			if (numBytes == recordGroupByteLength) {
 				if (lastNum == 0)
 					lastNum = recordsPerGroup;
@@ -386,8 +380,8 @@ public abstract class Database {
 					resultGroup = splice(resultGroup, group3, lastNum);
 					byte[] groupBytes = dh.getRecordGroupBytes();
 					toUnsignedByteArray(resultGroup, groupBytes, 0);
-					putBytes(dh, byteIndex, groupBytes, 0,
-							recordGroupByteLength);
+					putRecordsAsBytes(dh, byteIndex, recordNum, groupBytes, 0,
+							recordGroupByteLength, lastNum, true);
 					dh.releaseBytes(groupBytes);
 				} else {
 					BigInteger group1 = getRecordsAsBigIntGroup(dh, byteIndex,
@@ -399,19 +393,19 @@ public abstract class Database {
 					resultGroup = splice(resultGroup, group3, lastNum);
 					byte[] groupBytes = dh.getRecordGroupBytes();
 					toUnsignedByteArray(resultGroup, groupBytes, 0);
-					putBytes(dh, byteIndex, groupBytes, 0,
-							recordGroupByteLength);
+					putRecordsAsBytes(dh, byteIndex, recordNum, groupBytes, 0,
+							recordGroupByteLength, lastNum, true);
 					dh.releaseBytes(groupBytes);
 				}
 				return;
-			}
-			if (recordGroupUsesLong) {
+			} else if (recordGroupUsesLong) {
 				long group1 = getRecordsAsLongGroup(dh, byteIndex, 0, recordNum);
 				long group2 = longRecordGroup(arr, off);
 				long resultGroup = splice(group1, group2, recordNum);
 				byte[] groupBytes = dh.getRecordGroupBytes();
 				toUnsignedByteArray(resultGroup, groupBytes, 0);
-				putBytes(dh, byteIndex, groupBytes, 0, recordGroupByteLength);
+				putRecordsAsBytes(dh, byteIndex, recordNum, groupBytes, 0,
+						recordGroupByteLength, 0, true);
 				dh.releaseBytes(groupBytes);
 			} else {
 				BigInteger group1 = getRecordsAsBigIntGroup(dh, byteIndex, 0,
@@ -420,7 +414,8 @@ public abstract class Database {
 				BigInteger resultGroup = splice(group1, group2, recordNum);
 				byte[] groupBytes = dh.getRecordGroupBytes();
 				toUnsignedByteArray(resultGroup, groupBytes, 0);
-				putBytes(dh, byteIndex, groupBytes, 0, recordGroupByteLength);
+				putRecordsAsBytes(dh, byteIndex, recordNum, groupBytes, 0,
+						recordGroupByteLength, 0, true);
 				dh.releaseBytes(groupBytes);
 			}
 			byteIndex += recordGroupByteLength;
@@ -440,7 +435,8 @@ public abstract class Database {
 				long resultGroup = splice(group1, group2, lastNum);
 				byte[] groupBytes = dh.getRecordGroupBytes();
 				toUnsignedByteArray(resultGroup, groupBytes, 0);
-				putBytes(dh, byteIndex, groupBytes, 0, recordGroupByteLength);
+				putRecordsAsBytes(dh, byteIndex, 0, groupBytes, 0,
+						recordGroupByteLength, lastNum, true);
 				dh.releaseBytes(groupBytes);
 			} else {
 				BigInteger group1 = bigIntRecordGroup(arr, off);
@@ -449,7 +445,8 @@ public abstract class Database {
 				BigInteger resultGroup = splice(group1, group2, lastNum);
 				byte[] groupBytes = dh.getRecordGroupBytes();
 				toUnsignedByteArray(resultGroup, groupBytes, 0);
-				putBytes(dh, byteIndex, groupBytes, 0, recordGroupByteLength);
+				putRecordsAsBytes(dh, byteIndex, 0, groupBytes, 0,
+						recordGroupByteLength, lastNum, true);
 				dh.releaseBytes(groupBytes);
 			}
 		}
@@ -517,8 +514,7 @@ public abstract class Database {
 		if (overwriteEdgesOk) {
 			getBytes(dh, byteIndex, arr, off, numBytes);
 			return;
-		}
-		if (numBytes < recordGroupByteLength) {
+		} else if (numBytes < recordGroupByteLength) {
 			if (recordNum > 0) {
 				byte[] groupBytes = dh.getRecordGroupBytes();
 				if (!overwriteEdgesOk)
@@ -540,36 +536,38 @@ public abstract class Database {
 			} else
 				getBytes(dh, byteIndex, arr, off, numBytes);
 			return;
-		}
-		if (recordNum > 0) {
+		} else if (recordNum > 0) {
 			if (numBytes == recordGroupByteLength) {
 				if (lastNum == 0)
 					lastNum = recordsPerGroup;
 				if (recordGroupUsesLong) {
 					long group1 = longRecordGroup(arr, off);
-					long group2 = getLongRecordGroup(dh, byteIndex);
+					long group2 = getRecordsAsLongGroup(dh, byteIndex,
+							recordNum, lastNum);
 					long group3 = group1;
 					long resultGroup = splice(group1, group2, recordNum);
 					resultGroup = splice(resultGroup, group3, lastNum);
 					toUnsignedByteArray(resultGroup, arr, off);
 				} else {
 					BigInteger group1 = bigIntRecordGroup(arr, off);
-					BigInteger group2 = getBigIntRecordGroup(dh, byteIndex);
+					BigInteger group2 = getRecordsAsBigIntGroup(dh, byteIndex,
+							recordNum, lastNum);
 					BigInteger group3 = group1;
 					BigInteger resultGroup = splice(group1, group2, recordNum);
 					resultGroup = splice(resultGroup, group3, lastNum);
 					toUnsignedByteArray(resultGroup, arr, off);
 				}
 				return;
-			}
-			if (recordGroupUsesLong) {
+			} else if (recordGroupUsesLong) {
 				long group1 = longRecordGroup(arr, off);
-				long group2 = getLongRecordGroup(dh, byteIndex);
+				long group2 = getRecordsAsLongGroup(dh, byteIndex, recordNum,
+						recordsPerGroup);
 				long resultGroup = splice(group1, group2, recordNum);
 				toUnsignedByteArray(resultGroup, arr, off);
 			} else {
 				BigInteger group1 = bigIntRecordGroup(arr, off);
-				BigInteger group2 = getBigIntRecordGroup(dh, byteIndex);
+				BigInteger group2 = getRecordsAsBigIntGroup(dh, byteIndex,
+						recordNum, recordsPerGroup);
 				BigInteger resultGroup = splice(group1, group2, recordNum);
 				toUnsignedByteArray(resultGroup, arr, off);
 			}
@@ -584,12 +582,13 @@ public abstract class Database {
 			byteIndex += numBytes;
 			off += numBytes;
 			if (recordGroupUsesLong) {
-				long group1 = getLongRecordGroup(dh, byteIndex);
+				long group1 = getRecordsAsLongGroup(dh, byteIndex, 0, lastNum);
 				long group2 = longRecordGroup(arr, off);
 				long resultGroup = splice(group1, group2, lastNum);
 				toUnsignedByteArray(resultGroup, arr, off);
 			} else {
-				BigInteger group1 = getBigIntRecordGroup(dh, byteIndex);
+				BigInteger group1 = getRecordsAsBigIntGroup(dh, byteIndex, 0,
+						lastNum);
 				BigInteger group2 = bigIntRecordGroup(arr, off);
 				BigInteger resultGroup = splice(group1, group2, lastNum);
 				toUnsignedByteArray(resultGroup, arr, off);
@@ -640,8 +639,8 @@ public abstract class Database {
 	 * @param loc
 	 *            The location to seek to
 	 */
-	protected synchronized void seek(long loc) {
-		location = loc;
+	protected void seek(DatabaseHandle dh, long loc) {
+		dh.location = loc;
 	}
 
 	/**
@@ -654,9 +653,9 @@ public abstract class Database {
 	 * @param len
 	 *            The number of bytes to write
 	 */
-	protected synchronized void putBytes(byte[] arr, int off, int len) {
-		putBytes(myHandle, location, arr, off, len);
-		location += len;
+	protected void putBytes(DatabaseHandle dh, byte[] arr, int off, int len) {
+		putBytes(dh, dh.location, arr, off, len);
+		dh.location += len;
 	}
 
 	/**
@@ -669,9 +668,9 @@ public abstract class Database {
 	 * @param len
 	 *            The number of bytes to read
 	 */
-	protected synchronized void getBytes(byte[] arr, int off, int len) {
-		getBytes(myHandle, location, arr, off, len);
-		location += len;
+	protected void getBytes(DatabaseHandle dh, byte[] arr, int off, int len) {
+		getBytes(dh, dh.location, arr, off, len);
+		dh.location += len;
 	}
 
 	/**
@@ -688,7 +687,8 @@ public abstract class Database {
 		long[] recs = new long[recordsPerGroup];
 		for (int i = 0; i < recordsPerGroup; i++)
 			recs[i] = r;
-		seek(offset);
+		DatabaseHandle dh = getHandle();
+		seek(dh, offset);
 		int maxBytes = 1024 - 1024 % recordGroupByteLength;
 		byte[] groups = new byte[maxBytes];
 		while (len > 0) {
@@ -710,9 +710,10 @@ public abstract class Database {
 				}
 
 			}
-			putBytes(groups, 0, groupsLength);
+			putBytes(dh, groups, 0, groupsLength);
 			len -= groupsLength;
 		}
+		closeHandle(dh);
 	}
 
 	/**
@@ -740,10 +741,6 @@ public abstract class Database {
 	}
 
 	public void closeHandle(DatabaseHandle dh) {
-	}
-
-	public DatabaseHandle getHandle(long recordStart, long numRecords) {
-		return getHandle();
 	}
 
 	protected final long toByte(long recordIndex) {

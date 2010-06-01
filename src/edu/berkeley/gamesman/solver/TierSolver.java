@@ -252,8 +252,7 @@ public class TierSolver extends Solver {
 			Pair<Long, Long> slice;
 			while ((slice = nextSlice(conf)) != null) {
 				thisSlice = slice;
-				DatabaseHandle myWrite = writeDb
-						.getHandle(slice.car, slice.cdr);
+				DatabaseHandle myWrite = writeDb.getHandle();
 				DatabaseHandle readHandle = readDb.getHandle();
 				solvePartialTier(conf, slice.car, slice.cdr, updater,
 						readHandle, myWrite);

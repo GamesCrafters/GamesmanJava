@@ -147,6 +147,8 @@ public class GZippedFileDatabase extends Database implements Runnable {
 
 	private final long lastByteIndex;
 
+	private DatabaseHandle lastUsed;
+
 	@Override
 	protected void closeDatabase() {
 		if (solve) {
@@ -178,20 +180,23 @@ public class GZippedFileDatabase extends Database implements Runnable {
 	@Override
 	protected synchronized void getBytes(DatabaseHandle dh, long loc,
 			byte[] arr, int off, int len) {
-		seek(loc);
-		getBytes(arr, off, len);
+		seek(dh, loc);
+		getBytes(dh, arr, off, len);
 	}
 
 	@Override
-	protected synchronized void getBytes(byte[] arr, int off, int len) {
+	protected synchronized void getBytes(DatabaseHandle dh, byte[] arr,
+			int off, int len) {
+		if (lastUsed != dh)
+			seek(dh, dh.location);
 		while (len > 0) {
-			int bytesToRead = (int) Math.min(len, nextStart - location);
+			int bytesToRead = (int) Math.min(len, nextStart - dh.location);
 			while (bytesToRead > 0) {
 				try {
 					int bytesRead = myStream.read(arr, off, bytesToRead);
 					bytesToRead -= bytesRead;
 					len -= bytesRead;
-					location += bytesRead;
+					dh.location += bytesRead;
 					off += bytesRead;
 				} catch (IOException e) {
 					throw new Error(e);
@@ -212,16 +217,17 @@ public class GZippedFileDatabase extends Database implements Runnable {
 	}
 
 	@Override
-	protected synchronized void seek(long location) {
+	protected synchronized void seek(DatabaseHandle dh, long location) {
+		lastUsed = dh;
 		thisEntry = location / entrySize;
 		nextStart = (thisEntry + 1) * entrySize;
 		try {
 			fis.getChannel().position(
 					entryPoints[(int) (thisEntry - firstEntry)]);
 			myStream = new GZIPInputStream(fis, bufferSize);
-			this.location = thisEntry * entrySize;
-			while (this.location < location)
-				this.location += myStream.skip(location - this.location);
+			dh.location = thisEntry * entrySize;
+			while (dh.location < location)
+				dh.location += myStream.skip(location - dh.location);
 		} catch (IOException e) {
 			throw new Error(e);
 		}
@@ -231,11 +237,6 @@ public class GZippedFileDatabase extends Database implements Runnable {
 	protected void putBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
 			int len) {
 		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public DatabaseHandle getHandle() {
-		return super.getHandle();
 	}
 
 	private class WriteHandle extends DatabaseHandle {
@@ -421,6 +422,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
+			readFrom.closeHandle(readHandle[i]);
 		}
 		writeTo.close();
 		System.out.println("Zipped in "

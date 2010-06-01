@@ -13,11 +13,13 @@ public final class FileDatabase extends Database {
 	/**
 	 * The file contained in this FileDatabase
 	 */
-	public final File myFile;
+	private final File myFile;
 
-	protected final RandomAccessFile fd;
+	private final RandomAccessFile fd;
 
-	protected final long offset;
+	private final long offset;
+
+	private DatabaseHandle lastUsed;
 
 	public FileDatabase(String uri, Configuration config, boolean solve,
 			long firstRecord, long numRecords) throws IOException {
@@ -60,7 +62,9 @@ public final class FileDatabase extends Database {
 	}
 
 	@Override
-	protected synchronized void seek(long loc) {
+	protected synchronized void seek(DatabaseHandle dh, long loc) {
+		super.seek(dh, loc);
+		lastUsed = dh;
 		try {
 			fd.seek(loc + offset);
 		} catch (IOException e) {
@@ -69,7 +73,10 @@ public final class FileDatabase extends Database {
 	}
 
 	@Override
-	protected synchronized void getBytes(byte[] arr, int off, int len) {
+	protected synchronized void getBytes(DatabaseHandle dh, byte[] arr,
+			int off, int len) {
+		if (lastUsed != dh)
+			seek(dh, dh.location);
 		try {
 			fd.read(arr, off, len);
 		} catch (IOException e) {
@@ -78,7 +85,10 @@ public final class FileDatabase extends Database {
 	}
 
 	@Override
-	protected synchronized void putBytes(byte[] arr, int off, int len) {
+	protected synchronized void putBytes(DatabaseHandle dh, byte[] arr,
+			int off, int len) {
+		if (lastUsed != dh)
+			seek(dh, dh.location);
 		try {
 			fd.write(arr, off, len);
 		} catch (IOException e) {
@@ -89,14 +99,14 @@ public final class FileDatabase extends Database {
 	@Override
 	protected synchronized void getBytes(DatabaseHandle dh, long loc,
 			byte[] arr, int off, int len) {
-		seek(loc);
-		getBytes(arr, off, len);
+		seek(dh, loc);
+		getBytes(dh, arr, off, len);
 	}
 
 	@Override
 	protected synchronized void putBytes(DatabaseHandle dh, long loc,
 			byte[] arr, int off, int len) {
-		seek(loc);
-		putBytes(arr, off, len);
+		seek(dh, loc);
+		putBytes(dh, arr, off, len);
 	}
 }

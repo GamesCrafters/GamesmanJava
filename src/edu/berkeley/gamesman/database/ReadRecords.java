@@ -11,27 +11,43 @@ public class ReadRecords {
 
 	public static void main(String[] args) throws ClassNotFoundException,
 			IOException {
-		String jobFile = args[0];
-		String databaseFile = args[1];
-		long firstRecord = Long.parseLong(args[2]);
-		long numRecords = Long.parseLong(args[3]);
-		Configuration conf = new Configuration(jobFile);
-		conf.setProperty("gamesman.db.uri", databaseFile);
-		Database db = Database.openDatabase(databaseFile, conf, false,
-				firstRecord, numRecords);
+		int i = 0;
+		String jobFile = null;
+		if (args.length > 3)
+			jobFile = args[i++];
+		String databaseFile = args[i++];
+		long firstRecord = Long.parseLong(args[i++]);
+		long numRecords = Long.parseLong(args[i++]);
+		Configuration conf;
+		Database db;
+		if (jobFile == null) {
+			db = Database.openDatabase(databaseFile, false, firstRecord,
+					numRecords);
+			conf = db.getConfiguration();
+		} else {
+			conf = new Configuration(jobFile);
+			db = Database.openDatabase(databaseFile, conf, false, firstRecord,
+					numRecords);
+		}
+		DatabaseHandle dh = db.getHandle();
 		long firstByte = db.toByte(firstRecord);
-		long numBytes = db.numBytes(firstRecord, numRecords);
+		int firstNum = db.toNum(firstRecord);
+		long lastByte = db.lastByte(firstRecord + numRecords);
+		int lastNum = db.toNum(firstRecord + numRecords);
+		long numBytes = lastByte - firstByte;
 		byte[] arr = new byte[(int) Math.min(numBytes, BUFFER_SIZE)];
-		db.seek(firstByte);
+		db.seek(dh, firstByte);
+		// TODO Figure out how to do this right
 		OutputStream out = System.out;
 		if (conf.getBoolean("gamesman.zippedTransfer", false))
 			out = new GZIPOutputStream(out);
 		while (numBytes > 0) {
 			int bytesToRead = (int) Math.min(numBytes, BUFFER_SIZE);
-			db.getBytes(arr, 0, bytesToRead);
+			db.getBytes(dh, arr, 0, bytesToRead);
 			out.write(arr, 0, bytesToRead);
 			numBytes -= bytesToRead;
 		}
+		db.closeHandle(dh);
 		out.close();
 	}
 }

@@ -29,7 +29,7 @@ public class MemoryDatabase extends DatabaseWrapper {
 		lastNum = toNum(firstRecord() + numRecords());
 		this.backChanges = backChanges;
 		if (backChanges) {
-			myHandle = db.getHandle(firstRecord(), numRecords());
+			myHandle = db.getHandle();
 			db.getRecordsAsBytes(myHandle, firstByte, firstNum, memoryStorage,
 					0, numBytes, lastNum, true);
 		} else
@@ -57,6 +57,7 @@ public class MemoryDatabase extends DatabaseWrapper {
 	@Override
 	protected void closeDatabase() {
 		flush();
+		db.closeHandle(myHandle);
 		db.close();
 	}
 
