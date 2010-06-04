@@ -1,6 +1,10 @@
 package edu.berkeley.gamesman.database;
 
 import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 import edu.berkeley.gamesman.core.Configuration;
@@ -67,13 +71,14 @@ public class RemoteDatabase extends Database {
 		}
 		command.append(remoteFile);
 		command.append(" ");
-		command.append(byteIndex);
+		long firstRecord = toFirstRecord(byteIndex);
+		long numRecords = toLastRecord(byteIndex + numBytes) - firstRecord;
+		firstRecord += firstNum;
+		if (lastNum > 0)
+			numRecords -= recordsPerGroup - lastNum;
+		command.append(firstRecord);
 		command.append(" ");
-		command.append(firstNum);
-		command.append(" ");
-		command.append(numBytes);
-		command.append(" ");
-		command.append(lastNum);
+		command.append(numRecords);
 		if (maxCommandLen < command.length())
 			maxCommandLen = command.length();
 		try {
@@ -115,6 +120,18 @@ public class RemoteDatabase extends Database {
 	protected void putBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
 			int len) {
 		throw new UnsupportedOperationException();
+	}
+
+	public static void main(String[] args) throws ClassNotFoundException,
+			IOException {
+		String confFile = args[0];
+		String dbFile = args[1];
+		RemoteDatabase db = (RemoteDatabase) Database.openDatabase(dbFile,
+				new Configuration(confFile), true);
+		File f = new File(dbFile);
+		FileOutputStream fos = new FileOutputStream(f);
+		db.store(fos);
+		fos.close();
 	}
 
 }
