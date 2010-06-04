@@ -62,51 +62,90 @@ public final class FileDatabase extends Database {
 	}
 
 	@Override
-	protected synchronized void seek(DatabaseHandle dh, long loc) {
-		super.seek(dh, loc);
+	protected synchronized void prepareRange(DatabaseHandle dh, long byteIndex,
+			int firstNum, long numBytes, int lastNum) {
+		super.prepareRange(dh, byteIndex, firstNum, numBytes, lastNum);
 		lastUsed = dh;
 		try {
-			fd.seek(loc + offset);
+			fd.seek(byteIndex + offset);
 		} catch (IOException e) {
 			throw new Error(e);
 		}
 	}
 
 	@Override
-	protected synchronized void getBytes(DatabaseHandle dh, byte[] arr,
-			int off, int len) {
-		if (lastUsed != dh)
-			seek(dh, dh.location);
+	protected synchronized int getBytes(DatabaseHandle dh, byte[] arr, int off,
+			int maxLen, boolean overwriteEdgesOk) {
+		if (lastUsed != dh) {
+			lastUsed = dh;
+			try {
+				fd.seek(dh.location + offset);
+			} catch (IOException e) {
+				throw new Error(e);
+			}
+		}
+		if (!overwriteEdgesOk)
+			return super.getBytes(dh, arr, off, maxLen, false);
 		try {
-			fd.read(arr, off, len);
+			int numBytes = (int) Math.min(maxLen, dh.lastByteIndex
+					- dh.location);
+			fd.read(arr, off, numBytes);
+			dh.location += numBytes;
+			return numBytes;
 		} catch (IOException e) {
 			throw new Error(e);
 		}
 	}
 
 	@Override
-	protected synchronized void putBytes(DatabaseHandle dh, byte[] arr,
-			int off, int len) {
-		if (lastUsed != dh)
-			seek(dh, dh.location);
+	protected synchronized void putRecordsAsBytes(DatabaseHandle dh,
+			long byteIndex, int recordNum, byte[] arr, int off, int numBytes,
+			int lastNum, boolean edgesAreCorrect) {
+		super.putRecordsAsBytes(dh, byteIndex, recordNum, arr, off, numBytes,
+				lastNum, edgesAreCorrect);
+	}
+
+	@Override
+	protected synchronized int putBytes(DatabaseHandle dh, byte[] arr, int off,
+			int maxLen, boolean edgesAreCorrect) {
+		if (lastUsed != dh) {
+			lastUsed = dh;
+			try {
+				fd.seek(dh.location + offset);
+			} catch (IOException e) {
+				throw new Error(e);
+			}
+		}
+		if (!edgesAreCorrect)
+			return super.putBytes(dh, arr, off, maxLen, false);
 		try {
-			fd.write(arr, off, len);
+			int numBytes = (int) Math.min(maxLen, dh.lastByteIndex
+					- dh.location);
+			fd.write(arr, off, numBytes);
+			dh.location += numBytes;
+			return numBytes;
 		} catch (IOException e) {
 			throw new Error(e);
 		}
+	}
+
+	@Override
+	protected synchronized void getRecordsAsBytes(DatabaseHandle dh,
+			long byteIndex, int recordNum, byte[] arr, int off, int numBytes,
+			int lastNum, boolean overwriteEdgesOk) {
+		super.getRecordsAsBytes(dh, byteIndex, recordNum, arr, off, numBytes,
+				lastNum, overwriteEdgesOk);
 	}
 
 	@Override
 	protected synchronized void getBytes(DatabaseHandle dh, long loc,
 			byte[] arr, int off, int len) {
-		seek(dh, loc);
-		getBytes(dh, arr, off, len);
+		getRecordsAsBytes(dh, loc, 0, arr, off, len, 0, true);
 	}
 
 	@Override
 	protected synchronized void putBytes(DatabaseHandle dh, long loc,
 			byte[] arr, int off, int len) {
-		seek(dh, loc);
-		putBytes(dh, arr, off, len);
+		putRecordsAsBytes(dh, loc, 0, arr, off, len, 0, true);
 	}
 }

@@ -36,16 +36,14 @@ public class ReadRecords {
 		int lastNum = db.toNum(firstRecord + numRecords);
 		long numBytes = lastByte - firstByte;
 		byte[] arr = new byte[(int) Math.min(numBytes, BUFFER_SIZE)];
-		db.seek(dh, firstByte);
-		// TODO Figure out how to do this right
+		db.prepareRange(dh, firstByte, firstNum, numBytes, lastNum);
 		OutputStream out = System.out;
 		if (conf.getBoolean("gamesman.zippedTransfer", false))
 			out = new GZIPOutputStream(out);
 		while (numBytes > 0) {
-			int bytesToRead = (int) Math.min(numBytes, BUFFER_SIZE);
-			db.getBytes(dh, arr, 0, bytesToRead);
-			out.write(arr, 0, bytesToRead);
-			numBytes -= bytesToRead;
+			int bytesRead = db.getBytes(dh, arr, 0, BUFFER_SIZE, true);
+			out.write(arr, 0, bytesRead);
+			numBytes -= bytesRead;
 		}
 		db.closeHandle(dh);
 		out.close();

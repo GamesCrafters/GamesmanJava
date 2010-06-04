@@ -12,6 +12,13 @@ import edu.berkeley.gamesman.util.qll.Pool;
 public class DatabaseHandle {
 	private final Pool<byte[]> recordGroupBytes;
 	protected long location;
+	protected long byteIndex;
+	protected int firstNum;
+	protected long lastByteIndex;
+	protected int lastNum;
+	protected byte[] firstGroup;
+	protected byte[] lastGroup;
+	protected DatabaseHandle innerHandle;
 
 	public DatabaseHandle(final int recordGroupByteLength) {
 		recordGroupBytes = new Pool<byte[]>(new Factory<byte[]>() {

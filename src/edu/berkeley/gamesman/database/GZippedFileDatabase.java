@@ -180,15 +180,29 @@ public class GZippedFileDatabase extends Database implements Runnable {
 	@Override
 	protected synchronized void getBytes(DatabaseHandle dh, long loc,
 			byte[] arr, int off, int len) {
-		seek(dh, loc);
-		getBytes(dh, arr, off, len);
+		getRecordsAsBytes(dh, loc, 0, arr, off, len, 0, true);
 	}
 
 	@Override
-	protected synchronized void getBytes(DatabaseHandle dh, byte[] arr,
-			int off, int len) {
-		if (lastUsed != dh)
-			seek(dh, dh.location);
+	protected synchronized void getRecordsAsBytes(DatabaseHandle dh,
+			long byteIndex, int recordNum, byte[] arr, int off, int numBytes,
+			int lastNum, boolean overwriteEdgesOk) {
+		super.getRecordsAsBytes(dh, byteIndex, recordNum, arr, off, numBytes,
+				lastNum, overwriteEdgesOk);
+	}
+
+	@Override
+	protected synchronized int getBytes(DatabaseHandle dh, byte[] arr, int off,
+			int maxLen, boolean overwriteEdgesOk) {
+		if (lastUsed != dh) {
+			lastUsed = dh;
+			seek(dh);
+		}
+		if (!overwriteEdgesOk)
+			return super.getBytes(dh, arr, off, maxLen, false);
+		final int numBytes = (int) Math.min(maxLen, dh.lastByteIndex
+				- dh.byteIndex);
+		int len = numBytes;
 		while (len > 0) {
 			int bytesToRead = (int) Math.min(len, nextStart - dh.location);
 			while (bytesToRead > 0) {
@@ -214,20 +228,27 @@ public class GZippedFileDatabase extends Database implements Runnable {
 				}
 			}
 		}
+		return numBytes;
 	}
 
 	@Override
-	protected synchronized void seek(DatabaseHandle dh, long location) {
+	protected synchronized void prepareRange(DatabaseHandle dh, long byteIndex,
+			int firstNum, long numBytes, int lastNum) {
+		super.prepareRange(dh, byteIndex, firstNum, numBytes, lastNum);
+		seek(dh);
+	}
+
+	private synchronized void seek(DatabaseHandle dh) {
 		lastUsed = dh;
-		thisEntry = location / entrySize;
+		thisEntry = dh.location / entrySize;
 		nextStart = (thisEntry + 1) * entrySize;
 		try {
 			fis.getChannel().position(
 					entryPoints[(int) (thisEntry - firstEntry)]);
 			myStream = new GZIPInputStream(fis, bufferSize);
-			dh.location = thisEntry * entrySize;
-			while (dh.location < location)
-				dh.location += myStream.skip(location - dh.location);
+			long curLoc = thisEntry * entrySize;
+			while (curLoc < dh.location)
+				curLoc += myStream.skip(dh.location - curLoc);
 		} catch (IOException e) {
 			throw new Error(e);
 		}
@@ -252,6 +273,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			myHandle = readFrom.getHandle();
 		}
 
+		// TODO Combine all calls into the prepareRange, getBytes paradigm
 		void setRange(ByteArrayOutputStream baos, long entry, long firstByte,
 				int numBytes) {
 			this.numBytes = numBytes;
