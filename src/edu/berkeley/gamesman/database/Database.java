@@ -1,6 +1,7 @@
 package edu.berkeley.gamesman.database;
 
 import java.io.FileInputStream;
+import java.io.IOError;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -67,7 +68,7 @@ public abstract class Database {
 				} catch (ClassNotFoundException e) {
 					throw new Error(e);
 				} catch (IOException e) {
-					throw new Error(e);
+					throw new IOError(e);
 				}
 		this.conf = conf;
 		this.solve = solve;
@@ -1021,7 +1022,7 @@ public abstract class Database {
 			} catch (ClassNotFoundException e) {
 				throw new Error(e);
 			} catch (IOException e) {
-				throw new Error(e);
+				throw new IOError(e);
 			}
 		if (uri != null)
 			conf.setProperty("gamesman.db.uri", uri);

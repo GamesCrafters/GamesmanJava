@@ -306,11 +306,7 @@ public class Configuration {
 		LineNumberReader r = null;
 		try {
 			r = new LineNumberReader(new FileReader(path));
-		} catch (FileNotFoundException e) {
-			throw new Error("Could not open property file", e);
-		}
-		String line;
-		try {
+			String line;
 			while ((line = r.readLine()) != null) {
 				line = line.trim();
 				if (line.equals("") || line.charAt(0) == '#')
@@ -325,7 +321,7 @@ public class Configuration {
 				props.setProperty(arr[0].trim(), arr[1].trim());
 			}
 		} catch (IOException e) {
-			throw new Error("Could not read from property file", e);
+			throw new IOError(e);
 		}
 	}
 
@@ -385,7 +381,7 @@ public class Configuration {
 			try {
 				return in.readLine();
 			} catch (IOException e) {
-				throw new Error("Could not read a line from console", e);
+				throw new IOError(e);
 			}
 		}
 		return s;
@@ -423,7 +419,7 @@ public class Configuration {
 	public Game<? extends State> getGame() {
 		return g;
 	}
-	
+
 	public static void storeNone(OutputStream os) throws IOException {
 		for (int i = 0; i < 4; i++)
 			os.write(0);

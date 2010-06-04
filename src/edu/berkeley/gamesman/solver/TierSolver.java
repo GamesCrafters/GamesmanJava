@@ -120,7 +120,7 @@ public class TierSolver extends Solver {
 					fw.write(Integer.toString(tier));
 					fw.close();
 				} catch (IOException e) {
-					throw new Error(e);
+					throw new IOError(e);
 				}
 			}
 		}

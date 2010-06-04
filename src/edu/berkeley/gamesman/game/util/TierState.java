@@ -58,7 +58,7 @@ public final class TierState implements State, Cloneable {
 			tier = is.tier;
 			hash = is.hash;
 		} else
-			throw new Error("Wrong State passed");
+			throw new Error("Type mismatch");
 	}
 
 	@Override

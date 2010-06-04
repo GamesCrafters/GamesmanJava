@@ -7,7 +7,7 @@ import java.util.zip.GZIPOutputStream;
 import edu.berkeley.gamesman.core.Configuration;
 
 public class ReadRecords {
-	private static final int BUFFER_SIZE = 4096;
+	static final int BUFFER_SIZE = 4096;
 
 	public static void main(String[] args) throws ClassNotFoundException,
 			IOException {
