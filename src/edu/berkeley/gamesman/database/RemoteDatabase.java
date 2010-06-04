@@ -1,7 +1,6 @@
 package edu.berkeley.gamesman.database;
 
 import java.io.BufferedInputStream;
-import java.io.IOError;
 import java.io.IOException;
 
 import edu.berkeley.gamesman.core.Configuration;
@@ -83,7 +82,7 @@ public class RemoteDatabase extends Database {
 			((RemoteHandle) dh).is = new BufferedInputStream(
 					p.getInputStream(), ReadRecords.BUFFER_SIZE);
 		} catch (IOException e) {
-			throw new IOError(e);
+			throw new Error(e);
 		}
 	}
 
@@ -101,7 +100,7 @@ public class RemoteDatabase extends Database {
 				if (dh.location == dh.lastByteIndex)
 					((RemoteHandle) dh).is.close();
 			} catch (IOException e) {
-				throw new IOError(e);
+				throw new Error(e);
 			}
 			return numBytes;
 		}

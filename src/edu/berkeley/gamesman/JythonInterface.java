@@ -1,10 +1,8 @@
 package edu.berkeley.gamesman;
 
 import java.io.BufferedReader;
-import java.io.IOError;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Properties;
@@ -64,7 +62,7 @@ public final class JythonInterface extends GamesmanApplication {
 				System.out.println("Please input a number");
 				continue;
 			} catch (IOException e) {
-				throw new IOError(e);
+				throw new Error(e);
 			}
 			if (i < 0 || i >= Consoles.values().length) {
 				System.out.println(i + " is out of range");

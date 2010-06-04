@@ -163,7 +163,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 				fos.write(entryBytes);
 				fos.close();
 			} catch (IOException e) {
-				throw new IOError(e);
+				throw new Error(e);
 			}
 		} else {
 			try {
@@ -172,7 +172,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 				else
 					myStream.close();
 			} catch (IOException e) {
-				throw new IOError(e);
+				throw new Error(e);
 			}
 		}
 	}
@@ -213,7 +213,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 					dh.location += bytesRead;
 					off += bytesRead;
 				} catch (IOException e) {
-					throw new IOError(e);
+					throw new Error(e);
 				}
 			}
 			if (len > 0) {
@@ -224,7 +224,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 							entryPoints[(int) (thisEntry - firstEntry)]);
 					myStream = new GZIPInputStream(fis, bufferSize);
 				} catch (IOException e) {
-					throw new IOError(e);
+					throw new Error(e);
 				}
 			}
 		}
@@ -250,7 +250,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			while (curLoc < dh.location)
 				curLoc += myStream.skip(dh.location - curLoc);
 		} catch (IOException e) {
-			throw new IOError(e);
+			throw new Error(e);
 		}
 	}
 
@@ -365,7 +365,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 							.getChannel().position();
 					thisCache.car.writeTo(fos);
 				} catch (IOException e) {
-					throw new IOError(e);
+					throw new Error(e);
 				}
 				synchronized (this) {
 					zippedStoragePool.release(thisCache.car);
@@ -391,7 +391,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 				gzo.write(wh.myStorage, 0, wh.numBytes);
 				gzo.finish();
 			} catch (IOException e) {
-				throw new IOError(e);
+				throw new Error(e);
 			}
 			closeHandle(wh);
 			wh = getNextHandle();

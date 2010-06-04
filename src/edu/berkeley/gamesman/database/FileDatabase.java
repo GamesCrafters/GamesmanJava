@@ -3,7 +3,6 @@ package edu.berkeley.gamesman.database;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOError;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
@@ -69,7 +68,7 @@ public final class FileDatabase extends Database {
 		try {
 			fd.seek(byteIndex + offset);
 		} catch (IOException e) {
-			throw new IOError(e);
+			throw new Error(e);
 		}
 	}
 
@@ -81,7 +80,7 @@ public final class FileDatabase extends Database {
 			try {
 				fd.seek(dh.location + offset);
 			} catch (IOException e) {
-				throw new IOError(e);
+				throw new Error(e);
 			}
 		}
 		if (!overwriteEdgesOk)
@@ -93,7 +92,7 @@ public final class FileDatabase extends Database {
 			dh.location += numBytes;
 			return numBytes;
 		} catch (IOException e) {
-			throw new IOError(e);
+			throw new Error(e);
 		}
 	}
 
@@ -113,7 +112,7 @@ public final class FileDatabase extends Database {
 			try {
 				fd.seek(dh.location + offset);
 			} catch (IOException e) {
-				throw new IOError(e);
+				throw new Error(e);
 			}
 		}
 		if (!edgesAreCorrect)
@@ -125,7 +124,7 @@ public final class FileDatabase extends Database {
 			dh.location += numBytes;
 			return numBytes;
 		} catch (IOException e) {
-			throw new IOError(e);
+			throw new Error(e);
 		}
 	}
 

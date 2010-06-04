@@ -321,7 +321,7 @@ public class Configuration {
 				props.setProperty(arr[0].trim(), arr[1].trim());
 			}
 		} catch (IOException e) {
-			throw new IOError(e);
+			throw new Error(e);
 		}
 	}
 
@@ -381,7 +381,7 @@ public class Configuration {
 			try {
 				return in.readLine();
 			} catch (IOException e) {
-				throw new IOError(e);
+				throw new Error(e);
 			}
 		}
 		return s;
