@@ -46,9 +46,12 @@ public class TierSolver extends Solver {
 
 	boolean parallelSolving;
 
+//	private long times[] = new long[5];
+
 	protected void solvePartialTier(Configuration conf, long start,
 			long hashes, TierSolverUpdater t, DatabaseHandle readDh,
 			DatabaseHandle writeDh) {
+//		long nano = System.nanoTime();
 		TierGame game = (TierGame) conf.getGame();
 		long current = start;
 		long stepNum = current % STEP_SIZE;
@@ -61,12 +64,18 @@ public class TierSolver extends Solver {
 		TierState[] children = new TierState[game.maxChildren()];
 		for (int i = 0; i < children.length; i++)
 			children[i] = new TierState();
+//		long lastNano = nano;
+//		nano = System.nanoTime();
+//		times[0] = nano - lastNano;
 		for (long count = 0L; count < hashes; count++) {
 			if (stepNum == STEP_SIZE) {
 				t.calculated(STEP_SIZE);
 				stepNum = 0;
 			}
 			PrimitiveValue pv = game.primitiveValue();
+//			lastNano = nano;
+//			nano = System.nanoTime();
+//			times[1] += nano - lastNano;
 			switch (pv) {
 			case UNDECIDED:
 				int len = game.validMoves(children);
@@ -75,6 +84,9 @@ public class TierSolver extends Solver {
 							game.stateToHash(children[i])), vals[i]);
 					vals[i].previousPosition();
 				}
+//				lastNano = nano;
+//				nano = System.nanoTime();
+//				times[2] += nano - lastNano;
 				Record newVal = game.combine(vals, 0, len);
 				writeDb.putRecord(writeDh, current, game.getRecord(curState,
 						newVal));
@@ -87,13 +99,33 @@ public class TierSolver extends Solver {
 				writeDb.putRecord(writeDh, current, game.getRecord(curState,
 						prim));
 			}
+//			lastNano = nano;
+//			nano = System.nanoTime();
+//			times[3] += nano - lastNano;
 			if (count < hashes - 1) {
 				game.nextHashInTier();
 				curState.hash++;
 			}
 			++current;
 			++stepNum;
+//			lastNano = nano;
+//			nano = System.nanoTime();
+//			times[4] += nano - lastNano;
 		}
+//		long sumTimes = 0;
+//		for (int i = 0; i < 5; i++) {
+//			sumTimes += times[i];
+//		}
+//		assert Util.debug(DebugFacility.SOLVER, "Initializing: " + 1000
+//				* times[0] / sumTimes / 10D);
+//		assert Util.debug(DebugFacility.SOLVER, "Primitive Value: " + 1000
+//				* times[1] / sumTimes / 10D);
+//		assert Util.debug(DebugFacility.SOLVER, "Calculating/Reading Chilren: "
+//				+ 1000 * times[2] / sumTimes / 10D);
+//		assert Util.debug(DebugFacility.SOLVER, "Storing records: " + 1000
+//				* times[3] / sumTimes / 10D);
+//		assert Util.debug(DebugFacility.SOLVER, "Stepping: " + 1000 * times[4]
+//				/ sumTimes / 10D);
 	}
 
 	@Override

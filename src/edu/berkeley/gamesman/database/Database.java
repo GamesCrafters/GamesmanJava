@@ -464,8 +464,8 @@ public abstract class Database {
 			boolean edgesAreCorrect) {
 		final int numBytes = (int) Math.min(dh.lastByteIndex - dh.location,
 				maxLen);
-		int remainBytes = numBytes;
-		if (edgesAreCorrect) {
+		if (edgesAreCorrect || !superCompress
+				|| (dh.firstNum == 0 && dh.lastNum == 0)) {
 			putBytes(dh, dh.location, arr, off, numBytes);
 			dh.location += numBytes;
 			return numBytes;
@@ -473,6 +473,7 @@ public abstract class Database {
 			if (dh.innerHandle == null)
 				dh.innerHandle = getHandle();
 		}
+		int remainBytes = numBytes;
 		final long beforeBytes = dh.location - dh.byteIndex;
 		long afterBytes = dh.lastByteIndex - (dh.location + numBytes);
 		if (beforeBytes < recordGroupByteLength && dh.firstNum > 0) {
@@ -596,12 +597,13 @@ public abstract class Database {
 			final int maxLen, final boolean overwriteEdgesOk) {
 		final int numBytes = (int) Math.min(dh.lastByteIndex - dh.location,
 				maxLen);
-		int remainBytes = numBytes;
-		if (overwriteEdgesOk) {
+		if (overwriteEdgesOk || !superCompress
+				|| (dh.firstNum == 0 && dh.lastNum == 0)) {
 			getBytes(dh, dh.location, arr, off, numBytes);
 			dh.location += numBytes;
 			return numBytes;
 		}
+		int remainBytes = numBytes;
 		long byteLoc = dh.location - dh.byteIndex;
 		long afterBytes = dh.lastByteIndex - (dh.location + numBytes);
 		if (byteLoc < recordGroupByteLength && dh.firstNum > 0) {
