@@ -69,13 +69,11 @@ public enum PrimitiveValue {
 	 * @return The value of this move from the perspective of the other player.
 	 */
 	public PrimitiveValue flipValue() {
-		switch (this) {
-		case LOSE:
+		if (this == LOSE)
 			return WIN;
-		case WIN:
+		else if (this == WIN)
 			return LOSE;
-		default:
+		else
 			return this;
-		}
 	}
 }

@@ -51,14 +51,17 @@ public class TierSolver extends Solver {
 	protected void solvePartialTier(Configuration conf, long start,
 			long hashes, TierSolverUpdater t, DatabaseHandle readDh,
 			DatabaseHandle writeDh) {
-		long firstNano = 0, nano = 0;
-		if (Util.debug(DebugFacility.SOLVER)) {
+		final long firstNano;
+		long nano = 0;
+		final boolean debugSolver = Util.debug(DebugFacility.SOLVER);
+		if (debugSolver) {
 			for (int i = 0; i < 7; i++) {
 				times[i] = 0;
 			}
 			firstNano = System.nanoTime();
 			nano = firstNano;
-		}
+		} else
+			firstNano = 0;
 		TierGame game = (TierGame) conf.getGame();
 		long current = start;
 		long stepNum = current % STEP_SIZE;
@@ -72,7 +75,7 @@ public class TierSolver extends Solver {
 		for (int i = 0; i < children.length; i++)
 			children[i] = new TierState();
 		long lastNano;
-		if (Util.debug(DebugFacility.SOLVER)) {
+		if (debugSolver) {
 			lastNano = nano;
 			nano = System.nanoTime();
 			times[0] = nano - lastNano;
@@ -83,15 +86,14 @@ public class TierSolver extends Solver {
 				stepNum = 0;
 			}
 			PrimitiveValue pv = game.primitiveValue();
-			if (Util.debug(DebugFacility.SOLVER)) {
+			if (debugSolver) {
 				lastNano = nano;
 				nano = System.nanoTime();
 				times[1] += nano - lastNano;
 			}
-			switch (pv) {
-			case UNDECIDED:
+			if (pv == PrimitiveValue.UNDECIDED) {
 				int len = game.validMoves(children);
-				if (Util.debug(DebugFacility.SOLVER)) {
+				if (debugSolver) {
 					lastNano = nano;
 					nano = System.nanoTime();
 					times[2] += nano - lastNano;
@@ -101,7 +103,7 @@ public class TierSolver extends Solver {
 							game.stateToHash(children[i])), vals[i]);
 					vals[i].previousPosition();
 				}
-				if (Util.debug(DebugFacility.SOLVER)) {
+				if (debugSolver) {
 					lastNano = nano;
 					nano = System.nanoTime();
 					times[3] += nano - lastNano;
@@ -109,11 +111,10 @@ public class TierSolver extends Solver {
 				Record newVal = game.combine(vals, 0, len);
 				writeDb.putRecord(writeDh, current, game.getRecord(curState,
 						newVal));
+			} else if (pv == PrimitiveValue.IMPOSSIBLE) {
 				break;
-			case IMPOSSIBLE:
-				break;
-			default:
-				if (Util.debug(DebugFacility.SOLVER)) {
+			} else {
+				if (debugSolver) {
 					lastNano = nano;
 					nano = System.nanoTime();
 					times[2] += nano - lastNano;
@@ -126,7 +127,7 @@ public class TierSolver extends Solver {
 				writeDb.putRecord(writeDh, current, game.getRecord(curState,
 						prim));
 			}
-			if (Util.debug(DebugFacility.SOLVER)) {
+			if (debugSolver) {
 				lastNano = nano;
 				nano = System.nanoTime();
 				times[4] += nano - lastNano;
@@ -137,7 +138,7 @@ public class TierSolver extends Solver {
 			}
 			++current;
 			++stepNum;
-			if (Util.debug(DebugFacility.SOLVER)) {
+			if (debugSolver) {
 				lastNano = nano;
 				nano = System.nanoTime();
 				times[5] += nano - lastNano;
@@ -146,14 +147,14 @@ public class TierSolver extends Solver {
 				times[6] += nano - lastNano;
 			}
 		}
-		if (Util.debug(DebugFacility.SOLVER)) {
+		if (debugSolver) {
 			long sumTimes = nano - firstNano - times[6] * 6;
-			Util.debug(DebugFacility.SOLVER, "Initializing: " + 1000
-					* times[0] / sumTimes / 10D);
+			Util.debug(DebugFacility.SOLVER, "Initializing: " + 1000 * times[0]
+					/ sumTimes / 10D);
 			Util.debug(DebugFacility.SOLVER, "Primitive Value: " + 1000
 					* (times[1] - times[6]) / sumTimes / 10D);
-			Util.debug(DebugFacility.SOLVER, "Calculating Chilren: "
-					+ 1000 * (times[2] - times[6]) / sumTimes / 10D);
+			Util.debug(DebugFacility.SOLVER, "Calculating Chilren: " + 1000
+					* (times[2] - times[6]) / sumTimes / 10D);
 			Util.debug(DebugFacility.SOLVER, "Reading Children: " + 1000
 					* (times[3] - times[6]) / sumTimes / 10D);
 			Util.debug(DebugFacility.SOLVER, "Storing records: " + 1000

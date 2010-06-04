@@ -44,7 +44,7 @@ public abstract class Database {
 
 	private final int recordGroupByteBits;
 
-	private final boolean superCompress;
+	protected final boolean superCompress;
 
 	protected final boolean recordGroupUsesLong;
 

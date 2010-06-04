@@ -261,7 +261,7 @@ public abstract class Game<S extends State> {
 		if (conf.remotenessStates > 0) {
 			lastSize = size;
 			size = 0;
-			if (bestVal.equals(PrimitiveValue.LOSE)) {
+			if (bestVal == PrimitiveValue.LOSE) {
 				int bestRemoteness = 0;
 				for (int i = 0; i < lastSize; i++) {
 					int remoteness = arrVals[i + offset].remoteness;

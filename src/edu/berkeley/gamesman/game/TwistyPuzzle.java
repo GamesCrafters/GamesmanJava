@@ -31,7 +31,7 @@ public abstract class TwistyPuzzle<S extends State> extends Game<S> {
 
 	@Override
 	public long getRecord(S recordState, Record fromRecord) {
-		if (fromRecord.value.equals(PrimitiveValue.UNDECIDED))
+		if (fromRecord.value == PrimitiveValue.UNDECIDED)
 			return 0;
 		else
 			return fromRecord.remoteness + 1;

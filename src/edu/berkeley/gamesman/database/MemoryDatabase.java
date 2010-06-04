@@ -157,4 +157,22 @@ public class MemoryDatabase extends DatabaseWrapper {
 	public long numRecords() {
 		return myNumRecords;
 	}
+
+	//TODO Do this without cheating
+	@Override
+	public long getRecord(DatabaseHandle dh, long recordIndex) {
+		if (!superCompress && recordGroupByteLength == 1)
+			return memoryStorage[(int) (recordIndex - firstByte)];
+		else
+			return super.getRecord(dh, recordIndex);
+	}
+
+	//TODO Do this without cheating
+	@Override
+	public void putRecord(DatabaseHandle dh, long recordIndex, long r) {
+		if (!superCompress && recordGroupByteLength == 1)
+			memoryStorage[(int) (recordIndex - firstByte)] = (byte) r;
+		else
+			super.putRecord(dh, recordIndex, r);
+	}
 }

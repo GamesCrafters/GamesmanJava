@@ -9,7 +9,6 @@ import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.game.util.PieceRearranger;
 import edu.berkeley.gamesman.util.ExpCoefs;
 import edu.berkeley.gamesman.util.Pair;
-import edu.berkeley.gamesman.util.Util;
 
 /**
  * Implementation of Connect 4 using the general IterArrangerHasher
@@ -587,9 +586,9 @@ public final class Connect4 extends TierGame {
 	@Override
 	public long getRecord(TierState recordState, Record fromRecord) {
 		if (conf.remotenessStates > 0) {
-			if (fromRecord.value.equals(PrimitiveValue.TIE)) {
+			if (fromRecord.value == PrimitiveValue.TIE) {
 				return gameSize + 1;
-			} else if (fromRecord.value.equals(PrimitiveValue.UNDECIDED)) {
+			} else if (fromRecord.value == PrimitiveValue.UNDECIDED) {
 				return gameSize + 2;
 			} else {
 				return fromRecord.remoteness;

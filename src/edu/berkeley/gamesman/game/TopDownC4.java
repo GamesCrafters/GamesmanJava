@@ -403,9 +403,9 @@ public final class TopDownC4 extends TopDownMutaGame<C4State> {
 	@Override
 	public long getRecord(C4State recordState, Record fromRecord) {
 		if (conf.remotenessStates > 0) {
-			if (fromRecord.value.equals(PrimitiveValue.TIE)) {
+			if (fromRecord.value == PrimitiveValue.TIE) {
 				return gameSize + 1;
-			} else if (fromRecord.value.equals(PrimitiveValue.UNDECIDED)) {
+			} else if (fromRecord.value == PrimitiveValue.UNDECIDED) {
 				return gameSize + 2;
 			} else {
 				return fromRecord.remoteness;
