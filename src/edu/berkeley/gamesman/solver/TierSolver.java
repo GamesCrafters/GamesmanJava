@@ -73,7 +73,7 @@ public class TierSolver extends Solver {
 		Record prim = new Record(conf);
 		TierState[] children = new TierState[game.maxChildren()];
 		for (int i = 0; i < children.length; i++)
-			children[i] = new TierState();
+			children[i] = game.newState();
 		long lastNano;
 		if (debugSolver) {
 			lastNano = nano;
