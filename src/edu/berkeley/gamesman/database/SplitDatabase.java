@@ -18,8 +18,9 @@ public class SplitDatabase extends Database {
 			long firstRecord, long numRecords) {
 		super(uri, conf, solve, firstRecord, numRecords);
 		try {
-			FileInputStream fis = new FileInputStream(conf
-					.getProperty("gamesman.db.uri"));
+			if (uri == null)
+				uri = conf.getProperty("gamesman.db.uri");
+			FileInputStream fis = new FileInputStream(uri);
 			skipHeader(fis);
 			ArrayList<Database> databaseList = new ArrayList<Database>();
 			Scanner scan = new Scanner(fis);

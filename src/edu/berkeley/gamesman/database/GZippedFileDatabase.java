@@ -56,7 +56,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			final Database readFrom, boolean storeConf, long maxMem)
 			throws IOException {
 		super(uri, conf, true, readFrom.firstRecord(), readFrom.numRecords(),
-				readFrom);
+				readFrom.getHeader());
 		myFile = new File(uri);
 		entrySize = conf.getInteger("zip.entryKB", 64) << 10;
 		bufferSize = conf.getInteger("zip.bufferKB", 4) << 10;

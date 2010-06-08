@@ -7,7 +7,7 @@ public abstract class DatabaseWrapper extends Database {
 
 	public DatabaseWrapper(Database db, String uri, Configuration config,
 			boolean solve, long firstRecord, long numRecords) {
-		super(uri, config, solve, firstRecord, numRecords, db);
+		super(uri, config, solve, firstRecord, numRecords, db.getHeader());
 		this.db = db;
 	}
 }
