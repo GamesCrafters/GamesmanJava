@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.parallel;
+package edu.berkeley.gamesman.util;
 
 import java.io.InputStream;
 import java.util.Scanner;

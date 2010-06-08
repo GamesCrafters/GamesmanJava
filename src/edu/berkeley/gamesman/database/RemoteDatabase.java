@@ -2,13 +2,11 @@ package edu.berkeley.gamesman.database;
 
 import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.parallel.ErrorThread;
+import edu.berkeley.gamesman.util.ErrorThread;
 
 public class RemoteDatabase extends Database {
 	private final String user, server, confFile, gamesmanPath, remoteFile;
@@ -72,10 +70,11 @@ public class RemoteDatabase extends Database {
 		command.append(remoteFile);
 		command.append(" ");
 		long firstRecord = toFirstRecord(byteIndex);
-		long numRecords = toLastRecord(byteIndex + numBytes) - firstRecord;
+		long lastRecord = toLastRecord(byteIndex + numBytes);
 		firstRecord += firstNum;
 		if (lastNum > 0)
-			numRecords -= recordsPerGroup - lastNum;
+			lastRecord -= recordsPerGroup - lastNum;
+		long numRecords = lastRecord - firstRecord;
 		command.append(firstRecord);
 		command.append(" ");
 		command.append(numRecords);
