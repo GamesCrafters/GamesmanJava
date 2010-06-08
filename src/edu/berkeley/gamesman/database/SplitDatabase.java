@@ -15,8 +15,9 @@ public class SplitDatabase extends Database {
 	private final int[] lastNums;
 
 	public SplitDatabase(String uri, Configuration conf, boolean solve,
-			long firstRecord, long numRecords) {
-		super(uri, conf, solve, firstRecord, numRecords);
+			long firstRecord, long numRecords, DatabaseHeader header) {
+		super(uri, conf, solve, firstRecord, numRecords,
+				header == null ? getSplitHeader(uri) : header);
 		try {
 			if (uri == null)
 				uri = conf.getProperty("gamesman.db.uri");
@@ -25,8 +26,8 @@ public class SplitDatabase extends Database {
 			ArrayList<Database> databaseList = new ArrayList<Database>();
 			Scanner scan = new Scanner(fis);
 			while (scan.hasNext()) {
-				databaseList.add(Database.openDatabase(scan.next(), solve, scan
-						.nextLong(), scan.nextLong()));
+				databaseList.add(Database.openDatabase(scan.next(), conf,
+						solve, scan.nextLong(), scan.nextLong(), getHeader()));
 			}
 			this.databaseList = databaseList.toArray(new Database[databaseList
 					.size()]);
@@ -43,6 +44,18 @@ public class SplitDatabase extends Database {
 				lastByteIndices[i] = lastByte(dbLastRecord);
 				lastNums[i] = toNum(dbLastRecord);
 			}
+		} catch (IOException e) {
+			throw new Error(e);
+		}
+	}
+
+	private static DatabaseHeader getSplitHeader(String uri) {
+		try {
+			FileInputStream fis = new FileInputStream(uri);
+			byte[] headBytes = new byte[18];
+			readFully(fis, headBytes, 0, 18);
+			fis.close();
+			return new DatabaseHeader(headBytes);
 		} catch (IOException e) {
 			throw new Error(e);
 		}

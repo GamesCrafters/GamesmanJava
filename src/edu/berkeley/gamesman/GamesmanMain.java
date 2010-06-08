@@ -1,13 +1,10 @@
 package edu.berkeley.gamesman;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.Properties;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.State;
-import edu.berkeley.gamesman.database.Database;
-import edu.berkeley.gamesman.database.DatabaseWrapper;
 import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.master.Master;
 import edu.berkeley.gamesman.solver.Solver;
@@ -48,12 +45,8 @@ public final class GamesmanMain extends GamesmanApplication {
 		if (solverName == null)
 			throw new Error(
 					"You must specify a solver with the property gamesman.solver");
-		String[] dbType = conf.getProperty("gamesman.database").split(":");
 
 		Class<? extends Solver> s = null;
-		Class<? extends Database> d = null;
-		ArrayList<Class<? extends DatabaseWrapper>> wrappers = new ArrayList<Class<? extends DatabaseWrapper>>(
-				dbType.length - 1);
 		// Class<? extends Game<Object>> g;
 		// Class<? extends Hasher<Object>> h;
 		// g = Util.typedForName("edu.berkeley.gamesman.game." + gameName);
@@ -62,18 +55,6 @@ public final class GamesmanMain extends GamesmanApplication {
 					Solver.class);
 			// h = Util.typedForName("edu.berkeley.gamesman.hasher." +
 			// hasherName);
-
-			d = Class.forName(
-					"edu.berkeley.gamesman.database."
-							+ dbType[dbType.length - 1]).asSubclass(
-					Database.class);
-
-			for (int i = dbType.length - 2; i >= 0; i--) {
-				Class<? extends DatabaseWrapper> dw = Class.forName(
-						"edu.berkeley.gamesman.database." + dbType[i])
-						.asSubclass(DatabaseWrapper.class);
-				wrappers.add(dw);
-			}
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -94,7 +75,7 @@ public final class GamesmanMain extends GamesmanApplication {
 			}
 		} else {
 			assert Util.debug(DebugFacility.CORE, "Defaulting to solve...");
-			Master m = new Master(conf, s, d, wrappers);
+			Master m = new Master(conf, s);
 			m.run();
 		}
 

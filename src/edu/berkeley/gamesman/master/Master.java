@@ -31,27 +31,13 @@ public final class Master implements TaskFactory {
 
 	private final Configuration conf;
 
-	public Master(Configuration conf, Class<? extends Solver> solverc,
-			Class<? extends Database> databasec,
-			List<Class<? extends DatabaseWrapper>> wrappers) {
+	public Master(Configuration conf, Class<? extends Solver> solverc) {
 
 		Task.setTaskFactory(this);
 
 		try {
 			game = conf.getGame();
-			Database database = databasec.getConstructor(String.class,
-					Configuration.class, Boolean.TYPE, Long.TYPE, Long.TYPE)
-					.newInstance(conf.getProperty("gamesman.db.uri"), conf,
-							true, 0, -1);
-			for (Class<? extends DatabaseWrapper> wrapper : wrappers) {
-				database = wrapper
-						.getConstructor(Database.class, String.class,
-								Configuration.class, Boolean.TYPE, Long.TYPE,
-								Long.TYPE).newInstance(database,
-								conf.getProperty("gamesman.db.uri"), conf,
-								true, 0, -1);
-			}
-			this.database = database;
+			this.database = Database.openDatabase(conf, true);
 			conf.db = database;
 			this.conf = conf;
 			solver = solverc.getConstructor(Configuration.class).newInstance(

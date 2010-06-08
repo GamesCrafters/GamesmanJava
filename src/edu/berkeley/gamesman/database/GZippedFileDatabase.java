@@ -19,8 +19,9 @@ import edu.berkeley.gamesman.util.qll.QuickLinkedList;
  */
 public class GZippedFileDatabase extends Database implements Runnable {
 	public GZippedFileDatabase(String uri, Configuration conf, boolean solve,
-			long firstRecord, long numRecords) throws IOException {
-		super(uri, conf, solve, firstRecord, numRecords);
+			long firstRecord, long numRecords, DatabaseHeader header)
+			throws IOException {
+		super(uri, conf, solve, firstRecord, numRecords, header);
 		myFile = new File(uri);
 		entrySize = conf.getInteger("zip.entryKB", 64) << 10;
 		bufferSize = conf.getInteger("zip.bufferKB", 4) << 10;

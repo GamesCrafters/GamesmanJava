@@ -1,5 +1,6 @@
 package edu.berkeley.gamesman.database;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -162,24 +163,6 @@ public abstract class Database {
 				+ " records per group\n" + recordGroupByteLength
 				+ " bytes per group");
 
-	}
-
-	/**
-	 * Initialize a Database given a URI and a Configuration. This method may
-	 * either open an existing database or create a new one. If a new one is
-	 * created, the Configuration should be stored. If config is null, it will
-	 * use whatever is in the database.
-	 * 
-	 * @param uri
-	 *            The URI that the Database is associated with
-	 * @param conf
-	 *            The Configuration that is relevant
-	 * @param solve
-	 *            true for solving, false for playing
-	 */
-	public Database(String uri, Configuration conf, boolean solve,
-			long firstRecord, long numRecords) {
-		this(uri, conf, solve, firstRecord, numRecords, null);
 	}
 
 	/**
@@ -949,6 +932,10 @@ public abstract class Database {
 		return toByte(numHashes);
 	}
 
+	public static Database openDatabase(Configuration conf, boolean solve) {
+		return openDatabase(null, conf, solve);
+	}
+	
 	public static Database openDatabase(String uri, boolean solve) {
 		return openDatabase(uri, null, solve);
 	}
@@ -968,6 +955,11 @@ public abstract class Database {
 		return openDatabase(uri, conf, solve, 0, -1);
 	}
 
+	public static Database openDatabase(String uri, Configuration conf,
+			boolean solve, long firstRecord, long numRecords) {
+		return openDatabase(uri, conf, solve, firstRecord, numRecords, null);
+	}
+
 	/**
 	 * @param solve
 	 *            true for solving, false for playing
@@ -979,11 +971,14 @@ public abstract class Database {
 	 *         the database class
 	 */
 	public static Database openDatabase(String uri, Configuration conf,
-			boolean solve, long firstRecord, long numRecords) {
-		if (conf == null)
+			boolean solve, long firstRecord, long numRecords,
+			DatabaseHeader header) {
+		if (uri == null)
+			uri = conf.getProperty("gamesman.db.uri");
+		else if (conf == null) {
 			try {
 				FileInputStream fis = new FileInputStream(uri);
-				fis.skip(18);
+				skipFully(fis, 18);
 				conf = Configuration.load(fis);
 				fis.close();
 			} catch (ClassNotFoundException e) {
@@ -991,8 +986,7 @@ public abstract class Database {
 			} catch (IOException e) {
 				throw new Error(e);
 			}
-		if (uri != null)
-			conf.setProperty("gamesman.db.uri", uri);
+		}
 		String[] dbType = conf.getProperty("gamesman.database").split(":");
 		try {
 			Class<? extends Database> dbClass = Class.forName(
@@ -1000,18 +994,17 @@ public abstract class Database {
 							+ dbType[dbType.length - 1]).asSubclass(
 					Database.class);
 			conf.db = dbClass.getConstructor(String.class, Configuration.class,
-					Boolean.TYPE, Long.TYPE, Long.TYPE).newInstance(
-					conf.getProperty("gamesman.db.uri"), conf, solve,
-					firstRecord, numRecords);
+					Boolean.TYPE, Long.TYPE, Long.TYPE, DatabaseHeader.class)
+					.newInstance(uri, conf, solve, firstRecord, numRecords,
+							header);
 			for (int i = dbType.length - 2; i >= 0; i--) {
 				Class<? extends DatabaseWrapper> wrapperClass = Class.forName(
 						"edu.berkeley.gamesman.database." + dbType[i])
 						.asSubclass(DatabaseWrapper.class);
 				conf.db = wrapperClass.getConstructor(Database.class,
 						String.class, Configuration.class, Boolean.TYPE,
-						Long.TYPE, Long.TYPE).newInstance(conf.db,
-						conf.getProperty("gamesman.db.uri"), conf, solve,
-						firstRecord, numRecords);
+						Long.TYPE, Long.TYPE).newInstance(conf.db, uri, conf,
+						solve, firstRecord, numRecords);
 			}
 		} catch (InstantiationException e) {
 			e.printStackTrace();
@@ -1029,6 +1022,17 @@ public abstract class Database {
 			e.printStackTrace();
 		}
 		return conf.db;
+	}
+
+	private static void skipFully(InputStream is, long len) throws IOException {
+		while (len > 0) {
+			long bytesSkipped = is.skip(len);
+			if (bytesSkipped < 0)
+				break;
+			else {
+				len -= bytesSkipped;
+			}
+		}
 	}
 
 	protected final void storeNone(OutputStream os) throws IOException {

@@ -22,14 +22,15 @@ public final class FileDatabase extends Database {
 	private DatabaseHandle lastUsed;
 
 	public FileDatabase(String uri, Configuration config, boolean solve,
-			long firstRecord, long numRecords) throws IOException {
-		this(uri, config, solve, firstRecord, numRecords, true);
+			long firstRecord, long numRecords, DatabaseHeader header)
+			throws IOException {
+		this(uri, config, solve, firstRecord, numRecords, header, true);
 	}
 
 	public FileDatabase(String uri, Configuration config, boolean solve,
-			long firstRecord, long numRecords, boolean storeConf)
-			throws IOException {
-		super(uri, config, solve, firstRecord, numRecords);
+			long firstRecord, long numRecords, DatabaseHeader header,
+			boolean storeConf) throws IOException {
+		super(uri, config, solve, firstRecord, numRecords, header);
 		myFile = new File(uri);
 		if (solve) {
 			FileOutputStream fos = new FileOutputStream(myFile);

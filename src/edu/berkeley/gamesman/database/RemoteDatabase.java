@@ -14,15 +14,16 @@ public class RemoteDatabase extends Database {
 	private int maxCommandLen = -1;
 
 	public RemoteDatabase(String uri, Configuration conf, boolean solve,
-			long firstRecord, long numRecords) {
-		this(uri, conf, solve, firstRecord, numRecords, conf
+			long firstRecord, long numRecords, DatabaseHeader header) {
+		this(uri, conf, solve, firstRecord, numRecords, header, conf
 				.getProperty("gamesman.remote.server"), conf
 				.getProperty("gamesman.remote.db.uri"));
 	}
 
 	public RemoteDatabase(String uri, Configuration conf, boolean solve,
-			long firstRecord, long numRecords, String server, String remoteFile) {
-		super(uri, conf, solve, firstRecord, numRecords);
+			long firstRecord, long numRecords, DatabaseHeader header,
+			String server, String remoteFile) {
+		super(uri, conf, solve, firstRecord, numRecords, header);
 		user = conf.getProperty("gamesman.remote.user", null);
 		this.server = server;
 		gamesmanPath = conf.getProperty("gamesman.remote.path");
