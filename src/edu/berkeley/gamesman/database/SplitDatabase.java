@@ -146,6 +146,10 @@ public class SplitDatabase extends Database {
 			db++;
 		}
 		sh.location += numBytes;
+		if (sh.lastByteIndex == sh.location) {
+			for (int i = sh.currentDb; sh.dbLoc[i] >= 0; i++)
+				sh.dbLoc[i] = -1;
+		}
 		return numBytes;
 	}
 
