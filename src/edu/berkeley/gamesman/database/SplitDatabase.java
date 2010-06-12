@@ -41,8 +41,6 @@ public class SplitDatabase extends Database {
 				databaseList.add(Database.openDatabase(dbType, dbUri, conf,
 						solve, dbFirstRecord, dbNumRecords, getHeader(
 								dbFirstRecord, dbNumRecords)));
-				// TODO Needs header for recordGroup information, but
-				// firstRecord/numRecords is incorrect
 			}
 			this.databaseList = databaseList.toArray(new Database[databaseList
 					.size()]);
