@@ -54,8 +54,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 	}
 
 	public GZippedFileDatabase(String uri, final Configuration conf,
-			final Database readFrom, boolean storeConf, long maxMem)
-			throws IOException {
+			final Database readFrom, long maxMem) throws IOException {
 		super(uri, conf, true, readFrom.firstRecord(), readFrom.numRecords(),
 				readFrom.getHeader());
 		myFile = new File(uri);
@@ -71,10 +70,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		waitingCaches = new QuickLinkedList<Pair<ByteArrayOutputStream, Long>>();
 		waitingCachesIter = waitingCaches.listIterator();
 		fos = new FileOutputStream(myFile);
-		if (storeConf)
-			store(fos);
-		else
-			storeNone(fos);
+		store(fos);
 		tableOffset = fos.getChannel().position();
 		fos.getChannel().position(tableOffset + (numEntries << 3));
 		zippedStoragePool = new Pool<ByteArrayOutputStream>(
@@ -430,7 +426,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		outConf.setProperty("zip.entryKB", Integer.toString(entryKB));
 		outConf.setProperty("zip.bufferKB", Integer.toString(bufferKB));
 		GZippedFileDatabase writeTo = new GZippedFileDatabase(zipDb, outConf,
-				readFrom, true, maxMem);
+				readFrom, maxMem);
 		Thread[] threadList = new Thread[numThreads];
 		DatabaseHandle[] readHandle = new DatabaseHandle[numThreads];
 		for (int i = 0; i < numThreads; i++) {

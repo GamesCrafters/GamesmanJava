@@ -420,11 +420,6 @@ public class Configuration {
 		return g;
 	}
 
-	public static void storeNone(OutputStream os) throws IOException {
-		for (int i = 0; i < 4; i++)
-			os.write(0);
-	}
-
 	public static void skipConf(InputStream is) throws IOException {
 		int confLength = 0;
 		for (int i = 0; i < 4; i++) {

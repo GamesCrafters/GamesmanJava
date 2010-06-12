@@ -1,6 +1,5 @@
 package edu.berkeley.gamesman.database;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,7 +42,7 @@ public abstract class Database {
 
 	protected final int recordGroupByteLength;
 
-	private final int recordGroupByteBits;
+	protected final int recordGroupByteBits;
 
 	protected final boolean superCompress;
 
@@ -411,17 +410,18 @@ public abstract class Database {
 	 */
 	protected int putBytes(DatabaseHandle dh, byte[] arr, int off, int maxLen,
 			boolean edgesAreCorrect) {
-		final int numBytes = (int) Math.min(dh.lastByteIndex - dh.location,
-				maxLen);
-		if (edgesAreCorrect || !superCompress
-				|| (dh.firstNum == 0 && dh.lastNum == 0)) {
+		final int numBytes;
+		if (edgesAreCorrect) {
+			numBytes = (int) Math.min(dh.lastByteIndex - dh.location, maxLen);
 			putBytes(dh, dh.location, arr, off, numBytes);
 			dh.location += numBytes;
 			return numBytes;
-		} else {
-			if (dh.innerHandle == null)
-				dh.innerHandle = getHandle();
+		} else if (!superCompress || (dh.firstNum == 0 && dh.lastNum == 0)) {
+			return putBytes(dh, arr, off, maxLen, true);
 		}
+		numBytes = (int) Math.min(dh.lastByteIndex - dh.location, maxLen);
+		if (dh.innerHandle == null)
+			dh.innerHandle = getHandle();
 		int remainBytes = numBytes;
 		final long beforeBytes = dh.location - dh.byteIndex;
 		long afterBytes = dh.lastByteIndex - (dh.location + numBytes);
@@ -544,14 +544,16 @@ public abstract class Database {
 	 */
 	protected int getBytes(final DatabaseHandle dh, final byte[] arr, int off,
 			final int maxLen, final boolean overwriteEdgesOk) {
-		final int numBytes = (int) Math.min(dh.lastByteIndex - dh.location,
-				maxLen);
-		if (overwriteEdgesOk || !superCompress
-				|| (dh.firstNum == 0 && dh.lastNum == 0)) {
+		final int numBytes;
+		if (overwriteEdgesOk) {
+			numBytes = (int) Math.min(dh.lastByteIndex - dh.location, maxLen);
 			getBytes(dh, dh.location, arr, off, numBytes);
 			dh.location += numBytes;
 			return numBytes;
+		} else if (!superCompress || (dh.firstNum == 0 && dh.lastNum == 0)) {
+			return getBytes(dh, arr, off, maxLen, true);
 		}
+		numBytes = (int) Math.min(dh.lastByteIndex - dh.location, maxLen);
 		int remainBytes = numBytes;
 		long byteLoc = dh.location - dh.byteIndex;
 		long afterBytes = dh.lastByteIndex - (dh.location + numBytes);
@@ -935,7 +937,7 @@ public abstract class Database {
 	public static Database openDatabase(Configuration conf, boolean solve) {
 		return openDatabase(null, conf, solve);
 	}
-	
+
 	public static Database openDatabase(String uri, boolean solve) {
 		return openDatabase(uri, null, solve);
 	}
@@ -957,7 +959,8 @@ public abstract class Database {
 
 	public static Database openDatabase(String uri, Configuration conf,
 			boolean solve, long firstRecord, long numRecords) {
-		return openDatabase(uri, conf, solve, firstRecord, numRecords, null);
+		return openDatabase(null, uri, conf, solve, firstRecord, numRecords,
+				null);
 	}
 
 	/**
@@ -970,9 +973,9 @@ public abstract class Database {
 	 * @return the Database used to store this particular solve Could not load
 	 *         the database class
 	 */
-	public static Database openDatabase(String uri, Configuration conf,
-			boolean solve, long firstRecord, long numRecords,
-			DatabaseHeader header) {
+	public static Database openDatabase(String dbType, String uri,
+			Configuration conf, boolean solve, long firstRecord,
+			long numRecords, DatabaseHeader header) {
 		if (uri == null)
 			uri = conf.getProperty("gamesman.db.uri");
 		else if (conf == null) {
@@ -987,19 +990,21 @@ public abstract class Database {
 				throw new Error(e);
 			}
 		}
-		String[] dbType = conf.getProperty("gamesman.database").split(":");
+		if (dbType == null)
+			dbType = conf.getProperty("gamesman.database");
+		String[] dbClasses = dbType.split(":");
 		try {
 			Class<? extends Database> dbClass = Class.forName(
 					"edu.berkeley.gamesman.database."
-							+ dbType[dbType.length - 1]).asSubclass(
+							+ dbClasses[dbClasses.length - 1]).asSubclass(
 					Database.class);
 			conf.db = dbClass.getConstructor(String.class, Configuration.class,
 					Boolean.TYPE, Long.TYPE, Long.TYPE, DatabaseHeader.class)
 					.newInstance(uri, conf, solve, firstRecord, numRecords,
 							header);
-			for (int i = dbType.length - 2; i >= 0; i--) {
+			for (int i = dbClasses.length - 2; i >= 0; i--) {
 				Class<? extends DatabaseWrapper> wrapperClass = Class.forName(
-						"edu.berkeley.gamesman.database." + dbType[i])
+						"edu.berkeley.gamesman.database." + dbClasses[i])
 						.asSubclass(DatabaseWrapper.class);
 				conf.db = wrapperClass.getConstructor(Database.class,
 						String.class, Configuration.class, Boolean.TYPE,
@@ -1033,11 +1038,6 @@ public abstract class Database {
 				len -= bytesSkipped;
 			}
 		}
-	}
-
-	protected final void storeNone(OutputStream os) throws IOException {
-		storeInfo(os);
-		Configuration.storeNone(os);
 	}
 
 	protected final void store(OutputStream os) throws IOException {

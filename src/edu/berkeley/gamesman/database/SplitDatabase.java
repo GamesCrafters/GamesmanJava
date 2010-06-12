@@ -1,7 +1,9 @@
 package edu.berkeley.gamesman.database;
 
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -13,6 +15,11 @@ public class SplitDatabase extends Database {
 	private final int[] firstNums;
 	private final long[] lastByteIndices;
 	private final int[] lastNums;
+	private final String uri;
+	private final ArrayList<String> dbTypeList;
+	private final ArrayList<String> uriList;
+	private final ArrayList<Long> firstRecordList;
+	private final ArrayList<Long> numRecordsList;
 
 	public SplitDatabase(String uri, Configuration conf, boolean solve,
 			long firstRecord, long numRecords, DatabaseHeader header) {
@@ -21,13 +28,21 @@ public class SplitDatabase extends Database {
 		try {
 			if (uri == null)
 				uri = conf.getProperty("gamesman.db.uri");
+			this.uri = uri;
 			FileInputStream fis = new FileInputStream(uri);
 			skipHeader(fis);
 			ArrayList<Database> databaseList = new ArrayList<Database>();
 			Scanner scan = new Scanner(fis);
 			while (scan.hasNext()) {
-				databaseList.add(Database.openDatabase(scan.next(), conf,
-						solve, scan.nextLong(), scan.nextLong(), getHeader()));
+				String dbType = scan.next();
+				String dbUri = scan.next();
+				long dbFirstRecord = scan.nextLong();
+				long dbNumRecords = scan.nextLong();
+				databaseList.add(Database.openDatabase(dbType, dbUri, conf,
+						solve, dbFirstRecord, dbNumRecords, getHeader(
+								dbFirstRecord, dbNumRecords)));
+				// TODO Needs header for recordGroup information, but
+				// firstRecord/numRecords is incorrect
 			}
 			this.databaseList = databaseList.toArray(new Database[databaseList
 					.size()]);
@@ -44,9 +59,43 @@ public class SplitDatabase extends Database {
 				lastByteIndices[i] = lastByte(dbLastRecord);
 				lastNums[i] = toNum(dbLastRecord);
 			}
+			dbTypeList = null;
+			uriList = null;
+			firstRecordList = null;
+			numRecordsList = null;
 		} catch (IOException e) {
 			throw new Error(e);
 		}
+	}
+
+	private DatabaseHeader getHeader(long dbFirstRecord, long dbNumRecords) {
+		if (superCompress)
+			return new DatabaseHeader(dbFirstRecord, dbNumRecords,
+					recordsPerGroup, recordGroupByteLength);
+		else
+			return new DatabaseHeader(dbFirstRecord, dbNumRecords,
+					recordGroupByteBits);
+	}
+
+	public SplitDatabase(String uri, Configuration conf, long firstRecord,
+			long numRecords) {
+		super(uri, conf, true, firstRecord, numRecords, null);
+		if (uri == null)
+			uri = conf.getProperty("gamesman.db.uri");
+		this.uri = uri;
+		databaseList = null;
+		firstByteIndices = null;
+		firstNums = null;
+		lastByteIndices = null;
+		lastNums = null;
+		dbTypeList = new ArrayList<String>();
+		uriList = new ArrayList<String>();
+		firstRecordList = new ArrayList<Long>();
+		numRecordsList = new ArrayList<Long>();
+	}
+
+	public SplitDatabase(String uri, Configuration conf) {
+		this(uri, conf, 0, -1);
 	}
 
 	private static DatabaseHeader getSplitHeader(String uri) {
@@ -63,8 +112,25 @@ public class SplitDatabase extends Database {
 
 	@Override
 	protected void closeDatabase() {
-		for (Database d : databaseList)
-			d.close();
+		if (dbTypeList == null)
+			for (Database d : databaseList)
+				d.close();
+		else {
+			try {
+				FileOutputStream fos = new FileOutputStream(uri);
+				store(fos);
+				PrintStream myStream = new PrintStream(fos);
+				myStream.println();
+				for (int i = 0; i < dbTypeList.size(); i++) {
+					myStream.println(dbTypeList.get(i) + " " + uriList.get(i)
+							+ " " + firstRecordList.get(i) + " "
+							+ numRecordsList.get(i));
+				}
+				myStream.close();
+			} catch (IOException ioe) {
+				throw new Error(ioe);
+			}
+		}
 	}
 
 	@Override
@@ -112,7 +178,8 @@ public class SplitDatabase extends Database {
 		while (sh.location >= lastByteIndices[sh.currentDb])
 			sh.dbLoc[sh.currentDb++] = -1;
 		int db = sh.currentDb;
-		while (firstByteIndices[db] < sh.location + numBytes) {
+		while (db < firstByteIndices.length
+				&& firstByteIndices[db] < sh.location + numBytes) {
 			if (sh.dbLoc[db] < 0) {
 				long lastByteIndex = lastByteIndices[sh.currentDb];
 				int lastNum;
@@ -147,7 +214,7 @@ public class SplitDatabase extends Database {
 		}
 		sh.location += numBytes;
 		if (sh.lastByteIndex == sh.location) {
-			for (int i = sh.currentDb; sh.dbLoc[i] >= 0; i++)
+			for (int i = sh.currentDb; i < sh.dbLoc.length && sh.dbLoc[i] >= 0; i++)
 				sh.dbLoc[i] = -1;
 		}
 		return numBytes;
@@ -165,7 +232,8 @@ public class SplitDatabase extends Database {
 		while (sh.location >= lastByteIndices[sh.currentDb])
 			sh.dbLoc[sh.currentDb++] = -1;
 		int db = sh.currentDb;
-		while (firstByteIndices[db] < sh.location + numBytes) {
+		while (db < firstByteIndices.length
+				&& firstByteIndices[db] < sh.location + numBytes) {
 			if (sh.dbLoc[db] < 0) {
 				long lastByteIndex = lastByteIndices[sh.currentDb];
 				int lastNum;
@@ -199,6 +267,10 @@ public class SplitDatabase extends Database {
 			db++;
 		}
 		sh.location += numBytes;
+		if (sh.lastByteIndex == sh.location) {
+			for (int i = sh.currentDb; i < sh.dbLoc.length && sh.dbLoc[i] >= 0; i++)
+				sh.dbLoc[i] = -1;
+		}
 		return numBytes;
 	}
 
@@ -229,5 +301,38 @@ public class SplitDatabase extends Database {
 				dbLoc[i] = -1;
 			}
 		}
+	}
+
+	public static void main(String[] args) throws ClassNotFoundException {
+		String confFile = args[0];
+		String dbFile = args[1];
+		SplitDatabase sd;
+		int start;
+		if ((args.length & 3) == 2) {
+			sd = new SplitDatabase(dbFile, new Configuration(confFile));
+			start = 2;
+		} else {
+			sd = new SplitDatabase(dbFile, new Configuration(confFile), Long
+					.parseLong(args[2]), Long.parseLong(args[3]));
+			start = 4;
+		}
+		for (int i = start; i < args.length; i += 4) {
+			sd.addDatabase(args[i], args[i + 1], Long.parseLong(args[i + 2]),
+					Long.parseLong(args[i + 3]));
+		}
+		sd.close();
+	}
+
+	private void addDatabase(String dbType, String uri, long firstRecord,
+			long numRecords) {
+		dbTypeList.add(dbType);
+		uriList.add(uri);
+		firstRecordList.add(firstRecord);
+		numRecordsList.add(numRecords);
+	}
+
+	@Override
+	public DatabaseHandle getHandle() {
+		return new SplitHandle(recordGroupByteLength);
 	}
 }

@@ -24,20 +24,11 @@ public final class FileDatabase extends Database {
 	public FileDatabase(String uri, Configuration config, boolean solve,
 			long firstRecord, long numRecords, DatabaseHeader header)
 			throws IOException {
-		this(uri, config, solve, firstRecord, numRecords, header, true);
-	}
-
-	public FileDatabase(String uri, Configuration config, boolean solve,
-			long firstRecord, long numRecords, DatabaseHeader header,
-			boolean storeConf) throws IOException {
 		super(uri, config, solve, firstRecord, numRecords, header);
 		myFile = new File(uri);
 		if (solve) {
 			FileOutputStream fos = new FileOutputStream(myFile);
-			if (storeConf) {
-				store(fos);
-			} else
-				storeNone(fos);
+			store(fos);
 			long lastByte = lastByte(firstContainedRecord + numContainedRecords);
 			offset = fos.getChannel().position() - toByte(firstContainedRecord);
 			fos.close();
