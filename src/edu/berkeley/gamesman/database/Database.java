@@ -9,6 +9,7 @@ import java.math.BigInteger;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.util.DebugFacility;
+import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
 /**
@@ -978,20 +979,50 @@ public abstract class Database {
 			long numRecords, DatabaseHeader header) {
 		if (uri == null)
 			uri = conf.getProperty("gamesman.db.uri");
-		else if (conf == null) {
-			try {
-				FileInputStream fis = new FileInputStream(uri);
-				skipFully(fis, 18);
-				conf = Configuration.load(fis);
-				fis.close();
-			} catch (ClassNotFoundException e) {
-				throw new Error(e);
-			} catch (IOException e) {
-				throw new Error(e);
+		if (uri.contains(":")) {
+			String[] hostFile = uri.split(":");
+			String host = hostFile[0];
+			String path = hostFile[1];
+			String file = hostFile[2];
+			if (!file.startsWith("/") && !file.startsWith(path))
+				file = path + "/" + file;
+			String user = null;
+			if (host.contains("@")) {
+				String[] userHost = host.split("@");
+				user = userHost[0];
+				host = userHost[1];
 			}
+			if (dbType == null || !dbType.endsWith("RemoteDatabase"))
+				dbType = "RemoteDatabase";
+			if (conf == null) {
+				Pair<DatabaseHeader, Configuration> p = RemoteDatabase
+						.remoteHeaderConf(user, host, file);
+				if (header == null)
+					header = p.car;
+				conf = p.cdr;
+			} else if (header == null) {
+				header = RemoteDatabase.remoteHeader(user, host, file);
+			}
+			conf.setProperty("gamesman.remote.user", user);
+			conf.setProperty("gamesman.remote.server", host);
+			conf.setProperty("gamesman.remote.path", path);
+			conf.setProperty("gamesman.remote.db.uri", file);
+		} else {
+			if (conf == null) {
+				try {
+					FileInputStream fis = new FileInputStream(uri);
+					skipFully(fis, 18);
+					conf = Configuration.load(fis);
+					fis.close();
+				} catch (ClassNotFoundException e) {
+					throw new Error(e);
+				} catch (IOException e) {
+					throw new Error(e);
+				}
+			}
+			if (dbType == null)
+				dbType = conf.getProperty("gamesman.database");
 		}
-		if (dbType == null)
-			dbType = conf.getProperty("gamesman.database");
 		String[] dbClasses = dbType.split(":");
 		try {
 			Class<? extends Database> dbClass = Class.forName(
@@ -1029,7 +1060,7 @@ public abstract class Database {
 		return conf.db;
 	}
 
-	private static void skipFully(InputStream is, long len) throws IOException {
+	public static void skipFully(InputStream is, long len) throws IOException {
 		while (len > 0) {
 			long bytesSkipped = is.skip(len);
 			if (bytesSkipped < 0)

@@ -442,15 +442,25 @@ public class Configuration {
 
 	public static Configuration load(InputStream is) throws IOException,
 			ClassNotFoundException {
+		ByteArrayInputStream bais = new ByteArrayInputStream(loadBytes(is));
+		Database.skipFully(bais, 4);
+		Properties props = new Properties();
+		props.load(bais);
+		return new Configuration(props);
+	}
+
+	public static byte[] loadBytes(InputStream is) throws IOException {
 		int confLength = 0;
 		for (int i = 0; i < 4; i++) {
 			confLength <<= 8;
 			confLength |= is.read();
 		}
-		byte[] confBytes = new byte[confLength];
-		is.read(confBytes);
-		Properties props = new Properties();
-		props.load(new ByteArrayInputStream(confBytes));
-		return new Configuration(props);
+		byte[] confBytes = new byte[confLength + 4];
+		int c = 0;
+		for (int i = 24; i >= 0; i -= 8) {
+			confBytes[c++] = (byte) (confLength >>> i);
+		}
+		Database.readFully(is, confBytes, 4, confLength);
+		return confBytes;
 	}
 }

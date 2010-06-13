@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.database;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -22,17 +23,20 @@ public class SplitDatabase extends Database {
 	private final ArrayList<Long> numRecordsList;
 
 	public SplitDatabase(String uri, Configuration conf, boolean solve,
-			long firstRecord, long numRecords, DatabaseHeader header) {
+			long firstRecord, long numRecords, DatabaseHeader header,
+			InputStream dbStream) {
 		super(uri, conf, solve, firstRecord, numRecords,
 				header == null ? getSplitHeader(uri) : header);
 		try {
-			if (uri == null)
-				uri = conf.getProperty("gamesman.db.uri");
+			if (dbStream == null) {
+				if (uri == null)
+					uri = conf.getProperty("gamesman.db.uri");
+				dbStream = new FileInputStream(uri);
+				skipHeader(dbStream);
+			}
 			this.uri = uri;
-			FileInputStream fis = new FileInputStream(uri);
-			skipHeader(fis);
 			ArrayList<Database> databaseList = new ArrayList<Database>();
-			Scanner scan = new Scanner(fis);
+			Scanner scan = new Scanner(dbStream);
 			while (scan.hasNext()) {
 				String dbType = scan.next();
 				String dbUri = scan.next();
@@ -42,6 +46,7 @@ public class SplitDatabase extends Database {
 						solve, dbFirstRecord, dbNumRecords, getHeader(
 								dbFirstRecord, dbNumRecords)));
 			}
+			scan.close();
 			this.databaseList = databaseList.toArray(new Database[databaseList
 					.size()]);
 			firstByteIndices = new long[databaseList.size()];

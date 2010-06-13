@@ -1,16 +1,19 @@
 package edu.berkeley.gamesman.database;
 
 import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.ErrorThread;
+import edu.berkeley.gamesman.util.Pair;
+import edu.berkeley.gamesman.util.Util;
 
 public class RemoteDatabase extends Database {
 	private final String user, server, confFile, gamesmanPath, remoteFile;
-	private static final Runtime runtime = Runtime.getRuntime();
 	private int maxCommandLen = -1;
 
 	public RemoteDatabase(String uri, Configuration conf, boolean solve,
@@ -28,10 +31,11 @@ public class RemoteDatabase extends Database {
 		this.server = server;
 		gamesmanPath = conf.getProperty("gamesman.remote.path");
 		String confFile = conf.getProperty("gamesman.remote.confFile", null);
-		if (confFile != null && !confFile.startsWith("/"))
+		if (confFile != null && !confFile.startsWith("/")
+				&& !confFile.startsWith(gamesmanPath))
 			confFile = gamesmanPath + "/" + confFile;
 		this.confFile = confFile;
-		if (!remoteFile.startsWith("/"))
+		if (!remoteFile.startsWith("/") && !remoteFile.startsWith(gamesmanPath))
 			remoteFile = gamesmanPath + "/" + remoteFile;
 		this.remoteFile = remoteFile;
 	}
@@ -82,7 +86,7 @@ public class RemoteDatabase extends Database {
 		if (maxCommandLen < command.length())
 			maxCommandLen = command.length();
 		try {
-			Process p = runtime.exec(command.toString());
+			Process p = Runtime.getRuntime().exec(command.toString());
 			new ErrorThread(p.getErrorStream(), server).start();
 			((RemoteHandle) dh).is = new BufferedInputStream(
 					p.getInputStream(), ReadRecords.BUFFER_SIZE);
@@ -122,16 +126,72 @@ public class RemoteDatabase extends Database {
 		throw new UnsupportedOperationException();
 	}
 
-	public static void main(String[] args) throws ClassNotFoundException,
-			IOException {
-		String confFile = args[0];
-		String dbFile = args[1];
-		RemoteDatabase db = (RemoteDatabase) Database.openDatabase(dbFile,
-				new Configuration(confFile), true);
-		File f = new File(dbFile);
-		FileOutputStream fos = new FileOutputStream(f);
-		db.store(fos);
-		fos.close();
+	// public static void main(String[] args) throws IOException {
+	// byte[] headerBytes = new byte[18];
+	// FileInputStream fis = new FileInputStream(args[0]);
+	// readFully(fis, headerBytes, 0, 18);
+	// System.out.write(headerBytes);
+	// if (args.length > 1 && Boolean.parseBoolean(args[1])) {
+	// byte[] confBytes = Configuration.loadBytes(fis);
+	// System.out.write(confBytes);
+	// }
+	// fis.close();
+	// System.out.flush();
+	// }
+
+	private static Pair<DatabaseHeader, Configuration> remoteHeaderConf(
+			String user, String host, String file, boolean withConf) {
+		try {
+			int numBytes = withConf ? 22 : 18;
+			String commandString = "ssh "
+					+ (user == null ? host : (user + "@" + host)) + " dd if="
+					+ file + " count=";
+			byte[] headerBytes = new byte[numBytes];
+			String command = commandString + 1;
+			assert Util.debug(DebugFacility.DATABASE, command);
+			Process p = Runtime.getRuntime().exec(command);
+			new ErrorThread(p.getErrorStream(), host).start();
+			InputStream is = p.getInputStream();
+			Database.readFully(is, headerBytes, 0, numBytes);
+			is.close();
+			DatabaseHeader dh = new DatabaseHeader(headerBytes);
+			if (withConf) {
+				int confLength = 0;
+				for (int i = 18; i < 22; i++) {
+					confLength <<= 8;
+					confLength |= headerBytes[i];
+				}
+				command = commandString + ((numBytes + confLength + 511) >> 9);
+				assert Util.debug(DebugFacility.DATABASE, command);
+				p = Runtime.getRuntime().exec(command);
+				new ErrorThread(p.getErrorStream(), host).start();
+				is = p.getInputStream();
+				Database.readFully(is, headerBytes, 0, numBytes);
+				byte[] confBytes = new byte[confLength];
+				Database.readFully(is, confBytes, 0, confLength);
+				is.close();
+				ByteArrayInputStream bais = new ByteArrayInputStream(confBytes);
+				Properties props = new Properties();
+				props.load(bais);
+				Configuration conf = new Configuration(props);
+				return new Pair<DatabaseHeader, Configuration>(dh, conf);
+			} else
+				return new Pair<DatabaseHeader, Configuration>(dh, null);
+		} catch (IOException e) {
+			throw new Error(e);
+		} catch (ClassNotFoundException e) {
+			throw new Error(e);
+		}
+	}
+
+	public static Pair<DatabaseHeader, Configuration> remoteHeaderConf(
+			String user, String host, String file) {
+		return remoteHeaderConf(user, host, file, true);
+	}
+
+	public static DatabaseHeader remoteHeader(String user, String host,
+			String file) {
+		return remoteHeaderConf(user, host, file, false).car;
 	}
 
 }
