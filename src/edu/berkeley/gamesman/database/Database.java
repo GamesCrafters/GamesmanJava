@@ -508,8 +508,9 @@ public abstract class Database {
 		if (remainBytes > 0) {
 			if (dh.lastGroup == null) {
 				dh.lastGroup = dh.getRecordGroupBytes();
-				getRecordsAsBytes(dh.innerHandle, dh.byteIndex, dh.lastNum,
-						dh.lastGroup, 0, recordGroupByteLength, 0, true);
+				getRecordsAsBytes(dh.innerHandle, dh.lastByteIndex
+						- recordGroupByteLength, dh.lastNum, dh.lastGroup, 0,
+						recordGroupByteLength, 0, true);
 			}
 			int groupByte = recordGroupByteLength
 					- (remainBytes + (int) afterBytes);

@@ -195,15 +195,15 @@ public class SplitDatabase extends Database {
 		while (db < firstByteIndices.length
 				&& firstByteIndices[db] < sh.location + numBytes) {
 			if (sh.dbLoc[db] < 0) {
-				long lastByteIndex = lastByteIndices[sh.currentDb];
+				long lastByteIndex = lastByteIndices[db];
 				int lastNum;
 				if (lastByteIndex > sh.lastByteIndex) {
 					lastByteIndex = sh.lastByteIndex;
 					lastNum = sh.lastNum;
 				} else if (lastByteIndex < sh.lastByteIndex) {
-					lastNum = lastNums[sh.currentDb];
+					lastNum = lastNums[db];
 				} else
-					lastNum = Math.min(sh.lastNum, lastNums[sh.currentDb]);
+					lastNum = Math.min(sh.lastNum, lastNums[db]);
 				if (firstByteIndices[db] < lastByteIndex
 						- recordGroupByteLength
 						|| lastNum == 0 || firstNums[db] < lastNum) {
@@ -249,15 +249,15 @@ public class SplitDatabase extends Database {
 		while (db < firstByteIndices.length
 				&& firstByteIndices[db] < sh.location + numBytes) {
 			if (sh.dbLoc[db] < 0) {
-				long lastByteIndex = lastByteIndices[sh.currentDb];
+				long lastByteIndex = lastByteIndices[db];
 				int lastNum;
 				if (lastByteIndex > sh.lastByteIndex) {
 					lastByteIndex = sh.lastByteIndex;
 					lastNum = sh.lastNum;
 				} else if (lastByteIndex < sh.lastByteIndex) {
-					lastNum = lastNums[sh.currentDb];
+					lastNum = lastNums[db];
 				} else
-					lastNum = Math.min(sh.lastNum, lastNums[sh.currentDb]);
+					lastNum = Math.min(sh.lastNum, lastNums[db]);
 				if (firstByteIndices[db] < lastByteIndex
 						- recordGroupByteLength
 						|| lastNum == 0 || firstNums[db] < lastNum) {
