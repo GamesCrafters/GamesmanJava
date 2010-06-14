@@ -23,30 +23,40 @@ public class SplitDatabase extends Database {
 	private final ArrayList<Long> numRecordsList;
 
 	public SplitDatabase(String uri, Configuration conf, boolean solve,
+			long firstRecord, long numRecords, DatabaseHeader header) {
+		this(uri, conf, solve, firstRecord, numRecords, header, null);
+	}
+
+	public SplitDatabase(String uri, Configuration conf, boolean solve,
 			long firstRecord, long numRecords, DatabaseHeader header,
 			InputStream dbStream) {
 		super(uri, conf, solve, firstRecord, numRecords,
 				header == null ? getSplitHeader(uri) : header);
 		try {
+			final boolean closeAfter;
 			if (dbStream == null) {
 				if (uri == null)
 					uri = conf.getProperty("gamesman.db.uri");
 				dbStream = new FileInputStream(uri);
 				skipHeader(dbStream);
-			}
+				closeAfter = false;
+			} else
+				closeAfter = true;
 			this.uri = uri;
 			ArrayList<Database> databaseList = new ArrayList<Database>();
 			Scanner scan = new Scanner(dbStream);
-			while (scan.hasNext()) {
-				String dbType = scan.next();
+			String dbType = scan.next();
+			while (!dbType.equals("end")) {
 				String dbUri = scan.next();
 				long dbFirstRecord = scan.nextLong();
 				long dbNumRecords = scan.nextLong();
 				databaseList.add(Database.openDatabase(dbType, dbUri, conf,
 						solve, dbFirstRecord, dbNumRecords, getHeader(
 								dbFirstRecord, dbNumRecords)));
+				dbType = scan.next();
 			}
-			scan.close();
+			if (closeAfter)
+				scan.close();
 			this.databaseList = databaseList.toArray(new Database[databaseList
 					.size()]);
 			firstByteIndices = new long[databaseList.size()];
@@ -129,6 +139,7 @@ public class SplitDatabase extends Database {
 							+ " " + firstRecordList.get(i) + " "
 							+ numRecordsList.get(i));
 				}
+				myStream.println("end");
 				myStream.close();
 			} catch (IOException ioe) {
 				throw new Error(ioe);
