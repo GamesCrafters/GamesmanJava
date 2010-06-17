@@ -177,11 +177,7 @@ public abstract class Database {
 	 * Close this Database, flush to disk, and release all associated resources.
 	 * This object should not be used again after making this call.
 	 */
-	public final void close() {
-		closeDatabase();
-	}
-
-	protected abstract void closeDatabase();
+	public abstract void close();
 
 	/**
 	 * Retrieve the Configuration associated with this Database.

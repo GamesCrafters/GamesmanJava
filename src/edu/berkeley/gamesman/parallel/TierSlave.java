@@ -59,10 +59,10 @@ public class TierSlave implements TaskFactory, Runnable {
 			}
 			String foldUri = conf
 					.getProperty("gamesman.parallel.slaveDbFolder");
-			String path = conf.getProperty("gamesman.path");
+			String path = conf.getProperty("gamesman.remote.path");
 			if (!(foldUri.startsWith("/") || foldUri.startsWith(path)))
 				foldUri = path + "/" + foldUri;
-			writeUri = foldUri + "/" + firstHash + ".db";
+			writeUri = foldUri + "/" + "s" + firstHash + ".db";
 			writeDb = Database.openDatabase(writeUri, conf, true, head);
 			solver.setWriteDb(writeDb);
 		} catch (IllegalAccessException e) {

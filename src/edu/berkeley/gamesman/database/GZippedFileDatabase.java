@@ -147,7 +147,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 	private DatabaseHandle lastUsed;
 
 	@Override
-	protected void closeDatabase() {
+	public void close() {
 		if (solve) {
 			byte[] entryBytes = new byte[numEntries << 3];
 			int count = 0;

@@ -55,7 +55,7 @@ public class MemoryDatabase extends DatabaseWrapper {
 	private final boolean backChanges;
 
 	@Override
-	protected void closeDatabase() {
+	public void close() {
 		flush();
 		db.closeHandle(myHandle);
 		db.close();

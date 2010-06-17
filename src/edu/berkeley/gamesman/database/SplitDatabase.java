@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Scanner;
 
 import edu.berkeley.gamesman.core.Configuration;
@@ -100,6 +101,14 @@ public class SplitDatabase extends Database {
 		this(uri, conf, 0, -1);
 	}
 
+	public SplitDatabase(Configuration conf) {
+		this(null, conf);
+	}
+
+	public SplitDatabase(Configuration conf, long firstRecord, long numRecords) {
+		this(null, conf, firstRecord, numRecords);
+	}
+
 	private static DatabaseHeader getSplitHeader(String uri) {
 		try {
 			FileInputStream fis = new FileInputStream(uri);
@@ -113,7 +122,7 @@ public class SplitDatabase extends Database {
 	}
 
 	@Override
-	protected void closeDatabase() {
+	public void close() {
 		if (dbTypeList == null)
 			for (Database d : databaseList)
 				d.close();
@@ -306,6 +315,11 @@ public class SplitDatabase extends Database {
 		}
 	}
 
+	@Override
+	public DatabaseHandle getHandle() {
+		return new SplitHandle(recordGroupByteLength);
+	}
+
 	public static void main(String[] args) throws ClassNotFoundException {
 		String confFile = args[0];
 		String dbFile = args[1];
@@ -326,16 +340,41 @@ public class SplitDatabase extends Database {
 		sd.close();
 	}
 
-	private void addDatabase(String dbType, String uri, long firstRecord,
-			long numRecords) {
+	private synchronized void addDatabase(String dbType, String uri,
+			long firstRecord, long numRecords) {
 		dbTypeList.add(dbType);
 		uriList.add(uri);
 		firstRecordList.add(firstRecord);
 		numRecordsList.add(numRecords);
 	}
 
-	@Override
-	public DatabaseHandle getHandle() {
-		return new SplitHandle(recordGroupByteLength);
+	public synchronized void addDatabasesFirst(SplitDatabase otherDb) {
+		dbTypeList.addAll(0, otherDb.dbTypeList);
+		uriList.addAll(0, otherDb.uriList);
+		firstRecordList.addAll(0, otherDb.firstRecordList);
+		numRecordsList.addAll(0, otherDb.numRecordsList);
+	}
+
+	public synchronized String makeStream(long firstRecord, long numRecords) {
+		int dbNum = Collections.binarySearch(firstRecordList, firstRecord);
+		if (dbNum < 0)
+			dbNum = -dbNum - 2;
+		long lastRecord = firstRecord + numRecords;
+		String s = "";
+		while (firstRecordList.get(dbNum) < lastRecord)
+			s += dbTypeList.get(dbNum) + " " + uriList.get(dbNum) + " "
+					+ firstRecordList.get(dbNum) + " "
+					+ numRecordsList.get(dbNum) + " ";
+		s += "end";
+		return s;
+	}
+
+	public synchronized void insertDb(String dbType, String uri,
+			long firstRecord, long numRecords) {
+		int dbNum = -Collections.binarySearch(firstRecordList, firstRecord) - 1;
+		dbTypeList.add(dbNum, dbType);
+		uriList.add(dbNum, uri);
+		firstRecordList.add(dbNum, firstRecord);
+		numRecordsList.add(dbNum, numRecords);
 	}
 }

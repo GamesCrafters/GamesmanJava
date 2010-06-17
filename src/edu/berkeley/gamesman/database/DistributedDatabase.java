@@ -19,7 +19,7 @@ public class DistributedDatabase extends Database {
 	}
 
 	@Override
-	protected void closeDatabase() {
+	public void close() {
 		readStream.close();
 		requestStream.close();
 	}

@@ -44,7 +44,7 @@ public final class FileDatabase extends Database {
 	}
 
 	@Override
-	protected void closeDatabase() {
+	public void close() {
 		try {
 			fd.close();
 		} catch (IOException e) {

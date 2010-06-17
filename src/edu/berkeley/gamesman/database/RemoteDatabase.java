@@ -41,7 +41,7 @@ public class RemoteDatabase extends Database {
 	}
 
 	@Override
-	protected void closeDatabase() {
+	public void close() {
 	}
 
 	@Override

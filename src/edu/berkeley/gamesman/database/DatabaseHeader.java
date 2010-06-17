@@ -60,7 +60,7 @@ public final class DatabaseHeader {
 		}
 	}
 
-	byte[] toBytes() {
+	public byte[] toBytes() {
 		int c = 0;
 		byte[] b = new byte[18];
 		for (int i = 56; i >= 0; i -= 8)
