@@ -28,7 +28,7 @@ public final class FileDatabase extends Database {
 		myFile = new File(uri);
 		if (solve) {
 			FileOutputStream fos = new FileOutputStream(myFile);
-			store(fos);
+			store(fos, uri);
 			long lastByte = lastByte(firstContainedRecord + numContainedRecords);
 			offset = fos.getChannel().position() - toByte(firstContainedRecord);
 			fos.close();

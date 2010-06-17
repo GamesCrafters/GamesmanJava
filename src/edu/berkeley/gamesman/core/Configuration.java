@@ -7,7 +7,6 @@ import java.util.Properties;
 import java.util.Set;
 
 import edu.berkeley.gamesman.database.Database;
-import edu.berkeley.gamesman.game.Connect4;
 import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.util.Util;
 
@@ -430,9 +429,21 @@ public class Configuration {
 		is.read(skippedBytes);
 	}
 
-	public void store(OutputStream os) throws IOException {
+	public void store(OutputStream os, String dbType, String uri)
+			throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		props.store(baos, "");
+		String typeProp = props.getProperty("gamesman.database", null);
+		String uriProp = props.getProperty("gamesman.db.uri", null);
+		if ((dbType != null && !dbType.equals(typeProp))
+				|| (uri != null && !uri.equals(uriProp))) {
+			Properties props2 = (Properties) props.clone();
+			if (dbType != null && !dbType.equals(typeProp))
+				props2.setProperty("gamesman.database", dbType);
+			if (uri != null && !uri.equals(uriProp))
+				props2.setProperty("gamesman.db.uri", uri);
+			props2.store(baos, "");
+		} else
+			props.store(baos, "");
 		byte[] confBytes = baos.toByteArray();
 		for (int i = 24; i >= 0; i -= 8) {
 			os.write(confBytes.length >> i);

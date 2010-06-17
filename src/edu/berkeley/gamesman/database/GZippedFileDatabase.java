@@ -70,7 +70,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		waitingCaches = new QuickLinkedList<Pair<ByteArrayOutputStream, Long>>();
 		waitingCachesIter = waitingCaches.listIterator();
 		fos = new FileOutputStream(myFile);
-		store(fos);
+		store(fos, uri);
 		tableOffset = fos.getChannel().position();
 		fos.getChannel().position(tableOffset + (numEntries << 3));
 		zippedStoragePool = new Pool<ByteArrayOutputStream>(

@@ -1026,19 +1026,20 @@ public abstract class Database {
 				dbType = conf.getProperty("gamesman.database");
 		}
 		String[] dbClasses = dbType.split(":");
+		for (int i = 0; i < dbClasses.length; i++) {
+			if (!dbClasses[i].startsWith("edu.berkeley.gamesman"))
+				dbClasses[i] = "edu.berkeley.gamesman.database." + dbClasses[i];
+		}
 		try {
 			Class<? extends Database> dbClass = Class.forName(
-					"edu.berkeley.gamesman.database."
-							+ dbClasses[dbClasses.length - 1]).asSubclass(
-					Database.class);
+					dbClasses[dbClasses.length - 1]).asSubclass(Database.class);
 			conf.db = dbClass.getConstructor(String.class, Configuration.class,
 					Boolean.TYPE, Long.TYPE, Long.TYPE, DatabaseHeader.class)
 					.newInstance(uri, conf, solve, firstRecord, numRecords,
 							header);
 			for (int i = dbClasses.length - 2; i >= 0; i--) {
 				Class<? extends DatabaseWrapper> wrapperClass = Class.forName(
-						"edu.berkeley.gamesman.database." + dbClasses[i])
-						.asSubclass(DatabaseWrapper.class);
+						dbClasses[i]).asSubclass(DatabaseWrapper.class);
 				conf.db = wrapperClass.getConstructor(Database.class,
 						String.class, Configuration.class, Boolean.TYPE,
 						Long.TYPE, Long.TYPE).newInstance(conf.db, uri, conf,
@@ -1073,9 +1074,9 @@ public abstract class Database {
 		}
 	}
 
-	protected final void store(OutputStream os) throws IOException {
+	protected final void store(OutputStream os, String uri) throws IOException {
 		storeInfo(os);
-		conf.store(os);
+		conf.store(os, this.getClass().getName(), uri);
 	}
 
 	protected final void skipHeader(InputStream is) throws IOException {

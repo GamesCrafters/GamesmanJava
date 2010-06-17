@@ -129,7 +129,7 @@ public class SplitDatabase extends Database {
 		else {
 			try {
 				FileOutputStream fos = new FileOutputStream(uri);
-				store(fos);
+				store(fos, uri);
 				PrintStream myStream = new PrintStream(fos);
 				myStream.println();
 				for (int i = 0; i < dbTypeList.size(); i++) {
