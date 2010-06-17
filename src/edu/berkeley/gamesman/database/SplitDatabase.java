@@ -3,7 +3,6 @@ package edu.berkeley.gamesman.database;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -29,7 +28,7 @@ public class SplitDatabase extends Database {
 
 	public SplitDatabase(String uri, Configuration conf, boolean solve,
 			long firstRecord, long numRecords, DatabaseHeader header,
-			InputStream dbStream) {
+			Scanner dbStream) {
 		super(uri, conf, solve, firstRecord, numRecords,
 				header == null ? getSplitHeader(uri) : header);
 		try {
@@ -37,26 +36,25 @@ public class SplitDatabase extends Database {
 			if (dbStream == null) {
 				if (uri == null)
 					uri = conf.getProperty("gamesman.db.uri");
-				dbStream = new FileInputStream(uri);
-				skipHeader(dbStream);
-				closeAfter = false;
-			} else
+				FileInputStream is = new FileInputStream(uri);
+				skipHeader(is);
 				closeAfter = true;
+				dbStream = new Scanner(is);
+			} else
+				closeAfter = false;
 			this.uri = uri;
 			ArrayList<Database> databaseList = new ArrayList<Database>();
-			Scanner scan = new Scanner(dbStream);
-			String dbType = scan.next();
+			String dbType = dbStream.next();
 			while (!dbType.equals("end")) {
-				String dbUri = scan.next();
-				long dbFirstRecord = scan.nextLong();
-				long dbNumRecords = scan.nextLong();
+				String dbUri = dbStream.next();
+				long dbFirstRecord = dbStream.nextLong();
+				long dbNumRecords = dbStream.nextLong();
 				databaseList.add(Database.openDatabase(dbType, dbUri, conf,
-						solve, dbFirstRecord, dbNumRecords, getHeader(
-								dbFirstRecord, dbNumRecords)));
-				dbType = scan.next();
+						solve, getHeader(dbFirstRecord, dbNumRecords)));
+				dbType = dbStream.next();
 			}
 			if (closeAfter)
-				scan.close();
+				dbStream.close();
 			this.databaseList = databaseList.toArray(new Database[databaseList
 					.size()]);
 			firstByteIndices = new long[databaseList.size()];
@@ -79,15 +77,6 @@ public class SplitDatabase extends Database {
 		} catch (IOException e) {
 			throw new Error(e);
 		}
-	}
-
-	private DatabaseHeader getHeader(long dbFirstRecord, long dbNumRecords) {
-		if (superCompress)
-			return new DatabaseHeader(dbFirstRecord, dbNumRecords,
-					recordsPerGroup, recordGroupByteLength);
-		else
-			return new DatabaseHeader(dbFirstRecord, dbNumRecords,
-					recordGroupByteBits);
 	}
 
 	public SplitDatabase(String uri, Configuration conf, long firstRecord,

@@ -936,32 +936,37 @@ public abstract class Database {
 		return toByte(numHashes);
 	}
 
+	public static Database openDatabase(String uri) {
+		return openDatabase(uri, 0, -1);
+	}
+
 	public static Database openDatabase(Configuration conf, boolean solve) {
-		return openDatabase(null, conf, solve);
+		return openDatabase(null, conf, solve, null);
 	}
 
-	public static Database openDatabase(String uri, boolean solve) {
-		return openDatabase(uri, null, solve);
-	}
-
-	public static Database openDatabase(String uri, boolean solve,
-			long firstRecord, long numRecords) {
-		return openDatabase(uri, null, solve, firstRecord, numRecords);
-	}
-
-	/**
-	 * @param solve
-	 *            true for solving, false for playing
-	 * @return the Database used to store this particular solve
-	 */
-	public static Database openDatabase(String uri, Configuration conf,
-			boolean solve) {
-		return openDatabase(uri, conf, solve, 0, -1);
+	public static Database openDatabase(String uri, long firstRecord,
+			long numRecords) {
+		return openDatabase(uri, null, false, firstRecord, numRecords);
 	}
 
 	public static Database openDatabase(String uri, Configuration conf,
 			boolean solve, long firstRecord, long numRecords) {
-		return openDatabase(null, uri, conf, solve, firstRecord, numRecords,
+		return openDatabase(null, uri, conf, solve, firstRecord, numRecords);
+	}
+
+	public static Database openDatabase(String uri, Configuration conf,
+			boolean solve, DatabaseHeader header) {
+		return openDatabase(null, uri, conf, solve, header);
+	}
+
+	public static Database openDatabase(String dbType, String uri,
+			Configuration conf, boolean solve, DatabaseHeader header) {
+		return openDatabase(dbType, uri, conf, solve, 0, -1, header);
+	}
+
+	public static Database openDatabase(String dbType, String uri,
+			Configuration conf, boolean solve, long firstRecord, long numRecords) {
+		return openDatabase(dbType, uri, conf, solve, firstRecord, numRecords,
 				null);
 	}
 
@@ -975,7 +980,7 @@ public abstract class Database {
 	 * @return the Database used to store this particular solve Could not load
 	 *         the database class
 	 */
-	public static Database openDatabase(String dbType, String uri,
+	private static Database openDatabase(String dbType, String uri,
 			Configuration conf, boolean solve, long firstRecord,
 			long numRecords, DatabaseHeader header) {
 		if (uri == null)
@@ -1114,12 +1119,21 @@ public abstract class Database {
 		}
 	}
 
-	protected final DatabaseHeader getHeader() {
+	public final DatabaseHeader getHeader() {
 		if (superCompress)
 			return new DatabaseHeader(firstRecord(), numRecords(),
 					recordsPerGroup, recordGroupByteLength);
 		else
 			return new DatabaseHeader(firstRecord(), numRecords(),
+					recordGroupByteBits);
+	}
+
+	public final DatabaseHeader getHeader(long dbFirstRecord, long dbNumRecords) {
+		if (superCompress)
+			return new DatabaseHeader(dbFirstRecord, dbNumRecords,
+					recordsPerGroup, recordGroupByteLength);
+		else
+			return new DatabaseHeader(dbFirstRecord, dbNumRecords,
 					recordGroupByteBits);
 	}
 }

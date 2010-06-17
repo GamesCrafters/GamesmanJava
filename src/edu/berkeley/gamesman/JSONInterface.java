@@ -171,7 +171,7 @@ public class JSONInterface extends GamesmanApplication {
 			File f = new File(filename);
 			if (filename != null && f.exists()) {
 				System.out.println("Loading solved database " + filename);
-				Database db = Database.openDatabase(filename, false);
+				Database db = Database.openDatabase(filename);
 				return db.getConfiguration();
 			}
 		} catch (Error fe) {

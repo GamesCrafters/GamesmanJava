@@ -35,26 +35,16 @@ public final class GamesmanMain extends GamesmanApplication {
 
 		assert Util.debug(DebugFacility.CORE, "Preloading classes...");
 
-		String gameName, solverName;
-
-		gameName = conf.getProperty("gamesman.game");
-		if (gameName == null)
-			throw new Error(
-					"You must specify a game with the property gamesman.game");
+		String solverName;
 		solverName = conf.getProperty("gamesman.solver");
 		if (solverName == null)
 			throw new Error(
 					"You must specify a solver with the property gamesman.solver");
 
 		Class<? extends Solver> s = null;
-		// Class<? extends Game<Object>> g;
-		// Class<? extends Hasher<Object>> h;
-		// g = Util.typedForName("edu.berkeley.gamesman.game." + gameName);
 		try {
 			s = Util.typedForName("edu.berkeley.gamesman.solver." + solverName,
 					Solver.class);
-			// h = Util.typedForName("edu.berkeley.gamesman.hasher." +
-			// hasherName);
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}

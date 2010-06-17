@@ -8,7 +8,6 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.database.Database;
-import edu.berkeley.gamesman.database.DatabaseWrapper;
 import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.solver.Solver;
 import edu.berkeley.gamesman.util.DebugFacility;
@@ -21,7 +20,7 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author Steven Schlansker
  */
-public final class Master implements TaskFactory {
+public final class Master implements TaskFactory, Runnable {
 
 	private final Game<? extends State> game;
 

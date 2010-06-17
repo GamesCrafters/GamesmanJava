@@ -403,20 +403,19 @@ public class TierSolver extends Solver {
 	 * @return A WorkUnit for solving solveSpace
 	 */
 	public WorkUnit prepareSolve(Configuration conf, int tier, long startHash,
-			long endHash) {
+			long numHashes) {
 		strictSafety = conf.getBoolean("gamesman.solver.strictMemory", false);
 		this.tier = tier;
-		updater = new TierSolverUpdater(endHash - startHash);
+		updater = new TierSolverUpdater(numHashes);
 		parallelSolving = true;
 		TierGame game = (TierGame) conf.getGame();
-		long fullSize = endHash - startHash;
 		double tierFrac = ((double) game.numHashesForTier(tier + 1))
 				/ game.numHashesForTier(tier);
-		long neededMem = writeDb.requiredMem(endHash - startHash)
-				+ readDb.requiredMem((long) ((endHash - startHash) * tierFrac));
+		long neededMem = writeDb.requiredMem(numHashes)
+				+ readDb.requiredMem((long) (numHashes * tierFrac));
 		splits = Math.max(minSplit, (int) (neededMem * numThreads / maxMem));
 		strainingMemory = strictSafety && splits > minSplit;
-		starts = writeDb.splitRange(startHash, fullSize, splits);
+		starts = writeDb.splitRange(startHash, numHashes, splits);
 		return new TierSolverWorkUnit(conf);
 	}
 }

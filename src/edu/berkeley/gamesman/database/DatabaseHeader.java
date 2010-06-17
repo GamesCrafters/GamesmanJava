@@ -1,9 +1,9 @@
 package edu.berkeley.gamesman.database;
 
-final class DatabaseHeader {
-	final long firstRecord;
+public final class DatabaseHeader {
+	public final long firstRecord;
 
-	final long numRecords;
+	public final long numRecords;
 
 	final int recordsPerGroup;
 
@@ -32,7 +32,7 @@ final class DatabaseHeader {
 		this.recordGroupByteLength = 1 << recordGroupByteBits;
 	}
 
-	DatabaseHeader(byte[] dbInfo) {
+	public DatabaseHeader(byte[] dbInfo) {
 		long firstContainedRecord = 0;
 		for (int i = 0; i < 8; i++) {
 			firstContainedRecord <<= 8;
@@ -75,5 +75,14 @@ final class DatabaseHeader {
 			b[c++] = (byte) recordGroupByteBits;
 		}
 		return b;
+	}
+
+	public final DatabaseHeader getHeader(long firstRecord, long numRecords) {
+		if (superCompress)
+			return new DatabaseHeader(firstRecord, numRecords, recordsPerGroup,
+					recordGroupByteLength);
+		else
+			return new DatabaseHeader(firstRecord, numRecords,
+					recordGroupByteBits);
 	}
 }

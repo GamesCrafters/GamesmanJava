@@ -90,7 +90,7 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 					"Please specify a database file as the only argument");
 		Configuration conf;
 		Database fd;
-		fd = Database.openDatabase(args[0], false);
+		fd = Database.openDatabase(args[0]);
 		conf = fd.getConfiguration();
 		int width = conf.getInteger("gamesman.game.width", 7);
 		int height = conf.getInteger("gamesman.game.height", 6);

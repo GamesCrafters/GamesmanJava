@@ -21,7 +21,7 @@ public class ReadRecords {
 		Configuration conf;
 		Database db;
 		if (jobFile == null) {
-			db = Database.openDatabase(databaseFile, false, firstRecord,
+			db = Database.openDatabase(databaseFile, firstRecord,
 					numRecords);
 			conf = db.getConfiguration();
 		} else {

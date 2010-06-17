@@ -419,7 +419,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			bufferKB = Integer.parseInt(args[5]);
 		else
 			bufferKB = 4;
-		Database readFrom = Database.openDatabase(db1, false);
+		Database readFrom = Database.openDatabase(db1);
 		Configuration outConf = readFrom.getConfiguration().cloneAll();
 		outConf.setProperty("gamesman.database", "GZippedFileDatabase");
 		outConf.setProperty("gamesman.db.uri", zipDb);
