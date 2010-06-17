@@ -1005,7 +1005,8 @@ public abstract class Database {
 			} else if (header == null) {
 				header = RemoteDatabase.remoteHeader(user, host, file);
 			}
-			conf.setProperty("gamesman.remote.user", user);
+			if (user != null)
+				conf.setProperty("gamesman.remote.user", user);
 			conf.setProperty("gamesman.remote.server", host);
 			conf.setProperty("gamesman.remote.path", path);
 			conf.setProperty("gamesman.remote.db.uri", file);
