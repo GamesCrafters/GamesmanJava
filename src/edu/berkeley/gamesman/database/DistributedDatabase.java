@@ -20,8 +20,6 @@ public class DistributedDatabase extends Database {
 
 	@Override
 	public void close() {
-		readStream.close();
-		requestStream.close();
 	}
 
 	@Override
@@ -69,7 +67,7 @@ public class DistributedDatabase extends Database {
 		public SplitDatabase sd;
 
 		public DistributedHandle() {
-			super(null);
+			super(recordGroupByteLength);
 		}
 	}
 

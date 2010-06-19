@@ -22,7 +22,7 @@ public class C4CachedSolver extends TierSolver {
 		readPagePool = new Pool<MemoryDatabase>(new Factory<MemoryDatabase>() {
 
 			public MemoryDatabase newObject() {
-				return new MemoryDatabase(readDb, null, conf, false, 0, 0, true);
+				return new MemoryDatabase(readDb, null, conf, false, true);
 			}
 
 			public void reset(MemoryDatabase t) {
@@ -31,7 +31,7 @@ public class C4CachedSolver extends TierSolver {
 		writePagePool = new Pool<MemoryDatabase>(new Factory<MemoryDatabase>() {
 
 			public MemoryDatabase newObject() {
-				return new MemoryDatabase(writeDb, null, conf, true, 0, 0, true);
+				return new MemoryDatabase(writeDb, null, conf, true, true);
 			}
 
 			public void reset(MemoryDatabase t) {
@@ -84,7 +84,7 @@ public class C4CachedSolver extends TierSolver {
 
 		TierState curState = game.hashToState(start);
 		game.setState(curState);
-		
+
 		long lastNano;
 		if (debugSolver) {
 			lastNano = nano;

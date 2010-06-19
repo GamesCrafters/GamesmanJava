@@ -83,9 +83,9 @@ public abstract class Database {
 			firstContainedRecord = header.firstRecord;
 			this.firstRecord = Math.max(firstRecord, firstContainedRecord);
 			numContainedRecords = header.numRecords;
-			this.numRecords = Math.min(firstRecord + numRecords,
+			this.numRecords = Math.max(Math.min(firstRecord + numRecords,
 					firstContainedRecord + numContainedRecords)
-					- this.firstRecord;
+					- this.firstRecord, 0);
 		} else {
 			double requiredCompression = Double.parseDouble(conf.getProperty(
 					"record.compression", "0")) / 100;

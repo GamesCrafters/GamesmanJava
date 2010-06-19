@@ -321,10 +321,15 @@ public class TierSolver extends Solver {
 			while ((slice = nextSlice(conf)) != null) {
 				thisSlice = slice;
 				DatabaseHandle myWrite = writeDb.getHandle();
-				DatabaseHandle readHandle = readDb.getHandle();
+				DatabaseHandle readHandle;
+				if (readDb == null)
+					readHandle = null;
+				else
+					readHandle = readDb.getHandle();
 				solvePartialTier(conf, slice.car, slice.cdr, updater,
 						readHandle, myWrite);
-				readDb.closeHandle(readHandle);
+				if (readHandle != null)
+					readDb.closeHandle(readHandle);
 				writeDb.closeHandle(myWrite);
 			}
 			if (barr != null)
@@ -408,11 +413,13 @@ public class TierSolver extends Solver {
 		this.tier = tier;
 		updater = new TierSolverUpdater(numHashes);
 		parallelSolving = true;
+		long neededMem = writeDb.requiredMem(numHashes);
 		TierGame game = (TierGame) conf.getGame();
-		double tierFrac = ((double) game.numHashesForTier(tier + 1))
-				/ game.numHashesForTier(tier);
-		long neededMem = writeDb.requiredMem(numHashes)
-				+ readDb.requiredMem((long) (numHashes * tierFrac));
+		if (tier < game.numberOfTiers() - 1) {
+			double tierFrac = ((double) game.numHashesForTier(tier + 1))
+					/ game.numHashesForTier(tier);
+			neededMem += readDb.requiredMem((long) (numHashes * tierFrac));
+		}
 		splits = Math.max(minSplit, (int) (neededMem * numThreads / maxMem));
 		strainingMemory = strictSafety && splits > minSplit;
 		starts = writeDb.splitRange(startHash, numHashes, splits);

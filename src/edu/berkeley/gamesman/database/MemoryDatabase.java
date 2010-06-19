@@ -17,23 +17,38 @@ public class MemoryDatabase extends DatabaseWrapper {
 	}
 
 	public MemoryDatabase(Database db, String uri, Configuration conf,
+			boolean solve, boolean backChanges) {
+		this(db, uri, conf, solve, 0, 0, backChanges, true);
+	}
+
+	public MemoryDatabase(Database db, String uri, Configuration conf,
 			boolean solve, long firstRecord, long numRecords,
 			boolean backChanges) {
+		this(db, uri, conf, solve, firstRecord, numRecords, backChanges, false);
+	}
+
+	private MemoryDatabase(Database db, String uri, Configuration conf,
+			boolean solve, long firstRecord, long numRecords,
+			boolean backChanges, boolean mutable) {
 		super(db, uri, conf, solve, firstRecord, numRecords);
-		this.myFirstRecord = super.firstRecord();
-		this.myNumRecords = super.numRecords();
-		memoryStorage = new byte[(int) numBytes(firstRecord(), numRecords())];
-		firstByte = toByte(this.myFirstRecord);
-		firstNum = toNum(firstRecord());
-		numBytes = (int) (lastByte(firstRecord() + numRecords()) - firstByte);
-		lastNum = toNum(firstRecord() + numRecords());
 		this.backChanges = backChanges;
-		if (backChanges) {
+		this.mutable = mutable;
+		if (backChanges)
 			myHandle = db.getHandle();
+		else
+			myHandle = null;
+		if (mutable) {
+			this.myFirstRecord = super.firstRecord();
+			this.myNumRecords = super.numRecords();
+		} else if (backChanges) {
+			memoryStorage = new byte[(int) numBytes(firstRecord(), numRecords())];
+			firstByte = toByte(this.myFirstRecord);
+			firstNum = toNum(firstRecord());
+			numBytes = (int) (lastByte(firstRecord() + numRecords()) - firstByte);
+			lastNum = toNum(firstRecord() + numRecords());
 			db.getRecordsAsBytes(myHandle, firstByte, firstNum, memoryStorage,
 					0, numBytes, lastNum, true);
-		} else
-			myHandle = null;
+		}
 	}
 
 	protected byte[] memoryStorage;
@@ -52,7 +67,7 @@ public class MemoryDatabase extends DatabaseWrapper {
 
 	private long myNumRecords;
 
-	private final boolean backChanges;
+	private final boolean backChanges, mutable;
 
 	@Override
 	public void close() {
@@ -134,6 +149,8 @@ public class MemoryDatabase extends DatabaseWrapper {
 	}
 
 	public void setRange(long firstRecord, int numRecords) {
+		if (!mutable)
+			throw new UnsupportedOperationException();
 		this.myFirstRecord = firstRecord;
 		this.myNumRecords = numRecords;
 		firstByte = toByte(firstRecord);
@@ -158,7 +175,7 @@ public class MemoryDatabase extends DatabaseWrapper {
 		return myNumRecords;
 	}
 
-	//TODO Do this without cheating
+	// TODO Do this without cheating
 	@Override
 	public long getRecord(DatabaseHandle dh, long recordIndex) {
 		if (!superCompress && recordGroupByteLength == 1)
@@ -167,7 +184,7 @@ public class MemoryDatabase extends DatabaseWrapper {
 			return super.getRecord(dh, recordIndex);
 	}
 
-	//TODO Do this without cheating
+	// TODO Do this without cheating
 	@Override
 	public void putRecord(DatabaseHandle dh, long recordIndex, long r) {
 		if (!superCompress && recordGroupByteLength == 1)

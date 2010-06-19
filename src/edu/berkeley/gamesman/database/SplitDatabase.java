@@ -365,10 +365,13 @@ public class SplitDatabase extends Database {
 			dbNum = -dbNum - 2;
 		long lastRecord = firstRecord + numRecords;
 		String s = "";
-		while (firstRecordList.get(dbNum) < lastRecord)
+		while (dbNum < firstRecordList.size()
+				&& firstRecordList.get(dbNum) < lastRecord) {
 			s += dbTypeList.get(dbNum) + " " + uriList.get(dbNum) + " "
 					+ firstRecordList.get(dbNum) + " "
 					+ numRecordsList.get(dbNum) + " ";
+			dbNum++;
+		}
 		s += "end";
 		return s;
 	}

@@ -1,5 +1,6 @@
 package edu.berkeley.gamesman.parallel;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -58,6 +59,9 @@ public class TierSlave implements TaskFactory, Runnable {
 				readDb = null;
 			}
 			String foldUri = conf.getProperty("gamesman.parallel.dbfolder");
+			File f = new File(foldUri);
+			if (!f.exists())
+				f.mkdir();
 			String path = conf.getProperty("gamesman.remote.path");
 			if (!(foldUri.startsWith("/") || foldUri.startsWith(path)))
 				foldUri = path + "/" + foldUri;
@@ -144,7 +148,6 @@ public class TierSlave implements TaskFactory, Runnable {
 			t.start();
 			myThreads.add(t);
 		}
-
 		for (Thread t : myThreads)
 			while (t.isAlive())
 				try {
@@ -153,7 +156,8 @@ public class TierSlave implements TaskFactory, Runnable {
 					new Exception("Interrupted while joined on thread " + t)
 							.printStackTrace();
 				}
-		readDb.close();
+		if (readDb != null)
+			readDb.close();
 		writeDb.close();
 		System.out.println("finished: " + writeUri + " " + firstHash + " "
 				+ numHashes);
@@ -202,7 +206,7 @@ public class TierSlave implements TaskFactory, Runnable {
 					+ String.format("%4.02f", fraction * 100)
 					+ "% ETA "
 					+ Util.millisToETA((long) (elapsedMillis / fraction)
-							- elapsedMillis) + " remains\r");
+							- elapsedMillis) + " remains\n");
 		}
 	}
 }
