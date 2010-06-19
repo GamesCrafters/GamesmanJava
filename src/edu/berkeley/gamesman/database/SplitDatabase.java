@@ -21,6 +21,7 @@ public class SplitDatabase extends Database {
 	private final ArrayList<String> uriList;
 	private final ArrayList<Long> firstRecordList;
 	private final ArrayList<Long> numRecordsList;
+	private final boolean store;
 
 	public SplitDatabase(String uri, Configuration conf, boolean solve,
 			long firstRecord, long numRecords, DatabaseHeader header) {
@@ -75,13 +76,14 @@ public class SplitDatabase extends Database {
 			uriList = null;
 			firstRecordList = null;
 			numRecordsList = null;
+			store = false;
 		} catch (IOException e) {
 			throw new Error(e);
 		}
 	}
 
 	public SplitDatabase(String uri, Configuration conf, long firstRecord,
-			long numRecords) {
+			long numRecords, boolean store) {
 		super(uri, conf, true, firstRecord, numRecords, null);
 		if (uri == null)
 			uri = conf.getProperty("gamesman.db.uri");
@@ -95,18 +97,20 @@ public class SplitDatabase extends Database {
 		uriList = new ArrayList<String>();
 		firstRecordList = new ArrayList<Long>();
 		numRecordsList = new ArrayList<Long>();
+		this.store = store;
 	}
 
 	public SplitDatabase(String uri, Configuration conf) {
-		this(uri, conf, 0, -1);
+		this(uri, conf, 0, -1, true);
 	}
 
-	public SplitDatabase(Configuration conf) {
-		this(null, conf);
+	public SplitDatabase(Configuration conf, boolean store) {
+		this(conf, 0, -1, store);
 	}
 
-	public SplitDatabase(Configuration conf, long firstRecord, long numRecords) {
-		this(null, conf, firstRecord, numRecords);
+	public SplitDatabase(Configuration conf, long firstRecord, long numRecords,
+			boolean store) {
+		this(null, conf, firstRecord, numRecords, store);
 	}
 
 	private static DatabaseHeader getSplitHeader(String uri) {
@@ -126,7 +130,7 @@ public class SplitDatabase extends Database {
 		if (dbTypeList == null)
 			for (Database d : databaseList)
 				d.close();
-		else {
+		else if (store) {
 			try {
 				FileOutputStream fos = new FileOutputStream(uri);
 				store(fos, uri);
@@ -330,7 +334,7 @@ public class SplitDatabase extends Database {
 			start = 2;
 		} else {
 			sd = new SplitDatabase(dbFile, new Configuration(confFile), Long
-					.parseLong(args[2]), Long.parseLong(args[3]));
+					.parseLong(args[2]), Long.parseLong(args[3]), true);
 			start = 4;
 		}
 		for (int i = start; i < args.length; i += 4) {

@@ -125,7 +125,7 @@ public class TierMaster implements Runnable {
 		this.slaveJobFile = slaveJobFile;
 		Configuration slaveConf = new Configuration(slaveJobFile);
 		dbFolder = slaveConf.getProperty("gamesman.parallel.dbfolder");
-		dbTrack = new SplitDatabase(conf);
+		dbTrack = new SplitDatabase(conf, true);
 		nodes = new NodeRunnable[nodeNames.length];
 		for (int i = 0; i < nodeNames.length; i++) {
 			nodes[i] = new NodeRunnable(nodeNames[i]);
@@ -161,7 +161,7 @@ public class TierMaster implements Runnable {
 		for (tier = g.numberOfTiers() - 1; tier >= 0; tier--) {
 			long start = g.hashOffsetForTier(tier);
 			long length = g.numHashesForTier(tier);
-			curTierDb = new SplitDatabase(conf, start, length);
+			curTierDb = new SplitDatabase(conf, start, length, false);
 			divides = curTierDb.splitRange(start, length, numSplits);
 			sliceNum = 0;
 			int i = 0;
