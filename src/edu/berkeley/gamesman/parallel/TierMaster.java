@@ -86,8 +86,11 @@ public class TierMaster implements Runnable {
 									+ scan.nextLine());
 					}
 					lastPrinted = System.currentTimeMillis();
-					curTierDb.insertDb(innerDbType, scan.next(), scan
-							.nextLong(), scan.nextLong());
+					long firstRecord = scan.nextLong();
+					curTierDb.insertDb("RemoteDatabase", (user == null ? name
+							: (user + "@" + name))
+							+ ":" + path + ":" + dbFolder + "/s" + firstRecord,
+							firstRecord, scan.nextLong());
 					slice = getSlice();
 				}
 			} catch (IOException e) {
@@ -101,7 +104,7 @@ public class TierMaster implements Runnable {
 	private final String user;
 	private final String path;
 	private final String slaveJobFile;
-	private final String innerDbType;
+	private final String dbFolder;
 	private final SplitDatabase dbTrack;
 	private final int numSplits;
 	private SplitDatabase prevTierDb;
@@ -117,13 +120,12 @@ public class TierMaster implements Runnable {
 		path = conf.getProperty("gamesman.remote.path");
 		String slaveJobFile = conf.getProperty("gamesman.parallel.slave.job");
 		numSplits = (int) (conf.getFloat("gamesman.parallel.multiple", 1) * nodeNames.length);
-		Configuration slaveConf = new Configuration(slaveJobFile);
 		if (!(slaveJobFile.startsWith("/") || slaveJobFile.startsWith(path)))
 			slaveJobFile = path + "/" + slaveJobFile;
 		this.slaveJobFile = slaveJobFile;
-		innerDbType = slaveConf.getProperty("gamesman.database");
+		Configuration slaveConf = new Configuration(slaveJobFile);
+		dbFolder = slaveConf.getProperty("gamesman.parallel.dbfolder");
 		dbTrack = new SplitDatabase(conf);
-		TierGame g = (TierGame) conf.getGame();
 		nodes = new NodeRunnable[nodeNames.length];
 		for (int i = 0; i < nodeNames.length; i++) {
 			nodes[i] = new NodeRunnable(nodeNames[i]);
