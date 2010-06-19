@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Properties;
 import java.util.Scanner;
 
 import edu.berkeley.gamesman.core.Configuration;
@@ -76,13 +75,17 @@ public class TierMaster implements Runnable {
 					Scanner scan = new Scanner(is);
 					String next = scan.next();
 					while (!next.equals("finished:")) {
+						lastPrinted = System.currentTimeMillis();
 						if (next.equals("fetch:")) {
 							long firstRecord = scan.nextLong();
 							long numRecords = scan.nextLong();
 							ps.println(prevTierDb.makeStream(firstRecord,
 									numRecords));
-						}
+						} else
+							System.out.println(name + ": " + next + " "
+									+ scan.nextLine());
 					}
+					lastPrinted = System.currentTimeMillis();
 					curTierDb.insertDb(innerDbType, scan.next(), scan
 							.nextLong(), scan.nextLong());
 					slice = getSlice();
@@ -100,9 +103,12 @@ public class TierMaster implements Runnable {
 	private final String slaveJobFile;
 	private final String innerDbType;
 	private final SplitDatabase dbTrack;
+	private final int numSplits;
 	private SplitDatabase prevTierDb;
 	private SplitDatabase curTierDb;
 	private int tier;
+	private long[] divides;
+	private int sliceNum = 0;
 
 	public TierMaster(Configuration conf, String[] nodeNames)
 			throws ClassNotFoundException {
@@ -110,6 +116,7 @@ public class TierMaster implements Runnable {
 		user = conf.getProperty("gamesman.remote.user");
 		path = conf.getProperty("gamesman.remote.path");
 		String slaveJobFile = conf.getProperty("gamesman.parallel.slave.job");
+		numSplits = (int) (conf.getFloat("gamesman.parallel.multiple", 1) * nodeNames.length);
 		Configuration slaveConf = new Configuration(slaveJobFile);
 		if (!(slaveJobFile.startsWith("/") || slaveJobFile.startsWith(path)))
 			slaveJobFile = path + "/" + slaveJobFile;
@@ -123,9 +130,12 @@ public class TierMaster implements Runnable {
 		}
 	}
 
-	public Pair<Long, Long> getSlice() {
-		// TODO Auto-generated method stub
-		return null;
+	synchronized Pair<Long, Long> getSlice() {
+		if (sliceNum >= divides.length - 1)
+			return null;
+		long firstRecord = divides[sliceNum++];
+		long numRecords = divides[sliceNum] - firstRecord;
+		return new Pair<Long, Long>(firstRecord, numRecords);
 	}
 
 	public static void main(String[] args) throws ClassNotFoundException,
@@ -147,8 +157,11 @@ public class TierMaster implements Runnable {
 		TierGame g = (TierGame) conf.getGame();
 		Thread[] joinThreads = new Thread[nodes.length];
 		for (tier = g.numberOfTiers() - 1; tier >= 0; tier--) {
-			curTierDb = new SplitDatabase(conf, g.hashOffsetForTier(tier), g
-					.numHashesForTier(tier));
+			long start = g.hashOffsetForTier(tier);
+			long length = g.numHashesForTier(tier);
+			curTierDb = new SplitDatabase(conf, start, length);
+			divides = curTierDb.splitRange(start, length, numSplits);
+			sliceNum = 0;
 			int i = 0;
 			for (NodeRunnable nr : nodes) {
 				Thread t = new Thread(nr);
