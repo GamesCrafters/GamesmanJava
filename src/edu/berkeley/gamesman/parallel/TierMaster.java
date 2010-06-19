@@ -57,20 +57,20 @@ public class TierMaster implements Runnable {
 
 		public void run() {
 			try {
-				lastPrinted = System.currentTimeMillis();
-				String command = "ssh "
-						+ (user == null ? name : (user + "@" + name));
-				command += " java -cp " + path
-						+ "/bin edu.berkeley.gamesman.parallel.TierSlave ";
-				command += slaveJobFile + " " + tier;
-				Process p = Runtime.getRuntime().exec(command);
-				InputStream es = p.getErrorStream();
-				new ErrorThread(es, name).start();
-				// TODO Start Error-check thread
-				OutputStream os = p.getOutputStream();
-				InputStream is = p.getInputStream();
 				Pair<Long, Long> slice = getSlice();
 				while (slice != null) {
+					lastPrinted = System.currentTimeMillis();
+					String command = "ssh "
+							+ (user == null ? name : (user + "@" + name));
+					command += " java -cp " + path
+							+ "/bin edu.berkeley.gamesman.parallel.TierSlave ";
+					command += slaveJobFile + " " + tier;
+					Process p = Runtime.getRuntime().exec(command);
+					InputStream es = p.getErrorStream();
+					new ErrorThread(es, name).start();
+					// TODO Start Error-check thread
+					OutputStream os = p.getOutputStream();
+					InputStream is = p.getInputStream();
 					os.write(dbTrack.getHeader(slice.car, slice.cdr).toBytes());
 					os.flush();
 					PrintStream ps = new PrintStream(os);
