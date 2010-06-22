@@ -945,6 +945,11 @@ public abstract class Database {
 		return openDatabase(uri, null, false, firstRecord, numRecords);
 	}
 
+	public static Database openDatabase(String dbType, String uri,
+			long firstRecord, long numRecords) {
+		return openDatabase(dbType, uri, null, false, firstRecord, numRecords);
+	}
+
 	public static Database openDatabase(String uri, Configuration conf,
 			boolean solve, long firstRecord, long numRecords) {
 		return openDatabase(null, uri, conf, solve, firstRecord, numRecords);

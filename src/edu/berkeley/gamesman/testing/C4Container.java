@@ -83,15 +83,21 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 	/**
 	 * @param args
 	 *            The job file
+	 * @throws ClassNotFoundException
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws ClassNotFoundException {
 		if (args.length != 1)
 			throw new Error(
 					"Please specify a database file as the only argument");
 		Configuration conf;
 		Database fd;
-		fd = Database.openDatabase(args[0]);
-		conf = fd.getConfiguration();
+		if (args[0].endsWith(".job")) {
+			conf = new Configuration(args[0]);
+			fd = Database.openDatabase(conf, false);
+		} else {
+			fd = Database.openDatabase(args[0]);
+			conf = fd.getConfiguration();
+		}
 		int width = conf.getInteger("gamesman.game.width", 7);
 		int height = conf.getInteger("gamesman.game.height", 6);
 		Record r = new Record(conf);
@@ -101,8 +107,7 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 			g.recordFromLong(g.hashToState(0), fd.getRecord(fdHandle, 0), r);
 		} else {
 			TopDownC4 g = (TopDownC4) conf.getGame();
-			g.recordFromLong(g.hashToState(0), fd.getRecord(fdHandle, 0),
-					r);
+			g.recordFromLong(g.hashToState(0), fd.getRecord(fdHandle, 0), r);
 		}
 		fd.closeHandle(fdHandle);
 		System.out.println(r);

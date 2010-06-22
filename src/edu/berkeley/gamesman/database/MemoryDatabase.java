@@ -31,21 +31,20 @@ public class MemoryDatabase extends DatabaseWrapper {
 			boolean solve, long firstRecord, long numRecords,
 			boolean backChanges, boolean mutable) {
 		super(db, uri, conf, solve, firstRecord, numRecords);
+		firstRecord = this.myFirstRecord = super.firstRecord();
+		numRecords = this.myNumRecords = super.numRecords();
 		this.backChanges = backChanges;
 		this.mutable = mutable;
 		if (backChanges)
 			myHandle = db.getHandle();
 		else
 			myHandle = null;
-		if (mutable) {
-			this.myFirstRecord = super.firstRecord();
-			this.myNumRecords = super.numRecords();
-		} else if (backChanges) {
-			memoryStorage = new byte[(int) numBytes(firstRecord(), numRecords())];
-			firstByte = toByte(this.myFirstRecord);
-			firstNum = toNum(firstRecord());
-			numBytes = (int) (lastByte(firstRecord() + numRecords()) - firstByte);
-			lastNum = toNum(firstRecord() + numRecords());
+		if (!mutable && backChanges) {
+			firstByte = toByte(firstRecord);
+			numBytes = (int) (lastByte(firstRecord + numRecords) - firstByte);
+			memoryStorage = new byte[numBytes];
+			firstNum = toNum(firstRecord);
+			lastNum = toNum(firstRecord + numRecords);
 			db.getRecordsAsBytes(myHandle, firstByte, firstNum, memoryStorage,
 					0, numBytes, lastNum, true);
 		}

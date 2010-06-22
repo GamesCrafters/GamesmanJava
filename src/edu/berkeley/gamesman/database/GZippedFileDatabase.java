@@ -23,8 +23,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			throws IOException {
 		super(uri, conf, solve, firstRecord, numRecords, header);
 		myFile = new File(uri);
-		entrySize = conf.getInteger("zip.entryKB", 64) << 10;
-		bufferSize = conf.getInteger("zip.bufferKB", 4) << 10;
+		entrySize = conf.getInteger("gamesman.db.zip.entryKB", 64) << 10;
 		final long firstByteIndex = toByte(firstContainedRecord);
 		firstEntry = handleEntry = thisEntry = firstByteIndex / entrySize;
 		lastByteIndex = lastByte(firstContainedRecord + numContainedRecords);
@@ -58,8 +57,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		super(uri, conf, true, readFrom.firstRecord(), readFrom.numRecords(),
 				readFrom.getHeader());
 		myFile = new File(uri);
-		entrySize = conf.getInteger("zip.entryKB", 64) << 10;
-		bufferSize = conf.getInteger("zip.bufferKB", 4) << 10;
+		entrySize = conf.getInteger("gamesman.db.zip.entryKB", 64) << 10;
 		final long firstByteIndex = toByte(firstContainedRecord);
 		firstEntry = handleEntry = thisEntry = firstByteIndex / entrySize;
 		lastByteIndex = lastByte(firstContainedRecord + numContainedRecords);
@@ -115,8 +113,6 @@ public class GZippedFileDatabase extends Database implements Runnable {
 	private final long[] entryPoints;
 
 	private final int entrySize;
-
-	private final int bufferSize;
 
 	private long thisEntry;
 
@@ -198,28 +194,29 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		if (!overwriteEdgesOk)
 			return super.getBytes(dh, arr, off, maxLen, false);
 		final int numBytes = (int) Math.min(maxLen, dh.lastByteIndex
-				- dh.byteIndex);
+				- dh.location);
 		int len = numBytes;
 		while (len > 0) {
 			int bytesToRead = (int) Math.min(len, nextStart - dh.location);
-			while (bytesToRead > 0) {
-				try {
-					int bytesRead = myStream.read(arr, off, bytesToRead);
-					bytesToRead -= bytesRead;
-					len -= bytesRead;
-					dh.location += bytesRead;
-					off += bytesRead;
-				} catch (IOException e) {
-					throw new Error(e);
-				}
+			try {
+				readFully(myStream, arr, off, bytesToRead);
+				len -= bytesToRead;
+				dh.location += bytesToRead;
+				off += bytesToRead;
+			} catch (IOException e) {
+				throw new Error(e);
 			}
 			if (len > 0) {
 				thisEntry++;
 				nextStart += entrySize;
 				try {
+					// Unfortunately Java's implementation of GZIPInputStream is
+					// stupid so this line is necessary. As you might imagine,
+					// things would be really frustrating and tricky if not for
+					// the availability of this function here.
 					fis.getChannel().position(
 							entryPoints[(int) (thisEntry - firstEntry)]);
-					myStream = new GZIPInputStream(fis, bufferSize);
+					myStream = new GZIPInputStream(fis, entrySize);
 				} catch (IOException e) {
 					throw new Error(e);
 				}
@@ -242,7 +239,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		try {
 			fis.getChannel().position(
 					entryPoints[(int) (thisEntry - firstEntry)]);
-			myStream = new GZIPInputStream(fis, bufferSize);
+			myStream = new GZIPInputStream(fis, entrySize);
 			long curLoc = thisEntry * entrySize;
 			while (curLoc < dh.location)
 				curLoc += myStream.skip(dh.location - curLoc);
@@ -384,7 +381,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		while (wh != null) {
 			try {
 				GZIPOutputStream gzo = new GZIPOutputStream(wh.zippedStorage,
-						bufferSize);
+						entrySize);
 				gzo.write(wh.myStorage, 0, wh.numBytes);
 				gzo.finish();
 			} catch (IOException e) {
@@ -400,7 +397,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		long time = System.currentTimeMillis();
 		String db1 = args[0];
 		String zipDb = args[1];
-		int entryKB, bufferKB;
+		int entryKB;
 		int numThreads;
 		if (args.length > 2)
 			numThreads = Integer.parseInt(args[2]);
@@ -415,16 +412,12 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			maxMem = ((long) Integer.parseInt(args[4])) << 10;
 		else
 			maxMem = 1 << 25;
-		if (args.length > 5)
-			bufferKB = Integer.parseInt(args[5]);
-		else
-			bufferKB = 4;
 		Database readFrom = Database.openDatabase(db1);
 		Configuration outConf = readFrom.getConfiguration().cloneAll();
 		outConf.setProperty("gamesman.database", "GZippedFileDatabase");
 		outConf.setProperty("gamesman.db.uri", zipDb);
-		outConf.setProperty("zip.entryKB", Integer.toString(entryKB));
-		outConf.setProperty("zip.bufferKB", Integer.toString(bufferKB));
+		outConf.setProperty("gamesman.db.zip.entryKB", Integer
+				.toString(entryKB));
 		GZippedFileDatabase writeTo = new GZippedFileDatabase(zipDb, outConf,
 				readFrom, maxMem);
 		Thread[] threadList = new Thread[numThreads];
@@ -446,5 +439,38 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		writeTo.close();
 		System.out.println("Zipped in "
 				+ Util.millisToETA(System.currentTimeMillis() - time));
+	}
+
+	protected synchronized long prepareZippedRange(DatabaseHandle dh,
+			long byteIndex, int firstNum, long numBytes, int lastNum) {
+		lastUsed = dh;
+		long startEntry = byteIndex / entrySize;
+		long endEntry = (byteIndex + numBytes + entrySize - 1) / entrySize;
+		dh.byteIndex = entryPoints[(int) (startEntry - firstEntry)];
+		dh.lastByteIndex = entryPoints[(int) (endEntry - firstEntry)];
+		dh.location = dh.byteIndex;
+		try {
+			fis.getChannel().position(dh.location);
+		} catch (IOException e) {
+			throw new Error(e);
+		}
+		return dh.lastByteIndex - dh.byteIndex;
+	}
+
+	protected synchronized int getZippedBytes(DatabaseHandle dh, byte[] arr,
+			int off, int maxBytes) {
+		try {
+			if (lastUsed != dh) {
+				lastUsed = dh;
+				fis.getChannel().position(dh.location);
+			}
+			int numBytes = (int) Math.min(maxBytes, dh.lastByteIndex
+					- dh.location);
+			readFully(fis, arr, off, numBytes);
+			dh.location += numBytes;
+			return numBytes;
+		} catch (IOException ioe) {
+			throw new Error(ioe);
+		}
 	}
 }
