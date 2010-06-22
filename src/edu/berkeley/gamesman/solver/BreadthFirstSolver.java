@@ -149,7 +149,6 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 					e.printStackTrace();
 				}
 			}
-			readDb.closeHandle(readDh);
 			writeDb.closeHandle(writeDh);
 			solveTask.complete();
 			assert Util.debug(DebugFacility.SOLVER,

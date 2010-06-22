@@ -45,7 +45,6 @@ public class ReadRecords {
 			out.write(arr, 0, bytesRead);
 			numBytes -= bytesRead;
 		}
-		db.closeHandle(dh);
 		out.close();
 	}
 }

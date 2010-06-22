@@ -360,7 +360,6 @@ public class JSONInterface extends GamesmanApplication {
 				DatabaseHandle handle = db.getHandle();
 				g.recordFromLong(state, db.getRecord(handle, g
 						.stateToHash(state)), rec);
-				db.closeHandle(handle);
 				if (conf.valueStates > 0) {
 					PrimitiveValue pv = rec.value;
 					if (g.getPlayerCount() > 1 && isChildState) {

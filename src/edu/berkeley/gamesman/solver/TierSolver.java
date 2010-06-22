@@ -328,8 +328,6 @@ public class TierSolver extends Solver {
 					readHandle = readDb.getHandle();
 				solvePartialTier(conf, slice.car, slice.cdr, updater,
 						readHandle, myWrite);
-				if (readHandle != null)
-					readDb.closeHandle(readHandle);
 				writeDb.closeHandle(myWrite);
 			}
 			if (barr != null)

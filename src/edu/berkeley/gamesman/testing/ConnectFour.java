@@ -134,7 +134,6 @@ class ConnectFour implements MouseListener {
 					DatabaseHandle fdHandle = fd.getHandle();
 					tdgame.recordFromLong(state, fd.getRecord(fdHandle, tdgame
 							.stateToHash(state)), r);
-					fd.closeHandle(fdHandle);
 					System.out.println(r);
 				} else {
 					TierState state = game.stringToState(arrToString(board));
@@ -142,7 +141,6 @@ class ConnectFour implements MouseListener {
 					DatabaseHandle fdHandle = fd.getHandle();
 					game.recordFromLong(state, fd.getRecord(fdHandle, game
 							.stateToHash(state)), r);
-					fd.closeHandle(fdHandle);
 					System.out.println(r);
 				}
 				if (!win())
@@ -181,7 +179,6 @@ class ConnectFour implements MouseListener {
 					DatabaseHandle fdHandle = fd.getHandle();
 					tdgame.recordFromLong(state, fd.getRecord(fdHandle,
 							moveHashes[i]), records[i]);
-					fd.closeHandle(fdHandle);
 				}
 				for (Record r : records)
 					r.previousPosition();
@@ -216,7 +213,6 @@ class ConnectFour implements MouseListener {
 					game.recordFromLong(state, fd.getRecord(fdHandle,
 							moveHashes[i]), records[i]);
 				}
-				fd.closeHandle(fdHandle);
 				for (Record r : records)
 					r.previousPosition();
 				Record bestRecord = game.combine(records, 0, records.length);

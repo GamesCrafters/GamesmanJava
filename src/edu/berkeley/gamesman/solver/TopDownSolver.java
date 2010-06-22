@@ -82,7 +82,6 @@ public class TopDownSolver<S extends State> extends Solver {
 			DatabaseHandle readHandle = readDb.getHandle();
 			DatabaseHandle writeHandle = writeDb.getHandle();
 			solve(game, s, new Record(conf), 0, readHandle, writeHandle);
-			readDb.closeHandle(readHandle);
 			writeDb.closeHandle(writeHandle);
 			System.out.println(Util.millisToETA(System.currentTimeMillis()
 					- currentTimeMillis)

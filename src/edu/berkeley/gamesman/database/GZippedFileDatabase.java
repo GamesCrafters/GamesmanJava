@@ -434,7 +434,6 @@ public class GZippedFileDatabase extends Database implements Runnable {
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
-			readFrom.closeHandle(readHandle[i]);
 		}
 		writeTo.close();
 		System.out.println("Zipped in "
@@ -472,5 +471,9 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		} catch (IOException ioe) {
 			throw new Error(ioe);
 		}
+	}
+
+	public int extraBytes(long firstByte) {
+		return (int) (firstByte % entrySize);
 	}
 }

@@ -180,7 +180,6 @@ public class C4CachedSolver extends TierSolver {
 		if (readPages != null)
 			for (int i = 0; i < readPages.length; i++)
 				if (readPages[i] != null) {
-					readPages[i].closeHandle(readHandles[i]);
 					readPages[i].flush();
 					readPagePool.release(readPages[i]);
 				}
