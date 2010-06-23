@@ -29,15 +29,15 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		lastByteIndex = lastByte(firstContainedRecord + numContainedRecords);
 		long lastEntry = (lastByteIndex + entrySize - 1) / entrySize;
 		numEntries = (int) (lastEntry - firstEntry);
-		entryPoints = new long[numEntries];
+		entryPoints = new long[numEntries + 1];
 		fos = null;
 		fis = new FileInputStream(myFile);
 		skipHeader(fis);
 		tableOffset = fis.getChannel().position();
-		byte[] entryBytes = new byte[numEntries << 3];
+		byte[] entryBytes = new byte[entryPoints.length << 3];
 		readFully(fis, entryBytes, 0, entryBytes.length);
 		int count = 0;
-		for (int i = 0; i < numEntries; i++) {
+		for (int i = 0; i < entryPoints.length; i++) {
 			for (int bit = 56; bit >= 0; bit -= 8) {
 				entryPoints[i] <<= 8;
 				entryPoints[i] |= ((int) entryBytes[count++]) & 255;
@@ -63,14 +63,14 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		lastByteIndex = lastByte(firstContainedRecord + numContainedRecords);
 		long lastEntry = (lastByteIndex + entrySize - 1) / entrySize;
 		numEntries = (int) (lastEntry - firstEntry);
-		entryPoints = new long[numEntries];
+		entryPoints = new long[numEntries + 1];
 		fis = null;
 		waitingCaches = new QuickLinkedList<Pair<ByteArrayOutputStream, Long>>();
 		waitingCachesIter = waitingCaches.listIterator();
 		fos = new FileOutputStream(myFile);
 		store(fos, uri);
 		tableOffset = fos.getChannel().position();
-		fos.getChannel().position(tableOffset + (numEntries << 3));
+		fos.getChannel().position(tableOffset + (entryPoints.length << 3));
 		zippedStoragePool = new Pool<ByteArrayOutputStream>(
 				new Factory<ByteArrayOutputStream>() {
 
@@ -145,9 +145,9 @@ public class GZippedFileDatabase extends Database implements Runnable {
 	@Override
 	public void close() {
 		if (solve) {
-			byte[] entryBytes = new byte[numEntries << 3];
+			byte[] entryBytes = new byte[entryPoints.length << 3];
 			int count = 0;
-			for (int entry = 0; entry < numEntries; entry++) {
+			for (int entry = 0; entry < entryPoints.length; entry++) {
 				for (int i = 56; i >= 0; i -= 8)
 					entryBytes[count++] = (byte) (entryPoints[entry] >>> i);
 			}
@@ -358,18 +358,23 @@ public class GZippedFileDatabase extends Database implements Runnable {
 					entryPoints[(int) ((thisEntry++) - firstEntry)] = fos
 							.getChannel().position();
 					thisCache.car.writeTo(fos);
+					synchronized (this) {
+						zippedStoragePool.release(thisCache.car);
+						memoryConstraint.release();
+						if (waitingCaches.isEmpty()) {
+							if (thisEntry - firstEntry == numEntries) {
+								entryPoints[numEntries] = fos.getChannel()
+										.position();
+							}
+							break;
+						}
+						thisCache = waitingCaches.getFirst();
+						if (thisEntry != thisCache.cdr)
+							break;
+						waitingCaches.removeFirst();
+					}
 				} catch (IOException e) {
 					throw new Error(e);
-				}
-				synchronized (this) {
-					zippedStoragePool.release(thisCache.car);
-					memoryConstraint.release();
-					if (waitingCaches.isEmpty())
-						break;
-					thisCache = waitingCaches.getFirst();
-					if (thisEntry != thisCache.cdr)
-						break;
-					waitingCaches.removeFirst();
 				}
 			}
 		} else
@@ -414,7 +419,8 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			maxMem = 1 << 25;
 		Database readFrom = Database.openDatabase(db1);
 		Configuration outConf = readFrom.getConfiguration().cloneAll();
-		outConf.setProperty("gamesman.database", "GZippedFileDatabase");
+		outConf.setProperty("gamesman.database", GZippedFileDatabase.class
+				.getName());
 		outConf.setProperty("gamesman.db.uri", zipDb);
 		outConf.setProperty("gamesman.db.zip.entryKB", Integer
 				.toString(entryKB));
@@ -435,42 +441,69 @@ public class GZippedFileDatabase extends Database implements Runnable {
 					e.printStackTrace();
 				}
 		}
+		readFrom.close();
 		writeTo.close();
 		System.out.println("Zipped in "
 				+ Util.millisToETA(System.currentTimeMillis() - time));
 	}
 
 	protected synchronized long prepareZippedRange(DatabaseHandle dh,
-			long byteIndex, int firstNum, long numBytes, int lastNum) {
-		lastUsed = dh;
+			long byteIndex, long numBytes) {
 		long startEntry = byteIndex / entrySize;
 		long endEntry = (byteIndex + numBytes + entrySize - 1) / entrySize;
 		dh.byteIndex = entryPoints[(int) (startEntry - firstEntry)];
 		dh.lastByteIndex = entryPoints[(int) (endEntry - firstEntry)];
-		dh.location = dh.byteIndex;
+		dh.location = byteIndex;
+		dh.firstNum = 4;
+		zippedSeek(dh);
+		return dh.lastByteIndex - dh.byteIndex + ((endEntry - startEntry) << 2);
+	}
+
+	private synchronized void zippedSeek(DatabaseHandle dh) {
+		lastUsed = dh;
+		thisEntry = dh.location / entrySize;
+		nextStart = entryPoints[(int) (thisEntry + 1 - firstEntry)];
 		try {
 			fis.getChannel().position(dh.location);
 		} catch (IOException e) {
 			throw new Error(e);
 		}
-		return dh.lastByteIndex - dh.byteIndex;
 	}
 
 	protected synchronized int getZippedBytes(DatabaseHandle dh, byte[] arr,
-			int off, int maxBytes) {
-		try {
-			if (lastUsed != dh) {
-				lastUsed = dh;
-				fis.getChannel().position(dh.location);
+			int off, int maxLen) {
+		if (lastUsed != dh)
+			zippedSeek(dh);
+		final int numBytes = (int) Math.min(maxLen, dh.lastByteIndex
+				- dh.location);
+		int len = numBytes;
+		while (len > 0) {
+			int bytesToRead = (int) Math.min(len, nextStart - dh.location
+					+ dh.firstNum);
+			try {
+				if (dh.firstNum > 0) {
+					int bytesInBlock = (int) (nextStart - dh.location);
+					while (dh.firstNum > 0 && bytesToRead > 0) {
+						dh.firstNum--;
+						arr[off++] = (byte) (bytesInBlock >>> (dh.firstNum << 3));
+						len--;
+						bytesToRead--;
+					}
+				}
+				readFully(fis, arr, off, bytesToRead);
+				len -= bytesToRead;
+				dh.location += bytesToRead;
+				off += bytesToRead;
+			} catch (IOException e) {
+				throw new Error(e);
 			}
-			int numBytes = (int) Math.min(maxBytes, dh.lastByteIndex
-					- dh.location);
-			readFully(fis, arr, off, numBytes);
-			dh.location += numBytes;
-			return numBytes;
-		} catch (IOException ioe) {
-			throw new Error(ioe);
+			if (len > 0) {
+				thisEntry++;
+				nextStart = entryPoints[(int) (thisEntry + 1 - firstEntry)];
+				dh.firstNum = 4;
+			}
 		}
+		return numBytes;
 	}
 
 	public int extraBytes(long firstByte) {

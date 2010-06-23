@@ -984,6 +984,7 @@ public abstract class Database {
 	private static Database openDatabase(String dbType, String uri,
 			Configuration conf, boolean solve, long firstRecord,
 			long numRecords, DatabaseHeader header) {
+		String[] dbClasses;
 		if (uri == null)
 			uri = conf.getProperty("gamesman.db.uri");
 		if (uri.contains(":")) {
@@ -999,8 +1000,6 @@ public abstract class Database {
 				user = userHost[0];
 				host = userHost[1];
 			}
-			if (dbType == null || !dbType.endsWith("RemoteDatabase"))
-				dbType = "RemoteDatabase";
 			if (conf == null) {
 				Pair<DatabaseHeader, Configuration> p = RemoteDatabase
 						.remoteHeaderConf(user, host, file);
@@ -1010,11 +1009,35 @@ public abstract class Database {
 			} else if (header == null) {
 				header = RemoteDatabase.remoteHeader(user, host, file);
 			}
-			if (user != null)
-				conf.setProperty("gamesman.remote.user", user);
-			conf.setProperty("gamesman.remote.server", host);
-			conf.setProperty("gamesman.remote.path", path);
-			conf.setProperty("gamesman.remote.db.uri", file);
+			dbClasses = dbType.split(":");
+			dbClasses[dbClasses.length - 1] = RemoteDatabase.class.getName();
+			try {
+				conf.db = new RemoteDatabase(uri, conf, solve, firstRecord,
+						numRecords, header, user, host, path, file);
+				for (int i = dbClasses.length - 2; i >= 0; i--) {
+					Class<? extends DatabaseWrapper> wrapperClass = Class
+							.forName(dbClasses[i]).asSubclass(
+									DatabaseWrapper.class);
+					conf.db = wrapperClass.getConstructor(Database.class,
+							String.class, Configuration.class, Boolean.TYPE,
+							Long.TYPE, Long.TYPE).newInstance(conf.db, uri,
+							conf, solve, firstRecord, numRecords);
+				}
+			} catch (InstantiationException e) {
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+			} catch (SecurityException e) {
+				e.printStackTrace();
+			} catch (InvocationTargetException e) {
+				e.getCause().printStackTrace();
+			} catch (NoSuchMethodException e) {
+				e.printStackTrace();
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			}
 		} else {
 			if (conf == null) {
 				try {
@@ -1030,41 +1053,48 @@ public abstract class Database {
 			}
 			if (dbType == null)
 				dbType = conf.getProperty("gamesman.database");
-		}
-		String[] dbClasses = dbType.split(":");
-		for (int i = 0; i < dbClasses.length; i++) {
-			if (!dbClasses[i].startsWith("edu.berkeley.gamesman"))
-				dbClasses[i] = "edu.berkeley.gamesman.database." + dbClasses[i];
-		}
-		try {
-			Class<? extends Database> dbClass = Class.forName(
-					dbClasses[dbClasses.length - 1]).asSubclass(Database.class);
-			conf.db = dbClass.getConstructor(String.class, Configuration.class,
-					Boolean.TYPE, Long.TYPE, Long.TYPE, DatabaseHeader.class)
-					.newInstance(uri, conf, solve, firstRecord, numRecords,
-							header);
-			for (int i = dbClasses.length - 2; i >= 0; i--) {
-				Class<? extends DatabaseWrapper> wrapperClass = Class.forName(
-						dbClasses[i]).asSubclass(DatabaseWrapper.class);
-				conf.db = wrapperClass.getConstructor(Database.class,
-						String.class, Configuration.class, Boolean.TYPE,
-						Long.TYPE, Long.TYPE).newInstance(conf.db, uri, conf,
-						solve, firstRecord, numRecords);
+			dbClasses = dbType.split(":");
+			String packageName = null;
+			for (int i = 0; i < dbClasses.length; i++) {
+				if (!dbClasses[i].startsWith("edu.berkeley.gamesman")) {
+					if (packageName == null)
+						packageName = Database.class.getPackage().getName()
+								+ ".";
+					dbClasses[i] = packageName + dbClasses[i];
+				}
 			}
-		} catch (InstantiationException e) {
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		} catch (SecurityException e) {
-			e.printStackTrace();
-		} catch (InvocationTargetException e) {
-			e.getCause().printStackTrace();
-		} catch (NoSuchMethodException e) {
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
+			try {
+				Class<? extends Database> dbClass = Class.forName(
+						dbClasses[dbClasses.length - 1]).asSubclass(
+						Database.class);
+				conf.db = dbClass.getConstructor(String.class,
+						Configuration.class, Boolean.TYPE, Long.TYPE,
+						Long.TYPE, DatabaseHeader.class).newInstance(uri, conf,
+						solve, firstRecord, numRecords, header);
+				for (int i = dbClasses.length - 2; i >= 0; i--) {
+					Class<? extends DatabaseWrapper> wrapperClass = Class
+							.forName(dbClasses[i]).asSubclass(
+									DatabaseWrapper.class);
+					conf.db = wrapperClass.getConstructor(Database.class,
+							String.class, Configuration.class, Boolean.TYPE,
+							Long.TYPE, Long.TYPE).newInstance(conf.db, uri,
+							conf, solve, firstRecord, numRecords);
+				}
+			} catch (InstantiationException e) {
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+			} catch (SecurityException e) {
+				e.printStackTrace();
+			} catch (InvocationTargetException e) {
+				e.getCause().printStackTrace();
+			} catch (NoSuchMethodException e) {
+				e.printStackTrace();
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			}
 		}
 		return conf.db;
 	}

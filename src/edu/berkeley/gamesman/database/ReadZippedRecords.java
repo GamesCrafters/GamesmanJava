@@ -31,12 +31,9 @@ public class ReadZippedRecords {
 		}
 		DatabaseHandle dh = db.getHandle();
 		long firstByte = db.toByte(firstRecord);
-		int firstNum = db.toNum(firstRecord);
 		long lastByte = db.lastByte(firstRecord + numRecords);
-		int lastNum = db.toNum(firstRecord + numRecords);
 		long numBytes = lastByte - firstByte;
-		numBytes = db.prepareZippedRange(dh, firstByte, firstNum, numBytes,
-				lastNum);
+		numBytes = db.prepareZippedRange(dh, firstByte, numBytes);
 		int extraBytes = db.extraBytes(firstByte);
 		byte[] arr = new byte[(int) Math.min(numBytes, BUFFER_SIZE)];
 		for (i = 24; i >= 0; i -= 8) {

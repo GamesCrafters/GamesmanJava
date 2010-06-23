@@ -2,9 +2,11 @@ package edu.berkeley.gamesman.database;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.zip.GZIPInputStream;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.util.DebugFacility;
@@ -13,31 +15,45 @@ import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
 public class RemoteDatabase extends Database {
-	private final String user, server, confFile, gamesmanPath, remoteFile;
+	private final String user, server, confFile, path, remoteFile;
+	private final boolean readZipped;
 	private int maxCommandLen = -1;
+	private final int entrySize;
 
 	public RemoteDatabase(String uri, Configuration conf, boolean solve,
 			long firstRecord, long numRecords, DatabaseHeader header) {
-		this(uri, conf, solve, firstRecord, numRecords, header, conf
-				.getProperty("gamesman.remote.server"), conf
-				.getProperty("gamesman.remote.db.uri"));
+		this(uri, conf, solve, firstRecord, numRecords, header, null, null,
+				null, null);
 	}
 
 	public RemoteDatabase(String uri, Configuration conf, boolean solve,
 			long firstRecord, long numRecords, DatabaseHeader header,
-			String server, String remoteFile) {
+			String user, String server, String path, String remoteFile) {
 		super(uri, conf, solve, firstRecord, numRecords, header);
-		user = conf.getProperty("gamesman.remote.user", null);
+		if (user == null)
+			user = conf.getProperty("gamesman.remote.user", null);
+		this.user = user;
+		if (server == null)
+			server = conf.getProperty("gamesman.remote.server");
 		this.server = server;
-		gamesmanPath = conf.getProperty("gamesman.remote.path");
-		String confFile = conf.getProperty("gamesman.remote.confFile", null);
-		if (confFile != null && !confFile.startsWith("/")
-				&& !confFile.startsWith(gamesmanPath))
-			confFile = gamesmanPath + "/" + confFile;
-		this.confFile = confFile;
-		if (!remoteFile.startsWith("/") && !remoteFile.startsWith(gamesmanPath))
-			remoteFile = gamesmanPath + "/" + remoteFile;
+		if (path == null)
+			path = conf.getProperty("gamesman.remote.path");
+		this.path = path;
+		if (remoteFile == null)
+			remoteFile = conf.getProperty("gamesman.remote.db.uri");
+		if (!remoteFile.startsWith("/") && !remoteFile.startsWith(path))
+			remoteFile = path + "/" + remoteFile;
+		readZipped = conf.getBoolean("gamesman.remote.zipped", false);
+		if (readZipped)
+			entrySize = conf.getInteger("gamesman.db.zip.entryKB", 64) << 10;
+		else
+			entrySize = -1;
 		this.remoteFile = remoteFile;
+		String confFile = conf.getProperty("gamesman.remote.job", null);
+		if (confFile != null && !confFile.startsWith("/")
+				&& !confFile.startsWith(path))
+			confFile = path + "/" + confFile;
+		this.confFile = confFile;
 	}
 
 	@Override
@@ -66,8 +82,13 @@ public class RemoteDatabase extends Database {
 		}
 		command.append(server);
 		command.append(" java -cp ");
-		command.append(gamesmanPath);
-		command.append("/bin edu.berkeley.gamesman.database.ReadRecords ");
+		command.append(path);
+		command.append("/bin ");
+		if (readZipped)
+			command.append(ReadZippedRecords.class.getName());
+		else
+			command.append(ReadRecords.class.getName());
+		command.append(" ");
 		if (confFile != null) {
 			command.append(confFile);
 			command.append(" ");
@@ -88,8 +109,23 @@ public class RemoteDatabase extends Database {
 		try {
 			Process p = Runtime.getRuntime().exec(command.toString());
 			new ErrorThread(p.getErrorStream(), server).start();
-			((RemoteHandle) dh).is = new BufferedInputStream(
-					p.getInputStream(), ReadRecords.BUFFER_SIZE);
+			RemoteHandle rh = ((RemoteHandle) dh);
+			rh.is = new BufferedInputStream(p.getInputStream(),
+					ReadRecords.BUFFER_SIZE);
+			if (readZipped) {
+				byte[] skipBytes = new byte[4];
+				Database.readFully(rh.is, skipBytes, 0, 4);
+				int skipNum = 0;
+				for (int i = 0; i < 4; i++) {
+					skipNum <<= 8;
+					skipNum |= skipBytes[i];
+				}
+				rh.is = new ZipChunkInputStream(rh.is);
+				if (skipNum > 4) {
+					skipBytes = new byte[skipNum];
+				}
+				Database.readFully(rh.is, skipBytes, 0, skipNum);
+			}
 		} catch (IOException e) {
 			throw new Error(e);
 		}
@@ -197,7 +233,9 @@ public class RemoteDatabase extends Database {
 }
 
 class RemoteHandle extends DatabaseHandle {
-	BufferedInputStream is;
+	GZIPInputStream gzi;
+	ChunkInputStream cis;
+	FilterInputStream is;
 
 	public RemoteHandle(int recordGroupByteLength) {
 		super(recordGroupByteLength);

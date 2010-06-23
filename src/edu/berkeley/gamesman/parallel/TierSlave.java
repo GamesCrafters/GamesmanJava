@@ -12,8 +12,10 @@ import java.util.Scanner;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.database.Database;
+import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.database.DatabaseHeader;
 import edu.berkeley.gamesman.database.DistributedDatabase;
+import edu.berkeley.gamesman.database.GZippedFileDatabase;
 import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.solver.TierSolver;
 import edu.berkeley.gamesman.util.DebugFacility;
@@ -26,11 +28,13 @@ public class TierSlave implements TaskFactory, Runnable {
 	private final DistributedDatabase readDb;
 	private final Database writeDb;
 	private final String writeUri;
+	private final String zipUri;
 	private final Configuration conf;
 	private final TierSolver solver;
 	private final int tier;
 	private final long firstHash;
 	private final long numHashes;
+	private final boolean zipOnFinish;
 
 	public TierSlave(Configuration conf, Class<? extends TierSolver> solverc,
 			int tier) {
@@ -65,7 +69,14 @@ public class TierSlave implements TaskFactory, Runnable {
 			String path = conf.getProperty("gamesman.remote.path");
 			if (!(foldUri.startsWith("/") || foldUri.startsWith(path)))
 				foldUri = path + "/" + foldUri;
-			writeUri = foldUri + "/s" + firstHash + ".db";
+			zipOnFinish = conf.getBoolean("gamesman.remote.zipped", false);
+			if (zipOnFinish) {
+				zipUri = foldUri + "/s" + firstHash + ".db";
+				writeUri = zipUri + ".uz";
+			} else {
+				writeUri = foldUri + "/s" + firstHash + ".db";
+				zipUri = null;
+			}
 			writeDb = Database.openDatabase(writeUri, conf, true, head);
 			solver.setWriteDb(writeDb);
 		} catch (IllegalAccessException e) {
@@ -158,7 +169,38 @@ public class TierSlave implements TaskFactory, Runnable {
 				}
 		if (readDb != null)
 			readDb.close();
-		writeDb.close();
+		if (zipOnFinish) {
+			long time = System.currentTimeMillis();
+			int entryKB = conf.getInteger("gamesman.db.zip.entryKB", 64);
+			long maxMem = conf.getLong("gamesman.memory", Integer.MAX_VALUE);
+			Database readFrom = writeDb;
+			GZippedFileDatabase writeTo;
+			try {
+				writeTo = new GZippedFileDatabase(zipUri, conf, readFrom,
+						maxMem);
+			} catch (IOException e) {
+				throw new Error(e);
+			}
+			Thread[] threadList = new Thread[threads];
+			DatabaseHandle[] readHandle = new DatabaseHandle[threads];
+			for (int i = 0; i < threads; i++) {
+				readHandle[i] = readFrom.getHandle();
+				threadList[i] = new Thread(writeTo);
+				threadList[i].start();
+			}
+			for (int i = 0; i < threads; i++) {
+				while (threadList[i].isAlive())
+					try {
+						threadList[i].join();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+			}
+			readFrom.close();
+			writeTo.close();
+			System.out.println("Zipped in "
+					+ Util.millisToETA(System.currentTimeMillis() - time));
+		}
 		System.out.println("finished: " + writeUri + " " + firstHash + " "
 				+ numHashes);
 	}
