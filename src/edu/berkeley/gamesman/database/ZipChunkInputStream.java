@@ -7,12 +7,15 @@ import java.util.zip.GZIPInputStream;
 
 public class ZipChunkInputStream extends FilterInputStream {
 	private final ChunkInputStream cis;
+	private final int entrySize;
 	private GZIPInputStream gzi;
 
-	public ZipChunkInputStream(InputStream in) throws IOException {
+	public ZipChunkInputStream(InputStream in, int entrySize)
+			throws IOException {
 		super(in);
+		this.entrySize = entrySize;
 		cis = new ChunkInputStream(in);
-		gzi = new GZIPInputStream(cis);
+		gzi = new GZIPInputStream(cis, entrySize);
 	}
 
 	@Override

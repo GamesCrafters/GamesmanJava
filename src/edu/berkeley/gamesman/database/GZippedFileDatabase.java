@@ -1,6 +1,7 @@
 package edu.berkeley.gamesman.database;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.concurrent.Semaphore;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -451,18 +452,29 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			long byteIndex, long numBytes) {
 		long startEntry = byteIndex / entrySize;
 		long endEntry = (byteIndex + numBytes + entrySize - 1) / entrySize;
+		thisEntry = startEntry;
 		dh.byteIndex = entryPoints[(int) (startEntry - firstEntry)];
 		dh.lastByteIndex = entryPoints[(int) (endEntry - firstEntry)];
-		dh.location = byteIndex;
+		dh.location = dh.byteIndex;
 		dh.firstNum = 4;
-		zippedSeek(dh);
+		lastUsed = dh;
+		try {
+			fis.getChannel().position(dh.location);
+		} catch (IOException e) {
+			throw new Error(e);
+		}
 		return dh.lastByteIndex - dh.byteIndex + ((endEntry - startEntry) << 2);
 	}
 
 	private synchronized void zippedSeek(DatabaseHandle dh) {
 		lastUsed = dh;
-		thisEntry = dh.location / entrySize;
-		nextStart = entryPoints[(int) (thisEntry + 1 - firstEntry)];
+		thisEntry = Arrays.binarySearch(entryPoints, dh.location);
+		if (thisEntry < 0) {
+			thisEntry = -thisEntry - 1;
+			nextStart = entryPoints[(int) thisEntry--];
+		} else
+			nextStart = entryPoints[(int) thisEntry + 1];
+		thisEntry += firstEntry;
 		try {
 			fis.getChannel().position(dh.location);
 		} catch (IOException e) {

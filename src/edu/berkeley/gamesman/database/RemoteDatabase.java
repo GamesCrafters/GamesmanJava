@@ -120,7 +120,7 @@ public class RemoteDatabase extends Database {
 					skipNum <<= 8;
 					skipNum |= skipBytes[i];
 				}
-				rh.is = new ZipChunkInputStream(rh.is);
+				rh.is = new ZipChunkInputStream(rh.is, entrySize);
 				if (skipNum > 4) {
 					skipBytes = new byte[skipNum];
 				}

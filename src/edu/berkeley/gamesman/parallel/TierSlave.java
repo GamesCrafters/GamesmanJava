@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Properties;
@@ -171,7 +172,6 @@ public class TierSlave implements TaskFactory, Runnable {
 			readDb.close();
 		if (zipOnFinish) {
 			long time = System.currentTimeMillis();
-			int entryKB = conf.getInteger("gamesman.db.zip.entryKB", 64);
 			long maxMem = conf.getLong("gamesman.memory", Integer.MAX_VALUE);
 			Database readFrom = writeDb;
 			GZippedFileDatabase writeTo;
@@ -200,9 +200,11 @@ public class TierSlave implements TaskFactory, Runnable {
 			writeTo.close();
 			System.out.println("Zipped in "
 					+ Util.millisToETA(System.currentTimeMillis() - time));
-		}
-		System.out.println("finished: " + writeUri + " " + firstHash + " "
-				+ numHashes);
+			System.out.println("finished: " + zipUri + " " + firstHash + " "
+					+ numHashes);
+		} else
+			System.out.println("finished: " + writeUri + " " + firstHash + " "
+					+ numHashes);
 	}
 
 	private class TierSlaveRunnable implements Runnable {
