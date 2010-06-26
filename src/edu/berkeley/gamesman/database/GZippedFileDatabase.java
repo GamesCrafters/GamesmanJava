@@ -241,7 +241,11 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			fis.getChannel().position(
 					entryPoints[(int) (thisEntry - firstEntry)]);
 			myStream = new GZIPInputStream(fis, entrySize);
-			long curLoc = thisEntry * entrySize;
+			long curLoc;
+			if (thisEntry == firstEntry)
+				curLoc = toByte(firstRecord());
+			else
+				curLoc = thisEntry * entrySize;
 			while (curLoc < dh.location)
 				curLoc += myStream.skip(dh.location - curLoc);
 		} catch (IOException e) {
@@ -310,10 +314,10 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			}
 			entry = handleEntry++;
 			firstByteIndex = nextStart;
-			if (entry == firstEntry)
-				nextStart = handleEntry * entrySize;
-			else if (handleEntry == firstEntry + numEntries)
+			if (handleEntry == firstEntry + numEntries)
 				nextStart = this.lastByteIndex;
+			else if (entry == firstEntry)
+				nextStart = handleEntry * entrySize;
 			else
 				nextStart += entrySize;
 			lastByteIndex = nextStart;
@@ -490,11 +494,10 @@ public class GZippedFileDatabase extends Database implements Runnable {
 				- dh.location);
 		int len = numBytes;
 		while (len > 0) {
-			int bytesToRead = (int) Math.min(len, nextStart - dh.location
-					+ dh.firstNum);
+			int bytesInBlock = (int) (nextStart - dh.location);
+			int bytesToRead = Math.min(len, bytesInBlock + dh.firstNum);
 			try {
 				if (dh.firstNum > 0) {
-					int bytesInBlock = (int) (nextStart - dh.location);
 					while (dh.firstNum > 0 && bytesToRead > 0) {
 						dh.firstNum--;
 						arr[off++] = (byte) (bytesInBlock >>> (dh.firstNum << 3));

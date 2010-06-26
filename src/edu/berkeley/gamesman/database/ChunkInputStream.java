@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class ChunkInputStream extends FilterInputStream {
-	private int remain;
+	private int remain = 0;
 	private final byte[] numBytesBytes = new byte[4];
 
 	public ChunkInputStream(InputStream in) throws IOException {
@@ -18,7 +18,7 @@ public class ChunkInputStream extends FilterInputStream {
 		remain = 0;
 		for (int i = 0; i < 4; i++) {
 			remain <<= 8;
-			remain |= numBytesBytes[i];
+			remain |= numBytesBytes[i] & 255;
 		}
 	}
 
