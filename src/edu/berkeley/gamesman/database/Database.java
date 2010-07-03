@@ -1009,6 +1009,8 @@ public abstract class Database {
 			} else if (header == null) {
 				header = RemoteDatabase.remoteHeader(user, host, file);
 			}
+			if (dbType == null)
+				dbType = conf.getProperty("gamesman.database");
 			dbClasses = dbType.split(":");
 			dbClasses[dbClasses.length - 1] = RemoteDatabase.class.getName();
 			try {

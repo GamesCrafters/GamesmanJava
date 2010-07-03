@@ -48,6 +48,5 @@ public class ReadZippedRecords {
 			System.out.flush();
 			numBytes -= bytesRead;
 		}
-		System.out.flush();
 	}
 }

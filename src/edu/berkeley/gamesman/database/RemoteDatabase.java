@@ -114,11 +114,11 @@ public class RemoteDatabase extends Database {
 					ReadRecords.BUFFER_SIZE);
 			if (readZipped) {
 				byte[] skipBytes = new byte[4];
-				Database.readFully(rh.is, skipBytes, 0, 4);
+				readFully(rh.is, skipBytes, 0, 4);
 				int skipNum = 0;
 				for (int i = 0; i < 4; i++) {
 					skipNum <<= 8;
-					skipNum |= skipBytes[i];
+					skipNum |= skipBytes[i] & 255;
 				}
 				rh.is = new ZipChunkInputStream(rh.is, entrySize);
 				if (skipNum > 4) {
@@ -195,7 +195,7 @@ public class RemoteDatabase extends Database {
 				int confLength = 0;
 				for (int i = 18; i < 22; i++) {
 					confLength <<= 8;
-					confLength |= headerBytes[i];
+					confLength |= headerBytes[i] & 255;
 				}
 				command = commandString + ((numBytes + confLength + 511) >> 9);
 				assert Util.debug(DebugFacility.DATABASE, command);

@@ -25,7 +25,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		super(uri, conf, solve, firstRecord, numRecords, header);
 		myFile = new File(uri);
 		entrySize = conf.getInteger("gamesman.db.zip.entryKB", 64) << 10;
-		final long firstByteIndex = toByte(firstContainedRecord);
+		firstByteIndex = toByte(firstContainedRecord);
 		firstEntry = handleEntry = thisEntry = firstByteIndex / entrySize;
 		lastByteIndex = lastByte(firstContainedRecord + numContainedRecords);
 		long lastEntry = (lastByteIndex + entrySize - 1) / entrySize;
@@ -59,7 +59,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 				readFrom.getHeader());
 		myFile = new File(uri);
 		entrySize = conf.getInteger("gamesman.db.zip.entryKB", 64) << 10;
-		final long firstByteIndex = toByte(firstContainedRecord);
+		firstByteIndex = toByte(firstContainedRecord);
 		firstEntry = handleEntry = thisEntry = firstByteIndex / entrySize;
 		lastByteIndex = lastByte(firstContainedRecord + numContainedRecords);
 		long lastEntry = (lastByteIndex + entrySize - 1) / entrySize;
@@ -138,6 +138,8 @@ public class GZippedFileDatabase extends Database implements Runnable {
 	private final Database readFrom;
 
 	private long nextStart;
+
+	private final long firstByteIndex;
 
 	private final long lastByteIndex;
 
@@ -243,7 +245,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			myStream = new GZIPInputStream(fis, entrySize);
 			long curLoc;
 			if (thisEntry == firstEntry)
-				curLoc = toByte(firstRecord());
+				curLoc = firstByteIndex;
 			else
 				curLoc = thisEntry * entrySize;
 			while (curLoc < dh.location)
@@ -461,13 +463,15 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		dh.lastByteIndex = entryPoints[(int) (endEntry - firstEntry)];
 		dh.location = dh.byteIndex;
 		dh.firstNum = 4;
+		dh.lastNum = (int) ((endEntry - startEntry) << 2);
 		lastUsed = dh;
 		try {
 			fis.getChannel().position(dh.location);
 		} catch (IOException e) {
 			throw new Error(e);
 		}
-		return dh.lastByteIndex - dh.byteIndex + ((endEntry - startEntry) << 2);
+		nextStart = entryPoints[(int) (thisEntry + 1 - firstEntry)];
+		return dh.lastByteIndex - dh.byteIndex + dh.lastNum;
 	}
 
 	private synchronized void zippedSeek(DatabaseHandle dh) {
@@ -491,19 +495,18 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		if (lastUsed != dh)
 			zippedSeek(dh);
 		final int numBytes = (int) Math.min(maxLen, dh.lastByteIndex
-				- dh.location);
+				- dh.location + dh.lastNum);
 		int len = numBytes;
 		while (len > 0) {
 			int bytesInBlock = (int) (nextStart - dh.location);
 			int bytesToRead = Math.min(len, bytesInBlock + dh.firstNum);
 			try {
-				if (dh.firstNum > 0) {
-					while (dh.firstNum > 0 && bytesToRead > 0) {
-						dh.firstNum--;
-						arr[off++] = (byte) (bytesInBlock >>> (dh.firstNum << 3));
-						len--;
-						bytesToRead--;
-					}
+				while (dh.firstNum > 0 && bytesToRead > 0) {
+					dh.firstNum--;
+					dh.lastNum--;
+					arr[off++] = (byte) (bytesInBlock >>> (dh.firstNum << 3));
+					len--;
+					bytesToRead--;
 				}
 				readFully(fis, arr, off, bytesToRead);
 				len -= bytesToRead;
@@ -522,6 +525,10 @@ public class GZippedFileDatabase extends Database implements Runnable {
 	}
 
 	public int extraBytes(long firstByte) {
-		return (int) (firstByte % entrySize);
+		if (firstByte < (firstEntry + 1) * entrySize) {
+			return (int) (firstByte - firstByteIndex);
+		} else {
+			return (int) (firstByte % entrySize);
+		}
 	}
 }
