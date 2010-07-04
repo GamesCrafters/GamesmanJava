@@ -34,7 +34,7 @@ public class ZipChunkInputStream extends FilterInputStream {
 		int byteRead = gzi.read();
 		if (byteRead < 0) {
 			cis.nextChunk();
-			gzi = new GZIPInputStream(cis);
+			gzi = new GZIPInputStream(cis, entrySize);
 			byteRead = gzi.read();
 		}
 		return byteRead;

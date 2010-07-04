@@ -1147,7 +1147,7 @@ public abstract class Database {
 		while (len > 0) {
 			int bytesRead = is.read(arr, off, len);
 			if (bytesRead < 0) {
-				throw new EOFException("End of stream reached");
+				throw new EOFException();
 			} else {
 				off += bytesRead;
 				len -= bytesRead;

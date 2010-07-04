@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class ChunkInputStream extends FilterInputStream {
-	private int remain = 0;
+	private int remain;
 	private final byte[] numBytesBytes = new byte[4];
 
 	public ChunkInputStream(InputStream in) throws IOException {
