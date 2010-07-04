@@ -82,8 +82,18 @@ public class TierMaster implements Runnable {
 					et = new ErrorThread(es, name) {
 						@Override
 						public void error(String error) {
+							if (!hadErrors)
+								new Thread() {
+									public synchronized void run() {
+										try {
+											wait(2000);
+										} catch (InterruptedException e) {
+											e.printStackTrace();
+										}
+										p.destroy();
+									}
+								}.start();
 							super.error(error);
-							p.destroy();
 						}
 					};
 					et.start();
