@@ -43,6 +43,9 @@ public class GZippedFileDatabase extends Database implements Runnable {
 				entryPoints[i] <<= 8;
 				entryPoints[i] |= ((int) entryBytes[count++]) & 255;
 			}
+			if (i > 0 && entryPoints[i] - entryPoints[i - 1] == 0)
+				throw new EOFException("No bytes in block " + i + "("
+						+ (i + firstEntry) + " total)");
 		}
 		waitingCaches = null;
 		waitingCachesIter = null;
