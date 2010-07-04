@@ -20,7 +20,7 @@ import edu.berkeley.gamesman.util.Pair;
 
 public class TierMaster implements Runnable {
 	private class TimeOutChecker extends Thread {
-		private static final long WAIT_TIME = 20000L;
+		private static final long WAIT_TIME = 300000L;
 		private final Thread myThread;
 		private final NodeRunnable myRunnable;
 
@@ -70,8 +70,12 @@ public class TierMaster implements Runnable {
 					lastPrinted = System.currentTimeMillis();
 					String command = "ssh "
 							+ (user == null ? name : (user + "@" + name));
-					command += " java -cp " + path + "/bin "
-							+ TierSlave.class.getName() + " ";
+					command += " java -cp " + path + "/bin ";
+					if (maxMem > Integer.MAX_VALUE) {
+						command += "-d64 ";
+					}
+					command += "-Xmx" + maxMem + " ";
+					command += TierSlave.class.getName() + " ";
 					command += slaveJobFile + " " + tier;
 					final Process p = Runtime.getRuntime().exec(command);
 					InputStream es = p.getErrorStream();
@@ -156,6 +160,7 @@ public class TierMaster implements Runnable {
 	private final String slaveJobFile;
 	private final SplitDatabase dbTrack;
 	private final int numSplits;
+	private final long maxMem;
 	private final LinkedList<Pair<Long, Long>> failedSlices = new LinkedList<Pair<Long, Long>>();
 	private final Semaphore semaphore;
 	private SplitDatabase prevTierDb;
@@ -175,6 +180,7 @@ public class TierMaster implements Runnable {
 		if (!(slaveJobFile.startsWith("/") || slaveJobFile.startsWith(path)))
 			slaveJobFile = path + "/" + slaveJobFile;
 		numSplits = (int) (conf.getFloat("gamesman.parallel.multiple", 1) * nodeNames.length);
+		maxMem = (long) (conf.getLong("gamesman.memory", 100000000) * 1.2);
 		this.slaveJobFile = slaveJobFile;
 		dbTrack = new SplitDatabase(conf, true);
 		nodes = new NodeRunnable[nodeNames.length];
