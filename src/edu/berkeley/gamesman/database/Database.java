@@ -1,5 +1,6 @@
 package edu.berkeley.gamesman.database;
 
+import java.io.EOFException;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -1145,9 +1146,9 @@ public abstract class Database {
 			int len) throws IOException {
 		while (len > 0) {
 			int bytesRead = is.read(arr, off, len);
-			if (bytesRead < 0)
-				break;
-			else {
+			if (bytesRead < 0) {
+				throw new EOFException("End of stream reached");
+			} else {
 				off += bytesRead;
 				len -= bytesRead;
 			}
