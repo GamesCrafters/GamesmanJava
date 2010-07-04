@@ -1,7 +1,6 @@
 package edu.berkeley.gamesman.database;
 
 import java.io.*;
-import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 import java.util.concurrent.Semaphore;
 import java.util.zip.GZIPInputStream;
@@ -365,6 +364,8 @@ public class GZippedFileDatabase extends Database implements Runnable {
 				try {
 					entryPoints[(int) ((thisEntry++) - firstEntry)] = fos
 							.getChannel().position();
+					if (thisCache.car.size() == 0)
+						throw new RuntimeException("Zipped size cannot be zero");
 					thisCache.car.writeTo(fos);
 					synchronized (this) {
 						zippedStoragePool.release(thisCache.car);
@@ -488,7 +489,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			try {
 				while (dh.firstNum > 0 && bytesToRead > 0) {
 					if (bytesInBlock == 0)
-						throw new Error(new EOFException());
+						throw new EOFException();
 					dh.firstNum--;
 					dh.lastNum--;
 					arr[off++] = (byte) (bytesInBlock >>> (dh.firstNum << 3));
@@ -502,7 +503,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			} catch (IOException e) {
 				throw new Error(e);
 			}
-			if (dh.location == nextStart) {
+			if (len > 0) {
 				thisEntry++;
 				nextStart = entryPoints[(int) (thisEntry + 1 - firstEntry)];
 				dh.firstNum = 4;
