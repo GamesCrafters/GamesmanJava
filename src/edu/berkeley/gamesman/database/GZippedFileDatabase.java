@@ -357,9 +357,9 @@ public class GZippedFileDatabase extends Database implements Runnable {
 				}
 			}
 			while (true) {
-				if (thisEntry > 0 && thisEntry % 100 == 0) {
-					System.out.println("Starting entry " + thisEntry + "/"
-							+ numEntries);
+				if ((thisEntry - firstEntry) % 1000 == 0) {
+					System.out.println("Starting entry "
+							+ (thisEntry - firstEntry) + "/" + numEntries);
 				}
 				try {
 					entryPoints[(int) ((thisEntry++) - firstEntry)] = fos
@@ -489,7 +489,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			try {
 				while (dh.firstNum > 0 && bytesToRead > 0) {
 					if (bytesInBlock == 0)
-						throw new EOFException();
+						throw new EOFException("No bytes in block!");
 					dh.firstNum--;
 					dh.lastNum--;
 					arr[off++] = (byte) (bytesInBlock >>> (dh.firstNum << 3));
@@ -506,6 +506,9 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			if (len > 0) {
 				thisEntry++;
 				nextStart = entryPoints[(int) (thisEntry + 1 - firstEntry)];
+				if (nextStart - dh.location == 0)
+					throw new Error(new EOFException("0-byte entry at entry "
+							+ thisEntry));
 				dh.firstNum = 4;
 			}
 		}
