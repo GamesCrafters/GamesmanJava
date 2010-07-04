@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Properties;
@@ -200,6 +199,7 @@ public class TierSlave implements TaskFactory, Runnable {
 			writeTo.close();
 			System.out.println("Zipped in "
 					+ Util.millisToETA(System.currentTimeMillis() - time));
+			new File(writeUri).delete();
 			System.out.println("finished: " + zipUri + " " + firstHash + " "
 					+ numHashes);
 		} else

@@ -7,9 +7,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Scanner;
+import java.util.concurrent.Semaphore;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.database.RemoteDatabase;
 import edu.berkeley.gamesman.database.SplitDatabase;
 import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.util.ErrorThread;
@@ -17,7 +20,7 @@ import edu.berkeley.gamesman.util.Pair;
 
 public class TierMaster implements Runnable {
 	private class TimeOutChecker extends Thread {
-		private static final long WAIT_TIME = 600000L;
+		private static final long WAIT_TIME = 10000L;
 		private final Thread myThread;
 		private final NodeRunnable myRunnable;
 
@@ -34,8 +37,12 @@ public class TierMaster implements Runnable {
 					wait(WAIT_TIME);
 					if (myThread.isAlive()) {
 						long nextPrinted = myRunnable.lastPrinted;
-						if (nextPrinted <= lastPrinted) {
-							// TODO: Indicate failure
+						if (nextPrinted <= lastPrinted && myRunnable.et != null
+								&& !myRunnable.et.hadErrors) {
+							myRunnable.et
+									.error("Connection timed out after "
+											+ (System.currentTimeMillis() - myRunnable.lastPrinted)
+											/ 1000 + " seconds");
 						} else
 							lastPrinted = nextPrinted;
 					}
@@ -44,31 +51,38 @@ public class TierMaster implements Runnable {
 				}
 			}
 		}
-
 	}
 
 	private class NodeRunnable implements Runnable {
+		private static final long WAIT_TIME = 10000L;
 		public long lastPrinted;
 		private final String name;
+		public ErrorThread et;
 
 		public NodeRunnable(String name) {
 			this.name = name;
 		}
 
-		public void run() {
+		public synchronized void run() {
 			try {
 				Pair<Long, Long> slice = getSlice();
 				while (slice != null) {
 					lastPrinted = System.currentTimeMillis();
 					String command = "ssh "
 							+ (user == null ? name : (user + "@" + name));
-					command += " java -cp " + path
-							+ "/bin edu.berkeley.gamesman.parallel.TierSlave ";
+					command += " java -cp " + path + "/bin "
+							+ TierSlave.class.getName() + " ";
 					command += slaveJobFile + " " + tier;
-					Process p = Runtime.getRuntime().exec(command);
+					final Process p = Runtime.getRuntime().exec(command);
 					InputStream es = p.getErrorStream();
-					new ErrorThread(es, name).start();
-					// TODO Start Error-check thread
+					et = new ErrorThread(es, name) {
+						@Override
+						public void error(String error) {
+							super.error(error);
+							p.destroy();
+						}
+					};
+					et.start();
 					OutputStream os = p.getOutputStream();
 					InputStream is = p.getInputStream();
 					os.write(dbTrack.getHeader(slice.car, slice.cdr).toBytes());
@@ -76,27 +90,57 @@ public class TierMaster implements Runnable {
 					PrintStream ps = new PrintStream(os);
 					Scanner scan = new Scanner(is);
 					String next = scan.next();
-					while (!next.equals("finished:")) {
-						lastPrinted = System.currentTimeMillis();
-						if (next.equals("fetch:")) {
-							long firstRecord = scan.nextLong();
-							long numRecords = scan.nextLong();
-							ps.println(prevTierDb.makeStream(firstRecord,
-									numRecords));
-							ps.flush();
-						} else
-							System.out.println(name + ": " + next + " "
-									+ scan.nextLine());
-						next = scan.next();
+					try {
+						while (!next.equals("finished:")) {
+							if (et.hadErrors) {
+								break;
+							}
+							lastPrinted = System.currentTimeMillis();
+							if (next.equals("fetch:")) {
+								long firstRecord = scan.nextLong();
+								long numRecords = scan.nextLong();
+								ps.println(prevTierDb.makeStream(firstRecord,
+										numRecords));
+								ps.flush();
+							} else
+								System.out.println(name + ": " + next + " "
+										+ scan.nextLine());
+							if (et.hadErrors) {
+								break;
+							}
+							next = scan.next();
+						}
+					} catch (Exception e) {
+						if (!et.hadErrors)
+							et.error("local " + e.getStackTrace());
 					}
-					lastPrinted = System.currentTimeMillis();
-					String filePath = scan.next();
-					long firstRecord = scan.nextLong();
-					long numRecords = scan.nextLong();
-					curTierDb.insertDb("RemoteDatabase", (user == null ? name
-							: (user + "@" + name))
-							+ ":" + path + ":" + filePath, firstRecord,
-							numRecords);
+					if (et.hadErrors) {
+						try {
+							wait(WAIT_TIME);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						sliceFailed(slice);
+					} else {
+						lastPrinted = System.currentTimeMillis();
+						String filePath = scan.next();
+						long firstRecord = scan.nextLong();
+						long numRecords = scan.nextLong();
+						if (et.hadErrors) {
+							try {
+								wait(WAIT_TIME);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+							sliceFailed(slice);
+						} else {
+							et = null;
+							finishDb(
+									(user == null ? name : (user + "@" + name))
+											+ ":" + path + ":" + filePath,
+									firstRecord, numRecords);
+						}
+					}
 					slice = getSlice();
 				}
 			} catch (IOException e) {
@@ -112,9 +156,12 @@ public class TierMaster implements Runnable {
 	private final String slaveJobFile;
 	private final SplitDatabase dbTrack;
 	private final int numSplits;
+	private final LinkedList<Pair<Long, Long>> failedSlices = new LinkedList<Pair<Long, Long>>();
+	private final Semaphore semaphore;
 	private SplitDatabase prevTierDb;
 	private SplitDatabase curTierDb;
 	private int tier;
+	private int finishedSlices;
 	private long[] divides;
 	private int sliceNum = 0;
 
@@ -133,14 +180,37 @@ public class TierMaster implements Runnable {
 		for (int i = 0; i < nodeNames.length; i++) {
 			nodes[i] = new NodeRunnable(nodeNames[i]);
 		}
+		semaphore = new Semaphore(0);
 	}
 
-	synchronized Pair<Long, Long> getSlice() {
-		if (sliceNum >= divides.length - 1)
+	private synchronized void finishDb(String uri, long firstRecord,
+			long numRecords) {
+		curTierDb.insertDb(RemoteDatabase.class.getName(), uri, firstRecord,
+				numRecords);
+		finishedSlices++;
+	}
+
+	private Pair<Long, Long> getSlice() {
+		if (finishedSlices >= divides.length - 1) {
+			while (!semaphore.tryAcquire())
+				semaphore.release();
 			return null;
-		long firstRecord = divides[sliceNum++];
-		long numRecords = divides[sliceNum] - firstRecord;
-		return new Pair<Long, Long>(firstRecord, numRecords);
+		}
+		semaphore.acquireUninterruptibly();
+		if (finishedSlices >= divides.length - 1)
+			return null;
+		synchronized (this) {
+			if (!failedSlices.isEmpty())
+				return failedSlices.removeFirst();
+			long firstRecord = divides[sliceNum++];
+			long numRecords = divides[sliceNum] - firstRecord;
+			return new Pair<Long, Long>(firstRecord, numRecords);
+		}
+	}
+
+	private synchronized void sliceFailed(Pair<Long, Long> slice) {
+		failedSlices.addLast(slice);
+		semaphore.release();
 	}
 
 	public static void main(String[] args) throws ClassNotFoundException,
@@ -166,6 +236,8 @@ public class TierMaster implements Runnable {
 			long length = g.numHashesForTier(tier);
 			curTierDb = new SplitDatabase(conf, start, length, false);
 			divides = curTierDb.splitRange(start, length, numSplits);
+			finishedSlices = 0;
+			semaphore.release(divides.length - 1);
 			sliceNum = 0;
 			int i = 0;
 			for (NodeRunnable nr : nodes) {
