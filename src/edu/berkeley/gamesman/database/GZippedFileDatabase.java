@@ -2,6 +2,7 @@ package edu.berkeley.gamesman.database;
 
 import java.io.*;
 import java.util.Arrays;
+import java.util.ConcurrentModificationException;
 import java.util.concurrent.Semaphore;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -474,26 +475,10 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		return dh.lastByteIndex - dh.byteIndex + dh.lastNum;
 	}
 
-	private synchronized void zippedSeek(DatabaseHandle dh) {
-		lastUsed = dh;
-		thisEntry = Arrays.binarySearch(entryPoints, dh.location);
-		if (thisEntry < 0) {
-			thisEntry = -thisEntry - 1;
-			nextStart = entryPoints[(int) thisEntry--];
-		} else
-			nextStart = entryPoints[(int) thisEntry + 1];
-		thisEntry += firstEntry;
-		try {
-			fis.getChannel().position(dh.location);
-		} catch (IOException e) {
-			throw new Error(e);
-		}
-	}
-
 	protected synchronized int getZippedBytes(DatabaseHandle dh, byte[] arr,
 			int off, int maxLen) {
 		if (lastUsed != dh)
-			zippedSeek(dh);
+			throw new ConcurrentModificationException();
 		final int numBytes = (int) Math.min(maxLen, dh.lastByteIndex
 				- dh.location + dh.lastNum);
 		int len = numBytes;
@@ -502,6 +487,8 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			int bytesToRead = Math.min(len, bytesInBlock + dh.firstNum);
 			try {
 				while (dh.firstNum > 0 && bytesToRead > 0) {
+					if (bytesInBlock == 0)
+						throw new Error(new EOFException());
 					dh.firstNum--;
 					dh.lastNum--;
 					arr[off++] = (byte) (bytesInBlock >>> (dh.firstNum << 3));
@@ -515,7 +502,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			} catch (IOException e) {
 				throw new Error(e);
 			}
-			if (len > 0) {
+			if (dh.location == nextStart) {
 				thisEntry++;
 				nextStart = entryPoints[(int) (thisEntry + 1 - firstEntry)];
 				dh.firstNum = 4;
