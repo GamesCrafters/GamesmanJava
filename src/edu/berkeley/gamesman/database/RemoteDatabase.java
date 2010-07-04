@@ -1,12 +1,9 @@
 package edu.berkeley.gamesman.database;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
-import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
-import java.util.zip.GZIPInputStream;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.util.DebugFacility;
@@ -110,8 +107,7 @@ public class RemoteDatabase extends Database {
 			Process p = Runtime.getRuntime().exec(command.toString());
 			new ErrorThread(p.getErrorStream(), server).start();
 			RemoteHandle rh = ((RemoteHandle) dh);
-			rh.is = new BufferedInputStream(p.getInputStream(),
-					ReadRecords.BUFFER_SIZE);
+			rh.is = p.getInputStream();
 			if (readZipped) {
 				byte[] skipBytes = new byte[4];
 				readFully(rh.is, skipBytes, 0, 4);
@@ -233,9 +229,7 @@ public class RemoteDatabase extends Database {
 }
 
 class RemoteHandle extends DatabaseHandle {
-	GZIPInputStream gzi;
-	ChunkInputStream cis;
-	FilterInputStream is;
+	InputStream is;
 
 	public RemoteHandle(int recordGroupByteLength) {
 		super(recordGroupByteLength);
