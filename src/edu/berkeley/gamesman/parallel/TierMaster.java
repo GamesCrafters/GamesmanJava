@@ -20,7 +20,7 @@ import edu.berkeley.gamesman.util.Pair;
 
 public class TierMaster implements Runnable {
 	private class TimeOutChecker extends Thread {
-		private static final long WAIT_TIME = 10000L;
+		private static final long WAIT_TIME = 20000L;
 		private final Thread myThread;
 		private final NodeRunnable myRunnable;
 
@@ -164,6 +164,7 @@ public class TierMaster implements Runnable {
 	private int finishedSlices;
 	private long[] divides;
 	private int sliceNum = 0;
+	private boolean released;
 
 	public TierMaster(Configuration conf, String[] nodeNames)
 			throws ClassNotFoundException {
@@ -192,9 +193,14 @@ public class TierMaster implements Runnable {
 
 	private Pair<Long, Long> getSlice() {
 		if (finishedSlices >= divides.length - 1) {
-			while (!semaphore.tryAcquire())
-				semaphore.release();
-			return null;
+			synchronized (this) {
+				if (!released) {
+					released = true;
+					semaphore.release(nodes.length - 1);
+				} else
+					semaphore.acquireUninterruptibly();
+				return null;
+			}
 		}
 		semaphore.acquireUninterruptibly();
 		if (finishedSlices >= divides.length - 1)
@@ -237,6 +243,7 @@ public class TierMaster implements Runnable {
 			curTierDb = new SplitDatabase(conf, start, length, false);
 			divides = curTierDb.splitRange(start, length, numSplits);
 			finishedSlices = 0;
+			released = false;
 			semaphore.release(divides.length - 1);
 			sliceNum = 0;
 			int i = 0;
