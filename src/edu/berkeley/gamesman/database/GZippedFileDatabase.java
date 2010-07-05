@@ -44,8 +44,8 @@ public class GZippedFileDatabase extends Database implements Runnable {
 				entryPoints[i] |= ((int) entryBytes[count++]) & 255;
 			}
 			if (i > 0 && entryPoints[i] - entryPoints[i - 1] == 0)
-				throw new EOFException("No bytes in block " + i + "/" + numEntries + " ("
-						+ (i + firstEntry) + " total)");
+				throw new EOFException("No bytes in block " + i + "/"
+						+ numEntries + " (" + (i + firstEntry) + " total)");
 		}
 		waitingCaches = null;
 		waitingCachesIter = null;
@@ -154,6 +154,12 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			byte[] entryBytes = new byte[entryPoints.length << 3];
 			int count = 0;
 			for (int entry = 0; entry < entryPoints.length; entry++) {
+				if (entry > 0
+						&& entryPoints[entry] - entryPoints[entry - 1] == 0) {
+					throw new Error(new EOFException("No bytes in block "
+							+ entry + "/" + numEntries + " ("
+							+ (entry + firstEntry) + " total)"));
+				}
 				for (int i = 56; i >= 0; i -= 8)
 					entryBytes[count++] = (byte) (entryPoints[entry] >>> i);
 			}
@@ -216,10 +222,12 @@ public class GZippedFileDatabase extends Database implements Runnable {
 				thisEntry++;
 				nextStart += entrySize;
 				try {
-					// Unfortunately Java's implementation of GZIPInputStream is
-					// stupid so this line is necessary. As you might imagine,
-					// things would be really frustrating and tricky if not for
-					// the availability of this function here.
+					/*
+					 * Unfortunately Java's implementation of GZIPInputStream is
+					 * stupid so this line is necessary. As you might imagine,
+					 * things would be really frustrating and tricky if not for
+					 * the availability of this function here.
+					 */
 					fis.getChannel().position(
 							entryPoints[(int) (thisEntry - firstEntry)]);
 					myStream = new GZIPInputStream(fis, entrySize);
