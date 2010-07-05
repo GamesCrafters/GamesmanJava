@@ -373,12 +373,13 @@ public class GZippedFileDatabase extends Database implements Runnable {
 							+ (thisEntry - firstEntry) + "/" + numEntries);
 				}
 				try {
-					entryPoints[(int) ((thisEntry++) - firstEntry)] = fos
+					entryPoints[(int) (thisEntry - firstEntry)] = fos
 							.getChannel().position();
 					if (thisCache.car.size() == 0)
 						throw new RuntimeException("Zipped size cannot be zero");
 					thisCache.car.writeTo(fos);
 					synchronized (this) {
+						thisEntry++;
 						zippedStoragePool.release(thisCache.car);
 						memoryConstraint.release();
 						if (waitingCaches.isEmpty()) {
