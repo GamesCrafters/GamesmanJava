@@ -229,11 +229,20 @@ public class RemoteDatabase extends Database {
 	}
 
 	public static void main(String[] args) throws IOException {
-		Database rd = Database.openDatabase(args[0]);
+		RemoteDatabase rd = (RemoteDatabase) Database.openDatabase(args[0]);
+		rd.addRemoteProperties();
 		FileOutputStream fos = new FileOutputStream(args[1]);
 		rd.store(fos, args[1]);
 		fos.close();
 		rd.close();
+	}
+
+	private void addRemoteProperties() {
+		if (user != null)
+			conf.setProperty("gamesman.remote.user", user);
+		conf.setProperty("gamesman.remote.server", server);
+		conf.setProperty("gamesman.remote.path", path);
+		conf.setProperty("gamesman.remote.db.uri", remoteFile);
 	}
 
 }
