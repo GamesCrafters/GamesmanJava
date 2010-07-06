@@ -1,6 +1,8 @@
 package edu.berkeley.gamesman.database;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -224,6 +226,14 @@ public class RemoteDatabase extends Database {
 	public static DatabaseHeader remoteHeader(String user, String host,
 			String file) {
 		return remoteHeaderConf(user, host, file, false).car;
+	}
+
+	public static void main(String[] args) throws IOException {
+		Database rd = Database.openDatabase(args[0]);
+		FileOutputStream fos = new FileOutputStream(args[1]);
+		rd.store(fos, args[1]);
+		fos.close();
+		rd.close();
 	}
 
 }
