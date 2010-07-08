@@ -1,7 +1,7 @@
 package edu.berkeley.gamesman.game;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.State;
 
@@ -31,7 +31,7 @@ public abstract class TwistyPuzzle<S extends State> extends Game<S> {
 
 	@Override
 	public long getRecord(S recordState, Record fromRecord) {
-		if (fromRecord.value == PrimitiveValue.UNDECIDED)
+		if (fromRecord.value == Value.UNDECIDED)
 			return 0;
 		else
 			return fromRecord.remoteness + 1;
@@ -40,9 +40,9 @@ public abstract class TwistyPuzzle<S extends State> extends Game<S> {
 	@Override
 	public void recordFromLong(S recordState, long record, Record toStore) {
 		if (record == 0)
-			toStore.value = PrimitiveValue.UNDECIDED;
+			toStore.value = Value.UNDECIDED;
 		else {
-			toStore.value = PrimitiveValue.WIN;
+			toStore.value = Value.WIN;
 			toStore.remoteness = (int) (record - 1);
 		}
 	}

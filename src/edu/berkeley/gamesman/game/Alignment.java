@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.game.util.AlignmentState;
 import edu.berkeley.gamesman.hasher.AlignmentHasher;
 import edu.berkeley.gamesman.util.DebugFacility;
@@ -123,31 +123,31 @@ public class Alignment extends Game<AlignmentState> {
 	}
 
 	@Override
-	public PrimitiveValue primitiveValue(AlignmentState pos) {
+	public Value primitiveValue(AlignmentState pos) {
 		if (pos.lastMove == 'X') {
 			if (pos.oDead >= piecesToWin) {
-				return PrimitiveValue.LOSE;
+				return Value.LOSE;
 			}
 			if (pos.xDead >= piecesToWin) {
-				return PrimitiveValue.WIN;
+				return Value.WIN;
 			}
 			if (pos.full()) {
-				return PrimitiveValue.TIE;
+				return Value.TIE;
 			} else {
-				return PrimitiveValue.UNDECIDED;
+				return Value.UNDECIDED;
 			}
 		}
 		if (pos.lastMove == 'O') {
 			if (pos.xDead >= piecesToWin) {
-				return PrimitiveValue.LOSE;
+				return Value.LOSE;
 			}
 			if (pos.oDead >= piecesToWin) {
-				return PrimitiveValue.WIN;
+				return Value.WIN;
 			}
 			if (pos.full()) {
-				return PrimitiveValue.TIE;
+				return Value.TIE;
 			} else {
-				return PrimitiveValue.UNDECIDED;
+				return Value.UNDECIDED;
 			}
 		} else {
 			throw new IllegalArgumentException("Last move cannot be "

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.hasher.TierHasher;
 import edu.berkeley.gamesman.util.Pair;
@@ -64,7 +64,7 @@ public abstract class TierGame extends Game<TierState> {
 	}
 
 	@Override
-	public synchronized PrimitiveValue primitiveValue(TierState pos) {
+	public synchronized Value primitiveValue(TierState pos) {
 		setState(pos);
 		return primitiveValue();
 	}
@@ -80,7 +80,7 @@ public abstract class TierGame extends Game<TierState> {
 	/**
 	 * @return The "primitive value" of the current position.
 	 */
-	public abstract PrimitiveValue primitiveValue();
+	public abstract Value primitiveValue();
 
 	@Override
 	public synchronized Collection<Pair<String, TierState>> validMoves(

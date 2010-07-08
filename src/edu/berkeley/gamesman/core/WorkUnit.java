@@ -3,15 +3,16 @@ package edu.berkeley.gamesman.core;
 import java.util.List;
 
 /**
- * A WorkUnit represents enough information that a Solver, given an appropriate
- * WorkUnit, can complete the work represented by this WorkUnit.
+ * A WorkUnit is used by a single thread of a solver when doing a multi-threaded
+ * solve.
  * 
  * @author Steven Schlansker
  */
 public interface WorkUnit {
 
 	/**
-	 * Divide a WorkUnit into pieces
+	 * Divide a WorkUnit into pieces. For single-threaded solves, do not assume
+	 * this method will be called (even once)
 	 * 
 	 * @param num
 	 *            The number of pieces to divide into

@@ -3,7 +3,7 @@ package edu.berkeley.gamesman.game;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.util.Pair;
@@ -112,7 +112,7 @@ public final class TopDownGame<S extends State> extends TopDownMutaGame<S> {
 	}
 
 	@Override
-	public PrimitiveValue primitiveValue() {
+	public Value primitiveValue() {
 		return myGame.primitiveValue(stateList.getLast());
 	}
 
@@ -208,7 +208,7 @@ public final class TopDownGame<S extends State> extends TopDownMutaGame<S> {
 	}
 
 	@Override
-	public PrimitiveValue primitiveValue(S pos) {
+	public Value primitiveValue(S pos) {
 		return myGame.primitiveValue(pos);
 	}
 

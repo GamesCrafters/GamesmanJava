@@ -3,38 +3,36 @@ package edu.berkeley.gamesman.core;
 /**
  * A PrimitiveValue represents the value of a state in the Gamesman world
  * 
- * @author Steven Schlansker
+ * @author dnspies
  */
-public enum PrimitiveValue {
-	// These must be in order so that PrimitiveValue.values()[x].value() == x
+public enum Value {
 	/**
-	 * The next player to move will lose even playing perfectly
+	 * The player who just moved can force a win
 	 */
 	LOSE(0),
 	/**
-	 * The game will eventually end in a tie
+	 * Neither player can force a win nor end the game
 	 */
-	TIE(1),
+	DRAW(1),
 	/**
-	 * The next player to move will win in perfect play
+	 * Neither player can force a win, but it is possible to end the game
 	 */
-	WIN(2),
+	TIE(2),
 	/**
-	 * The game is not over yet
+	 * A placeholder for solvers to use when they haven't yet calculated the
+	 * children of the position. Additionally, if a game is not completely
+	 * solved, this may be used to indicate that the value of the position is
+	 * unknown.
 	 */
 	UNDECIDED(3),
 	/**
+	 * The player who's turn it is can force a win
+	 */
+	WIN(4),
+	/**
 	 * This is not a legal position
 	 */
-	IMPOSSIBLE(4),
-	/**
-	 * This position could be a draw
-	 */
-	MAYBE_DRAW(5),
-	/**
-	 * This position is a draw
-	 */
-	DEFINITE_DRAW(6);
+	IMPOSSIBLE(5);
 
 	/**
 	 * The numeric value of this primitive value (same as ordinal())
@@ -45,9 +43,9 @@ public enum PrimitiveValue {
 	 * The same as PrimitiveValue.values(), but without needing to allocate new
 	 * space every time it's called
 	 */
-	public final static PrimitiveValue[] values = PrimitiveValue.values();
+	public final static Value[] values = Value.values();
 
-	PrimitiveValue(int v) {
+	private Value(int v) {
 		value = v;
 	}
 
@@ -61,14 +59,14 @@ public enum PrimitiveValue {
 	 * @return Is true only if this PrimitiveValue is better than otherValue.
 	 *         Order of values from worst to best: Lose, Tie, Win, Undecided
 	 */
-	public boolean isPreferableTo(PrimitiveValue otherValue) {
+	public boolean isPreferableTo(Value otherValue) {
 		return (value > otherValue.value);
 	}
 
 	/**
 	 * @return The value of this move from the perspective of the other player.
 	 */
-	public PrimitiveValue flipValue() {
+	public Value flipValue() {
 		if (this == LOSE)
 			return WIN;
 		else if (this == WIN)

@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.HashMap;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.hasher.PermutationHash;
 import edu.berkeley.gamesman.util.Pair;
@@ -106,8 +106,8 @@ public class Rubik extends TwistyPuzzle<CubeState> {
 	}
 
 	@Override
-	public PrimitiveValue primitiveValue(CubeState pos) {
-		return pos.isSolved() ? PrimitiveValue.WIN : PrimitiveValue.UNDECIDED;
+	public Value primitiveValue(CubeState pos) {
+		return pos.isSolved() ? Value.WIN : Value.UNDECIDED;
 	}
 
 	@Override

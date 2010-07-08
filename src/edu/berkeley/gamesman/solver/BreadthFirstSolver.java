@@ -40,14 +40,14 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 				conf.remotenessStates);
 		hashSpace = game.numHashes();
 		Record defaultRecord = new Record(conf);
-		defaultRecord.value = PrimitiveValue.UNDECIDED;
+		defaultRecord.value = Value.UNDECIDED;
 		writeDb.fill(game.getRecord(null, defaultRecord), 0, hashSpace);
 		DatabaseHandle dh = writeDb.getHandle();
 		long numPositionsZero = 0;
 		Record rec = new Record(conf);
 		for (T s : game.startingPositions()) {
 			long hash = game.stateToHash(s);
-			PrimitiveValue isWin = game.primitiveValue(s);
+			Value isWin = game.primitiveValue(s);
 			rec.value = isWin;
 			rec.remoteness = 0;
 			writeDb.putRecord(dh, hash, game.getRecord(s, rec));
@@ -108,7 +108,7 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 					game.recordFromLong(null, readDb.getRecord(readDh, hash),
 							rec);
 					// TODO: Figure out when this is allowed to be null
-					if (rec.value != PrimitiveValue.UNDECIDED
+					if (rec.value != Value.UNDECIDED
 							&& rec.remoteness == remoteness) {
 						game.hashToState(hash, currentPos);
 						int numChildren = game.validMoves(currentPos,
@@ -118,7 +118,7 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 									.stateToHash(childPositions[i]);
 							game.recordFromLong(childPositions[i], readDb
 									.getRecord(readDh, childhash), childrec);
-							if (childrec.value == PrimitiveValue.UNDECIDED) {
+							if (childrec.value == Value.UNDECIDED) {
 								childrec.value = rec.value;
 								childrec.remoteness = remoteness + 1;
 								// System.out.println("Setting child "+childhash+"="+childrec);

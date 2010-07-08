@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.game.Alignment;
 import edu.berkeley.gamesman.game.util.AlignmentState;
 
@@ -38,18 +38,18 @@ public class AlignmentTester {
 			state.put(row, col, game.opposite(state.lastMove));
 			state.fireGuns(5);
 			state.setLastMove(game.opposite(state.lastMove));
-			PrimitiveValue p = game.primitiveValue(state);
-			if (p != PrimitiveValue.UNDECIDED) {
-				if (p == PrimitiveValue.WIN) {
+			Value p = game.primitiveValue(state);
+			if (p != Value.UNDECIDED) {
+				if (p == Value.WIN) {
 					System.out.println(Alignment.opposite(state.lastMove)
 							+ " just won!");
 					break;
 				}
-				if (p == PrimitiveValue.LOSE) {
+				if (p == Value.LOSE) {
 					System.out.println(state.lastMove + " just won!");
 					break;
 				}
-				if (p == PrimitiveValue.TIE) {
+				if (p == Value.TIE) {
 					System.out.println("Tie game!");
 					break;
 				}

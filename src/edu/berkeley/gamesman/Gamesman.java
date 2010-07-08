@@ -10,8 +10,7 @@ import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
 /**
- * An entry main for all of gamesman-java. Any application that wants to be part
- * of this should extend GamesmanApplication
+ * An entry main for all of gamesman-java. The main class to use when solving on a single machine
  * 
  * @author Jeremy Fleischman
  * 

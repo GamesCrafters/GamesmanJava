@@ -12,9 +12,11 @@ import edu.berkeley.gamesman.util.Util;
 
 /**
  * A Configuration object stores information related to a specific configuration
- * of Game, Hasher, and Records. The information should be specific enough that
- * a database will only match Configuration if the given Game and Hasher will
- * derive useful information from it.
+ * of Game and Records. The information should be specific enough that a
+ * database will only match Configuration if the given Game will derive useful
+ * information from it. Every database begins with the 18-byte header followed
+ * by the configuration data. Use the load and store methods to read and write
+ * the configuration from the database.
  * 
  * @author Steven Schlansker
  */
@@ -125,11 +127,21 @@ public class Configuration {
 		}
 	}
 
+	/**
+	 * Given a job file, will construct a Configuration
+	 * 
+	 * @param solvedJob
+	 *            The name of the job file
+	 * @throws ClassNotFoundException
+	 *             Could not find game class or hasher class
+	 */
 	public Configuration(String solvedJob) throws ClassNotFoundException {
 		this(readProperties(solvedJob));
 	}
 
 	/**
+	 * @param <T>
+	 *            The state this game takes
 	 * @return the Game this configuration plays
 	 */
 	@SuppressWarnings("unchecked")
@@ -215,13 +227,13 @@ public class Configuration {
 	}
 
 	/**
-	 * Parses a property as an Integer.
+	 * Parses a property as a Float.
 	 * 
 	 * @param key
 	 *            the name of the configuration property
 	 * @param dfl
 	 *            default value
-	 * @return The value associated with the key, if defined and an integer.
+	 * @return The value associated with the key, if defined and a float.
 	 *         Otherwise, returns dfl.
 	 */
 	public float getFloat(String key, float dfl) {
@@ -239,7 +251,7 @@ public class Configuration {
 	 *            the name of the configuration property
 	 * @param dfl
 	 *            default value
-	 * @return The value associated with the key, if defined and an long.
+	 * @return The value associated with the key, if defined and a long.
 	 *         Otherwise, returns dfl.
 	 */
 	public long getLong(String key, long dfl) {
@@ -360,32 +372,6 @@ public class Configuration {
 		props.remove(key);
 	}
 
-	private static BufferedReader in = new BufferedReader(
-			new InputStreamReader(System.in));
-
-	/**
-	 * Return a property, prompting the user if it doesn't exist
-	 * 
-	 * @param key
-	 *            the key to get
-	 * @return its value
-	 */
-	public String getPropertyWithPrompt(String key) {
-		String s = props.getProperty(key);
-		if (s == null) {
-			System.out
-					.print("Gamesman would like you to specify the value for '"
-							+ key + "'\n\t>");
-			System.out.flush();
-			try {
-				return in.readLine();
-			} catch (IOException e) {
-				throw new Error(e);
-			}
-		}
-		return s;
-	}
-
 	/**
 	 * @return A new identical configuration with clones of the game and hasher
 	 */
@@ -415,10 +401,21 @@ public class Configuration {
 			return Util.parseIntegers(iString.split(", *"));
 	}
 
+	/**
+	 * @return The game for this configuration
+	 */
 	public Game<? extends State> getGame() {
 		return g;
 	}
 
+	/**
+	 * Skips over the configuration at the beginning of a database
+	 * 
+	 * @param is
+	 *            Generally the FileInputStream for the database file
+	 * @throws IOException
+	 *             If an IOException occurs
+	 */
 	public static void skipConf(InputStream is) throws IOException {
 		int confLength = 0;
 		for (int i = 0; i < 4; i++) {
@@ -429,6 +426,18 @@ public class Configuration {
 		is.read(skippedBytes);
 	}
 
+	/**
+	 * Stores this configuration in the output stream
+	 * 
+	 * @param os
+	 *            An OutputStream to store to
+	 * @param dbType
+	 *            The class of the database (Use db.getClass().getName())
+	 * @param uri
+	 *            The location of the database
+	 * @throws IOException
+	 *             If an IOException occurs while writing
+	 */
 	public void store(OutputStream os, String dbType, String uri)
 			throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -451,6 +460,15 @@ public class Configuration {
 		os.write(confBytes);
 	}
 
+	/**
+	 * @param is
+	 *            An input stream to load from
+	 * @return A configuration object loaded from the input stream
+	 * @throws IOException
+	 *             If an IOException occurs while reading
+	 * @throws ClassNotFoundException
+	 *             If the game cannot be found
+	 */
 	public static Configuration load(InputStream is) throws IOException,
 			ClassNotFoundException {
 		ByteArrayInputStream bais = new ByteArrayInputStream(loadBytes(is));
@@ -460,6 +478,15 @@ public class Configuration {
 		return new Configuration(props);
 	}
 
+	/**
+	 * You probably want to use load instead.
+	 * 
+	 * @param is
+	 *            An input stream to read from
+	 * @return The byte array in which a configuration might be stored
+	 * @throws IOException
+	 *             If an IOException occurs while reading
+	 */
 	public static byte[] loadBytes(InputStream is) throws IOException {
 		int confLength = 0;
 		for (int i = 0; i < 4; i++) {

@@ -207,17 +207,17 @@ public final class Connect4 extends TierGame {
 	}
 
 	@Override
-	public PrimitiveValue primitiveValue() {
+	public Value primitiveValue() {
 		char lastTurn = (pieces.size() % 2 == 1 ? 'X' : 'O');
 		int result = bsb.xInALine(piecesToWin, lastTurn);
 		if (result > 0)
-			return PrimitiveValue.LOSE;
+			return Value.LOSE;
 		else if (result < 0)
-			return PrimitiveValue.IMPOSSIBLE;
+			return Value.IMPOSSIBLE;
 		else if (pieces.size() == gameSize)
-			return PrimitiveValue.TIE;
+			return Value.TIE;
 		else
-			return PrimitiveValue.UNDECIDED;
+			return Value.UNDECIDED;
 	}
 
 	private char get(int row, int col) {
@@ -567,34 +567,48 @@ public final class Connect4 extends TierGame {
 	public void recordFromLong(TierState recordState, long state, Record toStore) {
 		if (conf.remotenessStates > 0) {
 			if (state == gameSize + 1) {
-				toStore.value = PrimitiveValue.TIE;
+				toStore.value = Value.TIE;
 				toStore.remoteness = gameSize - recordState.tier;
 			} else if (state == gameSize + 2) {
-				toStore.value = PrimitiveValue.UNDECIDED;
+				toStore.value = Value.UNDECIDED;
 			} else if ((state & 1L) > 0) {
-				toStore.value = PrimitiveValue.WIN;
+				toStore.value = Value.WIN;
 				toStore.remoteness = (int) state;
 			} else {
-				toStore.value = PrimitiveValue.LOSE;
+				toStore.value = Value.LOSE;
 				toStore.remoteness = (int) state;
 			}
 		} else {
-			toStore.value = PrimitiveValue.values[(int) state];
+			if (state == 0)
+				toStore.value = Value.LOSE;
+			else if (state == 1)
+				toStore.value = Value.TIE;
+			else if (state == 2)
+				toStore.value = Value.WIN;
+			else
+				throw new Error("Bad State: " + state);
 		}
 	}
 
 	@Override
 	public long getRecord(TierState recordState, Record fromRecord) {
 		if (conf.remotenessStates > 0) {
-			if (fromRecord.value == PrimitiveValue.TIE) {
+			if (fromRecord.value == Value.TIE) {
 				return gameSize + 1;
-			} else if (fromRecord.value == PrimitiveValue.UNDECIDED) {
+			} else if (fromRecord.value == Value.UNDECIDED) {
 				return gameSize + 2;
 			} else {
 				return fromRecord.remoteness;
 			}
 		} else {
-			return fromRecord.value.value;
+			if (fromRecord.value == Value.LOSE)
+				return 0;
+			else if (fromRecord.value == Value.TIE)
+				return 1;
+			else if (fromRecord.value == Value.WIN)
+				return 2;
+			else
+				throw new Error(fromRecord.value + " not supported in Connect4");
 		}
 	}
 }

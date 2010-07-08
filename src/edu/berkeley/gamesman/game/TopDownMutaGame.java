@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.util.Pair;
 
@@ -55,7 +55,7 @@ public abstract class TopDownMutaGame<S extends State> extends Game<S> {
 	public abstract S getState();
 
 	@Override
-	public PrimitiveValue primitiveValue(S pos) {
+	public Value primitiveValue(S pos) {
 		setToState(pos);
 		return primitiveValue();
 	}
@@ -63,7 +63,7 @@ public abstract class TopDownMutaGame<S extends State> extends Game<S> {
 	/**
 	 * @return The primitive value of the current position
 	 */
-	public abstract PrimitiveValue primitiveValue();
+	public abstract Value primitiveValue();
 
 	/**
 	 * Sets the board to the passed state

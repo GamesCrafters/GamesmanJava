@@ -4,21 +4,31 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class ChunkInputStream extends FilterInputStream {
+/**
+ * An underlying input stream to keep buffered input streams (such as
+ * GZIPInputStream) from overstepping their bounds. It starts by reading four
+ * bytes as an integer (call it n). It then reads n bytes before returning -1
+ * (meaning EOF). A call to nextChunk tells the stream to read the next four
+ * bytes as a length and then allow that many bytes before reaching the end
+ * again. GZippedFileDatabase.readZippedBytes assumes that the reading stream
+ * will be a ChunkInputStream wrapped by GZIPInputStreams. This whole system is
+ * implemented by the ZipChunkInputStream.
+ * 
+ * @author dnspies
+ */
+final class ChunkInputStream extends FilterInputStream {
 	private int remain;
-	private final byte[] numBytesBytes = new byte[4];
 
-	public ChunkInputStream(InputStream in) throws IOException {
+	ChunkInputStream(InputStream in) throws IOException {
 		super(in);
 		nextChunk();
 	}
 
-	public void nextChunk() throws IOException {
-		Database.readFully(in, numBytesBytes, 0, 4);
+	void nextChunk() throws IOException {
 		remain = 0;
 		for (int i = 0; i < 4; i++) {
 			remain <<= 8;
-			remain |= numBytesBytes[i] & 255;
+			remain |= in.read();
 		}
 	}
 

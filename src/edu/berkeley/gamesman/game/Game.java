@@ -2,15 +2,13 @@ package edu.berkeley.gamesman.game;
 
 import java.lang.reflect.Array;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.util.Pair;
-import edu.berkeley.gamesman.util.Util;
 
 /**
  * Public interface that all Games must implement to be solvable
@@ -121,7 +119,7 @@ public abstract class Game<S extends State> {
 	 *            The primitive State
 	 * @return the primitive value of the state
 	 */
-	public abstract PrimitiveValue primitiveValue(S pos);
+	public abstract Value primitiveValue(S pos);
 
 	/**
 	 * Unhash a given hashed value and return the corresponding Board
@@ -211,13 +209,13 @@ public abstract class Game<S extends State> {
 		int size = len;
 		int lastSize;
 		Record[] arrVals = recordArray;
-		PrimitiveValue bestVal = PrimitiveValue.WIN;
+		Value bestVal = Value.WIN;
 		if (conf.valueStates > 0) {
 			lastSize = size;
 			size = 0;
-			bestVal = PrimitiveValue.LOSE;
+			bestVal = Value.LOSE;
 			for (int i = 0; i < lastSize; i++) {
-				PrimitiveValue value = arrVals[i + offset].value;
+				Value value = arrVals[i + offset].value;
 				if (value.isPreferableTo(bestVal)) {
 					size = 1;
 					valsBest[0] = arrVals[i + offset];
@@ -261,7 +259,7 @@ public abstract class Game<S extends State> {
 		if (conf.remotenessStates > 0) {
 			lastSize = size;
 			size = 0;
-			if (bestVal == PrimitiveValue.LOSE) {
+			if (bestVal == Value.LOSE) {
 				int bestRemoteness = 0;
 				for (int i = 0; i < lastSize; i++) {
 					int remoteness = arrVals[i + offset].remoteness;
@@ -361,7 +359,7 @@ public abstract class Game<S extends State> {
 	}
 
 	public int defaultValueStates() {
-		return 4;
+		return 6;
 	}
 
 	public int defaultRemotenessStates() {
@@ -369,14 +367,14 @@ public abstract class Game<S extends State> {
 	}
 
 	public int defaultScoreStates() {
-		return 1;
+		return 0;
 	}
 
 	public void recordFromLong(S recordState, long record, Record toStore) {
 		int fieldStates = 1;
 		if (conf.valueStates > 0) {
 			fieldStates = conf.valueStates;
-			toStore.value = PrimitiveValue.values[(int) (record % fieldStates)];
+			toStore.value = Value.values[(int) (record % fieldStates)];
 		}
 		if (conf.remotenessStates > 0) {
 			record /= fieldStates;

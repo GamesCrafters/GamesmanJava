@@ -1,18 +1,17 @@
 package edu.berkeley.gamesman.core;
 
-
 /**
  * Stores information about a game state
  * 
  * @author dnspies
  */
-public final class Record {
+public final class Record implements Cloneable {
 	private final Configuration conf;
 
 	/**
 	 * The value of this record
 	 */
-	public PrimitiveValue value;
+	public Value value;
 
 	/**
 	 * The remoteness of this record
@@ -47,8 +46,9 @@ public final class Record {
 	}
 
 	/**
-	 * Changes this record to the previous position. WARNING! Does not change
-	 * the score. You must do that yourself.
+	 * Changes this record to the previous position by flipping the value and
+	 * adding one to the remoteness. WARNING! Does not change the score. You
+	 * must do that yourself.
 	 */
 	public void previousPosition() {
 		if (conf.valueStates > 0)
@@ -94,18 +94,9 @@ public final class Record {
 	}
 
 	/**
-	 * @param conf
-	 *            a configuration object
-	 * @return Determines the size (in bytes) of a record with a given
-	 *         configuration object
-	 */
-	public static int byteSize(Configuration conf) {
-		return 24;
-	}
-
-	/**
-	 * Changes this record to the next position. WARNING! Does not change
-	 * the score. You must do that yourself.
+	 * Changes this record to the next position by flipping the value and
+	 * subtracting one from the remoteness. WARNING! Does not change the score.
+	 * You must do that yourself.
 	 */
 	public void nextPosition() {
 		value = value.flipValue();

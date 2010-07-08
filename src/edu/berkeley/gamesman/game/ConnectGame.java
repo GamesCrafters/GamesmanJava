@@ -200,18 +200,18 @@ public abstract class ConnectGame extends TierGame {
 	protected abstract void setToCharArray(char[] myPieces);
 
 	@Override
-	public PrimitiveValue primitiveValue() {
-		PrimitiveValue result;
+	public Value primitiveValue() {
+		Value result;
 		if ((myState.tier & 1) == 1)
-			result = isWin('X') ? PrimitiveValue.LOSE
-					: PrimitiveValue.UNDECIDED;
+			result = isWin('X') ? Value.LOSE
+					: Value.UNDECIDED;
 		else
-			result = isWin('O') ? PrimitiveValue.LOSE
-					: PrimitiveValue.UNDECIDED;
+			result = isWin('O') ? Value.LOSE
+					: Value.UNDECIDED;
 		assert Util.debug(DebugFacility.GAME, result.name() + "\n");
 		if (myState.tier == numberOfTiers() - 1
-				&& result == PrimitiveValue.UNDECIDED)
-			return PrimitiveValue.IMPOSSIBLE;
+				&& result == Value.UNDECIDED)
+			return Value.IMPOSSIBLE;
 		else
 			return result;
 	}
@@ -235,9 +235,9 @@ public abstract class ConnectGame extends TierGame {
 	@Override
 	public void recordFromLong(TierState recordState, long state, Record toStore) {
 		if ((state & 1) == 1)
-			toStore.value = PrimitiveValue.WIN;
+			toStore.value = Value.WIN;
 		else
-			toStore.value = PrimitiveValue.LOSE;
+			toStore.value = Value.LOSE;
 		if (conf.remotenessStates > 0)
 			toStore.remoteness = (int) state;
 	}

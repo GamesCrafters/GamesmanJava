@@ -29,7 +29,7 @@ public final class GamesmanMain extends GamesmanApplication {
 		try {
 			this.conf = new Configuration(props);
 		} catch (ClassNotFoundException e) {
-			throw new Error("Configuration contains unknown game or hasher ", e);
+			throw new Error("Configuration contains unknown game", e);
 		}
 		Thread.currentThread().setName("Gamesman");
 
@@ -75,6 +75,7 @@ public final class GamesmanMain extends GamesmanApplication {
 
 	/**
 	 * Diagnostic call to unhash an arbitrary value to a game board
+	 * @param <T> The state type of the game
 	 */
 	public <T extends State> void executeunhash() {
 		Game<T> gm = conf.getCheckedGame();
@@ -85,6 +86,7 @@ public final class GamesmanMain extends GamesmanApplication {
 
 	/**
 	 * Diagnostic call to view all child moves of a given hashed game state
+	 * @param <T> The state type of the game
 	 */
 	public <T extends State> void executegenmoves() {
 		Game<T> gm = conf.getCheckedGame();
@@ -98,6 +100,7 @@ public final class GamesmanMain extends GamesmanApplication {
 
 	/**
 	 * Hash a single board with the given hasher and print it.
+	 * @param <T> The state type of the game
 	 */
 	public <T extends State> void executehash() {
 		Game<T> gm = conf.getCheckedGame();
@@ -109,6 +112,7 @@ public final class GamesmanMain extends GamesmanApplication {
 
 	/**
 	 * Evaluate a single board and return its primitive value.
+	 * @param <T> The state type of the game
 	 */
 	public <T extends State> void executeevaluate() {
 		Game<T> gm = conf.getCheckedGame();

@@ -263,10 +263,10 @@ public class JSONInterface extends GamesmanApplication {
 			final List<GamestateResponse> responseArray = Collections
 					.synchronizedList(new ArrayList<GamestateResponse>());
 
-			PrimitiveValue pv = game.primitiveValue(state);
+			Value pv = game.primitiveValue(state);
 			Collection<Pair<String, T>> states = game.validMoves(state);
 			Iterator<Pair<String, T>> iter = states.iterator();
-			if (game.getPlayerCount() <= 1 || pv == PrimitiveValue.UNDECIDED) {
+			if (game.getPlayerCount() <= 1 || pv == Value.UNDECIDED) {
 				// Game is not over yet...
 				Thread[] recordThreads = new Thread[states.size()];
 				for (int i = 0; i < recordThreads.length; i++) {
@@ -361,12 +361,12 @@ public class JSONInterface extends GamesmanApplication {
 				g.recordFromLong(state, db.getRecord(handle, g
 						.stateToHash(state)), rec);
 				if (conf.valueStates > 0) {
-					PrimitiveValue pv = rec.value;
+					Value pv = rec.value;
 					if (g.getPlayerCount() > 1 && isChildState) {
-						if (pv == PrimitiveValue.WIN)
-							pv = PrimitiveValue.LOSE;
-						else if (pv == PrimitiveValue.LOSE)
-							pv = PrimitiveValue.WIN;
+						if (pv == Value.WIN)
+							pv = Value.LOSE;
+						else if (pv == Value.LOSE)
+							pv = Value.WIN;
 					}
 					request.setValue(pv.name().toLowerCase());
 				}
@@ -377,13 +377,13 @@ public class JSONInterface extends GamesmanApplication {
 					request.setScore(rec.score);
 				}
 			} else {
-				PrimitiveValue pv = g.primitiveValue(state);
-				if (pv != PrimitiveValue.UNDECIDED) {
+				Value pv = g.primitiveValue(state);
+				if (pv != Value.UNDECIDED) {
 					if (g.getPlayerCount() > 1 && isChildState) {
-						if (pv == PrimitiveValue.WIN)
-							pv = PrimitiveValue.LOSE;
-						else if (pv == PrimitiveValue.LOSE)
-							pv = PrimitiveValue.WIN;
+						if (pv == Value.WIN)
+							pv = Value.LOSE;
+						else if (pv == Value.LOSE)
+							pv = Value.WIN;
 					}
 					request.setValue(pv.name().toLowerCase());
 

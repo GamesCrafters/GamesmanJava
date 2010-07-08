@@ -14,9 +14,116 @@ import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
 /**
+ * <p>
  * A Database is the abstract superclass of all data storage methods used in
  * Gamesman. Each particular Database is responsible for the persistent storage
  * of Records derived from solving games.
+ * </p>
+ * <p>
+ * Every database (with the exception of the RemoteDatabase and
+ * DatabaseWrappers) should be associated with a file whose first 18 bytes
+ * contain special header information telling what sort of first-level
+ * compression the database uses and what range of the game is stored in that
+ * database. This is followed by the configuration object used to create that
+ * database. To implement this, before writing anything to the FileOutputStream,
+ * call store(fos, uri) where fos is the outputstream. When reading from the
+ * database, make sure to call skipHeader(fis) where fis is the FileInputStream.
+ * </p>
+ * <p>
+ * To read from or write to a database, you'll need a DatabaseHandle for each
+ * thread. DatabaseHandles are used by databases to handle threading issues
+ * since it's possible many threads will be operating on the database at the
+ * same time. When writing to a database, make sure to call closeHandle when
+ * you're done.
+ * </p>
+ * <p>
+ * To instantiate a database, use the static methods. They'll find the
+ * appropriate child class from the given information and instantiate using that
+ * class's constructor. All classes extending Database must have a constructor
+ * which takes no additional arguments or the static methods won't be able to
+ * create instances of that database. After calling super, make sure to set
+ * firstRecord = firstRecord() and numRecords = numRecords() before using them
+ * since 0 and -1 respectively indicate the entire game. A null header or
+ * configuration means fetch them from the file (uri) and a null uri means fetch
+ * it from the configuration. In general, don't depend on the arguments to the
+ * constructor, use the database methods to obtain information about how the
+ * database was constructed.
+ * </p>
+ * <p>
+ * In general, databases store records in the following way. The game passes the
+ * long index and the long record value to the database. The database reads the
+ * other records in the same record group. It combines those records with the
+ * one passed and then stores the group to the database. totalStates is the
+ * number of possible values a record can have. A record group is a
+ * base-totalStates number. The number of digits in the record group is
+ * recordsPerGroup and the number of bytes required to store that record group
+ * is recordGroupByteLength.
+ * </p>
+ * <p>
+ * While the above information is important for understanding how databases
+ * work, you generally should not have to deal with that. Nothing dealing with
+ * bytes or record groups is visible outside the database package or Database
+ * classes. Furthermore, the superclass Database handles all the calculations
+ * dealing with converting between records and bytes. If you want to extend
+ * Database, you must override the getBytes and putBytes methods (which are
+ * fairly straightforward). For slightly more control, you may have those
+ * methods throw UnsupportedOperation in which case you'll override the other
+ * getBytes and putBytes and prepareRange. In this case, to deal with all the
+ * nasty edge cases, do the following:<br/>
+ * <code>
+ * protected void prepareRange(DatabaseHandle dh, long byteIndex, int firstNum, long numBytes, int lastNum) {<br />
+ * &nbsp;&nbsp;super.prepareRange(dh,byteIndex,firstNum,numBytes,lastNum);<br />
+ * &nbsp;&nbsp;//Your code<br />
+ * }<br />
+ * <br />
+ * protected int getBytes(final DatabaseHandle dh, final byte[] arr, int off,<br />
+ * &nbsp;&nbsp;final int maxLen, final boolean overwriteEdgesOk){<br />
+ * &nbsp;&nbsp;if(!overwriteEdgesOk){<br />
+ * &nbsp;&nbsp;&nbsp;&nbsp;return super.getBytes(dh, arr, off, maxLen, false);<br />
+ * &nbsp;&nbsp;}<br />
+ * &nbsp;&nbsp;final int numBytes = Math.min(maxLen,dh.lastByteIndex-dh.location);<br />
+ * &nbsp;&nbsp;//Your code, numBytes is the number of bytes to read.<br />
+ * &nbsp;&nbsp;dh.location+=numBytes;<br />
+ * &nbsp;&nbsp;return numBytes;<br />
+ * }<br />
+ * <br />
+ * protected int putBytes(final DatabaseHandle dh, final byte[] arr, int off,<br />
+ * &nbsp;&nbsp;final int maxLen, final boolean edgesAreCorrect){<br />
+ * &nbsp;&nbsp;if(!edgesAreCorrect){<br />
+ * &nbsp;&nbsp;&nbsp;&nbsp;return super.getBytes(dh, arr, off, maxLen, false);<br />
+ * &nbsp;&nbsp;}<br />
+ * &nbsp;&nbsp;final int numBytes = Math.min(maxLen,dh.lastByteIndex-dh.location);<br />
+ * &nbsp;&nbsp;//Your code, numBytes is the number of bytes to read.<br />
+ * &nbsp;&nbsp;dh.location+=numBytes;<br />
+ * &nbsp;&nbsp;return numBytes;<br />
+ * }</code><br />
+ * When overwriteEdgesOk/edgesAreCorrect is false, the Database versions of
+ * these methods split the request into chunks in which these variables are true
+ * and then calls getBytes and putBytes with them set to true. So by writing
+ * your methods in this way, you're designating that when the edges are not
+ * already handled, the Database class will handle it and when they are handled,
+ * you'll deal with actually fetching the bytes. You can safely assume that when
+ * prepareRange is called, getBytes/putBytes will eventually be called over the
+ * entire range prepared. Furthermore, closeHandle will eventually be called on
+ * all handles used for writing (but may or may not be called on handles used
+ * for reading)
+ * </p>
+ * <p>
+ * To obtain the actual records requested (in prepareRange), use:<br />
+ * <code>
+ * long firstRecord = toFirstRecord(byteIndex)+firstNum;<br />
+ * long numRecords = toLastRecord(byteIndex + numBytes) - (lastNum == 0 ? 0 : (recordsPerGroup - lastNum)) - firstRecord;
+ * </code><br />
+ * You may subclass DatabaseHandle in order to store this information or add
+ * anything else you need. You may even choose to subclass DatabaseHandle
+ * without overriding the lower-level versions of getBytes/putBytes (but you'll
+ * probably still want to override prepareRange in that case). The argument to
+ * the DatabaseHandle super constructor should always be recordGroupByteLength
+ * unless you choose to handle record group edge cases yourself (this is not
+ * recommended) in which case it should be null.
+ * </p>
+ * 
+ * @author dnspies
  */
 public abstract class Database {
 
@@ -50,6 +157,12 @@ public abstract class Database {
 
 	protected final boolean recordGroupUsesLong;
 
+	/**
+	 * All databases should override this constructor without adding any
+	 * additional parameters. In general, your constructor should not use the
+	 * arguments provided, use the database methods and visible variables to
+	 * obtain that information
+	 */
 	protected Database(String uri, Configuration conf, boolean solve,
 			long firstRecord, long numRecords, DatabaseHeader header) {
 		byte[] dbInfo = null;
@@ -190,10 +303,15 @@ public abstract class Database {
 	}
 
 	/**
-	 * Read the Nth Record from the Database as a long
+	 * Read the Nth Record from the Database as a long. To convert the long to a
+	 * Record, use the game's recordFromLong method. Remember, a database only
+	 * stores the minimum amount of information necessary. Often for information
+	 * from the database to be of any use, you'll need to know the game state as
+	 * well.
 	 * 
 	 * @param dh
-	 *            A handle for this database.
+	 *            A handle for this database. Handles should not be used
+	 *            simultaneously by multiple threads
 	 * 
 	 * @param recordIndex
 	 *            The record number
@@ -211,13 +329,16 @@ public abstract class Database {
 	}
 
 	/**
+	 * Stores a particular value at the Nth position in the database. To store a
+	 * Record, use the game's getRecord method.
+	 * 
 	 * @param dh
 	 *            A handle for this database
 	 * 
 	 * @param recordIndex
 	 *            The record number
 	 * @param r
-	 *            The Record to store
+	 *            The Record value to store
 	 */
 	public void putRecord(DatabaseHandle dh, long recordIndex, long r) {
 		long byteIndex = toByte(recordIndex);
@@ -231,6 +352,8 @@ public abstract class Database {
 	}
 
 	/**
+	 * Returns a record group as a long
+	 * 
 	 * @param loc
 	 *            The index of the byte the group begins on
 	 * @return The group beginning at byte-index loc
@@ -244,6 +367,8 @@ public abstract class Database {
 	}
 
 	/**
+	 * Returns a record group as a BigInteger
+	 * 
 	 * @param loc
 	 *            The index of the byte the group begins on
 	 * @return The group beginning at loc
@@ -257,6 +382,8 @@ public abstract class Database {
 	}
 
 	/**
+	 * Places a record group as a long in the database
+	 * 
 	 * @param loc
 	 *            The index of the byte the group begins on
 	 * @param rg
@@ -270,6 +397,8 @@ public abstract class Database {
 	}
 
 	/**
+	 * Places a record group as a BigInteger in the database
+	 * 
 	 * @param loc
 	 *            The index of the byte the group begins on
 	 * @param rg
@@ -282,6 +411,31 @@ public abstract class Database {
 		dh.releaseBytes(groups);
 	}
 
+	/**
+	 * Calls prepareRange immediately followed by putBytes on that range.
+	 * 
+	 * @param dh
+	 *            A database handle for this thread.
+	 * @param byteIndex
+	 *            The index at which to begin writing bytes (should be
+	 *            group-aligned if recordNum!=0)
+	 * @param recordNum
+	 *            The number of records to skip in the first group
+	 * @param arr
+	 *            An array containing the bytes to write
+	 * @param off
+	 *            The offset into the array to begin reading
+	 * @param numBytes
+	 *            The number of bytes to write from the array
+	 *            (byteIndex+numBytes should be group-aligned if lastNum!=0)
+	 * @param lastNum
+	 *            The number of records to use from the last group or all of
+	 *            them if lastNum=0
+	 * @param edgesAreCorrect
+	 *            true if the database does not need to be careful not to write
+	 *            the edges (firstNum, lastNum) into the database (sorry about
+	 *            the double negative)
+	 */
 	protected void putRecordsAsBytes(DatabaseHandle dh, long byteIndex,
 			int recordNum, byte[] arr, int off, int numBytes, int lastNum,
 			boolean edgesAreCorrect) {
@@ -289,6 +443,25 @@ public abstract class Database {
 		putBytes(dh, arr, off, numBytes, edgesAreCorrect);
 	}
 
+	/**
+	 * Puts records from a single group into the database. This is equivalent to
+	 * putRecordsAsBytes with numBytes = recordGroupByteLength and using the
+	 * least significant recordGroupByteLength bytes of rg instead of arr
+	 * 
+	 * @param dh
+	 *            A database handle for this thread.
+	 * @param byteIndex
+	 *            The index at which to begin writing bytes (should be
+	 *            group-aligned)
+	 * @param firstNum
+	 *            The number of records to skip in the first group
+	 * @param lastNum
+	 *            The number of records to use from the last group. Note that
+	 *            unlike putRecordsAsBytes, this value should be equal to
+	 *            recordsPerGroup where appropriate rather than zero
+	 * @param rg
+	 *            The record group to write bytes from
+	 */
 	protected void putRecordsAsGroup(DatabaseHandle dh, long byteIndex,
 			int firstNum, int lastNum, long rg) {
 		byte[] groupBytes = dh.getRecordGroupBytes();
@@ -299,6 +472,25 @@ public abstract class Database {
 		dh.releaseBytes(groupBytes);
 	}
 
+	/**
+	 * Puts records from a single group into the database. This is equivalent to
+	 * putRecordsAsBytes with numBytes = recordGroupByteLength and using the
+	 * least significant recordGroupByteLength bytes of rg instead of arr
+	 * 
+	 * @param dh
+	 *            A database handle for this thread.
+	 * @param byteIndex
+	 *            The index at which to begin writing bytes (should be
+	 *            group-aligned)
+	 * @param firstNum
+	 *            The number of records to skip in the group
+	 * @param lastNum
+	 *            The record-digit to stop using from the group. Note that
+	 *            unlike putRecordsAsBytes, this value should be equal to
+	 *            recordsPerGroup where appropriate rather than zero
+	 * @param rg
+	 *            The record group to write bytes from
+	 */
 	protected void putRecordsAsGroup(DatabaseHandle dh, long byteIndex,
 			int firstNum, int lastNum, BigInteger rg) {
 		byte[] groupBytes = dh.getRecordGroupBytes();
@@ -309,6 +501,19 @@ public abstract class Database {
 		dh.releaseBytes(groupBytes);
 	}
 
+	/**
+	 * Combines two record groups into one by taking all the records before num
+	 * from one of them and all the records after num for the other. For
+	 * instance, if totalStates = 10 then splice(1678,54491,3) returns 54678.
+	 * 
+	 * @param group1
+	 *            The first group
+	 * @param group2
+	 *            The second group
+	 * @param num
+	 *            The cut-off point
+	 * @return The group that results from combining them.
+	 */
 	protected final long splice(long group1, long group2, int num) {
 		if (superCompress)
 			return group1 % longMultipliers[num]
@@ -319,6 +524,19 @@ public abstract class Database {
 			return group1;
 	}
 
+	/**
+	 * Combines two record groups into one by taking all the records before num
+	 * from one of them and all the records after num for the other. For
+	 * instance, if totalStates = 10 then splice(1678,54491,3) returns 54678.
+	 * 
+	 * @param group1
+	 *            The first group
+	 * @param group2
+	 *            The second group
+	 * @param num
+	 *            The cut-off point
+	 * @return The group that results from combining them.
+	 */
 	protected final BigInteger splice(BigInteger group1, BigInteger group2,
 			int num) {
 		if (superCompress)
@@ -331,10 +549,11 @@ public abstract class Database {
 	}
 
 	/**
-	 * Seek to this location and write len bytes from an array into the database
+	 * Seek to this location and write len bytes from an array into the
+	 * database.
 	 * 
 	 * @param loc
-	 *            The location to seek to
+	 *            The byte-location to seek to
 	 * @param arr
 	 *            An array to read from
 	 * @param off
@@ -345,6 +564,31 @@ public abstract class Database {
 	protected abstract void putBytes(DatabaseHandle dh, long loc, byte[] arr,
 			int off, int len);
 
+	/**
+	 * Calls prepareRange immediately followed by getBytes on that range.
+	 * 
+	 * @param dh
+	 *            A database handle for this thread.
+	 * @param byteIndex
+	 *            The index at which to begin reading bytes (should be
+	 *            group-aligned if recordNum!=0)
+	 * @param recordNum
+	 *            The number of records to skip in the first group
+	 * @param arr
+	 *            An array containing the bytes to read
+	 * @param off
+	 *            The offset into the array to begin reading
+	 * @param numBytes
+	 *            The number of bytes to read into the array (byteIndex+numBytes
+	 *            should be group-aligned if lastNum!=0)
+	 * @param lastNum
+	 *            The number of records to use from the last group or all of
+	 *            them if lastNum=0
+	 * @param overwriteEdgesOk
+	 *            true if the database does not need to be careful not to read
+	 *            the edges (firstNum, lastNum) into the array (sorry about the
+	 *            double negative)
+	 */
 	protected void getRecordsAsBytes(DatabaseHandle dh, long byteIndex,
 			int recordNum, byte[] arr, int off, int numBytes, int lastNum,
 			boolean overwriteEdgesOk) {
@@ -352,6 +596,26 @@ public abstract class Database {
 		getBytes(dh, arr, off, numBytes, overwriteEdgesOk);
 	}
 
+	/**
+	 * Reads records from a single group as a long. This is equivalent to
+	 * getRecordsAsBytes with numBytes = recordGroupByteLength and using the
+	 * least significant recordGroupByteLength bytes of the returned group
+	 * instead of arr
+	 * 
+	 * @param dh
+	 *            A database handle for this thread.
+	 * @param byteIndex
+	 *            The index at which to begin reading bytes (should be
+	 *            group-aligned)
+	 * @param firstNum
+	 *            The number of records to skip in the group
+	 * @param lastNum
+	 *            The number of record-digit to stop using from the group. Note
+	 *            that unlike getRecordsAsBytes, this value should be equal to
+	 *            recordsPerGroup where appropriate rather than zero
+	 * @return The record group at byteIndex only being careful to make sure
+	 *         that records firstNum through lastNum are correct
+	 */
 	protected long getRecordsAsLongGroup(DatabaseHandle dh, long byteIndex,
 			int firstNum, int lastNum) {
 		byte[] groupBytes = dh.getRecordGroupBytes();
@@ -363,6 +627,26 @@ public abstract class Database {
 		return group;
 	}
 
+	/**
+	 * Reads records from a single group as a BigInteger. This is equivalent to
+	 * getRecordsAsBytes with numBytes = recordGroupByteLength and using the
+	 * least significant recordGroupByteLength bytes of the returned group
+	 * instead of arr
+	 * 
+	 * @param dh
+	 *            A database handle for this thread.
+	 * @param byteIndex
+	 *            The index at which to begin reading bytes (should be
+	 *            group-aligned)
+	 * @param firstNum
+	 *            The number of records to skip in the group
+	 * @param lastNum
+	 *            The number of record-digit to stop using from the group. Note
+	 *            that unlike getRecordsAsBytes, this value should be equal to
+	 *            recordsPerGroup where appropriate rather than zero
+	 * @return The record group at byteIndex only being careful to make sure
+	 *         that records firstNum through lastNum are correct
+	 */
 	protected BigInteger getRecordsAsBigIntGroup(DatabaseHandle dh,
 			long byteIndex, int firstNum, int lastNum) {
 		byte[] groupBytes = dh.getRecordGroupBytes();
@@ -389,6 +673,24 @@ public abstract class Database {
 	protected abstract void getBytes(DatabaseHandle dh, long loc, byte[] arr,
 			int off, int len);
 
+	/**
+	 * Prepare a given range of records for reading/writing (one or the other,
+	 * not interchangeably).
+	 * 
+	 * @param dh
+	 *            A database handle for this thread
+	 * @param byteIndex
+	 *            The byte index at which to begin reading/writing (should be
+	 *            group-aligned if firstNum!=0)
+	 * @param firstNum
+	 *            The number of records to ignore in the first group
+	 * @param numBytes
+	 *            The total number of bytes to read/write (byteIndex + numBytes
+	 *            should be group-aligned if lastNum!=0)
+	 * @param lastNum
+	 *            The number of records to care about from the last group or all
+	 *            of them if lastNum = 0
+	 */
 	protected void prepareRange(DatabaseHandle dh, long byteIndex,
 			int firstNum, long numBytes, int lastNum) {
 		dh.byteIndex = byteIndex;
@@ -399,12 +701,24 @@ public abstract class Database {
 	}
 
 	/**
-	 * Writes len bytes from the array into the database
+	 * Writes up to maxLen bytes from the array into the database. Call
+	 * prepareRange before calling this method.
 	 * 
+	 * @param dh
+	 *            A database handle for this thread
 	 * @param arr
-	 *            An array to read from
+	 *            An array to write from
 	 * @param off
 	 *            The offset into the array
+	 * @param maxLen
+	 *            The maximum number of bytes to write (will be less if
+	 *            prepareRange was only called for some smaller number of bytes)
+	 * @param edgesAreCorrect
+	 *            Whether the database needs to be careful not to overwrite the
+	 *            edges of the prepared range. If edgesAreCorrect is false,
+	 *            putBytes will split the call up into multiple calls (as well
+	 *            as calls to getBytes) and combine the database's edges with
+	 *            the values in the array.
 	 */
 	protected int putBytes(DatabaseHandle dh, byte[] arr, int off, int maxLen,
 			boolean edgesAreCorrect) {
@@ -534,12 +848,23 @@ public abstract class Database {
 	}
 
 	/**
-	 * Reads len bytes from the database into an array
+	 * Reads up to maxLen bytes from the database into the array. Call
+	 * prepareRange before calling this method.
 	 * 
+	 * @param dh
+	 *            A database handle for this thread
 	 * @param arr
 	 *            An array to write to
 	 * @param off
 	 *            The offset into the array
+	 * @param maxLen
+	 *            The maximum number of bytes to read (will be less if
+	 *            prepareRange was only called for some smaller number of bytes)
+	 * @param overwriteEdgesOk
+	 *            Whether the database needs to be careful not to overwrite the
+	 *            edges of the prepared range. If overwriteEdgesOk is false,
+	 *            putBytes will split the call up into multiple calls and
+	 *            combine the array's edges with the values in the database.
 	 */
 	protected int getBytes(final DatabaseHandle dh, final byte[] arr, int off,
 			final int maxLen, final boolean overwriteEdgesOk) {
@@ -646,9 +971,9 @@ public abstract class Database {
 	 * @param r
 	 *            The record
 	 * @param offset
-	 *            The byte offset into the database
+	 *            The byte offset into the database (should be group-aligned)
 	 * @param len
-	 *            The number of bytes to fill
+	 *            The number of bytes to fill (should be group-aligned)
 	 */
 	public void fill(long r, long offset, long len) {
 		long[] recs = new long[recordsPerGroup];
@@ -699,17 +1024,50 @@ public abstract class Database {
 		return firstRecord;
 	}
 
+	/**
+	 * Returns whether the record at this index is contained in this database.
+	 * Formally:<br />
+	 * hash >= firstRecord() && hash < firstRecord() + numRecords();
+	 * 
+	 * @param hash
+	 *            The index of the record
+	 * @return Whether this database should contain that record.
+	 */
 	public final boolean containsRecord(long hash) {
 		return hash >= firstRecord() && hash < firstRecord() + numRecords();
 	}
 
+	/**
+	 * Provides a handle for any thread wishing to access this database. Recycle
+	 * handles when possible for faster solve-time. If this handle was used for
+	 * writing to the database, make sure to call closeHandle when you're done
+	 * with it.
+	 * 
+	 * @return A new handle for this database.
+	 */
 	public DatabaseHandle getHandle() {
 		return new DatabaseHandle(recordGroupByteLength);
 	}
 
+	/**
+	 * Closes a database handle used for writing. It is not necessary to call
+	 * this method on handles which were only used for reading. Do not use the
+	 * handle again after calling this method.
+	 * 
+	 * @param dh
+	 *            The handle.
+	 */
 	public void closeHandle(DatabaseHandle dh) {
 	}
 
+	/**
+	 * Given a record index, returns the byte index of the group in which it is
+	 * stored
+	 * 
+	 * @param recordIndex
+	 *            The record index
+	 * @return The byte index
+	 */
 	protected final long toByte(long recordIndex) {
 		if (superCompress)
 			if (recordGroupByteLength > 1)
@@ -720,6 +1078,14 @@ public abstract class Database {
 			return recordIndex << recordGroupByteBits;
 	}
 
+	/**
+	 * Given a byte index, returns the first record index of the group which
+	 * contains that byte index
+	 * 
+	 * @param byteIndex
+	 *            The byte index
+	 * @return The record index
+	 */
 	protected final long toFirstRecord(long byteIndex) {
 		if (superCompress)
 			if (recordGroupByteLength > 1)
@@ -730,10 +1096,30 @@ public abstract class Database {
 			return byteIndex >> recordGroupByteBits;
 	}
 
+	/**
+	 * Given a byte index, returns the first record index of the next group
+	 * after the previous byte index. DOES NOT RETURN THE LAST RECORD INDEX OF A
+	 * GROUP (although the method name might lead some to think so)! More
+	 * formally returns:<br />
+	 * toFirstRecord(byteIndex + recordGroupByteLength - 1);
+	 * 
+	 * @param byteIndex
+	 *            The byteIndex
+	 * @return The recordIndex
+	 */
 	protected long toLastRecord(long byteIndex) {
 		return toFirstRecord(byteIndex + recordGroupByteLength - 1);
 	}
 
+	/**
+	 * Returns the "digit" within a group at which a particular recordIndex is
+	 * stored. More formally:<br />
+	 * recordIndex % recordsPerGroup
+	 * 
+	 * @param recordIndex
+	 *            The record index
+	 * @return The digit (or num) of the record
+	 */
 	protected final int toNum(long recordIndex) {
 		if (superCompress)
 			return (int) (recordIndex % recordsPerGroup);
@@ -741,14 +1127,45 @@ public abstract class Database {
 			return 0;
 	}
 
+	/**
+	 * Given a record index, returns the first byte index of the next group
+	 * after the previous record. DOES NOT RETURN THE LAST BYTE INDEX OF A GROUP
+	 * (although the method name might lead some to think so)! More formally:<br />
+	 * toByte(lastRecord + recordsPerGroup - 1)
+	 * 
+	 * @param lastRecord
+	 *            The record index
+	 * @return The byte index
+	 */
 	protected final long lastByte(long lastRecord) {
 		return toByte(lastRecord + recordsPerGroup - 1);
 	}
 
+	/**
+	 * Returns the total number of bytes required for storing the given range of
+	 * records. More formally:<br />
+	 * lastByte(firstRecord + numRecords) - toByte(firstRecord)
+	 * 
+	 * @param firstRecord
+	 *            The first record of the range
+	 * @param numRecords
+	 *            The number of records in the range
+	 * @return The number of bytes required to store those records
+	 */
 	protected final long numBytes(long firstRecord, long numRecords) {
 		return lastByte(firstRecord + numRecords) - toByte(firstRecord);
 	}
 
+	/**
+	 * Creates a record group from an array of bytes (reads
+	 * recordGroupByteLength bytes into a long)
+	 * 
+	 * @param values
+	 *            The array of bytes
+	 * @param offset
+	 *            The offset into the array
+	 * @return The record group
+	 */
 	protected final long longRecordGroup(byte[] values, int offset) {
 		long longValues = 0;
 		for (int i = 0; i < recordGroupByteLength; i++) {
@@ -759,6 +1176,16 @@ public abstract class Database {
 		return longValues;
 	}
 
+	/**
+	 * Creates a record group from an array of bytes (reads
+	 * recordGroupByteLength bytes into a BigInteger)
+	 * 
+	 * @param values
+	 *            The array of bytes
+	 * @param offset
+	 *            The offset into the array
+	 * @return The record group
+	 */
 	protected final BigInteger bigIntRecordGroup(byte[] values, int offset) {
 		byte[] bigIntByte = new byte[recordGroupByteLength];
 		for (int i = 0; i < recordGroupByteLength; i++) {

@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.HashMap;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.PrimitiveValue;
+import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.hasher.PermutationHash;
 import edu.berkeley.gamesman.util.Pair;
@@ -33,9 +33,9 @@ public class Pyraminx extends TwistyPuzzle<PyraminxState> {
 	}
 
 	@Override
-	public PrimitiveValue primitiveValue(PyraminxState pos) {
-		return pos.equals(SOLVED_STATE) ? PrimitiveValue.WIN
-				: PrimitiveValue.UNDECIDED;
+	public Value primitiveValue(PyraminxState pos) {
+		return pos.equals(SOLVED_STATE) ? Value.WIN
+				: Value.UNDECIDED;
 	}
 
 	private static final PyraminxState SOLVED_STATE = new PyraminxState(

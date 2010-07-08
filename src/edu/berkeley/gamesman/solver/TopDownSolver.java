@@ -45,7 +45,7 @@ public class TopDownSolver<S extends State> extends Solver {
 	public WorkUnit prepareSolve(final Configuration conf) {
 		long hashSpace = conf.getGame().numHashes();
 		Record defaultRecord = new Record(conf);
-		defaultRecord.value = PrimitiveValue.UNDECIDED;
+		defaultRecord.value = Value.UNDECIDED;
 		writeDb.fill(conf.getGame().getRecord(null, defaultRecord), 0,
 				hashSpace);
 
@@ -95,9 +95,9 @@ public class TopDownSolver<S extends State> extends Solver {
 			assert Util.debug(DebugFacility.SOLVER, game.toString());
 		long hash = game.getHash();
 		game.recordFromLong(curState, readDb.getRecord(readDh, hash), value);
-		if (value.value != PrimitiveValue.UNDECIDED)
+		if (value.value != Value.UNDECIDED)
 			return;
-		PrimitiveValue pv = game.primitiveValue();
+		Value pv = game.primitiveValue();
 		switch (pv) {
 		case UNDECIDED:
 			Record[] recs = recordList.addFirst();

@@ -85,13 +85,13 @@ public class TierSolver extends Solver {
 				t.calculated(STEP_SIZE);
 				stepNum = 0;
 			}
-			PrimitiveValue pv = game.primitiveValue();
+			Value pv = game.primitiveValue();
 			if (debugSolver) {
 				lastNano = nano;
 				nano = System.nanoTime();
 				times[1] += nano - lastNano;
 			}
-			if (pv == PrimitiveValue.UNDECIDED) {
+			if (pv == Value.UNDECIDED) {
 				int len = game.validMoves(children);
 				if (debugSolver) {
 					lastNano = nano;
@@ -111,7 +111,7 @@ public class TierSolver extends Solver {
 				Record newVal = game.combine(vals, 0, len);
 				writeDb.putRecord(writeDh, current, game.getRecord(curState,
 						newVal));
-			} else if (pv == PrimitiveValue.IMPOSSIBLE) {
+			} else if (pv == Value.IMPOSSIBLE) {
 				break;
 			} else {
 				if (debugSolver) {
