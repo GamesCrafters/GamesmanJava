@@ -1197,6 +1197,12 @@ public abstract class Database {
 		return new BigInteger(1, bigIntByte);
 	}
 
+	/**
+	 * Creates a record group from an array of records
+	 * @param recs An array of records
+	 * @param offset The first record to read from in the array
+	 * @return A record group from the next recordsPerGroup records
+	 */
 	protected final long longRecordGroup(long[] recs, int offset) {
 		if (superCompress) {
 			long longValues = 0;
@@ -1210,6 +1216,12 @@ public abstract class Database {
 			return recs[0];
 	}
 
+	/**
+	 * Creates a record group from an array of records
+	 * @param recs An array of records
+	 * @param offset The first record to read from in the array
+	 * @return A record group from the next recordsPerGroup records
+	 */
 	protected final BigInteger bigIntRecordGroup(long[] recs, int offset) {
 		if (superCompress) {
 			BigInteger bigIntValues = BigInteger.ZERO;
@@ -1223,6 +1235,12 @@ public abstract class Database {
 			return BigInteger.valueOf(recs[0]);
 	}
 
+	/**
+	 * Stores recordsPerGroup records from a group in an array
+	 * @param recordGroup The group to read from
+	 * @param recs The array to store in
+	 * @param offset The offset into the array to begin storing records
+	 */
 	protected final void getRecords(long recordGroup, long[] recs, int offset) {
 		if (superCompress) {
 			for (int i = 0; i < recordsPerGroup; i++) {
