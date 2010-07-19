@@ -440,11 +440,11 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			maxMem = 1 << 25;
 		Database readFrom = Database.openDatabase(db1);
 		Configuration outConf = readFrom.getConfiguration().cloneAll();
-		outConf.setProperty("gamesman.database", GZippedFileDatabase.class
-				.getName());
+		outConf.setProperty("gamesman.database",
+				GZippedFileDatabase.class.getName());
 		outConf.setProperty("gamesman.db.uri", zipDb);
-		outConf.setProperty("gamesman.db.zip.entryKB", Integer
-				.toString(entryKB));
+		outConf.setProperty("gamesman.db.zip.entryKB",
+				Integer.toString(entryKB));
 		GZippedFileDatabase writeTo = new GZippedFileDatabase(zipDb, outConf,
 				readFrom, maxMem);
 		Thread[] threadList = new Thread[numThreads];
@@ -486,6 +486,95 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		}
 		nextStart = entryPoints[(int) (thisEntry + 1 - firstEntry)];
 		return dh.lastByteIndex - dh.byteIndex + dh.lastNum;
+	}
+
+	protected synchronized long prepareMoveRange(DatabaseHandle dh,
+			long firstRecord, long numRecords, DistributedDatabase allRecords) {
+		long firstTransferByte = firstByteIndex - firstByteIndex % entrySize;
+		long firstTransferRecord = toFirstRecord(firstTransferByte);
+		if (firstTransferRecord < firstRecord) {
+			firstTransferRecord = firstRecord;
+			firstTransferByte = Math
+					.max(firstTransferByte, toByte(firstRecord));
+		}
+		long lastTransferByte = (firstEntry + numEntries - 1) * entrySize;
+		long lastTransferRecord = toLastRecord(lastTransferByte);
+		boolean rezipEnd = false;
+		if (lastTransferRecord > firstRecord + numRecords) {
+			lastTransferRecord = firstRecord + numRecords;
+			long newLastByte = lastByte(lastTransferRecord);
+			if (newLastByte < lastTransferByte) {
+				lastTransferByte = newLastByte;
+				rezipEnd = true;
+			}
+		}
+		if (firstTransferRecord < firstRecord()) {
+			long firstReadByte = toByte(firstTransferRecord);
+			long lastUseByte = (firstEntry + 1) * entrySize;
+			long lastReadRecord = toLastRecord(lastUseByte);
+			if (lastTransferRecord < lastReadRecord) {
+				lastReadRecord = lastTransferRecord;
+				lastUseByte = Math.min(lastUseByte, lastByte(lastReadRecord));
+				rezipEnd = false;
+			}
+			long lastReadByte = lastByte(lastReadRecord);
+			byte[] initialBytes = new byte[(int) (lastReadByte - firstReadByte)];
+			if (lastReadRecord > firstRecord()) {
+				int firstRecordNum = toNum(firstRecord());
+				allRecords.getRecordsAsBytes(dh, firstReadByte,
+						toNum(firstTransferRecord), initialBytes, 0,
+						(int) (lastByte(firstRecord()) - firstReadByte),
+						firstRecordNum, true);
+				getRecordsAsBytes(dh, firstByteIndex, firstRecordNum,
+						initialBytes, (int) (firstByteIndex - firstReadByte),
+						(int) (lastReadByte - firstByteIndex),
+						toNum(lastReadRecord), false);
+			} else {
+				allRecords.getRecordsAsBytes(dh, firstReadByte,
+						toNum(firstTransferRecord), initialBytes, 0,
+						(int) (lastReadByte - firstReadByte),
+						toNum(lastReadRecord), true);
+			}
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			try {
+				GZIPOutputStream gzo = new GZIPOutputStream(baos, entrySize);
+				gzo.write(initialBytes,
+						(int) (firstTransferByte - firstReadByte),
+						(int) (lastUseByte - firstTransferByte));
+				gzo.close();
+				byte[] zippedInitialBytes = baos.toByteArray();
+				// TODO: Save zippedInitialBytes
+			} catch (IOException e) {
+				throw new Error(e);
+			}
+		}
+		if (rezipEnd) {
+			long firstUseByte = lastTransferByte - lastTransferByte % entrySize;
+			long firstEndRecord = toFirstRecord(firstUseByte);
+			if (firstTransferRecord > firstEndRecord) {
+				firstEndRecord = firstTransferRecord;
+				firstUseByte = Math.max(firstUseByte, toByte(firstEndRecord));
+			}
+			long firstEndByte = toByte(firstEndRecord);
+			long lastEndByte = lastByte(lastTransferRecord);
+			byte[] finalBytes = new byte[(int) (lastEndByte - firstEndByte)];
+			getRecordsAsBytes(dh, firstEndByte, toNum(firstEndRecord),
+					finalBytes, 0, (int) (lastEndByte - firstEndByte),
+					toNum(lastTransferRecord), true);
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			try {
+				GZIPOutputStream gzo = new GZIPOutputStream(baos, entrySize);
+				gzo.write(finalBytes, (int) (firstUseByte - firstEndByte),
+						(int) (lastTransferByte - firstUseByte));
+				gzo.close();
+				byte[] zippedEndBytes = baos.toByteArray();
+				// TODO: Save zippedEndBytes
+			} catch (IOException e) {
+				throw new Error(e);
+			}
+		}
+		return 0L;
+		// TODO: Calculate correct return value
 	}
 
 	protected synchronized int getZippedBytes(DatabaseHandle dh, byte[] arr,
