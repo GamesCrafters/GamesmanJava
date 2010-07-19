@@ -25,6 +25,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		super(uri, conf, solve, firstRecord, numRecords, header);
 		myFile = new File(uri);
 		entrySize = conf.getInteger("gamesman.db.zip.entryKB", 64) << 10;
+		gzipWorst = entrySize + ((entrySize + ((1 << 15) - 1)) >> 15) * 5 + 18;
 		firstByteIndex = toByte(firstContainedRecord);
 		firstEntry = handleEntry = thisEntry = firstByteIndex / entrySize;
 		lastByteIndex = lastByte(firstContainedRecord + numContainedRecords);
@@ -62,6 +63,8 @@ public class GZippedFileDatabase extends Database implements Runnable {
 				readFrom.getHeader());
 		myFile = new File(uri);
 		entrySize = conf.getInteger("gamesman.db.zip.entryKB", 64) << 10;
+		gzipWorst = entrySize + ((entrySize + ((1 << 15) - 1)) >> 15) * 5 + 18;
+		// As I understand, this is worst-case performance for gzip
 		firstByteIndex = toByte(firstContainedRecord);
 		firstEntry = handleEntry = thisEntry = firstByteIndex / entrySize;
 		lastByteIndex = lastByte(firstContainedRecord + numContainedRecords);
@@ -79,11 +82,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 				new Factory<ByteArrayOutputStream>() {
 
 					public ByteArrayOutputStream newObject() {
-						return new ByteArrayOutputStream(entrySize
-								+ ((entrySize + ((1 << 15) - 1)) >> 15) * 5
-								+ 18);
-						// As I understand, this is worst-case performance for
-						// gzip
+						return new ByteArrayOutputStream(gzipWorst);
 					}
 
 					public void reset(ByteArrayOutputStream t) {
@@ -117,6 +116,8 @@ public class GZippedFileDatabase extends Database implements Runnable {
 	private final long[] entryPoints;
 
 	private final int entrySize;
+
+	private final int gzipWorst;
 
 	private long thisEntry;
 
@@ -444,11 +445,11 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			maxMem = 1 << 25;
 		Database readFrom = Database.openDatabase(db1);
 		Configuration outConf = readFrom.getConfiguration().cloneAll();
-		outConf.setProperty("gamesman.database",
-				GZippedFileDatabase.class.getName());
+		outConf.setProperty("gamesman.database", GZippedFileDatabase.class
+				.getName());
 		outConf.setProperty("gamesman.db.uri", zipDb);
-		outConf.setProperty("gamesman.db.zip.entryKB",
-				Integer.toString(entryKB));
+		outConf.setProperty("gamesman.db.zip.entryKB", Integer
+				.toString(entryKB));
 		GZippedFileDatabase writeTo = new GZippedFileDatabase(zipDb, outConf,
 				readFrom, maxMem);
 		Thread[] threadList = new Thread[numThreads];
@@ -541,7 +542,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 						(int) (lastReadByte - firstReadByte),
 						toNum(lastReadRecord), true);
 			}
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			ByteArrayOutputStream baos = new ByteArrayOutputStream(gzipWorst);
 			try {
 				GZIPOutputStream gzo = new GZIPOutputStream(baos, entrySize);
 				gzo.write(initialBytes,
@@ -567,7 +568,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			getRecordsAsBytes(dh, firstEndByte, toNum(firstEndRecord),
 					finalBytes, 0, (int) (lastEndByte - firstEndByte),
 					toNum(lastTransferRecord), true);
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			ByteArrayOutputStream baos = new ByteArrayOutputStream(gzipWorst);
 			try {
 				GZIPOutputStream gzo = new GZIPOutputStream(baos, entrySize);
 				gzo.write(finalBytes, (int) (firstUseByte - firstEndByte),
@@ -581,13 +582,51 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			zippedFinalBytes = null;
 		long firstTransferEntry = firstTransferByte / entrySize;
 		long lastTransferEntry = (lastTransferByte + entrySize - 1) / entrySize;
-		long totalBytes;
-		if (zippedInitialBytes != null)
-			totalBytes = zippedInitialBytes.length;
-		else
-			totalBytes = entryPoints[1] - entryPoints[0];
-		//TODO Correct this
+		long totalBytes = entryPoints[(int) (lastTransferEntry - firstEntry)]
+				- entryPoints[(int) (firstTransferEntry - firstEntry)];
+		if (zippedInitialBytes != null) {
+			totalBytes += zippedInitialBytes.length
+					- (entryPoints[(int) (firstTransferEntry + 1 - firstEntry)] - entryPoints[(int) (firstTransferEntry - firstEntry)]);
+			firstTransferEntry++;
+		}
+		if (zippedFinalBytes != null) {
+			totalBytes += zippedFinalBytes.length
+					- (entryPoints[(int) (lastTransferEntry - firstEntry)] - entryPoints[(int) (lastTransferEntry - 1 - firstEntry)]);
+			lastTransferEntry--;
+		}
+		dh.firstNum = 0;
+		dh.lastNum = 0;
+		dh.byteIndex = entryPoints[(int) (firstTransferEntry - firstEntry)];
+		dh.lastByteIndex = entryPoints[(int) (lastTransferEntry - firstEntry)];
+		dh.location = dh.byteIndex;
 		return totalBytes;
+	}
+
+	protected synchronized int getMoveBytes(DatabaseHandle dh, byte[] arr,
+			int off, int maxLen) {
+		if (lastUsed != dh)
+			throw new ConcurrentModificationException();
+		final int numBytes = (int) Math.min(maxLen, dh.lastByteIndex
+				- dh.location + zippedInitialBytes.length - dh.firstNum
+				+ zippedFinalBytes.length - dh.lastNum);
+		int len = numBytes;
+		if (len > 0 && dh.firstNum < zippedInitialBytes.length) {
+			int copyBytes = Math.min(len, zippedInitialBytes.length
+					- dh.firstNum);
+			System.arraycopy(zippedInitialBytes, dh.firstNum, arr, off,
+					copyBytes);
+			len -= copyBytes;
+			off += copyBytes;
+		}
+		if (dh.location < dh.lastByteIndex) {
+			try {
+				fis.getChannel().position(dh.location);
+			} catch (IOException e) {
+				throw new Error(e);
+			}
+		}
+		//TODO Finish method, include 4-byte lengths
+		return numBytes;
 	}
 
 	protected synchronized int getZippedBytes(DatabaseHandle dh, byte[] arr,
