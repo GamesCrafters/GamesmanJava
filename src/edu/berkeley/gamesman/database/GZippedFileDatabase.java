@@ -148,6 +148,10 @@ public class GZippedFileDatabase extends Database implements Runnable {
 
 	private DatabaseHandle lastUsed;
 
+	private byte[] zippedInitialBytes;
+
+	private byte[] zippedFinalBytes;
+
 	@Override
 	public void close() {
 		if (solve) {
@@ -497,7 +501,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			firstTransferByte = Math
 					.max(firstTransferByte, toByte(firstRecord));
 		}
-		long lastTransferByte = (firstEntry + numEntries - 1) * entrySize;
+		long lastTransferByte = lastByteIndex - lastByteIndex % entrySize;
 		long lastTransferRecord = toLastRecord(lastTransferByte);
 		boolean rezipEnd = false;
 		if (lastTransferRecord > firstRecord + numRecords) {
@@ -508,6 +512,8 @@ public class GZippedFileDatabase extends Database implements Runnable {
 				rezipEnd = true;
 			}
 		}
+		if (firstTransferByte == lastTransferByte)
+			return 0L;
 		if (firstTransferRecord < firstRecord()) {
 			long firstReadByte = toByte(firstTransferRecord);
 			long lastUseByte = (firstEntry + 1) * entrySize;
@@ -542,12 +548,12 @@ public class GZippedFileDatabase extends Database implements Runnable {
 						(int) (firstTransferByte - firstReadByte),
 						(int) (lastUseByte - firstTransferByte));
 				gzo.close();
-				byte[] zippedInitialBytes = baos.toByteArray();
-				// TODO: Save zippedInitialBytes
+				zippedInitialBytes = baos.toByteArray();
 			} catch (IOException e) {
 				throw new Error(e);
 			}
-		}
+		} else
+			zippedInitialBytes = null;
 		if (rezipEnd) {
 			long firstUseByte = lastTransferByte - lastTransferByte % entrySize;
 			long firstEndRecord = toFirstRecord(firstUseByte);
@@ -567,14 +573,21 @@ public class GZippedFileDatabase extends Database implements Runnable {
 				gzo.write(finalBytes, (int) (firstUseByte - firstEndByte),
 						(int) (lastTransferByte - firstUseByte));
 				gzo.close();
-				byte[] zippedEndBytes = baos.toByteArray();
-				// TODO: Save zippedEndBytes
+				zippedFinalBytes = baos.toByteArray();
 			} catch (IOException e) {
 				throw new Error(e);
 			}
-		}
-		return 0L;
-		// TODO: Calculate correct return value
+		} else
+			zippedFinalBytes = null;
+		long firstTransferEntry = firstTransferByte / entrySize;
+		long lastTransferEntry = (lastTransferByte + entrySize - 1) / entrySize;
+		long totalBytes;
+		if (zippedInitialBytes != null)
+			totalBytes = zippedInitialBytes.length;
+		else
+			totalBytes = entryPoints[1] - entryPoints[0];
+		//TODO Correct this
+		return totalBytes;
 	}
 
 	protected synchronized int getZippedBytes(DatabaseHandle dh, byte[] arr,
