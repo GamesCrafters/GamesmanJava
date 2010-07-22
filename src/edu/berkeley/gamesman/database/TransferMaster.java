@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.util.Scanner;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.util.UndeterminedChunkInputStream;
 
 public final class TransferMaster {
 	public static void main(String[] args) throws IOException {
@@ -48,10 +49,14 @@ public final class TransferMaster {
 				command += TransferSlave.class.getName() + " " + firstForDb
 						+ " " + (lastForDb - firstForDb);
 				Process p = Runtime.getRuntime().exec(command);
-				BufferedInputStream buf = new BufferedInputStream(p
-						.getInputStream());
-				// TODO Finish method, read bytes and chars separately
-				// (TransferSlave uses \n rather than line separator)
+				UndeterminedChunkInputStream in = new UndeterminedChunkInputStream(
+						new BufferedInputStream(p.getInputStream()));
+				Scanner readScan = new Scanner(in);
+				String neededChunk = readScan.next();
+				while (neededChunk.startsWith("cached:")) {
+
+				}
+				// TODO Finish method; use nextChunk to read returned bytes
 				nextType = dbScan.next();
 			}
 		}

@@ -1,15 +1,15 @@
-package edu.berkeley.gamesman.database;
+package edu.berkeley.gamesman.util;
 
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 
-final class ZipChunkInputStream extends FilterInputStream {
+public final class ZipChunkInputStream extends FilterInputStream {
 	private final ChunkInputStream cis;
 	private final int entrySize;
 
-	ZipChunkInputStream(InputStream in, int entrySize) throws IOException {
+	public ZipChunkInputStream(InputStream in, int entrySize) throws IOException {
 		super(in);
 		this.entrySize = entrySize;
 		cis = new ChunkInputStream(in);

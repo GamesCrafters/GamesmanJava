@@ -12,6 +12,7 @@ import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.ErrorThread;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
+import edu.berkeley.gamesman.util.ZipChunkInputStream;
 
 public class RemoteDatabase extends Database {
 	private final String user, server, confFile, path, remoteFile;

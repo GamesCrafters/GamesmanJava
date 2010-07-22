@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.database;
+package edu.berkeley.gamesman.util;
 
 import java.io.FilterInputStream;
 import java.io.IOException;
