@@ -445,7 +445,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		GZipHandle gzh = (GZipHandle) dh;
 		lastUsed = gzh;
 		gzh.cwis = new ChunkWrapInputStream(fis, entryPoints,
-				(int) (startEntry - firstEntry), (int) (endEntry - startEntry));
+				(int) (startEntry - firstEntry));
 		gzh.remainingBytes = entryPoints[(int) (endEntry - firstEntry)]
 				- entryPoints[(int) (startEntry - firstEntry)]
 				+ ((endEntry - startEntry) << 2);
@@ -607,39 +607,25 @@ public class GZippedFileDatabase extends Database implements Runnable {
 final class ChunkWrapInputStream extends FilterInputStream {
 	final long[] positions;
 	int nextEntry;
-	int lastEntry;
 	long curPos;
 	int lengthBytes = 4;
 
-	ChunkWrapInputStream(InputStream in, long[] positions, int curEntry,
-			int numEntries) {
+	ChunkWrapInputStream(InputStream in, long[] positions, int curEntry) {
 		super(in);
 		this.positions = positions;
-		if (numEntries == 0) {
-			nextEntry = curEntry;
-			lastEntry = curEntry;
-		} else {
-			nextEntry = curEntry + 1;
-			if (numEntries < 0) {
-				lastEntry = positions.length;
-			} else {
-				lastEntry = curEntry + numEntries;
-			}
-		}
+		nextEntry = curEntry + 1;
 		curPos = positions[curEntry];
-	}
-
-	public ChunkWrapInputStream(InputStream in, long[] positions, int curEntry) {
-		this(in, positions, curEntry, -1);
 	}
 
 	@Override
 	public int read() throws IOException {
+		if (nextEntry == positions.length)
+			return -1;
 		int blockBytes = (int) (positions[nextEntry] - curPos);
-		if (blockBytes == 0) {
-			if (nextEntry == lastEntry)
-				return -1;
+		if (blockBytes + lengthBytes == 0) {
 			nextEntry++;
+			if (nextEntry == positions.length)
+				return -1;
 			blockBytes = (int) (positions[nextEntry] - curPos);
 			lengthBytes = 4;
 		}
@@ -654,12 +640,14 @@ final class ChunkWrapInputStream extends FilterInputStream {
 
 	@Override
 	public int read(byte[] arr, int off, int len) throws IOException {
+		if (nextEntry == positions.length)
+			return -1;
 		int blockBytes = (int) (positions[nextEntry] - curPos);
 		int totalBytesRead = 0;
-		if (blockBytes == 0) {
-			if (nextEntry == lastEntry)
-				return -1;
+		if (blockBytes + lengthBytes == 0) {
 			nextEntry++;
+			if (nextEntry == positions.length)
+				return -1;
 			blockBytes = (int) (positions[nextEntry] - curPos);
 			lengthBytes = 4;
 		}
@@ -679,12 +667,14 @@ final class ChunkWrapInputStream extends FilterInputStream {
 
 	@Override
 	public long skip(long n) throws IOException {
+		if (nextEntry == positions.length)
+			return -1;
 		int blockBytes = (int) (positions[nextEntry] - curPos);
 		int totalBytesSkipped = 0;
-		if (blockBytes == 0) {
-			if (nextEntry == lastEntry)
-				return -1;
+		if (blockBytes + lengthBytes == 0) {
 			nextEntry++;
+			if (nextEntry == positions.length)
+				return -1;
 			blockBytes = (int) (positions[nextEntry] - curPos);
 			lengthBytes = 4;
 		}
