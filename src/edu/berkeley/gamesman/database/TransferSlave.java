@@ -21,10 +21,9 @@ public final class TransferSlave {
 		allRecords.close();
 		if (numBytes == 0) {
 			System.out.println("skip");
-		} else if (numBytes < 0) {
-			System.out.println("done");
 		} else {
-			System.out.println("ready");
+			System.out.print("ready\n");
+			System.out.flush();
 			while (!scan.nextLine().equals("go"))
 				;
 			byte[] arr = new byte[(int) Math.min(ReadZippedRecords.BUFFER_SIZE,

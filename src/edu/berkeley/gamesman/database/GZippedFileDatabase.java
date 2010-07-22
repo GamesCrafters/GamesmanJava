@@ -364,6 +364,21 @@ public class GZippedFileDatabase extends Database implements Runnable {
 
 	private GZipHandle lastUsed;
 
+	protected final class GZipHandle extends DatabaseHandle {
+		ChunkWrapInputStream cwis;
+		ZipChunkInputStream zcis;
+		long filePos, remainingBytes;
+
+		public GZipHandle(int recordGroupByteLength) {
+			super(recordGroupByteLength);
+		}
+	}
+
+	@Override
+	public GZipHandle getHandle() {
+		return new GZipHandle(recordGroupByteLength);
+	}
+
 	@Override
 	protected synchronized void getBytes(DatabaseHandle dh, long loc,
 			byte[] arr, int off, int len) {
@@ -438,6 +453,8 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		throw new UnsupportedOperationException();
 	}
 
+	// For remote work
+
 	protected synchronized long prepareZippedRange(DatabaseHandle dh,
 			long byteIndex, long numBytes) {
 		long startEntry = byteIndex / entrySize;
@@ -477,14 +494,18 @@ public class GZippedFileDatabase extends Database implements Runnable {
 
 	protected synchronized long prepareMoveRange(DatabaseHandle dh,
 			long firstRecord, long numRecords, DistributedDatabase allRecords) {
-		// TODO Add rezipStart boolean in case the file begins in this database
 		byte[] zippedInitialBytes, zippedFinalBytes;
 		long firstTransferByte = firstByteIndex - firstByteIndex % entrySize;
 		long firstTransferRecord = toFirstRecord(firstTransferByte);
+		boolean rezipStart = false;
 		if (firstTransferRecord < firstRecord) {
 			firstTransferRecord = firstRecord;
-			firstTransferByte = Math
-					.max(firstTransferByte, toByte(firstRecord));
+			long newFirstByte = toByte(firstRecord);
+			if (newFirstByte > firstTransferByte) {
+				firstTransferByte = newFirstByte;
+				if (firstTransferByte % entrySize > 0)
+					rezipStart = true;
+			}
 		}
 		long lastTransferByte = lastByteIndex - lastByteIndex % entrySize;
 		long lastTransferRecord = toLastRecord(lastTransferByte);
@@ -505,9 +526,10 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		}
 		if (firstTransferByte >= lastTransferByte)
 			return 0L;
-		if (firstTransferRecord < firstRecord()) {
+		if (rezipStart || firstTransferRecord < firstRecord()) {
 			long firstReadByte = toByte(firstTransferRecord);
-			long lastUseByte = (firstEntry + 1) * entrySize;
+			long lastUseByte = firstTransferByte + entrySize
+					- firstTransferByte % entrySize;
 			long lastReadRecord = toLastRecord(lastUseByte);
 			if (lastTransferRecord < lastReadRecord) {
 				lastReadRecord = lastTransferRecord;
@@ -516,8 +538,13 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			}
 			long lastReadByte = lastByte(lastReadRecord);
 			byte[] initialBytes = new byte[(int) (lastReadByte - firstReadByte)];
-			DatabaseHandle allHandle = allRecords.getHandle();
-			if (lastReadRecord > firstRecord()) {
+			if (rezipStart) {
+				getRecordsAsBytes(dh, firstReadByte,
+						toNum(firstTransferRecord), initialBytes, 0,
+						(int) (lastReadByte - firstReadByte),
+						toNum(lastReadRecord), true);
+			} else if (lastReadRecord > firstRecord()) {
+				DatabaseHandle allHandle = allRecords.getHandle();
 				int firstRecordNum = toNum(firstRecord());
 				allRecords.getRecordsAsBytes(allHandle, firstReadByte,
 						toNum(firstTransferRecord), initialBytes, 0,
@@ -529,6 +556,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 						toNum(lastReadRecord), false);
 			} else {
 				new Exception("This shouldn't happen").printStackTrace();
+				DatabaseHandle allHandle = allRecords.getHandle();
 				allRecords.getRecordsAsBytes(allHandle, firstReadByte,
 						toNum(firstTransferRecord), initialBytes, 0,
 						(int) (lastReadByte - firstReadByte),
@@ -595,21 +623,6 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		gzh.remainingBytes = totalBytes
 				+ ((lastTransferEntry - firstTransferEntry) << 2);
 		return gzh.remainingBytes;
-	}
-
-	protected final class GZipHandle extends DatabaseHandle {
-		ChunkWrapInputStream cwis;
-		ZipChunkInputStream zcis;
-		long filePos, remainingBytes;
-
-		public GZipHandle(int recordGroupByteLength) {
-			super(recordGroupByteLength);
-		}
-	}
-
-	@Override
-	public GZipHandle getHandle() {
-		return new GZipHandle(recordGroupByteLength);
 	}
 }
 
@@ -713,12 +726,14 @@ final class MoveInputStream extends InputStream {
 		this.initialBytes = initialBytes;
 		this.finalBytes = finalBytes;
 		this.innerStream = innerStream;
-		this.innerLen = totalBytes - (initialBytes.length + finalBytes.length);
+		this.innerLen = totalBytes
+				- ((initialBytes == null ? 0 : initialBytes.length) + (finalBytes == null ? 0
+						: finalBytes.length));
 	}
 
 	@Override
 	public int read(byte[] arr, int off, int len) throws IOException {
-		if (inRead < initialBytes.length) {
+		if (initialBytes != null && inRead < initialBytes.length) {
 			int bytesToRead = Math.min(len, initialBytes.length - inRead);
 			System.arraycopy(initialBytes, inRead, arr, off, bytesToRead);
 			inRead += bytesToRead;
@@ -730,7 +745,7 @@ final class MoveInputStream extends InputStream {
 				throw new EOFException();
 			innerLen -= bytesToRead;
 			return bytesToRead;
-		} else if (finRead < finalBytes.length) {
+		} else if (finalBytes != null && finRead < finalBytes.length) {
 			int bytesToRead = Math.min(len, finalBytes.length - finRead);
 			System.arraycopy(finalBytes, finRead, arr, off, bytesToRead);
 			finRead += bytesToRead;
@@ -741,7 +756,7 @@ final class MoveInputStream extends InputStream {
 
 	@Override
 	public int read() throws IOException {
-		if (inRead < initialBytes.length) {
+		if (initialBytes != null && inRead < initialBytes.length) {
 			return initialBytes[inRead++];
 		} else if (innerLen > 0) {
 			int byteRead = innerStream.read();
@@ -749,7 +764,7 @@ final class MoveInputStream extends InputStream {
 				throw new EOFException();
 			innerLen--;
 			return byteRead;
-		} else if (finRead < finalBytes.length) {
+		} else if (finalBytes != null && finRead < finalBytes.length) {
 			return finalBytes[finRead++];
 		} else
 			return -1;
@@ -757,7 +772,7 @@ final class MoveInputStream extends InputStream {
 
 	@Override
 	public long skip(long n) throws IOException {
-		if (inRead < initialBytes.length) {
+		if (initialBytes != null && inRead < initialBytes.length) {
 			int bytesToSkip = (int) Math.min(n, initialBytes.length - inRead);
 			inRead += bytesToSkip;
 			return bytesToSkip;
@@ -767,7 +782,7 @@ final class MoveInputStream extends InputStream {
 				throw new EOFException();
 			innerLen -= bytesToSkip;
 			return bytesToSkip;
-		} else if (finRead < finalBytes.length) {
+		} else if (finalBytes != null && finRead < finalBytes.length) {
 			int bytesToSkip = (int) Math.min(n, finalBytes.length - finRead);
 			finRead += bytesToSkip;
 			return bytesToSkip;
