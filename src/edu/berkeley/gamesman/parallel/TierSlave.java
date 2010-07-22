@@ -54,10 +54,9 @@ public class TierSlave implements TaskFactory, Runnable {
 			if (prevTier < game.numberOfTiers()) {
 				long firstTierRecord = game.hashOffsetForTier(prevTier);
 				long numTierRecords = game.numHashesForTier(prevTier);
-				readDb = new DistributedDatabase(conf, firstTierRecord,
-						numTierRecords, head.getHeader(firstTierRecord,
-								numTierRecords), new Scanner(System.in),
-						System.out);
+				readDb = new DistributedDatabase(conf, head.getHeader(
+						firstTierRecord, numTierRecords),
+						new Scanner(System.in), System.out);
 				solver.setReadDb(readDb);
 			} else {
 				readDb = null;

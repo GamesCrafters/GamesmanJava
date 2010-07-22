@@ -76,7 +76,7 @@ public class TierMaster implements Runnable {
 					}
 					command += "-Xmx" + maxMem + " ";
 					command += TierSlave.class.getName() + " ";
-					command += slaveJobFile + " " + tier;
+					command += jobFile + " " + tier;
 					final Process p = Runtime.getRuntime().exec(command);
 					InputStream es = p.getErrorStream();
 					et = new ErrorThread(es, name) {
@@ -167,7 +167,7 @@ public class TierMaster implements Runnable {
 	private final NodeRunnable[] nodes;
 	private final String user;
 	private final String path;
-	private final String slaveJobFile;
+	private final String jobFile;
 	private final SplitDatabase dbTrack;
 	private final int numSplits;
 	private final long maxMem;
@@ -181,17 +181,16 @@ public class TierMaster implements Runnable {
 	private int sliceNum = 0;
 	private boolean released;
 
-	public TierMaster(Configuration conf, String[] nodeNames)
+	public TierMaster(Configuration conf, String jobFile, String[] nodeNames)
 			throws ClassNotFoundException {
 		this.conf = conf;
 		user = conf.getProperty("gamesman.remote.user", null);
 		path = conf.getProperty("gamesman.remote.path");
-		String slaveJobFile = conf.getProperty("gamesman.parallel.slave.job");
-		if (!(slaveJobFile.startsWith("/") || slaveJobFile.startsWith(path)))
-			slaveJobFile = path + "/" + slaveJobFile;
+		if (!(jobFile.startsWith("/") || jobFile.startsWith(path)))
+			jobFile = path + "/" + jobFile;
 		numSplits = (int) (conf.getFloat("gamesman.parallel.multiple", 1) * nodeNames.length);
 		maxMem = (long) (conf.getLong("gamesman.memory", 100000000) * 1.2);
-		this.slaveJobFile = slaveJobFile;
+		this.jobFile = jobFile;
 		dbTrack = new SplitDatabase(conf, true);
 		nodes = new NodeRunnable[nodeNames.length];
 		for (int i = 0; i < nodeNames.length; i++) {
@@ -245,8 +244,8 @@ public class TierMaster implements Runnable {
 		while (scan.hasNext())
 			nodes.add(scan.next());
 		scan.close();
-		TierMaster tm = new TierMaster(conf, nodes.toArray(new String[nodes
-				.size()]));
+		TierMaster tm = new TierMaster(conf, jobFile, nodes
+				.toArray(new String[nodes.size()]));
 		tm.run();
 	}
 

@@ -496,7 +496,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 				rezipEnd = true;
 			}
 		}
-		if (firstTransferByte == lastTransferByte)
+		if (firstTransferByte >= lastTransferByte)
 			return 0L;
 		if (firstTransferRecord < firstRecord()) {
 			long firstReadByte = toByte(firstTransferRecord);
@@ -509,9 +509,10 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			}
 			long lastReadByte = lastByte(lastReadRecord);
 			byte[] initialBytes = new byte[(int) (lastReadByte - firstReadByte)];
+			DatabaseHandle allHandle = allRecords.getHandle();
 			if (lastReadRecord > firstRecord()) {
 				int firstRecordNum = toNum(firstRecord());
-				allRecords.getRecordsAsBytes(dh, firstReadByte,
+				allRecords.getRecordsAsBytes(allHandle, firstReadByte,
 						toNum(firstTransferRecord), initialBytes, 0,
 						(int) (lastByte(firstRecord()) - firstReadByte),
 						firstRecordNum, true);
@@ -520,7 +521,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 						(int) (lastReadByte - firstByteIndex),
 						toNum(lastReadRecord), false);
 			} else {
-				allRecords.getRecordsAsBytes(dh, firstReadByte,
+				allRecords.getRecordsAsBytes(allHandle, firstReadByte,
 						toNum(firstTransferRecord), initialBytes, 0,
 						(int) (lastReadByte - firstReadByte),
 						toNum(lastReadRecord), true);

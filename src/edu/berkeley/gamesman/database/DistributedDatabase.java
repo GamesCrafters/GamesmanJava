@@ -10,10 +10,9 @@ public class DistributedDatabase extends Database {
 	private final Scanner readStream;
 	private final PrintStream requestStream;
 
-	public DistributedDatabase(Configuration conf, long firstRecord,
-			long numRecords, DatabaseHeader header, Scanner readStream,
-			PrintStream requestStream) {
-		super(null, conf, false, firstRecord, numRecords, header);
+	public DistributedDatabase(Configuration conf, DatabaseHeader header,
+			Scanner readStream, PrintStream requestStream) {
+		super(null, conf, false, header.firstRecord, header.numRecords, header);
 		this.readStream = readStream;
 		this.requestStream = requestStream;
 	}

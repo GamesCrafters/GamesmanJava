@@ -10,25 +10,14 @@ public class ReadZippedRecords {
 	public static void main(String[] args) throws ClassNotFoundException,
 			IOException {
 		int i = 0;
-		String jobFile = null;
-		if (args.length > 3)
-			jobFile = args[i++];
 		String databaseFile = args[i++];
 		long firstRecord = Long.parseLong(args[i++]);
 		long numRecords = Long.parseLong(args[i++]);
-		Configuration conf;
 		GZippedFileDatabase db;
-		if (jobFile == null) {
-			db = (GZippedFileDatabase) Database.openDatabase(
-					GZippedFileDatabase.class.getName(), databaseFile,
-					firstRecord, numRecords);
-			conf = db.getConfiguration();
-		} else {
-			conf = new Configuration(jobFile);
-			db = (GZippedFileDatabase) Database.openDatabase(
-					GZippedFileDatabase.class.getName(), databaseFile, conf,
-					false, firstRecord, numRecords);
-		}
+		db = (GZippedFileDatabase) Database.openDatabase(
+				GZippedFileDatabase.class.getName(), databaseFile, firstRecord,
+				numRecords);
+		Configuration conf = db.getConfiguration();
 		DatabaseHandle dh = db.getHandle();
 		long firstByte = db.toByte(firstRecord);
 		long lastByte = db.lastByte(firstRecord + numRecords);
@@ -48,5 +37,6 @@ public class ReadZippedRecords {
 			System.out.flush();
 			numBytes -= bytesRead;
 		}
+		db.close();
 	}
 }
