@@ -477,6 +477,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 
 	protected synchronized long prepareMoveRange(DatabaseHandle dh,
 			long firstRecord, long numRecords, DistributedDatabase allRecords) {
+		// TODO Add rezipStart boolean in case the file begins in this database
 		byte[] zippedInitialBytes, zippedFinalBytes;
 		long firstTransferByte = firstByteIndex - firstByteIndex % entrySize;
 		long firstTransferRecord = toFirstRecord(firstTransferByte);
@@ -493,8 +494,14 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			long newLastByte = lastByte(lastTransferRecord);
 			if (newLastByte < lastTransferByte) {
 				lastTransferByte = newLastByte;
-				rezipEnd = true;
+				if (lastTransferByte % entrySize > 0)
+					rezipEnd = true;
 			}
+		} else if (firstRecord + numRecords <= firstRecord() + numRecords()) {
+			lastTransferRecord = firstRecord + numRecords;
+			lastTransferByte = lastByte(lastTransferRecord);
+			if (lastTransferByte < lastByteIndex)
+				rezipEnd = true;
 		}
 		if (firstTransferByte >= lastTransferByte)
 			return 0L;
@@ -521,6 +528,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 						(int) (lastReadByte - firstByteIndex),
 						toNum(lastReadRecord), false);
 			} else {
+				new Exception("This shouldn't happen").printStackTrace();
 				allRecords.getRecordsAsBytes(allHandle, firstReadByte,
 						toNum(firstTransferRecord), initialBytes, 0,
 						(int) (lastReadByte - firstReadByte),
