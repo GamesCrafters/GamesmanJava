@@ -1,9 +1,7 @@
 package edu.berkeley.gamesman.database;
 
 import java.io.*;
-import java.util.ConcurrentModificationException;
 import java.util.concurrent.Semaphore;
-import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import edu.berkeley.gamesman.core.Configuration;
@@ -19,49 +17,14 @@ import edu.berkeley.gamesman.util.qll.QuickLinkedList;
  * @author dnspies
  */
 public class GZippedFileDatabase extends Database implements Runnable {
-	public GZippedFileDatabase(String uri, Configuration conf, boolean solve,
-			long firstRecord, long numRecords, DatabaseHeader header)
-			throws IOException {
-		super(uri, conf, solve, firstRecord, numRecords, header);
-		myFile = new File(uri);
-		entrySize = conf.getInteger("gamesman.db.zip.entryKB", 64) << 10;
-		gzipWorst = entrySize + ((entrySize + ((1 << 15) - 1)) >> 15) * 5 + 18;
-		firstByteIndex = toByte(firstContainedRecord);
-		firstEntry = handleEntry = thisEntry = firstByteIndex / entrySize;
-		lastByteIndex = lastByte(firstContainedRecord + numContainedRecords);
-		long lastEntry = (lastByteIndex + entrySize - 1) / entrySize;
-		numEntries = (int) (lastEntry - firstEntry);
-		entryPoints = new long[numEntries + 1];
-		fos = null;
-		fis = new FileInputStream(myFile);
-		skipHeader(fis);
-		tableOffset = fis.getChannel().position();
-		byte[] entryBytes = new byte[entryPoints.length << 3];
-		readFully(fis, entryBytes, 0, entryBytes.length);
-		int count = 0;
-		for (int i = 0; i < entryPoints.length; i++) {
-			for (int bit = 56; bit >= 0; bit -= 8) {
-				entryPoints[i] <<= 8;
-				entryPoints[i] |= ((int) entryBytes[count++]) & 255;
-			}
-			if (i > 0 && entryPoints[i] - entryPoints[i - 1] == 0)
-				throw new EOFException("No bytes in block " + i + "/"
-						+ numEntries + " (" + (i + firstEntry) + " total)");
-		}
-		waitingCaches = null;
-		waitingCachesIter = null;
-		zippedStoragePool = null;
-		memoryConstraint = null;
-		handlePool = null;
-		readFrom = null;
-		nextStart = firstByteIndex;
-	}
+
+	// Writing only
 
 	public GZippedFileDatabase(String uri, final Configuration conf,
 			final Database readFrom, long maxMem) throws IOException {
 		super(uri, conf, true, readFrom.firstRecord(), readFrom.numRecords(),
 				readFrom.getHeader());
-		myFile = new File(uri);
+		File myFile = new File(uri);
 		entrySize = conf.getInteger("gamesman.db.zip.entryKB", 64) << 10;
 		gzipWorst = entrySize + ((entrySize + ((1 << 15) - 1)) >> 15) * 5 + 18;
 		// As I understand, this is worst-case performance for gzip
@@ -105,53 +68,18 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		nextStart = firstByteIndex;
 	}
 
-	private final File myFile;
-
-	private final FileInputStream fis;
-
-	private final FileOutputStream fos;
-
-	private GZIPInputStream myStream;
-
-	private final long[] entryPoints;
-
-	private final int entrySize;
-
-	private final int gzipWorst;
-
-	private long thisEntry;
-
-	private long handleEntry;
-
-	private final long firstEntry;
-
-	private final int numEntries;
-
 	private final QuickLinkedList<Pair<ByteArrayOutputStream, Long>> waitingCaches;
-
 	private final QuickLinkedList<Pair<ByteArrayOutputStream, Long>>.QLLIterator waitingCachesIter;
-
 	private final long tableOffset;
-
 	private final Pool<ByteArrayOutputStream> zippedStoragePool;
-
 	private final Pool<WriteHandle> handlePool;
-
 	private final Semaphore memoryConstraint;
-
 	private final Database readFrom;
-
+	private final FileOutputStream fos;
+	private final int numEntries;
+	private long thisEntry;
+	private long handleEntry;
 	private long nextStart;
-
-	private final long firstByteIndex;
-
-	private final long lastByteIndex;
-
-	private DatabaseHandle lastUsed;
-
-	private byte[] zippedInitialBytes;
-
-	private byte[] zippedFinalBytes;
 
 	@Override
 	public void close() {
@@ -177,104 +105,11 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			}
 		} else {
 			try {
-				if (myStream == null)
-					fis.close();
-				else
-					myStream.close();
+				fis.close();
 			} catch (IOException e) {
 				throw new Error(e);
 			}
 		}
-	}
-
-	@Override
-	protected synchronized void getBytes(DatabaseHandle dh, long loc,
-			byte[] arr, int off, int len) {
-		getRecordsAsBytes(dh, loc, 0, arr, off, len, 0, true);
-	}
-
-	@Override
-	protected synchronized void getRecordsAsBytes(DatabaseHandle dh,
-			long byteIndex, int recordNum, byte[] arr, int off, int numBytes,
-			int lastNum, boolean overwriteEdgesOk) {
-		super.getRecordsAsBytes(dh, byteIndex, recordNum, arr, off, numBytes,
-				lastNum, overwriteEdgesOk);
-	}
-
-	@Override
-	protected synchronized int getBytes(DatabaseHandle dh, byte[] arr, int off,
-			int maxLen, boolean overwriteEdgesOk) {
-		if (lastUsed != dh) {
-			lastUsed = dh;
-			seek(dh);
-		}
-		if (!overwriteEdgesOk)
-			return super.getBytes(dh, arr, off, maxLen, false);
-		final int numBytes = (int) Math.min(maxLen, dh.lastByteIndex
-				- dh.location);
-		int len = numBytes;
-		while (len > 0) {
-			int bytesToRead = (int) Math.min(len, nextStart - dh.location);
-			try {
-				readFully(myStream, arr, off, bytesToRead);
-				len -= bytesToRead;
-				dh.location += bytesToRead;
-				off += bytesToRead;
-			} catch (IOException e) {
-				throw new Error(e);
-			}
-			if (len > 0) {
-				thisEntry++;
-				nextStart += entrySize;
-				try {
-					/*
-					 * Unfortunately Java's implementation of GZIPInputStream is
-					 * stupid so this line is necessary. As you might imagine,
-					 * things would be really frustrating and tricky if not for
-					 * the availability of this function here.
-					 */
-					fis.getChannel().position(
-							entryPoints[(int) (thisEntry - firstEntry)]);
-					myStream = new GZIPInputStream(fis, entrySize);
-				} catch (IOException e) {
-					throw new Error(e);
-				}
-			}
-		}
-		return numBytes;
-	}
-
-	@Override
-	protected synchronized void prepareRange(DatabaseHandle dh, long byteIndex,
-			int firstNum, long numBytes, int lastNum) {
-		super.prepareRange(dh, byteIndex, firstNum, numBytes, lastNum);
-		seek(dh);
-	}
-
-	private synchronized void seek(DatabaseHandle dh) {
-		lastUsed = dh;
-		thisEntry = dh.location / entrySize;
-		nextStart = (thisEntry + 1) * entrySize;
-		try {
-			fis.getChannel().position(
-					entryPoints[(int) (thisEntry - firstEntry)]);
-			myStream = new GZIPInputStream(fis, entrySize);
-			long curLoc;
-			if (thisEntry == firstEntry)
-				curLoc = firstByteIndex;
-			else
-				curLoc = thisEntry * entrySize;
-			while (curLoc < dh.location)
-				curLoc += myStream.skip(dh.location - curLoc);
-		} catch (IOException e) {
-			throw new Error(e);
-		}
-	}
-
-	@Override
-	protected void putBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
-			int len) {
-		throw new UnsupportedOperationException();
 	}
 
 	private class WriteHandle extends DatabaseHandle {
@@ -473,28 +308,164 @@ public class GZippedFileDatabase extends Database implements Runnable {
 				+ Util.millisToETA(System.currentTimeMillis() - time));
 	}
 
+	// For reading and writing
+
+	public GZippedFileDatabase(String uri, Configuration conf, boolean solve,
+			long firstRecord, long numRecords, DatabaseHeader header)
+			throws IOException {
+		super(uri, conf, solve, firstRecord, numRecords, header);
+		File myFile = new File(uri);
+		entrySize = conf.getInteger("gamesman.db.zip.entryKB", 64) << 10;
+		gzipWorst = entrySize + ((entrySize + ((1 << 15) - 1)) >> 15) * 5 + 18;
+		firstByteIndex = toByte(firstContainedRecord);
+		firstEntry = firstByteIndex / entrySize;
+		lastByteIndex = lastByte(firstContainedRecord + numContainedRecords);
+		long lastEntry = (lastByteIndex + entrySize - 1) / entrySize;
+		numEntries = (int) (lastEntry - firstEntry);
+		entryPoints = new long[numEntries + 1];
+		fis = new FileInputStream(myFile);
+		skipHeader(fis);
+		tableOffset = fis.getChannel().position();
+		byte[] entryBytes = new byte[entryPoints.length << 3];
+		readFully(fis, entryBytes, 0, entryBytes.length);
+		int count = 0;
+		for (int i = 0; i < entryPoints.length; i++) {
+			for (int bit = 56; bit >= 0; bit -= 8) {
+				entryPoints[i] <<= 8;
+				entryPoints[i] |= ((int) entryBytes[count++]) & 255;
+			}
+			if (i > 0 && entryPoints[i] - entryPoints[i - 1] == 0)
+				throw new EOFException("No bytes in block " + i + "/"
+						+ numEntries + " (" + (i + firstEntry) + " total)");
+		}
+		zippedStoragePool = null;
+		waitingCachesIter = null;
+		waitingCaches = null;
+		readFrom = null;
+		memoryConstraint = null;
+		handlePool = null;
+		fos = null;
+	}
+
+	private final FileInputStream fis;
+
+	private final long[] entryPoints;
+
+	private final int entrySize;
+
+	private final long firstEntry;
+
+	private final long firstByteIndex;
+
+	private final int gzipWorst;
+
+	private final long lastByteIndex;
+
+	private GZipHandle lastUsed;
+
+	@Override
+	protected synchronized void getBytes(DatabaseHandle dh, long loc,
+			byte[] arr, int off, int len) {
+		getRecordsAsBytes(dh, loc, 0, arr, off, len, 0, true);
+	}
+
+	@Override
+	protected synchronized void getRecordsAsBytes(DatabaseHandle dh,
+			long byteIndex, int recordNum, byte[] arr, int off, int numBytes,
+			int lastNum, boolean overwriteEdgesOk) {
+		super.getRecordsAsBytes(dh, byteIndex, recordNum, arr, off, numBytes,
+				lastNum, overwriteEdgesOk);
+	}
+
+	@Override
+	protected synchronized int getBytes(DatabaseHandle dh, byte[] arr, int off,
+			int maxLen, boolean overwriteEdgesOk) {
+		if (!overwriteEdgesOk)
+			return super.getBytes(dh, arr, off, maxLen, false);
+		final int numBytes = (int) Math.min(maxLen, dh.lastByteIndex
+				- dh.location);
+		try {
+			GZipHandle gzh = (GZipHandle) dh;
+			if (lastUsed != gzh) {
+				if (lastUsed != null)
+					lastUsed.filePos = fis.getChannel().position();
+				lastUsed = gzh;
+				fis.getChannel().position(gzh.filePos);
+			}
+			readFully(gzh.zcis, arr, off, numBytes);
+		} catch (IOException e) {
+			throw new Error(e);
+		}
+		dh.location += numBytes;
+		return numBytes;
+	}
+
+	@Override
+	protected synchronized void prepareRange(DatabaseHandle dh, long byteIndex,
+			int firstNum, long numBytes, int lastNum) {
+		GZipHandle gzh = (GZipHandle) dh;
+		long thisEntry = byteIndex / entrySize;
+		try {
+			if (lastUsed != null)
+				try {
+					lastUsed.filePos = fis.getChannel().position();
+				} catch (IOException e) {
+					throw new Error(e);
+				}
+			lastUsed = gzh;
+			gzh.filePos = entryPoints[(int) (thisEntry - firstEntry)];
+			fis.getChannel().position(gzh.filePos);
+			gzh.cwis = new ChunkWrapInputStream(fis, entryPoints,
+					(int) (thisEntry - firstEntry));
+			gzh.zcis = new ZipChunkInputStream(gzh.cwis, entrySize);
+			long curLoc;
+			if (thisEntry == firstEntry)
+				curLoc = firstByteIndex;
+			else
+				curLoc = thisEntry * entrySize;
+			while (curLoc < byteIndex)
+				curLoc += gzh.zcis.skip(byteIndex - curLoc);
+		} catch (IOException e) {
+			throw new Error(e);
+		}
+		super.prepareRange(dh, byteIndex, firstNum, numBytes, lastNum);
+	}
+
+	@Override
+	protected void putBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
+			int len) {
+		throw new UnsupportedOperationException();
+	}
+
 	protected synchronized long prepareZippedRange(DatabaseHandle dh,
 			long byteIndex, long numBytes) {
 		long startEntry = byteIndex / entrySize;
 		long endEntry = (byteIndex + numBytes + entrySize - 1) / entrySize;
-		thisEntry = startEntry;
-		dh.byteIndex = entryPoints[(int) (startEntry - firstEntry)];
-		dh.lastByteIndex = entryPoints[(int) (endEntry - firstEntry)];
-		dh.location = dh.byteIndex;
-		dh.firstNum = 4;
-		dh.lastNum = (int) ((endEntry - startEntry) << 2);
-		lastUsed = dh;
+		GZipHandle gzh = (GZipHandle) dh;
+		gzh.cwis = new ChunkWrapInputStream(fis, entryPoints,
+				(int) (startEntry - firstEntry), (int) (endEntry - startEntry));
+		gzh.remainingBytes = entryPoints[(int) (endEntry - firstEntry)]
+				- entryPoints[(int) (startEntry - firstEntry)]
+				+ ((endEntry - startEntry) << 2);
+		return gzh.remainingBytes;
+	}
+
+	protected synchronized int getZippedBytes(DatabaseHandle dh, byte[] arr,
+			int off, int maxLen) {
+		GZipHandle gzh = (GZipHandle) dh;
+		final int numBytes = (int) Math.min(maxLen, gzh.remainingBytes);
 		try {
-			fis.getChannel().position(dh.location);
+			readFully(gzh.cwis, arr, off, numBytes);
 		} catch (IOException e) {
 			throw new Error(e);
 		}
-		nextStart = entryPoints[(int) (thisEntry + 1 - firstEntry)];
-		return dh.lastByteIndex - dh.byteIndex + dh.lastNum;
+		gzh.remainingBytes -= numBytes;
+		return numBytes;
 	}
 
 	protected synchronized long prepareMoveRange(DatabaseHandle dh,
 			long firstRecord, long numRecords, DistributedDatabase allRecords) {
+		byte[] zippedInitialBytes, zippedFinalBytes;
 		long firstTransferByte = firstByteIndex - firstByteIndex % entrySize;
 		long firstTransferRecord = toFirstRecord(firstTransferByte);
 		if (firstTransferRecord < firstRecord) {
@@ -594,78 +565,72 @@ public class GZippedFileDatabase extends Database implements Runnable {
 					- (entryPoints[(int) (lastTransferEntry - firstEntry)] - entryPoints[(int) (lastTransferEntry - 1 - firstEntry)]);
 			lastTransferEntry--;
 		}
-		dh.firstNum = 0;
-		dh.lastNum = 0;
-		dh.byteIndex = entryPoints[(int) (firstTransferEntry - firstEntry)];
-		dh.lastByteIndex = entryPoints[(int) (lastTransferEntry - firstEntry)];
-		dh.location = dh.byteIndex;
+		MoveInputStream moveStream = new MoveInputStream(zippedInitialBytes,
+				fis, zippedFinalBytes, totalBytes);
+		prepareZippedRange(dh, firstRecord, numRecords);
+		try {
+			fis.getChannel().position(
+					entryPoints[(int) (firstTransferEntry - firstEntry)]);
+		} catch (IOException e) {
+			throw new Error(e);
+		}
 		return totalBytes;
 	}
 
-	protected synchronized int getMoveBytes(DatabaseHandle dh, byte[] arr,
-			int off, int maxLen) {
-		if (lastUsed != dh)
-			throw new ConcurrentModificationException();
-		final int numBytes = (int) Math.min(maxLen, dh.lastByteIndex
-				- dh.location + zippedInitialBytes.length - dh.firstNum
-				+ zippedFinalBytes.length - dh.lastNum);
-		int len = numBytes;
-		if (len > 0 && dh.firstNum < zippedInitialBytes.length) {
-			int copyBytes = Math.min(len, zippedInitialBytes.length
-					- dh.firstNum);
-			System.arraycopy(zippedInitialBytes, dh.firstNum, arr, off,
-					copyBytes);
-			len -= copyBytes;
-			off += copyBytes;
-		}
-		if (dh.location < dh.lastByteIndex) {
-			try {
-				fis.getChannel().position(dh.location);
-			} catch (IOException e) {
-				throw new Error(e);
-			}
-		}
-		//TODO Finish method, include 4-byte lengths
-		return numBytes;
-	}
+	private class MoveInputStream extends InputStream {
+		final byte[] initialBytes, finalBytes;
+		final InputStream innerStream;
+		int inRead = 0, finRead = 0;
+		long innerLen;
 
-	protected synchronized int getZippedBytes(DatabaseHandle dh, byte[] arr,
-			int off, int maxLen) {
-		if (lastUsed != dh)
-			throw new ConcurrentModificationException();
-		final int numBytes = (int) Math.min(maxLen, dh.lastByteIndex
-				- dh.location + dh.lastNum);
-		int len = numBytes;
-		while (len > 0) {
-			int bytesInBlock = (int) (nextStart - dh.location);
-			int bytesToRead = Math.min(len, bytesInBlock + dh.firstNum);
-			try {
-				while (dh.firstNum > 0 && bytesToRead > 0) {
-					if (bytesInBlock == 0)
-						throw new EOFException("No bytes in block!");
-					dh.firstNum--;
-					dh.lastNum--;
-					arr[off++] = (byte) (bytesInBlock >>> (dh.firstNum << 3));
-					len--;
-					bytesToRead--;
-				}
-				readFully(fis, arr, off, bytesToRead);
-				len -= bytesToRead;
-				dh.location += bytesToRead;
-				off += bytesToRead;
-			} catch (IOException e) {
-				throw new Error(e);
-			}
-			if (len > 0) {
-				thisEntry++;
-				nextStart = entryPoints[(int) (thisEntry + 1 - firstEntry)];
-				if (nextStart - dh.location == 0)
-					throw new Error(new EOFException("0-byte entry at entry "
-							+ thisEntry));
-				dh.firstNum = 4;
-			}
+		public MoveInputStream(byte[] initialBytes, InputStream innerStream,
+				byte[] finalBytes, long totalBytes) {
+			this.initialBytes = initialBytes;
+			this.finalBytes = finalBytes;
+			this.innerStream = innerStream;
+			this.innerLen = totalBytes
+					- (initialBytes.length + finalBytes.length);
 		}
-		return numBytes;
+
+		@Override
+		public int read(byte[] arr, int off, int len) throws IOException {
+			if (inRead < initialBytes.length) {
+				int bytesToRead = Math.min(len, initialBytes.length - inRead);
+				System.arraycopy(initialBytes, inRead, arr, off, bytesToRead);
+				inRead += bytesToRead;
+				return bytesToRead;
+			} else if (innerLen > 0) {
+				int bytesToRead = innerStream.read(arr, off, (int) Math.min(
+						len, innerLen));
+				if (bytesToRead < 0)
+					throw new EOFException();
+				innerLen -= bytesToRead;
+				return bytesToRead;
+			} else if (finRead < finalBytes.length) {
+				int bytesToRead = Math.min(len, finalBytes.length - finRead);
+				System.arraycopy(finalBytes, finRead, arr, off, bytesToRead);
+				finRead += bytesToRead;
+				return bytesToRead;
+			} else
+				return -1;
+		}
+
+		@Override
+		public int read() throws IOException {
+			if (inRead < initialBytes.length) {
+				return initialBytes[inRead++];
+			} else if (innerLen > 0) {
+				int byteRead = innerStream.read();
+				if (byteRead < 0)
+					throw new EOFException();
+				innerLen--;
+				return byteRead;
+			} else if (finRead < finalBytes.length) {
+				return finalBytes[finRead++];
+			} else
+				return -1;
+		}
+
 	}
 
 	public int extraBytes(long firstByte) {
@@ -674,5 +639,119 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		} else {
 			return (int) (firstByte % entrySize);
 		}
+	}
+
+	protected final class GZipHandle extends DatabaseHandle {
+		ChunkWrapInputStream cwis;
+		ZipChunkInputStream zcis;
+		long filePos, remainingBytes;
+
+		public GZipHandle(int recordGroupByteLength) {
+			super(recordGroupByteLength);
+		}
+	}
+
+	@Override
+	public GZipHandle getHandle() {
+		return new GZipHandle(recordGroupByteLength);
+	}
+}
+
+final class ChunkWrapInputStream extends FilterInputStream {
+	final long[] positions;
+	int nextEntry;
+	int lastEntry;
+	long curPos;
+	int lengthBytes = 4;
+
+	ChunkWrapInputStream(InputStream in, long[] positions, int curEntry,
+			int numEntries) {
+		super(in);
+		this.positions = positions;
+		if (numEntries == 0) {
+			nextEntry = curEntry;
+			lastEntry = curEntry;
+		} else {
+			nextEntry = curEntry + 1;
+			if (numEntries < 0) {
+				lastEntry = positions.length;
+			} else {
+				lastEntry = curEntry + numEntries;
+			}
+		}
+		curPos = positions[curEntry];
+	}
+
+	public ChunkWrapInputStream(InputStream in, long[] positions, int curEntry) {
+		this(in, positions, curEntry, -1);
+	}
+
+	@Override
+	public int read() throws IOException {
+		int blockBytes = (int) (positions[nextEntry] - curPos);
+		if (blockBytes == 0) {
+			if (nextEntry == lastEntry)
+				return -1;
+			nextEntry++;
+			blockBytes = (int) (positions[nextEntry] - curPos);
+			lengthBytes = 4;
+		}
+		if (lengthBytes > 0) {
+			lengthBytes--;
+			return (blockBytes >> (lengthBytes << 3)) & 255;
+		} else {
+			curPos++;
+			return in.read();
+		}
+	}
+
+	@Override
+	public int read(byte[] arr, int off, int len) throws IOException {
+		int blockBytes = (int) (positions[nextEntry] - curPos);
+		int totalBytesRead = 0;
+		if (blockBytes == 0) {
+			if (nextEntry == lastEntry)
+				return -1;
+			nextEntry++;
+			blockBytes = (int) (positions[nextEntry] - curPos);
+			lengthBytes = 4;
+		}
+		while (lengthBytes > 0 && len > 0) {
+			lengthBytes--;
+			arr[off++] = (byte) (blockBytes >> (lengthBytes << 3));
+			len--;
+			totalBytesRead++;
+		}
+		if (len > 0) {
+			int bytesRead = in.read(arr, off, Math.min(len, blockBytes));
+			totalBytesRead += bytesRead;
+			curPos += bytesRead;
+		}
+		return totalBytesRead;
+	}
+
+	@Override
+	public long skip(long n) throws IOException {
+		int blockBytes = (int) (positions[nextEntry] - curPos);
+		int totalBytesSkipped = 0;
+		if (blockBytes == 0) {
+			if (nextEntry == lastEntry)
+				return -1;
+			nextEntry++;
+			blockBytes = (int) (positions[nextEntry] - curPos);
+			lengthBytes = 4;
+		}
+		int lengthSkip = (int) Math.min(lengthBytes, n);
+		if (lengthSkip > 0) {
+			lengthBytes -= lengthSkip;
+			n -= lengthSkip;
+			totalBytesSkipped += lengthSkip;
+		}
+		if (n > 0) {
+			int bytesSkipped = (int) in.skip(Math.min(n, blockBytes));
+			totalBytesSkipped += bytesSkipped;
+			curPos += bytesSkipped;
+		}
+		return totalBytesSkipped;
 	}
 }

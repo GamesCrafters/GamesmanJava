@@ -8,35 +8,44 @@ import java.util.zip.GZIPInputStream;
 final class ZipChunkInputStream extends FilterInputStream {
 	private final ChunkInputStream cis;
 	private final int entrySize;
-	private GZIPInputStream gzi;
 
-	ZipChunkInputStream(InputStream in, int entrySize)
-			throws IOException {
+	ZipChunkInputStream(InputStream in, int entrySize) throws IOException {
 		super(in);
 		this.entrySize = entrySize;
 		cis = new ChunkInputStream(in);
-		gzi = new GZIPInputStream(cis, entrySize);
+		this.in = new GZIPInputStream(cis, entrySize);
 	}
 
 	@Override
 	public int read(byte[] arr, int off, int len) throws IOException {
-		int bytesRead = gzi.read(arr, off, len);
+		int bytesRead = in.read(arr, off, len);
 		if (bytesRead < 0) {
 			cis.nextChunk();
-			gzi = new GZIPInputStream(cis, entrySize);
-			bytesRead = gzi.read(arr, off, len);
+			in = new GZIPInputStream(cis, entrySize);
+			bytesRead = in.read(arr, off, len);
 		}
 		return bytesRead;
 	}
 
 	@Override
 	public int read() throws IOException {
-		int byteRead = gzi.read();
+		int byteRead = in.read();
 		if (byteRead < 0) {
 			cis.nextChunk();
-			gzi = new GZIPInputStream(cis, entrySize);
-			byteRead = gzi.read();
+			in = new GZIPInputStream(cis, entrySize);
+			byteRead = in.read();
 		}
 		return byteRead;
+	}
+
+	@Override
+	public long skip(long n) throws IOException {
+		long bytesSkipped = in.skip(n);
+		if (bytesSkipped < 0) {
+			cis.nextChunk();
+			in = new GZIPInputStream(cis, entrySize);
+			bytesSkipped = in.skip(n);
+		}
+		return bytesSkipped;
 	}
 }
