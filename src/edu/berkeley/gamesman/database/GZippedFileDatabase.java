@@ -1,6 +1,7 @@
 package edu.berkeley.gamesman.database;
 
 import java.io.*;
+import java.util.ConcurrentModificationException;
 import java.util.concurrent.Semaphore;
 import java.util.zip.GZIPOutputStream;
 
@@ -442,6 +443,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		long startEntry = byteIndex / entrySize;
 		long endEntry = (byteIndex + numBytes + entrySize - 1) / entrySize;
 		GZipHandle gzh = (GZipHandle) dh;
+		lastUsed = gzh;
 		gzh.cwis = new ChunkWrapInputStream(fis, entryPoints,
 				(int) (startEntry - firstEntry), (int) (endEntry - startEntry));
 		gzh.remainingBytes = entryPoints[(int) (endEntry - firstEntry)]
@@ -450,9 +452,19 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		return gzh.remainingBytes;
 	}
 
+	public int extraBytes(long firstByte) {
+		if (firstByte < (firstEntry + 1) * entrySize) {
+			return (int) (firstByte - firstByteIndex);
+		} else {
+			return (int) (firstByte % entrySize);
+		}
+	}
+
 	protected synchronized int getZippedBytes(DatabaseHandle dh, byte[] arr,
 			int off, int maxLen) {
 		GZipHandle gzh = (GZipHandle) dh;
+		if (lastUsed != gzh)
+			throw new ConcurrentModificationException();
 		final int numBytes = (int) Math.min(maxLen, gzh.remainingBytes);
 		try {
 			readFully(gzh.cwis, arr, off, numBytes);
@@ -553,92 +565,27 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			zippedFinalBytes = null;
 		long firstTransferEntry = firstTransferByte / entrySize;
 		long lastTransferEntry = (lastTransferByte + entrySize - 1) / entrySize;
-		long totalBytes = entryPoints[(int) (lastTransferEntry - firstEntry)]
-				- entryPoints[(int) (firstTransferEntry - firstEntry)];
+		long[] myPoints = new long[(int) (lastTransferEntry - firstTransferEntry) + 1];
+		System
+				.arraycopy(entryPoints,
+						(int) (firstTransferEntry - firstEntry), myPoints, 0,
+						(int) (lastTransferEntry - firstTransferEntry) + 1);
 		if (zippedInitialBytes != null) {
-			totalBytes += zippedInitialBytes.length
-					- (entryPoints[(int) (firstTransferEntry + 1 - firstEntry)] - entryPoints[(int) (firstTransferEntry - firstEntry)]);
-			firstTransferEntry++;
+			myPoints[0] = myPoints[1] - zippedInitialBytes.length;
 		}
 		if (zippedFinalBytes != null) {
-			totalBytes += zippedFinalBytes.length
-					- (entryPoints[(int) (lastTransferEntry - firstEntry)] - entryPoints[(int) (lastTransferEntry - 1 - firstEntry)]);
-			lastTransferEntry--;
+			myPoints[myPoints.length - 1] = myPoints[myPoints.length - 2]
+					+ zippedFinalBytes.length;
 		}
+		long totalBytes = myPoints[myPoints.length - 1] - myPoints[0];
 		MoveInputStream moveStream = new MoveInputStream(zippedInitialBytes,
 				fis, zippedFinalBytes, totalBytes);
-		prepareZippedRange(dh, firstRecord, numRecords);
-		try {
-			fis.getChannel().position(
-					entryPoints[(int) (firstTransferEntry - firstEntry)]);
-		} catch (IOException e) {
-			throw new Error(e);
-		}
-		return totalBytes;
-	}
-
-	private class MoveInputStream extends InputStream {
-		final byte[] initialBytes, finalBytes;
-		final InputStream innerStream;
-		int inRead = 0, finRead = 0;
-		long innerLen;
-
-		public MoveInputStream(byte[] initialBytes, InputStream innerStream,
-				byte[] finalBytes, long totalBytes) {
-			this.initialBytes = initialBytes;
-			this.finalBytes = finalBytes;
-			this.innerStream = innerStream;
-			this.innerLen = totalBytes
-					- (initialBytes.length + finalBytes.length);
-		}
-
-		@Override
-		public int read(byte[] arr, int off, int len) throws IOException {
-			if (inRead < initialBytes.length) {
-				int bytesToRead = Math.min(len, initialBytes.length - inRead);
-				System.arraycopy(initialBytes, inRead, arr, off, bytesToRead);
-				inRead += bytesToRead;
-				return bytesToRead;
-			} else if (innerLen > 0) {
-				int bytesToRead = innerStream.read(arr, off, (int) Math.min(
-						len, innerLen));
-				if (bytesToRead < 0)
-					throw new EOFException();
-				innerLen -= bytesToRead;
-				return bytesToRead;
-			} else if (finRead < finalBytes.length) {
-				int bytesToRead = Math.min(len, finalBytes.length - finRead);
-				System.arraycopy(finalBytes, finRead, arr, off, bytesToRead);
-				finRead += bytesToRead;
-				return bytesToRead;
-			} else
-				return -1;
-		}
-
-		@Override
-		public int read() throws IOException {
-			if (inRead < initialBytes.length) {
-				return initialBytes[inRead++];
-			} else if (innerLen > 0) {
-				int byteRead = innerStream.read();
-				if (byteRead < 0)
-					throw new EOFException();
-				innerLen--;
-				return byteRead;
-			} else if (finRead < finalBytes.length) {
-				return finalBytes[finRead++];
-			} else
-				return -1;
-		}
-
-	}
-
-	public int extraBytes(long firstByte) {
-		if (firstByte < (firstEntry + 1) * entrySize) {
-			return (int) (firstByte - firstByteIndex);
-		} else {
-			return (int) (firstByte % entrySize);
-		}
+		GZipHandle gzh = (GZipHandle) dh;
+		lastUsed = gzh;
+		gzh.cwis = new ChunkWrapInputStream(moveStream, myPoints, 0);
+		gzh.remainingBytes = totalBytes
+				+ ((lastTransferEntry - firstTransferEntry) << 2);
+		return gzh.remainingBytes;
 	}
 
 	protected final class GZipHandle extends DatabaseHandle {
@@ -753,5 +700,79 @@ final class ChunkWrapInputStream extends FilterInputStream {
 			curPos += bytesSkipped;
 		}
 		return totalBytesSkipped;
+	}
+}
+
+final class MoveInputStream extends InputStream {
+	final byte[] initialBytes, finalBytes;
+	final InputStream innerStream;
+	int inRead = 0, finRead = 0;
+	long innerLen;
+
+	public MoveInputStream(byte[] initialBytes, InputStream innerStream,
+			byte[] finalBytes, long totalBytes) {
+		this.initialBytes = initialBytes;
+		this.finalBytes = finalBytes;
+		this.innerStream = innerStream;
+		this.innerLen = totalBytes - (initialBytes.length + finalBytes.length);
+	}
+
+	@Override
+	public int read(byte[] arr, int off, int len) throws IOException {
+		if (inRead < initialBytes.length) {
+			int bytesToRead = Math.min(len, initialBytes.length - inRead);
+			System.arraycopy(initialBytes, inRead, arr, off, bytesToRead);
+			inRead += bytesToRead;
+			return bytesToRead;
+		} else if (innerLen > 0) {
+			int bytesToRead = innerStream.read(arr, off, (int) Math.min(len,
+					innerLen));
+			if (bytesToRead < 0)
+				throw new EOFException();
+			innerLen -= bytesToRead;
+			return bytesToRead;
+		} else if (finRead < finalBytes.length) {
+			int bytesToRead = Math.min(len, finalBytes.length - finRead);
+			System.arraycopy(finalBytes, finRead, arr, off, bytesToRead);
+			finRead += bytesToRead;
+			return bytesToRead;
+		} else
+			return -1;
+	}
+
+	@Override
+	public int read() throws IOException {
+		if (inRead < initialBytes.length) {
+			return initialBytes[inRead++];
+		} else if (innerLen > 0) {
+			int byteRead = innerStream.read();
+			if (byteRead < 0)
+				throw new EOFException();
+			innerLen--;
+			return byteRead;
+		} else if (finRead < finalBytes.length) {
+			return finalBytes[finRead++];
+		} else
+			return -1;
+	}
+
+	@Override
+	public long skip(long n) throws IOException {
+		if (inRead < initialBytes.length) {
+			int bytesToSkip = (int) Math.min(n, initialBytes.length - inRead);
+			inRead += bytesToSkip;
+			return bytesToSkip;
+		} else if (innerLen > 0) {
+			long bytesToSkip = innerStream.skip(Math.min(n, innerLen));
+			if (bytesToSkip < 0)
+				throw new EOFException();
+			innerLen -= bytesToSkip;
+			return bytesToSkip;
+		} else if (finRead < finalBytes.length) {
+			int bytesToSkip = (int) Math.min(n, finalBytes.length - finRead);
+			finRead += bytesToSkip;
+			return bytesToSkip;
+		} else
+			return -1;
 	}
 }
