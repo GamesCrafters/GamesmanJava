@@ -101,7 +101,7 @@ public class TierMaster implements Runnable {
 					InputStream is = p.getInputStream();
 					os.write(dbTrack.getHeader(slice.car, slice.cdr).toBytes());
 					os.flush();
-					PrintStream ps = new PrintStream(os);
+					PrintStream ps = new PrintStream(os, true);
 					Scanner scan = new Scanner(is);
 					String next = scan.next();
 					try {
@@ -115,7 +115,6 @@ public class TierMaster implements Runnable {
 								long numRecords = scan.nextLong();
 								ps.println(prevTierDb.makeStream(firstRecord,
 										numRecords));
-								ps.flush();
 							} else
 								System.out.println(name + ": " + next + " "
 										+ scan.nextLine());

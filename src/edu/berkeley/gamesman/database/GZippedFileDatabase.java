@@ -7,6 +7,7 @@ import java.util.zip.GZIPOutputStream;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.util.qll.Factory;
+import edu.berkeley.gamesman.util.ChunkInputStream;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 import edu.berkeley.gamesman.util.ZipChunkInputStream;
@@ -68,6 +69,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		});
 		this.readFrom = readFrom;
 		nextStart = firstByteIndex;
+		writeBuffer = null;
 	}
 
 	private final QuickLinkedList<Pair<ByteArrayOutputStream, Long>> waitingCaches;
@@ -82,6 +84,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 	private long thisEntry;
 	private long handleEntry;
 	private long nextStart;
+	private final byte[] writeBuffer;
 
 	@Override
 	public void close() {
@@ -347,6 +350,35 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		memoryConstraint = null;
 		handlePool = null;
 		fos = null;
+		writeBuffer = null;
+	}
+
+	public GZippedFileDatabase(String uri, Configuration conf,
+			DatabaseHeader header) throws IOException {
+		super(uri, conf, true, header.firstRecord, header.numRecords, header);
+		File myFile = new File(uri);
+		entrySize = conf.getInteger("gamesman.db.zip.entryKB", 64) << 10;
+		gzipWorst = entrySize + ((entrySize + ((1 << 15) - 1)) >> 15) * 5 + 18;
+		// As I understand, this is worst-case performance for gzip
+		firstByteIndex = toByte(firstContainedRecord);
+		firstEntry = thisEntry = firstByteIndex / entrySize;
+		lastByteIndex = lastByte(firstContainedRecord + numContainedRecords);
+		long lastEntry = (lastByteIndex + entrySize - 1) / entrySize;
+		numEntries = (int) (lastEntry - firstEntry);
+		entryPoints = new long[numEntries + 1];
+		fis = null;
+		waitingCaches = null;
+		waitingCachesIter = null;
+		fos = new FileOutputStream(myFile);
+		store(fos, uri);
+		tableOffset = fos.getChannel().position();
+		fos.getChannel().position(tableOffset + (entryPoints.length << 3));
+		zippedStoragePool = null;
+		memoryConstraint = null;
+		handlePool = null;
+		readFrom = null;
+		nextStart = firstByteIndex;
+		writeBuffer = new byte[gzipWorst];
 	}
 
 	private final FileInputStream fis;
@@ -462,6 +494,12 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		long endEntry = (byteIndex + numBytes + entrySize - 1) / entrySize;
 		GZipHandle gzh = (GZipHandle) dh;
 		lastUsed = gzh;
+		try {
+			fis.getChannel().position(
+					entryPoints[(int) (startEntry - firstEntry)]);
+		} catch (IOException e) {
+			throw new Error(e);
+		}
 		gzh.cwis = new ChunkWrapInputStream(fis, entryPoints,
 				(int) (startEntry - firstEntry));
 		gzh.remainingBytes = entryPoints[(int) (endEntry - firstEntry)]
@@ -491,6 +529,26 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		}
 		gzh.remainingBytes -= numBytes;
 		return numBytes;
+	}
+
+	protected synchronized void putZippedBytes(ChunkInputStream is,
+			long numBytes) throws IOException {
+		if (entryPoints[(int) (thisEntry - firstEntry)] == 0)
+			entryPoints[(int) (thisEntry - firstEntry)] = fos.getChannel()
+					.position();
+		while (numBytes > 0) {
+			int bytesRead = is.read(writeBuffer, 0, (int) Math.min(numBytes,
+					writeBuffer.length));
+			if (bytesRead < 0) {
+				is.nextChunk();
+				entryPoints[(int) ((++thisEntry) - firstEntry)] = fos
+						.getChannel().position();
+				bytesRead = is.read(writeBuffer, 0, (int) Math.min(numBytes,
+						writeBuffer.length));
+			}
+			fos.write(writeBuffer, 0, bytesRead);
+			numBytes -= bytesRead;
+		}
 	}
 
 	protected synchronized long prepareMoveRange(DatabaseHandle dh,
@@ -608,8 +666,14 @@ public class GZippedFileDatabase extends Database implements Runnable {
 				.arraycopy(entryPoints,
 						(int) (firstTransferEntry - firstEntry), myPoints, 0,
 						(int) (lastTransferEntry - firstTransferEntry) + 1);
-		if (zippedInitialBytes != null) {
-			myPoints[0] = myPoints[1] - zippedInitialBytes.length;
+		try {
+			if (zippedInitialBytes != null) {
+				myPoints[0] = myPoints[1] - zippedInitialBytes.length;
+				fis.getChannel().position(myPoints[1]);
+			} else
+				fis.getChannel().position(myPoints[0]);
+		} catch (IOException e) {
+			throw new Error(e);
 		}
 		if (zippedFinalBytes != null) {
 			myPoints[myPoints.length - 1] = myPoints[myPoints.length - 2]

@@ -112,18 +112,13 @@ public class RemoteDatabase extends Database {
 			RemoteHandle rh = ((RemoteHandle) dh);
 			rh.is = p.getInputStream();
 			if (readZipped) {
-				byte[] skipBytes = new byte[4];
-				readFully(rh.is, skipBytes, 0, 4);
 				int skipNum = 0;
 				for (int i = 0; i < 4; i++) {
 					skipNum <<= 8;
-					skipNum |= skipBytes[i] & 255;
+					skipNum |= rh.is.read() & 255;
 				}
 				rh.is = new ZipChunkInputStream(rh.is, entrySize);
-				if (skipNum > 4) {
-					skipBytes = new byte[skipNum];
-				}
-				Database.readFully(rh.is, skipBytes, 0, skipNum);
+				Database.skipFully(rh.is, skipNum);
 			}
 		} catch (IOException e) {
 			throw new Error(e);

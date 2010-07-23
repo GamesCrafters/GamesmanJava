@@ -16,15 +16,15 @@ import java.io.InputStream;
  * 
  * @author dnspies
  */
-final class ChunkInputStream extends FilterInputStream {
+public final class ChunkInputStream extends FilterInputStream {
 	private int remain;
 
-	ChunkInputStream(InputStream in) throws IOException {
+	public ChunkInputStream(InputStream in) throws IOException {
 		super(in);
 		nextChunk();
 	}
 
-	void nextChunk() throws IOException {
+	public void nextChunk() throws IOException {
 		remain = 0;
 		for (int i = 0; i < 4; i++) {
 			remain <<= 8;
