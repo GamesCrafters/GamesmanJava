@@ -1,10 +1,15 @@
-package edu.berkeley.gamesman.database;
+package edu.berkeley.gamesman.parallel;
 
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Scanner;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.database.Database;
+import edu.berkeley.gamesman.database.DatabaseHandle;
+import edu.berkeley.gamesman.database.DistributedDatabase;
+import edu.berkeley.gamesman.database.GZippedFileDatabase;
+import edu.berkeley.gamesman.database.ReadZippedRecords;
 import edu.berkeley.gamesman.util.UndeterminedChunkOutputStream;
 
 public final class TransferSlave {
@@ -21,7 +26,7 @@ public final class TransferSlave {
 		PrintStream printOut = new PrintStream(out, true);
 		DistributedDatabase allRecords = new DistributedDatabase(conf, db
 				.getHeader(0, gameLength), scan, printOut);
-		GZippedFileDatabase.GZipHandle dh = db.getHandle();
+		DatabaseHandle dh = db.getHandle();
 		long numBytes = db.prepareMoveRange(dh, firstRecord, numRecords,
 				allRecords);
 		allRecords.close();
@@ -31,8 +36,7 @@ public final class TransferSlave {
 		} else {
 			printOut.println("ready");
 			printOut.flush();
-			out.nextChunk();
-			out.flush();
+			out.finish();
 			while (!scan.nextLine().equals("go"))
 				;
 			byte[] arr = new byte[(int) Math.min(ReadZippedRecords.BUFFER_SIZE,
@@ -40,11 +44,11 @@ public final class TransferSlave {
 			while (numBytes > 0) {
 				int bytesRead = db.getZippedBytes(dh, arr, 0,
 						ReadZippedRecords.BUFFER_SIZE);
-				out.write(arr, 0, bytesRead);
-				out.flush();
+				System.out.write(arr, 0, bytesRead);
+				System.out.flush();
 				numBytes -= bytesRead;
 			}
-			out.close();
+			System.out.close();
 		}
 		db.close();
 	}

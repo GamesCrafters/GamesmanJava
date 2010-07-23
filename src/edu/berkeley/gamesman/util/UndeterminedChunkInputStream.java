@@ -50,4 +50,18 @@ public class UndeterminedChunkInputStream extends FilterInputStream {
 			remainBytes |= in.read() & 255;
 		}
 	}
+
+	public void skipToChunkEnd() throws IOException {
+		if (remainBytes == 0)
+			nextChunk();
+		while (remainBytes >= 0) {
+			skip(remainBytes);
+			if (remainBytes == 0)
+				nextChunk();
+		}
+	}
+
+	public void finish() throws IOException {
+		skipToChunkEnd();
+	}
 }

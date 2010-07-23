@@ -1,12 +1,17 @@
-package edu.berkeley.gamesman.database;
+package edu.berkeley.gamesman.parallel;
 
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Scanner;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.database.Database;
+import edu.berkeley.gamesman.database.GZippedFileDatabase;
+import edu.berkeley.gamesman.database.SplitDatabase;
+import edu.berkeley.gamesman.util.ChunkInputStream;
 import edu.berkeley.gamesman.util.UndeterminedChunkInputStream;
 
 public final class TransferMaster {
@@ -33,7 +38,6 @@ public final class TransferMaster {
 				String uri = dbScan.next();
 				dbScan.nextLong();
 				dbScan.nextLong();
-				StringBuilder moveProc = new StringBuilder(maxLen);
 				String[] hostFile = uri.split(":");
 				String host = hostFile[0];
 				String path = hostFile[1];
@@ -53,22 +57,30 @@ public final class TransferMaster {
 						+ " " + (lastForDb - firstForDb);
 				Process p = Runtime.getRuntime().exec(command);
 				PrintStream ps = new PrintStream(p.getOutputStream(), true);
-				UndeterminedChunkInputStream in = new UndeterminedChunkInputStream(
+				InputStream in = new BufferedInputStream(p.getInputStream());
+				UndeterminedChunkInputStream ucis = new UndeterminedChunkInputStream(
 						new BufferedInputStream(p.getInputStream()));
-				Scanner readScan = new Scanner(in);
+				Scanner readScan = new Scanner(ucis);
 				String neededChunk = readScan.next();
-				while (!neededChunk.equals("ready")
-						|| neededChunk.equals("skip")) {
-					long firstRequestedRecord = readScan.nextLong();
-					long numRequestedRecords = readScan.nextLong();
-					ps.println(readFrom.makeStream(firstRequestedRecord,
-							numRequestedRecords));
+				while (!(neededChunk.equals("ready") || neededChunk
+						.equals("skip"))) {
+					if (neededChunk.equals("fetch:")) {
+						long firstRequestedRecord = readScan.nextLong();
+						long numRequestedRecords = readScan.nextLong();
+						ps.println(readFrom.makeStream(firstRequestedRecord,
+								numRequestedRecords));
+					} else
+						System.out.println(host + ": " + neededChunk + " "
+								+ readScan.nextLine());
+					neededChunk = readScan.next();
 				}
 				if (neededChunk.equals("ready")) {
+					ucis.finish();
 					ps.println("go");
-					in.nextChunk();
-					//TODO Finish method
+					ChunkInputStream cis = new ChunkInputStream(in);
+					db.putZippedBytes(cis);
 				}
+				db.close();
 				nextType = dbScan.next();
 			}
 		}

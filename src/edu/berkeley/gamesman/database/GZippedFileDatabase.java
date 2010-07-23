@@ -488,7 +488,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 
 	// For remote work
 
-	protected synchronized long prepareZippedRange(DatabaseHandle dh,
+	protected long prepareZippedRange(DatabaseHandle dh,
 			long byteIndex, long numBytes) {
 		long startEntry = byteIndex / entrySize;
 		long endEntry = (byteIndex + numBytes + entrySize - 1) / entrySize;
@@ -516,7 +516,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		}
 	}
 
-	protected synchronized int getZippedBytes(DatabaseHandle dh, byte[] arr,
+	public int getZippedBytes(DatabaseHandle dh, byte[] arr,
 			int off, int maxLen) {
 		GZipHandle gzh = (GZipHandle) dh;
 		if (lastUsed != gzh)
@@ -531,12 +531,12 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		return numBytes;
 	}
 
-	protected synchronized void putZippedBytes(ChunkInputStream is,
-			long numBytes) throws IOException {
+	public void putZippedBytes(ChunkInputStream is, long numBytes)
+			throws IOException {
 		if (entryPoints[(int) (thisEntry - firstEntry)] == 0)
 			entryPoints[(int) (thisEntry - firstEntry)] = fos.getChannel()
 					.position();
-		while (numBytes > 0) {
+		while (numBytes != 0) {
 			int bytesRead = is.read(writeBuffer, 0, (int) Math.min(numBytes,
 					writeBuffer.length));
 			if (bytesRead < 0) {
@@ -545,13 +545,20 @@ public class GZippedFileDatabase extends Database implements Runnable {
 						.getChannel().position();
 				bytesRead = is.read(writeBuffer, 0, (int) Math.min(numBytes,
 						writeBuffer.length));
+				if (bytesRead < 0)
+					break;
 			}
 			fos.write(writeBuffer, 0, bytesRead);
-			numBytes -= bytesRead;
+			if (numBytes > 0)
+				numBytes -= bytesRead;
 		}
 	}
 
-	protected synchronized long prepareMoveRange(DatabaseHandle dh,
+	public void putZippedBytes(ChunkInputStream is) throws IOException {
+		putZippedBytes(is, -1);
+	}
+
+	public long prepareMoveRange(DatabaseHandle dh,
 			long firstRecord, long numRecords, DistributedDatabase allRecords) {
 		byte[] zippedInitialBytes, zippedFinalBytes;
 		long firstTransferByte = firstByteIndex - firstByteIndex % entrySize;

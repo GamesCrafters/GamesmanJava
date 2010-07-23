@@ -5,7 +5,7 @@ import java.io.IOException;
 import edu.berkeley.gamesman.core.Configuration;
 
 public class ReadZippedRecords {
-	static final int BUFFER_SIZE = 4096;
+	public static final int BUFFER_SIZE = 4096;
 
 	public static void main(String[] args) throws ClassNotFoundException,
 			IOException {
