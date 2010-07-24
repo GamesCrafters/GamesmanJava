@@ -190,7 +190,7 @@ public class TierMaster implements Runnable {
 		numSplits = (int) (conf.getFloat("gamesman.parallel.multiple", 1) * nodeNames.length);
 		maxMem = (long) (conf.getLong("gamesman.memory", 100000000) * 1.2);
 		this.jobFile = jobFile;
-		dbTrack = new SplitDatabase(conf, true);
+		dbTrack = SplitDatabase.openSplitDatabase(conf, true, true);
 		nodes = new NodeRunnable[nodeNames.length];
 		for (int i = 0; i < nodeNames.length; i++) {
 			nodes[i] = new NodeRunnable(nodeNames[i]);
@@ -254,7 +254,8 @@ public class TierMaster implements Runnable {
 		for (tier = g.numberOfTiers() - 1; tier >= 0; tier--) {
 			long start = g.hashOffsetForTier(tier);
 			long length = g.numHashesForTier(tier);
-			curTierDb = new SplitDatabase(conf, start, length, false);
+			curTierDb = SplitDatabase.openSplitDatabase(conf, true, start,
+					length, false);
 			divides = curTierDb.splitRange(start, length, numSplits);
 			finishedSlices = 0;
 			released = false;

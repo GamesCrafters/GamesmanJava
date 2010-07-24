@@ -166,11 +166,7 @@ public abstract class Database {
 	protected Database(String uri, Configuration conf, boolean solve,
 			long firstRecord, long numRecords, DatabaseHeader header) {
 		byte[] dbInfo = null;
-		if (numRecords == -1) {
-			firstRecord = 0;
-			numRecords = conf.getGame().numHashes();
-		}
-		if (header == null)
+		if (header == null || conf == null)
 			if (!solve)
 				try {
 					FileInputStream fis = new FileInputStream(uri);
@@ -179,12 +175,17 @@ public abstract class Database {
 					if (conf == null)
 						conf = Configuration.load(fis);
 					fis.close();
-					header = new DatabaseHeader(dbInfo);
+					if (header == null)
+						header = new DatabaseHeader(dbInfo);
 				} catch (ClassNotFoundException e) {
 					throw new Error(e);
 				} catch (IOException e) {
 					throw new Error(e);
 				}
+		if (numRecords == -1) {
+			firstRecord = 0;
+			numRecords = conf.getGame().numHashes();
+		}
 		this.conf = conf;
 		this.solve = solve;
 		totalStates = conf.getGame().recordStates();
@@ -1199,8 +1200,11 @@ public abstract class Database {
 
 	/**
 	 * Creates a record group from an array of records
-	 * @param recs An array of records
-	 * @param offset The first record to read from in the array
+	 * 
+	 * @param recs
+	 *            An array of records
+	 * @param offset
+	 *            The first record to read from in the array
 	 * @return A record group from the next recordsPerGroup records
 	 */
 	protected final long longRecordGroup(long[] recs, int offset) {
@@ -1218,8 +1222,11 @@ public abstract class Database {
 
 	/**
 	 * Creates a record group from an array of records
-	 * @param recs An array of records
-	 * @param offset The first record to read from in the array
+	 * 
+	 * @param recs
+	 *            An array of records
+	 * @param offset
+	 *            The first record to read from in the array
 	 * @return A record group from the next recordsPerGroup records
 	 */
 	protected final BigInteger bigIntRecordGroup(long[] recs, int offset) {
@@ -1237,9 +1244,13 @@ public abstract class Database {
 
 	/**
 	 * Stores recordsPerGroup records from a group in an array
-	 * @param recordGroup The group to read from
-	 * @param recs The array to store in
-	 * @param offset The offset into the array to begin storing records
+	 * 
+	 * @param recordGroup
+	 *            The group to read from
+	 * @param recs
+	 *            The array to store in
+	 * @param offset
+	 *            The offset into the array to begin storing records
 	 */
 	protected final void getRecords(long recordGroup, long[] recs, int offset) {
 		if (superCompress) {

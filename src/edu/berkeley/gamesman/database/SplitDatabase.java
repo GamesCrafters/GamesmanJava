@@ -82,9 +82,9 @@ public class SplitDatabase extends Database {
 		}
 	}
 
-	public SplitDatabase(String uri, Configuration conf, long firstRecord,
-			long numRecords, boolean store) {
-		super(uri, conf, true, firstRecord, numRecords, null);
+	private SplitDatabase(String uri, Configuration conf, boolean solve,
+			long firstRecord, long numRecords, boolean store) {
+		super(uri, conf, solve, firstRecord, numRecords, null);
 		if (uri == null)
 			uri = conf.getProperty("gamesman.db.uri");
 		this.uri = uri;
@@ -98,19 +98,31 @@ public class SplitDatabase extends Database {
 		firstRecordList = new ArrayList<Long>();
 		numRecordsList = new ArrayList<Long>();
 		this.store = store;
-	}
-
-	public SplitDatabase(String uri, Configuration conf) {
-		this(uri, conf, 0, -1, true);
-	}
-
-	public SplitDatabase(Configuration conf, boolean store) {
-		this(conf, 0, -1, store);
-	}
-
-	public SplitDatabase(Configuration conf, long firstRecord, long numRecords,
-			boolean store) {
-		this(null, conf, firstRecord, numRecords, store);
+		if (!solve) {
+			uri = this.uri;
+			if (uri == null)
+				uri = conf.getProperty("gamesman.db.uri");
+			Scanner dbStream;
+			try {
+				FileInputStream is = new FileInputStream(uri);
+				skipHeader(is);
+				dbStream = new Scanner(is);
+			} catch (IOException e) {
+				throw new Error(e);
+			}
+			String dbType = dbStream.next();
+			while (!dbType.equals("end")) {
+				String dbUri = dbStream.next();
+				long dbFirstRecord = dbStream.nextLong();
+				long dbNumRecords = dbStream.nextLong();
+				dbTypeList.add(dbType);
+				firstRecordList.add(dbFirstRecord);
+				numRecordsList.add(dbNumRecords);
+				uriList.add(dbUri);
+				dbType = dbStream.next();
+			}
+			dbStream.close();
+		}
 	}
 
 	private static DatabaseHeader getSplitHeader(String uri) {
@@ -330,11 +342,12 @@ public class SplitDatabase extends Database {
 		SplitDatabase sd;
 		int start;
 		if ((args.length & 3) == 2) {
-			sd = new SplitDatabase(dbFile, new Configuration(confFile));
+			sd = openSplitDatabase(dbFile, new Configuration(confFile), true,
+					true);
 			start = 2;
 		} else {
-			sd = new SplitDatabase(dbFile, new Configuration(confFile), Long
-					.parseLong(args[2]), Long.parseLong(args[3]), true);
+			sd = openSplitDatabase(dbFile, new Configuration(confFile), true,
+					Long.parseLong(args[2]), Long.parseLong(args[3]), true);
 			start = 4;
 		}
 		for (int i = start; i < args.length; i += 4) {
@@ -342,6 +355,33 @@ public class SplitDatabase extends Database {
 					Long.parseLong(args[i + 3]));
 		}
 		sd.close();
+	}
+
+	public static SplitDatabase openSplitDatabase(String uri,
+			Configuration conf, boolean solve, boolean store) {
+		return openSplitDatabase(uri, conf, solve, 0, -1, store);
+	}
+
+	private static SplitDatabase openSplitDatabase(String uri,
+			Configuration conf, boolean solve, long firstRecord,
+			long numRecords, boolean store) {
+		return new SplitDatabase(uri, conf, solve, firstRecord, numRecords,
+				store);
+	}
+
+	public static SplitDatabase openSplitDatabase(Configuration conf,
+			boolean solve, boolean store) {
+		return openSplitDatabase(null, conf, solve, store);
+	}
+
+	public static SplitDatabase openSplitDatabase(Configuration conf,
+			boolean solve, long firstRecord, long numRecords, boolean store) {
+		return openSplitDatabase(null, conf, solve, firstRecord, numRecords,
+				store);
+	}
+
+	public static SplitDatabase openSplitDatabase(String uri) {
+		return openSplitDatabase(uri, null, false, false);
 	}
 
 	private synchronized void addDatabase(String dbType, String uri,
@@ -383,5 +423,13 @@ public class SplitDatabase extends Database {
 		uriList.add(dbNum, uri);
 		firstRecordList.add(dbNum, firstRecord);
 		numRecordsList.add(dbNum, numRecords);
+	}
+
+	public void addDb(String dbType, String uri, long firstRecord,
+			long numRecords) {
+		dbTypeList.add(dbType);
+		uriList.add(uri);
+		firstRecordList.add(firstRecord);
+		numRecordsList.add(numRecords);
 	}
 }

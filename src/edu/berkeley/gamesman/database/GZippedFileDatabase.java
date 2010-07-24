@@ -488,8 +488,8 @@ public class GZippedFileDatabase extends Database implements Runnable {
 
 	// For remote work
 
-	protected long prepareZippedRange(DatabaseHandle dh,
-			long byteIndex, long numBytes) {
+	protected long prepareZippedRange(DatabaseHandle dh, long byteIndex,
+			long numBytes) {
 		long startEntry = byteIndex / entrySize;
 		long endEntry = (byteIndex + numBytes + entrySize - 1) / entrySize;
 		GZipHandle gzh = (GZipHandle) dh;
@@ -516,8 +516,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		}
 	}
 
-	public int getZippedBytes(DatabaseHandle dh, byte[] arr,
-			int off, int maxLen) {
+	public int getZippedBytes(DatabaseHandle dh, byte[] arr, int off, int maxLen) {
 		GZipHandle gzh = (GZipHandle) dh;
 		if (lastUsed != gzh)
 			throw new ConcurrentModificationException();
@@ -537,14 +536,21 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			entryPoints[(int) (thisEntry - firstEntry)] = fos.getChannel()
 					.position();
 		while (numBytes != 0) {
-			int bytesRead = is.read(writeBuffer, 0, (int) Math.min(numBytes,
-					writeBuffer.length));
+			int bytesRead;
+			if (numBytes < 0)
+				bytesRead = is.read(writeBuffer);
+			else
+				bytesRead = is.read(writeBuffer, 0, (int) Math.min(numBytes,
+						writeBuffer.length));
 			if (bytesRead < 0) {
 				is.nextChunk();
 				entryPoints[(int) ((++thisEntry) - firstEntry)] = fos
 						.getChannel().position();
-				bytesRead = is.read(writeBuffer, 0, (int) Math.min(numBytes,
-						writeBuffer.length));
+				if (numBytes < 0)
+					bytesRead = is.read(writeBuffer);
+				else
+					bytesRead = is.read(writeBuffer, 0, (int) Math.min(numBytes,
+							writeBuffer.length));
 				if (bytesRead < 0)
 					break;
 			}
@@ -558,8 +564,8 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		putZippedBytes(is, -1);
 	}
 
-	public long prepareMoveRange(DatabaseHandle dh,
-			long firstRecord, long numRecords, DistributedDatabase allRecords) {
+	public long prepareMoveRange(DatabaseHandle dh, long firstRecord,
+			long numRecords, DistributedDatabase allRecords) {
 		byte[] zippedInitialBytes, zippedFinalBytes;
 		long firstTransferByte = firstByteIndex - firstByteIndex % entrySize;
 		long firstTransferRecord = toFirstRecord(firstTransferByte);

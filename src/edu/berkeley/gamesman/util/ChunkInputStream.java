@@ -34,10 +34,10 @@ public final class ChunkInputStream extends FilterInputStream {
 
 	@Override
 	public int read(byte[] arr, int off, int len) throws IOException {
-		if (remain == 0)
+		if (remain <= 0)
 			return -1;
 		len = Math.min(len, remain);
-		int bytesRead = super.read(arr, off, len);
+		int bytesRead = in.read(arr, off, len);
 		if (bytesRead < 0)
 			return -1;
 		remain -= bytesRead;
@@ -46,9 +46,9 @@ public final class ChunkInputStream extends FilterInputStream {
 
 	@Override
 	public int read() throws IOException {
-		if (remain == 0)
+		if (remain <= 0)
 			return -1;
-		int byteRead = super.read();
+		int byteRead = in.read();
 		if (byteRead < 0)
 			return -1;
 		remain--;
