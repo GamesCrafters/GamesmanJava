@@ -22,6 +22,7 @@ public class TierSolver extends Solver {
 		maxMem = conf.getLong("gamesman.memory", Integer.MAX_VALUE);
 		numThreads = conf.getInteger("gamesman.threads", 1);
 		minSplit = conf.getInteger("gamesman.split", numThreads);
+		minSplitSize = conf.getInteger("gamesman.minimum.split", 1024);
 	}
 
 	protected static final double SAFETY_MARGIN = 2.0;
@@ -47,6 +48,8 @@ public class TierSolver extends Solver {
 	boolean parallelSolving;
 
 	private long times[] = new long[7];
+
+	private final int minSplitSize;
 
 	protected void solvePartialTier(Configuration conf, long start,
 			long hashes, TierSolverUpdater t, DatabaseHandle readDh,
@@ -237,7 +240,8 @@ public class TierSolver extends Solver {
 				splits = Math.max(minSplit,
 						(int) (neededMem * numThreads / maxMem));
 				strainingMemory = strictSafety && splits > minSplit;
-				starts = writeDb.splitRange(fullStart, fullSize, splits);
+				starts = writeDb.splitRange(fullStart, fullSize, splits,
+						minSplitSize);
 			}
 		}
 	};
@@ -420,7 +424,7 @@ public class TierSolver extends Solver {
 		}
 		splits = Math.max(minSplit, (int) (neededMem * numThreads / maxMem));
 		strainingMemory = strictSafety && splits > minSplit;
-		starts = writeDb.splitRange(startHash, numHashes, splits);
+		starts = writeDb.splitRange(startHash, numHashes, splits, minSplitSize);
 		return new TierSolverWorkUnit(conf);
 	}
 }

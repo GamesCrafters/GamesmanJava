@@ -172,6 +172,7 @@ public class TierMaster implements Runnable {
 	private final SplitDatabase dbTrack;
 	private final int numSplits;
 	private final long maxMem;
+	private final int minSplitSize;
 	private final LinkedList<Pair<Long, Long>> failedSlices = new LinkedList<Pair<Long, Long>>();
 	private final Semaphore semaphore;
 	private SplitDatabase prevTierDb;
@@ -195,6 +196,8 @@ public class TierMaster implements Runnable {
 			jobFile = path + "/" + jobFile;
 		numSplits = (int) (conf.getFloat("gamesman.parallel.multiple", 1) * nodeNames.length);
 		maxMem = (long) (conf.getLong("gamesman.memory", 100000000) * 1.2);
+		minSplitSize = conf.getInteger("gamesman.parallel.minimum.split", Math
+				.max(1 << 20, conf.getInteger("gamesman.minimum.split", 1024)));
 		this.jobFile = jobFile;
 		dbTrack = SplitDatabase.openSplitDatabase(conf, true, true);
 		String dbUri = conf.getProperty("gamesman.db.uri");
@@ -321,7 +324,8 @@ public class TierMaster implements Runnable {
 		for (; tier >= 0; tier--) {
 			long start = g.hashOffsetForTier(tier);
 			long length = g.numHashesForTier(tier);
-			divides = curTierDb.splitRange(start, length, numSplits);
+			divides = curTierDb.splitRange(start, length, numSplits,
+					minSplitSize);
 			sliceNum = 0;
 			while (sliceNum < divides.length - 1
 					&& curTierDb.containsDb(divides[sliceNum]))

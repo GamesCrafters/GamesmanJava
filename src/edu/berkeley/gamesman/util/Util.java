@@ -509,8 +509,9 @@ public final class Util {
 	 * @return The starts of each task
 	 */
 	public static long[] groupAlignedTasks(int tasks, long start, long length,
-			int groupLength) {
-		int split = (int) Math.min(tasks, Math.max(length / groupLength, 1));
+			int groupLength, int minGroup) {
+		int split = (int) Math.min(tasks, Math.max(length
+				/ Math.max(groupLength, minGroup), 1));
 		long[] starts = new long[split + 1];
 		for (int count = 0; count < split; count++) {
 			starts[count] = length * count / split + start;

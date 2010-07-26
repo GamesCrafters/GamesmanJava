@@ -1380,9 +1380,10 @@ public abstract class Database {
 		}
 	}
 
-	public long[] splitRange(long firstRecord, long numRecords, int numSplits) {
+	public long[] splitRange(long firstRecord, long numRecords, int numSplits,
+			int minGroup) {
 		return Util.groupAlignedTasks(numSplits, firstRecord, numRecords,
-				recordsPerGroup);
+				recordsPerGroup, minGroup);
 	}
 
 	public final long requiredMem(long numHashes) {
