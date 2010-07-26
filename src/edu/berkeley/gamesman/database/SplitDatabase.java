@@ -405,6 +405,8 @@ public class SplitDatabase extends Database {
 			dbNum = -dbNum - 2;
 		long lastRecord = firstRecord + numRecords;
 		String s = "";
+		if(firstRecordList.isEmpty())
+			throw new Error("Empty list");
 		while (dbNum < firstRecordList.size()
 				&& firstRecordList.get(dbNum) < lastRecord) {
 			s += dbTypeList.get(dbNum) + " " + uriList.get(dbNum) + " "
@@ -431,5 +433,9 @@ public class SplitDatabase extends Database {
 		uriList.add(uri);
 		firstRecordList.add(firstRecord);
 		numRecordsList.add(numRecords);
+	}
+
+	public boolean containsDb(long firstRecord) {
+		return Collections.binarySearch(firstRecordList, firstRecord) >= 0;
 	}
 }

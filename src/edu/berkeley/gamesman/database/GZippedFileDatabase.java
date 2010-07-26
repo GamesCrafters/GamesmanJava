@@ -549,8 +549,8 @@ public class GZippedFileDatabase extends Database implements Runnable {
 				if (numBytes < 0)
 					bytesRead = is.read(writeBuffer);
 				else
-					bytesRead = is.read(writeBuffer, 0, (int) Math.min(numBytes,
-							writeBuffer.length));
+					bytesRead = is.read(writeBuffer, 0, (int) Math.min(
+							numBytes, writeBuffer.length));
 				if (bytesRead < 0)
 					break;
 			}

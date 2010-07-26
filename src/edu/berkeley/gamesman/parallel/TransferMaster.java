@@ -25,6 +25,9 @@ public final class TransferMaster {
 		final long hashes = conf.getGame().numHashes();
 		long lastForDb = 0;
 		String parentFile = args[3];
+		File parentFold = new File(parentFile);
+		if (!parentFold.exists())
+			parentFold.mkdir();
 		for (int i = 0; i < numSplits; i++) {
 			long firstForDb = lastForDb;
 			lastForDb = (i + 1) * hashes / numSplits;

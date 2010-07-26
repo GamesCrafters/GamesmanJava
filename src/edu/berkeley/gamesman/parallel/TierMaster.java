@@ -1,7 +1,9 @@
 package edu.berkeley.gamesman.parallel;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -175,13 +177,17 @@ public class TierMaster implements Runnable {
 	private SplitDatabase prevTierDb;
 	private SplitDatabase curTierDb;
 	private int tier;
-	private int finishedSlices;
+	private int finishedSlices = 0;
 	private long[] divides;
 	private int sliceNum = 0;
 	private boolean released;
+	private File tmpFile;
+	private PrintStream tmpFileOs;
+	private File curTmpFile;
+	private PrintStream curTmpFileOs;
 
 	public TierMaster(Configuration conf, String jobFile, String[] nodeNames)
-			throws ClassNotFoundException {
+			throws ClassNotFoundException, FileNotFoundException {
 		this.conf = conf;
 		user = conf.getProperty("gamesman.remote.user", null);
 		path = conf.getProperty("gamesman.remote.path");
@@ -191,6 +197,62 @@ public class TierMaster implements Runnable {
 		maxMem = (long) (conf.getLong("gamesman.memory", 100000000) * 1.2);
 		this.jobFile = jobFile;
 		dbTrack = SplitDatabase.openSplitDatabase(conf, true, true);
+		String dbUri = conf.getProperty("gamesman.db.uri");
+		tmpFile = new File(dbUri + ".tmp");
+		curTmpFile = new File(dbUri + ".cur");
+		if (tmpFile.exists()) {
+			FileInputStream fis = new FileInputStream(tmpFile);
+			Scanner scan = new Scanner(fis);
+			if (scan.hasNext())
+				tier = scan.nextInt();
+			else
+				tier = ((TierGame) conf.getGame()).numberOfTiers();
+			curTierDb = SplitDatabase.openSplitDatabase(conf, true, false);
+			String dbType = null;
+			if (scan.hasNext())
+				dbType = scan.next();
+			while (scan.hasNext()) {
+				String uri = scan.next();
+				long firstRecord = scan.nextLong();
+				long numRecords = scan.nextLong();
+				curTierDb.addDb(dbType, uri, firstRecord, numRecords);
+				dbType = scan.next();
+				if (dbType.equals("end")) {
+					dbTrack.addDatabasesFirst(curTierDb);
+					if (prevTierDb != null)
+						prevTierDb.close();
+					prevTierDb = curTierDb;
+					curTierDb = SplitDatabase.openSplitDatabase(conf, true,
+							false);
+					if (scan.hasNext())
+						tier = scan.nextInt();
+					else
+						break;
+					dbType = scan.next();
+				}
+			}
+			scan.close();
+			if (curTmpFile.exists()) {
+				fis = new FileInputStream(curTmpFile);
+				scan = new Scanner(fis);
+				while (scan.hasNext()) {
+					dbType = scan.next();
+					String uri = scan.next();
+					long firstRecord = scan.nextLong();
+					long numRecords = scan.nextLong();
+					curTierDb.insertDb(dbType, uri, firstRecord, numRecords);
+					finishedSlices++;
+				}
+				scan.close();
+			}
+		} else {
+			tier = ((TierGame) conf.getGame()).numberOfTiers();
+			curTierDb = SplitDatabase.openSplitDatabase(conf, true, false);
+		}
+		tmpFileOs = new PrintStream(new FileOutputStream(tmpFile, true), true);
+		curTmpFileOs = new PrintStream(new FileOutputStream(curTmpFile, true),
+				true);
+		tier--;
 		nodes = new NodeRunnable[nodeNames.length];
 		for (int i = 0; i < nodeNames.length; i++) {
 			nodes[i] = new NodeRunnable(nodeNames[i]);
@@ -202,6 +264,8 @@ public class TierMaster implements Runnable {
 			long numRecords) {
 		curTierDb.insertDb(RemoteDatabase.class.getName(), uri, firstRecord,
 				numRecords);
+		curTmpFileOs.println(RemoteDatabase.class.getName() + " " + uri + " "
+				+ firstRecord + " " + numRecords);
 		finishedSlices++;
 	}
 
@@ -224,6 +288,9 @@ public class TierMaster implements Runnable {
 				return failedSlices.removeFirst();
 			long firstRecord = divides[sliceNum++];
 			long numRecords = divides[sliceNum] - firstRecord;
+			while (sliceNum < divides.length - 1
+					&& curTierDb.containsDb(divides[sliceNum]))
+				sliceNum++;
 			return new Pair<Long, Long>(firstRecord, numRecords);
 		}
 	}
@@ -251,16 +318,16 @@ public class TierMaster implements Runnable {
 	public void run() {
 		TierGame g = (TierGame) conf.getGame();
 		Thread[] joinThreads = new Thread[nodes.length];
-		for (tier = g.numberOfTiers() - 1; tier >= 0; tier--) {
+		for (; tier >= 0; tier--) {
 			long start = g.hashOffsetForTier(tier);
 			long length = g.numHashesForTier(tier);
-			curTierDb = SplitDatabase.openSplitDatabase(conf, true, start,
-					length, false);
 			divides = curTierDb.splitRange(start, length, numSplits);
-			finishedSlices = 0;
-			released = false;
-			semaphore.release(divides.length - 1);
 			sliceNum = 0;
+			while (sliceNum < divides.length - 1
+					&& curTierDb.containsDb(divides[sliceNum]))
+				sliceNum++;
+			released = false;
+			semaphore.release(divides.length - 1 - finishedSlices);
 			int i = 0;
 			for (NodeRunnable nr : nodes) {
 				Thread t = new Thread(nr);
@@ -282,9 +349,22 @@ public class TierMaster implements Runnable {
 			if (prevTierDb != null)
 				prevTierDb.close();
 			prevTierDb = curTierDb;
+			finishedSlices = 0;
+			tmpFileOs.println(tier);
+			tmpFileOs.println(curTierDb.makeStream(start, length));
+			curTierDb = SplitDatabase.openSplitDatabase(conf, true, false);
+			curTmpFileOs.close();
+			try {
+				curTmpFileOs = new PrintStream(new FileOutputStream(curTmpFile,
+						false), true);
+			} catch (FileNotFoundException e) {
+				throw new Error(e);
+			}
 		}
 		if (prevTierDb != null)
 			prevTierDb.close();
 		dbTrack.close();
+		tmpFile.delete();
+		curTmpFile.delete();
 	}
 }
