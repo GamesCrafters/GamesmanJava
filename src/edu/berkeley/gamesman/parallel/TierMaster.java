@@ -58,6 +58,7 @@ public class TierMaster implements Runnable {
 	private class NodeRunnable implements Runnable {
 		private static final long WAIT_TIME = 10000L;
 		public long lastPrinted;
+		private Process p;
 		private final String name;
 		public ErrorThread et;
 
@@ -66,38 +67,42 @@ public class TierMaster implements Runnable {
 		}
 
 		public synchronized void run() {
-			try {
-				Pair<Long, Long> slice = getSlice();
-				while (slice != null) {
-					lastPrinted = System.currentTimeMillis();
-					String command = "ssh "
-							+ (user == null ? name : (user + "@" + name));
-					command += " java -cp " + path + "/bin ";
-					if (maxMem > Integer.MAX_VALUE) {
-						command += "-d64 ";
-					}
-					command += "-Xmx" + maxMem + " ";
-					command += TierSlave.class.getName() + " ";
-					command += jobFile + " " + tier;
-					final Process p = Runtime.getRuntime().exec(command);
-					InputStream es = p.getErrorStream();
-					et = new ErrorThread(es, name) {
-						@Override
-						public void error(String error) {
-							if (!hadErrors)
-								new Thread() {
-									public synchronized void run() {
-										try {
-											wait(2000);
-										} catch (InterruptedException e) {
-											e.printStackTrace();
-										}
-										p.destroy();
+			Pair<Long, Long> slice = getSlice();
+			while (slice != null) {
+				lastPrinted = System.currentTimeMillis();
+				String command = "ssh "
+						+ (user == null ? name : (user + "@" + name));
+				command += " java -cp " + path + "/bin ";
+				if (maxMem > Integer.MAX_VALUE) {
+					command += "-d64 ";
+				}
+				command += "-Xmx" + maxMem + " ";
+				command += TierSlave.class.getName() + " ";
+				command += jobFile + " " + tier;
+				boolean onFinish = false;
+				p = null;
+				et = new ErrorThread(null, name) {
+					@Override
+					public void error(String error) {
+						if (!hadErrors)
+							new Thread() {
+								public synchronized void run() {
+									try {
+										wait(2000);
+									} catch (InterruptedException e) {
+										e.printStackTrace();
 									}
-								}.start();
-							super.error(error);
-						}
-					};
+									if (p != null)
+										p.destroy();
+								}
+							}.start();
+						super.error(error);
+					}
+				};
+				try {
+					p = Runtime.getRuntime().exec(command);
+					InputStream es = p.getErrorStream();
+					et.setStream(es);
 					et.start();
 					OutputStream os = p.getOutputStream();
 					InputStream is = p.getInputStream();
@@ -106,28 +111,23 @@ public class TierMaster implements Runnable {
 					PrintStream ps = new PrintStream(os, true);
 					Scanner scan = new Scanner(is);
 					String next = scan.next();
-					try {
-						while (!next.equals("finished:")) {
-							if (et.hadErrors) {
-								break;
-							}
-							lastPrinted = System.currentTimeMillis();
-							if (next.equals("fetch:")) {
-								long firstRecord = scan.nextLong();
-								long numRecords = scan.nextLong();
-								ps.println(prevTierDb.makeStream(firstRecord,
-										numRecords));
-							} else
-								System.out.println(name + ": " + next + " "
-										+ scan.nextLine());
-							if (et.hadErrors) {
-								break;
-							}
-							next = scan.next();
+					while (!next.equals("finished:")) {
+						if (et.hadErrors) {
+							break;
 						}
-					} catch (Exception e) {
-						if (!et.hadErrors)
-							et.error("local " + e.getStackTrace());
+						lastPrinted = System.currentTimeMillis();
+						if (next.equals("fetch:")) {
+							long firstRecord = scan.nextLong();
+							long numRecords = scan.nextLong();
+							ps.println(prevTierDb.makeStream(firstRecord,
+									numRecords));
+						} else
+							System.out.println(name + ": " + next + " "
+									+ scan.nextLine());
+						if (et.hadErrors) {
+							break;
+						}
+						next = scan.next();
 					}
 					if (et.hadErrors) {
 						try {
@@ -150,16 +150,20 @@ public class TierMaster implements Runnable {
 							sliceFailed(slice);
 						} else {
 							et = null;
+							onFinish = true;
 							finishDb(
 									(user == null ? name : (user + "@" + name))
 											+ ":" + path + ":" + filePath,
 									firstRecord, numRecords);
 						}
 					}
-					slice = getSlice();
+				} catch (Exception e) {
+					if (onFinish)
+						throw new Error(e);
+					else if (et != null && !et.hadErrors)
+						et.error("local " + e.getStackTrace());
 				}
-			} catch (IOException e) {
-				e.printStackTrace();
+				slice = getSlice();
 			}
 		}
 	}

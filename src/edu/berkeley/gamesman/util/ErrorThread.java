@@ -8,7 +8,7 @@ import java.util.Scanner;
  * 
  */
 public class ErrorThread extends Thread {
-	private final Scanner myErrors;
+	private Scanner myErrors;
 	public boolean hadErrors = false;
 	private final String extra;
 
@@ -17,7 +17,8 @@ public class ErrorThread extends Thread {
 	}
 
 	public ErrorThread(InputStream errorStream, String extra) {
-		myErrors = new Scanner(errorStream);
+		if (errorStream != null)
+			myErrors = new Scanner(errorStream);
 		this.extra = extra;
 		setDaemon(true);
 	}
@@ -31,5 +32,9 @@ public class ErrorThread extends Thread {
 	public void error(String error) {
 		System.err.println((extra == null ? "" : (extra + ": ")) + error);
 		hadErrors = true;
+	}
+
+	public void setStream(InputStream es) {
+		myErrors = new Scanner(es);
 	}
 }
