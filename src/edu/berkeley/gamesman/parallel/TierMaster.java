@@ -157,11 +157,13 @@ public class TierMaster implements Runnable {
 									firstRecord, numRecords);
 						}
 					}
-				} catch (Exception e) {
+				} catch (Throwable t) {
 					if (onFinish)
-						throw new Error(e);
-					else if (et != null && !et.hadErrors)
-						et.error("local " + e.getStackTrace());
+						throw new Error(t);
+					else if (!et.hadErrors) {
+						et.error("local " + t.getStackTrace());
+						sliceFailed(slice);
+					}
 				}
 				slice = getSlice();
 			}
