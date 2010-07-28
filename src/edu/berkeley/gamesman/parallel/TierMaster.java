@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -130,24 +129,24 @@ public class TierMaster implements Runnable {
 						next = scan.next();
 					}
 					if (et.hadErrors) {
+						sliceFailed(slice);
 						try {
 							wait(WAIT_TIME);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}
-						sliceFailed(slice);
 					} else {
 						lastPrinted = System.currentTimeMillis();
 						String filePath = scan.next();
 						long firstRecord = scan.nextLong();
 						long numRecords = scan.nextLong();
 						if (et.hadErrors) {
+							sliceFailed(slice);
 							try {
 								wait(WAIT_TIME);
 							} catch (InterruptedException e) {
 								e.printStackTrace();
 							}
-							sliceFailed(slice);
 						} else {
 							et = null;
 							onFinish = true;
@@ -158,11 +157,17 @@ public class TierMaster implements Runnable {
 						}
 					}
 				} catch (Throwable t) {
-					if (onFinish)
-						throw new Error(t);
-					else if (!et.hadErrors) {
+					if (onFinish) {
+						t.printStackTrace();
+						System.exit(1);
+					} else if (!et.hadErrors) {
 						et.error("local " + t.getStackTrace());
 						sliceFailed(slice);
+						try {
+							wait(WAIT_TIME);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
 					}
 				}
 				slice = getSlice();
