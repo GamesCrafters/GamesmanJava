@@ -121,7 +121,7 @@ public class TierMaster implements Runnable {
 							ps.println(prevTierDb.makeStream(firstRecord,
 									numRecords));
 						} else
-							System.out.println(name + ": " + next + " "
+							System.out.println(name + ": " + next
 									+ scan.nextLine());
 						if (et.hadErrors) {
 							break;
