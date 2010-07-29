@@ -69,7 +69,7 @@ public class TierMaster implements Runnable {
 			Pair<Long, Long> slice = getSlice();
 			while (slice != null) {
 				lastPrinted = System.currentTimeMillis();
-				String command = "ssh "
+				String command = "ssh -q "
 						+ (user == null ? name : (user + "@" + name));
 				command += " java -cp " + path + "/bin ";
 				if (maxMem > Integer.MAX_VALUE) {

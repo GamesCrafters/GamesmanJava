@@ -75,7 +75,7 @@ public class RemoteDatabase extends Database {
 			command = new StringBuilder(maxCommandLen);
 		else
 			command = new StringBuilder();
-		command.append("ssh ");
+		command.append("ssh -q ");
 		if (user != null) {
 			command.append(user);
 			command.append("@");
@@ -173,7 +173,7 @@ public class RemoteDatabase extends Database {
 			String user, String host, String file, boolean withConf) {
 		try {
 			int numBytes = withConf ? 22 : 18;
-			String commandString = "ssh "
+			String commandString = "ssh -q "
 					+ (user == null ? host : (user + "@" + host)) + " dd if="
 					+ file + " count=";
 			byte[] headerBytes = new byte[numBytes];
