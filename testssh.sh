@@ -1,42 +1,60 @@
-echo icluster2
-ssh -q icluster2.eecs.berkeley.edu echo "Howdy"
-echo icluster3
-ssh -q icluster3.eecs.berkeley.edu echo "Howdy"
-echo icluster4
-ssh -q icluster4.eecs.berkeley.edu echo "Howdy"
-echo icluster5
-ssh -q icluster5.eecs.berkeley.edu echo "Howdy"
-echo icluster6
-ssh -q icluster6.eecs.berkeley.edu echo "Howdy"
-echo icluster7
-ssh -q icluster7.eecs.berkeley.edu echo "Howdy"
-echo icluster8
-ssh -q icluster8.eecs.berkeley.edu echo "Howdy"
-echo icluster9
-ssh -q icluster9.eecs.berkeley.edu echo "Howdy"
-echo icluster10
-ssh -q icluster10.eecs.berkeley.edu echo "Howdy"
-echo icluster11
-ssh -q icluster11.eecs.berkeley.edu echo "Howdy"
-echo icluster12
-ssh -q icluster12.eecs.berkeley.edu echo "Howdy"
-echo icluster13
-ssh -q icluster13.eecs.berkeley.edu echo "Howdy"
-echo icluster14
-ssh -q icluster14.eecs.berkeley.edu echo "Howdy"
-echo icluster15
-ssh -q icluster15.eecs.berkeley.edu echo "Howdy"
-echo icluster16
-ssh -q icluster16.eecs.berkeley.edu echo "Howdy"
-echo icluster17
-ssh -q icluster17.eecs.berkeley.edu echo "Howdy"
-echo icluster18
-ssh -q icluster18.eecs.berkeley.edu echo "Howdy"
-echo icluster19
-ssh -q icluster19.eecs.berkeley.edu echo "Howdy"
-echo icluster20
-ssh -q icluster20.eecs.berkeley.edu echo "Howdy"
-echo icluster21
-ssh -q icluster21.eecs.berkeley.edu echo "Howdy"
-echo icluster22
-ssh -q icluster22.eecs.berkeley.edu echo "Howdy"
+echo akane
+ssh akane.cs.berkeley.edu echo "Howdy"
+echo arlet
+ssh arlet.cs.berkeley.edu echo "Howdy"
+echo barry
+ssh barry.cs.berkeley.edu echo "Howdy"
+echo bonza
+ssh bonza.cs.berkeley.edu echo "Howdy"
+echo braeburn
+ssh braeburn.cs.berkeley.edu echo "Howdy"
+echo crispin
+ssh crispin.cs.berkeley.edu echo "Howdy"
+echo davey
+ssh davey.cs.berkeley.edu echo "Howdy"
+echo delicious
+ssh delicious.cs.berkeley.edu echo "Howdy"
+echo dulcet
+ssh dulcet.cs.berkeley.edu echo "Howdy"
+echo empress
+ssh empress.cs.berkeley.edu echo "Howdy"
+echo fiesta
+ssh fiesta.cs.berkeley.edu echo "Howdy"
+echo firmgold
+ssh firmgold.cs.berkeley.edu echo "Howdy"
+echo freyburg
+ssh freyburg.cs.berkeley.edu echo "Howdy"
+echo fuji
+ssh fuji.cs.berkeley.edu echo "Howdy"
+echo geneva
+ssh geneva.cs.berkeley.edu echo "Howdy"
+echo gilpin
+ssh gilpin.cs.berkeley.edu echo "Howdy"
+echo grove
+ssh grove.cs.berkeley.edu echo "Howdy"
+echo haas
+ssh haas.cs.berkeley.edu echo "Howdy"
+echo hazen
+ssh hazen.cs.berkeley.edu echo "Howdy"
+echo liberty
+ssh liberty.cs.berkeley.edu echo "Howdy"
+echo mcintosh
+ssh mcintosh.cs.berkeley.edu echo "Howdy"
+echo mio
+ssh mio.cs.berkeley.edu echo "Howdy"
+echo orin
+ssh orin.cs.berkeley.edu echo "Howdy"
+echo priam
+ssh priam.cs.berkeley.edu echo "Howdy"
+echo shay
+ssh shay.cs.berkeley.edu echo "Howdy"
+echo taylor
+ssh taylor.cs.berkeley.edu echo "Howdy"
+echo vand
+ssh vand.cs.berkeley.edu echo "Howdy"
+echo viking
+ssh viking.cs.berkeley.edu echo "Howdy"
+echo winesap
+ssh winesap.cs.berkeley.edu echo "Howdy"
+echo york
+ssh york.cs.berkeley.edu echo "Howdy"

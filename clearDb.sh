@@ -1,42 +1,60 @@
-echo icluster2
-ssh icluster2.eecs.berkeley.edu rm -rf /scratch/db76_fold
-echo icluster3
-ssh icluster3.eecs.berkeley.edu rm -rf /scratch/db76_fold
-echo icluster4
-ssh icluster4.eecs.berkeley.edu rm -rf /scratch/db76_fold
-echo icluster5
-ssh icluster5.eecs.berkeley.edu rm -rf /scratch/db76_fold
-echo icluster6
-ssh icluster6.eecs.berkeley.edu rm -rf /scratch/db76_fold
-echo icluster7
-ssh icluster7.eecs.berkeley.edu rm -rf /scratch/db76_fold
-echo icluster8
-ssh icluster8.eecs.berkeley.edu rm -rf /scratch/db76_fold
-echo icluster9
-ssh icluster9.eecs.berkeley.edu rm -rf /scratch/db76_fold
-echo icluster10
-ssh icluster10.eecs.berkeley.edu rm -rf /scratch/db76_fold
-echo icluster11
-ssh icluster11.eecs.berkeley.edu rm -rf /scratch/db76_fold
-echo icluster12
-ssh icluster12.eecs.berkeley.edu rm -rf /scratch/db76_fold
-echo icluster13
-ssh icluster13.eecs.berkeley.edu rm -rf /scratch/db76_fold
-echo icluster14
-ssh icluster14.eecs.berkeley.edu rm -rf /scratch/db76_fold
-echo icluster15
-ssh icluster15.eecs.berkeley.edu rm -rf /scratch/db76_fold
-echo icluster16
-ssh icluster16.eecs.berkeley.edu rm -rf /scratch/db76_fold
-echo icluster17
-ssh icluster17.eecs.berkeley.edu rm -rf /scratch/db76_fold
-echo icluster18
-ssh icluster18.eecs.berkeley.edu rm -rf /scratch/db76_fold
-echo icluster19
-ssh icluster19.eecs.berkeley.edu rm -rf /scratch/db76_fold
-echo icluster20
-ssh icluster20.eecs.berkeley.edu rm -rf /scratch/db76_fold
-echo icluster21
-ssh icluster21.eecs.berkeley.edu rm -rf /scratch/db76_fold
-echo icluster22
-ssh icluster22.eecs.berkeley.edu rm -rf /scratch/db76_fold
+echo akane
+ssh akane.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo arlet
+ssh arlet.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo barry
+ssh barry.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo bonza
+ssh bonza.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo braeburn
+ssh braeburn.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo crispin
+ssh crispin.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo davey
+ssh davey.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo delicious
+ssh delicious.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo dulcet
+ssh dulcet.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo empress
+ssh empress.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo fiesta
+ssh fiesta.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo firmgold
+ssh firmgold.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo freyburg
+ssh freyburg.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo fuji
+ssh fuji.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo geneva
+ssh geneva.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo gilpin
+ssh gilpin.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo grove
+ssh grove.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo haas
+ssh haas.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo hazen
+ssh hazen.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo liberty
+ssh liberty.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo mcintosh
+ssh mcintosh.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo mio
+ssh mio.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo orin
+ssh orin.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo priam
+ssh priam.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo shay
+ssh shay.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo taylor
+ssh taylor.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo vand
+ssh vand.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo viking
+ssh viking.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo winesap
+ssh winesap.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
+echo york
+ssh york.cs.berkeley.edu rm -r /var/folders/zz/zzzivhrRnAmviuee+++UUE++662/db76_fold
