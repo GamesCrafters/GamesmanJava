@@ -1386,8 +1386,8 @@ public abstract class Database {
 				recordsPerGroup, minGroup);
 	}
 
-	public final long requiredMem(long numHashes) {
-		return toByte(numHashes);
+	public final long requiredMem(long firstHash, long numHashes) {
+		return numBytes(firstHash, numHashes);
 	}
 
 	public static Database openDatabase(String uri) {
@@ -1628,5 +1628,9 @@ public abstract class Database {
 		else
 			return new DatabaseHeader(dbFirstRecord, dbNumRecords,
 					recordGroupByteBits);
+	}
+
+	public final long recordsForMem(long firstHash, int availableMemory) {
+		return toFirstRecord(toByte(firstHash) + availableMemory) - firstHash;
 	}
 }

@@ -156,12 +156,17 @@ public class MemoryDatabase extends DatabaseWrapper {
 		firstNum = toNum(firstRecord);
 		numBytes = (int) (lastByte(firstRecord + numRecords) - firstByte);
 		lastNum = toNum(firstRecord + numRecords);
-		if (memoryStorage == null || memoryStorage.length < numBytes)
-			memoryStorage = new byte[numBytes];
+		ensureByteSize(numBytes);
 		if (backChanges) {
 			db.getRecordsAsBytes(myHandle, firstByte, firstNum, memoryStorage,
 					0, numBytes, lastNum, true);
 		}
+	}
+
+	// Does not preserve stored records.
+	public void ensureByteSize(int numBytes) {
+		if (memoryStorage == null || memoryStorage.length < numBytes)
+			memoryStorage = new byte[numBytes];
 	}
 
 	@Override

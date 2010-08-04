@@ -15,6 +15,7 @@ import edu.berkeley.gamesman.util.qll.Pool;
 public class C4CachedSolver extends TierSolver {
 	private final Pool<MemoryDatabase> readPagePool;
 	private final Pool<MemoryDatabase> writePagePool;
+	private int maxPage;
 	private long times[] = new long[8];
 
 	public C4CachedSolver(final Configuration conf) {
@@ -22,10 +23,14 @@ public class C4CachedSolver extends TierSolver {
 		readPagePool = new Pool<MemoryDatabase>(new Factory<MemoryDatabase>() {
 
 			public MemoryDatabase newObject() {
-				return new MemoryDatabase(readDb, null, conf, false, true);
+				MemoryDatabase md = new MemoryDatabase(readDb, null, conf,
+						false, true);
+				reset(md);
+				return md;
 			}
 
 			public void reset(MemoryDatabase t) {
+			t.ensureByteSize(maxPage);
 			}
 		});
 		writePagePool = new Pool<MemoryDatabase>(new Factory<MemoryDatabase>() {
@@ -55,6 +60,8 @@ public class C4CachedSolver extends TierSolver {
 		} else
 			firstNano = 0;
 		Connect4 game = (Connect4) conf.getGame();
+		maxPage = (int) ((maxMem / numThreads - writeDb.requiredMem(start,
+				hashes)) / game.maxChildren());
 		long current = start;
 		long stepNum = current % STEP_SIZE;
 		Record[] vals = new Record[game.maxChildren()];
@@ -80,7 +87,6 @@ public class C4CachedSolver extends TierSolver {
 		MemoryDatabase writePage = writePagePool.get();
 		writePage.setRange(start, (int) hashes);
 		DatabaseHandle writePageDh = writePage.getHandle();
-		int maxPage = (int) (maxMem / (numThreads * game.maxChildren()));
 
 		TierState curState = game.hashToState(start);
 		game.setState(curState);
@@ -119,13 +125,15 @@ public class C4CachedSolver extends TierSolver {
 							readPages[col]
 									.setRange(childHash, (int) Math.min(
 											lastChildren[col] + 1 - childHash,
-											maxPage));
+											readDb.recordsForMem(childHash,
+													maxPage)));
 						} else {
 							readPages[col] = readPagePool.get();
 							readPages[col]
 									.setRange(childHash, (int) Math.min(
 											lastChildren[col] + 1 - childHash,
-											maxPage));
+											readDb.recordsForMem(childHash,
+													maxPage)));
 							readHandles[col] = readPages[col].getHandle();
 						}
 					}

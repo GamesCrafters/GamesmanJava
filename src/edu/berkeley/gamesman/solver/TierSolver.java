@@ -27,19 +27,15 @@ public class TierSolver extends Solver {
 
 	protected static final double SAFETY_MARGIN = 2.0;
 
-	private boolean strictSafety;
-
-	protected boolean strainingMemory;
-
 	private int splits;
 
 	private int count;
 
-	protected int numThreads;
+	protected final int numThreads;
 
-	private int minSplit;
+	private final int minSplit;
 
-	protected long maxMem;
+	protected final long maxMem;
 
 	private long[] starts;
 
@@ -170,7 +166,6 @@ public class TierSolver extends Solver {
 	@Override
 	public WorkUnit prepareSolve(Configuration inconf) {
 		String msf = inconf.getProperty("gamesman.minSolvedFile", null);
-		strictSafety = inconf.getBoolean("gamesman.solver.strictMemory", false);
 		if (msf == null)
 			tier = ((TierGame) inconf.getGame()).numberOfTiers();
 		else {
@@ -232,14 +227,10 @@ public class TierSolver extends Solver {
 				TierGame game = (TierGame) conf.getGame();
 				long fullStart = game.hashOffsetForTier(tier);
 				long fullSize = game.numHashesForTier(tier);
-				long neededMem = writeDb.requiredMem(game
-						.numHashesForTier(tier))
-						+ (tier < (game.numberOfTiers() - 1) ? readDb
-								.requiredMem(game.numHashesForTier(tier + 1))
-								: 0);
-				splits = Math.max(minSplit,
-						(int) (neededMem * numThreads / maxMem));
-				strainingMemory = strictSafety && splits > minSplit;
+				splits = Math.max(minSplit, numSplits(readDb == null ? 0
+						: readDb.requiredMem(game.hashOffsetForTier(tier + 1),
+								game.numHashesForTier(tier + 1)), writeDb
+						.requiredMem(fullStart, fullSize), maxMem));
 				starts = writeDb.splitRange(fullStart, fullSize, splits,
 						minSplitSize);
 			}
@@ -251,6 +242,11 @@ public class TierSolver extends Solver {
 	private volatile boolean needs2Sync = false;
 
 	private volatile boolean needs2Reset = false;
+
+	private int numSplits(long lastTierSize, long thisTierSize, long maxMem) {
+		return (int) ((thisTierSize + lastTierSize
+				* conf.getGame().maxChildren()) / maxMem);
+	}
 
 	protected Pair<Long, Long> nextSlice(Configuration conf) {
 		while (true) {
@@ -404,26 +400,27 @@ public class TierSolver extends Solver {
 	 * @param tier
 	 *            The tier
 	 * @param startHash
-	 *            The tier to solve
-	 * @param endHash
-	 *            The range in the given tier to solve
+	 *            The first hash in the range to solve
+	 * @param numHashes
+	 *            The number of hashes to solve
 	 * @return A WorkUnit for solving solveSpace
 	 */
 	public WorkUnit prepareSolve(Configuration conf, int tier, long startHash,
 			long numHashes) {
-		strictSafety = conf.getBoolean("gamesman.solver.strictMemory", false);
 		this.tier = tier;
 		updater = new TierSolverUpdater(numHashes);
 		parallelSolving = true;
-		long neededMem = writeDb.requiredMem(numHashes);
 		TierGame game = (TierGame) conf.getGame();
+		double tierFrac = 0D;
 		if (tier < game.numberOfTiers() - 1) {
-			double tierFrac = ((double) game.numHashesForTier(tier + 1))
+			tierFrac = ((double) game.numHashesForTier(tier + 1))
 					/ game.numHashesForTier(tier);
-			neededMem += readDb.requiredMem((long) (numHashes * tierFrac));
 		}
-		splits = Math.max(minSplit, (int) (neededMem * numThreads / maxMem));
-		strainingMemory = strictSafety && splits > minSplit;
+		long writeRequired = writeDb.requiredMem(startHash, numHashes);
+		splits = Math.max(minSplit, numSplits(
+				tier == game.numberOfTiers() - 1 ? 0
+						: (long) (tierFrac * writeRequired), writeRequired,
+				maxMem));
 		starts = writeDb.splitRange(startHash, numHashes, splits, minSplitSize);
 		return new TierSolverWorkUnit(conf);
 	}
