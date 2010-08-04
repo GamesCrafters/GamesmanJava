@@ -7,13 +7,11 @@ import java.util.zip.GZIPInputStream;
 
 public final class ZipChunkInputStream extends FilterInputStream {
 	private final ChunkInputStream cis;
-	private final int entrySize;
 
-	public ZipChunkInputStream(InputStream in, int entrySize) throws IOException {
+	public ZipChunkInputStream(InputStream in) throws IOException {
 		super(in);
-		this.entrySize = entrySize;
 		cis = new ChunkInputStream(in);
-		this.in = new GZIPInputStream(cis, entrySize);
+		this.in = new GZIPInputStream(cis);
 	}
 
 	@Override
@@ -21,7 +19,7 @@ public final class ZipChunkInputStream extends FilterInputStream {
 		int bytesRead = in.read(arr, off, len);
 		if (bytesRead < 0) {
 			cis.nextChunk();
-			in = new GZIPInputStream(cis, entrySize);
+			in = new GZIPInputStream(cis);
 			bytesRead = in.read(arr, off, len);
 		}
 		return bytesRead;
@@ -32,7 +30,7 @@ public final class ZipChunkInputStream extends FilterInputStream {
 		int byteRead = in.read();
 		if (byteRead < 0) {
 			cis.nextChunk();
-			in = new GZIPInputStream(cis, entrySize);
+			in = new GZIPInputStream(cis);
 			byteRead = in.read();
 		}
 		return byteRead;
@@ -43,7 +41,7 @@ public final class ZipChunkInputStream extends FilterInputStream {
 		long bytesSkipped = in.skip(n);
 		if (bytesSkipped < 0) {
 			cis.nextChunk();
-			in = new GZIPInputStream(cis, entrySize);
+			in = new GZIPInputStream(cis);
 			bytesSkipped = in.skip(n);
 		}
 		return bytesSkipped;

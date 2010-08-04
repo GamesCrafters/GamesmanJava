@@ -466,7 +466,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			fis.getChannel().position(gzh.filePos);
 			gzh.cwis = new ChunkWrapInputStream(fis, entryPoints,
 					(int) (thisEntry - firstEntry));
-			gzh.zcis = new ZipChunkInputStream(gzh.cwis, entrySize);
+			gzh.zcis = new ZipChunkInputStream(gzh.cwis);
 			long curLoc;
 			if (thisEntry == firstEntry)
 				curLoc = firstByteIndex;

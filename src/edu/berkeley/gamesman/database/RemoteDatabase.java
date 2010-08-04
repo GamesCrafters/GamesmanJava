@@ -1,7 +1,6 @@
 package edu.berkeley.gamesman.database;
 
 import java.io.ByteArrayInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,7 +17,6 @@ public class RemoteDatabase extends Database {
 	private final String user, server, confFile, path, remoteFile;
 	private final boolean readZipped;
 	private int maxCommandLen = -1;
-	private final int entrySize;
 
 	public RemoteDatabase(String uri, Configuration conf, boolean solve,
 			long firstRecord, long numRecords, DatabaseHeader header) {
@@ -44,10 +42,6 @@ public class RemoteDatabase extends Database {
 		if (!remoteFile.startsWith("/") && !remoteFile.startsWith(path))
 			remoteFile = path + "/" + remoteFile;
 		readZipped = conf.getBoolean("gamesman.remote.zipped", false);
-		if (readZipped)
-			entrySize = conf.getInteger("gamesman.db.zip.entryKB", 64) << 10;
-		else
-			entrySize = -1;
 		this.remoteFile = remoteFile;
 		String confFile = conf.getProperty("gamesman.remote.job", null);
 		if (confFile != null && !confFile.startsWith("/")
@@ -117,7 +111,7 @@ public class RemoteDatabase extends Database {
 					skipNum <<= 8;
 					skipNum |= rh.is.read() & 255;
 				}
-				rh.is = new ZipChunkInputStream(rh.is, entrySize);
+				rh.is = new ZipChunkInputStream(rh.is);
 				Database.skipFully(rh.is, skipNum);
 			}
 		} catch (IOException e) {
