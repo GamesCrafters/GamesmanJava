@@ -245,7 +245,8 @@ public class TierSolver extends Solver {
 
 	private int numSplits(long lastTierSize, long thisTierSize, long maxMem) {
 		return (int) ((thisTierSize + lastTierSize
-				* conf.getGame().maxChildren()) / maxMem);
+				* conf.getGame().maxChildren())
+				* numThreads / maxMem);
 	}
 
 	protected Pair<Long, Long> nextSlice(Configuration conf) {
