@@ -286,8 +286,9 @@ public class TierSolver extends Solver {
 					Pair<Long, Long> slice = new Pair<Long, Long>(
 							starts[count], starts[count + 1] - starts[count]);
 					assert Util.debug(DebugFacility.THREADING, "Solving "
-							+ (count + 1) + "/" + splits + " in tier " + tier
-							+ "; " + starts[count] + "-" + starts[count + 1]);
+							+ (count + 1) + "/" + (starts.length - 1)
+							+ " in tier " + tier + "; " + starts[count] + "-"
+							+ starts[count + 1]);
 					if (count < starts.length - 2) {
 						++count;
 					} else {

@@ -558,6 +558,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			if (numBytes > 0)
 				numBytes -= bytesRead;
 		}
+		System.out.println("Entries put: " + (thisEntry - firstEntry));
 	}
 
 	public void putZippedBytes(ChunkInputStream is) throws IOException {

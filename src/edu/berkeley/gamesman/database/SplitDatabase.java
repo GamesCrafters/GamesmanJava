@@ -362,7 +362,7 @@ public class SplitDatabase extends Database {
 		return openSplitDatabase(uri, conf, solve, 0, -1, store);
 	}
 
-	private static SplitDatabase openSplitDatabase(String uri,
+	public static SplitDatabase openSplitDatabase(String uri,
 			Configuration conf, boolean solve, long firstRecord,
 			long numRecords, boolean store) {
 		return new SplitDatabase(uri, conf, solve, firstRecord, numRecords,
