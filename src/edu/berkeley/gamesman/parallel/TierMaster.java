@@ -44,6 +44,7 @@ public class TierMaster implements Runnable {
 									.error("Connection timed out after "
 											+ (System.currentTimeMillis() - myRunnable.lastPrinted)
 											/ 1000 + " seconds");
+							myRunnable.p.destroy();
 						} else
 							lastPrinted = nextPrinted;
 					}
