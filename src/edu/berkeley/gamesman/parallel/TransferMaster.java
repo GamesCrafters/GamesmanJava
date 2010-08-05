@@ -51,7 +51,6 @@ public final class TransferMaster implements Runnable {
 		private PrintStream ps;
 		private InputStream in;
 		private ErrorThread et = null;
-		private boolean prepareCalled = false;
 
 		public TransferProcess(String uri, long firstRecord, long numRecords) {
 			String[] hostFile = uri.split(":");
@@ -73,10 +72,7 @@ public final class TransferMaster implements Runnable {
 			this.numRecords = numRecords;
 		}
 
-		public void prepare() {
-			if (prepareCalled)
-				throw new Error("Called twice");
-			prepareCalled = true;
+		public synchronized void prepare() {
 			String command = "ssh "
 					+ (user == null ? host : (user + "@" + host));
 			command += " java -cp " + path + File.separator + "bin ";
@@ -120,10 +116,8 @@ public final class TransferMaster implements Runnable {
 						skip = true;
 					ready.release();
 				} catch (Throwable t) {
-					throw new Error(t);
-				}
-				if (et.hadErrors) {
-					System.err.println("Had errors");
+					et.error(t.getMessage());
+					t.printStackTrace();
 				}
 			} while (et.hadErrors);
 		}
