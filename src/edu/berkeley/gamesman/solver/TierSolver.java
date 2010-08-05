@@ -21,19 +21,17 @@ public class TierSolver extends Solver {
 		super(conf);
 		maxMem = conf.getLong("gamesman.memory", 1 << 25);
 		numThreads = conf.getInteger("gamesman.threads", 1);
-		minSplit = conf.getInteger("gamesman.split", numThreads);
+		minSplits = conf.getInteger("gamesman.split", numThreads);
 		minSplitSize = conf.getInteger("gamesman.minimum.split", 1024);
 	}
 
-	protected static final double SAFETY_MARGIN = 2.0;
-
-	private int splits;
+	protected int splits;
 
 	private int count;
 
 	protected final int numThreads;
 
-	private final int minSplit;
+	protected final int minSplits;
 
 	protected final long maxMem;
 
@@ -227,7 +225,7 @@ public class TierSolver extends Solver {
 				TierGame game = (TierGame) conf.getGame();
 				long fullStart = game.hashOffsetForTier(tier);
 				long fullSize = game.numHashesForTier(tier);
-				splits = Math.max(minSplit, numSplits(readDb == null ? 0
+				splits = Math.max(minSplits, numSplits(readDb == null ? 0
 						: readDb.requiredMem(game.hashOffsetForTier(tier + 1),
 								game.numHashesForTier(tier + 1)), writeDb
 						.requiredMem(fullStart, fullSize), maxMem));
@@ -419,7 +417,7 @@ public class TierSolver extends Solver {
 					/ game.numHashesForTier(tier);
 		}
 		long writeRequired = writeDb.requiredMem(startHash, numHashes);
-		splits = Math.max(minSplit, numSplits(
+		splits = Math.max(minSplits, numSplits(
 				tier == game.numberOfTiers() - 1 ? 0
 						: (long) (tierFrac * writeRequired), writeRequired,
 				maxMem));

@@ -30,7 +30,8 @@ public class C4CachedSolver extends TierSolver {
 			}
 
 			public void reset(MemoryDatabase t) {
-			t.ensureByteSize(maxPage);
+				if (splits > minSplits)
+					t.ensureByteSize(maxPage);
 			}
 		});
 		writePagePool = new Pool<MemoryDatabase>(new Factory<MemoryDatabase>() {
