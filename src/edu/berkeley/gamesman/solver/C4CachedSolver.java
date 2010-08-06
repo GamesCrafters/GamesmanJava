@@ -15,6 +15,7 @@ import edu.berkeley.gamesman.util.qll.Pool;
 public class C4CachedSolver extends TierSolver {
 	private final Pool<MemoryDatabase> readPagePool;
 	private final Pool<MemoryDatabase> writePagePool;
+	private long pageBytesUsed;
 	private int maxPage;
 	private long times[] = new long[8];
 
@@ -31,7 +32,7 @@ public class C4CachedSolver extends TierSolver {
 
 			public void reset(MemoryDatabase t) {
 				if (splits > minSplits)
-					t.ensureByteSize(maxPage,10);
+					checkMemory(t.ensureByteSize(maxPage));
 			}
 		});
 		writePagePool = new Pool<MemoryDatabase>(new Factory<MemoryDatabase>() {
@@ -43,6 +44,18 @@ public class C4CachedSolver extends TierSolver {
 			public void reset(MemoryDatabase t) {
 			}
 		});
+	}
+
+	public synchronized void checkMemory(int addOn) {
+		pageBytesUsed += addOn;
+		System.gc();
+		Runtime r = Runtime.getRuntime();
+		if (r.maxMemory() - r.totalMemory() + r.freeMemory() < maxMem + 1024
+				- pageBytesUsed)
+			throw new Error("Not enough memory: Max memory = " + maxMem
+					+ "; Page bytes = " + pageBytesUsed
+					+ "; Remaining memory = "
+					+ (r.maxMemory() - r.totalMemory() + r.freeMemory()));
 	}
 
 	@Override
@@ -86,7 +99,7 @@ public class C4CachedSolver extends TierSolver {
 				lastChildren[i] = game.stateToHash(children[i]);
 		}
 		MemoryDatabase writePage = writePagePool.get();
-		writePage.setRange(start, (int) hashes);
+		checkMemory(writePage.setRange(start, (int) hashes));
 		DatabaseHandle writePageDh = writePage.getHandle();
 
 		TierState curState = game.hashToState(start);
@@ -123,18 +136,16 @@ public class C4CachedSolver extends TierSolver {
 							|| !readPages[col].containsRecord(childHash)) {
 						if (readPages[col] != null) {
 							readPages[col].flush();
-							readPages[col]
-									.setRange(childHash, (int) Math.min(
-											lastChildren[col] + 1 - childHash,
-											readDb.recordsForMem(childHash,
-													maxPage)));
+							checkMemory(readPages[col].setRange(childHash,
+									(int) Math.min(lastChildren[col] + 1
+											- childHash, readDb.recordsForMem(
+											childHash, maxPage))));
 						} else {
 							readPages[col] = readPagePool.get();
-							readPages[col]
-									.setRange(childHash, (int) Math.min(
-											lastChildren[col] + 1 - childHash,
-											readDb.recordsForMem(childHash,
-													maxPage)));
+							checkMemory(readPages[col].setRange(childHash,
+									(int) Math.min(lastChildren[col] + 1
+											- childHash, readDb.recordsForMem(
+											childHash, maxPage))));
 							readHandles[col] = readPages[col].getHandle();
 						}
 					}
@@ -148,8 +159,8 @@ public class C4CachedSolver extends TierSolver {
 					times[3] += nano - lastNano;
 				}
 				Record newVal = game.combine(vals, 0, len);
-				writePage.putRecord(writePageDh, current, game.getRecord(
-						curState, newVal));
+				writePage.putRecord(writePageDh, current,
+						game.getRecord(curState, newVal));
 			} else if (pv == Value.IMPOSSIBLE) {
 				break;
 			} else {
@@ -163,8 +174,8 @@ public class C4CachedSolver extends TierSolver {
 				}
 				prim.remoteness = 0;
 				prim.value = pv;
-				writePage.putRecord(writePageDh, current, game.getRecord(
-						curState, prim));
+				writePage.putRecord(writePageDh, current,
+						game.getRecord(curState, prim));
 			}
 			if (debugSolver) {
 				lastNano = nano;

@@ -147,7 +147,7 @@ public class MemoryDatabase extends DatabaseWrapper {
 		toUnsignedByteArray(r, memoryStorage, (int) (byteIndex - firstByte));
 	}
 
-	public void setRange(long firstRecord, int numRecords) {
+	public int setRange(long firstRecord, int numRecords) {
 		if (!mutable)
 			throw new UnsupportedOperationException();
 		this.myFirstRecord = firstRecord;
@@ -156,21 +156,22 @@ public class MemoryDatabase extends DatabaseWrapper {
 		firstNum = toNum(firstRecord);
 		numBytes = (int) (lastByte(firstRecord + numRecords) - firstByte);
 		lastNum = toNum(firstRecord + numRecords);
-		ensureByteSize(numBytes);
+		int retVal = ensureByteSize(numBytes);
 		if (backChanges) {
 			db.getRecordsAsBytes(myHandle, firstByte, firstNum, memoryStorage,
 					0, numBytes, lastNum, true);
 		}
+		return retVal;
 	}
 
-	public void ensureByteSize(int numBytes) {
-		ensureByteSize(numBytes, 0);
-	}
-
-	// Does not preserve stored records.
-	public void ensureByteSize(int numBytes, int extraBytes) {
-		if (memoryStorage == null || memoryStorage.length < numBytes)
-			memoryStorage = new byte[numBytes + extraBytes];
+	public int ensureByteSize(int numBytes) {
+		if (memoryStorage == null || memoryStorage.length < numBytes) {
+			int retVal = numBytes
+					- (memoryStorage == null ? 0 : memoryStorage.length);
+			memoryStorage = new byte[numBytes];
+			return retVal;
+		} else
+			return 0;
 	}
 
 	@Override
