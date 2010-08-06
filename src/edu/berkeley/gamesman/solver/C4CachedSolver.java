@@ -15,7 +15,6 @@ import edu.berkeley.gamesman.util.qll.Pool;
 public class C4CachedSolver extends TierSolver {
 	private final Pool<MemoryDatabase> readPagePool;
 	private final Pool<MemoryDatabase> writePagePool;
-	private long pageBytesUsed;
 	private int maxPage;
 	private long times[] = new long[8];
 
@@ -46,22 +45,11 @@ public class C4CachedSolver extends TierSolver {
 		});
 	}
 
-	public synchronized void checkMemory(int addOn) {
-		pageBytesUsed += addOn;
-		System.gc();
-		Runtime r = Runtime.getRuntime();
-		if (r.maxMemory() - r.totalMemory() + r.freeMemory() < maxMem + 1024
-				- pageBytesUsed)
-			throw new Error("Not enough memory: Max memory = " + maxMem
-					+ "; Page bytes = " + pageBytesUsed
-					+ "; Remaining memory = "
-					+ (r.maxMemory() - r.totalMemory() + r.freeMemory()));
-	}
-
 	@Override
 	protected void solvePartialTier(Configuration conf, long start,
 			long hashes, TierSolverUpdater t, DatabaseHandle readDh,
 			DatabaseHandle writeDh) {
+		checkMemory();
 		final long firstNano;
 		long nano = 0;
 		final boolean debugSolver = Util.debug(DebugFacility.SOLVER);
