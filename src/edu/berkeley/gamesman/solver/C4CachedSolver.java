@@ -79,6 +79,7 @@ public class C4CachedSolver extends TierSolver {
 		long[] lastChildren = null;
 		checkMemory();
 		if (tier < game.numberOfTiers() - 1) {
+			checkMemory();
 			readPages = new MemoryDatabase[game.maxChildren()];
 			readHandles = new DatabaseHandle[game.maxChildren()];
 			game.setState(game.hashToState(start + hashes - 1));
@@ -86,7 +87,9 @@ public class C4CachedSolver extends TierSolver {
 			lastChildren = new long[children.length];
 			for (int i = 0; i < children.length; i++)
 				lastChildren[i] = game.stateToHash(children[i]);
+			checkMemory();
 		}
+		checkMemory();
 		MemoryDatabase writePage = writePagePool.get();
 		checkMemory();
 		checkMemory(writePage.setRange(start, (int) hashes));
