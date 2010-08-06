@@ -163,10 +163,14 @@ public class MemoryDatabase extends DatabaseWrapper {
 		}
 	}
 
-	// Does not preserve stored records.
 	public void ensureByteSize(int numBytes) {
+		ensureByteSize(numBytes, 0);
+	}
+
+	// Does not preserve stored records.
+	public void ensureByteSize(int numBytes, int extraBytes) {
 		if (memoryStorage == null || memoryStorage.length < numBytes)
-			memoryStorage = new byte[numBytes];
+			memoryStorage = new byte[numBytes + extraBytes];
 	}
 
 	@Override
