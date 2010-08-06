@@ -20,6 +20,9 @@ public class TierSolver extends Solver {
 	public TierSolver(Configuration conf) {
 		super(conf);
 		maxMem = conf.getLong("gamesman.memory", 1 << 25);
+		Runtime r = Runtime.getRuntime();
+		if(r.maxMemory()-r.totalMemory()+r.freeMemory()<maxMem)
+			throw new Error("Too much memory already used");
 		numThreads = conf.getInteger("gamesman.threads", 1);
 		minSplits = conf.getInteger("gamesman.split", numThreads);
 		minSplitSize = conf.getInteger("gamesman.minimum.split", 1024);
