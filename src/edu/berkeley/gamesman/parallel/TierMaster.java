@@ -21,7 +21,7 @@ import edu.berkeley.gamesman.util.Pair;
 
 public class TierMaster implements Runnable {
 	private class TimeOutChecker extends Thread {
-		private static final long WAIT_TIME = 300000L;
+		private static final long SLEEP_TIME = 300000L;
 		private final Thread myThread;
 		private final NodeRunnable myRunnable;
 
@@ -31,11 +31,11 @@ public class TierMaster implements Runnable {
 		}
 
 		@Override
-		public synchronized void run() {
+		public void run() {
 			long lastPrinted = System.currentTimeMillis();
 			while (myThread.isAlive()) {
 				try {
-					wait(WAIT_TIME);
+					Thread.sleep(SLEEP_TIME);
 					if (myThread.isAlive()) {
 						long nextPrinted = myRunnable.lastPrinted;
 						if (nextPrinted <= lastPrinted && myRunnable.et != null
@@ -56,7 +56,7 @@ public class TierMaster implements Runnable {
 	}
 
 	private class NodeRunnable implements Runnable {
-		private static final long WAIT_TIME = 10000L;
+		private static final long SLEEP_TIME = 10000L;
 		public long lastPrinted;
 		private Process p;
 		private final String name;
@@ -66,7 +66,7 @@ public class TierMaster implements Runnable {
 			this.name = name;
 		}
 
-		public synchronized void run() {
+		public void run() {
 			Pair<Long, Long> slice = getSlice();
 			while (slice != null) {
 				lastPrinted = System.currentTimeMillis();
@@ -86,9 +86,9 @@ public class TierMaster implements Runnable {
 					public void error(String error) {
 						if (!hadErrors)
 							new Thread() {
-								public synchronized void run() {
+								public void run() {
 									try {
-										wait(2000);
+										sleep(2000);
 									} catch (InterruptedException e) {
 										e.printStackTrace();
 									}
@@ -132,7 +132,7 @@ public class TierMaster implements Runnable {
 					if (et.hadErrors) {
 						sliceFailed(slice);
 						try {
-							wait(WAIT_TIME);
+							Thread.sleep(SLEEP_TIME);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}
@@ -144,7 +144,7 @@ public class TierMaster implements Runnable {
 						if (et.hadErrors) {
 							sliceFailed(slice);
 							try {
-								wait(WAIT_TIME);
+								Thread.sleep(SLEEP_TIME);
 							} catch (InterruptedException e) {
 								e.printStackTrace();
 							}
@@ -165,7 +165,7 @@ public class TierMaster implements Runnable {
 						et.error("local " + t.getStackTrace());
 						sliceFailed(slice);
 						try {
-							wait(WAIT_TIME);
+							Thread.sleep(SLEEP_TIME);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}

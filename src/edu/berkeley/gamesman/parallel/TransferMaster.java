@@ -72,7 +72,7 @@ public final class TransferMaster implements Runnable {
 			this.numRecords = numRecords;
 		}
 
-		public synchronized void prepare() {
+		public void prepare() {
 			String command = "ssh "
 					+ (user == null ? host : (user + "@" + host));
 			command += " java -cp " + path + File.separator + "bin ";
@@ -83,7 +83,7 @@ public final class TransferMaster implements Runnable {
 				try {
 					if (p != null) {
 						try {
-							wait(2000);
+							Thread.sleep(2000);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}

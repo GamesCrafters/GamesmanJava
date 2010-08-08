@@ -154,11 +154,11 @@ class ConnectFour implements MouseListener {
 
 	}
 
-	synchronized void startCompMove() {
+	void startCompMove() {
 		if (compTurn() && !win()) {
 			if (compO && compX)
 				try {
-					wait(500);
+					Thread.sleep(500);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
