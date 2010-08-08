@@ -32,9 +32,7 @@ public class C4CachedSolver extends TierSolver {
 
 			public void reset(MemoryDatabase t) {
 				if (splits > minSplits)
-					synchronized (s) {
-						checkMemory(t.ensureByteSize(maxPage));
-					}
+					t.ensureByteSize(maxPage);
 			}
 		});
 		writePagePool = new Pool<MemoryDatabase>(new Factory<MemoryDatabase>() {
@@ -52,7 +50,6 @@ public class C4CachedSolver extends TierSolver {
 	protected void solvePartialTier(Configuration conf, long start,
 			long hashes, TierSolverUpdater t, DatabaseHandle readDh,
 			DatabaseHandle writeDh) {
-		checkMemory();
 		final long firstNano;
 		long nano = 0;
 		final boolean debugSolver = Util.debug(DebugFacility.SOLVER);
@@ -65,8 +62,8 @@ public class C4CachedSolver extends TierSolver {
 		} else
 			firstNano = 0;
 		Connect4 game = (Connect4) conf.getGame();
-		maxPage = (int) ((maxMem / numThreads - writeDb.requiredMem(start,
-				hashes)) / game.maxChildren());
+		maxPage = (int) ((maxMem / (2 * numThreads) - writeDb.requiredMem(
+				start, hashes)) / game.maxChildren());
 		long current = start;
 		long stepNum = current % STEP_SIZE;
 		Record[] vals = new Record[game.maxChildren()];
@@ -80,9 +77,7 @@ public class C4CachedSolver extends TierSolver {
 		MemoryDatabase[] readPages = null;
 		DatabaseHandle[] readHandles = null;
 		long[] lastChildren = null;
-		checkMemory();
 		if (tier < game.numberOfTiers() - 1) {
-			checkMemory();
 			readPages = new MemoryDatabase[game.maxChildren()];
 			readHandles = new DatabaseHandle[game.maxChildren()];
 			game.setState(game.hashToState(start + hashes - 1));
@@ -90,14 +85,9 @@ public class C4CachedSolver extends TierSolver {
 			lastChildren = new long[children.length];
 			for (int i = 0; i < children.length; i++)
 				lastChildren[i] = game.stateToHash(children[i]);
-			checkMemory();
 		}
-		checkMemory();
 		MemoryDatabase writePage = writePagePool.get();
-		checkMemory();
-		synchronized (this) {
-			checkMemory(writePage.setRange(start, (int) hashes));
-		}
+		writePage.setRange(start, (int) hashes);
 		DatabaseHandle writePageDh = writePage.getHandle();
 
 		TierState curState = game.hashToState(start);
@@ -134,22 +124,18 @@ public class C4CachedSolver extends TierSolver {
 							|| !readPages[col].containsRecord(childHash)) {
 						if (readPages[col] != null) {
 							readPages[col].flush();
-							synchronized (this) {
-								checkMemory(readPages[col].setRange(childHash,
-										(int) Math.min(lastChildren[col] + 1
-												- childHash, readDb
-												.recordsForMem(childHash,
-														maxPage))));
-							}
+							readPages[col]
+									.setRange(childHash, (int) Math.min(
+											lastChildren[col] + 1 - childHash,
+											readDb.recordsForMem(childHash,
+													maxPage)));
 						} else {
 							readPages[col] = readPagePool.get();
-							synchronized (this) {
-								checkMemory(readPages[col].setRange(childHash,
-										(int) Math.min(lastChildren[col] + 1
-												- childHash, readDb
-												.recordsForMem(childHash,
-														maxPage))));
-							}
+							readPages[col]
+									.setRange(childHash, (int) Math.min(
+											lastChildren[col] + 1 - childHash,
+											readDb.recordsForMem(childHash,
+													maxPage)));
 							readHandles[col] = readPages[col].getHandle();
 						}
 					}

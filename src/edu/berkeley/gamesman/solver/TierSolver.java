@@ -21,7 +21,6 @@ public class TierSolver extends Solver {
 		super(conf);
 		maxMem = conf.getLong("gamesman.memory", 1 << 25);
 		Runtime r = Runtime.getRuntime();
-		checkMemory();
 		numThreads = conf.getInteger("gamesman.threads", 1);
 		minSplits = conf.getInteger("gamesman.split", numThreads);
 		minSplitSize = conf.getInteger("gamesman.minimum.split", 1024);
@@ -100,10 +99,8 @@ public class TierSolver extends Solver {
 					times[2] += nano - lastNano;
 				}
 				for (int i = 0; i < len; i++) {
-					game.recordFromLong(
-							children[i],
-							readDb.getRecord(readDh,
-									game.stateToHash(children[i])), vals[i]);
+					game.recordFromLong(children[i], readDb.getRecord(readDh,
+							game.stateToHash(children[i])), vals[i]);
 					vals[i].previousPosition();
 				}
 				if (debugSolver) {
@@ -112,8 +109,8 @@ public class TierSolver extends Solver {
 					times[3] += nano - lastNano;
 				}
 				Record newVal = game.combine(vals, 0, len);
-				writeDb.putRecord(writeDh, current,
-						game.getRecord(curState, newVal));
+				writeDb.putRecord(writeDh, current, game.getRecord(curState,
+						newVal));
 			} else if (pv == Value.IMPOSSIBLE) {
 				break;
 			} else {
@@ -127,8 +124,8 @@ public class TierSolver extends Solver {
 				}
 				prim.remoteness = 0;
 				prim.value = pv;
-				writeDb.putRecord(writeDh, current,
-						game.getRecord(curState, prim));
+				writeDb.putRecord(writeDh, current, game.getRecord(curState,
+						prim));
 			}
 			if (debugSolver) {
 				lastNano = nano;
@@ -198,7 +195,6 @@ public class TierSolver extends Solver {
 		parallelSolving = false;
 		flusher.run();
 		needs2Reset = false;
-		checkMemory();
 		return new TierSolverWorkUnit(inconf);
 	}
 
@@ -232,14 +228,10 @@ public class TierSolver extends Solver {
 				TierGame game = (TierGame) conf.getGame();
 				long fullStart = game.hashOffsetForTier(tier);
 				long fullSize = game.numHashesForTier(tier);
-				splits = Math.max(
-						minSplits,
-						numSplits(
-								readDb == null ? 0 : readDb.requiredMem(
-										game.hashOffsetForTier(tier + 1),
-										game.numHashesForTier(tier + 1)),
-								writeDb.requiredMem(fullStart, fullSize),
-								maxMem));
+				splits = Math.max(minSplits, numSplits(readDb == null ? 0
+						: readDb.requiredMem(game.hashOffsetForTier(tier + 1),
+								game.numHashesForTier(tier + 1)), writeDb
+						.requiredMem(fullStart, fullSize), maxMem));
 				starts = writeDb.splitRange(fullStart, fullSize, splits,
 						minSplitSize);
 			}
@@ -255,7 +247,7 @@ public class TierSolver extends Solver {
 	private int numSplits(long lastTierSize, long thisTierSize, long maxMem) {
 		return (int) ((thisTierSize + lastTierSize
 				* conf.getGame().maxChildren())
-				* numThreads / maxMem);
+				* 2 * numThreads / maxMem);
 	}
 
 	protected Pair<Long, Long> nextSlice(Configuration conf) {
@@ -330,7 +322,6 @@ public class TierSolver extends Solver {
 					"Solver (" + index + "): " + conf.getGame().describe());
 			Pair<Long, Long> slice;
 			while ((slice = nextSlice(conf)) != null) {
-				checkMemory();
 				thisSlice = slice;
 				DatabaseHandle myWrite = writeDb.getHandle();
 				DatabaseHandle readHandle;
@@ -429,28 +420,11 @@ public class TierSolver extends Solver {
 					/ game.numHashesForTier(tier);
 		}
 		long writeRequired = writeDb.requiredMem(startHash, numHashes);
-		splits = Math.max(
-				minSplits,
-				numSplits(tier == game.numberOfTiers() - 1 ? 0
+		splits = Math.max(minSplits, numSplits(
+				tier == game.numberOfTiers() - 1 ? 0
 						: (long) (tierFrac * writeRequired), writeRequired,
-						maxMem));
+				maxMem));
 		starts = writeDb.splitRange(startHash, numHashes, splits, minSplitSize);
 		return new TierSolverWorkUnit(conf);
-	}
-
-	protected void checkMemory() {
-		checkMemory(0);
-	}
-
-	public synchronized void checkMemory(int addOn) {
-		pageBytesUsed += addOn;
-		System.gc();
-		Runtime r = Runtime.getRuntime();
-		if (r.maxMemory() - r.totalMemory() + r.freeMemory() < maxMem + 1024
-				- pageBytesUsed)
-			throw new Error("Not enough memory: Max memory = " + maxMem
-					+ "; Page bytes = " + pageBytesUsed
-					+ "; Remaining memory = "
-					+ (r.maxMemory() - r.totalMemory() + r.freeMemory()));
 	}
 }
