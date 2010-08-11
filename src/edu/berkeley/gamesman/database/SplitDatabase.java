@@ -22,6 +22,7 @@ public class SplitDatabase extends Database {
 	private final ArrayList<Long> firstRecordList;
 	private final ArrayList<Long> numRecordsList;
 	private final boolean store;
+	private long size;
 
 	public SplitDatabase(String uri, Configuration conf, boolean solve,
 			long firstRecord, long numRecords, DatabaseHeader header) {
@@ -440,16 +441,31 @@ public class SplitDatabase extends Database {
 	}
 
 	public long getSize() {
-		long size = 0;
 		int percent = 0;
+		final SplitDatabase s = this;
+		Thread[] threads = new Thread[databaseList.length];
 		for (int i = 0; i < databaseList.length; i++) {
-			Database d = databaseList[i];
+			final Database d = databaseList[i];
 			if (i * 100 / databaseList.length > percent) {
 				percent = i * 100 / databaseList.length;
 				System.out.println(percent + "%");
 			}
-			size += d.getSize();
+			threads[i] = new Thread() {
+				public void run() {
+					long mySize = d.getSize();
+					synchronized (s) {
+						size += mySize;
+					}
+				}
+			};
+			threads[i].start();
 		}
+		for (Thread t : threads)
+			try {
+				t.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		return size;
 	}
 }
