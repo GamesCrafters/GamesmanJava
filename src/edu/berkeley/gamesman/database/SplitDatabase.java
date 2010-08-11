@@ -443,13 +443,19 @@ public class SplitDatabase extends Database {
 	public long getSize() {
 		int percent = 0;
 		final SplitDatabase s = this;
-		Thread[] threads = new Thread[databaseList.length];
+		Thread[] threads = new Thread[32];
 		for (int i = 0; i < databaseList.length; i++) {
 			final Database d = databaseList[i];
 			if (i * 100 / databaseList.length > percent) {
 				percent = i * 100 / databaseList.length;
 				System.out.println(percent + "%");
 			}
+			if (threads[i & 31] != null && threads[i & 31].isAlive())
+				try {
+					threads[i & 31].join();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			threads[i] = new Thread() {
 				public void run() {
 					long mySize = d.getSize();
