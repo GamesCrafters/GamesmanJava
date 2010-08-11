@@ -26,10 +26,11 @@ public final class TransferMaster implements Runnable {
 	private final String parentFile;
 	private final int entrySize;
 	private final long firstTotalRecord, numTotalRecords;
+	private final String totalUser; // Say it out loud
 	private GZippedFileDatabase db;
 
 	private TransferMaster(String oldUri, String newUri, int numSplits,
-			String parentFile, long firstRecord, long numRecords) {
+			String parentFile, String user, long firstRecord, long numRecords) {
 		readFrom = SplitDatabase.openSplitDatabase(oldUri);
 		conf = readFrom.getConfiguration();
 		writeTo = SplitDatabase.openSplitDatabase(newUri, conf, true, true);
@@ -41,11 +42,17 @@ public final class TransferMaster implements Runnable {
 		}
 		firstTotalRecord = firstRecord;
 		numTotalRecords = numRecords;
+		this.totalUser = user;
+	}
+
+	private TransferMaster(String oldUri, String newUri, int numSplits,
+			String parentFile, String user) {
+		this(oldUri, newUri, numSplits, parentFile, user, 0, -1);
 	}
 
 	private TransferMaster(String oldUri, String newUri, int numSplits,
 			String parentFile) {
-		this(oldUri, newUri, numSplits, parentFile, 0, -1);
+		this(oldUri, newUri, numSplits, parentFile, null);
 	}
 
 	private class TransferProcess {
@@ -76,6 +83,8 @@ public final class TransferMaster implements Runnable {
 				user = userHost[0];
 				host = userHost[1];
 			}
+			if (user == null)
+				user = totalUser;
 			this.host = host;
 			this.user = user;
 			this.file = file;
@@ -141,6 +150,7 @@ public final class TransferMaster implements Runnable {
 			try {
 				ChunkInputStream cis = new ChunkInputStream(in);
 				db.putZippedBytes(cis);
+				cis.close();
 			} catch (IOException e) {
 				et.error("local io error");
 				e.printStackTrace();
@@ -157,10 +167,13 @@ public final class TransferMaster implements Runnable {
 
 	public static void main(String[] args) throws IOException {
 		TransferMaster tm;
-		if (args.length > 4) {
+		if (args.length > 5) {
 			tm = new TransferMaster(args[0], args[1],
-					Integer.parseInt(args[2]), args[3],
-					Long.parseLong(args[4]), Long.parseLong(args[5]));
+					Integer.parseInt(args[2]), args[3], args[4], Long
+							.parseLong(args[5]), Long.parseLong(args[6]));
+		} else if (args.length > 4) {
+			tm = new TransferMaster(args[0], args[1],
+					Integer.parseInt(args[2]), args[3], args[4]);
 		} else
 			tm = new TransferMaster(args[0], args[1],
 					Integer.parseInt(args[2]), args[3]);
