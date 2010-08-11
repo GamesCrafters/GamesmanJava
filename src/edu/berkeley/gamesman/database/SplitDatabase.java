@@ -464,7 +464,7 @@ public class SplitDatabase extends Database {
 					}
 				}
 			};
-			threads[i].start();
+			threads[i & 7].start();
 		}
 		for (Thread t : threads)
 			try {
