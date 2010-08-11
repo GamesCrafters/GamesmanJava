@@ -74,4 +74,9 @@ public class DistributedDatabase extends Database {
 	public DistributedHandle getHandle() {
 		return new DistributedHandle();
 	}
+
+	@Override
+	public long getSize() {
+		throw new UnsupportedOperationException();
+	}
 }

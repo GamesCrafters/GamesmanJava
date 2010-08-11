@@ -27,7 +27,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			final Database readFrom, long maxMem) throws IOException {
 		super(uri, conf, true, readFrom.firstRecord(), readFrom.numRecords(),
 				readFrom.getHeader());
-		File myFile = new File(uri);
+		myFile = new File(uri);
 		entrySize = conf.getInteger("gamesman.db.zip.entryKB", 64) << 10;
 		gzipWorst = entrySize + ((entrySize + ((1 << 15) - 1)) >> 15) * 5 + 18;
 		// As I understand, this is worst-case performance for gzip
@@ -319,7 +319,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			long firstRecord, long numRecords, DatabaseHeader header)
 			throws IOException {
 		super(uri, conf, solve, firstRecord, numRecords, header);
-		File myFile = new File(uri);
+		myFile = new File(uri);
 		entrySize = conf.getInteger("gamesman.db.zip.entryKB", 64) << 10;
 		gzipWorst = entrySize + ((entrySize + ((1 << 15) - 1)) >> 15) * 5 + 18;
 		firstByteIndex = toByte(firstContainedRecord);
@@ -356,7 +356,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 	public GZippedFileDatabase(String uri, Configuration conf,
 			DatabaseHeader header) throws IOException {
 		super(uri, conf, true, header.firstRecord, header.numRecords, header);
-		File myFile = new File(uri);
+		myFile = new File(uri);
 		entrySize = conf.getInteger("gamesman.db.zip.entryKB", 64) << 10;
 		gzipWorst = entrySize + ((entrySize + ((1 << 15) - 1)) >> 15) * 5 + 18;
 		// As I understand, this is worst-case performance for gzip
@@ -380,6 +380,8 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		nextStart = firstByteIndex;
 		writeBuffer = new byte[gzipWorst];
 	}
+
+	private final File myFile;
 
 	private final FileInputStream fis;
 
@@ -702,6 +704,11 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		gzh.remainingBytes = totalBytes
 				+ ((lastTransferEntry - firstTransferEntry) << 2);
 		return gzh.remainingBytes;
+	}
+
+	@Override
+	public long getSize() {
+		return myFile.length();
 	}
 }
 

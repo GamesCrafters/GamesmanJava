@@ -139,4 +139,9 @@ public final class FileDatabase extends Database {
 			byte[] arr, int off, int len) {
 		putRecordsAsBytes(dh, loc, 0, arr, off, len, 0, true);
 	}
+
+	@Override
+	public long getSize() {
+		return myFile.length();
+	}
 }

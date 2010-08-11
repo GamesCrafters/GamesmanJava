@@ -201,4 +201,9 @@ public class MemoryDatabase extends DatabaseWrapper {
 		else
 			super.putRecord(dh, recordIndex, r);
 	}
+
+	@Override
+	public long getSize() {
+		return memoryStorage.length;
+	}
 }

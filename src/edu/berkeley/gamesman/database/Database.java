@@ -1633,4 +1633,6 @@ public abstract class Database {
 	public final long recordsForMem(long firstHash, int availableMemory) {
 		return toFirstRecord(toByte(firstHash) + availableMemory) - firstHash;
 	}
+
+	public abstract long getSize();
 }

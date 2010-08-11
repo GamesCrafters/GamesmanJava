@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.Scanner;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.util.DebugFacility;
@@ -235,6 +236,35 @@ public class RemoteDatabase extends Database {
 		conf.setProperty("gamesman.remote.db.uri", remoteFile);
 	}
 
+	@Override
+	public long getSize() {
+		StringBuilder command;
+		if (maxCommandLen >= 0)
+			command = new StringBuilder();
+		else
+			command = new StringBuilder();
+		command.append("ssh -q ");
+		if (user != null) {
+			command.append(user);
+			command.append("@");
+		}
+		command.append(server);
+		command.append(" java -cp ");
+		command.append(path);
+		command.append("/bin ");
+		command.append(ReadLength.class);
+		command.append(" ");
+		command.append(remoteFile);
+		try {
+			Process p = Runtime.getRuntime().exec(command.toString());
+			new ErrorThread(p.getErrorStream(), server).start();
+			InputStream is = p.getInputStream();
+			Scanner scan = new Scanner(is);
+			return scan.nextLong();
+		} catch (IOException e) {
+			throw new Error(e);
+		}
+	}
 }
 
 class RemoteHandle extends DatabaseHandle {
