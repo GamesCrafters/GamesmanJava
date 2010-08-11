@@ -456,7 +456,7 @@ public class SplitDatabase extends Database {
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
-			threads[i] = new Thread() {
+			threads[i & 7] = new Thread() {
 				public void run() {
 					long mySize = d.getSize();
 					synchronized (s) {
