@@ -93,7 +93,7 @@ public final class TransferMaster implements Runnable {
 		}
 
 		public void prepare() {
-			String command = "ssh "
+			String command = "ssh -q "
 					+ (user == null ? host : (user + "@" + host));
 			command += " java -cp " + path + File.separator + "bin ";
 			command += TransferSlave.class.getName() + " " + file + " "
