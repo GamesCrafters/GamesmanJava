@@ -252,7 +252,7 @@ public class RemoteDatabase extends Database {
 		command.append(" java -cp ");
 		command.append(path);
 		command.append("/bin ");
-		command.append(ReadLength.class);
+		command.append(ReadLength.class.getName());
 		command.append(" ");
 		command.append(remoteFile);
 		try {
