@@ -25,16 +25,27 @@ public final class TransferMaster implements Runnable {
 	private final int numSplits;
 	private final String parentFile;
 	private final int entrySize;
+	private final long firstTotalRecord, numTotalRecords;
 	private GZippedFileDatabase db;
 
 	private TransferMaster(String oldUri, String newUri, int numSplits,
-			String parentFile) {
+			String parentFile, long firstRecord, long numRecords) {
 		readFrom = SplitDatabase.openSplitDatabase(oldUri);
 		conf = readFrom.getConfiguration();
 		writeTo = SplitDatabase.openSplitDatabase(newUri, conf, true, true);
 		this.numSplits = numSplits;
 		this.parentFile = parentFile;
 		entrySize = conf.getInteger("gamesman.db.zip.entryKB", 64) << 10;
+		if (numRecords < 0) {
+			numRecords = conf.getGame().numHashes() - firstRecord;
+		}
+		firstTotalRecord = firstRecord;
+		numTotalRecords = numRecords;
+	}
+
+	private TransferMaster(String oldUri, String newUri, int numSplits,
+			String parentFile) {
+		this(oldUri, newUri, numSplits, parentFile, 0, -1);
 	}
 
 	private class TransferProcess {
@@ -145,20 +156,26 @@ public final class TransferMaster implements Runnable {
 	}
 
 	public static void main(String[] args) throws IOException {
-		TransferMaster tm = new TransferMaster(args[0], args[1], Integer
-				.parseInt(args[2]), args[3]);
+		TransferMaster tm;
+		if (args.length > 4) {
+			tm = new TransferMaster(args[0], args[1],
+					Integer.parseInt(args[2]), args[3],
+					Long.parseLong(args[4]), Long.parseLong(args[5]));
+		} else
+			tm = new TransferMaster(args[0], args[1],
+					Integer.parseInt(args[2]), args[3]);
 		tm.run();
 	}
 
 	public void run() {
-		final long hashes = conf.getGame().numHashes();
-		long lastForDb = 0;
+		long lastForDb = firstTotalRecord;
 		File parentFold = new File(parentFile);
 		if (!parentFold.exists())
 			parentFold.mkdir();
 		for (int i = 0; i < numSplits; i++) {
 			long firstForDb = lastForDb;
-			lastForDb = (i + 1) * hashes / numSplits;
+			lastForDb = firstTotalRecord + (i + 1) * numTotalRecords
+					/ numSplits;
 			String dbUri = parentFile + File.separator + "s" + firstForDb
 					+ ".db";
 			try {

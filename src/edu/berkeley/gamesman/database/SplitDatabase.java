@@ -448,7 +448,17 @@ public class SplitDatabase extends Database {
 			final Database d = databaseList[i];
 			if (i * 100 / databaseList.length > percent) {
 				percent = i * 100 / databaseList.length;
-				System.out.println(percent + "%");
+				for (Thread t : threads) {
+					if (t != null) {
+						try {
+							t.join();
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+				System.out.println(percent + "%: " + d.firstRecord()
+						+ " records = " + size + " bytes");
 			}
 			if (threads[i & 7] != null && threads[i & 7].isAlive())
 				try {
@@ -467,11 +477,12 @@ public class SplitDatabase extends Database {
 			threads[i & 7].start();
 		}
 		for (Thread t : threads)
-			try {
-				t.join();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+			if (t != null)
+				try {
+					t.join();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 		return size;
 	}
 }
