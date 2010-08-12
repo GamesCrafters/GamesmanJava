@@ -505,7 +505,7 @@ public abstract class Database {
 	/**
 	 * Combines two record groups into one by taking all the records before num
 	 * from one of them and all the records after num for the other. For
-	 * instance, if totalStates = 10 then splice(1678,54491,3) returns 54678.
+	 * instance, if totalStates = 10 then splice(54678,1491,3) returns 54491.
 	 * 
 	 * @param group1
 	 *            The first group
@@ -528,7 +528,7 @@ public abstract class Database {
 	/**
 	 * Combines two record groups into one by taking all the records before num
 	 * from one of them and all the records after num for the other. For
-	 * instance, if totalStates = 10 then splice(1678,54491,3) returns 54678.
+	 * instance, if totalStates = 10 then splice(54678,1491,3) returns 54491.
 	 * 
 	 * @param group1
 	 *            The first group
@@ -1010,15 +1010,14 @@ public abstract class Database {
 	}
 
 	/**
-	 * @return The number of bytes used to store all the records (This does not
-	 *         include the header size)
+	 * @return The number of records in this database
 	 */
 	public long numRecords() {
 		return numRecords;
 	}
 
 	/**
-	 * @return The index of the first byte in this database (Will be zero if
+	 * @return The index of the first record in this database (Will be zero if
 	 *         this database stores the entire game)
 	 */
 	public long firstRecord() {
@@ -1040,9 +1039,9 @@ public abstract class Database {
 
 	/**
 	 * Provides a handle for any thread wishing to access this database. Recycle
-	 * handles when possible for faster solve-time. If this handle was used for
-	 * writing to the database, make sure to call closeHandle when you're done
-	 * with it.
+	 * handles when possible for faster solve-time. If this handle will be used
+	 * for writing to the database, make sure to call closeHandle when you're
+	 * done with it.
 	 * 
 	 * @return A new handle for this database.
 	 */
@@ -1263,6 +1262,16 @@ public abstract class Database {
 			recs[0] = recordGroup;
 	}
 
+	/**
+	 * Stores recordsPerGroup records from a group in an array
+	 * 
+	 * @param recordGroup
+	 *            The group to read from
+	 * @param recs
+	 *            The array to store in
+	 * @param offset
+	 *            The offset into the array to begin storing records
+	 */
 	protected final void getRecords(BigInteger recordGroup, long[] recs,
 			int offset) {
 		if (superCompress) {
@@ -1276,6 +1285,17 @@ public abstract class Database {
 			recs[0] = recordGroup.longValue();
 	}
 
+	/**
+	 * Returns this group with record num set to be r
+	 * 
+	 * @param recordGroup
+	 *            The group to alter
+	 * @param num
+	 *            The digit to change
+	 * @param r
+	 *            The record to change record num to
+	 * @return The altered record group
+	 */
 	protected final long setRecord(long recordGroup, int num, long r) {
 		if (superCompress) {
 			if (recordGroup == 0) {
@@ -1293,6 +1313,17 @@ public abstract class Database {
 			return r;
 	}
 
+	/**
+	 * Returns this group with record num set to be r
+	 * 
+	 * @param recordGroup
+	 *            The group to alter
+	 * @param num
+	 *            The digit to change
+	 * @param r
+	 *            The record to change record num to
+	 * @return The altered record group
+	 */
 	protected final BigInteger setRecord(BigInteger recordGroup, int num, long r) {
 		if (superCompress) {
 			if (recordGroup.equals(BigInteger.ZERO)) {
@@ -1311,6 +1342,16 @@ public abstract class Database {
 			return BigInteger.valueOf(r);
 	}
 
+	/**
+	 * Returns the nth record in this record group (Starting from least
+	 * significant)
+	 * 
+	 * @param recordGroup
+	 *            The group containing the record
+	 * @param num
+	 *            The digit the record is at
+	 * @return The record
+	 */
 	protected final long getRecord(long recordGroup, int num) {
 		if (superCompress) {
 			if (num == 0)
@@ -1323,6 +1364,16 @@ public abstract class Database {
 			return recordGroup;
 	}
 
+	/**
+	 * Returns the nth record in this record group (Starting from least
+	 * significant)
+	 * 
+	 * @param recordGroup
+	 *            The group containing the record
+	 * @param num
+	 *            The digit the record is at
+	 * @return The record
+	 */
 	protected final long getRecord(BigInteger recordGroup, int num) {
 		if (superCompress)
 			if (num == 0)
@@ -1336,12 +1387,36 @@ public abstract class Database {
 			return recordGroup.longValue();
 	}
 
+	/**
+	 * Stores a record group in a byte array (len = recordGroupByteLength)
+	 * 
+	 * @param recordGroup
+	 *            The record group to store
+	 * @param byteArray
+	 *            The array of bytes to store in
+	 * @param offset
+	 *            The offset to start at
+	 */
 	protected final void toUnsignedByteArray(long recordGroup,
 			byte[] byteArray, int offset) {
 		toUnsignedByteArray(recordGroup, 0, byteArray, offset,
 				recordGroupByteLength);
 	}
 
+	/**
+	 * Stores part of a record group in a byte array
+	 * 
+	 * @param recordGroup
+	 *            The record group to store
+	 * @param byteNum
+	 *            The first byte of the group to store
+	 * @param byteArray
+	 *            The array of bytes to store in
+	 * @param offset
+	 *            The offset to start at
+	 * @param numBytes
+	 *            The number of bytes from the group to store
+	 */
 	private final void toUnsignedByteArray(long recordGroup, int byteNum,
 			byte[] byteArray, int offset, int numBytes) {
 		int stopAt = offset + byteNum;
@@ -1355,12 +1430,36 @@ public abstract class Database {
 		}
 	}
 
+	/**
+	 * Stores a record group in a byte array (len = recordGroupByteLength)
+	 * 
+	 * @param recordGroup
+	 *            The record group to store
+	 * @param byteArray
+	 *            The array of bytes to store in
+	 * @param offset
+	 *            The offset to start at
+	 */
 	protected final void toUnsignedByteArray(BigInteger recordGroup,
 			byte[] byteArray, int offset) {
 		toUnsignedByteArray(recordGroup, 0, byteArray, offset,
 				recordGroupByteLength);
 	}
 
+	/**
+	 * Stores part of a record group in a byte array
+	 * 
+	 * @param recordGroup
+	 *            The record group to store
+	 * @param byteOff
+	 *            The first byte of the group to store
+	 * @param byteArray
+	 *            The array of bytes to store in
+	 * @param offset
+	 *            The offset to start at
+	 * @param numBytes
+	 *            The number of bytes from the group to store
+	 */
 	protected final void toUnsignedByteArray(BigInteger recordGroup,
 			int byteOff, byte[] byteArray, int offset, int numBytes) {
 		byte[] bigIntArray = recordGroup.toByteArray();
@@ -1380,49 +1479,184 @@ public abstract class Database {
 		}
 	}
 
+	/**
+	 * Given a range of records, splits them up into at most numSplits
+	 * group-aligned chunks ensuring that the smallest possible chunk size is
+	 * minGroup
+	 * 
+	 * @param firstRecord
+	 *            The first record of the range
+	 * @param numRecords
+	 *            The number of records in the range
+	 * @param numSplits
+	 *            The desired number of splits (may be less)
+	 * @param minGroup
+	 *            The minimum allowed chunk size
+	 * @return An array of length n+1 starting with firstRecord and each of the
+	 *         offsets in between and ending with numRecords
+	 */
 	public long[] splitRange(long firstRecord, long numRecords, int numSplits,
 			int minGroup) {
 		return Util.groupAlignedTasks(numSplits, firstRecord, numRecords,
 				recordsPerGroup, minGroup);
 	}
 
+	/**
+	 * @param firstHash
+	 *            The first hash of the range
+	 * @param numHashes
+	 *            The number of hashes in the range
+	 * @return The amount of memory required to hold the record range
+	 */
 	public final long requiredMem(long firstHash, long numHashes) {
 		return numBytes(firstHash, numHashes);
 	}
 
+	/**
+	 * Opens an existing database for reading
+	 * 
+	 * @param uri
+	 *            The file name (or user\@host:path:filename for remote
+	 *            databases)
+	 * @return The database opened
+	 */
 	public static Database openDatabase(String uri) {
 		return openDatabase(uri, 0, -1);
 	}
 
+	/**
+	 * Opens a database according to the provided configuration information
+	 * 
+	 * @param conf
+	 *            The configuration object for opening the database
+	 * @param solve
+	 *            Whether we're solving this database or just reading it
+	 * @return The database opened
+	 */
 	public static Database openDatabase(Configuration conf, boolean solve) {
 		return openDatabase(null, conf, solve, null);
 	}
 
+	/**
+	 * Opens a database for reading the indicated records only (Databases which
+	 * do not support this will open as usual)
+	 * 
+	 * @param uri
+	 *            The file name (or user\@host:path:filename for remote
+	 *            databases)
+	 * @param firstRecord
+	 *            The hash of the first record this database will store
+	 * @param numRecords
+	 *            The number of records this database will store
+	 * @return The database opened
+	 */
 	public static Database openDatabase(String uri, long firstRecord,
 			long numRecords) {
 		return openDatabase(uri, null, false, firstRecord, numRecords);
 	}
 
+	/**
+	 * Opens a database of a given type for reading the indicated records only
+	 * (Databases which do not support this will open as usual)
+	 * 
+	 * @param dbType
+	 *            The class of the database to be opened
+	 * @param uri
+	 *            The file name (or user\@host:path:filename for remote
+	 *            databases)
+	 * @param firstRecord
+	 *            The hash of the first record this database will store
+	 * @param numRecords
+	 *            The number of records this database will store
+	 * @return The database opened
+	 */
 	public static Database openDatabase(String dbType, String uri,
 			long firstRecord, long numRecords) {
 		return openDatabase(dbType, uri, null, false, firstRecord, numRecords);
 	}
 
+	/**
+	 * Opens the specified record range in a database
+	 * 
+	 * @param uri
+	 *            The file name (or user\@host:path:filename for remote
+	 *            databases)
+	 * @param conf
+	 *            The configuration object for opening the database
+	 * @param solve
+	 *            Whether we're solving this database or just reading it
+	 * @param firstRecord
+	 *            The hash of the first record this database will store
+	 * @param numRecords
+	 *            The number of records this database will store
+	 * @return The database opened
+	 */
 	public static Database openDatabase(String uri, Configuration conf,
 			boolean solve, long firstRecord, long numRecords) {
 		return openDatabase(null, uri, conf, solve, firstRecord, numRecords);
 	}
 
+	/**
+	 * Opens a database pre-providing all the necessary header information so it
+	 * doesn't have to be looked up
+	 * 
+	 * @param uri
+	 *            The file name (or user\@host:path:filename for remote
+	 *            databases)
+	 * @param conf
+	 *            The configuration object for opening the database
+	 * @param solve
+	 *            Whether we're solving this database or just reading it
+	 * @param header
+	 *            The four "header" data stored in the database header
+	 * @return The database opened
+	 */
 	public static Database openDatabase(String uri, Configuration conf,
 			boolean solve, DatabaseHeader header) {
 		return openDatabase(null, uri, conf, solve, header);
 	}
 
+	/**
+	 * Opens a database of a given class pre-providing all the necessary header
+	 * information so it doesn't have to be looked up
+	 * 
+	 * @param dbType
+	 *            The class of the database to be opened
+	 * @param uri
+	 *            The file name (or user\@host:path:filename for remote
+	 *            databases)
+	 * @param conf
+	 *            The configuration object for opening the database
+	 * @param solve
+	 *            Whether we're solving this database or just reading it
+	 * @param header
+	 *            The four "header" data stored in the database header
+	 * @return The database opened
+	 */
 	public static Database openDatabase(String dbType, String uri,
 			Configuration conf, boolean solve, DatabaseHeader header) {
 		return openDatabase(dbType, uri, conf, solve, 0, -1, header);
 	}
 
+	/**
+	 * Opens a given range of records from a database of a given class.
+	 * Databases which do not support this will open as usual.
+	 * 
+	 * @param dbType
+	 *            The class of the database to be opened
+	 * @param uri
+	 *            The file name (or user\@host:path:filename for remote
+	 *            databases)
+	 * @param conf
+	 *            The configuration object for opening the database
+	 * @param solve
+	 *            Whether we're solving this database or just reading it
+	 * @param firstRecord
+	 *            The hash of the first record this database will store
+	 * @param numRecords
+	 *            The number of records this database will store
+	 * @return The database opened
+	 */
 	public static Database openDatabase(String dbType, String uri,
 			Configuration conf, boolean solve, long firstRecord, long numRecords) {
 		return openDatabase(dbType, uri, conf, solve, firstRecord, numRecords,
@@ -1430,14 +1664,22 @@ public abstract class Database {
 	}
 
 	/**
+	 * @param dbType
+	 *            The class of the database to be opened
+	 * @param uri
+	 *            The file name (or user\@host:path:filename for remote
+	 *            databases)
+	 * @param conf
+	 *            The configuration object for opening the database
 	 * @param solve
-	 *            true for solving, false for playing
+	 *            Whether we're solving this database or just reading it
 	 * @param firstRecord
-	 *            The index of the first record this database contains
+	 *            The hash of the first record this database will store
 	 * @param numRecords
-	 *            The number of records in this database
-	 * @return the Database used to store this particular solve Could not load
-	 *         the database class
+	 *            The number of records this database will store
+	 * @param header
+	 *            The four "header" data stored in the database header
+	 * @return The database opened
 	 */
 	private static Database openDatabase(String dbType, String uri,
 			Configuration conf, boolean solve, long firstRecord,
@@ -1559,6 +1801,16 @@ public abstract class Database {
 		return conf.db;
 	}
 
+	/**
+	 * Skip the indicated number of bytes or skip to the end of the stream
+	 * 
+	 * @param is
+	 *            The input stream
+	 * @param len
+	 *            The number of bytes
+	 * @throws IOException
+	 *             If skipping throws an IOException
+	 */
 	public static void skipFully(InputStream is, long len) throws IOException {
 		while (len > 0) {
 			long bytesSkipped = is.skip(len);
@@ -1570,16 +1822,42 @@ public abstract class Database {
 		}
 	}
 
+	/**
+	 * Stores the header and configuration in the output stream
+	 * 
+	 * @param os
+	 *            The stream to store in
+	 * @param uri
+	 *            The name of this database
+	 * @throws IOException
+	 *             If an IOException is thrown while writing
+	 */
 	protected final void store(OutputStream os, String uri) throws IOException {
 		storeInfo(os);
 		conf.store(os, this.getClass().getName(), uri);
 	}
 
+	/**
+	 * Skip all the header information in the input stream
+	 * 
+	 * @param is
+	 *            The input stream
+	 * @throws IOException
+	 *             If an IOException is thrown while skipping
+	 */
 	protected final void skipHeader(InputStream is) throws IOException {
 		skipInfo(is);
 		Configuration.skipConf(is);
 	}
 
+	/**
+	 * Stores only the Header object, not the configuration
+	 * 
+	 * @param os
+	 *            The stream to store to
+	 * @throws IOException
+	 *             If an IOException is thrown while writing
+	 */
 	protected final void storeInfo(OutputStream os) throws IOException {
 		for (int i = 56; i >= 0; i -= 8)
 			os.write((int) (firstRecord() >>> i));
@@ -1594,10 +1872,34 @@ public abstract class Database {
 		}
 	}
 
+	/**
+	 * Skips only the Header object, not the configuration
+	 * 
+	 * @param is
+	 *            The stream to skip
+	 * @throws IOException
+	 *             If an IOException is thrown while skipping
+	 */
 	private void skipInfo(InputStream is) throws IOException {
 		byte[] b = new byte[18];
 		readFully(is, b, 0, 18);
 	}
+
+	/**
+	 * Fully read the indicated number of bytes or until reaching the end of the
+	 * stream
+	 * 
+	 * @param is
+	 *            The input stream
+	 * @param arr
+	 *            The array to read into
+	 * @param off
+	 *            The offset into arr to start at
+	 * @param len
+	 *            The number of bytes
+	 * @throws IOException
+	 *             If reading throws an IOException
+	 */
 
 	public static final void readFully(InputStream is, byte[] arr, int off,
 			int len) throws IOException {
@@ -1612,6 +1914,9 @@ public abstract class Database {
 		}
 	}
 
+	/**
+	 * @return The header object for this database
+	 */
 	public final DatabaseHeader getHeader() {
 		if (superCompress)
 			return new DatabaseHeader(firstRecord(), numRecords(),
@@ -1621,6 +1926,14 @@ public abstract class Database {
 					recordGroupByteBits);
 	}
 
+	/**
+	 * @param dbFirstRecord
+	 *            The index of the first record
+	 * @param dbNumRecords
+	 *            The number of records
+	 * @return A copy of the header object for this database with firstRecord
+	 *         and numRecords adjusted
+	 */
 	public final DatabaseHeader getHeader(long dbFirstRecord, long dbNumRecords) {
 		if (superCompress)
 			return new DatabaseHeader(dbFirstRecord, dbNumRecords,
@@ -1630,9 +1943,21 @@ public abstract class Database {
 					recordGroupByteBits);
 	}
 
+	/**
+	 * @param firstHash
+	 *            The hash of the first record in the range
+	 * @param availableMemory
+	 *            The number of bytes available
+	 * @return The number of records which can safely be stored in
+	 *         availableMemory bytes
+	 */
 	public final long recordsForMem(long firstHash, int availableMemory) {
 		return toFirstRecord(toByte(firstHash) + availableMemory) - firstHash;
 	}
 
+	/**
+	 * @return The number of bytes this database takes up on disk (including on
+	 *         separate disks or in other files)
+	 */
 	public abstract long getSize();
 }
