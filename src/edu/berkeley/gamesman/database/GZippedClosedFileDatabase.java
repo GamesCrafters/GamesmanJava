@@ -7,6 +7,7 @@ import java.io.IOException;
 import edu.berkeley.gamesman.core.Configuration;
 
 public class GZippedClosedFileDatabase extends GZippedFileDatabase {
+	private int handlesOpen = 0;
 
 	public GZippedClosedFileDatabase(String uri, Configuration conf,
 			boolean solve, long firstRecord, long numRecords,
@@ -18,6 +19,7 @@ public class GZippedClosedFileDatabase extends GZippedFileDatabase {
 	@Override
 	protected synchronized void prepareRange(DatabaseHandle dh, long byteIndex,
 			int firstNum, long numBytes, int lastNum) {
+		handlesOpen++;
 		try {
 			if (fis == null)
 				fis = new FileInputStream(myFile);
@@ -32,12 +34,15 @@ public class GZippedClosedFileDatabase extends GZippedFileDatabase {
 			int maxLen, boolean overwriteEdgesOk) {
 		int result = super.getBytes(dh, arr, off, maxLen, overwriteEdgesOk);
 		if (overwriteEdgesOk && dh.location == dh.lastByteIndex) {
-			try {
-				fis.close();
-			} catch (IOException e) {
-				e.printStackTrace();
+			handlesOpen--;
+			if (handlesOpen <= 0) {
+				try {
+					fis.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				fis = null;
 			}
-			fis = null;
 		}
 		return result;
 	}
