@@ -381,9 +381,9 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		writeBuffer = new byte[gzipWorst];
 	}
 
-	private final File myFile;
+	protected final File myFile;
 
-	private final FileInputStream fis;
+	protected FileInputStream fis;
 
 	private final long[] entryPoints;
 
