@@ -14,18 +14,19 @@ public class GZippedClosedFileDatabase extends GZippedFileDatabase {
 			DatabaseHeader header) throws IOException {
 		super(uri, conf, solve, firstRecord, numRecords, header);
 		fis.close();
+		fis = null;
 	}
 
 	@Override
 	protected synchronized void prepareRange(DatabaseHandle dh, long byteIndex,
 			int firstNum, long numBytes, int lastNum) {
 		handlesOpen++;
-		try {
-			if (fis == null)
+		if (fis == null)
+			try {
 				fis = new FileInputStream(myFile);
-		} catch (FileNotFoundException e) {
-			throw new Error(e);
-		}
+			} catch (FileNotFoundException e) {
+				throw new Error(e);
+			}
 		super.prepareRange(dh, byteIndex, firstNum, numBytes, lastNum);
 	}
 
