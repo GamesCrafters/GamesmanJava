@@ -5,7 +5,8 @@ import edu.berkeley.gamesman.util.qll.Pool;
 
 /**
  * Each thread reading from a database should use a separate instance of this
- * class
+ * class. This allows databases to be accessed in parallel without having to
+ * synchronize every access
  * 
  * @author dnspies
  */
@@ -20,7 +21,14 @@ public class DatabaseHandle {
 	protected byte[] lastGroup;
 	protected DatabaseHandle innerHandle;
 
-	public DatabaseHandle(final int recordGroupByteLength) {
+	/**
+	 * Creates a new database handle with a pool for creating byte arrays to
+	 * read in and out of record groups
+	 * 
+	 * @param recordGroupByteLength
+	 *            The number of bytes in a record group
+	 */
+	protected DatabaseHandle(final int recordGroupByteLength) {
 		recordGroupBytes = new Pool<byte[]>(new Factory<byte[]>() {
 			public byte[] newObject() {
 				return new byte[recordGroupByteLength];
@@ -31,14 +39,30 @@ public class DatabaseHandle {
 		});
 	}
 
+	/**
+	 * Creates a new database handle with the provided byte pool
+	 * 
+	 * @param bytePool
+	 *            A pool for creating byte arrays to read in and out of record
+	 *            groups
+	 */
 	protected DatabaseHandle(Pool<byte[]> bytePool) {
 		recordGroupBytes = bytePool;
 	}
 
+	/**
+	 * @return A byte array of length recordGroupByteLength
+	 */
 	public byte[] getRecordGroupBytes() {
 		return recordGroupBytes.get();
 	}
 
+	/**
+	 * Returns a byte array to the pool
+	 * 
+	 * @param b
+	 *            A byte array of length recordGroupByteLength
+	 */
 	public void releaseBytes(byte[] b) {
 		recordGroupBytes.release(b);
 	}

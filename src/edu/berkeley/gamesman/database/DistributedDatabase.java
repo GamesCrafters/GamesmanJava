@@ -5,11 +5,28 @@ import java.util.Scanner;
 
 import edu.berkeley.gamesman.core.Configuration;
 
+/**
+ * An interface for slave nodes in a parallel solve to access records contained
+ * on another node. Generally this database is not associated with a file.
+ * READ-ONLY
+ * 
+ * @author dnspies
+ */
 public class DistributedDatabase extends Database {
 
 	private final Scanner readStream;
 	private final PrintStream requestStream;
 
+	/**
+	 * @param conf
+	 *            The configuration object
+	 * @param header
+	 *            The header to use as this db's header
+	 * @param readStream
+	 *            A stream to scan in the locations of the desired records
+	 * @param requestStream
+	 *            A stream to print out which records are desired
+	 */
 	public DistributedDatabase(Configuration conf, DatabaseHeader header,
 			Scanner readStream, PrintStream requestStream) {
 		super(null, conf, false, header.firstRecord, header.numRecords, header);

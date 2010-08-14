@@ -8,6 +8,11 @@ import java.io.RandomAccessFile;
 
 import edu.berkeley.gamesman.core.Configuration;
 
+/**
+ * The most basic database. Simply writes the bytes out to a file
+ * 
+ * @author dnspies
+ */
 public final class FileDatabase extends Database {
 
 	/**

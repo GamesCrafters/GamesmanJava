@@ -56,6 +56,11 @@ public abstract class Game<S extends State> {
 	 */
 	public abstract Collection<Pair<String, S>> validMoves(S pos);
 
+	public synchronized final Collection<Pair<String, S>> synchronizedValidMoves(
+			S pos) {
+		return validMoves(pos);
+	}
+
 	/**
 	 * Valid moves without instantiation. Pass in a State array which the
 	 * children will be stored in.
@@ -103,6 +108,10 @@ public abstract class Game<S extends State> {
 		return 0;
 	}
 
+	public synchronized final int synchronizedPrimitiveScore(S pos) {
+		return primitiveScore(pos);
+	}
+
 	/**
 	 * @return The number of players, 2 for a game, 1 for a puzzle
 	 */
@@ -120,6 +129,10 @@ public abstract class Game<S extends State> {
 	 * @return the primitive value of the state
 	 */
 	public abstract Value primitiveValue(S pos);
+
+	public synchronized final Value synchronizedPrimitiveValue(S pos) {
+		return primitiveValue(pos);
+	}
 
 	/**
 	 * Unhash a given hashed value and return the corresponding Board
@@ -143,6 +156,10 @@ public abstract class Game<S extends State> {
 	 */
 	public abstract long stateToHash(S pos);
 
+	public synchronized final long synchronizedStateToHash(S pos) {
+		return stateToHash(pos);
+	}
+
 	/**
 	 * Produce a machine-parsable String representing the state. This function
 	 * must be the exact opposite of stringToState
@@ -153,6 +170,10 @@ public abstract class Game<S extends State> {
 	 * @see Game#stringToState(String)
 	 */
 	public abstract String stateToString(S pos);
+
+	public synchronized final String synchronizedStateToString(S pos) {
+		return stateToString(pos);
+	}
 
 	/**
 	 * "Pretty-print" a State for display to the user
@@ -189,6 +210,10 @@ public abstract class Game<S extends State> {
 	 * @see Game#stateToString(State)
 	 */
 	public abstract S stringToState(String pos);
+
+	public synchronized final S synchronizedStringToState(String pos) {
+		return stringToState(pos);
+	}
 
 	/**
 	 * @return a String that uniquely describes the setup of this Game
@@ -385,6 +410,11 @@ public abstract class Game<S extends State> {
 			record /= fieldStates;
 			toStore.score = (int) record;
 		}
+	}
+
+	public final synchronized void synchronizedRecordFromLong(S recordState,
+			long record, Record toStore) {
+		recordFromLong(recordState, record, toStore);
 	}
 
 	public long getRecord(S recordState, Record fromRecord) {

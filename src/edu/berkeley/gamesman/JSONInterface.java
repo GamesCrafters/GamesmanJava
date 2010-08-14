@@ -144,15 +144,16 @@ public class JSONInterface extends GamesmanApplication {
 			filename += "_" + key + "_" + val;
 		}
 		Configuration conf = loadedConfigurations.get(filename);
-		if (conf != null) {
-			return conf.cloneAll();
-		} else {
-			conf = addDatabase(params, game, filename);
-			if (conf != null) {
-				loadedConfigurations.put(filename, conf);
+		if (conf == null) {
+			synchronized (this) {
+				conf = loadedConfigurations.get(filename);
+				if (conf == null) {
+					conf = addDatabase(params, game, filename);
+					loadedConfigurations.put(filename, conf);
+				}
 			}
-			return conf.cloneAll();
 		}
+		return conf;
 	}
 
 	synchronized Configuration addDatabase(Map<String, String> params,
@@ -257,14 +258,15 @@ public class JSONInterface extends GamesmanApplication {
 			// Database db = config.getDatabase();
 			Game<T> game = config.getCheckedGame();
 
-			T state = game.stringToState(board);
+			T state = game.synchronizedStringToState(board);
 
 			// Access to this list must be synchronized!
 			final List<GamestateResponse> responseArray = Collections
 					.synchronizedList(new ArrayList<GamestateResponse>());
 
-			Value pv = game.primitiveValue(state);
-			Collection<Pair<String, T>> states = game.validMoves(state);
+			Value pv = game.synchronizedPrimitiveValue(state);
+			Collection<Pair<String, T>> states = game
+					.synchronizedValidMoves(state);
 			Iterator<Pair<String, T>> iter = states.iterator();
 			if (game.getPlayerCount() <= 1 || pv == Value.UNDECIDED) {
 				// Game is not over yet...
@@ -318,7 +320,7 @@ public class JSONInterface extends GamesmanApplication {
 			// Database db = config.getDatabase();
 			Game<T> game = config.getCheckedGame();
 
-			T state = game.stringToState(board);
+			T state = game.synchronizedStringToState(board);
 
 			response = fillResponseFields(config, state, false);
 
@@ -358,16 +360,12 @@ public class JSONInterface extends GamesmanApplication {
 			if (db != null) {
 				Record rec = new Record(conf);
 				DatabaseHandle handle = db.getHandle();
-				g.recordFromLong(state, db.getRecord(handle, g
-						.stateToHash(state)), rec);
+				g.synchronizedRecordFromLong(state, db.getRecord(handle, g
+						.synchronizedStateToHash(state)), rec);
 				if (conf.valueStates > 0) {
 					Value pv = rec.value;
-					if (g.getPlayerCount() > 1 && isChildState) {
-						if (pv == Value.WIN)
-							pv = Value.LOSE;
-						else if (pv == Value.LOSE)
-							pv = Value.WIN;
-					}
+					if (g.getPlayerCount() > 1 && isChildState)
+						pv = pv.flipValue();
 					request.setValue(pv.name().toLowerCase());
 				}
 				if (conf.remotenessStates > 0) {
@@ -377,7 +375,7 @@ public class JSONInterface extends GamesmanApplication {
 					request.setScore(rec.score);
 				}
 			} else {
-				Value pv = g.primitiveValue(state);
+				Value pv = g.synchronizedPrimitiveValue(state);
 				if (pv != Value.UNDECIDED) {
 					if (g.getPlayerCount() > 1 && isChildState) {
 						if (pv == Value.WIN)
@@ -388,12 +386,12 @@ public class JSONInterface extends GamesmanApplication {
 					request.setValue(pv.name().toLowerCase());
 
 				}
-				int score = g.primitiveScore(state);
+				int score = g.synchronizedPrimitiveScore(state);
 				if (score > 0) {
 					request.setScore(score);
 				}
 			}
-			request.setBoard(g.stateToString(state));
+			request.setBoard(g.synchronizedStateToString(state));
 			return request;
 		}
 	}
