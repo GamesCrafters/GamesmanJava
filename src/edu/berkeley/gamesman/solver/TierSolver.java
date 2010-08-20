@@ -228,7 +228,8 @@ public class TierSolver extends Solver {
 				TierGame game = (TierGame) conf.getGame();
 				long fullStart = game.hashOffsetForTier(tier);
 				long fullSize = game.numHashesForTier(tier);
-				splits = Math.max(minSplits, numSplits(readDb == null ? 0
+				int numTiers = game.numberOfTiers();
+				splits = Math.max(minSplits, numSplits(tier == numTiers - 1 ? 0
 						: readDb.requiredMem(game.hashOffsetForTier(tier + 1),
 								game.numHashesForTier(tier + 1)), writeDb
 						.requiredMem(fullStart, fullSize), maxMem));

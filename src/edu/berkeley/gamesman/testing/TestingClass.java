@@ -4,7 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -17,7 +16,6 @@ import java.util.zip.GZIPOutputStream;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.GZippedClosedFileDatabase;
-import edu.berkeley.gamesman.database.SplitDatabase;
 import edu.berkeley.gamesman.game.Connect4;
 import edu.berkeley.gamesman.game.util.TierState;
 
@@ -88,8 +86,8 @@ public class TestingClass {
 	}
 
 	public static void oldMain(String[] args) throws ClassNotFoundException {
-		Configuration conf = new Configuration(
-				Configuration.readProperties("jobs/Connect4_54.job"));
+		Configuration conf = new Configuration(Configuration
+				.readProperties("jobs/Connect4_54.job"));
 		Connect4 game = (Connect4) conf.getGame();
 		TierState[] states = new TierState[5];
 		for (int i = 0; i < 5; i++)

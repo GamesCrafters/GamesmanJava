@@ -11,8 +11,9 @@ import edu.berkeley.gamesman.core.Configuration;
  * 
  * @author dnspies
  */
-public class GZippedClosedFileDatabase extends GZippedFileDatabase {
+public class GZippedClosedFileDatabase extends GZippedDatabase {
 	private int handlesOpen = 0;
+	private long tableOffset = -1;
 
 	/**
 	 * The default constructor
@@ -37,8 +38,6 @@ public class GZippedClosedFileDatabase extends GZippedFileDatabase {
 			boolean solve, long firstRecord, long numRecords,
 			DatabaseHeader header) throws IOException {
 		super(uri, conf, solve, firstRecord, numRecords, header);
-		fis.close();
-		fis = null;
 	}
 
 	@Override
@@ -74,5 +73,31 @@ public class GZippedClosedFileDatabase extends GZippedFileDatabase {
 
 	@Override
 	public void close() {
+	}
+
+	@Override
+	protected synchronized long[] getEntryPoints(long firstEntry, int numEntries) {
+		long[] entryPoints = new long[numEntries + 1];
+		byte[] entryBytes = new byte[(numEntries + 1) << 3];
+		try {
+			if (tableOffset < 0) {
+				fis.getChannel().position(0);
+				skipHeader(fis);
+				tableOffset = fis.getChannel().position();
+			}
+			fis.getChannel().position(
+					tableOffset + ((firstEntry - this.firstEntry) << 3));
+			fis.read(entryBytes);
+		} catch (IOException ioe) {
+			throw new Error(ioe);
+		}
+		int c = 0;
+		for (int i = 0; i < entryPoints.length; i++) {
+			for (int s = 0; s < 8; s++) {
+				entryPoints[i] <<= 8;
+				entryPoints[i] |= entryBytes[c++] & 255;
+			}
+		}
+		return entryPoints;
 	}
 }

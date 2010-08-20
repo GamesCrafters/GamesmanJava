@@ -24,7 +24,7 @@ import edu.berkeley.gamesman.util.qll.QuickLinkedList;
  * 
  * @author dnspies
  */
-public class GZippedFileDatabase extends Database implements Runnable {
+public class GZippedFileDatabase extends GZippedDatabase implements Runnable {
 
 	// Writing only
 
@@ -49,12 +49,9 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			final Database readFrom, long maxMem) throws IOException {
 		super(uri, conf, true, readFrom.firstRecord(), readFrom.numRecords(),
 				readFrom.getHeader());
-		myFile = new File(uri);
-		entrySize = conf.getInteger("gamesman.db.zip.entryKB", 64) << 10;
 		gzipWorst = entrySize + ((entrySize + ((1 << 15) - 1)) >> 15) * 5 + 18;
 		// As I understand, this is worst-case performance for gzip
-		firstByteIndex = toByte(firstContainedRecord);
-		firstEntry = handleEntry = thisEntry = firstByteIndex / entrySize;
+		handleEntry = thisEntry = firstEntry;
 		lastByteIndex = lastByte(firstContainedRecord + numContainedRecords);
 		long lastEntry = (lastByteIndex + entrySize - 1) / entrySize;
 		numEntries = (int) (lastEntry - firstEntry);
@@ -341,11 +338,7 @@ public class GZippedFileDatabase extends Database implements Runnable {
 			long firstRecord, long numRecords, DatabaseHeader header)
 			throws IOException {
 		super(uri, conf, solve, firstRecord, numRecords, header);
-		myFile = new File(uri);
-		entrySize = conf.getInteger("gamesman.db.zip.entryKB", 64) << 10;
 		gzipWorst = entrySize + ((entrySize + ((1 << 15) - 1)) >> 15) * 5 + 18;
-		firstByteIndex = toByte(firstContainedRecord);
-		firstEntry = firstByteIndex / entrySize;
 		lastByteIndex = lastByte(firstContainedRecord + numContainedRecords);
 		long lastEntry = (lastByteIndex + entrySize - 1) / entrySize;
 		numEntries = (int) (lastEntry - firstEntry);
@@ -378,12 +371,9 @@ public class GZippedFileDatabase extends Database implements Runnable {
 	public GZippedFileDatabase(String uri, Configuration conf,
 			DatabaseHeader header) throws IOException {
 		super(uri, conf, true, header.firstRecord, header.numRecords, header);
-		myFile = new File(uri);
-		entrySize = conf.getInteger("gamesman.db.zip.entryKB", 64) << 10;
 		gzipWorst = entrySize + ((entrySize + ((1 << 15) - 1)) >> 15) * 5 + 18;
 		// As I understand, this is worst-case performance for gzip
-		firstByteIndex = toByte(firstContainedRecord);
-		firstEntry = thisEntry = firstByteIndex / entrySize;
+		thisEntry = firstEntry;
 		lastByteIndex = lastByte(firstContainedRecord + numContainedRecords);
 		long lastEntry = (lastByteIndex + entrySize - 1) / entrySize;
 		numEntries = (int) (lastEntry - firstEntry);
@@ -403,112 +393,11 @@ public class GZippedFileDatabase extends Database implements Runnable {
 		writeBuffer = new byte[gzipWorst];
 	}
 
-	protected final File myFile;
-
-	protected FileInputStream fis;
-
 	private final long[] entryPoints;
-
-	private final int entrySize;
-
-	private final long firstEntry;
-
-	private final long firstByteIndex;
 
 	private final int gzipWorst;
 
 	private final long lastByteIndex;
-
-	private GZipHandle lastUsed;
-
-	protected final class GZipHandle extends DatabaseHandle {
-		ChunkWrapInputStream cwis;
-		ZipChunkInputStream zcis;
-		long filePos, remainingBytes;
-
-		public GZipHandle(int recordGroupByteLength) {
-			super(recordGroupByteLength);
-		}
-	}
-
-	@Override
-	public GZipHandle getHandle() {
-		return new GZipHandle(recordGroupByteLength);
-	}
-
-	@Override
-	protected synchronized void getBytes(DatabaseHandle dh, long loc,
-			byte[] arr, int off, int len) {
-		getRecordsAsBytes(dh, loc, 0, arr, off, len, 0, true);
-	}
-
-	@Override
-	protected synchronized void getRecordsAsBytes(DatabaseHandle dh,
-			long byteIndex, int recordNum, byte[] arr, int off, int numBytes,
-			int lastNum, boolean overwriteEdgesOk) {
-		super.getRecordsAsBytes(dh, byteIndex, recordNum, arr, off, numBytes,
-				lastNum, overwriteEdgesOk);
-	}
-
-	@Override
-	protected synchronized int getBytes(DatabaseHandle dh, byte[] arr, int off,
-			int maxLen, boolean overwriteEdgesOk) {
-		if (!overwriteEdgesOk)
-			return super.getBytes(dh, arr, off, maxLen, false);
-		final int numBytes = (int) Math.min(maxLen, dh.lastByteIndex
-				- dh.location);
-		try {
-			GZipHandle gzh = (GZipHandle) dh;
-			if (lastUsed != gzh) {
-				if (lastUsed != null)
-					lastUsed.filePos = fis.getChannel().position();
-				lastUsed = gzh;
-				fis.getChannel().position(gzh.filePos);
-			}
-			readFully(gzh.zcis, arr, off, numBytes);
-		} catch (IOException e) {
-			throw new Error(e);
-		}
-		dh.location += numBytes;
-		return numBytes;
-	}
-
-	@Override
-	protected synchronized void prepareRange(DatabaseHandle dh, long byteIndex,
-			int firstNum, long numBytes, int lastNum) {
-		GZipHandle gzh = (GZipHandle) dh;
-		long thisEntry = byteIndex / entrySize;
-		try {
-			if (lastUsed != null)
-				try {
-					lastUsed.filePos = fis.getChannel().position();
-				} catch (IOException e) {
-					throw new Error(e);
-				}
-			lastUsed = gzh;
-			gzh.filePos = entryPoints[(int) (thisEntry - firstEntry)];
-			fis.getChannel().position(gzh.filePos);
-			gzh.cwis = new ChunkWrapInputStream(fis, entryPoints,
-					(int) (thisEntry - firstEntry));
-			gzh.zcis = new ZipChunkInputStream(gzh.cwis);
-			long curLoc;
-			if (thisEntry == firstEntry)
-				curLoc = firstByteIndex;
-			else
-				curLoc = thisEntry * entrySize;
-			while (curLoc < byteIndex)
-				curLoc += gzh.zcis.skip(byteIndex - curLoc);
-		} catch (IOException e) {
-			throw new Error(e);
-		}
-		super.prepareRange(dh, byteIndex, firstNum, numBytes, lastNum);
-	}
-
-	@Override
-	protected void putBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
-			int len) {
-		throw new UnsupportedOperationException();
-	}
 
 	// For remote work
 
@@ -729,97 +618,11 @@ public class GZippedFileDatabase extends Database implements Runnable {
 	}
 
 	@Override
-	public long getSize() {
-		return myFile.length();
-	}
-}
-
-final class ChunkWrapInputStream extends FilterInputStream {
-	final long[] positions;
-	int nextEntry;
-	long curPos;
-	int lengthBytes = 4;
-
-	ChunkWrapInputStream(InputStream in, long[] positions, int curEntry) {
-		super(in);
-		this.positions = positions;
-		nextEntry = curEntry + 1;
-		curPos = positions[curEntry];
-	}
-
-	@Override
-	public int read() throws IOException {
-		if (nextEntry == positions.length)
-			return -1;
-		int blockBytes = (int) (positions[nextEntry] - curPos);
-		if (blockBytes + lengthBytes == 0) {
-			nextEntry++;
-			if (nextEntry == positions.length)
-				return -1;
-			blockBytes = (int) (positions[nextEntry] - curPos);
-			lengthBytes = 4;
-		}
-		if (lengthBytes > 0) {
-			lengthBytes--;
-			return (blockBytes >> (lengthBytes << 3)) & 255;
-		} else {
-			curPos++;
-			return in.read();
-		}
-	}
-
-	@Override
-	public int read(byte[] arr, int off, int len) throws IOException {
-		if (nextEntry == positions.length)
-			return -1;
-		int blockBytes = (int) (positions[nextEntry] - curPos);
-		int totalBytesRead = 0;
-		if (blockBytes + lengthBytes == 0) {
-			nextEntry++;
-			if (nextEntry == positions.length)
-				return -1;
-			blockBytes = (int) (positions[nextEntry] - curPos);
-			lengthBytes = 4;
-		}
-		while (lengthBytes > 0 && len > 0) {
-			lengthBytes--;
-			arr[off++] = (byte) (blockBytes >> (lengthBytes << 3));
-			len--;
-			totalBytesRead++;
-		}
-		if (len > 0) {
-			int bytesRead = in.read(arr, off, Math.min(len, blockBytes));
-			totalBytesRead += bytesRead;
-			curPos += bytesRead;
-		}
-		return totalBytesRead;
-	}
-
-	@Override
-	public long skip(long n) throws IOException {
-		if (nextEntry == positions.length)
-			return -1;
-		int blockBytes = (int) (positions[nextEntry] - curPos);
-		int totalBytesSkipped = 0;
-		if (blockBytes + lengthBytes == 0) {
-			nextEntry++;
-			if (nextEntry == positions.length)
-				return -1;
-			blockBytes = (int) (positions[nextEntry] - curPos);
-			lengthBytes = 4;
-		}
-		int lengthSkip = (int) Math.min(lengthBytes, n);
-		if (lengthSkip > 0) {
-			lengthBytes -= lengthSkip;
-			n -= lengthSkip;
-			totalBytesSkipped += lengthSkip;
-		}
-		if (n > 0) {
-			int bytesSkipped = (int) in.skip(Math.min(n, blockBytes));
-			totalBytesSkipped += bytesSkipped;
-			curPos += bytesSkipped;
-		}
-		return totalBytesSkipped;
+	protected long[] getEntryPoints(long firstEntry, int numEntries) {
+		long[] res = new long[numEntries + 1];
+		System.arraycopy(entryPoints, (int) (firstEntry - this.firstEntry),
+				res, 0, numEntries + 1);
+		return res;
 	}
 }
 
