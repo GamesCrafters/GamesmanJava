@@ -15,7 +15,12 @@ import edu.berkeley.gamesman.util.qll.Pool;
 import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 
 /**
- * For reading only
+ * A file database whose records are GZipped in chunks. Each chunk contains
+ * gamesman.db.zip.entryKB (default 64) raw kilobytes of records (record groups
+ * may be split across chunk boundaries). The first numEntries*8 bytes after the
+ * header is a list of offsets into the file at which each chunk begins. This is
+ * loaded into an array when the database is opened and held in memory until it
+ * is garbage collected.
  * 
  * @author dnspies
  */
@@ -23,6 +28,23 @@ public class GZippedFileDatabase extends Database implements Runnable {
 
 	// Writing only
 
+	/**
+	 * This constructor is used when converting a database of another type
+	 * (usually a FileDatabase) into a GZippedFileDatabase
+	 * 
+	 * @param uri
+	 *            The name of the database file to be created
+	 * @param conf
+	 *            The configuration object
+	 * @param readFrom
+	 *            The database to read input from
+	 * @param maxMem
+	 *            The maximum amount of memory available to be used while
+	 *            GZipping
+	 * @throws IOException
+	 *             If there's an IOException creating the file or storing the
+	 *             header
+	 */
 	public GZippedFileDatabase(String uri, final Configuration conf,
 			final Database readFrom, long maxMem) throws IOException {
 		super(uri, conf, true, readFrom.firstRecord(), readFrom.numRecords(),
