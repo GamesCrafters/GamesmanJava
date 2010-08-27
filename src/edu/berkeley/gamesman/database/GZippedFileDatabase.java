@@ -10,7 +10,6 @@ import edu.berkeley.gamesman.util.qll.Factory;
 import edu.berkeley.gamesman.util.ChunkInputStream;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
-import edu.berkeley.gamesman.util.ZipChunkInputStream;
 import edu.berkeley.gamesman.util.qll.Pool;
 import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 

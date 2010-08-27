@@ -9,10 +9,36 @@ import java.io.InputStream;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.util.ZipChunkInputStream;
 
+/**
+ * A super-class for the two GZippedDatabase classes. One uses more memory, but
+ * operates quicker, the other is slower but uses less memory
+ * 
+ * @author dnspies
+ */
 public abstract class GZippedDatabase extends Database {
 
 	// For reading and writing
 
+	/**
+	 * The default constructor
+	 * 
+	 * @param uri
+	 *            The name of the file
+	 * @param conf
+	 *            The configuration object
+	 * @param solve
+	 *            Whether solving (If true, opened as read/write, otherwise just
+	 *            write)
+	 * @param firstRecord
+	 *            The index of the first record contained in this database
+	 * @param numRecords
+	 *            The number of records contained in this database
+	 * @param header
+	 *            The header
+	 * @throws IOException
+	 *             If opening the file or reading the header throws an
+	 *             IOException
+	 */
 	public GZippedDatabase(String uri, Configuration conf, boolean solve,
 			long firstRecord, long numRecords, DatabaseHeader header)
 			throws IOException {
@@ -134,6 +160,12 @@ public abstract class GZippedDatabase extends Database {
 	}
 }
 
+/**
+ * Wraps a stream using the location table to determine where the GZipped chunks
+ * are. Think of it as the inverse of ChunkInputStream.
+ * 
+ * @author dnspies
+ */
 final class ChunkWrapInputStream extends FilterInputStream {
 	final long[] positions;
 	int nextEntry;
