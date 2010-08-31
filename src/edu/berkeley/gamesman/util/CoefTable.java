@@ -84,8 +84,8 @@ public class CoefTable {
 				int len = i * degree + 1;
 				posTable[i] = new long[len];
 				for (int k = 0; k < len; k++) {
-					posTable[i][k] = get(n - 1, k) + get(n, k - 1)
-							- get(n - 1, k - (degree + 1));
+					posTable[i][k] = get(i - 1, k) + get(i, k - 1)
+							- get(i - 1, k - (degree + 1));
 				}
 			}
 		}
