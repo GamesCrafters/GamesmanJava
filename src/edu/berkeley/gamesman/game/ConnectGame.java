@@ -20,6 +20,7 @@ public abstract class ConnectGame extends TierGame {
 	private char turn;
 	protected final MMHasher mmh;
 	protected final TierState myState = newState();
+	private long numHashesForTier;
 
 	/**
 	 * @param conf
@@ -44,7 +45,7 @@ public abstract class ConnectGame extends TierGame {
 
 	@Override
 	public boolean hasNextHashInTier() {
-		return myState.hash < numHashesForTier() - 1;
+		return myState.hash < numHashesForTier - 1;
 	}
 
 	@Override
@@ -56,12 +57,6 @@ public abstract class ConnectGame extends TierGame {
 	public void nextHashInTier() {
 		myState.hash++;
 		gameMatchState();
-	}
-
-	@Override
-	public long numHashesForTier() {
-		int tier = getTier();
-		return Util.nCr(getBoardSize(), tier) * Util.nCr(tier, tier / 2);
 	}
 
 	@Override
@@ -92,7 +87,10 @@ public abstract class ConnectGame extends TierGame {
 			if (arr[i] != ' ')
 				tier++;
 		}
-		myState.tier = tier;
+		if (tier != myState.tier) {
+			myState.tier = tier;
+			numHashesForTier = numHashesForTier(tier);
+		}
 		turn = ((tier & 1) == 1) ? 'O' : 'X';
 		myState.hash = mmh.hash(getCharArray());
 	}
@@ -111,6 +109,7 @@ public abstract class ConnectGame extends TierGame {
 			arr[i] = ' ';
 		setToCharArray(arr);
 		myState.tier = 0;
+		numHashesForTier = 1;
 		turn = 'X';
 		myState.hash = 0;
 	}
@@ -118,13 +117,6 @@ public abstract class ConnectGame extends TierGame {
 	@Override
 	public void setState(TierState pos) {
 		myState.set(pos);
-		gameMatchState();
-	}
-
-	@Override
-	public void setTier(int tier) {
-		myState.tier = tier;
-		myState.hash = 0;
 		gameMatchState();
 	}
 
@@ -203,14 +195,11 @@ public abstract class ConnectGame extends TierGame {
 	public Value primitiveValue() {
 		Value result;
 		if ((myState.tier & 1) == 1)
-			result = isWin('X') ? Value.LOSE
-					: Value.UNDECIDED;
+			result = isWin('X') ? Value.LOSE : Value.UNDECIDED;
 		else
-			result = isWin('O') ? Value.LOSE
-					: Value.UNDECIDED;
+			result = isWin('O') ? Value.LOSE : Value.UNDECIDED;
 		assert Util.debug(DebugFacility.GAME, result.name() + "\n");
-		if (myState.tier == numberOfTiers() - 1
-				&& result == Value.UNDECIDED)
+		if (myState.tier == numberOfTiers() - 1 && result == Value.UNDECIDED)
 			return Value.IMPOSSIBLE;
 		else
 			return result;

@@ -197,11 +197,6 @@ public final class Connect4 extends TierGame {
 	}
 
 	@Override
-	public long numHashesForTier() {
-		return ec.getCoef(gameWidth, pieces.size()) * iah.colorArrangements;
-	}
-
-	@Override
 	public int numStartingPositions() {
 		return 1;
 	}
@@ -257,8 +252,7 @@ public final class Connect4 extends TierGame {
 		setToColHeights(pieces.size());
 	}
 
-	@Override
-	public void setTier(int tier) {
+	private void setTier(int tier) {
 		int pieceCount = 0;
 		for (int col = 0; col < gameWidth; col++) {
 			if (tier - pieceCount > gameHeight) {

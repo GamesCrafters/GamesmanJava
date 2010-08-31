@@ -207,8 +207,6 @@ class ConnectFour implements MouseListener {
 				for (int i = 0; i < listMoves.size(); i++) {
 					TierState state = listMoves.get(i).cdr;
 					moveHashes[i] = game.stateToHash(state);
-					if (game.getTier() != state.tier)
-						game.setTier(state.tier);
 					records[i] = new Record(conf);
 					game.recordFromLong(state, fd.getRecord(fdHandle,
 							moveHashes[i]), records[i]);

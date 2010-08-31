@@ -90,8 +90,7 @@ public abstract class TierGame extends Game<TierState> {
 	}
 
 	@Override
-	public synchronized int validMoves(TierState pos,
-			TierState[] children) {
+	public synchronized int validMoves(TierState pos, TierState[] children) {
 		setState(pos);
 		return validMoves(children);
 	}
@@ -112,16 +111,6 @@ public abstract class TierGame extends Game<TierState> {
 	 * @return The tier of this position
 	 */
 	public abstract int getTier();
-
-	/**
-	 * Cycle to the next position.
-	 */
-	public void next() {
-		if (hasNextHashInTier())
-			nextHashInTier();
-		else
-			setTier(getTier() + 1);
-	}
 
 	@Override
 	public synchronized String stateToString(TierState pos) {
@@ -164,18 +153,7 @@ public abstract class TierGame extends Game<TierState> {
 	 *            The tier in question
 	 * @return The number of hashes in the tier
 	 */
-	public synchronized long numHashesForTier(int tier) {
-		setTier(tier);
-		return numHashesForTier();
-	}
-
-	/**
-	 * Sets this game to the given tier.
-	 * 
-	 * @param tier
-	 *            The tier to set to.
-	 */
-	public abstract void setTier(int tier);
+	public abstract long numHashesForTier(int tier);
 
 	/**
 	 * Pretty-print's the current position
@@ -183,11 +161,6 @@ public abstract class TierGame extends Game<TierState> {
 	 * @return a string of the position
 	 */
 	public abstract String displayState();
-
-	/**
-	 * @return The number of hashes in this tier.
-	 */
-	public abstract long numHashesForTier();
 
 	@Override
 	public synchronized Collection<TierState> startingPositions() {
