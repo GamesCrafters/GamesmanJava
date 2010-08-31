@@ -1,15 +1,14 @@
 package edu.berkeley.gamesman.util;
 
 public class CoefTable {
-	long[][] posTable;
-	long[][] negTable;
-	int[] nLength;
+	long[][] posTable = { { 1L } };
+	long[][] negTable = new long[0][];
 	final int degree;
 
 	public static void main(String[] args) {
 		CoefTable ct = new CoefTable(Integer.parseInt(args[2]));
-		System.out.println(ct.get(Integer.parseInt(args[0]),
-				Integer.parseInt(args[1])));
+		System.out.println(ct.get(Integer.parseInt(args[0]), Integer
+				.parseInt(args[1])));
 	}
 
 	public CoefTable() {
@@ -25,21 +24,9 @@ public class CoefTable {
 	public long get(int n, int k) {
 		if (n < 0)
 			return getNeg(-n - 1, k);
-		if (k < 0)
+		ensureContained(n);
+		if (k < 0 || k >= posTable[n].length)
 			return 0;
-		ensureLength(n);
-		if (k >= nLength[n])
-			return 0;
-		else if (k >= nLength[n] / 2)
-			k = nLength[n] - (k + 1);
-		ensureRow(n, k);
-		if (posTable[n][k] == 0) {
-			if (n == 0)
-				posTable[n][k] = 1;
-			else
-				posTable[n][k] = get(n - 1, k) + get(n, k - 1)
-						- get(n - 1, k - (degree + 1));
-		}
 		return posTable[n][k];
 	}
 
@@ -47,99 +34,60 @@ public class CoefTable {
 		if (k < 0)
 			return 0;
 		ensureNegLength(n, k);
-		if (negTable[n][k] == Long.MIN_VALUE) {
-			if (n == 0)
-				negTable[n][k] = k % (degree + 1) <= 1 ? -(k % (degree + 1) * 2 - 1)
-						: 0;
-			else
-				negTable[n][k] = getNeg(n - 1, k) - getNeg(n - 1, k - 1)
-						+ getNeg(n, k - (degree + 1));
-		}
 		return negTable[n][k];
 	}
 
 	private void ensureNegLength(int n, int k) {
-		if (negTable == null) {
-			createNegTable(n, k);
-		} else if (negTable.length <= n) {
-			expandNegTable(n, k);
-		} else if (negTable[n] == null) {
-			createNegRow(n, k);
-		} else if (negTable[n].length <= k) {
-			expandNegRow(n, k);
+		if (negTable.length <= n) {
+			long[][] newNegTable = new long[n + 1][];
+			System.arraycopy(negTable, 0, newNegTable, 0, negTable.length);
+			for (int i = negTable.length; i <= n; i++) {
+				newNegTable[i] = new long[0];
+			}
+			negTable = newNegTable;
+		}
+		if (negTable[n].length <= k) {
+			if (negTable[0].length <= k) {
+				long[] newRow = new long[k + 1];
+				System.arraycopy(negTable[0], 0, newRow, 0, negTable[0].length);
+				int r = negTable[0].length;
+				negTable[0] = newRow;
+				for (; r <= k; r++) {
+					negTable[0][r] = (r == 0 ? 1 : (r == 1 ? -1 : getNeg(0, r
+							- (degree + 1))));
+				}
+			}
+			for (int i = 1; i <= n; i++) {
+				if (negTable[i].length <= k) {
+					long[] newRow = new long[k + 1];
+					System.arraycopy(negTable[i], 0, newRow, 0,
+							negTable[i].length);
+					int r = negTable[i].length;
+					negTable[i] = newRow;
+					for (; r <= k; r++) {
+						negTable[i][r] = getNeg(i - 1, r)
+								- getNeg(i - 1, r - 1)
+								+ getNeg(i, r - (degree + 1));
+					}
+				}
+			}
 		}
 	}
 
-	private void createNegTable(int n, int k) {
-		negTable = new long[n + 1][];
-		createNegRow(n, k);
-	}
-
-	private void expandNegTable(int n, int k) {
-		long[][] newNegTable = new long[n + 1][];
-		System.arraycopy(negTable, 0, newNegTable, 0, negTable.length);
-		negTable = newNegTable;
-		createNegRow(n, k);
-	}
-
-	private void createNegRow(int n, int k) {
-		negTable[n] = new long[k + 1];
-		for (int i = 0; i <= k; i++)
-			negTable[n][i] = Long.MIN_VALUE;
-	}
-
-	private void expandNegRow(int n, int k) {
-		long[] newNegRow = new long[k + 1];
-		System.arraycopy(negTable[n], 0, newNegRow, 0, negTable[n].length);
-		for (int i = negTable[n].length; i <= k; i++)
-			newNegRow[i] = Long.MIN_VALUE;
-		negTable[n] = newNegRow;
-	}
-
-	private void ensureLength(int n) {
-		if (posTable == null)
-			createTable(n);
-		else if (posTable.length <= n)
-			expandTable(n);
-	}
-
-	private void ensureRow(int n, int k) {
-		if (posTable[n] == null) {
-			createRow(n, k);
-		} else if (posTable[n].length <= k)
-			expandRow(n, k);
-	}
-
-	private void createTable(int n) {
-		posTable = new long[n + 1][];
-		nLength = new int[n + 1];
-		int totLength = 1;
-		for (int i = 0; i <= n; i++) {
-			nLength[i] = totLength;
-			totLength += degree;
+	private void ensureContained(int n) {
+		if (posTable.length <= n) {
+			long[][] newTable = new long[n + 1][];
+			System.arraycopy(posTable, 0, newTable, 0, posTable.length);
+			int i = posTable.length;
+			posTable = newTable;
+			for (; i <= n; i++) {
+				int len = i * degree + 1;
+				posTable[i] = new long[len];
+				for (int k = 0; k < len; k++) {
+					posTable[i][k] = get(n - 1, k) + get(n, k - 1)
+							- get(n - 1, k - (degree + 1));
+				}
+			}
 		}
-	}
-
-	private void expandTable(int n) {
-		long[][] newTable = new long[n + 1][];
-		System.arraycopy(posTable, 0, newTable, 0, posTable.length);
-		int[] newLength = new int[n + 1];
-		System.arraycopy(nLength, 0, newLength, 0, nLength.length);
-		int totLength = nLength[nLength.length - 1];
-		for (int i = nLength.length - 1; i <= n; i++) {
-			newLength[i] = totLength;
-			totLength += degree;
-		}
-		nLength = newLength;
-	}
-
-	private void createRow(int n, int k) {
-		posTable[n] = new long[k + 1];
-	}
-
-	private void expandRow(int n, int k) {
-		long[] newRow = new long[k + 1];
-		System.arraycopy(posTable[n], 0, newRow, 0, posTable[n].length);
-		posTable[n] = newRow;
 	}
 }
