@@ -51,9 +51,9 @@ public final class Record implements Cloneable {
 	 * must do that yourself.
 	 */
 	public void previousPosition() {
-		if (conf.valueStates > 0)
+		if (conf.hasValue)
 			value = value.flipValue();
-		if (conf.remotenessStates > 0)
+		if (conf.hasRemoteness)
 			++remoteness;
 	}
 
@@ -61,9 +61,9 @@ public final class Record implements Cloneable {
 	public boolean equals(Object r) {
 		if (r instanceof Record) {
 			Record rec = (Record) r;
-			return (conf.valueStates == 0 || value == rec.value)
-					&& (conf.remotenessStates == 0 || remoteness == rec.remoteness)
-					&& (conf.scoreStates == 0 || score == rec.score);
+			return (!conf.hasValue || value == rec.value)
+					&& (!conf.hasRemoteness || remoteness == rec.remoteness)
+					&& (!conf.hasScore || score == rec.score);
 		} else
 			return false;
 	}
@@ -71,11 +71,11 @@ public final class Record implements Cloneable {
 	@Override
 	public String toString() {
 		String s;
-		if (conf.valueStates > 0)
+		if (conf.hasValue)
 			s = value.name();
 		else
 			s = "Finish";
-		if (conf.remotenessStates > 0)
+		if (conf.hasRemoteness)
 			return s + " in " + remoteness;
 		else
 			return s;

@@ -541,30 +541,18 @@ public final class Connect4 extends TierGame {
 
 	@Override
 	public long recordStates() {
-		if (conf.remotenessStates > 0)
-			return gameSize + 2 + (conf.valueStates > 3 ? 1 : 0);
+		if (conf.hasRemoteness)
+			return gameSize + 2;
 		else
-			return 3 + (conf.valueStates > 3 ? 1 : 0);
-	}
-
-	@Override
-	public int defaultValueStates() {
-		return 3;
-	}
-
-	@Override
-	public int defaultRemotenessStates() {
-		return gameSize + 1;
+			return 3;
 	}
 
 	@Override
 	public void recordFromLong(TierState recordState, long state, Record toStore) {
-		if (conf.remotenessStates > 0) {
+		if (conf.hasRemoteness) {
 			if (state == gameSize + 1) {
 				toStore.value = Value.TIE;
 				toStore.remoteness = gameSize - recordState.tier;
-			} else if (state == gameSize + 2) {
-				toStore.value = Value.UNDECIDED;
 			} else if ((state & 1L) > 0) {
 				toStore.value = Value.WIN;
 				toStore.remoteness = (int) state;
@@ -586,11 +574,9 @@ public final class Connect4 extends TierGame {
 
 	@Override
 	public long getRecord(TierState recordState, Record fromRecord) {
-		if (conf.remotenessStates > 0) {
+		if (conf.hasRemoteness) {
 			if (fromRecord.value == Value.TIE) {
 				return gameSize + 1;
-			} else if (fromRecord.value == Value.UNDECIDED) {
-				return gameSize + 2;
 			} else {
 				return fromRecord.remoteness;
 			}

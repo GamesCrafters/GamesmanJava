@@ -168,7 +168,7 @@ public abstract class ConnectGame extends TierGame {
 
 	@Override
 	public long recordStates() {
-		if (conf.remotenessStates > 0)
+		if (conf.hasRemoteness)
 			return getBoardSize() + 1;
 		else
 			return 2;
@@ -207,7 +207,7 @@ public abstract class ConnectGame extends TierGame {
 
 	@Override
 	public long getRecord(TierState recordState, Record fromRecord) {
-		if (conf.remotenessStates > 0) {
+		if (conf.hasRemoteness) {
 			return fromRecord.remoteness;
 		} else {
 			switch (fromRecord.value) {
@@ -227,7 +227,7 @@ public abstract class ConnectGame extends TierGame {
 			toStore.value = Value.WIN;
 		else
 			toStore.value = Value.LOSE;
-		if (conf.remotenessStates > 0)
+		if (conf.hasRemoteness)
 			toStore.remoteness = (int) state;
 	}
 

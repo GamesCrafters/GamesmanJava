@@ -34,8 +34,7 @@ public class Pyraminx extends TwistyPuzzle<PyraminxState> {
 
 	@Override
 	public Value primitiveValue(PyraminxState pos) {
-		return pos.equals(SOLVED_STATE) ? Value.WIN
-				: Value.UNDECIDED;
+		return pos.equals(SOLVED_STATE) ? Value.WIN : Value.UNDECIDED;
 	}
 
 	private static final PyraminxState SOLVED_STATE = new PyraminxState(
@@ -230,12 +229,16 @@ public class Pyraminx extends TwistyPuzzle<PyraminxState> {
 	@Override
 	public int maxChildren() {
 		return 8;
-		// TODO: How can this be generalized?
 	}
 
 	@Override
 	public PyraminxState newState() {
 		return new PyraminxState(edgeCount, centerCount);
+	}
+
+	@Override
+	public int remotenessStates() {
+		return 12;
 	}
 }
 

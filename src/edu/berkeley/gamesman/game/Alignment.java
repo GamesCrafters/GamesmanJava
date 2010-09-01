@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.game.util.AlignmentState;
 import edu.berkeley.gamesman.hasher.AlignmentHasher;
@@ -16,7 +17,7 @@ import edu.berkeley.gamesman.util.Util;
  * 
  */
 public class Alignment extends Game<AlignmentState> {
-	private final int gameWidth, gameHeight;
+	private final int gameWidth, gameHeight, gameSize;
 	public final int piecesToWin;
 	private final AlignmentVariant variant; // should be an enum?
 	public final ArrayList<Pair<Integer, Integer>> openCells;
@@ -26,6 +27,7 @@ public class Alignment extends Game<AlignmentState> {
 		super(conf);
 		gameWidth = conf.getInteger("gamesman.game.width", 4);
 		gameHeight = conf.getInteger("gamesman.game.height", 4);
+		gameSize = gameWidth * gameHeight;
 		piecesToWin = conf.getInteger("gamesman.game.pieces", 5);
 
 		variant = AlignmentVariant.getVariant(conf.getInteger(
@@ -276,6 +278,35 @@ public class Alignment extends Game<AlignmentState> {
 
 	int getHeight() {
 		return gameHeight;
+	}
+
+	@Override
+	public long getRecord(AlignmentState recordState, Record fromRecord) {
+		if (fromRecord.value == Value.UNDECIDED)
+			return gameSize + 2;
+		else if (fromRecord.value == Value.TIE)
+			return gameSize + 1;
+		else
+			return fromRecord.remoteness;
+	}
+
+	@Override
+	public void recordFromLong(AlignmentState recordState, long record,
+			Record toStore) {
+		if (record == gameSize + 2) {
+			toStore.value = Value.UNDECIDED;
+		} else if (record == gameSize + 1) {
+			toStore.value = Value.TIE;
+			toStore.remoteness = gameSize - recordState.numPieces;
+		} else {
+			toStore.value = (record & 1) == 1 ? Value.WIN : Value.LOSE;
+			toStore.remoteness = (int) record;
+		}
+	}
+
+	@Override
+	public long recordStates() {
+		return gameSize + 3;
 	}
 
 }

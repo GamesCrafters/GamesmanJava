@@ -38,7 +38,7 @@ public class TopDownSolver<S extends State> extends Solver {
 			public void reset(Record[] t) {
 			}
 		});
-		containsRemoteness = conf.remotenessStates > 0;
+		containsRemoteness = conf.hasRemoteness;
 	}
 
 	@Override

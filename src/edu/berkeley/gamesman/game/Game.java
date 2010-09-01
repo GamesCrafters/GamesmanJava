@@ -235,7 +235,7 @@ public abstract class Game<S extends State> {
 		int lastSize;
 		Record[] arrVals = recordArray;
 		Value bestVal = Value.WIN;
-		if (conf.valueStates > 0) {
+		if (conf.hasValue) {
 			lastSize = size;
 			size = 0;
 			bestVal = Value.LOSE;
@@ -258,7 +258,7 @@ public abstract class Game<S extends State> {
 			arrVals = valsBest;
 			offset = 0;
 		}
-		if (conf.scoreStates > 0) {
+		if (conf.hasScore) {
 			lastSize = size;
 			size = 0;
 			int bestScore = Integer.MIN_VALUE;
@@ -281,7 +281,7 @@ public abstract class Game<S extends State> {
 			arrVals = valsBestScore;
 			offset = 0;
 		}
-		if (conf.remotenessStates > 0) {
+		if (conf.hasRemoteness) {
 			lastSize = size;
 			size = 0;
 			if (bestVal == Value.LOSE) {
@@ -334,11 +334,7 @@ public abstract class Game<S extends State> {
 	/**
 	 * @return The total number of possible states a record could be
 	 */
-	public long recordStates() {
-		return (conf.valueStates > 0 ? conf.valueStates : 1)
-				* (conf.remotenessStates > 0 ? conf.remotenessStates : 1)
-				* (conf.scoreStates > 0 ? conf.scoreStates : 1);
-	}
+	public abstract long recordStates();
 
 	/**
 	 * For mutable states. Avoids needing to instantiate new states.
@@ -383,56 +379,13 @@ public abstract class Game<S extends State> {
 		return combine(recArray, 0, recArray.length);
 	}
 
-	public int defaultValueStates() {
-		return 6;
-	}
-
-	public int defaultRemotenessStates() {
-		return 64;
-	}
-
-	public int defaultScoreStates() {
-		return 0;
-	}
-
-	public void recordFromLong(S recordState, long record, Record toStore) {
-		int fieldStates = 1;
-		if (conf.valueStates > 0) {
-			fieldStates = conf.valueStates;
-			toStore.value = Value.values[(int) (record % fieldStates)];
-		}
-		if (conf.remotenessStates > 0) {
-			record /= fieldStates;
-			fieldStates = conf.remotenessStates;
-			toStore.remoteness = (int) (record % fieldStates);
-		}
-		if (conf.scoreStates > 0) {
-			record /= fieldStates;
-			toStore.score = (int) record;
-		}
-	}
+	public abstract void recordFromLong(S recordState, long record,
+			Record toStore);
 
 	public final synchronized void synchronizedRecordFromLong(S recordState,
 			long record, Record toStore) {
 		recordFromLong(recordState, record, toStore);
 	}
 
-	public long getRecord(S recordState, Record fromRecord) {
-		int fieldStates = 1;
-		long totalState = 0;
-		if (conf.scoreStates > 0) {
-			totalState += fromRecord.score;
-			fieldStates = conf.scoreStates;
-		}
-		if (conf.remotenessStates > 0) {
-			totalState *= fieldStates;
-			totalState += fromRecord.remoteness;
-			fieldStates = conf.remotenessStates;
-		}
-		if (conf.valueStates > 0) {
-			totalState *= fieldStates;
-			totalState += fromRecord.value.value;
-		}
-		return totalState;
-	}
+	public abstract long getRecord(S recordState, Record fromRecord);
 }

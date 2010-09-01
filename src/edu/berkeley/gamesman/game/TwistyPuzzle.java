@@ -26,8 +26,10 @@ public abstract class TwistyPuzzle<S extends State> extends Game<S> {
 
 	@Override
 	public long recordStates() {
-		return conf.remotenessStates + 1;
+		return remotenessStates() + 1;
 	}
+
+	public abstract int remotenessStates();
 
 	@Override
 	public long getRecord(S recordState, Record fromRecord) {

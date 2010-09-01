@@ -7,8 +7,9 @@ public final class AlignmentState implements State {
 	private final boolean[] guns = new boolean[] { false, false, false, false };
 	// private ArrayList<Bullet> myBullets = new ArrayList<Bullet>();
 	public final char[][] board; // chars are 'X', 'O' and ' ' (X plays first)
-									// should be char[] to accomodate
-									// Dead_squares and no corners
+	// should be char[] to accomodate
+	// Dead_squares and no corners
+	public int numPieces;
 	public char lastMove;
 	public int xDead;
 	public int oDead;
@@ -20,6 +21,13 @@ public final class AlignmentState implements State {
 		this.oDead = oDead;
 		this.lastMove = lastMove;
 		bullets = new Bullet[board.length * board[0].length * 4];
+		numPieces = 0;
+		for (int row = 0; row < board.length; row++) {
+			for (int col = 0; col < board.length; col++) {
+				if (board[row][col] != ' ')
+					numPieces++;
+			}
+		}
 		for (int b = 0; b < bullets.length; b++) {
 			bullets[b] = new Bullet(0, 0, 0, 'O');
 		}
@@ -31,6 +39,7 @@ public final class AlignmentState implements State {
 		this.oDead = pos.oDead;
 		this.lastMove = pos.lastMove;
 		bullets = new Bullet[board.length * board[0].length * 4];
+		numPieces = pos.numPieces;
 	}
 
 	public void set(State s) {
@@ -42,13 +51,19 @@ public final class AlignmentState implements State {
 		}
 		xDead = as.xDead;
 		oDead = as.oDead;
+		numPieces = as.numPieces;
 		lastMove = as.lastMove;
 	}
 
 	public void set(char[][] board, int xDead, int oDead, char lastMove) {
+		numPieces = 0;
 		for (int row = 0; row < board.length; row++) {
-			for (int col = 0; col < board[row].length; col++)
-				this.board[row][col] = board[row][col];
+			System.arraycopy(board[row], 0, this.board[row], 0,
+					board[row].length);
+			for (int col = 0; col < board[row].length; col++) {
+				if (board[row][col] != ' ')
+					numPieces++;
+			}
 		}
 		this.xDead = xDead;
 		this.oDead = oDead;
@@ -59,7 +74,7 @@ public final class AlignmentState implements State {
 		return board[row][col];
 	}
 
-	public Boolean full() {
+	public boolean full() {
 		for (int row = 0; row < board.length; row++) {
 			for (int col = 0; col < board[0].length; col++) {
 				if (board[row][col] == ' ') {
@@ -72,6 +87,7 @@ public final class AlignmentState implements State {
 
 	public void put(int row, int col, char piece) {
 		board[row][col] = piece;
+		numPieces++;
 	}
 
 	public void setLastMove(char player) {
@@ -174,7 +190,7 @@ public final class AlignmentState implements State {
 	/**
 	 * moves the piece at (x0,y0) to (x1, y1)
 	 */
-	Boolean movePiece(int row0, int col0, int row1, int col1, AlignmentState pos) {
+	boolean movePiece(int row0, int col0, int row1, int col1, AlignmentState pos) {
 		if (pos.legalMove(row0, col0, row1, col1)) {
 			pos.board[row1][col1] = pos.board[row0][col0];
 			pos.board[row0][col0] = ' ';
@@ -184,7 +200,7 @@ public final class AlignmentState implements State {
 	}
 
 	/** true if the square (x0,y0) is one of 8 points adjacent to (x1, y1) */
-	Boolean adjacent(int x0, int y0, int x1, int y1) {
+	boolean adjacent(int x0, int y0, int x1, int y1) {
 		return (Math.abs(y1 - y0) <= 1 && Math.abs(x1 - x0) <= 1 && !(x1 == x0 && y1 == y0));
 	}
 
@@ -203,7 +219,7 @@ public final class AlignmentState implements State {
 			int col = b.col();
 			int drow = b.drow();
 			int dcol = b.dcol();
-			Boolean stillGoing = true;
+			boolean stillGoing = true;
 			while (stillGoing) {
 				row += drow;
 				col += dcol;
@@ -220,6 +236,7 @@ public final class AlignmentState implements State {
 						} else if (board[row][col] == opposite(whoseTurn)) {
 							board[row][col] = ' ';
 							deathCount++;
+							numPieces--;
 						}
 
 					}

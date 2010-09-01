@@ -23,21 +23,9 @@ import edu.berkeley.gamesman.util.Util;
 public class Configuration {
 	private final Game<?> g;
 
-	/**
-	 * The number of possible states for value. When zero, the record does not
-	 * contain value.
-	 */
-	public int valueStates;
-	/**
-	 * The number of possible states for remoteness. When zero, the record does
-	 * not contain remoteness.
-	 */
-	public int remotenessStates;
-	/**
-	 * The number of possible states for score. When zero, the record does not
-	 * contain score.
-	 */
-	public int scoreStates;
+	public final boolean hasRemoteness;
+	public final boolean hasScore;
+	public final boolean hasValue;
 
 	/**
 	 * The database associated with this configuration
@@ -99,32 +87,18 @@ public class Configuration {
 		String fields = getProperty("record.fields", "VALUE,REMOTENESS");
 		int states;
 		String[] splitFields = fields.split(",");
-		valueStates = 0;
-		remotenessStates = 0;
-		scoreStates = 0;
+		boolean hasValue = false, hasRemoteness = false, hasScore = false;
 		for (int i = 0; i < splitFields.length; i++) {
-			String[] splt = splitFields[i].split(":");
-			if (splt.length > 1)
-				states = Integer.parseInt(splt[1]);
-			else
-				states = 0;
-			if (splt[0].trim().equalsIgnoreCase("VALUE")) {
-				if (states == 0)
-					valueStates = g.defaultValueStates();
-				else
-					valueStates = states;
-			} else if (splt[0].trim().equalsIgnoreCase("REMOTENESS")) {
-				if (states == 0)
-					remotenessStates = g.defaultRemotenessStates();
-				else
-					remotenessStates = states;
-			} else if (splt[0].trim().equalsIgnoreCase("SCORE")) {
-				if (states == 0)
-					scoreStates = g.defaultScoreStates();
-				else
-					scoreStates = states;
-			}
+			if (splitFields[i].equalsIgnoreCase("VALUE"))
+				hasValue = true;
+			else if (splitFields[i].equalsIgnoreCase("REMOTENESS"))
+				hasRemoteness = true;
+			else if (splitFields[i].equalsIgnoreCase("SCORE"))
+				hasScore = true;
 		}
+		this.hasValue = hasValue;
+		this.hasScore = hasScore;
+		this.hasRemoteness = hasRemoteness;
 	}
 
 	/**

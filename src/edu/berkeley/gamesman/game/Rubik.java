@@ -237,6 +237,11 @@ public class Rubik extends TwistyPuzzle<CubeState> {
 		}
 		return c;
 	}
+
+	@Override
+	public int remotenessStates() {
+		return 21;
+	}
 }
 
 class CubeState implements State {

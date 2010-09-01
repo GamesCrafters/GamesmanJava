@@ -362,16 +362,16 @@ public class JSONInterface extends GamesmanApplication {
 				DatabaseHandle handle = db.getHandle();
 				g.synchronizedRecordFromLong(state, db.getRecord(handle, g
 						.synchronizedStateToHash(state)), rec);
-				if (conf.valueStates > 0) {
+				if (conf.hasValue) {
 					Value pv = rec.value;
 					if (g.getPlayerCount() > 1 && isChildState)
 						pv = pv.flipValue();
 					request.setValue(pv.name().toLowerCase());
 				}
-				if (conf.remotenessStates > 0) {
+				if (conf.hasRemoteness) {
 					request.setRemoteness(rec.remoteness);
 				}
-				if (conf.scoreStates > 0) {
+				if (conf.hasScore) {
 					request.setScore(rec.score);
 				}
 			} else {
