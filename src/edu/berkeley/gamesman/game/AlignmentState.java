@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.game.util;
+package edu.berkeley.gamesman.game;
 
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.game.util.Bullet;
@@ -209,7 +209,7 @@ public final class AlignmentState implements State {
 	 * a given turn. Finds and fires guns, returning the number of enemies
 	 * removed from the board. Destructive
 	 */
-	public void fireGuns(int piecesToWin) {
+	public void fireGuns(int piecesToWin, AlignmentVariant v) {
 		int numBullets = makeBullets();
 		char whoseTurn = opposite(lastMove);
 		int deathCount = 0;
@@ -234,11 +234,12 @@ public final class AlignmentState implements State {
 						if (board[row][col] == whoseTurn) {
 							stillGoing = false;
 						} else if (board[row][col] == opposite(whoseTurn)) {
-							board[row][col] = ' ';
 							deathCount++;
-							numPieces--;
+							if (v != AlignmentVariant.SUDDEN_DEATH) {
+								board[row][col] = ' ';
+								numPieces--;
+							}
 						}
-
 					}
 				} else {
 					stillGoing = false;
@@ -255,6 +256,10 @@ public final class AlignmentState implements State {
 			break;
 		}
 		// myBullets = new ArrayList<Bullet>();
+	}
+
+	public void fireGuns(int piecesToWin) {
+		fireGuns(piecesToWin, AlignmentVariant.STANDARD);
 	}
 
 	// =======================================================================================

@@ -6,7 +6,6 @@ import java.util.Collection;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Value;
-import edu.berkeley.gamesman.game.util.AlignmentState;
 import edu.berkeley.gamesman.hasher.AlignmentHasher;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
@@ -30,8 +29,8 @@ public class Alignment extends Game<AlignmentState> {
 		gameSize = gameWidth * gameHeight;
 		piecesToWin = conf.getInteger("gamesman.game.pieces", 5);
 
-		variant = AlignmentVariant.getVariant(conf.getInteger(
-				"gamesman.game.variant", 2));
+		variant = AlignmentVariant.variants[conf.getInteger(
+				"gamesman.game.variant", 1)];
 		// Removing corners
 		/*
 		 * Not compatible with AlignmentState and this removal is incorrect. if
@@ -100,7 +99,8 @@ public class Alignment extends Game<AlignmentState> {
 
 	@Override
 	public int maxChildren() {
-		if (variant == AlignmentVariant.NO_SLIDE) {
+		if (variant == AlignmentVariant.NO_SLIDE
+				|| variant == AlignmentVariant.SUDDEN_DEATH) {
 			return gameWidth * gameHeight;
 		} else {
 			return gameHeight * 65;
@@ -213,7 +213,8 @@ public class Alignment extends Game<AlignmentState> {
 		if (variant == AlignmentVariant.STANDARD) {
 			throw new UnsupportedOperationException(
 					"STANDARD variant not complete");
-		} else if (variant == AlignmentVariant.NO_SLIDE) {
+		} else if (variant == AlignmentVariant.NO_SLIDE
+				|| variant == AlignmentVariant.SUDDEN_DEATH) {
 			for (int row = 0; row < gameHeight; row++) {
 				for (int col = 0; col < gameWidth; col++) {
 					if (' ' == pos.get(row, col)) {
@@ -238,13 +239,14 @@ public class Alignment extends Game<AlignmentState> {
 		if (variant == AlignmentVariant.STANDARD) {
 			throw new UnsupportedOperationException(
 					"STANDARD variant not complete");
-		} else if (variant == AlignmentVariant.NO_SLIDE) {
+		} else if (variant == AlignmentVariant.NO_SLIDE
+				|| variant == AlignmentVariant.SUDDEN_DEATH) {
 			for (int row = 0; row < gameHeight; row++) {
 				for (int col = 0; col < gameWidth; col++) {
 					if (' ' == pos.get(row, col)) {
 						children[moves].set(pos);
 						children[moves].put(row, col, opposite(pos.lastMove));
-						children[moves].fireGuns(piecesToWin);
+						children[moves].fireGuns(piecesToWin, variant);
 						children[moves].setLastMove(opposite(pos.lastMove));
 						moves++;
 					}
@@ -312,21 +314,8 @@ public class Alignment extends Game<AlignmentState> {
 }
 
 enum AlignmentVariant {
-	STANDARD, NO_SLIDE, DEAD_SQUARES; // STANDARD = 1, NO_SLIDE = 2,
-	// DEAD_SQUARES = 3;
-
-	static AlignmentVariant getVariant(int varNum) {
-		switch (varNum) {
-		case (1):
-			return STANDARD;
-		case (2):
-			return NO_SLIDE;
-		case (3):
-			return DEAD_SQUARES;
-		default:
-			throw new IllegalArgumentException(
-					"No Alignment Variant exists for number " + varNum);
-		}
-
-	}
+	STANDARD, NO_SLIDE, DEAD_SQUARES, SUDDEN_DEATH; // STANDARD = 1, NO_SLIDE =
+	// 2,
+	// DEAD_SQUARES = 3, SUDDEN_DEATH = 4;
+	static final AlignmentVariant[] variants = AlignmentVariant.values();
 }

@@ -7,7 +7,7 @@ import java.io.InputStreamReader;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.game.Alignment;
-import edu.berkeley.gamesman.game.util.AlignmentState;
+import edu.berkeley.gamesman.game.AlignmentState;
 
 public class AlignmentTester {
 

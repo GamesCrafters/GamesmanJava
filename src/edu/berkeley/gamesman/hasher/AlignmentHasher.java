@@ -1,7 +1,7 @@
 package edu.berkeley.gamesman.hasher;
 
 import edu.berkeley.gamesman.game.Alignment;
-import edu.berkeley.gamesman.game.util.AlignmentState;
+import edu.berkeley.gamesman.game.AlignmentState;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
