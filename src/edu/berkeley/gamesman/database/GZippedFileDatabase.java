@@ -171,6 +171,9 @@ public class GZippedFileDatabase extends GZippedDatabase implements Runnable {
 		}
 	}
 
+	/**
+	 * @return A handle for zipping this database
+	 */
 	public WriteHandle getNextHandle() {
 		if (handleEntry == firstEntry + numEntries)
 			return null;
@@ -281,6 +284,18 @@ public class GZippedFileDatabase extends GZippedDatabase implements Runnable {
 		}
 	}
 
+	/**
+	 * Given a database, gzips it
+	 * 
+	 * @param args
+	 *            Old database file name, New file name, number of threads
+	 *            (default 1), Kilobytes per entry (default 64), Maximum
+	 *            available KB in memory (Default 2^15)
+	 * @throws IOException
+	 *             If an IOException occurs while reading or creating the file
+	 * @throws ClassNotFoundException
+	 *             If the old database has a bad configuration
+	 */
 	public static void main(String[] args) throws IOException,
 			ClassNotFoundException {
 		long time = System.currentTimeMillis();
@@ -303,11 +318,11 @@ public class GZippedFileDatabase extends GZippedDatabase implements Runnable {
 			maxMem = 1 << 25;
 		Database readFrom = Database.openDatabase(db1);
 		Configuration outConf = readFrom.getConfiguration().cloneAll();
-		outConf.setProperty("gamesman.database", GZippedFileDatabase.class
-				.getName());
+		outConf.setProperty("gamesman.database",
+				GZippedFileDatabase.class.getName());
 		outConf.setProperty("gamesman.db.uri", zipDb);
-		outConf.setProperty("gamesman.db.zip.entryKB", Integer
-				.toString(entryKB));
+		outConf.setProperty("gamesman.db.zip.entryKB",
+				Integer.toString(entryKB));
 		GZippedFileDatabase writeTo = new GZippedFileDatabase(zipDb, outConf,
 				readFrom, maxMem);
 		Thread[] threadList = new Thread[numThreads];
@@ -331,8 +346,25 @@ public class GZippedFileDatabase extends GZippedDatabase implements Runnable {
 				+ Util.millisToETA(System.currentTimeMillis() - time));
 	}
 
-	// For reading and writing
-
+	/**
+	 * The default constructor
+	 * 
+	 * @param uri
+	 *            The name of the file
+	 * @param conf
+	 *            The configuration object
+	 * @param solve
+	 *            Should be false
+	 * @param firstRecord
+	 *            The index of the first record contained in this database
+	 * @param numRecords
+	 *            The number of records contained in this database
+	 * @param header
+	 *            The header
+	 * @throws IOException
+	 *             If opening the file or reading the header throws an
+	 *             IOException
+	 */
 	public GZippedFileDatabase(String uri, Configuration conf, boolean solve,
 			long firstRecord, long numRecords, DatabaseHeader header)
 			throws IOException {
@@ -367,6 +399,19 @@ public class GZippedFileDatabase extends GZippedDatabase implements Runnable {
 		writeBuffer = null;
 	}
 
+	/**
+	 * Constructor for opening a database into which you're going to transfer
+	 * bytes which are already zipped using putZippedBytes
+	 * 
+	 * @param uri
+	 *            The file name
+	 * @param conf
+	 *            The configuration object
+	 * @param header
+	 *            The header information
+	 * @throws IOException
+	 *             If opening the database creates an IOException
+	 */
 	public GZippedFileDatabase(String uri, Configuration conf,
 			DatabaseHeader header) throws IOException {
 		super(uri, conf, true, header.firstRecord, header.numRecords, header);
@@ -400,6 +445,22 @@ public class GZippedFileDatabase extends GZippedDatabase implements Runnable {
 
 	// For remote work
 
+	/**
+	 * Prepare to read bytes without unzipping them so they may be transferred
+	 * over the network first.
+	 * 
+	 * @param dh
+	 *            The handle for reading
+	 * @param byteIndex
+	 *            The index (into the database, not the file) to begin reading
+	 *            at. If this is not a chunk break, prepareZippedRange will
+	 *            start at the first chunkBreak before byteIndex
+	 * @param numBytes
+	 *            The number of bytes to read (from the database, not the file).
+	 *            If byteIndex+numBytes is not at a chunk break,
+	 *            prepareZippedBytes will prepare to read everything up to the
+	 *            next chunk break
+	 */
 	protected long prepareZippedRange(DatabaseHandle dh, long byteIndex,
 			long numBytes) {
 		long startEntry = byteIndex / entrySize;
@@ -420,6 +481,12 @@ public class GZippedFileDatabase extends GZippedDatabase implements Runnable {
 		return gzh.remainingBytes;
 	}
 
+	/**
+	 * @param firstByte
+	 *            The first (unzipped) byte you wish to read
+	 * @return The number of (unzipped) bytes returned by extraBytes before the
+	 *         segment you're looking for begins
+	 */
 	public int extraBytes(long firstByte) {
 		if (firstByte < (firstEntry + 1) * entrySize) {
 			return (int) (firstByte - firstByteIndex);
@@ -428,6 +495,18 @@ public class GZippedFileDatabase extends GZippedDatabase implements Runnable {
 		}
 	}
 
+	/**
+	 * @param dh
+	 *            A handle for this database
+	 * @param arr
+	 *            An array to read into
+	 * @param off
+	 *            The offset of the array to begin reading at
+	 * @param maxLen
+	 *            The maximum number of bytes to read
+	 * @return The number of bytes read... Will only be less than maxLen if the
+	 *         end of the prepared range is reached
+	 */
 	public int getZippedBytes(DatabaseHandle dh, byte[] arr, int off, int maxLen) {
 		GZipHandle gzh = (GZipHandle) dh;
 		if (lastUsed != gzh)
@@ -442,6 +521,17 @@ public class GZippedFileDatabase extends GZippedDatabase implements Runnable {
 		return numBytes;
 	}
 
+	/**
+	 * Reads already-zipped bytes into the database
+	 * 
+	 * @param is
+	 *            The stream to read from (ChunkInputStream tells where the gzip
+	 *            blocks are)
+	 * @param numBytes
+	 *            The maximum number of bytes to write
+	 * @throws IOException
+	 *             If reading throws an IOException
+	 */
 	public void putZippedBytes(ChunkInputStream is, long numBytes)
 			throws IOException {
 		if (entryPoints[(int) (thisEntry - firstEntry)] == 0)
@@ -452,8 +542,8 @@ public class GZippedFileDatabase extends GZippedDatabase implements Runnable {
 			if (numBytes < 0)
 				bytesRead = is.read(writeBuffer);
 			else
-				bytesRead = is.read(writeBuffer, 0, (int) Math.min(numBytes,
-						writeBuffer.length));
+				bytesRead = is.read(writeBuffer, 0,
+						(int) Math.min(numBytes, writeBuffer.length));
 			if (bytesRead < 0) {
 				is.nextChunk();
 				entryPoints[(int) ((++thisEntry) - firstEntry)] = fos
@@ -461,8 +551,8 @@ public class GZippedFileDatabase extends GZippedDatabase implements Runnable {
 				if (numBytes < 0)
 					bytesRead = is.read(writeBuffer);
 				else
-					bytesRead = is.read(writeBuffer, 0, (int) Math.min(
-							numBytes, writeBuffer.length));
+					bytesRead = is.read(writeBuffer, 0,
+							(int) Math.min(numBytes, writeBuffer.length));
 				if (bytesRead < 0)
 					break;
 			}
@@ -473,10 +563,40 @@ public class GZippedFileDatabase extends GZippedDatabase implements Runnable {
 		System.out.println("Entries put: " + (thisEntry - firstEntry));
 	}
 
+	/**
+	 * Reads already-zipped bytes into the database until the end of the stream
+	 * is reached
+	 * 
+	 * @param is
+	 *            The stream to read from (ChunkInputStream tells where the gzip
+	 *            blocks are)
+	 * @throws IOException
+	 *             If reading throws an IOException
+	 */
 	public void putZippedBytes(ChunkInputStream is) throws IOException {
 		putZippedBytes(is, -1);
 	}
 
+	/**
+	 * Prepares to read a large chunk of this database without unzipping it so
+	 * it can be transferred over the network. This includes rezipping portions
+	 * which are only half-needed on the other side. The slaves try to do as
+	 * much work as possible in parallel, since ascribing any of this work to
+	 * the master (even if it may make a little more sense logically) will
+	 * significantly slow down the transfer. When this is called, the machine
+	 * will search for any extra bytes (on other machines) which need to be
+	 * zipped together with the ones being transferred.
+	 * 
+	 * @param dh
+	 *            A handle for this database
+	 * @param firstRecord
+	 *            The index of the first record to read
+	 * @param numRecords
+	 *            The number of records to be read
+	 * @param allRecords
+	 *            A link to the Distributed database which can return any record
+	 * @return The number of actual zipped bytes which will be read
+	 */
 	public long prepareMoveRange(DatabaseHandle dh, long firstRecord,
 			long numRecords, DistributedDatabase allRecords) {
 		byte[] zippedInitialBytes, zippedFinalBytes;
@@ -588,10 +708,8 @@ public class GZippedFileDatabase extends GZippedDatabase implements Runnable {
 		long firstTransferEntry = firstTransferByte / entrySize;
 		long lastTransferEntry = (lastTransferByte + entrySize - 1) / entrySize;
 		long[] myPoints = new long[(int) (lastTransferEntry - firstTransferEntry) + 1];
-		System
-				.arraycopy(entryPoints,
-						(int) (firstTransferEntry - firstEntry), myPoints, 0,
-						(int) (lastTransferEntry - firstTransferEntry) + 1);
+		System.arraycopy(entryPoints, (int) (firstTransferEntry - firstEntry),
+				myPoints, 0, (int) (lastTransferEntry - firstTransferEntry) + 1);
 		try {
 			if (zippedInitialBytes != null) {
 				myPoints[0] = myPoints[1] - zippedInitialBytes.length;
@@ -649,8 +767,8 @@ final class MoveInputStream extends InputStream {
 			inRead += bytesToRead;
 			return bytesToRead;
 		} else if (innerLen > 0) {
-			int bytesToRead = innerStream.read(arr, off, (int) Math.min(len,
-					innerLen));
+			int bytesToRead = innerStream.read(arr, off,
+					(int) Math.min(len, innerLen));
 			if (bytesToRead < 0)
 				throw new EOFException();
 			innerLen -= bytesToRead;

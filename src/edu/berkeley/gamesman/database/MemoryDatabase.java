@@ -5,22 +5,88 @@ import java.math.BigInteger;
 import edu.berkeley.gamesman.core.Configuration;
 
 /**
- * Stores the entire database as an array of bytes
+ * <p>
+ * Stores the entire database as an array of bytes. This is a DatabaseWrapper
+ * which means it can be flushed back to any other database (most commonly a
+ * FileDatabase)
+ * </p>
+ * <p>
+ * This class may also be used by game-specific solvers (See the C4CachedSolver)
+ * for caching sets of records.
+ * </p>
  * 
  * @author dnspies
  */
 public class MemoryDatabase extends DatabaseWrapper {
 
+	/**
+	 * Default constructor
+	 * 
+	 * @param db
+	 *            The backing database
+	 * @param uri
+	 *            The file-name of the backing database
+	 * @param conf
+	 *            The configuration object
+	 * @param solve
+	 *            true if writing as well as reading
+	 * @param firstRecord
+	 *            The index of the first record contained in this cache (may be
+	 *            different from db.firstRecord())
+	 * @param numRecords
+	 *            The number of records contained in this cache (may be
+	 *            different from db.numRecords())
+	 */
 	public MemoryDatabase(Database db, String uri, Configuration conf,
 			boolean solve, long firstRecord, long numRecords) {
 		this(db, uri, conf, solve, firstRecord, numRecords, true);
 	}
 
+	/**
+	 * A constructor for a memory database which will not initially contain any
+	 * information and may change sizes (see setRange).
+	 * 
+	 * @param db
+	 *            The backing database
+	 * @param uri
+	 *            The file-name of the backing database
+	 * @param conf
+	 *            The configuration object
+	 * @param solve
+	 *            true if writing as well as reading
+	 * @param backChanges
+	 *            If true, calling flush, close, and setRange will automatically
+	 *            flush any changes made back to the underlying database. In
+	 *            general if this is false, db is probably null
+	 */
 	public MemoryDatabase(Database db, String uri, Configuration conf,
 			boolean solve, boolean backChanges) {
 		this(db, uri, conf, solve, 0, 0, backChanges, true);
 	}
 
+	/**
+	 * A constructor for a memory database to be used as a fixed cache
+	 * 
+	 * @param db
+	 *            The backing database
+	 * @param uri
+	 *            The file-name of the backing database
+	 * @param conf
+	 *            The configuration object
+	 * @param solve
+	 *            true if writing as well as reading
+	 * @param firstRecord
+	 *            The index of the first record contained in this cache (may be
+	 *            different from db.firstRecord())
+	 * @param numRecords
+	 *            The number of records contained in this cache (may be
+	 *            different from db.numRecords())
+	 * @param backChanges
+	 *            If true, calling flush and close will flush any changes made
+	 *            back to the underlying database. Also the constructor will
+	 *            read in the specified records from the underlying database. In
+	 *            general if this is false, db is probably null
+	 */
 	public MemoryDatabase(Database db, String uri, Configuration conf,
 			boolean solve, long firstRecord, long numRecords,
 			boolean backChanges) {
@@ -147,6 +213,18 @@ public class MemoryDatabase extends DatabaseWrapper {
 		toUnsignedByteArray(r, memoryStorage, (int) (byteIndex - firstByte));
 	}
 
+	/**
+	 * Most databases have a fixed start and range. MemoryDatabase can be used
+	 * as a cache however and can be recycled in a pool by using the setRange
+	 * method
+	 * 
+	 * @param firstRecord
+	 *            The index of the first record contained in this cache
+	 * @param numRecords
+	 *            The number of records in this cache
+	 * @return The amount by which the internal array had to grow to incorporate
+	 *         the new records (0 if it did not grow).
+	 */
 	public int setRange(long firstRecord, int numRecords) {
 		if (!mutable)
 			throw new UnsupportedOperationException();
@@ -164,6 +242,14 @@ public class MemoryDatabase extends DatabaseWrapper {
 		return retVal;
 	}
 
+	/**
+	 * Ensure the internal array for this cache contains numBytes bytes
+	 * 
+	 * @param numBytes
+	 *            The number of bytes required
+	 * @return The amount by which the internal array had to grow to accomadate
+	 *         the bytes (0 if it did not grow)
+	 */
 	public int ensureByteSize(int numBytes) {
 		if (memoryStorage == null || memoryStorage.length < numBytes) {
 			int retVal = numBytes

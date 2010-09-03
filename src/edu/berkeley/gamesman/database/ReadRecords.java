@@ -6,9 +6,27 @@ import java.util.zip.GZIPOutputStream;
 
 import edu.berkeley.gamesman.core.Configuration;
 
+/**
+ * Reads a set of records to System.out. It is expected this will be called by
+ * another instance of the program using ssh
+ * 
+ * @author dnspies
+ */
 public class ReadRecords {
-	static final int BUFFER_SIZE = 4096;
+	/**
+	 * The size of the buffer which will store bytes to be written to System.out
+	 */
+	public static final int BUFFER_SIZE = 4096;
 
+	/**
+	 * @param args
+	 *            The (optional) job file, the database file, the index of the
+	 *            first record to read, the number of records to read
+	 * @throws ClassNotFoundException
+	 *             If the configuration object is bad
+	 * @throws IOException
+	 *             If there's an error writing to System.out
+	 */
 	public static void main(String[] args) throws ClassNotFoundException,
 			IOException {
 		int i = 0;
@@ -21,8 +39,7 @@ public class ReadRecords {
 		Configuration conf;
 		Database db;
 		if (jobFile == null) {
-			db = Database.openDatabase(databaseFile, firstRecord,
-					numRecords);
+			db = Database.openDatabase(databaseFile, firstRecord, numRecords);
 			conf = db.getConfiguration();
 		} else {
 			conf = new Configuration(jobFile);

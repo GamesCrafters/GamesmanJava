@@ -23,8 +23,19 @@ import edu.berkeley.gamesman.util.Util;
 public class Configuration {
 	private final Game<?> g;
 
+	/**
+	 * Does this game use remoteness?
+	 */
 	public final boolean hasRemoteness;
+	
+	/**
+	 * Does this game use score?
+	 */
 	public final boolean hasScore;
+	
+	/**
+	 * Does this game use value? (false for puzzles)
+	 */
 	public final boolean hasValue;
 
 	/**
@@ -85,7 +96,6 @@ public class Configuration {
 			throw new Error(e);
 		}
 		String fields = getProperty("record.fields", "VALUE,REMOTENESS");
-		int states;
 		String[] splitFields = fields.split(",");
 		boolean hasValue = false, hasRemoteness = false, hasScore = false;
 		for (int i = 0; i < splitFields.length; i++) {

@@ -9,6 +9,7 @@ import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.database.DistributedDatabase;
 import edu.berkeley.gamesman.database.GZippedFileDatabase;
+import edu.berkeley.gamesman.database.ReadRecords;
 import edu.berkeley.gamesman.database.ReadZippedRecords;
 import edu.berkeley.gamesman.util.UndeterminedChunkOutputStream;
 
@@ -39,11 +40,11 @@ public final class TransferSlave {
 			out.finish();
 			while (!scan.nextLine().equals("go"))
 				;
-			byte[] arr = new byte[(int) Math.min(ReadZippedRecords.BUFFER_SIZE,
+			byte[] arr = new byte[(int) Math.min(ReadRecords.BUFFER_SIZE,
 					numBytes)];
 			while (numBytes > 0) {
 				int bytesRead = db.getZippedBytes(dh, arr, 0,
-						ReadZippedRecords.BUFFER_SIZE);
+						ReadRecords.BUFFER_SIZE);
 				System.out.write(arr, 0, bytesRead);
 				System.out.flush();
 				numBytes -= bytesRead;
