@@ -27,10 +27,12 @@ public class Alignment extends Game<AlignmentState> {
 		gameWidth = conf.getInteger("gamesman.game.width", 4);
 		gameHeight = conf.getInteger("gamesman.game.height", 4);
 		gameSize = gameWidth * gameHeight;
-		piecesToWin = conf.getInteger("gamesman.game.pieces", 5);
-
 		variant = AlignmentVariant.variants[conf.getInteger(
 				"gamesman.game.variant", 1)];
+		if (variant == AlignmentVariant.SUDDEN_DEATH)
+			piecesToWin = 1;
+		else
+			piecesToWin = conf.getInteger("gamesman.game.pieces", 5);
 		// Removing corners
 		/*
 		 * Not compatible with AlignmentState and this removal is incorrect. if
