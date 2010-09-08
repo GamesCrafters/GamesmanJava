@@ -235,10 +235,8 @@ public final class AlignmentState implements State {
 							stillGoing = false;
 						} else if (board[row][col] == opposite(whoseTurn)) {
 							deathCount++;
-							if (v != AlignmentVariant.SUDDEN_DEATH) {
-								board[row][col] = ' ';
-								numPieces--;
-							}
+							board[row][col] = ' ';
+							numPieces--;
 						}
 					}
 				} else {

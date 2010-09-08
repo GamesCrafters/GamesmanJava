@@ -17,8 +17,8 @@ public final class AlignmentHasher {
 		offsets = new long[game.piecesToWin + 1][game.piecesToWin + 1][game.openCells
 				.size() + 1];
 		long offset = 0;
-		for (int xCaptured = 0; xCaptured < game.piecesToWin; xCaptured++) {
-			for (int oCaptured = 0; oCaptured < game.piecesToWin; oCaptured++) {
+		for (int xCaptured = 0; xCaptured <= game.piecesToWin; xCaptured++) {
+			for (int oCaptured = 0; oCaptured <= game.piecesToWin; oCaptured++) {
 				for (int pieces = 0; pieces <= game.openCells.size(); pieces++) {
 					offsets[xCaptured][oCaptured][pieces] = offset;
 					int totalPieces = pieces + xCaptured + oCaptured;
