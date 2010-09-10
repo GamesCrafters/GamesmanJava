@@ -104,10 +104,10 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 		DatabaseHandle fdHandle = fd.getHandle();
 		if (conf.getGame() instanceof Connect4) {
 			Connect4 g = (Connect4) conf.getGame();
-			g.recordFromLong(g.hashToState(0), fd.getRecord(fdHandle, 0), r);
+			g.longToRecord(g.hashToState(0), fd.getRecord(fdHandle, 0), r);
 		} else {
 			TopDownC4 g = (TopDownC4) conf.getGame();
-			g.recordFromLong(g.hashToState(0), fd.getRecord(fdHandle, 0), r);
+			g.longToRecord(g.hashToState(0), fd.getRecord(fdHandle, 0), r);
 		}
 		System.out.println(r);
 		DisplayFour df = new DisplayFour(height, width);

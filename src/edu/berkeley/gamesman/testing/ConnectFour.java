@@ -132,14 +132,14 @@ class ConnectFour implements MouseListener {
 					C4State state = tdgame.stringToState(arrToString(board));
 					Record r = new Record(conf);
 					DatabaseHandle fdHandle = fd.getHandle();
-					tdgame.recordFromLong(state, fd.getRecord(fdHandle, tdgame
+					tdgame.longToRecord(state, fd.getRecord(fdHandle, tdgame
 							.stateToHash(state)), r);
 					System.out.println(r);
 				} else {
 					TierState state = game.stringToState(arrToString(board));
 					Record r = new Record(conf);
 					DatabaseHandle fdHandle = fd.getHandle();
-					game.recordFromLong(state, fd.getRecord(fdHandle, game
+					game.longToRecord(state, fd.getRecord(fdHandle, game
 							.stateToHash(state)), r);
 					System.out.println(r);
 				}
@@ -177,7 +177,7 @@ class ConnectFour implements MouseListener {
 						tdgame.setNumPieces(state.numPieces);
 					records[i] = new Record(conf);
 					DatabaseHandle fdHandle = fd.getHandle();
-					tdgame.recordFromLong(state, fd.getRecord(fdHandle,
+					tdgame.longToRecord(state, fd.getRecord(fdHandle,
 							moveHashes[i]), records[i]);
 				}
 				for (Record r : records)
@@ -208,7 +208,7 @@ class ConnectFour implements MouseListener {
 					TierState state = listMoves.get(i).cdr;
 					moveHashes[i] = game.stateToHash(state);
 					records[i] = new Record(conf);
-					game.recordFromLong(state, fd.getRecord(fdHandle,
+					game.longToRecord(state, fd.getRecord(fdHandle,
 							moveHashes[i]), records[i]);
 				}
 				for (Record r : records)

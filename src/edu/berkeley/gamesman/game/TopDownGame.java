@@ -237,11 +237,11 @@ public final class TopDownGame<S extends State> extends TopDownMutaGame<S> {
 		return "\n" + displayState();
 	}
 
-	public void recordFromLong(S recordState, long record, Record toStore) {
-		myGame.recordFromLong(recordState, record, toStore);
+	public void longToRecord(S recordState, long record, Record toStore) {
+		myGame.longToRecord(recordState, record, toStore);
 	}
 
-	public long getRecord(S recordState, Record fromRecord) {
-		return myGame.getRecord(recordState, fromRecord);
+	public long recordToLong(S recordState, Record fromRecord) {
+		return myGame.recordToLong(recordState, fromRecord);
 	}
 }

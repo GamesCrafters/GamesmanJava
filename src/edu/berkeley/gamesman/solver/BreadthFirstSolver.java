@@ -41,7 +41,7 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 		hashSpace = game.numHashes();
 		Record defaultRecord = new Record(conf);
 		defaultRecord.value = Value.UNDECIDED;
-		writeDb.fill(game.getRecord(null, defaultRecord), 0, hashSpace);
+		writeDb.fill(game.recordToLong(null, defaultRecord), 0, hashSpace);
 		DatabaseHandle dh = writeDb.getHandle();
 		long numPositionsZero = 0;
 		Record rec = new Record(conf);
@@ -50,7 +50,7 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 			Value isWin = game.primitiveValue(s);
 			rec.value = isWin;
 			rec.remoteness = 0;
-			writeDb.putRecord(dh, hash, game.getRecord(s, rec));
+			writeDb.putRecord(dh, hash, game.recordToLong(s, rec));
 			numPositionsZero++;
 		}
 		writeDb.closeHandle(dh);
@@ -106,7 +106,7 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 					&& (maxRemoteness < 0 || remoteness <= maxRemoteness)) {
 				numPositionsInLevel = 0;
 				for (long hash = firstHash; hash < lastHashPlusOne; hash++) {
-					game.recordFromLong(null, readDb.getRecord(readDh, hash),
+					game.longToRecord(null, readDb.getRecord(readDh, hash),
 							rec);
 					// TODO: Figure out when this is allowed to be null
 					if (rec.value != Value.UNDECIDED
@@ -117,7 +117,7 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 						for (int i = 0; i < numChildren; i++) {
 							long childhash = game
 									.stateToHash(childPositions[i]);
-							game.recordFromLong(childPositions[i], readDb
+							game.longToRecord(childPositions[i], readDb
 									.getRecord(readDh, childhash), childrec);
 							if (childrec.value == Value.UNDECIDED) {
 								childrec.value = rec.value;
@@ -125,7 +125,7 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 								// System.out.println("Setting child "+childhash+"="+childrec);
 								writeDb
 										.putRecord(writeDh, childhash, game
-												.getRecord(childPositions[i],
+												.recordToLong(childPositions[i],
 														childrec));
 								numPositionsInLevel++;
 								numPositionsSeen++;

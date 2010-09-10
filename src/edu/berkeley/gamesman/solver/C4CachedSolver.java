@@ -139,7 +139,7 @@ public class C4CachedSolver extends TierSolver {
 							readHandles[col] = readPages[col].getHandle();
 						}
 					}
-					game.recordFromLong(children[i], readPages[col].getRecord(
+					game.longToRecord(children[i], readPages[col].getRecord(
 							readHandles[col], childHash), vals[i]);
 					vals[i].previousPosition();
 				}
@@ -149,7 +149,7 @@ public class C4CachedSolver extends TierSolver {
 					times[3] += nano - lastNano;
 				}
 				Record newVal = game.combine(vals, 0, len);
-				writePage.putRecord(writePageDh, current, game.getRecord(
+				writePage.putRecord(writePageDh, current, game.recordToLong(
 						curState, newVal));
 			} else if (pv == Value.IMPOSSIBLE) {
 				break;
@@ -164,7 +164,7 @@ public class C4CachedSolver extends TierSolver {
 				}
 				prim.remoteness = 0;
 				prim.value = pv;
-				writePage.putRecord(writePageDh, current, game.getRecord(
+				writePage.putRecord(writePageDh, current, game.recordToLong(
 						curState, prim));
 			}
 			if (debugSolver) {

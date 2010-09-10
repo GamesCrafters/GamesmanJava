@@ -46,7 +46,7 @@ public class TopDownSolver<S extends State> extends Solver {
 		long hashSpace = conf.getGame().numHashes();
 		Record defaultRecord = new Record(conf);
 		defaultRecord.value = Value.UNDECIDED;
-		writeDb.fill(conf.getGame().getRecord(null, defaultRecord), 0,
+		writeDb.fill(conf.getGame().recordToLong(null, defaultRecord), 0,
 				hashSpace);
 
 		return new WorkUnit() {
@@ -94,7 +94,7 @@ public class TopDownSolver<S extends State> extends Solver {
 		if (depth < 3)
 			assert Util.debug(DebugFacility.SOLVER, game.toString());
 		long hash = game.getHash();
-		game.recordFromLong(curState, readDb.getRecord(readDh, hash), value);
+		game.longToRecord(curState, readDb.getRecord(readDh, hash), value);
 		if (value.value != Value.UNDECIDED)
 			return;
 		Value pv = game.primitiveValue();
@@ -123,6 +123,6 @@ public class TopDownSolver<S extends State> extends Solver {
 			value.value = pv;
 			value.remoteness = 0;
 		}
-		writeDb.putRecord(writeDh, hash, game.getRecord(curState, value));
+		writeDb.putRecord(writeDh, hash, game.recordToLong(curState, value));
 	}
 }

@@ -379,13 +379,13 @@ public abstract class Game<S extends State> {
 		return combine(recArray, 0, recArray.length);
 	}
 
-	public abstract void recordFromLong(S recordState, long record,
+	public abstract void longToRecord(S recordState, long record,
 			Record toStore);
 
 	public final synchronized void synchronizedRecordFromLong(S recordState,
 			long record, Record toStore) {
-		recordFromLong(recordState, record, toStore);
+		longToRecord(recordState, record, toStore);
 	}
 
-	public abstract long getRecord(S recordState, Record fromRecord);
+	public abstract long recordToLong(S recordState, Record fromRecord);
 }

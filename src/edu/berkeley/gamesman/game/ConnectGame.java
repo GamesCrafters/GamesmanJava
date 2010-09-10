@@ -206,7 +206,7 @@ public abstract class ConnectGame extends TierGame {
 	}
 
 	@Override
-	public long getRecord(TierState recordState, Record fromRecord) {
+	public long recordToLong(TierState recordState, Record fromRecord) {
 		if (conf.hasRemoteness) {
 			return fromRecord.remoteness;
 		} else {
@@ -222,7 +222,7 @@ public abstract class ConnectGame extends TierGame {
 	}
 
 	@Override
-	public void recordFromLong(TierState recordState, long state, Record toStore) {
+	public void longToRecord(TierState recordState, long state, Record toStore) {
 		if ((state & 1) == 1)
 			toStore.value = Value.WIN;
 		else

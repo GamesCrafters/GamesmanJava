@@ -32,7 +32,7 @@ public abstract class TwistyPuzzle<S extends State> extends Game<S> {
 	public abstract int remotenessStates();
 
 	@Override
-	public long getRecord(S recordState, Record fromRecord) {
+	public long recordToLong(S recordState, Record fromRecord) {
 		if (fromRecord.value == Value.UNDECIDED)
 			return 0;
 		else
@@ -40,7 +40,7 @@ public abstract class TwistyPuzzle<S extends State> extends Game<S> {
 	}
 
 	@Override
-	public void recordFromLong(S recordState, long record, Record toStore) {
+	public void longToRecord(S recordState, long record, Record toStore) {
 		if (record == 0)
 			toStore.value = Value.UNDECIDED;
 		else {

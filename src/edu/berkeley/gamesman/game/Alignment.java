@@ -285,7 +285,7 @@ public class Alignment extends Game<AlignmentState> {
 	}
 
 	@Override
-	public long getRecord(AlignmentState recordState, Record fromRecord) {
+	public long recordToLong(AlignmentState recordState, Record fromRecord) {
 		if (fromRecord.value == Value.UNDECIDED)
 			return gameSize + 2;
 		else if (fromRecord.value == Value.TIE)
@@ -295,7 +295,7 @@ public class Alignment extends Game<AlignmentState> {
 	}
 
 	@Override
-	public void recordFromLong(AlignmentState recordState, long record,
+	public void longToRecord(AlignmentState recordState, long record,
 			Record toStore) {
 		if (record == gameSize + 2) {
 			toStore.value = Value.UNDECIDED;

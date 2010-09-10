@@ -548,7 +548,7 @@ public final class Connect4 extends TierGame {
 	}
 
 	@Override
-	public void recordFromLong(TierState recordState, long state, Record toStore) {
+	public void longToRecord(TierState recordState, long state, Record toStore) {
 		if (conf.hasRemoteness) {
 			if (state == gameSize + 1) {
 				toStore.value = Value.TIE;
@@ -573,7 +573,7 @@ public final class Connect4 extends TierGame {
 	}
 
 	@Override
-	public long getRecord(TierState recordState, Record fromRecord) {
+	public long recordToLong(TierState recordState, Record fromRecord) {
 		if (conf.hasRemoteness) {
 			if (fromRecord.value == Value.TIE) {
 				return gameSize + 1;

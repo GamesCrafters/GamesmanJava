@@ -99,7 +99,7 @@ public class TierSolver extends Solver {
 					times[2] += nano - lastNano;
 				}
 				for (int i = 0; i < len; i++) {
-					game.recordFromLong(children[i], readDb.getRecord(readDh,
+					game.longToRecord(children[i], readDb.getRecord(readDh,
 							game.stateToHash(children[i])), vals[i]);
 					vals[i].previousPosition();
 				}
@@ -109,7 +109,7 @@ public class TierSolver extends Solver {
 					times[3] += nano - lastNano;
 				}
 				Record newVal = game.combine(vals, 0, len);
-				writeDb.putRecord(writeDh, current, game.getRecord(curState,
+				writeDb.putRecord(writeDh, current, game.recordToLong(curState,
 						newVal));
 			} else if (pv == Value.IMPOSSIBLE) {
 				break;
@@ -124,7 +124,7 @@ public class TierSolver extends Solver {
 				}
 				prim.remoteness = 0;
 				prim.value = pv;
-				writeDb.putRecord(writeDh, current, game.getRecord(curState,
+				writeDb.putRecord(writeDh, current, game.recordToLong(curState,
 						prim));
 			}
 			if (debugSolver) {
