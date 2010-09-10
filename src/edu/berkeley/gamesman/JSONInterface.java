@@ -360,7 +360,7 @@ public class JSONInterface extends GamesmanApplication {
 			if (db != null) {
 				Record rec = new Record(conf);
 				DatabaseHandle handle = db.getHandle();
-				g.synchronizedRecordFromLong(state, db.getRecord(handle, g
+				g.synchronizedLongToRecord(state, db.getRecord(handle, g
 						.synchronizedStateToHash(state)), rec);
 				if (conf.hasValue) {
 					Value pv = rec.value;

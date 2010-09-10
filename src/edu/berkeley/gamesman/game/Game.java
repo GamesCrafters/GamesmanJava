@@ -13,7 +13,7 @@ import edu.berkeley.gamesman.util.Pair;
 /**
  * Public interface that all Games must implement to be solvable
  * 
- * @author Steven Schlansker
+ * @author David Spies
  * @param <S>
  *            The object used to represent a Game State
  * 
@@ -30,7 +30,7 @@ public abstract class Game<S extends State> {
 
 	/**
 	 * @param conf
-	 *            The configuratino object
+	 *            The configuration object
 	 */
 	public Game(Configuration conf) {
 		this.conf = conf;
@@ -45,9 +45,9 @@ public abstract class Game<S extends State> {
 
 	/**
 	 * Given a board state, generates all valid board states one move away from
-	 * the given state. It is <b>very strongly recommended</b> that you also
-	 * override validMoves(S pos, S[] children) as this will result in a
-	 * significant speedup for pretty much any solver
+	 * the given state. The String indicates in some sense what move is made to
+	 * reach that position. Also override the other validMoves (to be used by
+	 * the solver)
 	 * 
 	 * @param pos
 	 *            The board state to start from
@@ -56,6 +56,15 @@ public abstract class Game<S extends State> {
 	 */
 	public abstract Collection<Pair<String, S>> validMoves(S pos);
 
+	/**
+	 * A synchronized implementation of validMoves for JSONInterface (When
+	 * solving, the game is cloned to ensure there are no synchronization
+	 * problems)
+	 * 
+	 * @param pos
+	 *            The current position
+	 * @return A collection of each move along with its identifying string
+	 */
 	public synchronized final Collection<Pair<String, S>> synchronizedValidMoves(
 			S pos) {
 		return validMoves(pos);
@@ -108,6 +117,15 @@ public abstract class Game<S extends State> {
 		return 0;
 	}
 
+	/**
+	 * A synchronized implementation of primitiveScore for JSONInterface (When
+	 * solving, the game is cloned to ensure there are no synchronization
+	 * problems)
+	 * 
+	 * @param pos
+	 *            The position
+	 * @return The position's score
+	 */
 	public synchronized final int synchronizedPrimitiveScore(S pos) {
 		return primitiveScore(pos);
 	}
@@ -130,6 +148,12 @@ public abstract class Game<S extends State> {
 	 */
 	public abstract Value primitiveValue(S pos);
 
+	/**
+	 * @param pos
+	 *            The current position
+	 * @return The primitive value of the position. Generally LOSE,TIE, or
+	 *         UNDECIDED (for positions which aren't primitive)
+	 */
 	public synchronized final Value synchronizedPrimitiveValue(S pos) {
 		return primitiveValue(pos);
 	}
@@ -156,6 +180,15 @@ public abstract class Game<S extends State> {
 	 */
 	public abstract long stateToHash(S pos);
 
+	/**
+	 * A synchronized implementation of stateToHash for JSONInterface (When
+	 * solving, the game is cloned to ensure there are no synchronization
+	 * problems)
+	 * 
+	 * @param pos
+	 *            The position
+	 * @return The position's hash
+	 */
 	public synchronized final long synchronizedStateToHash(S pos) {
 		return stateToHash(pos);
 	}
@@ -171,6 +204,15 @@ public abstract class Game<S extends State> {
 	 */
 	public abstract String stateToString(S pos);
 
+	/**
+	 * A synchronized implementation of stateToString for JSONInterface (When
+	 * solving, the game is cloned to ensure there are no synchronization
+	 * problems)
+	 * 
+	 * @param pos
+	 *            The position
+	 * @return A string representing the position
+	 */
 	public synchronized final String synchronizedStateToString(S pos) {
 		return stateToString(pos);
 	}
@@ -211,6 +253,15 @@ public abstract class Game<S extends State> {
 	 */
 	public abstract S stringToState(String pos);
 
+	/**
+	 * A synchronized implementation of stringToState for JSONInterface (When
+	 * solving, the game is cloned to ensure there are no synchronization
+	 * problems)
+	 * 
+	 * @param pos
+	 *            The position as a string
+	 * @return The resulting state
+	 */
 	public synchronized final S synchronizedStringToState(String pos) {
 		return stringToState(pos);
 	}
@@ -379,13 +430,41 @@ public abstract class Game<S extends State> {
 		return combine(recArray, 0, recArray.length);
 	}
 
-	public abstract void longToRecord(S recordState, long record,
-			Record toStore);
+	/**
+	 * @param recordState
+	 *            The state corresponding to this record
+	 * @param record
+	 *            A long representing the record
+	 * @param toStore
+	 *            The record to store the result in (as opposed to returning a
+	 *            newly instantiated record)
+	 */
+	public abstract void longToRecord(S recordState, long record, Record toStore);
 
-	public final synchronized void synchronizedRecordFromLong(S recordState,
+	/**
+	 * A synchronized implementation of stateToString for JSONInterface (When
+	 * solving, the game is cloned to ensure there are no synchronization
+	 * problems)
+	 * 
+	 * @param recordState
+	 *            The state corresponding to this record
+	 * @param record
+	 *            A long representing the record (extracted from a database)
+	 * @param toStore
+	 *            The record to store the result in (as opposed to returning a
+	 *            newly instantiated record)
+	 */
+	public final synchronized void synchronizedLongToRecord(S recordState,
 			long record, Record toStore) {
 		longToRecord(recordState, record, toStore);
 	}
 
+	/**
+	 * @param recordState
+	 *            The state corresponding to this record
+	 * @param fromRecord
+	 *            The record to extract the long from
+	 * @return A long representing the record (to be stored in a database)
+	 */
 	public abstract long recordToLong(S recordState, Record fromRecord);
 }
