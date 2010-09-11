@@ -65,6 +65,10 @@ public final class TicTacToe extends Game<TicTacToeState> {
 							+ Integer.toString(row + 1);
 			}
 		}
+		for (int i = 0; i < children.length; i++) {
+			moves.add(new Pair<String, TicTacToeState>(childNames[i],
+					children[i]));
+		}
 		return moves;
 	}
 
