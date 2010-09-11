@@ -8,7 +8,6 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.core.Value;
-import edu.berkeley.gamesman.util.CoefTable;
 import edu.berkeley.gamesman.util.Pair;
 
 /**
@@ -22,13 +21,12 @@ public final class TicTacToe extends Game<TicTacToeState> {
 	private final int height;
 	private final int boardSize;
 	private final int piecesToWin;
-	private final long[] hashOffsetTable;
-	private final CoefTable ct = new CoefTable();
 
 	/**
 	 * Default Constructor
 	 * 
-	 * @param conf The Configuration object
+	 * @param conf
+	 *            The Configuration object
 	 */
 	public TicTacToe(Configuration conf) {
 		super(conf);
@@ -36,13 +34,6 @@ public final class TicTacToe extends Game<TicTacToeState> {
 		height = conf.getInteger("gamesman.game.height", 3);
 		boardSize = width * height;
 		piecesToWin = conf.getInteger("gamesman.game.pieces", 3);
-		hashOffsetTable = new long[boardSize + 2];
-		long total = 0;
-		for (int i = 0; i <= boardSize; i++) {
-			hashOffsetTable[i] = total;
-			total += ct.get(boardSize, i) * ct.get(i, i / 2);
-		}
-		hashOffsetTable[boardSize + 1] = total;
 	}
 
 	@Override
@@ -147,45 +138,46 @@ public final class TicTacToe extends Game<TicTacToeState> {
 	public Value primitiveValue(TicTacToeState pos) {
 		char lastTurn = pos.numPieces % 2 == 0 ? 'O' : 'X';
 		for (int row = 0; row < height; row++) {
-			int inRowFound = 0;
+			int piecesInRow = 0;
 			for (int col = 0; col < width; col++) {
 				if (pos.getPiece(row, col) == lastTurn) {
-					inRowFound++;
-					if (inRowFound == piecesToWin)
+					piecesInRow++;
+					if (piecesInRow == piecesToWin)
 						return Value.LOSE;
 				} else
-					inRowFound = 0;
+					piecesInRow = 0;
 			}
 		}
 		for (int col = 0; col < width; col++) {
-			int inColFound = 0;
+			int piecesInCol = 0;
 			for (int row = 0; row < height; row++) {
 				if (pos.getPiece(row, col) == lastTurn) {
-					inColFound++;
-					if (inColFound == piecesToWin)
+					piecesInCol++;
+					if (piecesInCol == piecesToWin)
 						return Value.LOSE;
 				} else
-					inColFound = 0;
+					piecesInCol = 0;
 			}
 		}
-
-		for (int row = 0; row < height - piecesToWin; row++) {
-			for (int col = 0; col < width - piecesToWin; col++) {
-				int dif;
-				for (dif = 0; dif < piecesToWin; dif++) {
-					if (pos.getPiece(row + dif, col + dif) != lastTurn)
+		for (int row = 0; row <= height - piecesToWin; row++) {
+			for (int col = 0; col <= width - piecesToWin; col++) {
+				int pieces;
+				for (pieces = 0; pieces < piecesToWin; pieces++) {
+					if (pos.getPiece(row + pieces, col + pieces) != lastTurn)
 						break;
 				}
-				if (dif == piecesToWin)
+				if (pieces == piecesToWin)
 					return Value.LOSE;
 			}
-			for (int col = piecesToWin; col < width; col++) {
-				int dif;
-				for (dif = 0; dif < piecesToWin; dif++) {
-					if (pos.getPiece(row + dif, col - dif) != lastTurn)
+		}
+		for (int row = 0; row <= height - piecesToWin; row++) {
+			for (int col = piecesToWin - 1; col < width; col++) {
+				int pieces;
+				for (pieces = 0; pieces < piecesToWin; pieces++) {
+					if (pos.getPiece(row + pieces, col - pieces) != lastTurn)
 						break;
 				}
-				if (dif == piecesToWin)
+				if (pieces == piecesToWin)
 					return Value.LOSE;
 			}
 		}
@@ -197,73 +189,36 @@ public final class TicTacToe extends Game<TicTacToeState> {
 
 	@Override
 	public long stateToHash(TicTacToeState pos) {
-		long offset = hashOffsetTable[pos.numPieces];
-		long multiplier = ct.get(pos.numPieces, pos.numPieces / 2);
-		long majorHash = 0;
-		long minorHash = 0;
-		int piecesCounted = 0;
-		int xsCounted = 0;
-		for (int i = 0; i < boardSize; i++) {
-			if (pos.getPiece(i) != ' ') {
-				piecesCounted++;
-				majorHash += ct.get(i, piecesCounted);
-				if (pos.getPiece(i) == 'X') {
-					xsCounted++;
-					minorHash += ct.get(piecesCounted - 1, xsCounted);
-				} else if (pos.getPiece(i) != 'O')
-					throw new Error("Bad piece: " + pos.getPiece(i));
-			}
-		}
-		return offset + majorHash * multiplier + minorHash;
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 	@Override
 	public long numHashes() {
-		return hashOffsetTable[boardSize + 1];
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 	@Override
 	public long recordStates() {
-		return 12;
+		return boardSize + 3;
 	}
 
 	@Override
 	public void hashToState(long hash, TicTacToeState s) {
-		int numPieces = Arrays.binarySearch(hashOffsetTable, hash);
-		if (numPieces < 0)
-			numPieces = -numPieces - 2;
-		hash -= hashOffsetTable[numPieces];
-		long multiplier = ct.get(numPieces, numPieces / 2);
-		long majorHash = hash / multiplier;
-		long minorHash = hash % multiplier;
-		int remainingPieces = numPieces;
-		int remainingXs = (numPieces + 1) / 2;
-		for (int i = boardSize - 1; i >= 0; i--) {
-			long pieceHash = ct.get(i, remainingPieces);
-			if (majorHash >= pieceHash) {
-				majorHash -= pieceHash;
-				remainingPieces--;
-				long xHash = ct.get(remainingPieces, remainingXs);
-				if (minorHash >= xHash) {
-					minorHash -= xHash;
-					remainingXs--;
-					s.setPiece(i, 'X');
-				} else
-					s.setPiece(i, 'O');
-			} else
-				s.setPiece(i, ' ');
-		}
+		// TODO Auto-generated method stub
+
 	}
 
 	@Override
 	public void longToRecord(TicTacToeState recordState, long record,
 			Record toStore) {
-		if (record == 10) {
+		if (record == boardSize + 1) {
 			toStore.value = Value.TIE;
 			toStore.remoteness = boardSize - recordState.numPieces;
-		} else if (record == 11) {
+		} else if (record == boardSize + 2)
 			toStore.value = Value.UNDECIDED;
-		} else {
+		else if (record >= 0 && record <= boardSize) {
 			toStore.value = record % 2 == 0 ? Value.LOSE : Value.WIN;
 			toStore.remoteness = (int) record;
 		}
@@ -271,15 +226,14 @@ public final class TicTacToe extends Game<TicTacToeState> {
 
 	@Override
 	public long recordToLong(TicTacToeState recordState, Record fromRecord) {
-		if (fromRecord.value == Value.TIE)
-			return 10;
-		else if (fromRecord.value == Value.UNDECIDED)
-			return 11;
-		else if (fromRecord.value == Value.LOSE
-				|| fromRecord.value == Value.WIN)
+		if (fromRecord.value == Value.WIN || fromRecord.value == Value.LOSE)
 			return fromRecord.remoteness;
+		else if (fromRecord.value == Value.TIE)
+			return boardSize + 1;
+		else if (fromRecord.value == Value.UNDECIDED)
+			return boardSize + 2;
 		else
-			throw new Error("Bad Value: " + fromRecord.value);
+			throw new Error("Invalid Value");
 	}
 }
 
