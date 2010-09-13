@@ -14,21 +14,36 @@ public final class YGame extends ConnectGame {
 
 	private final int[] translateOutArray;
 
-	private static final String formatString = "\n                 220_\n"
-			+ "                /| \\\n" + "               / |  \\\n"
-			+ "              /  |   \\\n" + "             /   |    \\\n"
-			+ "            /    |     \\\n" + "           /    /       \\\n"
-			+ "          221----210__-------122\n"
-			+ "         /|  /  \\ \\_____ |\\\n"
-			+ "        / | / __200_______\\| \\\n"
-			+ "       /  |/_/ / \\_      111_ \\\n"
-			+ "      /  _211   /    \\_    |\\\\_\\\n"
-			+ "     /__/ |\\ /       \\_ /  \\ \\\\\n"
-			+ "    222   _/  000__--------100__ | _=121\n"
-			+ "   / \\ /___/   \\__ __/    \\|/   \\\n"
-			+ "  / __010---------__011__------110____ \\\n"
-			+ " /_/     \\__ __/     \\__ _/     \\_\\\n"
-			+ "020-----------021-----------022----------120\n";
+	private static final String formatString = "\n"
+			+ "                         220\n\n\n" +
+
+			"               221         210         122\n\n\n" +
+
+			"                  211             111\n"
+			+ "                         200\n"
+			+ "          222                              121\n"
+			+ "                      000     100\n\n" +
+
+			"               010                  110\n"
+			+ "                         011\n"
+			+ "       020                                   120\n"
+			+ "                  021             022\n";
+
+	// "\n                 220_\n"
+	// + "                /| \\\n" + "               / |  \\\n"
+	// + "              /  |   \\\n" + "             /   |    \\\n"
+	// + "            /    |     \\\n" + "           /    /       \\\n"
+	// + "          221----210__-------122\n"
+	// + "         /|  /  \\ \\_____ |\\\n"
+	// + "        / | / __200_______\\| \\\n"
+	// + "       /  |/_/ / \\_      111_ \\\n"
+	// + "      /  _211   /    \\_    |\\\\_\\\n"
+	// + "     /__/ |\\ /       \\_ /  \\ \\\\\n"
+	// + "    222   _/  000__--------100__ | _=121\n"
+	// + "   / \\ /___/   \\__ __/    \\|/   \\\n"
+	// + "  / __010---------__011__------110____ \\\n"
+	// + " /_/     \\__ __/     \\__ _/     \\_\\\n"
+	// + "020-----------021-----------022----------120\n";
 
 	private final class Space {
 		// t = triangle, r = row c = column
@@ -249,9 +264,13 @@ public final class YGame extends ConnectGame {
 				* boardSize);
 		for (int i = 0; i < formatString.length(); i++) {
 			if (formatString.charAt(i) >= '0' && formatString.charAt(i) <= '9') {
-				sb.append(yBoard[formatString.charAt(i) - '0'][formatString
+				char player = yBoard[formatString.charAt(i) - '0'][formatString
 						.charAt(i + 1) - '0'][formatString.charAt(i + 2) - '0']
-						.getChar());
+						.getChar();
+				if (player == ' ')
+					sb.append('-');
+				else
+					sb.append(player);
 				i += 2;
 			} else {
 				sb.append(formatString.charAt(i));
