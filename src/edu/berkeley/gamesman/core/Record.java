@@ -62,7 +62,7 @@ public final class Record implements Cloneable {
 		if (r instanceof Record) {
 			Record rec = (Record) r;
 			return (!conf.hasValue || value == rec.value)
-					&& (!conf.hasRemoteness || remoteness == rec.remoteness)
+					&& (!conf.hasRemoteness || remoteness == rec.remoteness || (conf.hasValue && !value.hasRemoteness))
 					&& (!conf.hasScore || score == rec.score);
 		} else
 			return false;
