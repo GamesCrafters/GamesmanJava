@@ -75,10 +75,12 @@ public final class Record implements Cloneable {
 			s = value.name();
 		else
 			s = "Finish";
-		if (conf.hasRemoteness)
-			return s + " in " + remoteness;
-		else
-			return s;
+		if (conf.hasRemoteness && (!conf.hasValue || value.hasRemoteness)) {
+			s += " in " + remoteness;
+		}
+		if (conf.hasScore)
+			s += " with score " + score;
+		return s;
 	}
 
 	private Record(Record record) {
