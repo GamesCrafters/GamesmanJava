@@ -27,12 +27,12 @@ public class Configuration {
 	 * Does this game use remoteness?
 	 */
 	public final boolean hasRemoteness;
-	
+
 	/**
 	 * Does this game use score?
 	 */
 	public final boolean hasScore;
-	
+
 	/**
 	 * Does this game use value? (false for puzzles)
 	 */
@@ -80,8 +80,8 @@ public class Configuration {
 		}
 		setProperty("gamesman.game", gamename);
 		try {
-			g = Class.forName(gamename).asSubclass(Game.class).getConstructor(
-					Configuration.class).newInstance(this);
+			g = Class.forName(gamename).asSubclass(Game.class)
+					.getConstructor(Configuration.class).newInstance(this);
 		} catch (IllegalArgumentException e) {
 			throw new Error(e);
 		} catch (SecurityException e) {
@@ -145,10 +145,14 @@ public class Configuration {
 	 * @return its value
 	 */
 	public String getProperty(String key) {
-		String s = props.getProperty(key);
+		String s = getPropertyOrNull(key);
 		if (s == null)
 			throw new Error("Property " + key + " is unset and has no default!");
 		return s;
+	}
+
+	protected String getPropertyOrNull(String key) {
+		return props.getProperty(key);
 	}
 
 	/**
@@ -185,7 +189,7 @@ public class Configuration {
 	 * @return false iff s is "false" or s is "0", ignoring case
 	 */
 	public boolean getBoolean(String key, boolean dfl) {
-		String s = props.getProperty(key);
+		String s = getPropertyOrNull(key);
 		if (s == null)
 			return dfl;
 		else
@@ -203,7 +207,7 @@ public class Configuration {
 	 *         Otherwise, returns dfl.
 	 */
 	public int getInteger(String key, int dfl) {
-		String value = props.getProperty(key);
+		String value = getPropertyOrNull(key);
 		if (value != null)
 			return Integer.parseInt(value);
 		else
@@ -221,7 +225,7 @@ public class Configuration {
 	 *         Otherwise, returns dfl.
 	 */
 	public float getFloat(String key, float dfl) {
-		String value = props.getProperty(key);
+		String value = getPropertyOrNull(key);
 		if (value == null)
 			return dfl;
 		else
@@ -239,7 +243,7 @@ public class Configuration {
 	 *         Otherwise, returns dfl.
 	 */
 	public long getLong(String key, long dfl) {
-		String lString = props.getProperty(key);
+		String lString = getPropertyOrNull(key);
 		if (lString == null)
 			return dfl;
 		else
@@ -257,7 +261,7 @@ public class Configuration {
 	 *         array. Otherwise, returns dfl.
 	 */
 	public int[] getInts(String key, int[] dfl) {
-		String iString = props.getProperty(key);
+		String iString = getPropertyOrNull(key);
 		if (iString == null)
 			return dfl;
 		else
@@ -274,7 +278,11 @@ public class Configuration {
 	 * @return its value
 	 */
 	public String getProperty(String key, String dfl) {
-		return props.getProperty(key, dfl);
+		String result = getPropertyOrNull(key);
+		if (result == null)
+			return dfl;
+		else
+			return result;
 	}
 
 	/**
