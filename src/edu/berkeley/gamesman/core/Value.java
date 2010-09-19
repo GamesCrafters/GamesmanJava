@@ -39,6 +39,9 @@ public enum Value {
 	 */
 	public final int value;
 
+	/**
+	 * Does it make sense to include remoteness with this value?
+	 */
 	public final boolean hasRemoteness;
 
 	/**

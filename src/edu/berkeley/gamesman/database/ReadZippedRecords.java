@@ -2,7 +2,23 @@ package edu.berkeley.gamesman.database;
 
 import java.io.IOException;
 
+/**
+ * Reads a set of GZipped records to System.out. It is expected this will be called by
+ * another instance of the program using ssh
+ * 
+ * @author dnspies
+ */
 public class ReadZippedRecords {
+
+	/**
+	 * @param args
+	 *            The (optional) job file, the database file, the index of the
+	 *            first record to read, the number of records to read
+	 * @throws ClassNotFoundException
+	 *             If the configuration object is bad
+	 * @throws IOException
+	 *             If there's an error writing to System.out
+	 */
 	public static void main(String[] args) throws ClassNotFoundException,
 			IOException {
 		int i = 0;

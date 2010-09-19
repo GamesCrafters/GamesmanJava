@@ -14,17 +14,63 @@ import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 import edu.berkeley.gamesman.util.ZipChunkInputStream;
 
+/**
+ * A connection to an already solved database on another computer (via ssh and
+ * dd). This can be thought of sort of like a DatabaseWrapper. The URL for
+ * RemoteDatabases is username@server:GamesmanJavaPath:DatabasePath (The
+ * username@ is optional)
+ * 
+ * @author dnspies
+ */
 public class RemoteDatabase extends Database {
 	private final String user, server, confFile, path, remoteFile;
 	private final boolean readZipped;
 	private int maxCommandLen = -1;
 
+	/**
+	 * The default constructor
+	 * 
+	 * @param uri
+	 *            The name of the file on this machine (if any)
+	 * @param conf
+	 *            The configuration object
+	 * @param solve
+	 *            Should always be false
+	 * @param firstRecord
+	 *            The index of the first record contained in this database
+	 * @param numRecords
+	 *            The number of records contained in this database
+	 * @param header
+	 *            The header
+	 */
 	public RemoteDatabase(String uri, Configuration conf, boolean solve,
 			long firstRecord, long numRecords, DatabaseHeader header) {
 		this(uri, conf, solve, firstRecord, numRecords, header, null, null,
 				null, null);
 	}
 
+	/**
+	 * @param uri
+	 *            The name of the file on this machine (if any)
+	 * @param conf
+	 *            The configuration object
+	 * @param solve
+	 *            Should always be false
+	 * @param firstRecord
+	 *            The index of the first record contained in this database
+	 * @param numRecords
+	 *            The number of records contained in this database
+	 * @param header
+	 *            The header
+	 * @param user
+	 *            The user name
+	 * @param server
+	 *            The server name
+	 * @param path
+	 *            The GamesmanJava path
+	 * @param remoteFile
+	 *            The file uri on the remote host
+	 */
 	public RemoteDatabase(String uri, Configuration conf, boolean solve,
 			long firstRecord, long numRecords, DatabaseHeader header,
 			String user, String server, String path, String remoteFile) {
@@ -209,16 +255,26 @@ public class RemoteDatabase extends Database {
 		}
 	}
 
-	public static Pair<DatabaseHeader, Configuration> remoteHeaderConf(
+	protected static Pair<DatabaseHeader, Configuration> remoteHeaderConf(
 			String user, String host, String file) {
 		return remoteHeaderConf(user, host, file, true);
 	}
 
-	public static DatabaseHeader remoteHeader(String user, String host,
+	protected static DatabaseHeader remoteHeader(String user, String host,
 			String file) {
 		return remoteHeaderConf(user, host, file, false).car;
 	}
 
+	/**
+	 * Creates a local file for connecting to a remote database
+	 * 
+	 * @param args
+	 *            The full remote uri of the database
+	 *            username@server:GamesmanJavaPath:DatabasePath and the name of
+	 *            the local file
+	 * @throws IOException
+	 *             If there's an exception creating the local file
+	 */
 	public static void main(String[] args) throws IOException {
 		RemoteDatabase rd = (RemoteDatabase) Database.openDatabase(args[0]);
 		rd.addRemoteProperties();
