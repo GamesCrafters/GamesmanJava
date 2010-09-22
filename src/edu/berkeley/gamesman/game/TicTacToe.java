@@ -8,11 +8,13 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.core.Value;
+import edu.berkeley.gamesman.util.CoefTable;
 import edu.berkeley.gamesman.util.Pair;
 
 /**
  * A (relatively) simple implementation of Tic Tac Toe<br />
  * Created as a demonstration of GamesmanJava on Friday, September 10, 2010
+ * I had 3 minor bugs in class which I've marked
  * 
  * @author dnspies
  */
@@ -21,6 +23,8 @@ public final class TicTacToe extends Game<TicTacToeState> {
 	private final int height;
 	private final int boardSize;
 	private final int piecesToWin;
+	private final long[] tierOffsets;
+	private final CoefTable ct = new CoefTable();
 
 	/**
 	 * Default Constructor
@@ -34,6 +38,14 @@ public final class TicTacToe extends Game<TicTacToeState> {
 		height = conf.getInteger("gamesman.game.height", 3);
 		boardSize = width * height;
 		piecesToWin = conf.getInteger("gamesman.game.pieces", 3);
+		tierOffsets = new long[boardSize + 2];
+		long total = 0;
+		for (int i = 0; i <= boardSize; i++) {
+			tierOffsets[i] = total;
+			total += ct.get(boardSize, i) * ct.get(i, i / 2);
+			//Bug 1: I forgot to put ct.get(boardSize, i) * here
+		}
+		tierOffsets[boardSize + 1] = total;
 	}
 
 	@Override
@@ -193,14 +205,28 @@ public final class TicTacToe extends Game<TicTacToeState> {
 
 	@Override
 	public long stateToHash(TicTacToeState pos) {
-		// TODO Auto-generated method stub
-		return 0;
+		long offset = tierOffsets[pos.numPieces];
+		long majorHash = 0;
+		long minorHash = 0;
+		int pieceCount = 0;
+		int oCount = 0;
+		for (int i = 0; i < boardSize; i++) {
+			//Bug 2: i < boardSize, not i < pos.numPieces
+			if (pos.getPiece(i) == 'O') {
+				oCount++;
+				minorHash += ct.get(pieceCount, oCount);
+			}
+			if (pos.getPiece(i) != ' ') {
+				pieceCount++;
+				majorHash += ct.get(i, pieceCount);
+			}
+		}
+		return offset + majorHash * ct.get(pieceCount, oCount) + minorHash;
 	}
 
 	@Override
 	public long numHashes() {
-		// TODO Auto-generated method stub
-		return 0;
+		return tierOffsets[boardSize + 1];
 	}
 
 	@Override
@@ -210,8 +236,31 @@ public final class TicTacToe extends Game<TicTacToeState> {
 
 	@Override
 	public void hashToState(long hash, TicTacToeState s) {
-		// TODO Auto-generated method stub
-
+		int tier = Arrays.binarySearch(tierOffsets, hash);
+		if (tier < 0)
+			tier = -tier - 2;
+		hash -= tierOffsets[tier];
+		int pieceCount = tier;
+		int oCount = tier / 2;
+		long mult = ct.get(pieceCount, oCount);
+		long majorHash = hash / mult;
+		long minorHash = hash % mult;
+		for (int i = boardSize - 1; i >= 0; i--) {
+			//Bug 3: i = boardSize - 1, not i = tier - 1
+			long pieceHash = ct.get(i, pieceCount);
+			if (majorHash >= pieceHash && pieceCount > 0) {
+				majorHash -= pieceHash;
+				pieceCount--;
+				long oHash = ct.get(pieceCount, oCount);
+				if (minorHash >= oHash && oCount > 0) {
+					minorHash -= oHash;
+					oCount--;
+					s.setPiece(i, 'O');
+				} else
+					s.setPiece(i, 'X');
+			} else
+				s.setPiece(i, ' ');
+		}
 	}
 
 	@Override
