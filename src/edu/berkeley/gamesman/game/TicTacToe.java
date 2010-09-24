@@ -212,11 +212,11 @@ public final class TicTacToe extends Game<TicTacToeState> {
 		int oCount = 0;
 		for (int i = 0; i < boardSize; i++) {
 			//Bug 2: i < boardSize, not i < pos.numPieces
-			if (pos.getPiece(i) == 'O') {
-				oCount++;
-				minorHash += ct.get(pieceCount, oCount);
-			}
 			if (pos.getPiece(i) != ' ') {
+				if (pos.getPiece(i) == 'O') {
+					oCount++;
+					minorHash += ct.get(pieceCount, oCount);
+				}
 				pieceCount++;
 				majorHash += ct.get(i, pieceCount);
 			}
