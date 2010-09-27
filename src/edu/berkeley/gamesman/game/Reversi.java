@@ -97,9 +97,9 @@ public class Reversi extends TierGame {
 	}
 
 	@Override
-	public TierState getState() {
+	public void getState(TierState state) {
 		// TODO Auto-generated method stub
-		return null;
+
 	}
 
 	@Override
@@ -156,7 +156,7 @@ public class Reversi extends TierGame {
 
 	@Override
 	public String describe() {
-		return width +"x"+height+" Reversi";
+		return width + "x" + height + " Reversi";
 	}
 
 	@Override

@@ -34,8 +34,8 @@ public abstract class ConnectGame extends TierGame {
 	protected abstract int getBoardSize();
 
 	@Override
-	public TierState getState() {
-		return myState;
+	public void getState(TierState state) {
+		state.set(myState);
 	}
 
 	@Override

@@ -100,9 +100,9 @@ public final class Connect4 extends TierGame {
 	}
 
 	@Override
-	public TierState getState() {
-		return new TierState(pieces.size(), pieceArrangement
-				* iah.colorArrangements + iah.getHash());
+	public void getState(TierState state) {
+		state.tier = pieces.size();
+		state.hash = pieceArrangement * iah.colorArrangements + iah.getHash();
 	}
 
 	@Override

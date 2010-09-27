@@ -10,11 +10,22 @@ import edu.berkeley.gamesman.hasher.TierHasher;
 import edu.berkeley.gamesman.util.Pair;
 
 /**
+ * Implementation of a game which can be solved by the tier solver. The game
+ * hash-space is divided into some number of tiers. A given position in any tier
+ * must be guaranteed that the children are in the next tier (or some greater
+ * tier)
+ * 
  * @author DNSpies
  */
 public abstract class TierGame extends Game<TierState> {
 	private final TierHasher myHasher;
 
+	/**
+	 * Default Constructor
+	 * 
+	 * @param conf
+	 *            The configuration object
+	 */
 	public TierGame(Configuration conf) {
 		super(conf);
 		myHasher = new TierHasher(this);
@@ -28,6 +39,9 @@ public abstract class TierGame extends Game<TierState> {
 	}
 
 	/**
+	 * Does a binary search of the tier offset table and returns the tier for a
+	 * given position.
+	 * 
 	 * @param hash
 	 *            A hash for a record in this game
 	 * @return The tier this hash is contained in
@@ -101,13 +115,6 @@ public abstract class TierGame extends Game<TierState> {
 	public abstract Collection<Pair<String, TierState>> validMoves();
 
 	/**
-	 * @return Whether there is another position.
-	 */
-	public boolean hasNext() {
-		return hasNextHashInTier() || getTier() < numberOfTiers();
-	}
-
-	/**
 	 * @return The tier of this position
 	 */
 	public abstract int getTier();
@@ -126,21 +133,26 @@ public abstract class TierGame extends Game<TierState> {
 	@Override
 	public synchronized TierState stringToState(String pos) {
 		setFromString(pos);
-		return getState();
+		TierState ts = newState();
+		getState(ts);
+		return ts;
 	}
 
 	/**
+	 * Sets this position to match the passed string
+	 * 
 	 * @param pos
 	 *            A string representing this position
 	 */
 	public abstract void setFromString(String pos);
 
 	/**
-	 * Returns a state object for this position
+	 * Sets the passed state to this position
 	 * 
-	 * @return The state of this position
+	 * @param state
+	 *            A state to fill with the current position
 	 */
-	public abstract TierState getState();
+	public abstract void getState(TierState state);
 
 	@Override
 	public synchronized String displayState(TierState pos) {
@@ -167,7 +179,9 @@ public abstract class TierGame extends Game<TierState> {
 		ArrayList<TierState> positions = new ArrayList<TierState>();
 		for (int i = 0; i < numStartingPositions(); i++) {
 			setStartingPosition(i);
-			positions.add(getState());
+			TierState ts = newState();
+			getState(ts);
+			positions.add(ts);
 		}
 		return positions;
 	}
@@ -200,6 +214,9 @@ public abstract class TierGame extends Game<TierState> {
 		return myHasher.hashOffsetForTier(pos.tier) + pos.hash;
 	}
 
+	/**
+	 * @return The number of tiers in the game
+	 */
 	public abstract int numberOfTiers();
 
 	@Override

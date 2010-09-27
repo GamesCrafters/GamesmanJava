@@ -17,10 +17,15 @@ import edu.berkeley.gamesman.util.*;
  */
 public class TierSolver extends Solver {
 
+	/**
+	 * The default constructor
+	 * 
+	 * @param conf
+	 *            The configuration object
+	 */
 	public TierSolver(Configuration conf) {
 		super(conf);
 		maxMem = conf.getLong("gamesman.memory", 1 << 25);
-		Runtime r = Runtime.getRuntime();
 		numThreads = conf.getInteger("gamesman.threads", 1);
 		minSplits = conf.getInteger("gamesman.split", numThreads);
 		minSplitSize = conf.getInteger("gamesman.minimum.split", 1024);
@@ -45,8 +50,6 @@ public class TierSolver extends Solver {
 	private long times[] = new long[7];
 
 	private final int minSplitSize;
-
-	private long pageBytesUsed = 0;
 
 	protected void solvePartialTier(Configuration conf, long start,
 			long hashes, TierSolverUpdater t, DatabaseHandle readDh,
@@ -99,8 +102,10 @@ public class TierSolver extends Solver {
 					times[2] += nano - lastNano;
 				}
 				for (int i = 0; i < len; i++) {
-					game.longToRecord(children[i], readDb.getRecord(readDh,
-							game.stateToHash(children[i])), vals[i]);
+					game.longToRecord(
+							children[i],
+							readDb.getRecord(readDh,
+									game.stateToHash(children[i])), vals[i]);
 					vals[i].previousPosition();
 				}
 				if (debugSolver) {
@@ -109,8 +114,8 @@ public class TierSolver extends Solver {
 					times[3] += nano - lastNano;
 				}
 				Record newVal = game.combine(vals, 0, len);
-				writeDb.putRecord(writeDh, current, game.recordToLong(curState,
-						newVal));
+				writeDb.putRecord(writeDh, current,
+						game.recordToLong(curState, newVal));
 			} else if (pv == Value.IMPOSSIBLE) {
 				break;
 			} else {
@@ -124,8 +129,8 @@ public class TierSolver extends Solver {
 				}
 				prim.remoteness = 0;
 				prim.value = pv;
-				writeDb.putRecord(writeDh, current, game.recordToLong(curState,
-						prim));
+				writeDb.putRecord(writeDh, current,
+						game.recordToLong(curState, prim));
 			}
 			if (debugSolver) {
 				lastNano = nano;
@@ -229,10 +234,14 @@ public class TierSolver extends Solver {
 				long fullStart = game.hashOffsetForTier(tier);
 				long fullSize = game.numHashesForTier(tier);
 				int numTiers = game.numberOfTiers();
-				splits = Math.max(minSplits, numSplits(tier == numTiers - 1 ? 0
-						: readDb.requiredMem(game.hashOffsetForTier(tier + 1),
-								game.numHashesForTier(tier + 1)), writeDb
-						.requiredMem(fullStart, fullSize), maxMem));
+				splits = Math.max(
+						minSplits,
+						numSplits(
+								tier == numTiers - 1 ? 0 : readDb.requiredMem(
+										game.hashOffsetForTier(tier + 1),
+										game.numHashesForTier(tier + 1)),
+								writeDb.requiredMem(fullStart, fullSize),
+								maxMem));
 				starts = writeDb.splitRange(fullStart, fullSize, splits,
 						minSplitSize);
 			}
@@ -421,10 +430,11 @@ public class TierSolver extends Solver {
 					/ game.numHashesForTier(tier);
 		}
 		long writeRequired = writeDb.requiredMem(startHash, numHashes);
-		splits = Math.max(minSplits, numSplits(
-				tier == game.numberOfTiers() - 1 ? 0
+		splits = Math.max(
+				minSplits,
+				numSplits(tier == game.numberOfTiers() - 1 ? 0
 						: (long) (tierFrac * writeRequired), writeRequired,
-				maxMem));
+						maxMem));
 		starts = writeDb.splitRange(startHash, numHashes, splits, minSplitSize);
 		return new TierSolverWorkUnit(conf);
 	}

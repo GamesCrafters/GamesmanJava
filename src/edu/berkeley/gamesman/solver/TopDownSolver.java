@@ -24,6 +24,12 @@ public class TopDownSolver<S extends State> extends Solver {
 
 	protected RecycleLinkedList<Record[]> recordList;
 
+	/**
+	 * The default constructor
+	 * 
+	 * @param conf
+	 *            The configuration object
+	 */
 	public TopDownSolver(final Configuration conf) {
 		super(conf);
 		final Game<?> game = conf.getGame();
