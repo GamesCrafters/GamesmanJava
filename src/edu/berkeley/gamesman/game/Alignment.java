@@ -209,30 +209,26 @@ public class Alignment extends Game<AlignmentState> {
 	@Override
 	public Collection<Pair<String, AlignmentState>> validMoves(
 			AlignmentState pos) {
-		AlignmentState s = new AlignmentState(pos);
-		Collection<String> strings = new ArrayList<String>();
-		Collection<AlignmentState> states = new ArrayList<AlignmentState>();
-		if (variant == AlignmentVariant.STANDARD) {
-			throw new UnsupportedOperationException(
-					"STANDARD variant not complete");
-		} else if (variant == AlignmentVariant.NO_SLIDE
-				|| variant == AlignmentVariant.SUDDEN_DEATH) {
-			for (int row = 0; row < gameHeight; row++) {
-				for (int col = 0; col < gameWidth; col++) {
-					if (' ' == pos.get(row, col)) {
-						s.put(row, col, opposite(pos.lastMove));
-						strings.add("row: " + row + " col: " + col);
-						states.add(new AlignmentState(s));
-					}
+		ArrayList<String> childStrings = new ArrayList<String>();
+		for (int row = 0; row < gameHeight; row++) {
+			for (int col = 0; col < gameWidth; col++) {
+				if (pos.get(row, col) == ' ') {
+					childStrings.add(Character.toString((char) ('a' + col))
+							+ (row + 1));
 				}
 			}
-			return Pair.zip(strings, states);
-		} else if (variant == AlignmentVariant.DEAD_SQUARES) {
-			throw new UnsupportedOperationException(
-					"DEAD_SQUARES variant not complete");
 		}
-
-		return null;
+		AlignmentState[] children = new AlignmentState[childStrings.size()];
+		for (int i = 0; i < children.length; i++) {
+			children[i] = newState();
+		}
+		validMoves(pos, children);
+		ArrayList<Pair<String, AlignmentState>> childCollection = new ArrayList<Pair<String, AlignmentState>>();
+		for (int i = 0; i < children.length; i++) {
+			childCollection.add(new Pair<String, AlignmentState>(childStrings
+					.get(i), children[i]));
+		}
+		return childCollection;
 	}
 
 	@Override
