@@ -75,26 +75,33 @@ public class LoopySolver<S extends State> extends Solver {
 /*
  * value = {retrieve from database}
  *		case IMPOSSIBLE:
- *			Run primitiveValue
+ *			value.value = primitiveValue()
  *			if primitive:
- *				Store value in database
+ *				value.remoteness = value.remainingChildren = 0
+ *				{Store value in database}
+ *				value = value.previousPosition()
  *				Run through parents:
  *					fix(..., false)
  *			else:
  *				value.remainingChildren = len(children)
  *				value.value = DRAW
- *				Store value in database
+ *				{Store value in database}
  *				bestValue = -infinity
  *				Run through children:
  *					solve(...)
- *					if value==UNDECIDED:
+ *					if value.value == UNDECIDED:
  *						bestValue = {retrieve from database}
  *					else:
+ *						if(value.remainingChildren==0):
+ *							value.remainingChildren = (database value).remainingChildren - 1
+ *						else
+ *							value.remainingChildren = (database value).remainingChildren
  *						if(value>bestValue)
  *							bestValue = value
  *							{store value in database}
- *						(database value).remainingChildren--
- *				value = bestValue.previousPosition()
+ *						else
+ *							{store value.remainingChildren in database}
+ *				value = bestValue
  *				Run through parents:
  *					fix(..., false)
  *			value = UNDECIDED
@@ -103,23 +110,28 @@ public class LoopySolver<S extends State> extends Solver {
  *
 */
 	}
-	
-	private void fix(TopDownMutaGame<S> game, S curState, Record value, int depth, DatabaseHandle readDh, DatabaseHandle writeDh, boolean update){
+
+	private void fix(TopDownMutaGame<S> game, S curState, Record value,
+			int depth, DatabaseHandle readDh, DatabaseHandle writeDh,
+			boolean update) {
 /*
  * (database value) = {retrieve from database}
  * 	case IMPOSSIBLE:
  * 		Do nothing
  * 	default:
  *  If update:
- *  	value.children = (database value).remainingChildren
+ *  	value.remainingChildren = (database value).remainingChildren
  *  else:
- *  	value.children = (database value).remainingChildren - 1
- *  if (database value) is DRAW or value>(database value)
- *  	(database value) = value
+ *  	value.remainingChildren = (database value).remainingChildren - 1
+ *  if (database value).value is DRAW or value>(database value)
+ *  	{Store value in database}
+ *  	value = value.previousPosition()
  *  	Run through parents:
- *  		fix(..., true)
+ *  		fix(..., not (database value changed from <=DRAW to >DRAW or 
+ *  				(database value<DRAW and database value.remainingChildren changed from 1 to 0)))
+ *  	value = value.nextPosition()
  *  else
- *  	(database value).children = value.children
+ *  	{Store value.remainingChildren in database}
  */
 	}
 }
