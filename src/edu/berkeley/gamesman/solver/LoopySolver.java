@@ -8,13 +8,15 @@ import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.core.WorkUnit;
-import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
-import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.game.LoopyMutaGame;
+import edu.berkeley.gamesman.game.LoopyRecord;
 import edu.berkeley.gamesman.game.TopDownMutaGame;
+import edu.berkeley.gamesman.util.qll.Pool;
+import edu.berkeley.gamesman.util.qll.Factory;
 
 public class LoopySolver<S extends State> extends Solver {
+	Pool<LoopyRecord> recordPool;
 
 	public LoopySolver(Configuration conf) {
 		super(conf);
@@ -22,7 +24,18 @@ public class LoopySolver<S extends State> extends Solver {
 
 	@Override
 	public WorkUnit prepareSolve(final Configuration conf) {
-		Game<?> game = conf.getGame();
+		final LoopyMutaGame<?> game = (LoopyMutaGame<?>) conf.getGame();
+		recordPool = new Pool<LoopyRecord>(new Factory<LoopyRecord>() {
+
+			public LoopyRecord newObject() {
+				return game.getRecord();
+			}
+
+			public void reset(LoopyRecord t) {
+				t.value = Value.UNDECIDED;
+			}
+
+		});
 		long hashSpace = game.numHashes();
 		Record defaultRecord = game.getRecord();
 		defaultRecord.value = Value.IMPOSSIBLE;
