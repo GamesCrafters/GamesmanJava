@@ -12,6 +12,7 @@ import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.Connect4;
+import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.game.TopDownC4;
 
 /**
@@ -100,13 +101,14 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 		}
 		int width = conf.getInteger("gamesman.game.width", 7);
 		int height = conf.getInteger("gamesman.game.height", 6);
-		Record r = new Record(conf);
+		Game<?> game = conf.getGame();
+		Record r = game.getRecord();
 		DatabaseHandle fdHandle = fd.getHandle();
-		if (conf.getGame() instanceof Connect4) {
-			Connect4 g = (Connect4) conf.getGame();
+		if (game instanceof Connect4) {
+			Connect4 g = (Connect4) game;
 			g.longToRecord(g.hashToState(0), fd.getRecord(fdHandle, 0), r);
 		} else {
-			TopDownC4 g = (TopDownC4) conf.getGame();
+			TopDownC4 g = (TopDownC4) game;
 			g.longToRecord(g.hashToState(0), fd.getRecord(fdHandle, 0), r);
 		}
 		System.out.println(r);
@@ -145,8 +147,8 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 					game.getDisplay().slots[r][c].removeMouseListener(game);
 				}
 			}
-			setGame(new ConnectFour(conf, game.getDisplay(), xButton
-					.isSelected(), oButton.isSelected()));
+			setGame(new ConnectFour(conf, game.getDisplay(),
+					xButton.isSelected(), oButton.isSelected()));
 			repaint();
 		}
 	}

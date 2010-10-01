@@ -130,17 +130,18 @@ class ConnectFour implements MouseListener {
 					nextRecord = null;
 				} else if (topDown) {
 					C4State state = tdgame.stringToState(arrToString(board));
-					Record r = new Record(conf);
+					Record r = tdgame.getRecord();
 					DatabaseHandle fdHandle = fd.getHandle();
-					tdgame.longToRecord(state, fd.getRecord(fdHandle, tdgame
-							.stateToHash(state)), r);
+					tdgame.longToRecord(state,
+							fd.getRecord(fdHandle, tdgame.stateToHash(state)),
+							r);
 					System.out.println(r);
 				} else {
 					TierState state = game.stringToState(arrToString(board));
-					Record r = new Record(conf);
+					Record r = game.getRecord();
 					DatabaseHandle fdHandle = fd.getHandle();
-					game.longToRecord(state, fd.getRecord(fdHandle, game
-							.stateToHash(state)), r);
+					game.longToRecord(state,
+							fd.getRecord(fdHandle, game.stateToHash(state)), r);
 					System.out.println(r);
 				}
 				if (!win())
@@ -175,10 +176,10 @@ class ConnectFour implements MouseListener {
 					moveHashes[i] = tdgame.stateToHash(state);
 					if (tdgame.getState().numPieces != state.numPieces)
 						tdgame.setNumPieces(state.numPieces);
-					records[i] = new Record(conf);
+					records[i] = tdgame.getRecord();
 					DatabaseHandle fdHandle = fd.getHandle();
-					tdgame.longToRecord(state, fd.getRecord(fdHandle,
-							moveHashes[i]), records[i]);
+					tdgame.longToRecord(state,
+							fd.getRecord(fdHandle, moveHashes[i]), records[i]);
 				}
 				for (Record r : records)
 					r.previousPosition();
@@ -207,9 +208,9 @@ class ConnectFour implements MouseListener {
 				for (int i = 0; i < listMoves.size(); i++) {
 					TierState state = listMoves.get(i).cdr;
 					moveHashes[i] = game.stateToHash(state);
-					records[i] = new Record(conf);
-					game.longToRecord(state, fd.getRecord(fdHandle,
-							moveHashes[i]), records[i]);
+					records[i] = game.getRecord();
+					game.longToRecord(state,
+							fd.getRecord(fdHandle, moveHashes[i]), records[i]);
 				}
 				for (Record r : records)
 					r.previousPosition();

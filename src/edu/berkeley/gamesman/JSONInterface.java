@@ -344,8 +344,8 @@ public class JSONInterface extends GamesmanApplication {
 					continue;
 				}
 				try {
-					j.put(URLDecoder.decode(key_val[0], "utf-8"), URLDecoder
-							.decode(key_val[1], "utf-8"));
+					j.put(URLDecoder.decode(key_val[0], "utf-8"),
+							URLDecoder.decode(key_val[1], "utf-8"));
 				} catch (UnsupportedEncodingException e) {
 				}
 			}
@@ -358,10 +358,11 @@ public class JSONInterface extends GamesmanApplication {
 			Database db = conf.db;
 			Game<T> g = conf.getCheckedGame();
 			if (db != null) {
-				Record rec = new Record(conf);
+				Record rec = g.getRecord();
 				DatabaseHandle handle = db.getHandle();
-				g.synchronizedLongToRecord(state, db.getRecord(handle, g
-						.synchronizedStateToHash(state)), rec);
+				g.synchronizedLongToRecord(state,
+						db.getRecord(handle, g.synchronizedStateToHash(state)),
+						rec);
 				if (conf.hasValue) {
 					Value pv = rec.value;
 					if (g.getPlayerCount() > 1 && isChildState)

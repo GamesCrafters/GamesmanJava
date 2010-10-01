@@ -467,4 +467,12 @@ public abstract class Game<S extends State> {
 	 * @return A long representing the record (to be stored in a database)
 	 */
 	public abstract long recordToLong(S recordState, Record fromRecord);
+
+	/**
+	 * @return A new Record object (if you wish to subclass Record for your
+	 *         game, you should over-ride this)
+	 */
+	public Record getRecord() {
+		return new Record(conf);
+	}
 }

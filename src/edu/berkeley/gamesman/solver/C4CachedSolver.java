@@ -68,8 +68,8 @@ public class C4CachedSolver extends TierSolver {
 		long stepNum = current % STEP_SIZE;
 		Record[] vals = new Record[game.maxChildren()];
 		for (int i = 0; i < vals.length; i++)
-			vals[i] = new Record(conf);
-		Record prim = new Record(conf);
+			vals[i] = game.getRecord();
+		Record prim = game.getRecord();
 		TierState[] children = new TierState[game.maxChildren()];
 		for (int i = 0; i < children.length; i++)
 			children[i] = game.newState();
@@ -124,18 +124,14 @@ public class C4CachedSolver extends TierSolver {
 							|| !readPages[col].containsRecord(childHash)) {
 						if (readPages[col] != null) {
 							readPages[col].flush();
-							readPages[col]
-									.setRange(childHash, (int) Math.min(
-											lastChildren[col] + 1 - childHash,
-											readDb.recordsForMem(childHash,
-													maxPage)));
+							readPages[col].setRange(childHash, (int) Math.min(
+									lastChildren[col] + 1 - childHash,
+									readDb.recordsForMem(childHash, maxPage)));
 						} else {
 							readPages[col] = readPagePool.get();
-							readPages[col]
-									.setRange(childHash, (int) Math.min(
-											lastChildren[col] + 1 - childHash,
-											readDb.recordsForMem(childHash,
-													maxPage)));
+							readPages[col].setRange(childHash, (int) Math.min(
+									lastChildren[col] + 1 - childHash,
+									readDb.recordsForMem(childHash, maxPage)));
 							readHandles[col] = readPages[col].getHandle();
 						}
 					}
@@ -149,8 +145,8 @@ public class C4CachedSolver extends TierSolver {
 					times[3] += nano - lastNano;
 				}
 				Record newVal = game.combine(vals, 0, len);
-				writePage.putRecord(writePageDh, current, game.recordToLong(
-						curState, newVal));
+				writePage.putRecord(writePageDh, current,
+						game.recordToLong(curState, newVal));
 			} else if (pv == Value.IMPOSSIBLE) {
 				break;
 			} else {
@@ -164,8 +160,8 @@ public class C4CachedSolver extends TierSolver {
 				}
 				prim.remoteness = 0;
 				prim.value = pv;
-				writePage.putRecord(writePageDh, current, game.recordToLong(
-						curState, prim));
+				writePage.putRecord(writePageDh, current,
+						game.recordToLong(curState, prim));
 			}
 			if (debugSolver) {
 				lastNano = nano;

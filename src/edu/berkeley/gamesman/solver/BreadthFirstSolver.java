@@ -39,12 +39,12 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 		int maxRemoteness = conf
 				.getInteger("gamesman.solver.maxRemoteness", -1);
 		hashSpace = game.numHashes();
-		Record defaultRecord = new Record(conf);
+		Record defaultRecord = game.getRecord();
 		defaultRecord.value = Value.UNDECIDED;
 		writeDb.fill(game.recordToLong(null, defaultRecord), 0, hashSpace);
 		DatabaseHandle dh = writeDb.getHandle();
 		long numPositionsZero = 0;
-		Record rec = new Record(conf);
+		Record rec = game.getRecord();
 		for (T s : game.startingPositions()) {
 			long hash = game.stateToHash(s);
 			Value isWin = game.primitiveValue(s);
@@ -96,8 +96,8 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 					game.describe()));
 			solveTask.setTotal(lastHashPlusOne - firstHash);
 			solveTask.setProgress(0);
-			Record rec = new Record(conf);
-			Record childrec = new Record(conf);
+			Record rec = game.getRecord();
+			Record childrec = game.getRecord();
 			T currentPos = game.newState();
 			T[] childPositions = game.newStateArray(game.maxChildren());
 			DatabaseHandle readDh = readDb.getHandle();
@@ -106,8 +106,7 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 					&& (maxRemoteness < 0 || remoteness <= maxRemoteness)) {
 				numPositionsInLevel = 0;
 				for (long hash = firstHash; hash < lastHashPlusOne; hash++) {
-					game.longToRecord(null, readDb.getRecord(readDh, hash),
-							rec);
+					game.longToRecord(null, readDb.getRecord(readDh, hash), rec);
 					// TODO: Figure out when this is allowed to be null
 					if (rec.value != Value.UNDECIDED
 							&& rec.remoteness == remoteness) {
@@ -117,16 +116,16 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 						for (int i = 0; i < numChildren; i++) {
 							long childhash = game
 									.stateToHash(childPositions[i]);
-							game.longToRecord(childPositions[i], readDb
-									.getRecord(readDh, childhash), childrec);
+							game.longToRecord(childPositions[i],
+									readDb.getRecord(readDh, childhash),
+									childrec);
 							if (childrec.value == Value.UNDECIDED) {
 								childrec.value = rec.value;
 								childrec.remoteness = remoteness + 1;
 								// System.out.println("Setting child "+childhash+"="+childrec);
-								writeDb
-										.putRecord(writeDh, childhash, game
-												.recordToLong(childPositions[i],
-														childrec));
+								writeDb.putRecord(writeDh, childhash, game
+										.recordToLong(childPositions[i],
+												childrec));
 								numPositionsInLevel++;
 								numPositionsSeen++;
 								lastTier = remoteness + 1;

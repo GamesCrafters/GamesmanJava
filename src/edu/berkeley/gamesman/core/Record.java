@@ -5,7 +5,7 @@ package edu.berkeley.gamesman.core;
  * 
  * @author dnspies
  */
-public final class Record implements Cloneable {
+public class Record implements Cloneable {
 	private final Configuration conf;
 
 	/**

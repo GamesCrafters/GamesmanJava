@@ -72,8 +72,8 @@ public class TierSolver extends Solver {
 		game.setState(curState);
 		Record[] vals = new Record[game.maxChildren()];
 		for (int i = 0; i < vals.length; i++)
-			vals[i] = new Record(conf);
-		Record prim = new Record(conf);
+			vals[i] = game.getRecord();
+		Record prim = game.getRecord();
 		TierState[] children = new TierState[game.maxChildren()];
 		for (int i = 0; i < children.length; i++)
 			children[i] = game.newState();
