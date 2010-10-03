@@ -8,5 +8,5 @@ public class LoopyRecord extends Record {
 		super(conf);
 	}
 
-	int remainingChildren;
+	public int remainingChildren;
 }

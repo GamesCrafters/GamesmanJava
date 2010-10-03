@@ -13,7 +13,6 @@ import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.Connect4;
 import edu.berkeley.gamesman.game.Game;
-import edu.berkeley.gamesman.game.TopDownC4;
 
 /**
  * A testing class for playing against a perfect play database
@@ -104,13 +103,8 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 		Game<?> game = conf.getGame();
 		Record r = game.getRecord();
 		DatabaseHandle fdHandle = fd.getHandle();
-		if (game instanceof Connect4) {
-			Connect4 g = (Connect4) game;
-			g.longToRecord(g.hashToState(0), fd.getRecord(fdHandle, 0), r);
-		} else {
-			TopDownC4 g = (TopDownC4) game;
-			g.longToRecord(g.hashToState(0), fd.getRecord(fdHandle, 0), r);
-		}
+		Connect4 g = (Connect4) game;
+		g.longToRecord(g.hashToState(0), fd.getRecord(fdHandle, 0), r);
 		System.out.println(r);
 		DisplayFour df = new DisplayFour(height, width);
 		ConnectFour cf = new ConnectFour(conf, df);

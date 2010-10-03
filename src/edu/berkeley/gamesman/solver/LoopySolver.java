@@ -1,21 +1,18 @@
 package edu.berkeley.gamesman.solver;
 
-import java.util.Collection;
 import java.util.List;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
-import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.LoopyMutaGame;
 import edu.berkeley.gamesman.game.LoopyRecord;
-import edu.berkeley.gamesman.game.TopDownMutaGame;
 import edu.berkeley.gamesman.util.qll.Pool;
 import edu.berkeley.gamesman.util.qll.Factory;
 
-public class LoopySolver<S extends State> extends Solver {
+public class LoopySolver extends Solver {
 	Pool<LoopyRecord> recordPool;
 
 	public LoopySolver(Configuration conf) {
@@ -24,7 +21,7 @@ public class LoopySolver<S extends State> extends Solver {
 
 	@Override
 	public WorkUnit prepareSolve(final Configuration conf) {
-		final LoopyMutaGame<?> game = (LoopyMutaGame<?>) conf.getGame();
+		final LoopyMutaGame game = (LoopyMutaGame) conf.getGame();
 		recordPool = new Pool<LoopyRecord>(new Factory<LoopyRecord>() {
 
 			public LoopyRecord newObject() {
@@ -56,11 +53,10 @@ public class LoopySolver<S extends State> extends Solver {
 	}
 
 	public void solve(Configuration conf) {
-		LoopyMutaGame<S> game = (LoopyMutaGame<S>) conf.<S> getCheckedGame();
-		Collection<S> startingPositions = game.startingPositions();
-		for (S state : startingPositions) {
-			game.setToState(state);
-			solve(game, state, game.getRecord(), 0, readDb.getHandle(),
+		LoopyMutaGame game = (LoopyMutaGame) conf.getGame();
+		for (int startNum = 0; startNum < game.numStartingPositions(); startNum++) {
+			game.setStartingPosition(startNum);
+			solve(game, game.getRecord(), 0, readDb.getHandle(),
 					writeDb.getHandle());
 		}
 		/*
@@ -70,8 +66,8 @@ public class LoopySolver<S extends State> extends Solver {
 		 */
 	}
 
-	private void solve(TopDownMutaGame<S> game, S curState, Record value,
-			int depth, DatabaseHandle readDh, DatabaseHandle writeDh) {
+	private void solve(LoopyMutaGame game, Record value, int depth,
+			DatabaseHandle readDh, DatabaseHandle writeDh) {
 /*
  * value = {retrieve from database}
  *		case IMPOSSIBLE:
@@ -111,9 +107,8 @@ public class LoopySolver<S extends State> extends Solver {
 */
 	}
 
-	private void fix(TopDownMutaGame<S> game, S curState, Record value,
-			int depth, DatabaseHandle readDh, DatabaseHandle writeDh,
-			boolean update) {
+	private void fix(LoopyMutaGame game, Record value, int depth,
+			DatabaseHandle readDh, DatabaseHandle writeDh, boolean update) {
 /*
  * (database value) = {retrieve from database}
  * 	case IMPOSSIBLE:

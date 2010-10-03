@@ -4,7 +4,7 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.State;
 
-public abstract class LoopyMutaGame<S extends State> extends TopDownMutaGame<S> {
+public abstract class LoopyMutaGame extends TopDownMutaGame {
 
 	public LoopyMutaGame(Configuration conf) {
 		super(conf);

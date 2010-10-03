@@ -4,27 +4,24 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Value;
-import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.util.Pair;
 
 /**
  * This is the super class for all top-down mutable games
  * 
  * @author dnspies
- * 
- * @param <S>
- *            The state for this game
  */
-public abstract class TopDownMutaGame<S extends State> extends Game<S> {
+public abstract class TopDownMutaGame extends Game<HashState> {
 
 	public TopDownMutaGame(Configuration conf) {
 		super(conf);
 	}
 
 	@Override
-	public String displayState(S pos) {
-		setToState(pos);
+	public String displayState(HashState pos) {
+		setToHash(pos.hash);
 		return displayState();
 	}
 
@@ -36,9 +33,8 @@ public abstract class TopDownMutaGame<S extends State> extends Game<S> {
 	public abstract String displayState();
 
 	@Override
-	public void hashToState(long hash, S state) {
-		setToHash(hash);
-		state.set(getState());
+	public void hashToState(long hash, HashState state) {
+		state.hash = hash;
 	}
 
 	/**
@@ -49,14 +45,9 @@ public abstract class TopDownMutaGame<S extends State> extends Game<S> {
 	 */
 	public abstract void setToHash(long hash);
 
-	/**
-	 * @return The current state of the game
-	 */
-	public abstract S getState();
-
 	@Override
-	public Value primitiveValue(S pos) {
-		setToState(pos);
+	public Value primitiveValue(HashState pos) {
+		setToHash(pos.hash);
 		return primitiveValue();
 	}
 
@@ -65,18 +56,9 @@ public abstract class TopDownMutaGame<S extends State> extends Game<S> {
 	 */
 	public abstract Value primitiveValue();
 
-	/**
-	 * Sets the board to the passed state
-	 * 
-	 * @param pos
-	 *            A state to set
-	 */
-	public abstract void setToState(S pos);
-
 	@Override
-	public long stateToHash(S pos) {
-		setToState(pos);
-		return getHash();
+	public long stateToHash(HashState pos) {
+		return pos.hash;
 	}
 
 	/**
@@ -85,15 +67,15 @@ public abstract class TopDownMutaGame<S extends State> extends Game<S> {
 	public abstract long getHash();
 
 	@Override
-	public String stateToString(S pos) {
-		setToState(pos);
+	public String stateToString(HashState pos) {
+		setToHash(pos.hash);
 		return toString();
 	}
 
 	@Override
-	public S stringToState(String pos) {
+	public HashState stringToState(String pos) {
 		setFromString(pos);
-		return getState();
+		return newState(getHash());
 	}
 
 	/**
@@ -110,50 +92,100 @@ public abstract class TopDownMutaGame<S extends State> extends Game<S> {
 	 * 
 	 * @return Whether there are any possible moves to be made
 	 */
-	public abstract boolean makeMove(S curState);
+	public abstract boolean makeMove();
 
 	/**
 	 * Changes the last move made to the next possible move in the list
 	 * 
 	 * @return If there are any more moves to be tried
 	 */
-	public abstract boolean changeMove(S curState);
+	public abstract boolean changeMove();
 
 	/**
 	 * Undoes the last move made
 	 */
-	public abstract void undoMove(S curState);
+	public abstract void undoMove();
 
 	@Override
-	public Collection<Pair<String, S>> validMoves(S pos) {
-		setToState(pos);
+	public Collection<Pair<String, HashState>> validMoves(HashState pos) {
+		setToHash(pos.hash);
 		return validMoves();
 	}
 
-	/**
-	 * @return All the possible moves for the current position
-	 */
-	public Collection<Pair<String, S>> validMoves() {
-		boolean made = makeMove(null);
-		int i = 0;
-		ArrayList<Pair<String, S>> validMoves = new ArrayList<Pair<String, S>>();
-		while (made) {
-			validMoves.add(new Pair<String, S>(Integer.toString(i++),
-					getState()));
-			made = changeMove(null);
+	private Collection<Pair<String, HashState>> validMoves() {
+		Collection<String> moveStrings = moveNames();
+		HashState[] states = new HashState[moveStrings.size()];
+		for (int i = 0; i < states.length; i++) {
+			states[i] = newState();
 		}
-		undoMove(null);
+		validMoves(states);
+		ArrayList<Pair<String, HashState>> validMoves = new ArrayList<Pair<String, HashState>>(
+				moveStrings.size());
+		int i = 0;
+		for (String move : moveStrings) {
+			validMoves.add(new Pair<String, HashState>(move, states[i++]));
+		}
 		return validMoves;
 	}
 
-	public int validMoves(S pos, S[] childArray) {
-		boolean made = makeMove(null);
-		int i;
-		for (i = 0; made; i++) {
-			childArray[i] = getState();
-			made = changeMove(null);
+	public abstract Collection<String> moveNames();
+
+	@Override
+	public Collection<HashState> startingPositions() {
+		int numStartingPositions = numStartingPositions();
+		ArrayList<HashState> startingPositions = new ArrayList<HashState>(
+				numStartingPositions);
+		for (int i = 0; i < numStartingPositions; i++) {
+			setStartingPosition(i);
+			HashState thisState = newState(getHash());
+			startingPositions.add(thisState);
 		}
-		undoMove(null);
-		return i;
+		return startingPositions;
 	}
+
+	public abstract int numStartingPositions();
+
+	public abstract void setStartingPosition(int i);
+
+	@Override
+	public int validMoves(HashState pos, HashState[] children) {
+		setToHash(pos.hash);
+		return validMoves(children);
+	}
+
+	private int validMoves(HashState[] children) {
+		int count = 0;
+		boolean hasNext = makeMove();
+		while (hasNext) {
+			children[count++].hash = getHash();
+			hasNext = changeMove();
+		}
+		undoMove();
+		return count;
+	}
+
+	@Override
+	public HashState newState() {
+		return new HashState();
+	}
+
+	private HashState newState(long hash) {
+		return new HashState(hash);
+	}
+
+	@Override
+	public void longToRecord(HashState recordState, long record, Record toStore) {
+		setToHash(recordState.hash);
+		longToRecord(record, toStore);
+	}
+
+	public abstract void longToRecord(long record, Record toStore);
+
+	@Override
+	public long recordToLong(HashState recordState, Record fromRecord) {
+		setToHash(recordState.hash);
+		return recordToLong(fromRecord);
+	}
+
+	public abstract long recordToLong(Record fromRecord);
 }
