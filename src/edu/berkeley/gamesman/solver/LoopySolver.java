@@ -88,7 +88,7 @@ public class LoopySolver extends Solver {
  *					if value.value == UNDECIDED:
  *						bestValue = {retrieve from database}
  *					else:
- *						if(value.remainingChildren==0):
+ *						if(value.remainingChildren==0 OR value.value.nextPosition() > DRAW):
  *							value.remainingChildren = (database value).remainingChildren - 1
  *						else
  *							value.remainingChildren = (database value).remainingChildren
