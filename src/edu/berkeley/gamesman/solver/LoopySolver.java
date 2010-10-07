@@ -39,7 +39,7 @@ public class LoopySolver extends Solver {
 		});
 		long hashSpace = game.numHashes();
 		Record defaultRecord = game.getRecord();
-		defaultRecord.value = Value.IMPOSSIBLE;
+		defaultRecord.value = Value.IMPOSSIBLE; //why do we set it to impossible?
 		writeDb.fill(conf.getGame().recordToLong(null, defaultRecord), 0,
 				hashSpace);
 
@@ -68,6 +68,11 @@ public class LoopySolver extends Solver {
 		 * 	If (database value)<DRAW and remainingChildren>0:
 		 * 		(database value)=DRAW
 		 */
+		
+		for (long i = 0; i < readDb.numRecords(); i++) {
+			//need to fill in 
+		}
+
 	}
 
 	private void solve(LoopyMutaGame game, LoopyRecord value, int depth,
