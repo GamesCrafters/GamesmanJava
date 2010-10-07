@@ -12,6 +12,10 @@ import edu.berkeley.gamesman.game.LoopyRecord;
 import edu.berkeley.gamesman.util.qll.Pool;
 import edu.berkeley.gamesman.util.qll.Factory;
 
+/**
+ * @author David, Brent, Nancy, Kevin, Peter, Sharmishtha, Raji
+ *
+ */
 public class LoopySolver extends Solver {
 	Pool<LoopyRecord> recordPool;
 
@@ -66,10 +70,14 @@ public class LoopySolver extends Solver {
 		 */
 	}
 
-	private void solve(LoopyMutaGame game, Record value, int depth,
+	private void solve(LoopyMutaGame game, LoopyRecord value, int depth,
 			DatabaseHandle readDh, DatabaseHandle writeDh) {
 /*
  * value = {retrieve from database}
+ */
+	long hash = game.getHash();
+	game.longToRecord(readDb.getRecord(readDh, hash), value);
+/*
  *		case IMPOSSIBLE:
  *			value.value = primitiveValue()
  *			if primitive:
@@ -78,17 +86,45 @@ public class LoopySolver extends Solver {
  *				value = value.previousPosition()
  *				Run through parents:
  *					fix(..., false)
+ */
+	switch(value.value){
+		case IMPOSSIBLE:
+			value.value = game.primitiveValue();
+			if (game.primitiveValue() != Value.UNDECIDED){
+				value.remoteness = 0;
+				value.remainingChildren = 0;
+				
+				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
+				value.previousPosition();
+				//Run through parents:
+				
+				//not sure
+				while(value.remainingChildren >= 0) {
+					fix(game, value, depth, readDh, writeDh, false);
+				}
+			}
+/*	
  *			else:
  *				value.remainingChildren = len(children)
  *				value.value = DRAW
  *				{Store value in database}
  *				bestValue = -infinity
- *				Run through children:
+ *
+ */
+			else{
+				//value.remainingChildren = len(children);
+				value.value = Value.DRAW;
+				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
+				//bestValue = -infinity;
+				
+			}
+	}
+/*			Run through children:
  *					solve(...)
  *					if value.value == UNDECIDED:
  *						bestValue = {retrieve from database}
  *					else:
- *						if(value.remainingChildren==0 OR value.value.nextPosition() > DRAW):
+ *						if(value.remainingChildren==0):
  *							value.remainingChildren = (database value).remainingChildren - 1
  *						else
  *							value.remainingChildren = (database value).remainingChildren
@@ -106,7 +142,6 @@ public class LoopySolver extends Solver {
  *
 */
 	}
-
 	private void fix(LoopyMutaGame game, Record value, int depth,
 			DatabaseHandle readDh, DatabaseHandle writeDh, boolean update) {
 /*
