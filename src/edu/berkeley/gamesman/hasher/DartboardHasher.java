@@ -55,12 +55,12 @@ public class DartboardHasher {
 				return 0L;
 		}
 
-		public long get(int... k) {
+		public long get(int[] k) {
 			return get(k, 0);
 		}
 	}
 
-	public DartboardHasher(final char[] digits, int len) {
+	public DartboardHasher(int len, final char... digits) {
 		pieces = new int[len];
 		pieceHashes = new long[len];
 		this.digits = new char[digits.length];
@@ -196,7 +196,7 @@ public class DartboardHasher {
 		return oldHashes;
 	}
 
-	private long rearrange(int n, int... k) {
+	private long rearrange(int n, int[] k) {
 		return rearrange[n].get(k);
 	}
 
@@ -340,8 +340,7 @@ public class DartboardHasher {
 	}
 
 	public static void main(String[] args) {
-		DartboardHasher dh = new DartboardHasher(new char[] { ' ', 'O', 'X' },
-				9);
+		DartboardHasher dh = new DartboardHasher(9, ' ', 'O', 'X');
 		dh.setNums(4, 2, 3);
 		dh.setReplacements(' ', 'O');
 		long[] children = new long[9];
