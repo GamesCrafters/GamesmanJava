@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.solver;
+package                                                                                                                                                                                                                                                                                      edu.berkeley.gamesman.solver;
 
 import java.util.List;
 
@@ -71,6 +71,7 @@ public class LoopySolver extends Solver {
 		
 		for (long i = 0; i < readDb.numRecords(); i++) {
 			//need to fill in 
+			if 
 		}
 
 	}
@@ -122,6 +123,7 @@ public class LoopySolver extends Solver {
 				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
 				//bestValue = -infinity;
 				
+				
 			}
 	}
 /*			Run through children:
@@ -147,17 +149,36 @@ public class LoopySolver extends Solver {
  *
 */
 	}
-	private void fix(LoopyMutaGame game, Record value, int depth,
+	private void fix(LoopyMutaGame game, LoopyRecord value, int depth,
 			DatabaseHandle readDh, DatabaseHandle writeDh, boolean update) {
 /*
  * (database value) = {retrieve from database}
- * 	case IMPOSSIBLE:
+ * Question: what's the difference between database value  and LoopyRecord value 
+ */
+		
+		long hash = game.getHash();
+		game.longToRecord(readDb.getRecord(readDh, hash), value);
+		//how do we define database value?
+/* 	case IMPOSSIBLE:
  * 		Do nothing
  * 	default:
  *  If update:
  *  	value.remainingChildren = (database value).remainingChildren
  *  else:
  *  	value.remainingChildren = (database value).remainingChildren - 1
+ */
+		switch (value.value){
+			case IMPOSSIBLE:
+				return;
+			default:
+			if (update){
+				value.remainingChildren = 
+					
+			}
+		}
+		
+		
+/*  
  *  if (database value).value is DRAW or value>(database value)
  *  	{Store value in database}
  *  	value = value.previousPosition()
