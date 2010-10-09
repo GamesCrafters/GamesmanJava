@@ -201,6 +201,10 @@ public class DartboardHasher {
 	}
 
 	public long hash(char[] pieces) {
+		return hash(pieces, false);
+	}
+
+	private long hash(char[] pieces, boolean setNums) {
 		if (pieces.length != this.pieces.length)
 			throw new Error("Wrong number of pieces");
 		long totalHash = 0L;
@@ -220,12 +224,18 @@ public class DartboardHasher {
 			pieceHashes[piece] = hash;
 			totalHash += hash;
 		}
-		if (!Arrays.equals(numType, count))
+		if (setNums) {
+			System.arraycopy(count, 0, numType, 0, count.length);
+		} else if (!Arrays.equals(numType, count))
 			throw new Error("Wrong number of pieces");
 		countPool.release(count);
 		this.hash = totalHash;
 		calculateReplacements();
 		return totalHash;
+	}
+
+	public long setNumsAndHash(char[] pieces) {
+		return hash(pieces, true);
 	}
 
 	public void unhash(long hash) {
@@ -269,10 +279,10 @@ public class DartboardHasher {
 			count[rPair[1]]++;
 			for (int piece = 0; piece < pieces.length; piece++) {
 				count[pieces[piece]]++;
+				rDifs[piece] = -pieceHashes[piece];
 				for (int digit = 0; digit < pieces[piece]; digit++) {
 					count[digit]--;
-					rDifs[piece] += rearrange(piece, count)
-							- pieceHashes[piece];
+					rDifs[piece] += rearrange(piece, count);
 					count[digit]++;
 				}
 			}
@@ -331,11 +341,21 @@ public class DartboardHasher {
 		countPool.release(count);
 	}
 
+	public long getHash() {
+		return hash;
+	}
+
+	public void getCharArray(char[] charArray) {
+		if (charArray.length != pieces.length)
+			throw new Error("Wrong length char array");
+		for (int i = 0; i < pieces.length; i++) {
+			charArray[i] = get(i);
+		}
+	}
+
 	public String toString() {
 		char[] stringArr = new char[pieces.length];
-		for (int i = 0; i < pieces.length; i++) {
-			stringArr[i] = get(i);
-		}
+		getCharArray(stringArr);
 		return new String(stringArr);
 	}
 

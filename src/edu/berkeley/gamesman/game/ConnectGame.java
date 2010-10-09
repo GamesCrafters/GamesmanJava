@@ -5,7 +5,8 @@ import java.util.Collection;
 
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.game.util.TierState;
-import edu.berkeley.gamesman.hasher.MMHasher;
+import edu.berkeley.gamesman.hasher.ChangedIterator;
+import edu.berkeley.gamesman.hasher.DartboardHasher;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
@@ -17,10 +18,10 @@ import edu.berkeley.gamesman.util.Util;
  * @author dnspies
  */
 public abstract class ConnectGame extends TierGame {
-	private char turn;
-	protected final MMHasher mmh;
-	protected final TierState myState = newState();
-	private long numHashesForTier;
+	protected final DartboardHasher mmh;
+	private int tier;
+	private final ChangedIterator changed;
+	private final long[] moveHashes;
 
 	/**
 	 * @param conf
@@ -28,24 +29,38 @@ public abstract class ConnectGame extends TierGame {
 	 */
 	public ConnectGame(Configuration conf) {
 		super(conf);
-		mmh = new MMHasher();
+		int boardSize;
+		if (this instanceof YGame) {
+			int boardSide = conf.getInteger("gamesman.game.outerRows", 2) + 2;
+			boardSize = boardSide * (boardSide - 1) / 2 * 3;
+		} else if (this instanceof Connections) {
+			int boardSide = conf.getInteger("gamesman.game.side", 4);
+			boardSize = boardSide * boardSide + (boardSide - 1)
+					* (boardSide - 1);
+		} else {
+			throw new Error("Subclass not known to calculate board size");
+		}
+		mmh = new DartboardHasher(boardSize, ' ', 'O', 'X');
+		moveHashes = new long[boardSize];
+		changed = new ChangedIterator(boardSize);
 	}
 
 	protected abstract int getBoardSize();
 
 	@Override
 	public void getState(TierState state) {
-		state.set(myState);
+		state.tier = tier;
+		state.hash = mmh.getHash();
 	}
 
 	@Override
 	public int getTier() {
-		return myState.tier;
+		return tier;
 	}
 
 	@Override
 	public boolean hasNextHashInTier() {
-		return myState.hash < numHashesForTier - 1;
+		return mmh.numHashes() - 1 > mmh.getHash();
 	}
 
 	@Override
@@ -55,8 +70,13 @@ public abstract class ConnectGame extends TierGame {
 
 	@Override
 	public void nextHashInTier() {
-		myState.hash++;
-		gameMatchState();
+		mmh.next(changed);
+		char[] myArr = getCharArray();
+		while (changed.hasNext()) {
+			int piece = changed.next();
+			myArr[piece] = mmh.get(piece);
+		}
+		setToCharArray(myArr);
 	}
 
 	@Override
@@ -82,60 +102,51 @@ public abstract class ConnectGame extends TierGame {
 
 	private void stateMatchGame() {
 		char[] arr = getCharArray();
-		int tier = 0;
+		tier = 0;
 		for (int i = 0; i < arr.length; i++) {
 			if (arr[i] != ' ')
 				tier++;
 		}
-		if (tier != myState.tier) {
-			myState.tier = tier;
-			numHashesForTier = numHashesForTier(tier);
-		}
-		turn = ((tier & 1) == 1) ? 'O' : 'X';
-		myState.hash = mmh.hash(getCharArray());
+		mmh.setNumsAndHash(getCharArray());
+		mmh.setReplacements(' ', ((tier % 2) == 0) ? 'X' : 'O');
 	}
 
 	private void gameMatchState() {
-		int tier = myState.tier;
-		turn = ((tier & 1) == 1) ? 'O' : 'X';
-		mmh.unhash(myState.hash, getCharArray(), (tier + 1) / 2, tier / 2);
+		char[] charArray = getCharArray();
+		mmh.getCharArray(charArray);
+		setToCharArray(charArray);
 	}
 
 	@Override
 	public void setStartingPosition(int n) {
-		char[] arr = getCharArray();
-		int size = getBoardSize();
-		for (int i = 0; i < size; i++)
-			arr[i] = ' ';
-		setToCharArray(arr);
-		myState.tier = 0;
-		numHashesForTier = 1;
-		turn = 'X';
-		myState.hash = 0;
+		tier = 0;
+		mmh.setNums(getBoardSize(), 0, 0);
+		mmh.setReplacements(' ', 'X');
+		gameMatchState();
 	}
 
 	@Override
 	public void setState(TierState pos) {
-		myState.set(pos);
+		tier = pos.tier;
+		mmh.setNums(getBoardSize() - tier, tier / 2, (tier + 1) / 2);
+		mmh.setReplacements(' ', tier % 2 == 0 ? 'X' : 'O');
+		mmh.unhash(pos.hash);
 		gameMatchState();
 	}
 
 	@Override
 	public Collection<Pair<String, TierState>> validMoves() {
-		char turn = this.turn;
-		char[] pieces = getCharArray();
+		char turn = tier % 2 == 0 ? 'X' : 'O';
+		mmh.getChildren(' ', turn, moveHashes);
 		ArrayList<Pair<String, TierState>> moves = new ArrayList<Pair<String, TierState>>(
-				pieces.length);
-		for (int i = 0; i < pieces.length; i++) {
-			if (pieces[i] == ' ') {
-				pieces[i] = turn;
-				stateMatchGame();
+				moveHashes.length);
+		for (int i = 0; i < moveHashes.length; i++) {
+			if (moveHashes[i] >= 0) {
 				moves.add(new Pair<String, TierState>(Integer
-						.toString(translateOut(i)), myState.clone()));
-				pieces[i] = ' ';
+						.toString(translateOut(i)), newState(tier + 1,
+						moveHashes[i])));
 			}
 		}
-		stateMatchGame();
 		return moves;
 	}
 
@@ -150,20 +161,17 @@ public abstract class ConnectGame extends TierGame {
 
 	@Override
 	public int validMoves(TierState[] moves) {
-		char turn = this.turn;
-		char[] pieces = getCharArray();
-		int c = 0;
-		for (int i = 0; i < pieces.length; i++) {
-			if (pieces[i] == ' ') {
-				pieces[i] = turn;
-				stateMatchGame();
-				moves[c].set(myState);
-				pieces[i] = ' ';
-				c++;
+		char turn = tier % 2 == 0 ? 'X' : 'O';
+		mmh.getChildren(' ', turn, moveHashes);
+		int numChildren = 0;
+		for (int i = 0; i < moveHashes.length; i++) {
+			if (moveHashes[i] >= 0) {
+				moves[numChildren].tier = tier + 1;
+				moves[numChildren].hash = moveHashes[i];
+				numChildren++;
 			}
 		}
-		stateMatchGame();
-		return c;
+		return numChildren;
 	}
 
 	@Override
@@ -194,12 +202,12 @@ public abstract class ConnectGame extends TierGame {
 	@Override
 	public Value primitiveValue() {
 		Value result;
-		if ((myState.tier & 1) == 1)
+		if ((tier & 1) == 1)
 			result = isWin('X') ? Value.LOSE : Value.UNDECIDED;
 		else
 			result = isWin('O') ? Value.LOSE : Value.UNDECIDED;
 		assert Util.debug(DebugFacility.GAME, result.name() + "\n");
-		if (myState.tier == numberOfTiers() - 1 && result == Value.UNDECIDED)
+		if (tier == numberOfTiers() - 1 && result == Value.UNDECIDED)
 			return Value.IMPOSSIBLE;
 		else
 			return result;

@@ -235,4 +235,9 @@ public abstract class TierGame extends Game<TierState> {
 	public TierState newState() {
 		return new TierState();
 	}
+
+	public TierState newState(int tier, long hash) {
+		return new TierState(tier, hash);
+	}
+
 }
