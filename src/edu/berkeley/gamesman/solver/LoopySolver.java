@@ -64,14 +64,14 @@ public class LoopySolver extends Solver {
 					writeDb.getHandle());
 		}
 		/*
-		 * Run through database:
+		 * Run through database: //how to read database value?
 		 * 	If (database value)<DRAW and remainingChildren>0:
 		 * 		(database value)=DRAW
 		 */
 		
 		for (long i = 0; i < readDb.numRecords(); i++) {
 			//need to fill in 
-			if 
+			//if 
 		}
 
 	}
@@ -126,6 +126,7 @@ public class LoopySolver extends Solver {
 				
 			}
 	}
+			//HOW to run through children? (ie makeMove/moveLists)
 /*			Run through children:
  *					solve(...)
  *					if value.value == UNDECIDED:
@@ -171,10 +172,10 @@ public class LoopySolver extends Solver {
 			case IMPOSSIBLE:
 				return;
 			default:
-			if (update){
-				value.remainingChildren = 
+			//if (update){
+			//	value.remainingChildren = 
 					
-			}
+			//}
 		}
 		
 		
