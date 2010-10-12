@@ -105,6 +105,8 @@ public class BitSetBoard {
 			else
 				oPlayer = oPlayer.setBit(getBit(row, col));
 			break;
+		default:
+			throw new Error("Bad piece");
 		}
 	}
 

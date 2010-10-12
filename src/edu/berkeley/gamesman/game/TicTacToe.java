@@ -1,108 +1,122 @@
 package edu.berkeley.gamesman.game;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
-import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.core.Value;
+import edu.berkeley.gamesman.game.util.BitSetBoard;
+import edu.berkeley.gamesman.game.util.TierState;
+import edu.berkeley.gamesman.hasher.ChangedIterator;
 import edu.berkeley.gamesman.hasher.DartboardHasher;
 import edu.berkeley.gamesman.util.Pair;
 
-/**
- * A (relatively) simple implementation of Tic Tac Toe<br />
- * Created as a demonstration of GamesmanJava on Friday, September 10, 2010 I
- * had 3 minor bugs in class which I've marked
- * 
- * @author dnspies
- */
-public final class TicTacToe extends Game<TicTacToeState> {
-	private final int width;
-	private final int height;
-	private final int boardSize;
-	private final int piecesToWin;
-	private final long[] tierOffsets;
+public class TicTacToe extends TierGame {
+	private int numPieces;
 	private final DartboardHasher dh;
+	private final BitSetBoard bsb;
+	private final int width, height, boardSize;
+	private final int piecesToWin;
+	private final ChangedIterator ci;
+	private final long[] validMoves;
 
-	/**
-	 * Default Constructor
-	 * 
-	 * @param conf
-	 *            The Configuration object
-	 */
 	public TicTacToe(Configuration conf) {
 		super(conf);
 		width = conf.getInteger("gamesman.game.width", 3);
 		height = conf.getInteger("gamesman.game.height", 3);
 		boardSize = width * height;
 		piecesToWin = conf.getInteger("gamesman.game.pieces", 3);
-		tierOffsets = new long[boardSize + 2];
 		dh = new DartboardHasher(boardSize, ' ', 'O', 'X');
-		long total = 0;
-		for (int i = 0; i <= boardSize; i++) {
-			tierOffsets[i] = total;
-			dh.setNums(boardSize - i, i / 2, (i + 1) / 2);
-			total += dh.numHashes();
-		}
-		tierOffsets[boardSize + 1] = total;
+		bsb = new BitSetBoard(height, width);
+		ci = new ChangedIterator();
+		validMoves = new long[boardSize];
 	}
 
 	@Override
-	public Collection<TicTacToeState> startingPositions() {
-		ArrayList<TicTacToeState> returnList = new ArrayList<TicTacToeState>(1);
-		TicTacToeState returnState = newState();
-		returnList.add(returnState);
-		return returnList;
+	public void setState(TierState pos) {
+		numPieces = pos.tier;
+		dh.setNums(boardSize - numPieces, numPieces / 2, (numPieces + 1) / 2);
+		dh.setReplacements(' ', numPieces % 2 == 0 ? 'X' : 'O');
+		dh.unhash(pos.hash);
+		setBSB();
 	}
 
 	@Override
-	public Collection<Pair<String, TicTacToeState>> validMoves(
-			TicTacToeState pos) {
-		ArrayList<Pair<String, TicTacToeState>> moves = new ArrayList<Pair<String, TicTacToeState>>(
-				boardSize - pos.numPieces);
-		TicTacToeState[] children = new TicTacToeState[boardSize
-				- pos.numPieces];
-		String[] childNames = new String[children.length];
-		for (int i = 0; i < children.length; i++) {
-			children[i] = newState();
-		}
-		validMoves(pos, children);
-		int moveCount = 0;
+	public Value primitiveValue() {
+		return bsb.xInALine(piecesToWin, numPieces % 2 == 0 ? 'O' : 'X') == 1 ? Value.LOSE
+				: (numPieces == boardSize ? Value.TIE : Value.UNDECIDED);
+	}
+
+	@Override
+	public Collection<Pair<String, TierState>> validMoves() {
+		dh.getChildren(' ', numPieces % 2 == 0 ? 'X' : 'O', validMoves);
+		ArrayList<Pair<String, TierState>> moves = new ArrayList<Pair<String, TierState>>();
+		int i = 0;
 		for (int row = 0; row < height; row++) {
 			for (int col = 0; col < width; col++) {
-				if (pos.getPiece(row, col) == ' ')
-					childNames[moveCount++] = String
-							.valueOf((char) ('A' + col))
-							+ Integer.toString(row + 1);
+				if (validMoves[i] >= 0) {
+					moves.add(new Pair<String, TierState>(Character
+							.toString((char) ('A' + col))
+							+ Integer.toString(row + 1), new TierState(
+							numPieces + 1, validMoves[i])));
+				}
+				i++;
 			}
-		}
-		for (int i = 0; i < children.length; i++) {
-			moves.add(new Pair<String, TicTacToeState>(childNames[i],
-					children[i]));
 		}
 		return moves;
 	}
 
 	@Override
-	public int maxChildren() {
-		return boardSize;
+	public int getTier() {
+		return numPieces;
 	}
 
 	@Override
-	public String stateToString(TicTacToeState pos) {
-		return pos.toString();
+	public String stateToString() {
+		return dh.toString();
 	}
 
 	@Override
-	public String displayState(TicTacToeState pos) {
+	public void setFromString(String pos) {
+		dh.setNumsAndHash(pos.toCharArray());
+		setBSB();
+	}
+
+	private void setBSB() {
+		bsb.clear();
+		int next = 0;
+		for (int row = 0; row < height; row++) {
+			for (int col = 0; col < width; col++) {
+				if (dh.get(next) != ' ')
+					bsb.addPiece(row, col, dh.get(next++));
+			}
+		}
+	}
+
+	@Override
+	public void getState(TierState state) {
+		state.tier = numPieces;
+		state.hash = dh.getHash();
+	}
+
+	@Override
+	public long numHashesForTier(int tier) {
+		numPieces = tier;
+		dh.setNums(boardSize - numPieces, numPieces / 2, (numPieces + 1) / 2);
+		dh.setReplacements(' ', tier % 2 == 0 ? 'X' : 'O');
+		setBSB();
+		return dh.numHashes();
+	}
+
+	@Override
+	public String displayState() {
 		StringBuilder sb = new StringBuilder((width + 1) * 2 * (height + 1));
 		for (int row = height - 1; row >= 0; row--) {
 			sb.append(row + 1);
 			for (int col = 0; col < width; col++) {
 				sb.append(" ");
-				char piece = pos.getPiece(row, col);
+				char piece = dh.get(row * width + col);
 				if (piece == ' ')
 					sb.append('-');
 				else if (piece == 'X' || piece == 'O')
@@ -122,193 +136,88 @@ public final class TicTacToe extends Game<TicTacToeState> {
 	}
 
 	@Override
-	public TicTacToeState stringToState(String pos) {
-		return new TicTacToeState(width, pos.toCharArray());
+	public void setStartingPosition(int n) {
+		numPieces = 0;
+		dh.setNums(boardSize, 0, 0);
+		dh.setReplacements(' ', 'X');
+		bsb.clear();
+	}
+
+	@Override
+	public int numStartingPositions() {
+		return 1;
+	}
+
+	@Override
+	public boolean hasNextHashInTier() {
+		return dh.getHash() < dh.numHashes() - 1;
+	}
+
+	@Override
+	public void nextHashInTier() {
+		dh.next(ci);
+		while (ci.hasNext()) {
+			int next = ci.next();
+			char p = dh.get(next);
+			int row = next / width, col = next % width;
+			bsb.removePiece(row, col);
+			if (p != ' ') {
+				bsb.addPiece(row, col, p);
+			}
+		}
+	}
+
+	@Override
+	public int numberOfTiers() {
+		return boardSize + 1;
+	}
+
+	@Override
+	public int maxChildren() {
+		return boardSize;
+	}
+
+	@Override
+	public int validMoves(TierState[] moves) {
+		dh.getChildren(' ', numPieces % 2 == 0 ? 'X' : 'O', validMoves);
+		int moveCount = 0;
+		for (int i = 0; i < boardSize; i++) {
+			if (validMoves[i] >= 0) {
+				moves[moveCount].tier = numPieces + 1;
+				moves[moveCount].hash = validMoves[i];
+				moveCount++;
+			}
+		}
+		return moveCount;
 	}
 
 	@Override
 	public String describe() {
-		return width + "x" + height + " Tic Tac Toe with " + piecesToWin
-				+ " pieces";
-	}
-
-	@Override
-	public TicTacToeState newState() {
-		return new TicTacToeState(width, height);
-	}
-
-	@Override
-	public int validMoves(TicTacToeState pos, TicTacToeState[] children) {
-		int numMoves = 0;
-		char turn = pos.numPieces % 2 == 0 ? 'X' : 'O';
-		for (int i = 0; i < boardSize; i++) {
-			if (pos.getPiece(i) == ' ') {
-				children[numMoves].set(pos);
-				children[numMoves].setPiece(i, turn);
-				numMoves++;
-			}
-		}
-		return numMoves;
-	}
-
-	@Override
-	public Value primitiveValue(TicTacToeState pos) {
-		char lastTurn = pos.numPieces % 2 == 0 ? 'O' : 'X';
-		for (int row = 0; row < height; row++) {
-			int piecesInRow = 0;
-			for (int col = 0; col < width; col++) {
-				if (pos.getPiece(row, col) == lastTurn) {
-					piecesInRow++;
-					if (piecesInRow == piecesToWin)
-						return Value.LOSE;
-				} else
-					piecesInRow = 0;
-			}
-		}
-		for (int col = 0; col < width; col++) {
-			int piecesInCol = 0;
-			for (int row = 0; row < height; row++) {
-				if (pos.getPiece(row, col) == lastTurn) {
-					piecesInCol++;
-					if (piecesInCol == piecesToWin)
-						return Value.LOSE;
-				} else
-					piecesInCol = 0;
-			}
-		}
-		for (int row = 0; row <= height - piecesToWin; row++) {
-			for (int col = 0; col <= width - piecesToWin; col++) {
-				int pieces;
-				for (pieces = 0; pieces < piecesToWin; pieces++) {
-					if (pos.getPiece(row + pieces, col + pieces) != lastTurn)
-						break;
-				}
-				if (pieces == piecesToWin)
-					return Value.LOSE;
-			}
-		}
-		for (int row = 0; row <= height - piecesToWin; row++) {
-			for (int col = piecesToWin - 1; col < width; col++) {
-				int pieces;
-				for (pieces = 0; pieces < piecesToWin; pieces++) {
-					if (pos.getPiece(row + pieces, col - pieces) != lastTurn)
-						break;
-				}
-				if (pieces == piecesToWin)
-					return Value.LOSE;
-			}
-		}
-		if (pos.numPieces == boardSize)
-			return Value.TIE;
-		else
-			return Value.UNDECIDED;
-	}
-
-	@Override
-	public long stateToHash(TicTacToeState pos) {
-		long offset = tierOffsets[pos.numPieces];
-		return offset + dh.setNumsAndHash(pos.board);
-	}
-
-	@Override
-	public long numHashes() {
-		return tierOffsets[boardSize + 1];
+		return "Tic Tac Toe " + width + "x" + height;
 	}
 
 	@Override
 	public long recordStates() {
-		return boardSize + 3;
+		return boardSize + 2;
 	}
 
 	@Override
-	public void hashToState(long hash, TicTacToeState s) {
-		int tier = Arrays.binarySearch(tierOffsets, hash);
-		if (tier < 0)
-			tier = -tier - 2;
-		hash -= tierOffsets[tier];
-		dh.setNums(boardSize - tier, tier / 2, (tier + 1) / 2);
-		dh.unhash(hash);
-		dh.getCharArray(s.board);
-		s.numPieces = tier;
-	}
-
-	@Override
-	public void longToRecord(TicTacToeState recordState, long record,
-			Record toStore) {
+	public void longToRecord(TierState recordState, long record, Record toStore) {
 		if (record == boardSize + 1) {
 			toStore.value = Value.TIE;
-			toStore.remoteness = boardSize - recordState.numPieces;
-		} else if (record == boardSize + 2)
-			toStore.value = Value.UNDECIDED;
-		else if (record >= 0 && record <= boardSize) {
+			toStore.remoteness = boardSize - numPieces;
+		} else {
 			toStore.value = record % 2 == 0 ? Value.LOSE : Value.WIN;
 			toStore.remoteness = (int) record;
 		}
 	}
 
 	@Override
-	public long recordToLong(TicTacToeState recordState, Record fromRecord) {
-		if (fromRecord.value == Value.WIN || fromRecord.value == Value.LOSE)
-			return fromRecord.remoteness;
-		else if (fromRecord.value == Value.TIE)
+	public long recordToLong(TierState recordState, Record fromRecord) {
+		if (fromRecord.value == Value.TIE)
 			return boardSize + 1;
-		else if (fromRecord.value == Value.UNDECIDED)
-			return boardSize + 2;
 		else
-			throw new Error("Invalid Value");
-	}
-}
-
-class TicTacToeState implements State {
-	final char[] board;
-	private final int width;
-	int numPieces = 0;
-
-	public TicTacToeState(int width, int height) {
-		this.width = width;
-		board = new char[width * height];
-		for (int i = 0; i < board.length; i++) {
-			board[i] = ' ';
-		}
+			return fromRecord.remoteness;
 	}
 
-	public TicTacToeState(int width, char[] charArray) {
-		this.width = width;
-		board = charArray;
-	}
-
-	public void set(State s) {
-		TicTacToeState ttts = (TicTacToeState) s;
-		if (board.length != ttts.board.length)
-			throw new Error("Different Length Boards");
-		int boardLength = board.length;
-		System.arraycopy(ttts.board, 0, board, 0, boardLength);
-		numPieces = ttts.numPieces;
-	}
-
-	public void setPiece(int row, int col, char piece) {
-		setPiece(row * width + col, piece);
-	}
-
-	public void setPiece(int index, char piece) {
-		if (board[index] != ' ')
-			numPieces--;
-		board[index] = piece;
-		if (piece == 'X' || piece == 'O') {
-			numPieces++;
-		} else if (piece != ' ')
-			throw new Error("Invalid piece: " + piece);
-	}
-
-	public char getPiece(int row, int col) {
-		return getPiece(row * width + col);
-	}
-
-	public char getPiece(int index) {
-		return board[index];
-	}
-
-	public String toString() {
-		return Arrays.toString(board);
-	}
 }

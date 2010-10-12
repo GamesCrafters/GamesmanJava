@@ -1,5 +1,5 @@
 gamesman.game = TicTacToe
-gamesman.solver = TopDownSolver
+gamesman.solver = TierSolver
 gamesman.database = MemoryDatabase:FileDatabase
 gamesman.db.uri = ttt.db
-gamesman.debug.SOLVER = true
+gamesman.debug.THREADING = true
