@@ -367,8 +367,8 @@ public class Alignment extends Game<AlignmentState> {
 }
 
 enum AlignmentVariant {
-	STANDARD, NO_SLIDE, DEAD_SQUARES, SUDDEN_DEATH; // STANDARD = 1, NO_SLIDE =
-	// 2,
-	// DEAD_SQUARES = 3, SUDDEN_DEATH = 4;
+	STANDARD, NO_SLIDE, DEAD_SQUARES, SUDDEN_DEATH; // STANDARD = 0, NO_SLIDE =
+	// 1,
+	// DEAD_SQUARES = 2, SUDDEN_DEATH = 3;
 	static final AlignmentVariant[] variants = AlignmentVariant.values();
 }

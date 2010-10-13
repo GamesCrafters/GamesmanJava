@@ -87,7 +87,9 @@ public final class AlignmentState implements State {
 
 	public void put(int row, int col, char piece) {
 		board[row][col] = piece;
-		numPieces++;
+		if (piece != ' '){
+			numPieces++;
+		}
 	}
 
 	public void setLastMove(char player) {
@@ -96,7 +98,11 @@ public final class AlignmentState implements State {
 
 	/** Returns true if the piece at (x0,y0) can be moved to (x1,y1)) */
 	public boolean legalMove(int row0, int col0, int row1, int col1) {
-		return adjacent(row0, col0, row1, col1) && (board[row1][col1] == ' ');
+		return (row0 >= 0 && row1 >= 0 && col0 >= 0 && col1 >= 0)
+				&& (row0 < board.length && row1 < board.length
+						&& col0 < board[0].length && col1 < board[0].length)
+				&& adjacent(row0, col0, row1, col1)
+				&& (board[row1][col1] == ' ');
 	}
 
 	// =======================================================================================
