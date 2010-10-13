@@ -86,11 +86,8 @@ public final class AlignmentState implements State {
 	}
 
 	public void put(int row, int col, char piece) {
-		if (piece != ' ' && board[row][col] == ' ')
-			numPieces++;
-		else if (piece == ' ' && board[row][col] != ' ')
-			numPieces--;
 		board[row][col] = piece;
+		numPieces++;
 	}
 
 	public void setLastMove(char player) {
@@ -195,9 +192,8 @@ public final class AlignmentState implements State {
 	 */
 	boolean movePiece(int row0, int col0, int row1, int col1, AlignmentState pos) {
 		if (pos.legalMove(row0, col0, row1, col1)) {
-			char piece = pos.get(row0, col0);
-			pos.put(row1, col1, piece);
-			pos.put(row0, col0, ' ');
+			pos.board[row1][col1] = pos.board[row0][col0];
+			pos.board[row0][col0] = ' ';
 			return true;
 		}
 		return false;
@@ -239,7 +235,10 @@ public final class AlignmentState implements State {
 							stillGoing = false;
 						} else if (board[row][col] == opposite(whoseTurn)) {
 							deathCount++;
-							put(row, col, ' ');
+							if (v != AlignmentVariant.SUDDEN_DEATH) {
+								board[row][col] = ' ';
+								numPieces--;
+							}
 						}
 					}
 				} else {
