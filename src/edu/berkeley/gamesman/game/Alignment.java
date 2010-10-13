@@ -27,12 +27,13 @@ public class Alignment extends Game<AlignmentState> {
 		gameWidth = conf.getInteger("gamesman.game.width", 4);
 		gameHeight = conf.getInteger("gamesman.game.height", 4);
 		gameSize = gameWidth * gameHeight;
-		variant = AlignmentVariant.variants[conf.getInteger(
-				"gamesman.game.variant", 1)];
+		variant = AlignmentVariant.variants[conf.getInteger("gamesman.game.variant", 1)];
 		if (variant == AlignmentVariant.SUDDEN_DEATH)
 			piecesToWin = 1;
 		else
 			piecesToWin = conf.getInteger("gamesman.game.pieces", 5);
+		System.out.println("variant: " + variant);
+		System.out.println("pieces to win: " + piecesToWin);
 		// Removing corners
 		/*
 		 * Not compatible with AlignmentState and this removal is incorrect. if
@@ -218,6 +219,27 @@ public class Alignment extends Game<AlignmentState> {
 				}
 			}
 		}
+		
+		char pl = opposite(pos.lastMove);
+		AlignmentState childPos = new AlignmentState(pos);
+		for (int row = 0; row < gameHeight; row++) {
+			for (int col = 0; col < gameWidth; col++) {
+				if (pl == pos.get(row, col)) {
+					for(int adjRow = row-1; adjRow <= row+1; adjRow++ ){
+						for(int adjCol = col-1; adjCol <= col+1; adjCol++){
+							if (childPos.movePiece(row, col, adjRow, adjCol, pos)){
+								childStrings.add(Character.toString(
+										(char) ('a' + col)) + (row + 1) +
+										(char) ('a' + adjCol) + (adjRow + 1)
+									);
+							}
+							childPos.set(pos);
+						}
+					}
+				}
+			}
+		}
+		
 		AlignmentState[] children = new AlignmentState[childStrings.size()];
 		for (int i = 0; i < children.length; i++) {
 			children[i] = newState();
@@ -234,9 +256,42 @@ public class Alignment extends Game<AlignmentState> {
 	@Override
 	public int validMoves(AlignmentState pos, AlignmentState[] children) {
 		int moves = 0;
+		char pl = opposite(pos.lastMove);
+		
 		if (variant == AlignmentVariant.STANDARD) {
-			throw new UnsupportedOperationException(
-					"STANDARD variant not complete");
+			for (int row = 0; row < gameHeight; row++) {
+				for (int col = 0; col < gameWidth; col++) {
+					if (' ' == pos.get(row, col)) {
+						children[moves].set(pos);
+						children[moves].put(row, col, pl);
+						children[moves].fireGuns(piecesToWin, variant);
+						children[moves].setLastMove(pl);
+						moves++;
+					}
+				}
+			}
+			
+			for (int row = 0; row < gameHeight; row++) {
+				for (int col = 0; col < gameWidth; col++) {
+					if (pl == pos.get(row, col)) {
+						children[moves].set(pos);
+						for(int adjRow = row-1; adjRow <= row+1; adjRow++ ){
+							for(int adjCol = col-1; adjCol <= col+1; adjCol++){
+								if (children[moves].movePiece(row, col, adjRow, adjCol, pos)){
+									children[moves].fireGuns(piecesToWin, variant);
+									children[moves].setLastMove(pl);
+									moves++;
+								} else {
+									children[moves].set(pos);
+								}
+							}
+						}
+					}
+				}
+			}
+			
+//			throw new UnsupportedOperationException(
+//					"STANDARD variant not complete");
 		} else if (variant == AlignmentVariant.NO_SLIDE
 				|| variant == AlignmentVariant.SUDDEN_DEATH) {
 			for (int row = 0; row < gameHeight; row++) {
