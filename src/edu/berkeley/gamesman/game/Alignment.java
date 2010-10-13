@@ -220,20 +220,22 @@ public class Alignment extends Game<AlignmentState> {
 			}
 		}
 		
-		char pl = opposite(pos.lastMove);
-		AlignmentState childPos = new AlignmentState(pos);
-		for (int row = 0; row < gameHeight; row++) {
-			for (int col = 0; col < gameWidth; col++) {
-				if (pl == pos.get(row, col)) {
-					for(int adjRow = row-1; adjRow <= row+1; adjRow++ ){
-						for(int adjCol = col-1; adjCol <= col+1; adjCol++){
-							if (childPos.movePiece(row, col, adjRow, adjCol, pos)){
-								childStrings.add(Character.toString(
-										(char) ('a' + col)) + (row + 1) +
-										(char) ('a' + adjCol) + (adjRow + 1)
-									);
+		if (variant == AlignmentVariant.STANDARD) {
+			char pl = opposite(pos.lastMove);
+			AlignmentState childPos = new AlignmentState(pos);
+			for (int row = 0; row < gameHeight; row++) {
+				for (int col = 0; col < gameWidth; col++) {
+					if (pl == pos.get(row, col)) {
+						for(int adjRow = row-1; adjRow <= row+1; adjRow++ ){
+							for(int adjCol = col-1; adjCol <= col+1; adjCol++){
+								childPos.set(pos);
+								if (childPos.movePiece(row, col, adjRow, adjCol, childPos)){
+									childStrings.add(Character.toString(
+											(char) ('a' + col)) + (row + 1) +
+											(char) ('a' + adjCol) + (adjRow + 1)
+										);
+								}
 							}
-							childPos.set(pos);
 						}
 					}
 				}
@@ -274,15 +276,15 @@ public class Alignment extends Game<AlignmentState> {
 			for (int row = 0; row < gameHeight; row++) {
 				for (int col = 0; col < gameWidth; col++) {
 					if (pl == pos.get(row, col)) {
-						children[moves].set(pos);
+						//children[moves].set(pos);
 						for(int adjRow = row-1; adjRow <= row+1; adjRow++ ){
 							for(int adjCol = col-1; adjCol <= col+1; adjCol++){
+								children[moves].set(pos);
 								if (children[moves].movePiece(row, col, adjRow, adjCol, pos)){
+									children[moves].set(pos);
 									children[moves].fireGuns(piecesToWin, variant);
 									children[moves].setLastMove(pl);
 									moves++;
-								} else {
-									children[moves].set(pos);
 								}
 							}
 						}
