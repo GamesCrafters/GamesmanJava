@@ -102,8 +102,7 @@ public class Alignment extends Game<AlignmentState> {
 
 	@Override
 	public int maxChildren() {
-		if (variant == AlignmentVariant.NO_SLIDE
-				|| variant == AlignmentVariant.SUDDEN_DEATH) {
+		if (variant == AlignmentVariant.NO_SLIDE) {
 			return gameWidth * gameHeight;
 		} else {
 			return gameHeight * 65;
@@ -220,7 +219,7 @@ public class Alignment extends Game<AlignmentState> {
 			}
 		}
 		
-		if (variant == AlignmentVariant.STANDARD) {
+		if (variant != AlignmentVariant.NO_SLIDE) {
 			char pl = opposite(pos.lastMove);
 			AlignmentState childPos = new AlignmentState(pos);
 			for (int row = 0; row < gameHeight; row++) {
@@ -260,7 +259,7 @@ public class Alignment extends Game<AlignmentState> {
 		int moves = 0;
 		char pl = opposite(pos.lastMove);
 		
-		if (variant == AlignmentVariant.STANDARD) {
+		if (variant != AlignmentVariant.NO_SLIDE) {
 			for (int row = 0; row < gameHeight; row++) {
 				for (int col = 0; col < gameWidth; col++) {
 					if (' ' == pos.get(row, col)) {
@@ -276,7 +275,6 @@ public class Alignment extends Game<AlignmentState> {
 			for (int row = 0; row < gameHeight; row++) {
 				for (int col = 0; col < gameWidth; col++) {
 					if (pl == pos.get(row, col)) {
-						//children[moves].set(pos);
 						for(int adjRow = row-1; adjRow <= row+1; adjRow++ ){
 							for(int adjCol = col-1; adjCol <= col+1; adjCol++){
 								children[moves].set(pos);
@@ -294,8 +292,7 @@ public class Alignment extends Game<AlignmentState> {
 			
 //			throw new UnsupportedOperationException(
 //					"STANDARD variant not complete");
-		} else if (variant == AlignmentVariant.NO_SLIDE
-				|| variant == AlignmentVariant.SUDDEN_DEATH) {
+		} else if (variant == AlignmentVariant.NO_SLIDE) {
 			for (int row = 0; row < gameHeight; row++) {
 				for (int col = 0; col < gameWidth; col++) {
 					if (' ' == pos.get(row, col)) {
@@ -307,8 +304,8 @@ public class Alignment extends Game<AlignmentState> {
 					}
 				}
 			}
-
-		} else if (variant == AlignmentVariant.DEAD_SQUARES) {
+		}
+		if (variant == AlignmentVariant.DEAD_SQUARES) {
 			throw new UnsupportedOperationException(
 					"DEAD_SQUARES variant not complete");
 		}
