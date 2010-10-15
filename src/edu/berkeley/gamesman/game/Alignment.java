@@ -21,7 +21,7 @@ public class Alignment extends Game<AlignmentState> {
 	private final AlignmentVariant variant; // should be an enum?
 	public final ArrayList<Pair<Integer, Integer>> openCells;
 	private final AlignmentHasher myHasher;
-
+	
 	public Alignment(Configuration conf) {
 		super(conf);
 		gameWidth = conf.getInteger("gamesman.game.width", 4);
