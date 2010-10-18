@@ -60,7 +60,7 @@ public class QuickCross extends LoopyMutaGame {
 		printBoard();
 		System.out.printf("It is %s's turn.\n", whoseMove);
 		ArrayList<String> possibleMoves = generateMoves();
-		System.out.println("Where would you like to move?");
+		System.out.println("Where would you like to move? (enter either a position such as a1 or a move such as Ha1)");
 		/*System.out.print("There are " + possibleMoves.size() + " possible moves:\n");
 		for (int i = 0; i < possibleMoves.size(); i++) {
 			System.out.print(possibleMoves.get(i) + ", ");
@@ -76,43 +76,52 @@ public class QuickCross extends LoopyMutaGame {
 		while (true)
 		{
 			location = sc.nextLine();
+			if (possibleMoves.contains(location))
+				break;
 			if ((location.length() == 2) && (letterToNum(location.charAt(0)) < width+1) && (Integer.decode("" + location.charAt(1)) < height+1))
 				break;
 			else
 			{
-				System.out.print(location + " is not a valid position\n> ");
+				System.out.print(location + " is not a valid move or position\n> ");
 			}
 		}
 		String move = "";
-		if (getPiece(location) != ' ') {
-			System.out.printf("Flipping the piece at %s.\n", location);
-			if (getPiece(location) == '-') {
-				move = move + "V";
-			}
-			else if (getPiece(location) == '|') {
-				move = move + "H";
-			}
+		if  (location.length()== 3) {
+			move = location;
 		}
 		else {
-			System.out.println("Enter H for a horizontal piece, or V for a vertical piece.");
-			System.out.print("> ");
-			String direction;
-			while(true){
-				direction = sc.nextLine();
-				if (direction.equals("H") || direction.equals("V")){
-					break;
+			move = "";
+			if (getPiece(location) != ' ') {
+				System.out.printf("Flipping the piece at %s.\n", location);
+				if (getPiece(location) == '-') {
+					move = move + "V";
 				}
-				else
-					System.out.println("Please enter either H or V");
+				else if (getPiece(location) == '|') {
+					move = move + "H";
+				}
 			}
-			move = move + direction;
+			else {
+				System.out.println("Enter H for a horizontal piece, or V for a vertical piece.");
+				System.out.print("> ");
+				String direction;
+				while(true){
+					direction = sc.nextLine();
+					if (direction.equals("H") || direction.equals("V")){
+						break;
+					}
+					else
+						System.out.println("Please enter either H or V");
+				}
+				move = move + direction;
+			}
+			move = move + location;
+			
+			if (!(possibleMoves.contains(move))) {
+				System.err.println("Not a legal move!");
+				System.exit(1);
+			}
 		}
-		move = move + location;
 		
-		if (!(possibleMoves.contains(move))) {
-			System.err.println("Not a legal move!");
-			System.exit(1);
-		}
 		makeMoveDisplay(move);
 		
 		if (isPrimitivePosition()) {
