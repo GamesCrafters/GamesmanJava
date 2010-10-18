@@ -1,9 +1,9 @@
-from edu.berkeley.gamesman.core import Game,PrimitiveValue,Record,RecordFields,Configuration
+from edu.berkeley.gamesman.core import State,Value,Record,Configuration
+from edu.berkeley.gamesman.game import Game
 from edu.berkeley.gamesman.database import FileDatabase
-from edu.berkeley.gamesman.master import LocalMaster
+from edu.berkeley.gamesman.master import Master
 from edu.berkeley.gamesman.solver import TopDownSolver, BreadthFirstSolver
 from edu.berkeley.gamesman.util import Util, Pair, DebugFacility
-from edu.berkeley.gamesman.hasher import NullHasher
 from java.util import Properties,EnumSet
 
 import Play
@@ -25,6 +25,13 @@ class ConfigWrapper:
 	def __delitem__(self, key):
 		del self.realconfig[self.prefix+key]
 
+class PythonState(State):
+	def __init__(self, gameinst=None):
+		self.gameinst = gameinst
+
+	def set(self, other):
+		self.gameinst = other.gameinst
+
 class PythonPuzzle(Game):
 	def __init__(self, config):
 		puzzlename = config['pythonpuzzle']
@@ -38,10 +45,13 @@ class PythonPuzzle(Game):
 		for key in defaults:
 			if key not in self.config:
 				self.config[key] = str(defaults[key])
-		self.gameinst = self.gameclass.unserialize(self.config)
+		self.gameinst = self.newState().gameinst
+
+	def newState(self):
+		return PythonState(self.gameclass.unserialize(self.config))
 
 	def getPlayerCount(self):
-		return 0
+		return 1
 
 	def find_solutions(self):
 		puzzleQueue = []
@@ -71,24 +81,36 @@ class PythonPuzzle(Game):
 		sols = self.gameinst.generate_solutions()
 		if not sols:
 			sols = self.find_solutions()
-		return sols
+		return [PythonState(x) for x in sols]
 
-	def validMoves(self,state):
-		return [Pair(str(x), state.do_move(x)) for x in state.generate_moves()]
+	def validMoves(self, s, outarr=None):
+		state = s.gameinst
+		if outarr:
+			num = 0
+			for x in state.generate_moves():
+				outarr[num].gameinst = state.do_move(x)
+				num += 1
+			return num
+		else:
+			return [Pair(str(x), state.do_move(x)) for x in state.generate_moves()]
 
 	def primitiveScore(self,state):
-		return state.primitive_score()
+		return state.gameinst.primitive_score()
 
-	def primitiveValue(self,state):
+	def primitiveValue(self,s):
+		state = s.gameinst
 		if state.is_a_solution():
-			return PrimitiveValue.WIN
+			#print "solution", state
+			return Value.WIN
 		elif state.is_a_deadend():
-			return PrimitiveValue.LOSE
+			#print "deadend", state
+			return Value.LOSE
 		elif state.is_illegal():
-			return PrimitiveValue.TIE # Not really correct, but...
-		return PrimitiveValue.UNDECIDED
+			return Value.TIE # Not really correct, but...
+		#print "undecided", state
+		return Value.UNDECIDED
 
-	def hashToState(self,h):
+	def hashToState(self, h, s):
 		# Note: We need to convert from BigInteger to PyLong
 		# for operators such as __mod__ to work.
 		if type(h) != long and type(h) != int:
@@ -96,22 +118,63 @@ class PythonPuzzle(Game):
 				h = long(h)
 			except:
 				h = h.longValue()
-		return self.gameinst.unhash(h)
+		s.gameinst = self.gameinst.unhash(h)
 
-	def stateToHash(self,s):
-		return long(hash(s))
+	def stateToHash(self, s):
+		return long(hash(s.gameinst))
 
-	def lastHash(self):
+	def numHashes(self):
 		max = long(self.gameinst.maxhash())
 		if not max:
 			return 0L
-		return max - 1L
+		return max
+
+	# FIXME!
+	def recordStates(self):
+		if "maxRemoteness" not in self.gameinst.__dict__:
+			return 256
+		if "maxScore" not in self.gameinst.__dict__:
+			return self.gameinst.Remoteness() + 1 + 1
+		return 2 * (self.gameinst.maxRemoteness() + 1) * (self.gameinst.maxScore() + 1) + 1
+
+	# FIXME!
+	def maxChildren(self):
+		return 256
+
+	def recordToLong(self, recordState, toRead):
+		if toRead.value == Value.UNDECIDED:
+			return 0
+		maxRemoteness = self.gameinst.__dict__.get("maxRemoteness", 0)
+		longValue = toRead.remoteness + toRead.score * maxRemoteness
+		if toRead.value == Value.LOSE:
+			longValue += self.recordStates()/2
+		return longValue + 1
+
+	def longToRecord(self, recordState, recordNumber, toStore):
+		if recordNumber == 0:
+			toStore.value = Value.UNDECIDED
+			toStore.remoteness = 0
+			toStore.score = 0
+			return
+		recordNumber -= 1
+		maxWin = self.recordStates()/2
+		toStore.value = Value.WIN
+		if recordNumber >= maxWin:
+			recordNumber -= maxWin
+			toStore.value = Value.LOSE
+		if "maxRemoteness" in self.gameinst.__dict__:
+			maxRemoteness = self.gameinst.maxRemoteness
+			toStore.remoteness = recordNumber % maxRemoteness
+			toStore.score = recordNumber / maxRemoteness
+		else:
+			toStore.remoteness = recordNumber
 
 	def stateToString(self,s):
-		return s.serialize()
+		return s.gameinst.serialize()
 
 	def stringToState(self,string):
-		return self.gameclass.unserialize(self.config, string)
+		return PythonState(self.gameclass.unserialize(
+			self.config, string))
 
 	def getDefaultBoardWidth(self):
 		raise NotImplementedError()
@@ -120,7 +183,7 @@ class PythonPuzzle(Game):
 		raise NotImplementedError()
 
 	def displayState(self, s):
-		return str(s)
+		return str(s.gameinst)
 
 	def describe(self):
 		return self.gameclass.__name__
@@ -128,7 +191,7 @@ class PythonPuzzle(Game):
 class Solver:
 	def __init__(self, options={}, solverclass=None, hasherclass=None):
 		if not hasherclass:
-			hasherclass = NullHasher
+			raise RuntimeException("No hasher defined!")
 		if not solverclass:
 			solverclass = BreadthFirstSolver
 		puzzle = options['pythonpuzzle']
@@ -157,7 +220,7 @@ class Solver:
 		self.master = None
 
 	def initializeDB(self):
-		self.master = LocalMaster()
+		self.master = Master()
 		self.master.initialize(self.conf,self.solverclass,BlockDatabase)
 	def solve(self):
 		self.delete()

@@ -1,5 +1,5 @@
 from edu.berkeley.gamesman.core import Configuration
-from edu.berkeley.gamesman.core import RecordFields
+from edu.berkeley.gamesman.core import Record
 from edu.berkeley.gamesman.util import Util
 from java.util import Properties
 import sys,os

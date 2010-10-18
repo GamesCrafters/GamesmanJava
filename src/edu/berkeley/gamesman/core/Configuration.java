@@ -80,20 +80,10 @@ public class Configuration {
 		}
 		setProperty("gamesman.game", gamename);
 		try {
-			g = Class.forName(gamename).asSubclass(Game.class)
+			g = Util.typedForName(gamename, Game.class)
 					.getConstructor(Configuration.class).newInstance(this);
-		} catch (IllegalArgumentException e) {
-			throw new Error(e);
-		} catch (SecurityException e) {
-			throw new Error(e);
-		} catch (InstantiationException e) {
-			throw new Error(e);
-		} catch (IllegalAccessException e) {
-			throw new Error(e);
-		} catch (InvocationTargetException e) {
-			throw new Error(e.getCause());
-		} catch (NoSuchMethodException e) {
-			throw new Error(e);
+		} catch (Exception e) {
+			throw new ClassNotFoundException(gamename, e);
 		}
 		String fields = getProperty("record.fields", "VALUE,REMOTENESS");
 		String[] splitFields = fields.split(",");
