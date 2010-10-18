@@ -55,15 +55,17 @@ public class Node implements Writable {
 			case WIN: return LOSE;
 			case TIE: return TIE;
 			case DRAW:
-			default: throw new IllegalStateException();
+			default:
+				throw new IllegalArgumentException("value not invertible");
 		}
 	}
 
 	public void update(Message m) {
-		if (m.type != Message.SOLVE || solved)
+		if (m.type != Message.SOLVE)
 			throw new IllegalArgumentException();
+		if (solved || rchildren <= 0)
+			throw new IllegalStateException();
 		rchildren -= 1;
-		assert rchildren >= 0;
 		int inverted = valueInvert(m.value);
 		if (value < inverted) {
 			value = inverted;

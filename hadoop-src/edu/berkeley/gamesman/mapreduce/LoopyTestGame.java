@@ -24,7 +24,8 @@ public class LoopyTestGame implements LoopyGame {
 			case 5: succ.add(7l); break;
 			case 6: succ.add(5l); break;
 			case 7: succ.add(6l); succ.add(8l); break;
-			default: assert false;
+			default:
+				throw new IllegalArgumentException();
 		}
 		return succ;
 	}

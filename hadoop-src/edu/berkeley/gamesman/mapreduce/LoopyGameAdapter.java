@@ -37,7 +37,7 @@ public class LoopyGameAdapter implements LoopyGame {
 			case DRAW: return Node.DRAW;
 			case TIE: return Node.TIE;
 			case WIN: return Node.WIN;
-			default: throw new IllegalStateException("value not supported");
+			default: throw new AssertionError();
 		}
 	}
 

@@ -62,7 +62,7 @@ public class Message implements Writable, Cloneable {
 				out.writeInt(value);
 				break;
 			default:
-				assert false;
+				throw new AssertionError();
 		}
 	}
 
@@ -77,7 +77,7 @@ public class Message implements Writable, Cloneable {
 				value = in.readInt();
 				break;
 			default:
-				assert false;
+				throw new AssertionError();
 		}
 	}
 
