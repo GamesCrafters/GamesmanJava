@@ -6,11 +6,13 @@ import java.util.Set;
 
 public class GamesmanConf extends Configuration {
 	org.apache.hadoop.conf.Configuration hadoopConf;
+	boolean initialized = false;
 
 	public GamesmanConf(org.apache.hadoop.conf.Configuration hadoopConf)
 			throws ClassNotFoundException {
 		super(makeProperties(hadoopConf));
 		this.hadoopConf = hadoopConf;
+		this.initialized = true;
 	}
 
 	private static Properties makeProperties(
@@ -50,18 +52,25 @@ public class GamesmanConf extends Configuration {
 
 	@Override
 	public boolean __contains__(String key) {
+		if (!initialized)
+			return super.__contains__(key);
 		return hadoopConf.get(key) != null;
 	}
 
 	@Override
 	protected String getPropertyOrNull(String key) {
+		if (!initialized)
+			return super.getPropertyOrNull(key);
 		return hadoopConf.get(key);
 	}
 
 	@Override
 	public Object setProperty(String key, String value) {
 		String first = getPropertyOrNull(key);
-		hadoopConf.set(key, value);
+		if (!initialized)
+			super.setProperty(key, value);
+		else
+			hadoopConf.set(key, value);
 		return first;
 	}
 	
