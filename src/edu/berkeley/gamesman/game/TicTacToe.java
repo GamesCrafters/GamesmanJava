@@ -199,12 +199,14 @@ public class TicTacToe extends TierGame {
 
 	@Override
 	public long recordStates() {
-		return boardSize + 2;
+		return boardSize + 3;
 	}
 
 	@Override
 	public void longToRecord(TierState recordState, long record, Record toStore) {
-		if (record == boardSize + 1) {
+		if (record == boardSize + 2) {
+			toStore.value = Value.UNDECIDED;
+		} else if (record == boardSize + 1) {
 			toStore.value = Value.TIE;
 			toStore.remoteness = boardSize - numPieces;
 		} else {
@@ -215,7 +217,9 @@ public class TicTacToe extends TierGame {
 
 	@Override
 	public long recordToLong(TierState recordState, Record fromRecord) {
-		if (fromRecord.value == Value.TIE)
+		if (fromRecord.value == Value.UNDECIDED)
+			return boardSize + 2;
+		else if (fromRecord.value == Value.TIE)
 			return boardSize + 1;
 		else
 			return fromRecord.remoteness;

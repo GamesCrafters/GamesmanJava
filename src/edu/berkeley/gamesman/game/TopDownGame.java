@@ -92,12 +92,12 @@ public final class TopDownGame<S extends State> extends TopDownMutaGame {
 	}
 
 	@Override
-	public boolean makeMove() {
+	public int makeMove() {
 		RecycleLinkedList<S> moves = moveLists.addLast();
 		int numMoves = myGame.validMoves(stateList.getLast(), possibleMoves);
 		if (numMoves == 0) {
 			moveLists.removeLast();
-			return false;
+			return 0;
 		} else {
 			for (int i = 0; i < numMoves; i++) {
 				S move = moves.add();
@@ -105,7 +105,7 @@ public final class TopDownGame<S extends State> extends TopDownMutaGame {
 			}
 			S curState = stateList.addLast();
 			curState.set(moves.removeFirst());
-			return true;
+			return numMoves;
 		}
 	}
 

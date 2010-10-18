@@ -8,16 +8,18 @@ import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.LoopyMutaGame;
-import edu.berkeley.gamesman.game.LoopyRecord;
 import edu.berkeley.gamesman.util.qll.Pool;
 import edu.berkeley.gamesman.util.qll.Factory;
+import edu.berkeley.gamesman.util.qll.RecycleLinkedList;
 
 /**
  * @author David, Brent, Nancy, Kevin, Peter, Sharmishtha, Raji
  *
  */
 public class LoopySolver extends Solver {
-	Pool<LoopyRecord> recordPool;
+	Pool<Record> recordPool;
+	
+	protected RecycleLinkedList<Record[]> recordList; //Nancy: added this for else clause in solve loopy game function
 
 	public LoopySolver(Configuration conf) {
 		super(conf);
@@ -26,13 +28,13 @@ public class LoopySolver extends Solver {
 	@Override
 	public WorkUnit prepareSolve(final Configuration conf) {
 		final LoopyMutaGame game = (LoopyMutaGame) conf.getGame();
-		recordPool = new Pool<LoopyRecord>(new Factory<LoopyRecord>() {
+		recordPool = new Pool<Record>(new Factory<Record>() {
 
-			public LoopyRecord newObject() {
+			public Record newObject() {
 				return game.getRecord();
 			}
 
-			public void reset(LoopyRecord t) {
+			public void reset(Record t) {
 				t.value = Value.UNDECIDED;
 			}
 
@@ -59,30 +61,18 @@ public class LoopySolver extends Solver {
 	public void solve(Configuration conf) {
 		LoopyMutaGame game = (LoopyMutaGame) conf.getGame();
 		for (int startNum = 0; startNum < game.numStartingPositions(); startNum++) {
-			game.setStartingPosition(startNum);
+			game.setStartingPosition(startNum); 
 			solve(game, game.getRecord(), 0, readDb.getHandle(),
 					writeDb.getHandle());
 		}
-		/*
-		 * Run through database: //how to read database value?
-		 * 	If (database value)<DRAW and remainingChildren>0:
-		 * 		(database value)=DRAW
-		 */
-		
-		for (long i = 0; i < readDb.numRecords(); i++) {
-			//need to fill in 
-			//if 
-		}
-
 	}
 
-	private void solve(LoopyMutaGame game, LoopyRecord value, int depth,
+	private void solve(LoopyMutaGame game, Record value, int depth,
 			DatabaseHandle readDh, DatabaseHandle writeDh) {
-/*
- * value = {retrieve from database}
- */
 	long hash = game.getHash();
 	game.longToRecord(readDb.getRecord(readDh, hash), value);
+	Record best; //Added for best value, not sure
+	
 /*
  *		case IMPOSSIBLE:
  *			value.value = primitiveValue()
@@ -96,18 +86,16 @@ public class LoopySolver extends Solver {
 	switch(value.value){
 		case IMPOSSIBLE:
 			value.value = game.primitiveValue();
-			if (game.primitiveValue() != Value.UNDECIDED){
+			if (value.value != Value.UNDECIDED){
 				value.remoteness = 0;
-				value.remainingChildren = 0;
-				
 				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
 				value.previousPosition();
-				//Run through parents:
-				
-				//not sure
-				while(value.remainingChildren >= 0) {
-					fix(game, value, depth, readDh, writeDh, false);
+				boolean done = game.unmakeMove()>0;
+				while(!done){
+					fix(game,value,readDh,writeDh,false);
+					done = game.changeUnmakeMove();
 				}
+				game.remakeMove();
 			}
 /*	
  *			else:
@@ -118,10 +106,9 @@ public class LoopySolver extends Solver {
  *
  */
 			else{
-				//value.remainingChildren = len(children);
 				value.value = Value.DRAW;
 				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
-				//bestValue = -infinity;
+				//best.value = Value.				
 				
 				
 			}
@@ -149,16 +136,45 @@ public class LoopySolver extends Solver {
  *			value = value.previousPosition()
  *
 */
-	}
-	private void fix(LoopyMutaGame game, LoopyRecord value, int depth,
+			Record[] recs = recordList.addFirst();
+			boolean made = game.makeMove()>0;
+			int i = 0;
+			while (made) {
+				solve(game, value, depth + 1, readDh, writeDh);
+				recs[i].set(value);
+				recs[i].previousPosition();
+				++i;
+				made = game.changeMove();
+			}
+			if (value.value == Value.UNDECIDED){
+				best = value;
+			}
+			else {
+//				if(value.remainingChildren == 0){
+					//keep track of remaining children
+					//loop through positions
+					//see if draws, if none draws, remaining children 0
+					//else children is greater
+					
+					//don't do this --value.remainingChildren = (database value).remainingChildren	
+				}
+//				else{
+					//value.remainingChildren = (database value).remainingChildren
+//				}
+	//			if (value.value > best.value){
+//					best.value = value.value;
+					writeDb.putRecord(writeDh, hash, game.recordToLong(value));
+//				}
+	}	
+	private void fix(LoopyMutaGame game, Record value,
 			DatabaseHandle readDh, DatabaseHandle writeDh, boolean update) {
 /*
  * (database value) = {retrieve from database}
- * Question: what's the difference between database value  and LoopyRecord value 
+ * Question: what's the difference between database value  and Record value 
  */
+ //		Record value = new Record(conf);
+//		game.longToRecord(readDb.getRecord(readDb.getHandle() game.getHash(), value);
 		
-		long hash = game.getHash();
-		game.longToRecord(readDb.getRecord(readDh, hash), value);
 		//how do we define database value?
 /* 	case IMPOSSIBLE:
  * 		Do nothing
@@ -172,10 +188,13 @@ public class LoopySolver extends Solver {
 			case IMPOSSIBLE:
 				return;
 			default:
-			//if (update){
+			if (update){
 			//	value.remainingChildren = 
 					
-			//}
+			}
+			else{
+				// value.remainingChildren = 
+			}
 		}
 		
 		
@@ -190,5 +209,15 @@ public class LoopySolver extends Solver {
  *  else
  *  	{Store value.remainingChildren in database}
  */
+		if (true){
+			value.previousPosition();
+			//while(value.remainingChildren >= 0) {
+				//fix(game, value, depth, readDh, writeDh, not());
+			//}
+			value.nextPosition();
+		}
+		else{
+			//writeDb.putRecord(writeDh, hash, value.remainingChildren);
+		}
 	}
 }

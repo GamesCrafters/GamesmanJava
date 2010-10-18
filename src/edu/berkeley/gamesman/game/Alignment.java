@@ -279,7 +279,7 @@ public class Alignment extends Game<AlignmentState> {
 							for(int adjCol = col-1; adjCol <= col+1; adjCol++){
 								children[moves].set(pos);
 								if (children[moves].movePiece(row, col, adjRow, adjCol, pos)){
-									children[moves].set(pos);
+									//children[moves].set(pos);
 									children[moves].fireGuns(piecesToWin, variant);
 									children[moves].setLastMove(pl);
 									moves++;

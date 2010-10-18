@@ -305,9 +305,9 @@ public class QuickCross extends LoopyMutaGame {
 	}
 
 	@Override
-	public boolean unmakeMove() {
+	public int unmakeMove() {
 		// TODO Auto-generated method stub
-		return false;
+		return 0;
 	}
 
 	@Override
@@ -335,9 +335,9 @@ public class QuickCross extends LoopyMutaGame {
 	}
 
 	@Override
-	public boolean makeMove() {
+	public int makeMove() {
 		// TODO Auto-generated method stub
-		return false;
+		return 0;
 	}
 
 	@Override

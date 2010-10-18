@@ -90,9 +90,9 @@ public abstract class TopDownMutaGame extends Game<HashState> {
 	 * Makes a move on the board. The possible moves are ordered such that this
 	 * will always be the move made when makeMove() is called
 	 * 
-	 * @return Whether there are any possible moves to be made
+	 * @return The number of available moves
 	 */
-	public abstract boolean makeMove();
+	public abstract int makeMove();
 
 	/**
 	 * Changes the last move made to the next possible move in the list
@@ -154,14 +154,13 @@ public abstract class TopDownMutaGame extends Game<HashState> {
 	}
 
 	private int validMoves(HashState[] children) {
-		int count = 0;
-		boolean hasNext = makeMove();
-		while (hasNext) {
-			children[count++].hash = getHash();
-			hasNext = changeMove();
+		int numChildren = makeMove();
+		for (int child = 0; child < numChildren; child++) {
+			children[child].hash = getHash();
+			changeMove();
 		}
 		undoMove();
-		return count;
+		return numChildren;
 	}
 
 	@Override

@@ -108,18 +108,16 @@ public class TopDownSolver extends Solver {
 		switch (pv) {
 		case UNDECIDED:
 			Record[] recs = recordList.addFirst();
-			boolean made = game.makeMove();
-			int i = 0;
-			while (made) {
+			int numChildren = game.makeMove();
+			for (int child = 0; child < numChildren; child++) {
 				solve(game, value, depth + 1, readDh, writeDh);
-				recs[i].set(value);
-				recs[i].previousPosition();
-				++i;
-				made = game.changeMove();
+				recs[child].set(value);
+				recs[child].previousPosition();
+				game.changeMove();
 			}
-			if (i > 0)
+			if (numChildren > 0)
 				game.undoMove();
-			Record best = game.combine(recs, 0, i);
+			Record best = game.combine(recs, 0, numChildren);
 			value.set(best);
 			recordList.remove();
 			break;

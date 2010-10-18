@@ -3,7 +3,6 @@ package edu.berkeley.gamesman.solver;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.LoopyMutaGame;
-import edu.berkeley.gamesman.game.LoopyRecord;
 
 public class Loopypseudo {
 /*
@@ -15,11 +14,6 @@ public class Loopypseudo {
  *					writeDb.getHandle());
  *		}
  *		
- *		 // Run through database: //how to read database value?
- *		 //	If (database value)<DRAW and remainingChildren>0:
- *		 // 		(database value)=DRAW
- *		 
- *		
  *		for (long i = 0; i < readDb.numRecords(); i++) {
  *			//need to fill in 
  *			//if 
@@ -28,66 +22,71 @@ public class Loopypseudo {
  *	}
  */
 
-/*private void solve(LoopyMutaGame game, LoopyRecord value, int depth,
+/*private void solve(LoopyMutaGame game, Record value, int depth,
 			DatabaseHandle readDh, DatabaseHandle writeDh) {
- *value = {retrieve from database}
+ *		value.set({retrieve from database})
  *		case IMPOSSIBLE:
  *			value.value = primitiveValue()
  *			if primitive:
- *				value.remoteness = value.remainingChildren = 0
+ *				value.remoteness = 0
  *				{Store value in database}
- *				value = value.previousPosition()
+ *				value.previousPosition()
  *				Run through parents:
- *					fix(..., false)
+ *					fix(...)
   *			else:
- *				value.remainingChildren = len(children)
- *				value.value = DRAW
+  *				value.value = DRAW
  *				{Store value in database}
  *				bestValue = -infinity
-*			Run through children:
+ *				(pool)
+*				Run through children:
  *					solve(...)
  *					if value.value == UNDECIDED:
- *						bestValue = {retrieve from database}
+ *						bestValue.set({retrieve current position from database (not child position)})
  *					else:
- *						if(value.remainingChildren==0):
- *							value.remainingChildren = (database value).remainingChildren - 1
- *						else
- *							value.remainingChildren = (database value).remainingChildren
  *						if(value>bestValue)
- *							bestValue = value
- *							{store value in database}
- *						else
- *							{store value.remainingChildren in database}
- *				value = bestValue
+ *							bestValue.set(value)
+ *							{store bestValue in database}
+ *				value.set(bestValue)
+ *				value.previousPosition()
  *				Run through parents:
- *					fix(..., false)
- *			value = UNDECIDED
+ *					fix(...)
+ *			value.set(UNDECIDED)
+ *			break;
  *		default:
- *			value = value.previousPosition()
+ *			value.previousPosition()
+ *			break;
  *}
  *
- *private void fix(LoopyMutaGame game, LoopyRecord value, int depth,
- *			DatabaseHandle readDh, DatabaseHandle writeDh, boolean update) {
+ *private void fix(LoopyMutaGame game, Record value,
+ *			DatabaseHandle readDh, DatabaseHandle writeDh) {
  *
  * (database value) = {retrieve from database}
- * Question: what's the difference between database value  and LoopyRecord value 
+ * (pool)
  *
  * 	case IMPOSSIBLE:
  * 		Do nothing
  * 	default:
- *  If update:
- *  	value.remainingChildren = (database value).remainingChildren
- *  else:
- *  	value.remainingChildren = (database value).remainingChildren - 1
- *  if (database value).value is DRAW or value>(database value)
- *  	{Store value in database}
- *  	value = value.previousPosition()
- *  	Run through parents:
- *  		fix(..., not (database value changed from <=DRAW to >DRAW or 
- *  				(database value<DRAW and database value.remainingChildren changed from 1 to 0)))
- *  	value = value.nextPosition()
- *  else
- *  	{Store value.remainingChildren in database} 
+ * 		if (database value)<DRAW:
+ * 			Error
+ *  	else if value>(database value)
+ *			{Store value in database}
+ *		else if (database value)==DRAW:
+ *			value.set(-infinity)
+ *			Run through children:
+ *				childValue = {Retrieve from database}
+ *				if childValue == DRAW:
+ *					break
+ *				else if childValue>DRAW:
+ *					Error
+ *				else if childValue>value:
+ *					value.set(childValue)
+ *			else (if I don't break in the above loop):
+ *				value = value.previousPosition()
+ *				{Store value in database}
+ *		if database was changed:
+ *  		value = value.previousPosition()
+ *  		Run through parents:
+ *  			fix(...)
  */
 	
 	
