@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.core;
 import java.io.OutputStream;
 import java.util.Properties;
 import java.util.Set;
+import java.util.Map.Entry;
 
 public class GamesmanConf extends Configuration {
 	org.apache.hadoop.conf.Configuration hadoopConf;
@@ -18,7 +19,9 @@ public class GamesmanConf extends Configuration {
 	private static Properties makeProperties(
 			org.apache.hadoop.conf.Configuration hadoopConf) {
 		Properties props = new Properties();
-		props.put("gamesman.game", hadoopConf.get("gamesman.game"));
+		for (Entry<String,String> e : hadoopConf)
+			if (e.getKey().startsWith("gamesman"))
+				props.put(e.getKey(), e.getValue());
 		props.put("record.fields",
 				hadoopConf.get("record.fields", "VALUE,REMOTENESS"));
 		return props;
