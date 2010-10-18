@@ -89,7 +89,8 @@ public class TicTacToe extends TierGame {
 		for (int row = 0; row < height; row++) {
 			for (int col = 0; col < width; col++) {
 				if (dh.get(next) != ' ')
-					bsb.addPiece(row, col, dh.get(next++));
+					bsb.addPiece(row, col, dh.get(next));
+				next++;
 			}
 		}
 	}
