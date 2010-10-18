@@ -42,8 +42,6 @@ public class LoopySolver {
 			// it's text representation for now
 			Node n = Node.fromString(value.toString());
 			// expand the node
-			System.out.println(n.hash);
-			System.out.println(game.getSuccessors(n.hash));
 			if (!n.expanded) {
 				n.expanded = true;
 				for (long child : game.getSuccessors(n.hash)) {

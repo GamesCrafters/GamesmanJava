@@ -54,12 +54,11 @@ public class Node implements Writable {
 			case LOSE: return WIN;
 			case WIN: return LOSE;
 			case TIE: return TIE;
-			case DRAW: return DRAW;
+			case DRAW:
 			default: throw new IllegalStateException();
 		}
 	}
 
-	// I think this works?
 	public void update(Message m) {
 		if (m.type != Message.SOLVE || solved)
 			throw new IllegalArgumentException();
