@@ -12,17 +12,21 @@ import edu.berkeley.gamesman.core.Value;
 
 
 //The pieces are chars, ' ', '-', and '|'
-public class QuickCross extends LoopyMutaGame {
+//public class QuickCross extends LoopyMutaGame {
+public class QuickCross{
 	private static int width = 4;
 	private static int height = 4;
 	private int boardSize;
 	private static int piecesToWin = 4;
+	private static char[][] Board = new char[width][height];
+	private static String whoseMove;
+	private static ArrayList<String> undoMoveHistory = new ArrayList<String>();
 
 	
 	
 	//Constructor
 	public QuickCross(Configuration conf) {
-		super(conf);
+		//super(conf);
 		width = conf.getInteger("gamesman.game.width", 4);
 		height = conf.getInteger("gamesman.game.height", 4);
 		boardSize = width * height;
@@ -35,9 +39,6 @@ public class QuickCross extends LoopyMutaGame {
 			askUserForMove();
 		}
 	}
-	
-	static char[][] Board = new char[width][height];
-	static String whoseMove;
 	
 	private static void initializeQuickCross() {
 		for (int i = 0; i < width; i++) {
@@ -60,92 +61,73 @@ public class QuickCross extends LoopyMutaGame {
 		printBoard();
 		System.out.printf("It is %s's turn.\n", whoseMove);
 		ArrayList<String> possibleMoves = generateMoves();
-		System.out.println("Where would you like to move? (enter either a position such as a1 or a move such as Ha1)");
-		/*System.out.print("There are " + possibleMoves.size() + " possible moves:\n");
-		for (int i = 0; i < possibleMoves.size(); i++) {
-			System.out.print(possibleMoves.get(i) + ", ");
-			if (i % width == 0){
-				System.out.println();
-			}
-		}*/
-
+		System.out.println("Enter H for horizontal, V for vertical, F to flip. Example: Ha1");
 		System.out.print("> ");
 		Scanner sc = new Scanner(System.in); 
-		//Enter a grid location, such as "a1" or "b3"
-		String location;
+		String move;
 		while (true)
 		{
-			location = sc.nextLine();
-			if (possibleMoves.contains(location))
-				break;
-			if ((location.length() == 2) && (letterToNum(location.charAt(0)) < width+1) && (Integer.decode("" + location.charAt(1)) < height+1))
+			move = sc.nextLine();
+			if (possibleMoves.contains(move)|| (move.equals("undo") && undoMoveHistory.size()>0))
 				break;
 			else
 			{
-				System.out.print(location + " is not a valid move or position\n> ");
+				System.out.print(move + " is not a valid move\n> ");
 			}
 		}
-		String move = "";
-		if  (location.length()== 3) {
-			move = location;
+		if (move.equals("undo")){
+			undoMove();
 		}
-		else {
-			move = "";
-			if (getPiece(location) != ' ') {
-				System.out.printf("Flipping the piece at %s.\n", location);
-				if (getPiece(location) == '-') {
-					move = move + "V";
-				}
-				else if (getPiece(location) == '|') {
-					move = move + "H";
-				}
-			}
-			else {
-				System.out.println("Enter H for a horizontal piece, or V for a vertical piece.");
-				System.out.print("> ");
-				String direction;
-				while(true){
-					direction = sc.nextLine();
-					if (direction.equals("H") || direction.equals("V")){
-						break;
-					}
-					else
-						System.out.println("Please enter either H or V");
-				}
-				move = move + direction;
-			}
-			move = move + location;
-			
-			if (!(possibleMoves.contains(move))) {
-				System.err.println("Not a legal move!");
-				System.exit(1);
+		else{
+			makeMoveDisplay(move);
+			undoMoveHistory.add(move);
+			if (isPrimitivePosition()) {
+				printBoard();
+				//End the game, say who wins
+				System.out.printf("%s wins.", whoseMove);
+				System.exit(0); //Nonzero means it terminates w/ error
 			}
 		}
-		
-		makeMoveDisplay(move);
-		
-		if (isPrimitivePosition()) {
-			printBoard();
-			//End the game, say who wins
-			System.out.printf("%s wins.", whoseMove);
-			System.exit(0); //Nonzero means it terminates w/ error
-		}
-		
 		changeTurn();
 		
 	}
 	
 	//parses move entered by user.
-	 private static void makeMoveDisplay(String move) {
-	char p;
-	if (move.charAt(0) == 'H') p = '-';
-	else if (move.charAt(0) == 'V') p = '|';
-	else throw new Error("invalid move!");
-	int x = letterToNum(move.charAt(1))-1;
-	int y = Integer.decode("" + move.charAt(2))-1;
-	Board[x][y] = p;
-	
+	private static void makeMoveDisplay(String move) {
+		char p;
+		int x = letterToNum(move.charAt(1))-1;
+		int y = Integer.decode("" + move.charAt(2))-1;
+		if (move.charAt(0) == 'F'){
+			if (Board[x][y] == '-'){
+				p = '|';
+			}
+			else if(Board[x][y] == '|'){
+				p = '-';
+			}
+			else throw new Error("Invalid piece on board when making new move");
+		}
 		
+		else if (move.charAt(0) == 'H') p = '-';
+		else if (move.charAt(0) == 'V') p = '|';
+		else if (move.charAt(0) == ' ') p = ' ';
+		else throw new Error("invalid move!");
+		Board[x][y] = p;
+	}
+	
+	public static void undoMove(){
+		String move = undoMoveHistory.get(undoMoveHistory.size()-1);
+		undoMoveHistory.remove(undoMoveHistory.size()-1);
+		System.out.println("Undoing move: " + move);
+		if (move.charAt(0)=='F'){
+			makeMoveDisplay(move);
+		}
+		else{
+			String location = move.substring(1);
+			if (move.charAt(0)=='H' || move.charAt(0)=='V'){
+				makeMoveDisplay(' '+location);
+			}
+			else throw new Error("could not undo!");
+		}
 	}
 	 
 	static char getPiece(int a, int b) {
@@ -226,11 +208,8 @@ public class QuickCross extends LoopyMutaGame {
 					possibleMoves.add("H" + numToLetter(w+1) + (h+1));
 					possibleMoves.add("V" + numToLetter(w+1) + (h+1));
 				}
-				else if (getPiece(w, h)=='|'){
-					possibleMoves.add("H" + numToLetter(w+1) + (h+1));
-				}
-				else if (getPiece(w, h)=='-'){
-					possibleMoves.add("V" + numToLetter(w+1) + (h+1));
+				else if (getPiece(w, h)=='|' || getPiece(w, h) =='-'){
+					possibleMoves.add("F" + numToLetter(w+1) + (h+1));
 				}
 				else{
 					throw new Error("piece at " + w + h + "is illegal, cannot generate moves");
@@ -289,8 +268,8 @@ public class QuickCross extends LoopyMutaGame {
 		System.out.println("   a  b  c  d\n");		
 	}
 	
-	
-	
+}
+	/*
 
 	@Override
 	public boolean changeUnmakeMove() {
@@ -381,6 +360,7 @@ public class QuickCross extends LoopyMutaGame {
 		// TODO Auto-generated method stub
 
 	}
+
 
 	@Override
 	public void undoMove() {
