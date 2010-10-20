@@ -6,6 +6,7 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.game.util.TierState;
+import edu.berkeley.gamesman.hasher.DartboardHasher;
 import edu.berkeley.gamesman.util.Pair;
 
 public class Reversi extends TierGame {
@@ -15,6 +16,13 @@ public class Reversi extends TierGame {
 	private final Cell[][] board;
 	private final char[] pieces;
 	private int numPieces = 0;
+	private final DartboardHasher dbh;
+	private int turn; //1 for black, 0 for white.
+	private final static int BLACK = 1;
+	private final static int WHITE = 0;
+	private final int[][] offsetTable;
+	private TierState[] children;
+	private boolean isChildrenValid;
 
 	private class Cell {
 		final int row, col;
@@ -49,6 +57,7 @@ public class Reversi extends TierGame {
 		boardSize = width * height;
 		pieces = new char[boardSize];
 		board = new Cell[height][width];
+		dbh = new DartboardHasher(boardSize, ' ', 'O', 'X');
 		for (int row = 0; row < height; row++) {
 			for (int col = 0; col < width; col++) {
 				board[row][col] = new Cell(row, col, row * width + col);
@@ -58,18 +67,52 @@ public class Reversi extends TierGame {
 		board[height / 2 + 1][width / 2].setPiece('O');
 		board[height / 2][width / 2 + 1].setPiece('O');
 		board[height / 2 + 1][width / 2 + 1].setPiece('X');
+		
+		turn = BLACK;
+		isChildrenValid = false;
+		children = new TierState[0];
+		
+		offsetTable = new int[boardSize+1][];
+		//initalize offset table
 	}
 
 	@Override
 	public void setState(TierState pos) {
-		// TODO Auto-generated method stub
-
+		numPieces = pos.tier;
+		dbh.unhash(pos.hash);
+		setBoard();
+	}
+	
+	// Sets the internal board based on the current DartBboardHasher dbh.
+	private void setBoard() {
+		
 	}
 
 	@Override
 	public Value primitiveValue() {
-		// TODO Auto-generated method stub
-		return null;
+		Value value = Value.UNDECIDED;
+		if (!(isChildrenValid)) {
+			children = getChildren();
+			isChildrenValid = true;
+		}
+		if ((isChildrenValid && children.length == 0)) {
+			int black = 0;
+			int white = 0;
+			for (int boardNumber = 0;boardNumber < boardSize - 1;boardNumber++) {
+				if (pieces[boardNumber] == 'O')
+					white++;
+				if (pieces[boardNumber] == 'X')
+					black++;
+			}
+			if (black == white) {
+				value = Value.TIE;
+			} else if ((turn == BLACK && black > white) || (turn == WHITE && white > black)) {
+				value = Value.WIN;
+			} else if ((turn == BLACK && black < white) || (turn == WHITE && white < black)) {
+				value = Value.LOSE;
+			}
+		}
+		return value;
 	}
 
 	@Override
@@ -80,62 +123,85 @@ public class Reversi extends TierGame {
 
 	@Override
 	public int getTier() {
-		// TODO Auto-generated method stub
-		return 0;
+		return numPieces;
 	}
 
 	@Override
 	public String stateToString() {
-		// TODO Auto-generated method stub
-		return null;
+		String answer = "";
+		for (int boardNumber = 0;boardNumber < boardSize - 1;boardNumber++) {
+			answer += pieces[boardNumber];
+		}
+		return answer;
 	}
 
 	@Override
 	public void setFromString(String pos) {
-		// TODO Auto-generated method stub
-
+		if (pos.length() != boardSize - 1)
+			throw new Error("Bad String: wrong length");
+		else {
+			for (int row = 0; row < height; row++) {
+				for (int col = 0; col < width; col++) {
+					board[row][col].setPiece(pos.charAt(row * width + col));
+				}
+			}
+		}
 	}
 
 	@Override
 	public void getState(TierState state) {
-		// TODO Auto-generated method stub
-
+		state.tier = numPieces;
+		state.hash = dbh.hash(pieces);
 	}
 
 	@Override
 	public long numHashesForTier(int tier) {
-		// TODO Auto-generated method stub
-		return 0;
+		return offsetTable[tier][offsetTable[tier].length - 1];
 	}
 
 	@Override
 	public String displayState() {
-		// TODO Auto-generated method stub
-		return null;
+		String s = stateToString();
+		StringBuilder str = new StringBuilder((width + 3) * height);
+		for (int row = height - 1; row>=0; row--) 
+			str.append("|" + s.substr(row,(row+1)*width) + "|\n");
+		return str.toString();
 	}
 
 	@Override
 	public void setStartingPosition(int n) {
-		// TODO Auto-generated method stub
-
+		for (int boardNumber = 0;boardNumber < boardSize - 1;boardNumber++) {
+			pieces[boardNumber] = ' ';
+		}
+		board[height / 2][width / 2].setPiece('X');
+		board[height / 2 + 1][width / 2].setPiece('O');
+		board[height / 2][width / 2 + 1].setPiece('O');
+		board[height / 2 + 1][width / 2 + 1].setPiece('X');
+		
+		turn = BLACK;
+		isChildrenValid = false;
 	}
 
 	@Override
 	public int numStartingPositions() {
-		// TODO Auto-generated method stub
-		return 0;
+		return 1;
 	}
 
 	@Override
 	public boolean hasNextHashInTier() {
-		// TODO Auto-generated method stub
-		return false;
+		long currentHash = dbh.getHash();
+		return (currentHash	!= numHashesForTier(getTier()) - 1);
 	}
 
 	@Override
 	public void nextHashInTier() {
-		// TODO Auto-generated method stub
-
+		if (this.hasNextHashInTier()) {
+			TierState transition = new TierState();
+			this.getState(transition);
+			transition.hash++;
+			this.setState(transition);
+		} else
+			throw new Error("End of Tier");
 	}
 
 	@Override
@@ -150,8 +216,17 @@ public class Reversi extends TierGame {
 
 	@Override
 	public int validMoves(TierState[] moves) {
-		// TODO Auto-generated method stub
-		return 0;
+		if (!(isChildrenValid)) {
+			children = getChildren();
+			isChildrenValid = true;
+		}
+		System.arraycopy(children, 0, moves, 0, children.length);
+		return children.length;
+	}
+	
+	private TierState[] getChildren() {
+		//not finished!
+		return new TierState[0];
 	}
 
 	@Override
