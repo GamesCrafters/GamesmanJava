@@ -16,24 +16,22 @@ public final class YGame extends ConnectGame
 {
     private int totalNumberOfNodes;
 
-    private final int innerTriangleSegments;
-    private final int outerRingSegments;
-    private final int numberOfTriangles; // Total number of triangles (or rows, rings, etc.)
+    private int innerTriangleSegments;
+    private int outerRingSegments;
+    private int numberOfTriangles; // Total number of triangles (or rows, rings, etc.)
 
-    private final Vector< char[] > board;
-    private final int[] nodesInThisTriangle;
+    private Vector< char[] > board;
+    private int[] nodesInThisTriangle;
     private int transitionTriangleNumber = -1;
 
-    private final Node middleNode; // For odd numbered inner triangles, this is the special case centerpoint.
+    private char[] unrolledCharBoard; // The full board (string) representation.
 
-    private final char[] unrolledCharBoard; // The full board (string) representation.
-
-    private final Node[] neighbors; // Preallocate what will be returned from getNeighbors
+    private Node[] neighbors; // Preallocate what will be returned from getNeighbors
 
     private final int HEIGHT = 24;
     private final int WIDTH = 24;
 
-    private final char ASCIIrepresentation[][];
+    private char ASCIIrepresentation[][];
 
     /**
      * @author headcrash
@@ -45,28 +43,61 @@ public final class YGame extends ConnectGame
         private int index;
 
         /**
-         * @param trueIfInnerModeIn
-         * @param triangleIn
-         * @param indexIn
+         * Default (empty) constructor to be filled in with findNeighbors() call.
          */
-        Node( boolean trueIfInnerModeIn, int triangleIn, int indexIn )
+        Node()
         {
-            this.trueIfInnerMode = trueIfInnerModeIn;
-            this.triangle = triangleIn;
-            this.index = indexIn;
+
         }
+
+        public boolean isInInnerTriangle()
+        {
+            return this.trueIfInnerMode;
+        }
+
+        public int getTriangle()
+        {
+            return this.triangle;
+        }
+
+        public int getIndex()
+        {
+            return this.index;
+        }
+    }
+
+    /**
+     * @param conf
+     */
+    public YGame( Configuration conf )
+    {
+        super( conf );
+
+        this.initializeYGame( conf.getInteger( "gamesman.game.innerTriangleSegments", 2 ),
+                              conf.getInteger( "gamesman.game.outerSegments", 4 ) );
+    }
+
+    /**
+     * FOR TESTING PURPOSES ONLY. This is not using a configuration file!
+     * 
+     * @param innerTriangleSegmentsIn
+     * @param outerRingSegmentsIn
+     */
+    public YGame( int innerTriangleSegmentsIn, int outerRingSegmentsIn )
+    {
+        super( null );
+
+        initializeYGame( innerTriangleSegmentsIn, outerRingSegmentsIn );
     }
 
     /**
      * @param conf
      *            The configuration object
      */
-    public YGame( Configuration conf )
+    private void initializeYGame( int innerTriangleSegmentsIn, int outerRingSegmentsIn )
     {
-        super( conf );
-
-        this.innerTriangleSegments = conf.getInteger( "gamesman.game.innerTriangleSegments", 2 );
-        this.outerRingSegments = conf.getInteger( "gamesman.game.outerSegments", 4 );
+        this.innerTriangleSegments = innerTriangleSegmentsIn;
+        this.outerRingSegments = outerRingSegmentsIn;
 
         // Allocate and initialize the board, which is an array of character arrays representing the triangles.
 
@@ -130,10 +161,6 @@ public final class YGame extends ConnectGame
 
         // System.out.println( " = " + this.totalNumberOfNodes );
 
-        // Create a node to use for games that have a central point.
-
-        this.middleNode = new Node( true, 1, 0 );
-
         // Allocate the full board (string) representation.
 
         this.unrolledCharBoard = new char[this.totalNumberOfNodes];
@@ -141,6 +168,11 @@ public final class YGame extends ConnectGame
         // Allocate the array of possible neighbors (6 max)
 
         this.neighbors = new Node[6];
+
+        for ( int i = 0; i < 6; i++ )
+        {
+            this.neighbors[i] = new Node();
+        }
 
         // Allocate and initialize a 2-dimensional array to use for plotting the game board nodes.
 
@@ -167,7 +199,7 @@ public final class YGame extends ConnectGame
      * @see edu.berkeley.gamesman.game.ConnectGame#getBoardSize()
      */
     @Override
-    protected int getBoardSize()
+    public int getBoardSize()
     {
         return ( this.totalNumberOfNodes );
     }
@@ -195,13 +227,15 @@ public final class YGame extends ConnectGame
     }
 
     /**
+     * TODO: Filter by player (using triangle for board and index for .. well .. index), returned clockwise.
+     * 
      * @param trueIfInnerMode
      * @param triangle
      * @param index
      * @param player
      * @return
      */
-    protected int findNeighbors( boolean trueIfInnerModeIn, int triangleIn, int indexIn, char player )
+    public int findNeighbors( boolean trueIfInnerModeIn, int triangleIn, int indexIn, char player )
     {
         int numberOfNeighbors = 0;
 
@@ -289,7 +323,9 @@ public final class YGame extends ConnectGame
                             if ( triangleIn == 2 ) // Special case: triangle #2 (with 3 segments) has only the middle point as an
                             // inner neighbor.
                             {
-                                this.neighbors[numberOfNeighbors] = middleNode;
+                                this.neighbors[numberOfNeighbors].trueIfInnerMode = true;
+                                this.neighbors[numberOfNeighbors].triangle = triangleIn - 1;
+                                this.neighbors[numberOfNeighbors].index = 0;
 
                                 numberOfNeighbors++;
                             }
@@ -492,7 +528,7 @@ public final class YGame extends ConnectGame
     }
 
     // Cribbed from Wikipedia: http://www.hexwiki.org/index.php?title=Programming_the_bent_Y_board, see attached PNG for expected
-    // node numbers that we have to transform. This should also be somewhat generalizable for smaller boards.
+    // node numbers that we have to transform. This should also be generalizable for smaller boards.
 
     private final double[][] coordsFor4and8board =
     {
