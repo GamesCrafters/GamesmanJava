@@ -1,5 +1,6 @@
 package edu.berkeley.gamesman.game;
 
+import java.io.*;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.Configuration;
@@ -64,7 +65,7 @@ public class Reversi extends TierGame {
 	//number of ways to reorder white and black number of pieces
 	private int combination(int n, int k) {
 		if (n < k)
-			throw new Error("Can't compute combination: " + n + " > " + k);
+			return 0;
 		if (n == k || n == 1 || k == 1)
 			return 1;
 		return combination(n-1,k-1) + combination(n-1,k);
@@ -83,10 +84,10 @@ public class Reversi extends TierGame {
 				board[row][col] = new Cell(row, col, row * width + col);
 			}
 		}
+		board[height / 2 - 1][width / 2 - 1].setPiece('X');
+		board[height / 2][width / 2 - 1].setPiece('O');
+		board[height / 2 - 1][width / 2].setPiece('O');
 		board[height / 2][width / 2].setPiece('X');
-		board[height / 2 + 1][width / 2].setPiece('O');
-		board[height / 2][width / 2 + 1].setPiece('O');
-		board[height / 2 + 1][width / 2 + 1].setPiece('X');
 		
 		turn = BLACK;
 		isChildrenValid = false;
@@ -127,7 +128,7 @@ public class Reversi extends TierGame {
 		if ((isChildrenValid && children.length == 0)) {
 			int black = 0;
 			int white = 0;
-			for (int boardNumber = 0;boardNumber < boardSize - 1;boardNumber++) {
+			for (int boardNumber = 0;boardNumber < boardSize;boardNumber++) {
 				if (pieces[boardNumber] == 'O')
 					white++;
 				if (pieces[boardNumber] == 'X')
@@ -162,7 +163,7 @@ public class Reversi extends TierGame {
 	@Override
 	public String stateToString() {
 		String answer = "";
-		for (int boardNumber = 0;boardNumber < boardSize - 1;boardNumber++) {
+		for (int boardNumber = 0;boardNumber < boardSize;boardNumber++) {
 			answer += pieces[boardNumber];
 		}
 		return answer;
@@ -170,7 +171,7 @@ public class Reversi extends TierGame {
 
 	@Override
 	public void setFromString(String pos) {
-		if (pos.length() != boardSize - 1)
+		if (pos.length() != boardSize)
 			throw new Error("Bad String: wrong length");
 		else {
 			for (int row = 0; row < height; row++) {
@@ -195,8 +196,11 @@ public class Reversi extends TierGame {
 
 	@Override
 	public String displayState() {
-		// TODO Auto-generated method stub
-		return null;
+		String s = stateToString();
+		StringBuilder str = new StringBuilder((width + 3) * height);
+		for (int row = 0; row<height; row++) 
+			str.append("|" + s.substring(row*width,row*width+width) + "|\n");
+		return str.toString();
 	}
 
 	@Override
@@ -204,10 +208,10 @@ public class Reversi extends TierGame {
 		for (int boardNumber = 0;boardNumber < boardSize - 1;boardNumber++) {
 			pieces[boardNumber] = ' ';
 		}
+		board[height / 2 - 1][width / 2 - 1].setPiece('X');
+		board[height / 2][width / 2 - 1].setPiece('O');
+		board[height / 2 - 1][width / 2].setPiece('O');
 		board[height / 2][width / 2].setPiece('X');
-		board[height / 2 + 1][width / 2].setPiece('O');
-		board[height / 2][width / 2 + 1].setPiece('O');
-		board[height / 2 + 1][width / 2 + 1].setPiece('X');
 		
 		turn = BLACK;
 		isChildrenValid = false;
@@ -256,18 +260,20 @@ public class Reversi extends TierGame {
 	
 	private void getChildren() {
 		children = new TierState[0];
+		//looks at every spot on the board
 		for (int boardNumber = 0;boardNumber < boardSize; boardNumber++) {
+			//only a valid child if there is an empty space there
 			if (pieces[boardNumber] == ' ') {
-				int[] childrenNumbers = {boardNumber-width-1,boardNumber-width,boardNumber-width+1,boardNumber-1,boardNumber+1,boardNumber+width-1,boardNumber+width+1};
+				int[] childrenNumbers = {boardNumber-width-1,boardNumber-width,boardNumber-width+1,boardNumber-1,boardNumber+1,boardNumber+width-1,boardNumber+width,boardNumber+width+1};
+				//looks at each spot around the given spot
 				for (int index = 0;index < childrenNumbers.length; index++) {
-					if ((childrenNumbers[index] > 0 && childrenNumbers[index] < boardSize)) {
-						if (((turn == WHITE && pieces[childrenNumbers[index]] == 'X') || (turn == BLACK && pieces[childrenNumbers[index]] == 'O')) && isFlippable(boardNumber)) {
-							TierState[] newChildren = new TierState[children.length + 1];
-							System.arraycopy(children, 0, newChildren, 0, children.length);
-							newChildren[newChildren.length-1] = flipPieces(childrenNumbers[index]);
-							children = newChildren;
-							continue;
-						}
+					//makes sure the spot is within bounds, then checks if there is an opposing piece next to it
+					if (((childrenNumbers[index] > 0 && childrenNumbers[index] < boardSize)) && (((turn == WHITE && pieces[childrenNumbers[index]] == 'X') || (turn == BLACK && pieces[childrenNumbers[index]] == 'O')) && isFlippable(boardNumber, index))) {
+						TierState[] newChildren = new TierState[children.length + 1];
+						System.arraycopy(children, 0, newChildren, 0, children.length);
+						newChildren[newChildren.length-1] = flipPieces(childrenNumbers[index]);
+						children = newChildren;
+						break;
 					}
 				}
 			}
@@ -275,7 +281,28 @@ public class Reversi extends TierGame {
 		isChildrenValid = true;
 	}
 	
-	private boolean isFlippable(int boardNumber) {
+	private boolean isFlippable(int boardNumber, int direction) {
+		int addx = 0; int addy = 0;
+		switch (direction) {
+		case 0: addx=-1; addy=-1; break;
+		case 1: addx=0; addy=-1; break;
+		case 2: addx=1; addy=-1; break;
+		case 3: addx=-1; addy=0; break;
+		case 4: addx=1; addy=0; break;
+		case 5: addx=-1; addy=1; break;
+		case 6: addx=0; addy=1; break;
+		case 7: addx=1; addy=1; break;
+		}
+		int x = boardNumber % width;
+		int y = boardNumber / width;
+		char piece = 'P';
+		while (x>=0 && x<width && y>=0 && y<height && piece!=' ') {
+			piece = board[x][y].getPiece();
+			if ((turn == BLACK && piece == 'O') || (turn == WHITE && piece == 'X'))
+				return true;
+			x += addx;
+			y += addy;
+		}
 		return false;
 	}
 
@@ -304,6 +331,34 @@ public class Reversi extends TierGame {
 	public long recordToLong(TierState recordState, Record fromRecord) {
 		// TODO Auto-generated method stub
 		return 0;
+	}
+	
+	public static void main(String[] args) {
+		Reversi reversiGame = null;
+		try {
+			reversiGame = new Reversi(new Configuration("../gamesman-java/jobs/Reversi4x4.job"));
+		}
+		catch (ClassNotFoundException c) {
+			throw new Error(c);
+		}
+		String input = "     XO  OX     ";
+		while (true) {
+			if (input.equals("quit"))
+				break;
+		    reversiGame.setFromString(input);
+			System.out.println(reversiGame.displayState());
+			System.out.println(reversiGame.primitiveValue());
+			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		    try {
+		    	input = br.readLine();
+		    }
+		    catch (IOException e) {
+		    	throw new Error(e);
+		    }
+		    
+		}
+		reversiGame.setStartingPosition(1);
+		System.out.println(reversiGame.displayState());
 	}
 
 }
