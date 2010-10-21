@@ -1,0 +1,4 @@
+gamesman.game = Reversi
+gamesman.game.width = 4
+gamesman.game.height = 4
+
