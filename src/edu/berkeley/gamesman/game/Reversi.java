@@ -20,9 +20,20 @@ public class Reversi extends TierGame {
 	private int turn; //1 for black, 0 for white.
 	private final static int BLACK = 1;
 	private final static int WHITE = 0;
-	private final int[][] offsetTable;
 	private TierState[] children;
 	private boolean isChildrenValid;
+	private long hash;
+	private final long[][] offsetTable;
+		//offsetTable is a table of offsets based on the tier, or number of pieces
+		//and each element is an array of all possible ways to order the board with
+		//increasing number of white vs black pieces(first element is ways to order
+		//the board with 0 white pieces, second is with 1 white piece, etc...)
+		// tier
+		//  0   [ [1]
+		//  1     [64,128]
+		//  2     [2016,...]
+		//  ...
+		//  63    [64,...]    ]
 
 	private class Cell {
 		final int row, col;
@@ -49,6 +60,15 @@ public class Reversi extends TierGame {
 			pieces[boardNum] = p;
 		}
 	}
+	
+	//number of ways to reorder white and black number of pieces
+	private int combination(int n, int k) {
+		if (n < k)
+			throw new Error("Can't compute combination: " + n + " > " + k);
+		if (n == k || n == 1 || k == 1)
+			return 1;
+		return combination(n-1,k-1) + combination(n-1,k);
+	}
 
 	public Reversi(Configuration conf) {
 		super(conf);
@@ -71,30 +91,39 @@ public class Reversi extends TierGame {
 		turn = BLACK;
 		isChildrenValid = false;
 		children = new TierState[0];
+		hash = 0L; //not right.
 		
-		offsetTable = new int[boardSize+1][];
-		//initalize offset table
+		offsetTable = new long[boardSize+1][];
+		//initialize offset table
+		for (int tier = 0;tier < boardSize;tier++) {
+			//number of ways to put tier number of pieces on the board
+			long combo = 1;
+			for(int x = boardSize;x > boardSize - tier;x--) {
+				combo *= x;
+			}
+			for(int x = tier;x > 0;x--) {
+				combo /= x;
+			}
+						
+			offsetTable[tier] = new long[tier+1];
+			offsetTable[tier][0] = combo * combination(tier,1);
+			for (int offset = 1;offset < tier + 1;offset++) {
+				offsetTable[tier][offset] = offsetTable[tier][offset-1] + combo * combination(tier,offset);
+			}
+		}
 	}
 
 	@Override
 	public void setState(TierState pos) {
 		numPieces = pos.tier;
-		dbh.unhash(pos.hash);
-		setBoard();
-	}
-	
-	// Sets the internal board based on the current DartBboardHasher dbh.
-	private void setBoard() {
-		
+		//not done. remember to set hash.
 	}
 
 	@Override
 	public Value primitiveValue() {
 		Value value = Value.UNDECIDED;
-		if (!(isChildrenValid)) {
-			children = getChildren();
-			isChildrenValid = true;
-		}
+		if (!(isChildrenValid))
+			getChildren();
 		if ((isChildrenValid && children.length == 0)) {
 			int black = 0;
 			int white = 0;
@@ -125,6 +154,10 @@ public class Reversi extends TierGame {
 	public int getTier() {
 		return numPieces;
 	}
+	
+	public long getHash() {
+		return hash;
+	}
 
 	@Override
 	public String stateToString() {
@@ -146,12 +179,13 @@ public class Reversi extends TierGame {
 				}
 			}
 		}
+		//need to set hash
 	}
 
 	@Override
 	public void getState(TierState state) {
-		state.tier = numPieces;
-		state.hash = dbh.hash(pieces);
+		state.tier = getTier();
+		state.hash = getHash();
 	}
 
 	@Override
@@ -161,11 +195,8 @@ public class Reversi extends TierGame {
 
 	@Override
 	public String displayState() {
-		String s = stateToString();
-		StringBuilder str = new StringBuilder((width + 3) * height);
-		for (int row = height - 1; row>=0; row--) 
-			str.append("|" + s.substr(row,(row+1)*width) + "|\n");
-		return str.toString();
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	@Override
@@ -180,6 +211,7 @@ public class Reversi extends TierGame {
 		
 		turn = BLACK;
 		isChildrenValid = false;
+		hash = 0L; //not right.
 	}
 
 	@Override
@@ -197,9 +229,9 @@ public class Reversi extends TierGame {
 	public void nextHashInTier() {
 		if (this.hasNextHashInTier()) {
 			TierState transition = new TierState();
-			this.getState(transition);
+			getState(transition);
 			transition.hash++;
-			this.setState(transition);
+			setState(transition);
 		} else
 			throw new Error("End of Tier");
 	}
@@ -216,17 +248,39 @@ public class Reversi extends TierGame {
 
 	@Override
 	public int validMoves(TierState[] moves) {
-		if (!(isChildrenValid)) {
-			children = getChildren();
-			isChildrenValid = true;
-		}
+		if (!(isChildrenValid))
+			getChildren();
 		System.arraycopy(children, 0, moves, 0, children.length);
 		return children.length;
 	}
 	
-	private TierState[] getChildren() {
-		//not finished!
-		return new TierState[0];
+	private void getChildren() {
+		children = new TierState[0];
+		for (int boardNumber = 0;boardNumber < boardSize; boardNumber++) {
+			if (pieces[boardNumber] == ' ') {
+				int[] childrenNumbers = {boardNumber-width-1,boardNumber-width,boardNumber-width+1,boardNumber-1,boardNumber+1,boardNumber+width-1,boardNumber+width+1};
+				for (int index = 0;index < childrenNumbers.length; index++) {
+					if ((childrenNumbers[index] > 0 && childrenNumbers[index] < boardSize)) {
+						if (((turn == WHITE && pieces[childrenNumbers[index]] == 'X') || (turn == BLACK && pieces[childrenNumbers[index]] == 'O')) && isFlippable(boardNumber)) {
+							TierState[] newChildren = new TierState[children.length + 1];
+							System.arraycopy(children, 0, newChildren, 0, children.length);
+							newChildren[newChildren.length-1] = flipPieces(childrenNumbers[index]);
+							children = newChildren;
+							continue;
+						}
+					}
+				}
+			}
+		}
+		isChildrenValid = true;
+	}
+	
+	private boolean isFlippable(int boardNumber) {
+		return false;
+	}
+
+	private TierState flipPieces(int boardNumber) {
+		return new TierState();
 	}
 
 	@Override
