@@ -7,6 +7,7 @@ import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.database.DatabaseHandle;
+import edu.berkeley.gamesman.database.MemoryDatabase;
 import edu.berkeley.gamesman.game.LoopyMutaGame;
 import edu.berkeley.gamesman.util.qll.Pool;
 import edu.berkeley.gamesman.util.qll.Factory;
@@ -61,7 +62,7 @@ public class LoopySolver extends Solver {
 	public void solve(Configuration conf) {
 		LoopyMutaGame game = (LoopyMutaGame) conf.getGame();
 		for (int startNum = 0; startNum < game.numStartingPositions(); startNum++) {
-			game.setStartingPosition(startNum); 
+			game.setStartingPosition(startNum);
 			solve(game, game.getRecord(), 0, readDb.getHandle(),
 					writeDb.getHandle());
 		}
@@ -69,155 +70,108 @@ public class LoopySolver extends Solver {
 
 	private void solve(LoopyMutaGame game, Record value, int depth,
 			DatabaseHandle readDh, DatabaseHandle writeDh) {
-	long hash = game.getHash();
-	game.longToRecord(readDb.getRecord(readDh, hash), value);
-	Record best; //Added for best value, not sure
-	
-/*
- *		case IMPOSSIBLE:
- *			value.value = primitiveValue()
- *			if primitive:
- *				value.remoteness = value.remainingChildren = 0
- *				{Store value in database}
- *				value = value.previousPosition()
- *				Run through parents:
- *					fix(..., false)
- */
-	switch(value.value){
+		long hash = game.getHash();
+		game.longToRecord(readDb.getRecord(readDh, hash), value);
+		Record bestValue;
+
+		switch (value.value) {
 		case IMPOSSIBLE:
 			value.value = game.primitiveValue();
-			if (value.value != Value.UNDECIDED){
+			if (value.value != Value.UNDECIDED) {
 				value.remoteness = 0;
 				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
 				value.previousPosition();
-				boolean done = game.unmakeMove()>0;
-				while(!done){
-					fix(game,value,readDh,writeDh,false);
-					done = game.changeUnmakeMove();
+				int numParents = game.unmakeMove();
+				for (int parent = 0; parent < numParents; parent++) {
+					fix(game, value, readDh, writeDh);
+					game.changeUnmakeMove();
+				}
+				game.remakeMove();
+			} else {
+				value.value = Value.DRAW;
+				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
+				bestValue = recordPool.get();
+				boolean unassigned = true;
+				int numChildren = game.makeMove();
+				for (int child = 0; child < numChildren; child++) {
+					solve(game, value, depth + 1, readDh, writeDh);
+					if (value.value == Value.UNDECIDED) {
+						// bestValue.set({retrieve current position from
+						// database (not child position)})
+					} else {
+						if (unassigned || value.value.isPreferableTo(bestValue.value)) {
+							unassigned = false;
+							bestValue.set(value);
+							writeDb.putRecord(writeDh, hash,
+									game.recordToLong(bestValue));
+						}
+					}
+					game.changeMove();
+				}
+				value.set(bestValue);
+				recordPool.release(bestValue);
+				value.previousPosition();
+				int numParents = game.unmakeMove();
+				for (int parent = 0; parent < numParents; parent++) {
+					fix(game, value, readDh, writeDh);
+					game.changeUnmakeMove();
 				}
 				game.remakeMove();
 			}
-/*	
- *			else:
- *				value.remainingChildren = len(children)
- *				value.value = DRAW
- *				{Store value in database}
- *				bestValue = -infinity
- *
- */
-			else{
-				value.value = Value.DRAW;
-				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
-				//best.value = Value.				
-				
-				
-			}
-	}
-			//HOW to run through children? (ie makeMove/moveLists)
-/*			Run through children:
- *					solve(...)
- *					if value.value == UNDECIDED:
- *						bestValue = {retrieve from database}
- *					else:
- *						if(value.remainingChildren==0):
- *							value.remainingChildren = (database value).remainingChildren - 1
- *						else
- *							value.remainingChildren = (database value).remainingChildren
- *						if(value>bestValue)
- *							bestValue = value
- *							{store value in database}
- *						else
- *							{store value.remainingChildren in database}
- *				value = bestValue
- *				Run through parents:
- *					fix(..., false)
- *			value = UNDECIDED
- *		default:
- *			value = value.previousPosition()
- *
-*/
-			Record[] recs = recordList.addFirst();
-			boolean made = game.makeMove()>0;
-			int i = 0;
-			while (made) {
-				solve(game, value, depth + 1, readDh, writeDh);
-				recs[i].set(value);
-				recs[i].previousPosition();
-				++i;
-				made = game.changeMove();
-			}
-			if (value.value == Value.UNDECIDED){
-				best = value;
-			}
-			else {
-//				if(value.remainingChildren == 0){
-					//keep track of remaining children
-					//loop through positions
-					//see if draws, if none draws, remaining children 0
-					//else children is greater
-					
-					//don't do this --value.remainingChildren = (database value).remainingChildren	
-				}
-//				else{
-					//value.remainingChildren = (database value).remainingChildren
-//				}
-	//			if (value.value > best.value){
-//					best.value = value.value;
-					writeDb.putRecord(writeDh, hash, game.recordToLong(value));
-//				}
-	}	
-	private void fix(LoopyMutaGame game, Record value,
-			DatabaseHandle readDh, DatabaseHandle writeDh, boolean update) {
-/*
- * (database value) = {retrieve from database}
- * Question: what's the difference between database value  and Record value 
- */
- //		Record value = new Record(conf);
-//		game.longToRecord(readDb.getRecord(readDb.getHandle() game.getHash(), value);
-		
-		//how do we define database value?
-/* 	case IMPOSSIBLE:
- * 		Do nothing
- * 	default:
- *  If update:
- *  	value.remainingChildren = (database value).remainingChildren
- *  else:
- *  	value.remainingChildren = (database value).remainingChildren - 1
- */
-		switch (value.value){
-			case IMPOSSIBLE:
-				return;
-			default:
-			if (update){
-			//	value.remainingChildren = 
-					
-			}
-			else{
-				// value.remainingChildren = 
-			}
-		}
-		
-		
-/*  
- *  if (database value).value is DRAW or value>(database value)
- *  	{Store value in database}
- *  	value = value.previousPosition()
- *  	Run through parents:
- *  		fix(..., not (database value changed from <=DRAW to >DRAW or 
- *  				(database value<DRAW and database value.remainingChildren changed from 1 to 0)))
- *  	value = value.nextPosition()
- *  else
- *  	{Store value.remainingChildren in database}
- */
-		if (true){
+			value.value = Value.UNDECIDED;
+			break;
+		default:
 			value.previousPosition();
-			//while(value.remainingChildren >= 0) {
-				//fix(game, value, depth, readDh, writeDh, not());
-			//}
-			value.nextPosition();
+			break;
 		}
-		else{
-			//writeDb.putRecord(writeDh, hash, value.remainingChildren);
+	}
+
+	private void fix(LoopyMutaGame game, Record value, DatabaseHandle readDh,
+			DatabaseHandle writeDh) {
+
+		Record dbValue = recordPool.get();
+		long hash = game.getHash();
+		game.longToRecord(readDb.getRecord(readDh, hash), dbValue);
+		boolean update = false;
+
+		switch (value.value) {
+		case IMPOSSIBLE:
+			return;
+		default:
+			if (Value.DRAW.isPreferableTo(dbValue.value)) {
+				throw new Error("Draw should not be > database Value");
+			} else if (dbValue.value.isPreferableTo(Value.DRAW)) {
+				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
+			} else if (dbValue.value == Value.DRAW) {
+				boolean unassigned = true;
+				int numChildren = game.makeMove();
+				Record childValue = recordPool.get();
+				for (int child = 0; child < numChildren; child++) {
+					game.longToRecord(readDb.getRecord(readDh, hash),
+							childValue);
+					if (childValue.value == Value.DRAW) {
+						break;
+					} else if (childValue.value.isPreferableTo(Value.DRAW)) {
+						throw new Error("childValue should not be > DRAW");
+					} else if (unassigned
+							|| childValue.value.isPreferableTo(value.value)) {
+						value.set(childValue);
+						update = true;
+					}
+					game.changeMove();
+				}
+				value.previousPosition();
+				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
+			}
+			if (update) {
+				value.previousPosition();
+				int numParents = game.unmakeMove();
+				for (int parent = 0; parent < numParents; parent++) {
+					fix(game, value, readDh, writeDh);
+					game.changeUnmakeMove();
+				}
+				game.remakeMove();
+			}
 		}
 	}
 }
