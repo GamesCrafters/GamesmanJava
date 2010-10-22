@@ -42,7 +42,7 @@ public class LoopySolver extends Solver {
 		});
 		long hashSpace = game.numHashes();
 		Record defaultRecord = game.getRecord();
-		defaultRecord.value = Value.IMPOSSIBLE; //why do we set it to impossible?
+		defaultRecord.value = Value.IMPOSSIBLE;
 		writeDb.fill(conf.getGame().recordToLong(null, defaultRecord), 0,
 				hashSpace);
 
@@ -96,8 +96,7 @@ public class LoopySolver extends Solver {
 				for (int child = 0; child < numChildren; child++) {
 					solve(game, value, depth + 1, readDh, writeDh);
 					if (value.value == Value.UNDECIDED) {
-						// bestValue.set({retrieve current position from
-						// database (not child position)})
+						game.longToRecord(readDb.getRecord(readDh, hash), bestValue);
 					} else {
 						if (unassigned || value.value.isPreferableTo(bestValue.value)) {
 							unassigned = false;
