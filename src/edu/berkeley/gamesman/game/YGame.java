@@ -47,7 +47,6 @@ public final class YGame extends ConnectGame
          */
         Node()
         {
-
         }
 
         public boolean isInInnerTriangle()
@@ -87,7 +86,7 @@ public final class YGame extends ConnectGame
     {
         super( null );
 
-        initializeYGame( innerTriangleSegmentsIn, outerRingSegmentsIn );
+        this.initializeYGame( innerTriangleSegmentsIn, outerRingSegmentsIn );
     }
 
     /**
@@ -174,7 +173,7 @@ public final class YGame extends ConnectGame
             this.neighbors[i] = new Node();
         }
 
-        // Allocate and initialize a 2-dimensional array to use for plotting the game board nodes.
+        // Allocate and initialize a 2-dimensional array to use for plotting ASCII the game board nodes.
 
         ASCIIrepresentation = new char[HEIGHT][];
 
@@ -373,8 +372,8 @@ public final class YGame extends ConnectGame
 
                     numberOfNeighbors++;
                 }
-                else
                 // Not a corner
+                else
                 {
                     this.neighbors[numberOfNeighbors].trueIfInnerMode = isInnerTriangle( triangleIn );
                     this.neighbors[numberOfNeighbors].triangle = triangleIn + 1;
@@ -383,23 +382,23 @@ public final class YGame extends ConnectGame
                     numberOfNeighbors++;
                 }
             }
+            // Inner to inner triangle
             else
             {
-                this.neighbors[numberOfNeighbors].trueIfInnerMode = isInnerTriangle( triangleIn );
+                this.neighbors[numberOfNeighbors].trueIfInnerMode = isInnerTriangle( triangleIn ); // Wrong or duplicate?
                 this.neighbors[numberOfNeighbors].triangle = triangleIn - 1;
                 this.neighbors[numberOfNeighbors].index = indexIn + 2 + ( 3 * indexIn / triangleIn ) % 3 * ( triangleIn + 3 );
 
                 numberOfNeighbors++;
 
-                this.neighbors[numberOfNeighbors].trueIfInnerMode = isInnerTriangle( triangleIn );
+                this.neighbors[numberOfNeighbors].trueIfInnerMode = isInnerTriangle( triangleIn ); // Wrong or duplicate?
                 this.neighbors[numberOfNeighbors].triangle = triangleIn - 1;
-                this.neighbors[numberOfNeighbors].index = indexIn + 2 + ( 3 * indexIn / triangleIn ) % 3 * ( triangleIn + 3 );
+                this.neighbors[numberOfNeighbors].index = indexIn + 1 + ( 3 * indexIn / triangleIn ) % 3 * ( triangleIn + 3 );
 
                 numberOfNeighbors++;
 
                 if ( isCornerIndex( triangleIn, indexIn ) ) // Corners
                 {
-
                     this.neighbors[numberOfNeighbors].trueIfInnerMode = isInnerTriangle( triangleIn );
                     this.neighbors[numberOfNeighbors].triangle = triangleIn - 1;
                     this.neighbors[numberOfNeighbors].index = indexIn - 1 + ( 3 * indexIn / triangleIn ) % 3 * ( triangleIn + 3 );
