@@ -263,17 +263,7 @@ public final class YGame extends ConnectGame
 
         this.neighbors.clear();
 
-        // Same-layer neighbors:
-
-        this.neighborPool[numberOfNeighbors].trueIfInnerMode = trueIfInnerModeIn;
-        this.neighborPool[numberOfNeighbors].triangle = triangleIn;
-        this.neighborPool[numberOfNeighbors].index = ( indexIn - 1 ) % ( 3 * this.nodesInThisTriangle[triangleIn] );
-
-        if ( this.getPlayerAt( triangleIn, indexIn ) == player )
-        {
-            neighbors.add( this.neighborPool[numberOfNeighbors] );
-            numberOfNeighbors++;
-        }
+        // Same-layer neighbor (left):
 
         this.neighborPool[numberOfNeighbors].trueIfInnerMode = trueIfInnerModeIn;
         this.neighborPool[numberOfNeighbors].triangle = triangleIn;
@@ -419,6 +409,18 @@ public final class YGame extends ConnectGame
                     }
                 }
             }
+        }
+
+        // Same layer neighber (right)
+
+        this.neighborPool[numberOfNeighbors].trueIfInnerMode = trueIfInnerModeIn;
+        this.neighborPool[numberOfNeighbors].triangle = triangleIn;
+        this.neighborPool[numberOfNeighbors].index = ( indexIn - 1 ) % ( 3 * this.nodesInThisTriangle[triangleIn] );
+
+        if ( this.getPlayerAt( triangleIn, indexIn ) == player )
+        {
+            neighbors.add( this.neighborPool[numberOfNeighbors] );
+            numberOfNeighbors++;
         }
 
         // Outer neighbors:
