@@ -3,6 +3,8 @@ package edu.berkeley.gamesman.testing;
 
 import static org.junit.Assert.assertTrue;
 
+import java.util.Vector;
+
 import org.junit.Test;
 
 import edu.berkeley.gamesman.game.YGame;
@@ -22,8 +24,10 @@ public class TestY
     {
         YGame yGame = new YGame( 2, 4 );
 
-        int numberOfNeighbors = yGame.findNeighbors( false, 2, 0, 'X' );
+        yGame.fillBoardWithPlayer( 'X' );
 
-        assertTrue( numberOfNeighbors == 3 );
+        Vector< YGame.Node > neighbors = yGame.getNeighbors( false, 2, 0, 'X' );
+
+        assertTrue( neighbors.size() == 3 );
     }
 }
