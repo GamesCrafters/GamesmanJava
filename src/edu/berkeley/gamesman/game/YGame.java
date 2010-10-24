@@ -1,4 +1,3 @@
-
 package edu.berkeley.gamesman.game;
 
 import java.util.Vector;
@@ -20,14 +19,14 @@ public final class YGame extends ConnectGame
     private int outerRingSegments;
     private int numberOfTriangles; // Total number of triangles (or rows, rings, etc.)
 
-    private Vector< char[] > board;
+    private Vector<char[]> board;
     private int[] nodesInThisTriangle;
     private int transitionTriangleNumber = -1;
 
     private char[] unrolledCharBoard; // The full board (string) representation.
 
     private Node[] neighborPool; // Preallocated neighbor nodes (3 through 6 of them)
-    private Vector< Node > neighbors;
+    private Vector<Node> neighbors;
 
     private final int HEIGHT = 24;
     private final int WIDTH = 24;
@@ -70,12 +69,13 @@ public final class YGame extends ConnectGame
      * @param conf
      *            The configuration object
      */
-    public YGame( Configuration conf )
+    public YGame(Configuration conf)
     {
-        super( conf );
+        super(conf);
 
-        this.initializeYGame( conf.getInteger( "gamesman.game.innerTriangleSegments", 2 ),
-                              conf.getInteger( "gamesman.game.outerSegments", 4 ) );
+        this.initializeYGame(conf.getInteger(
+                "gamesman.game.innerTriangleSegments", 2), conf.getInteger(
+                "gamesman.game.outerSegments", 4));
     }
 
     /**
@@ -84,59 +84,64 @@ public final class YGame extends ConnectGame
      * @param innerTriangleSegmentsIn
      * @param outerRingSegmentsIn
      */
-    public YGame( int innerTriangleSegmentsIn, int outerRingSegmentsIn )
+    public YGame(int innerTriangleSegmentsIn, int outerRingSegmentsIn)
     {
-        super( null );
+        super(null);
 
-        this.initializeYGame( innerTriangleSegmentsIn, outerRingSegmentsIn );
+        this.initializeYGame(innerTriangleSegmentsIn, outerRingSegmentsIn);
     }
 
     /**
      * @param innerTriangleSegmentsIn
      * @param outerRingSegmentsIn
      */
-    private void initializeYGame( int innerTriangleSegmentsIn, int outerRingSegmentsIn )
+    private void initializeYGame(int innerTriangleSegmentsIn,
+            int outerRingSegmentsIn)
     {
         this.innerTriangleSegments = innerTriangleSegmentsIn;
         this.outerRingSegments = outerRingSegmentsIn;
 
         // Allocate and initialize the board, which is an array of character arrays representing the triangles.
 
-        if ( ( this.innerTriangleSegments % 3 ) == 2 )
+        if ((this.innerTriangleSegments % 3) == 2)
         {
-            this.numberOfTriangles = this.outerRingSegments - this.innerTriangleSegments + 1;
+            this.numberOfTriangles = this.outerRingSegments
+                    - this.innerTriangleSegments + 1;
         }
         else
         {
-            this.numberOfTriangles = this.outerRingSegments - this.innerTriangleSegments + 2;
+            this.numberOfTriangles = this.outerRingSegments
+                    - this.innerTriangleSegments + 2;
         }
 
-        assert Util.debug( DebugFacility.GAME, "numberOfTriangles: " + this.numberOfTriangles );
+        assert Util.debug(DebugFacility.GAME, "numberOfTriangles: "
+                + this.numberOfTriangles);
 
-        this.board = new Vector< char[] >( this.numberOfTriangles );
+        this.board = new Vector<char[]>(this.numberOfTriangles);
 
         this.nodesInThisTriangle = new int[this.numberOfTriangles];
 
         this.totalNumberOfNodes = 0;
 
-        int nodes = ( this.innerTriangleSegments % 3 ) * 3;
+        int nodes = (this.innerTriangleSegments % 3) * 3;
 
-        for ( int i = 0; i < this.numberOfTriangles; i++ )
+        for (int i = 0; i < this.numberOfTriangles; i++)
         {
-            assert Util.debug( DebugFacility.GAME, "nodesInThisTriangle[" + i + "]: " + nodes );
+            assert Util.debug(DebugFacility.GAME, "nodesInThisTriangle[" + i
+                    + "]: " + nodes);
 
             this.nodesInThisTriangle[i] = nodes;
 
             char[] triangleNodes = new char[nodes];
 
-            if ( ( nodes / 3 ) == this.innerTriangleSegments )
+            if ((nodes / 3) == this.innerTriangleSegments)
             {
                 this.transitionTriangleNumber = i;
             }
 
-            board.add( triangleNodes );
+            board.add(triangleNodes);
 
-            if ( this.transitionTriangleNumber == -1 )
+            if (this.transitionTriangleNumber == -1)
             {
                 nodes += 9;
             }
@@ -146,23 +151,24 @@ public final class YGame extends ConnectGame
             }
         }
 
-        assert ( this.transitionTriangleNumber >= 0 );
+        assert (this.transitionTriangleNumber >= 0);
 
-        for ( int i = 0; i < this.numberOfTriangles; i++ )
+        for (int i = 0; i < this.numberOfTriangles; i++)
         {
             this.totalNumberOfNodes += this.nodesInThisTriangle[i];
         }
 
-        assert Util.debug( DebugFacility.GAME, "totalNumberOfNodes: " + this.totalNumberOfNodes );
+        assert Util.debug(DebugFacility.GAME, "totalNumberOfNodes: "
+                + this.totalNumberOfNodes);
 
         // this.totalNumberOfNodes = 5 * ( this.numberOfTriangles * this.numberOfTriangles ) - ( 7 * this.numberOfTriangles ) + 3;
 
         // Double checking the above calculation.
         // This calculation doesn't appear to be correct for all cases.
 
-        assert Util.debug( DebugFacility.GAME, "`->calculated: "
-                                               + ( 5 * ( this.numberOfTriangles * this.numberOfTriangles )
-                                                   - ( 7 * this.numberOfTriangles ) + 3 ) );
+        assert Util.debug(DebugFacility.GAME, "`->calculated: "
+                + (5 * (this.numberOfTriangles * this.numberOfTriangles)
+                        - (7 * this.numberOfTriangles) + 3));
 
         // Allocate the full board (string) representation.
 
@@ -172,62 +178,64 @@ public final class YGame extends ConnectGame
 
         this.neighborPool = new Node[6];
 
-        for ( int i = 0; i < 6; i++ )
+        for (int i = 0; i < 6; i++)
         {
             this.neighborPool[i] = new Node();
         }
 
         // ..and the neighbor vector returned from getNeighbors
 
-        this.neighbors = new Vector< Node >( 6 );
+        this.neighbors = new Vector<Node>(6);
 
-        this.fillBoardWithPlayer( ' ' );
+        this.fillBoardWithPlayer(' ');
 
         // Allocate and initialize a 2-dimensional array to use for plotting ASCII the game board nodes.
 
         ASCIIrepresentation = new char[HEIGHT][];
 
-        for ( int y = 0; y < HEIGHT; y++ )
+        for (int y = 0; y < HEIGHT; y++)
         {
             ASCIIrepresentation[y] = new char[WIDTH];
         }
 
-        for ( int i = 0; i < 93; i++ )
+        for (int i = 0; i < 93; i++)
         {
-            int xCoord = (int) ( coordsFor4and8board[i][0] * ( WIDTH - 1 ) );
-            int yCoord = (int) ( coordsFor4and8board[i][1] * ( HEIGHT - 1 ) );
+            int xCoord = (int) (coordsFor4and8board[i][0] * (WIDTH - 1));
+            int yCoord = (int) (coordsFor4and8board[i][1] * (HEIGHT - 1));
             ASCIIrepresentation[yCoord][xCoord] = '.';
         }
 
-        assert Util.debug( DebugFacility.GAME, this.displayState() );
+        assert Util.debug(DebugFacility.GAME, this.displayState());
     }
 
     /**
      * @param player
      */
-    public void fillBoardWithPlayer( char player )
+    public void fillBoardWithPlayer(char player)
     {
-        for ( int i = 0; i < this.numberOfTriangles; i++ )
+        for (int i = 0; i < this.numberOfTriangles; i++)
         {
-            for ( int c = 0; c < this.nodesInThisTriangle[i]; c++ )
+            for (int c = 0; c < this.nodesInThisTriangle[i]; c++)
             {
-                board.get( i )[c] = player;
+                board.get(i)[c] = player;
             }
         }
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see edu.berkeley.gamesman.game.ConnectGame#getBoardSize()
      */
     @Override
     public int getBoardSize()
     {
-        return ( this.totalNumberOfNodes );
+        return (this.totalNumberOfNodes);
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see edu.berkeley.gamesman.game.ConnectGame#getCharArray()
      */
     @Override
@@ -235,11 +243,11 @@ public final class YGame extends ConnectGame
     {
         int charIndex = 0;
 
-        for ( int t = 0; t < board.size(); t++ )
+        for (int t = 0; t < board.size(); t++)
         {
-            char[] triangle = board.get( t );
+            char[] triangle = board.get(t);
 
-            for ( int n = 0; n < this.nodesInThisTriangle[t]; n++ )
+            for (int n = 0; n < this.nodesInThisTriangle[t]; n++)
             {
                 unrolledCharBoard[charIndex++] = triangle[n];
             }
@@ -249,7 +257,7 @@ public final class YGame extends ConnectGame
     }
 
     /**
-     * TODO: Filter by player (using triangle for board and index for .. well .. index), returned clockwise.
+     * TODO: Return neighbors in clockwise order
      * 
      * @param trueIfInnerMode
      * @param triangle
@@ -257,7 +265,8 @@ public final class YGame extends ConnectGame
      * @param player
      * @return
      */
-    public Vector< Node > getNeighbors( boolean trueIfInnerModeIn, int triangleIn, int indexIn, char player )
+    public Vector<Node> getNeighbors(boolean trueIfInnerModeIn, int triangleIn,
+            int indexIn, char player)
     {
         int numberOfNeighbors = 0;
 
@@ -267,141 +276,157 @@ public final class YGame extends ConnectGame
 
         this.neighborPool[numberOfNeighbors].trueIfInnerMode = trueIfInnerModeIn;
         this.neighborPool[numberOfNeighbors].triangle = triangleIn;
-        this.neighborPool[numberOfNeighbors].index = ( indexIn + 1 ) % ( 3 * this.nodesInThisTriangle[triangleIn] );
+        this.neighborPool[numberOfNeighbors].index = Util.nonNegativeModulo(
+                (indexIn + 1), (this.nodesInThisTriangle[triangleIn]));
 
-        if ( this.getPlayerAt( triangleIn, indexIn ) == player )
+        if (this.getPlayerAt(triangleIn, indexIn) == player)
         {
-            neighbors.add( this.neighborPool[numberOfNeighbors] );
+            neighbors.add(this.neighborPool[numberOfNeighbors]);
             numberOfNeighbors++;
         }
 
         // Inner neighbors:
 
-        if ( isInnerTriangle( triangleIn ) == false ) // Outer triangle to (outer triangle or transition triangle)
+        if (isInnerTriangle(triangleIn) == false) // Outer triangle to (outer triangle or transition triangle)
         {
-            this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle( triangleIn - 1 );
+            this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn - 1);
             this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
-            this.neighborPool[numberOfNeighbors].index = indexIn - ( indexIn / triangleIn );
+            this.neighborPool[numberOfNeighbors].index = indexIn
+                    - (indexIn / triangleIn);
 
-            if ( this.getPlayerAt( triangleIn, indexIn ) == player )
+            if (this.getPlayerAt(triangleIn, indexIn) == player)
             {
-                neighbors.add( this.neighborPool[numberOfNeighbors] );
+                neighbors.add(this.neighborPool[numberOfNeighbors]);
                 numberOfNeighbors++;
             }
 
-            if ( isCornerIndex( triangleIn, indexIn ) == false ) // The next inner neighbor only when it is not a
+            if (isCornerIndex(triangleIn, indexIn) == false) // The next inner neighbor only when it is not a
             // corner.
             {
-                this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle( triangleIn - 1 );
+                this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn - 1);
                 this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
-                this.neighborPool[numberOfNeighbors].index = indexIn - ( indexIn / triangleIn ) - 1;
+                this.neighborPool[numberOfNeighbors].index = indexIn
+                        - (indexIn / triangleIn) - 1;
 
-                if ( this.getPlayerAt( triangleIn, indexIn ) == player )
+                if (this.getPlayerAt(triangleIn, indexIn) == player)
                 {
-                    neighbors.add( this.neighborPool[numberOfNeighbors] );
+                    neighbors.add(this.neighborPool[numberOfNeighbors]);
                     numberOfNeighbors++;
                 }
             }
         }
         else
         {
-            if ( isCornerIndex( triangleIn, indexIn ) == false ) // Triangle corners don't have any inner neighbors.
+            if (isCornerIndex(triangleIn, indexIn) == false) // Triangle corners don't have any inner neighbors.
             {
-                if ( isCornerIndex( triangleIn, indexIn + 1 ) == false ) // After corner index
+                if (isCornerIndex(triangleIn, indexIn + 1) == false) // After corner index
                 {
-                    this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle( triangleIn );
+                    this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
                     this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
-                    this.neighborPool[numberOfNeighbors].index = 1 - ( 3 * indexIn / triangleIn ) % 3 * ( triangleIn - 3 );
+                    this.neighborPool[numberOfNeighbors].index = Util
+                            .nonNegativeModulo(1 - (3 * indexIn / triangleIn),
+                                    3 * (triangleIn - 3));
 
-                    if ( this.getPlayerAt( triangleIn, indexIn ) == player )
+                    if (this.getPlayerAt(triangleIn, indexIn) == player)
                     {
-                        neighbors.add( this.neighborPool[numberOfNeighbors] );
+                        neighbors.add(this.neighborPool[numberOfNeighbors]);
                         numberOfNeighbors++;
                     }
 
-                    this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle( triangleIn );
+                    this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
                     this.neighborPool[numberOfNeighbors].triangle = triangleIn;
-                    this.neighborPool[numberOfNeighbors].index = triangleIn - 2 % 3 * triangleIn;
+                    this.neighborPool[numberOfNeighbors].index = Util
+                            .nonNegativeModulo(triangleIn - 2, 3 * triangleIn);
 
-                    if ( this.getPlayerAt( triangleIn, indexIn ) == player )
+                    if (this.getPlayerAt(triangleIn, indexIn) == player)
                     {
-                        neighbors.add( this.neighborPool[numberOfNeighbors] );
+                        neighbors.add(this.neighborPool[numberOfNeighbors]);
                         numberOfNeighbors++;
                     }
                 }
                 else
                 {
-                    if ( isCornerIndex( triangleIn, indexIn - 1 ) == false ) // Before corner index
+                    if (isCornerIndex(triangleIn, indexIn - 1) == false) // Before corner index
                     {
-                        this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle( triangleIn );
+                        this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
                         this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
-                        this.neighborPool[numberOfNeighbors].index =
-                                                                     indexIn - 2 - ( 3 * indexIn / triangleIn ) % 3
-                                                                             * ( triangleIn - 3 );
+                        this.neighborPool[numberOfNeighbors].index = indexIn
+                                - 2 - (3 * indexIn / triangleIn) % 3
+                                * (triangleIn - 3);
 
-                        if ( this.getPlayerAt( triangleIn, indexIn ) == player )
+                        if (this.getPlayerAt(triangleIn, indexIn) == player)
                         {
-                            neighbors.add( this.neighborPool[numberOfNeighbors] );
+                            neighbors.add(this.neighborPool[numberOfNeighbors]);
                             numberOfNeighbors++;
                         }
 
-                        if ( ( indexIn - 1 ) != 1 ) // Special case: handling the case when triangle = 2
+                        if ((indexIn - 1) != 1) // Special case: handling the case when triangle = 2
                         {
-                            this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle( triangleIn );
+                            this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
                             this.neighborPool[numberOfNeighbors].triangle = triangleIn;
-                            this.neighborPool[numberOfNeighbors].index = ( triangleIn + 2 ) % 3 * triangleIn;
+                            this.neighborPool[numberOfNeighbors].index = Util
+                                    .nonNegativeModulo((triangleIn + 2),
+                                            3 * triangleIn);
 
-                            if ( this.getPlayerAt( triangleIn, indexIn ) == player )
+                            if (this.getPlayerAt(triangleIn, indexIn) == player)
                             {
-                                neighbors.add( this.neighborPool[numberOfNeighbors] );
+                                neighbors
+                                        .add(this.neighborPool[numberOfNeighbors]);
                                 numberOfNeighbors++;
                             }
                         }
                     }
                     else
                     {
-                        if ( triangleIn == 1 ) // Special case: triangle #1 (with 2 segments) has no inner neighbors.
+                        if (triangleIn == 1) // Special case: triangle #1 (with 2 segments) has no inner neighbors.
                         {
 
                         }
                         else
                         {
-                            if ( triangleIn == 2 ) // Special case: triangle #2 (with 3 segments) has only the middle point as an
+                            if (triangleIn == 2) // Special case: triangle #2 (with 3 segments) has only the middle point as an
                             // inner neighbor.
                             {
                                 this.neighborPool[numberOfNeighbors].trueIfInnerMode = true;
                                 this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
                                 this.neighborPool[numberOfNeighbors].index = 0;
 
-                                if ( this.getPlayerAt( triangleIn, indexIn ) == player )
+                                if (this.getPlayerAt(triangleIn, indexIn) == player)
                                 {
-                                    neighbors.add( this.neighborPool[numberOfNeighbors] );
+                                    neighbors
+                                            .add(this.neighborPool[numberOfNeighbors]);
                                     numberOfNeighbors++;
                                 }
                             }
                             else
                             {
-                                this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle( triangleIn );
+                                this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
                                 this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
-                                this.neighborPool[numberOfNeighbors].index =
-                                                                             indexIn - 2 - ( 3 * indexIn / triangleIn ) % 3
-                                                                                     * ( triangleIn - 3 );
+                                this.neighborPool[numberOfNeighbors].index = indexIn
+                                        - 2
+                                        - (3 * indexIn / triangleIn)
+                                        % 3
+                                        * (triangleIn - 3);
 
-                                if ( this.getPlayerAt( triangleIn, indexIn ) == player )
+                                if (this.getPlayerAt(triangleIn, indexIn) == player)
                                 {
-                                    neighbors.add( this.neighborPool[numberOfNeighbors] );
+                                    neighbors
+                                            .add(this.neighborPool[numberOfNeighbors]);
                                     numberOfNeighbors++;
                                 }
 
-                                this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle( triangleIn );
+                                this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
                                 this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
-                                this.neighborPool[numberOfNeighbors].index =
-                                                                             indexIn - 1 - ( 3 * indexIn / triangleIn ) % 3
-                                                                                     * ( triangleIn - 3 );
+                                this.neighborPool[numberOfNeighbors].index = indexIn
+                                        - 1
+                                        - (3 * indexIn / triangleIn)
+                                        % 3
+                                        * (triangleIn - 3);
 
-                                if ( this.getPlayerAt( triangleIn, indexIn ) == player )
+                                if (this.getPlayerAt(triangleIn, indexIn) == player)
                                 {
-                                    neighbors.add( this.neighborPool[numberOfNeighbors] );
+                                    neighbors
+                                            .add(this.neighborPool[numberOfNeighbors]);
                                     numberOfNeighbors++;
                                 }
                             }
@@ -415,52 +440,56 @@ public final class YGame extends ConnectGame
 
         this.neighborPool[numberOfNeighbors].trueIfInnerMode = trueIfInnerModeIn;
         this.neighborPool[numberOfNeighbors].triangle = triangleIn;
-        this.neighborPool[numberOfNeighbors].index = ( indexIn - 1 ) % ( 3 * this.nodesInThisTriangle[triangleIn] );
+        this.neighborPool[numberOfNeighbors].index = Util.nonNegativeModulo(
+                (indexIn - 1), this.nodesInThisTriangle[triangleIn]);
 
-        if ( this.getPlayerAt( triangleIn, indexIn ) == player )
+        if (this.getPlayerAt(triangleIn, indexIn) == player)
         {
-            neighbors.add( this.neighborPool[numberOfNeighbors] );
+            neighbors.add(this.neighborPool[numberOfNeighbors]);
             numberOfNeighbors++;
         }
 
         // Outer neighbors:
 
-        if ( triangleIn != this.numberOfTriangles ) // Outer nodes have no neighbors.
+        if (triangleIn < (this.numberOfTriangles - 1)) // Outer nodes have no neighbors.
         {
-            if ( isInnerTriangle( triangleIn + 1 ) == false ) // (Outer or transition triangle) to an outer triangle.
+            if (isInnerTriangle(triangleIn + 1) == false) // (Outer or transition triangle) to an outer triangle.
             {
-                this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle( triangleIn );
+                this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
                 this.neighborPool[numberOfNeighbors].triangle = triangleIn + 1;
-                this.neighborPool[numberOfNeighbors].index = indexIn + ( indexIn / triangleIn );
+                this.neighborPool[numberOfNeighbors].index = indexIn
+                        + (indexIn / triangleIn);
 
-                if ( this.getPlayerAt( triangleIn, indexIn ) == player )
+                if (this.getPlayerAt(triangleIn, indexIn) == player)
                 {
-                    neighbors.add( this.neighborPool[numberOfNeighbors] );
+                    neighbors.add(this.neighborPool[numberOfNeighbors]);
                     numberOfNeighbors++;
                 }
 
-                if ( isCornerIndex( triangleIn, indexIn ) ) // Corners
+                if (isCornerIndex(triangleIn, indexIn)) // Corners
                 {
-                    this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle( triangleIn );
+                    this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
                     this.neighborPool[numberOfNeighbors].triangle = triangleIn + 1;
-                    this.neighborPool[numberOfNeighbors].index = indexIn + ( indexIn / triangleIn ) - 1;
+                    this.neighborPool[numberOfNeighbors].index = indexIn
+                            + (indexIn / triangleIn) - 1;
 
-                    if ( this.getPlayerAt( triangleIn, indexIn ) == player )
+                    if (this.getPlayerAt(triangleIn, indexIn) == player)
                     {
-                        neighbors.add( this.neighborPool[numberOfNeighbors] );
+                        neighbors.add(this.neighborPool[numberOfNeighbors]);
                         numberOfNeighbors++;
                     }
                 }
                 // Not a corner
                 else
                 {
-                    this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle( triangleIn );
+                    this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
                     this.neighborPool[numberOfNeighbors].triangle = triangleIn + 1;
-                    this.neighborPool[numberOfNeighbors].index = indexIn + ( indexIn / triangleIn ) + 1;
+                    this.neighborPool[numberOfNeighbors].index = indexIn
+                            + (indexIn / triangleIn) + 1;
 
-                    if ( this.getPlayerAt( triangleIn, indexIn ) == player )
+                    if (this.getPlayerAt(triangleIn, indexIn) == player)
                     {
-                        neighbors.add( this.neighborPool[numberOfNeighbors] );
+                        neighbors.add(this.neighborPool[numberOfNeighbors]);
                         numberOfNeighbors++;
                     }
                 }
@@ -468,65 +497,77 @@ public final class YGame extends ConnectGame
             // Inner to inner triangle
             else
             {
-                this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle( triangleIn ); // Wrong or duplicate?
+                this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn); // Wrong or duplicate?
                 this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
-                this.neighborPool[numberOfNeighbors].index = indexIn + 2 + ( 3 * indexIn / triangleIn ) % 3 * ( triangleIn + 3 );
+                this.neighborPool[numberOfNeighbors].index = Util
+                        .nonNegativeModulo(indexIn + 2
+                                + (3 * indexIn / triangleIn),
+                                3 * (triangleIn + 3));
 
-                if ( this.getPlayerAt( triangleIn, indexIn ) == player )
+                if (this.getPlayerAt(triangleIn, indexIn) == player)
                 {
-                    neighbors.add( this.neighborPool[numberOfNeighbors] );
+                    neighbors.add(this.neighborPool[numberOfNeighbors]);
                     numberOfNeighbors++;
                 }
 
-                this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle( triangleIn ); // Wrong or duplicate?
+                this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn); // Wrong or duplicate?
                 this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
-                this.neighborPool[numberOfNeighbors].index = indexIn + 1 + ( 3 * indexIn / triangleIn ) % 3 * ( triangleIn + 3 );
+                this.neighborPool[numberOfNeighbors].index = Util
+                        .nonNegativeModulo(indexIn + 1
+                                + (3 * indexIn / triangleIn),
+                                3 * (triangleIn + 3));
 
-                if ( this.getPlayerAt( triangleIn, indexIn ) == player )
+                if (this.getPlayerAt(triangleIn, indexIn) == player)
                 {
-                    neighbors.add( this.neighborPool[numberOfNeighbors] );
+                    neighbors.add(this.neighborPool[numberOfNeighbors]);
                     numberOfNeighbors++;
                 }
 
-                if ( isCornerIndex( triangleIn, indexIn ) ) // Corners
+                if (isCornerIndex(triangleIn, indexIn)) // Corners
                 {
-                    this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle( triangleIn );
+                    this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
                     this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
-                    this.neighborPool[numberOfNeighbors].index = indexIn - 1 + ( 3 * indexIn / triangleIn ) % 3 * ( triangleIn + 3 );
+                    this.neighborPool[numberOfNeighbors].index = Util
+                            .nonNegativeModulo(indexIn - 1
+                                    + (3 * indexIn / triangleIn),
+                                    3 * (triangleIn + 3));
 
-                    if ( this.getPlayerAt( triangleIn, indexIn ) == player )
+                    if (this.getPlayerAt(triangleIn, indexIn) == player)
                     {
-                        neighbors.add( this.neighborPool[numberOfNeighbors] );
+                        neighbors.add(this.neighborPool[numberOfNeighbors]);
                         numberOfNeighbors++;
                     }
 
-                    this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle( triangleIn );
+                    this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
                     this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
-                    this.neighborPool[numberOfNeighbors].index = indexIn - 2 + ( 3 * indexIn / triangleIn ) % 3 * ( triangleIn + 3 );
+                    this.neighborPool[numberOfNeighbors].index = Util
+                            .nonNegativeModulo(indexIn - 2
+                                    + (3 * indexIn / triangleIn),
+                                    3 * (triangleIn + 3));
 
-                    if ( this.getPlayerAt( triangleIn, indexIn ) == player )
+                    if (this.getPlayerAt(triangleIn, indexIn) == player)
                     {
-                        neighbors.add( this.neighborPool[numberOfNeighbors] );
+                        neighbors.add(this.neighborPool[numberOfNeighbors]);
                         numberOfNeighbors++;
                     }
                 }
             }
         }
 
-        assert ( numberOfNeighbors >= 3 && numberOfNeighbors <= 6 );
+        assert (numberOfNeighbors >= 3 && numberOfNeighbors <= 6);
 
-        return ( neighbors );
+        return (neighbors);
     }
 
     /**
      * @param triangle
      * @return
      */
-    private boolean isInnerTriangle( int triangle )
+    private boolean isInnerTriangle(int triangle)
     {
-        assert ( triangle >= 0 && triangle < this.numberOfTriangles );
+        assert (triangle >= 0 && triangle < this.numberOfTriangles);
 
-        return ( triangle <= this.transitionTriangleNumber );
+        return (triangle <= this.transitionTriangleNumber);
     }
 
     /**
@@ -534,41 +575,43 @@ public final class YGame extends ConnectGame
      * @param index
      * @return
      */
-    private boolean isCornerIndex( int triangle, int index )
+    private boolean isCornerIndex(int triangle, int index)
     {
-        assert ( triangle >= 0 && triangle < this.numberOfTriangles );
+        assert (triangle >= 0 && triangle < this.numberOfTriangles);
 
         int segmentsInThisTriangle = this.nodesInThisTriangle[triangle] / 3;
 
-        return ( ( index % segmentsInThisTriangle ) == 0 );
+        return ((index % segmentsInThisTriangle) == 0);
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see edu.berkeley.gamesman.game.ConnectGame#isWin(char)
      */
     @Override
-    protected boolean isWin( char player )
+    protected boolean isWin(char player)
     {
-        assert Util.debug( DebugFacility.GAME, displayState() );
+        assert Util.debug(DebugFacility.GAME, displayState());
 
         return false;
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see edu.berkeley.gamesman.game.ConnectGame#setToCharArray(char[])
      */
     @Override
-    protected void setToCharArray( char[] myPieces )
+    protected void setToCharArray(char[] myPieces)
     {
         int charIndex = 0;
 
-        for ( int t = 0; t < board.size(); t++ )
+        for (int t = 0; t < board.size(); t++)
         {
-            char[] triangle = board.get( t );
+            char[] triangle = board.get(t);
 
-            for ( int n = 0; n < this.nodesInThisTriangle[t]; n++ )
+            for (int n = 0; n < this.nodesInThisTriangle[t]; n++)
             {
                 triangle[n] = myPieces[charIndex++];
             }
@@ -577,6 +620,7 @@ public final class YGame extends ConnectGame
 
     /*
      * (non-Javadoc)
+     * 
      * @see edu.berkeley.gamesman.game.TierGame#displayState()
      */
     @Override
@@ -584,23 +628,24 @@ public final class YGame extends ConnectGame
     {
         String stateString = new String();
 
-        if ( ( this.innerTriangleSegments == 4 ) && ( this.outerRingSegments == 8 ) )
+        if ((this.innerTriangleSegments == 4) && (this.outerRingSegments == 8))
         {
-            assert ( coordsFor4and8board.length == this.totalNumberOfNodes );
+            assert (coordsFor4and8board.length == this.totalNumberOfNodes);
 
-            for ( int y = 0; y < HEIGHT; y++ )
+            for (int y = 0; y < HEIGHT; y++)
             {
-                stateString.concat( ASCIIrepresentation[y].toString() );
-                stateString.concat( "\n" );
+                stateString.concat(ASCIIrepresentation[y].toString());
+                stateString.concat("\n");
             }
         }
         else
         {
-            stateString.concat( "UNABLE TO REPRESENT THIS CONFIGURATION IN 2D (yet):\n" );
-            stateString.concat( this.getCharArray().toString() );
+            stateString
+                    .concat("UNABLE TO REPRESENT THIS CONFIGURATION IN 2D (yet):\n");
+            stateString.concat(this.getCharArray().toString());
         }
 
-        return ( stateString );
+        return (stateString);
     }
 
     /**
@@ -608,13 +653,14 @@ public final class YGame extends ConnectGame
      * @param indexIn
      * @return
      */
-    public char getPlayerAt( int triangle, int index )
+    public char getPlayerAt(int triangle, int index)
     {
-        return board.get( triangle )[index];
+        return board.get(triangle)[index];
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see edu.berkeley.gamesman.game.Game#describe()
      */
     @Override
@@ -625,6 +671,7 @@ public final class YGame extends ConnectGame
 
     /*
      * (non-Javadoc)
+     * 
      * @see java.lang.Object#toString()
      */
     @Override
@@ -731,4 +778,16 @@ public final class YGame extends ConnectGame
     { 0.4987, 0.5035 },
     { 0.5479, 0.4218 },
     { 0.4505, 0.4213 } };
+
+    static public void main(String[] args)
+    {
+        YGame game = new YGame(2, 4);
+        Vector<Node> neighbors;
+
+        game.fillBoardWithPlayer('X');
+
+        neighbors = game.getNeighbors(false, 2, 0, 'X');
+
+        assert (neighbors.size() == 3);
+    }
 }
