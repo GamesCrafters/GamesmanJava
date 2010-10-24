@@ -206,8 +206,8 @@ public class LoopyQuickCross extends LoopyMutaGame {
 	public void setToHash(long hash) {
 		long hashLeft = hash;
 		for (int index = width*height - 1; index >= 0; index--){
-			int y = index / 3;
-			int x = index % 3;
+			int y = index / width;
+			int x = index % width;
 			double base = Math.pow(3,index);
 			if (base > hashLeft){
 				Board[x][y] = ' ';
@@ -237,8 +237,7 @@ public class LoopyQuickCross extends LoopyMutaGame {
 
 	@Override
 	public int maxChildren() {
-		// TODO Auto-generated method stub
-		return 0;
+		return width * height;
 	}
 
 	@Override
