@@ -61,10 +61,21 @@ public class LoopyQuickCross extends LoopyMutaGame {
 
 	@Override
 	public String displayState() {
-		return null;	
+		StringBuilder board = new StringBuilder(3 *(width + 1) * (height + 1));
+		for (int row = 0; row < width; row ++) {
+			board.append((height - row) + " ");
+			for (int col = 0; col < height; col++) {
+				board.append(" " + Board[col][height - row - 1] + " \n");
+			}
+		}
+		//Line below will change for different board widths.
+		//Let's take care of that later...
+		board.append("   a  b  c  d\n");
+		return board.toString();
 	}
 
 	@Override
+	//For this method, should we create a separate "QuickCrossHasher"?
 	public long getHash() {
 		// TODO Auto-generated method stub
 		return 0;
