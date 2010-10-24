@@ -789,5 +789,9 @@ public final class YGame extends ConnectGame
         neighbors = game.getNeighbors(false, 2, 0, 'X');
 
         assert (neighbors.size() == 3);
+
+        neighbors = game.getNeighbors(false, 2, 1, 'X');
+
+        assert (neighbors.size() == 4);
     }
 }
