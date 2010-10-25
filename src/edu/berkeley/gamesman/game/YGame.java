@@ -38,15 +38,15 @@ public final class YGame extends ConnectGame
      */
     public final class Node
     {
-        private boolean trueIfInnerMode;
+//        private boolean trueIfInnerMode;
         private int triangle;
         private int index;
 
-        public Node(boolean mode, int tr, int ind)
+        public Node(/*boolean mode,*/ int triangleIn, int indexIn)
         {
-            trueIfInnerMode = mode;
-            triangle = tr;
-            index = ind;
+//            trueIfInnerMode = mode;
+            triangle = triangleIn;
+            index = indexIn;
         }
 
         /**
@@ -54,13 +54,13 @@ public final class YGame extends ConnectGame
          */
         public Node()
         {
-            this(false, 0, 0);
+            this(/*false,*/ 0, 0);
         }
 
-        public boolean isInInnerTriangle()
-        {
-            return this.trueIfInnerMode;
-        }
+        //public boolean isInInnerTriangle()
+        //{
+            //return this.trueIfInnerMode;
+        //}
 
         public int getTriangle()
         {
@@ -75,14 +75,14 @@ public final class YGame extends ConnectGame
         @Override
         public String toString()
         {
-            return new String("Inner:" + this.trueIfInnerMode + ", Triangle:"
+            return new String(/*"Inner:" + this.this.trueIfInnerMode + ", */"Triangle:"
                     + this.triangle + ", Index:" + this.index);
         }
 
         public boolean equals(Node theNode)
         {
-            return ((trueIfInnerMode == theNode.isInInnerTriangle())
-                    && (triangle == theNode.getTriangle()) && (index == getIndex()));
+            return (//(trueIfInnerMode == theNode.isInInnerTriangle()) &&
+                    (triangle == theNode.getTriangle()) && (index == getIndex()));
         }
     }
 
@@ -288,7 +288,7 @@ public final class YGame extends ConnectGame
      * @param player
      * @return
      */
-    public Vector<Node> getNeighbors(boolean trueIfInnerModeIn, int triangleIn,
+    public Vector<Node> getNeighbors(/*boolean trueIfInnerModeIn, */int triangleIn,
             int indexIn, char player)
     {
         int numberOfNeighbors = 0;
@@ -297,7 +297,7 @@ public final class YGame extends ConnectGame
 
         // Same-layer neighbor (left):
 
-        this.neighborPool[numberOfNeighbors].trueIfInnerMode = trueIfInnerModeIn;
+        //this.neighborPool[numberOfNeighbors].trueIfInnerMode = trueIfInnerModeIn;
         this.neighborPool[numberOfNeighbors].triangle = triangleIn;
         this.neighborPool[numberOfNeighbors].index = Util.nonNegativeModulo(
                 (indexIn + 1), (this.nodesInThisTriangle[triangleIn]));
@@ -314,10 +314,10 @@ public final class YGame extends ConnectGame
         {
             int segments = (this.nodesInThisTriangle[triangleIn] / 3);
 
-            this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn - 1);
+            //this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn - 1);
             this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
-            this.neighborPool[numberOfNeighbors].index = indexIn
-                    - (indexIn / segments);
+            this.neighborPool[numberOfNeighbors].index = Util.nonNegativeModulo(indexIn
+                    - (indexIn / segments),this.nodesInThisTriangle[triangleIn-1]);
 
             if (this.getPlayerAt(triangleIn, indexIn) == player)
             {
@@ -327,7 +327,7 @@ public final class YGame extends ConnectGame
 
             if (isCornerIndex(triangleIn, indexIn) == false) // The next inner neighbor only when it is not a corner.
             {
-                this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn - 1);
+                //this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn - 1);
                 this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
                 this.neighborPool[numberOfNeighbors].index = indexIn
                         - (indexIn / segments) - 1;
@@ -345,7 +345,7 @@ public final class YGame extends ConnectGame
             {
                 if (isCornerIndex(triangleIn, indexIn + 1) == false) // After corner index
                 {
-                    this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
+                    //this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
                     this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
                     this.neighborPool[numberOfNeighbors].index = Util
                             .nonNegativeModulo(1 - (3 * indexIn / triangleIn),
@@ -357,7 +357,7 @@ public final class YGame extends ConnectGame
                         numberOfNeighbors++;
                     }
 
-                    this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
+                    //this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
                     this.neighborPool[numberOfNeighbors].triangle = triangleIn;
                     this.neighborPool[numberOfNeighbors].index = Util
                             .nonNegativeModulo(triangleIn - 2, 3 * triangleIn);
@@ -372,7 +372,7 @@ public final class YGame extends ConnectGame
                 {
                     if (isCornerIndex(triangleIn, indexIn - 1) == false) // Before corner index
                     {
-                        this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
+                        //this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
                         this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
                         this.neighborPool[numberOfNeighbors].index = Util
                                 .nonNegativeModulo(indexIn - 2
@@ -387,7 +387,7 @@ public final class YGame extends ConnectGame
 
                         if ((indexIn - 1) != 1) // Special case: handling the case when triangle = 2
                         {
-                            this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
+                            //this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
                             this.neighborPool[numberOfNeighbors].triangle = triangleIn;
                             this.neighborPool[numberOfNeighbors].index = Util
                                     .nonNegativeModulo((triangleIn + 2),
@@ -412,7 +412,7 @@ public final class YGame extends ConnectGame
                             if (triangleIn == 2) // Special case: triangle #2 (with 3 segments) has only the middle point as an
                             // inner neighbor.
                             {
-                                this.neighborPool[numberOfNeighbors].trueIfInnerMode = true;
+                                //this.neighborPool[numberOfNeighbors].trueIfInnerMode = true;
                                 this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
                                 this.neighborPool[numberOfNeighbors].index = 0;
 
@@ -425,7 +425,7 @@ public final class YGame extends ConnectGame
                             }
                             else
                             {
-                                this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
+                                //this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
                                 this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
                                 this.neighborPool[numberOfNeighbors].index = Util
                                         .nonNegativeModulo(indexIn - 2
@@ -439,7 +439,7 @@ public final class YGame extends ConnectGame
                                     numberOfNeighbors++;
                                 }
 
-                                this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
+                                //this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
                                 this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
                                 this.neighborPool[numberOfNeighbors].index = Util
                                         .nonNegativeModulo(indexIn - 1
@@ -461,7 +461,7 @@ public final class YGame extends ConnectGame
 
         // Same layer neighbor (right)
 
-        this.neighborPool[numberOfNeighbors].trueIfInnerMode = trueIfInnerModeIn;
+        //this.neighborPool[numberOfNeighbors].trueIfInnerMode = trueIfInnerModeIn;
         this.neighborPool[numberOfNeighbors].triangle = triangleIn;
         this.neighborPool[numberOfNeighbors].index = Util.nonNegativeModulo(
                 (indexIn - 1), this.nodesInThisTriangle[triangleIn]);
@@ -478,7 +478,7 @@ public final class YGame extends ConnectGame
         {
             if (isInnerTriangle(triangleIn + 1) == false) // (Outer or transition triangle) to an outer triangle.
             {
-                this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
+                //this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
                 this.neighborPool[numberOfNeighbors].triangle = triangleIn + 1;
                 this.neighborPool[numberOfNeighbors].index = indexIn
                         + (indexIn / triangleIn);
@@ -491,7 +491,7 @@ public final class YGame extends ConnectGame
 
                 if (isCornerIndex(triangleIn, indexIn)) // Corners
                 {
-                    this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
+                    //this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
                     this.neighborPool[numberOfNeighbors].triangle = triangleIn + 1;
                     this.neighborPool[numberOfNeighbors].index = Util
                             .nonNegativeModulo(indexIn + (indexIn / triangleIn)
@@ -507,7 +507,7 @@ public final class YGame extends ConnectGame
                 // Not a corner
                 else
                 {
-                    this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
+                    //this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
                     this.neighborPool[numberOfNeighbors].triangle = triangleIn + 1;
                     this.neighborPool[numberOfNeighbors].index = indexIn
                             + (indexIn / triangleIn) + 1;
@@ -522,7 +522,7 @@ public final class YGame extends ConnectGame
             // Inner to inner triangle
             else
             {
-                this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn); // Wrong or duplicate?
+                //this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn); // Wrong or duplicate?
                 this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
                 this.neighborPool[numberOfNeighbors].index = Util
                         .nonNegativeModulo(indexIn + 2
@@ -535,7 +535,7 @@ public final class YGame extends ConnectGame
                     numberOfNeighbors++;
                 }
 
-                this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn); // Wrong or duplicate?
+                //this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn); // Wrong or duplicate?
                 this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
                 this.neighborPool[numberOfNeighbors].index = Util
                         .nonNegativeModulo(indexIn + 1
@@ -550,7 +550,7 @@ public final class YGame extends ConnectGame
 
                 if (isCornerIndex(triangleIn, indexIn)) // Corners
                 {
-                    this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
+                    //this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
                     this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
                     this.neighborPool[numberOfNeighbors].index = Util
                             .nonNegativeModulo(indexIn - 1
@@ -563,7 +563,7 @@ public final class YGame extends ConnectGame
                         numberOfNeighbors++;
                     }
 
-                    this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
+                    //this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
                     this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
                     this.neighborPool[numberOfNeighbors].index = Util
                             .nonNegativeModulo(indexIn - 2
@@ -632,8 +632,8 @@ public final class YGame extends ConnectGame
                 boolean[] reachedEdges = new boolean[2];
                 reachedEdges[0] = true; // left edge is reached
                 Node previousNode = null;
-                Node startNode = new Node(false, numberOfTriangles, ind);
-                Node currentNode = new Node(false, numberOfTriangles, ind);
+                Node startNode = new Node(/*false, */numberOfTriangles, ind);
+                Node currentNode = new Node(/*false, */numberOfTriangles, ind);
                 boolean done = false;
 
                 do
@@ -654,7 +654,8 @@ public final class YGame extends ConnectGame
                         }
                     }
                     Vector<Node> neighbors = getNeighbors(
-                            currentNode.trueIfInnerMode, currentNode
+                            //currentNode.trueIfInnerMode, 
+                            currentNode
                                     .getTriangle(), currentNode.getIndex(),
                             player);
                     for (int i = 0; i < neighbors.size(); i++)
@@ -899,7 +900,7 @@ public final class YGame extends ConnectGame
 
         game.fillBoardWithPlayer('X');
 
-        neighbors = game.getNeighbors(false, 2, 0, 'X');
+        neighbors = game.getNeighbors(/*false,*/ 2, 0, 'X');
 
         for (int i = 0; i < neighbors.size(); i++)
             System.out.println("Neighbor #" + i + ": " + neighbors.get(i));
@@ -908,7 +909,7 @@ public final class YGame extends ConnectGame
 
         assert (neighbors.size() == 3);
 
-        neighbors = game.getNeighbors(false, 2, 1, 'X');
+        neighbors = game.getNeighbors(/*false,*/ 2, 1, 'X');
 
         for (int i = 0; i < neighbors.size(); i++)
             System.out.println("Neighbor #" + i + ": " + neighbors.get(i));
@@ -923,7 +924,7 @@ public final class YGame extends ConnectGame
 
         System.out.println(game.displayState());
 
-        neighbors = game.getNeighbors(false, 2, 0, 'X');
+        neighbors = game.getNeighbors(/*false,*/ 2, 0, 'X');
 
         for (int i = 0; i < neighbors.size(); i++)
             System.out.println("Neighbor #" + i + ": " + neighbors.get(i));
@@ -938,7 +939,7 @@ public final class YGame extends ConnectGame
 
         System.out.println(game.displayState());
 
-        neighbors = game.getNeighbors(false, 4, 3, 'X');
+        neighbors = game.getNeighbors(/*false,*/ 4, 3, 'X');
 
         for (int i = 0; i < neighbors.size(); i++)
             System.out.println("Neighbor #" + i + ": " + neighbors.get(i));
@@ -947,7 +948,7 @@ public final class YGame extends ConnectGame
 
         assert (neighbors.size() == 4);
 
-        neighbors = game.getNeighbors(false, 4, 4, 'X');
+        neighbors = game.getNeighbors(/*false,*/ 4, 4, 'X');
 
         for (int i = 0; i < neighbors.size(); i++)
             System.out.println("Neighbor #" + i + ": " + neighbors.get(i));
@@ -955,5 +956,14 @@ public final class YGame extends ConnectGame
         System.out.println();
 
         assert (neighbors.size() == 4);
-    }
+
+        neighbors = game.getNeighbors(/*false,*/ 4, 17, 'X');
+
+        for (int i = 0; i < neighbors.size(); i++)
+            System.out.println("Neighbor #" + i + ": " + neighbors.get(i));
+
+        System.out.println();
+
+        assert (neighbors.size() == 4);
+}
 }
