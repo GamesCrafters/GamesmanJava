@@ -1,6 +1,5 @@
 package edu.berkeley.gamesman.game;
 
-import java.util.Iterator;
 import java.util.Vector;
 
 import edu.berkeley.gamesman.core.Configuration;
@@ -43,21 +42,21 @@ public final class YGame extends ConnectGame
         private int triangle;
         private int index;
 
-        public Node( boolean mode, int tr, int ind )
+        public Node(boolean mode, int tr, int ind)
         {
-        	trueIfInnerMode = mode;
-        	triangle = tr;
-        	index = ind;
+            trueIfInnerMode = mode;
+            triangle = tr;
+            index = ind;
         }
-        
+
         /**
          * Default (empty) constructor to be filled in with findNeighbors() call.
          */
         public Node()
         {
-        	this( false, 0, 0);
+            this(false, 0, 0);
         }
-        
+
         public boolean isInInnerTriangle()
         {
             return this.trueIfInnerMode;
@@ -79,12 +78,11 @@ public final class YGame extends ConnectGame
             return new String("Inner:" + this.trueIfInnerMode + ", Triangle:"
                     + this.triangle + ", Index:" + this.index);
         }
-        
-        public boolean equals( Node theNode )
+
+        public boolean equals(Node theNode)
         {
-        	return (( trueIfInnerMode == theNode.isInInnerTriangle() ) && 
-		        	( triangle == theNode.getTriangle() ) &&
-		        	( index == getIndex() ));
+            return ((trueIfInnerMode == theNode.isInInnerTriangle())
+                    && (triangle == theNode.getTriangle()) && (index == getIndex()));
         }
     }
 
@@ -314,10 +312,12 @@ public final class YGame extends ConnectGame
 
         if (isInnerTriangle(triangleIn) == false) // Outer triangle to (outer triangle or transition triangle)
         {
+            int segments = (this.nodesInThisTriangle[triangleIn] / 3);
+
             this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn - 1);
             this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
             this.neighborPool[numberOfNeighbors].index = indexIn
-                    - (indexIn / triangleIn);
+                    - (indexIn / segments);
 
             if (this.getPlayerAt(triangleIn, indexIn) == player)
             {
@@ -325,13 +325,12 @@ public final class YGame extends ConnectGame
                 numberOfNeighbors++;
             }
 
-            if (isCornerIndex(triangleIn, indexIn) == false) // The next inner neighbor only when it is not a
-            // corner.
+            if (isCornerIndex(triangleIn, indexIn) == false) // The next inner neighbor only when it is not a corner.
             {
                 this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn - 1);
                 this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
                 this.neighborPool[numberOfNeighbors].index = indexIn
-                        - (indexIn / triangleIn) - 1;
+                        - (indexIn / segments) - 1;
 
                 if (this.getPlayerAt(triangleIn, indexIn) == player)
                 {
@@ -621,67 +620,77 @@ public final class YGame extends ConnectGame
         assert Util.debug(DebugFacility.GAME, displayState());
 
         boolean result = false;
-        //go over the left edge from bottom up
-        for (int ind = 0; ind < nodesInThisTriangle[ numberOfTriangles ] / 3; ind++)
+        // go over the left edge from bottom up
+        for (int ind = 0; ind < nodesInThisTriangle[numberOfTriangles] / 3; ind++)
         {
-        	if (getPlayerAt(numberOfTriangles, ind) == player)
-        	{
-                //reached Edges 
-                //[0] - left
-                //[1] - right
-                //[2] - bottom
+            if (getPlayerAt(numberOfTriangles, ind) == player)
+            {
+                // reached Edges
+                // [0] - left
+                // [1] - right
+                // [2] - bottom
                 boolean[] reachedEdges = new boolean[2];
-        		reachedEdges[0] = true;		//left edge is reached
+                reachedEdges[0] = true; // left edge is reached
                 Node previousNode = null;
-                Node startNode = new Node( false, numberOfTriangles, ind );
-        		Node currentNode = new Node( false, numberOfTriangles, ind );
-        		boolean done = false;
-        		
-        		do
-        		{
-        			if (currentNode.getTriangle() == numberOfTriangles)
-        			{
-        				int div = (nodesInThisTriangle[ numberOfTriangles ] + 1) / 3;
-        				int currentIndex = currentNode.getIndex();
-        				if ( (currentIndex >= div) && (currentIndex <= 2*div) )
-        				{
-        					reachedEdges[1] = true;
-        				}
-        				if ( (currentIndex >= 2*div) && (currentIndex <= 3*div) || (currentIndex == 0) )
-        				{
-        					reachedEdges[2] = true;
-        				}
-        			}
-	        		Vector<Node> neighbors = getNeighbors(currentNode.trueIfInnerMode, currentNode.getTriangle(), currentNode.getIndex(), player);
-	        		for (int i = 0; i < neighbors.size(); i++)
-	        		{
-	        			if ( previousNode == null )
-	        			{
-	        				previousNode = currentNode;
-	        				currentNode = neighbors.get( i ); //select the first node clock-wise
-	        				break;
-	        			}
-	        			else if ( previousNode.equals( neighbors.get(i) ))
-	        			{
-	                		previousNode = currentNode;
-	        				currentNode = neighbors.get( (i+1) % neighbors.size() ); //select next node after previous in clock-wise
-	        				break;
-	        			}        			
-	        		}
-	        		done = currentNode.equals( startNode ) || (reachedEdges[1] && reachedEdges[2]);
-        		} while (done);
-        		
-        		if ( reachedEdges[1] && reachedEdges[2] )
-        		{
-        			result = true;
-        			break;
-        		}
-        		else if ( reachedEdges[1] )
-        		{
-        			result = false;
-        			break;
-        		}
-        	}
+                Node startNode = new Node(false, numberOfTriangles, ind);
+                Node currentNode = new Node(false, numberOfTriangles, ind);
+                boolean done = false;
+
+                do
+                {
+                    if (currentNode.getTriangle() == numberOfTriangles)
+                    {
+                        int div = (nodesInThisTriangle[numberOfTriangles] + 1) / 3;
+                        int currentIndex = currentNode.getIndex();
+                        if ((currentIndex >= div) && (currentIndex <= 2 * div))
+                        {
+                            reachedEdges[1] = true;
+                        }
+                        if ((currentIndex >= 2 * div)
+                                && (currentIndex <= 3 * div)
+                                || (currentIndex == 0))
+                        {
+                            reachedEdges[2] = true;
+                        }
+                    }
+                    Vector<Node> neighbors = getNeighbors(
+                            currentNode.trueIfInnerMode, currentNode
+                                    .getTriangle(), currentNode.getIndex(),
+                            player);
+                    for (int i = 0; i < neighbors.size(); i++)
+                    {
+                        if (previousNode == null)
+                        {
+                            previousNode = currentNode;
+                            currentNode = neighbors.get(i); // select the first node clock-wise
+                            break;
+                        }
+                        else
+                            if (previousNode.equals(neighbors.get(i)))
+                            {
+                                previousNode = currentNode;
+                                currentNode = neighbors.get((i + 1)
+                                        % neighbors.size()); // select next node after previous in clock-wise
+                                break;
+                            }
+                    }
+                    done = currentNode.equals(startNode)
+                            || (reachedEdges[1] && reachedEdges[2]);
+                }
+                while (done);
+
+                if (reachedEdges[1] && reachedEdges[2])
+                {
+                    result = true;
+                    break;
+                }
+                else
+                    if (reachedEdges[1])
+                    {
+                        result = false;
+                        break;
+                    }
+            }
         }
         return result;
     }
@@ -922,5 +931,29 @@ public final class YGame extends ConnectGame
         System.out.println();
 
         assert (neighbors.size() == 3);
+
+        game = new YGame(3, 6);
+
+        game.fillBoardWithPlayer('X');
+
+        System.out.println(game.displayState());
+
+        neighbors = game.getNeighbors(false, 4, 3, 'X');
+
+        for (int i = 0; i < neighbors.size(); i++)
+            System.out.println("Neighbor #" + i + ": " + neighbors.get(i));
+
+        System.out.println();
+
+        assert (neighbors.size() == 4);
+
+        neighbors = game.getNeighbors(false, 4, 4, 'X');
+
+        for (int i = 0; i < neighbors.size(); i++)
+            System.out.println("Neighbor #" + i + ": " + neighbors.get(i));
+
+        System.out.println();
+
+        assert (neighbors.size() == 4);
     }
 }
