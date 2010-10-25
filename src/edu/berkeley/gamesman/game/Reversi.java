@@ -35,6 +35,8 @@ public class Reversi extends TierGame {
 		//  2     [4032,...]
 		//  ...
 		//  63    [64,...]    ]
+	
+	private String[] stringMoves; //only for testing.
 
 	private class Cell {
 		final int row, col;
@@ -96,6 +98,7 @@ public class Reversi extends TierGame {
 		turn = BLACK;
 		isChildrenValid = false;
 		children = new TierState[0];
+		stringMoves = new String[0]; //only for testing.
 		
 		offsetTable = new long[boardSize+1][];
 		//initialize offset table
@@ -337,6 +340,7 @@ public class Reversi extends TierGame {
 	
 	private void getChildren() {
 		children = new TierState[0];
+		stringMoves = new String[0]; //only for testing.
 		//looks at every spot on the board
 		for (int boardNumber = 0;boardNumber < boardSize; boardNumber++) {
 			//only a valid child if there is an empty space there
@@ -346,6 +350,10 @@ public class Reversi extends TierGame {
 				for (int index = 0;index < childrenNumbers.length; index++) {
 					//makes sure the spot is within bounds, then checks if there is an opposing piece next to it
 					if (((childrenNumbers[index] >= 0 && childrenNumbers[index] < boardSize)) && (((turn == WHITE && pieces[childrenNumbers[index]] == 'X') || (turn == BLACK && pieces[childrenNumbers[index]] == 'O')) && isFlippable(boardNumber, index, false, null))) {
+						String[] newStringMoves = new String[stringMoves.length+1]; //only for testing.
+						System.arraycopy(stringMoves,0,newStringMoves,0,stringMoves.length); //only for testing.
+						newStringMoves[newStringMoves.length-1] = ""+(boardNumber % width)+""+(boardNumber / width); //only for testing.
+						stringMoves = newStringMoves; //only for testing.
 						String[] stringState = {stateToString()};
 						boolean x = isFlippable(boardNumber,index,true,stringState);
 						TierState[] newChildren = new TierState[children.length + 1];
@@ -427,9 +435,13 @@ public class Reversi extends TierGame {
 	public String getTurn() {
 		if (turn==BLACK)
 			return "BLACK TO MOVE";
-		if (turn==WHITE)
+		else if (turn==WHITE)
 			return "WHITE TO MOVE";
 		return "";
+	}
+	
+	public String[] getStringMoves() {
+		return stringMoves;
 	}
 	
 	public static void main(String[] args) {
@@ -448,16 +460,19 @@ public class Reversi extends TierGame {
 			TierState[] moves = new TierState[16];
 			int y = reversiGame.validMoves(moves);
 			for (int x=0;x<y;x++) {
-				System.out.println(moves[x].hash);
+				System.out.println(reversiGame.getStringMoves()[x]);
 			}
-			System.out.println(reversiGame.turn);
+			//System.out.println(reversiGame.turn);
 			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 			try {
 				input = br.readLine();
 			} catch (IOException e) {
 				throw new Error(e);
 			}
-			reversiGame.setState(new TierState(reversiGame.getTier()+1,new Long(input)));
+			int index = 0;
+			for (index=0;!reversiGame.getStringMoves()[index].equals(input);index++)
+				;
+			reversiGame.setState(new TierState(reversiGame.getTier()+1,new Long(moves[index].hash)));
 			reversiGame.changeTurn();
 			System.out.println(reversiGame.turn);
 		}
