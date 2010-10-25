@@ -418,9 +418,9 @@ public class Reversi extends TierGame {
 	}
 	
 	public void changeTurn() {
-		if (turn==BLACK)
+		if (this.turn==BLACK)
 			this.turn = WHITE;
-		if (turn==WHITE)
+		else if (this.turn==WHITE)
 			this.turn = BLACK;
 	}
 	
@@ -450,6 +450,7 @@ public class Reversi extends TierGame {
 			for (int x=0;x<y;x++) {
 				System.out.println(moves[x].hash);
 			}
+			System.out.println(reversiGame.turn);
 			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 			try {
 				input = br.readLine();
@@ -458,6 +459,7 @@ public class Reversi extends TierGame {
 			}
 			reversiGame.setState(new TierState(reversiGame.getTier()+1,new Long(input)));
 			reversiGame.changeTurn();
+			System.out.println(reversiGame.turn);
 		}
 		
 /**
