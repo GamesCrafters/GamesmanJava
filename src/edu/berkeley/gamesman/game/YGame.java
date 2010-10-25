@@ -670,6 +670,18 @@ public final class YGame extends ConnectGame
         return board.get(triangle)[index];
     }
 
+    /**
+     * FOR TESTING PURPOSES
+     * 
+     * @param triangle
+     * @param index
+     * @param player
+     */
+    public void setPlayerAt(int triangle, int index, char player)
+    {
+        board.get(triangle)[index] = player;
+    }
+
     /*
      * (non-Javadoc)
      * 
