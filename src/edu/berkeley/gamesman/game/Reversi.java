@@ -113,9 +113,9 @@ public class Reversi extends TierGame {
 			}
 						
 			offsetTable[tier] = new long[tier+1];
-			offsetTable[tier][0] = combo * combination(tier,1);
+			offsetTable[tier][0] = combo; //* combination(tier,0);
 			for (int offset = 1;offset < tier + 1;offset++) {
-				offsetTable[tier][offset] = offsetTable[tier][offset-1] + combo * combination(tier,offset);
+				offsetTable[tier][offset] = offsetTable[tier][offset-1] + combo; //* combination(tier,offset);
 			}
 		}
 		
@@ -124,13 +124,13 @@ public class Reversi extends TierGame {
 
 	@Override
 	public void setState(TierState pos) {
-		numPieces = pos.tier;
-		unhash(pos.tier, pos.hash);
+		unhash(pos.tier+1, pos.hash);
 		isChildrenValid = false;
 		//not done. remember to set hash.
 	}
 	
 	private long hash(String pos) {
+		//System.out.println(pos);
 		if (pos.length() != boardSize)
 			throw new Error("Wrong length: "+ pos.length() + " != " + boardSize);
 		long majorHash = 0L;
@@ -157,21 +157,25 @@ public class Reversi extends TierGame {
 				dummyPieceCounter--;
 			}
 		}
-		return ((majorHash + offsetTable[pieceCounter][whiteCounter]) * ((int) Math.pow(2, pieceCounter))) + minorHash;
+		//System.out.println(pos);
+		//System.out.println(majorHash+","+minorHash+"|"+whiteCounter+","+pieceCounter);
+		return (majorHash + offsetTable[pieceCounter][whiteCounter]) * (int) Math.pow(2, pieceCounter) + minorHash;
 	}
 	
 	private void unhash(int tier, long hash) {
 		this.hash = hash;
-		long minorHash = hash % ((int) Math.pow(2,tier));
 		long majorHash = -1;
+		long minorHash = hash % (int) Math.pow(2, tier);
 		int numWhite = 0;
 		for (int index = 0; index < tier+1; index++) {
-			if ((hash - minorHash) / ((int) Math.pow(2,tier)) < offsetTable[tier][index]) {
-				majorHash = ((hash - minorHash) / ((int) Math.pow(2,tier))) - offsetTable[tier][index-1];
+			if ((hash - minorHash) / (int) Math.pow(2, tier) < offsetTable[tier][index]) {
+				majorHash = ((hash - minorHash) / (int) Math.pow(2,tier)) - offsetTable[tier][index-1];
 				numWhite = index-1;
 				break;
 			}
 		}
+		System.out.println(hash);
+		System.out.println(majorHash+","+minorHash+","+tier+","+numWhite+"|hash="+hash);
 		if (majorHash == -1)
 			throw new Error("Given hash is not in the tier");
 		//creating the order of pieces of be put in from minorHash
@@ -192,12 +196,11 @@ public class Reversi extends TierGame {
 			int combo = combination(pieceIndex+1,currentTier);
 			if (majorHash >= combo) {
 				char test = orderOfPieces[currentTier-1];
-				pieces[pieceIndex] = test;
+				board[pieceIndex / width][pieceIndex % height].setPiece(test);
 				currentTier--;
 				majorHash -= combo;
 			}
 		}
-		
 	}
 
 	@Override
@@ -285,8 +288,10 @@ public class Reversi extends TierGame {
 
 	@Override
 	public void setStartingPosition(int n) {
-		for (int boardNumber = 0;boardNumber < boardSize;boardNumber++) {
-			pieces[boardNumber] = ' ';
+		for (int x = 0; x < width; x++) {
+			for (int y = 0; y< height; y++) {
+				board[x][y].setPiece(' ');
+			}
 		}
 		board[height / 2 - 1][width / 2 - 1].setPiece('X');
 		board[height / 2][width / 2 - 1].setPiece('O');
@@ -352,7 +357,7 @@ public class Reversi extends TierGame {
 					if (((childrenNumbers[index] >= 0 && childrenNumbers[index] < boardSize)) && (((turn == WHITE && pieces[childrenNumbers[index]] == 'X') || (turn == BLACK && pieces[childrenNumbers[index]] == 'O')) && isFlippable(boardNumber, index, false, null))) {
 						String[] newStringMoves = new String[stringMoves.length+1]; //only for testing.
 						System.arraycopy(stringMoves,0,newStringMoves,0,stringMoves.length); //only for testing.
-						newStringMoves[newStringMoves.length-1] = ""+(boardNumber % width)+""+(boardNumber / width); //only for testing.
+						newStringMoves[newStringMoves.length-1] = ""+(boardNumber / width)+""+(boardNumber % height); //only for testing.
 						stringMoves = newStringMoves; //only for testing.
 						String[] stringState = {stateToString()};
 						boolean x = isFlippable(boardNumber,index,true,stringState);
@@ -369,35 +374,48 @@ public class Reversi extends TierGame {
 	}
 	
 	private boolean isFlippable(int boardNumber, int direction, boolean flip, String[] state) {
-		int addx = 0; int addy = 0;
+		int addRow = 0; int addCol = 0;
 		switch (direction) {
-		case 0: addx=-1; addy=-1; break;
-		case 1: addx=0; addy=-1; break;
-		case 2: addx=1; addy=-1; break;
-		case 3: addx=-1; addy=0; break;
-		case 4: addx=1; addy=0; break;
-		case 5: addx=-1; addy=1; break;
-		case 6: addx=0; addy=1; break;
-		case 7: addx=1; addy=1; break;
+		case 0: addRow=-1; addCol=-1; break;
+		case 1: addRow=-1; addCol=0; break;
+		case 2: addRow=-1; addCol=1; break;
+		case 3: addRow=0; addCol=-1; break;
+		case 4: addRow=0; addCol=1; break;
+		case 5: addRow=1; addCol=-1; break;
+		case 6: addRow=1; addCol=0; break;
+		case 7: addRow=1; addCol=1; break;
+		default: throw new Error("Bad direction");
 		}
-		int x = boardNumber % width;
-		int y = boardNumber / width;
-		if (flip)
-			state[0] = "" + state[0].substring(0,y*width+x)+(turn == BLACK ? 'X' : 'O')+state[0].substring(y*width+x+1,state[0].length());
+		int row = boardNumber / width;
+		int col = boardNumber % height;
+		if (flip) {
+			state[0] = "" + state[0].substring(0,row*width+col)+(turn == BLACK ? 'X' : 'O')+state[0].substring(row*width+col+1,state[0].length());
+		}
 		char piece = 'P';
-		x += addx;
-		y += addy;
-		while (x>=0 && x<width && y>=0 && y<height) {
-			piece = board[x][y].getPiece();
-			if (piece == ' ')
+		row += addRow;
+		col += addCol;
+		int pieceCounter = 0;
+		while (col>=0 && col<width && row>=0 && row<height) {
+			piece = (flip ? state[0].charAt(row*width+col) : board[row][col].getPiece());
+			if (piece == ' ' || (pieceCounter == 0 && piece == (turn==BLACK ? 'X' : 'O')))
 				break;
-			if (flip)
-				state[0] = "" + state[0].substring(0,y*width+x)+(turn == BLACK ? 'X' : 'O')+state[0].substring(y*width+x+1,state[0].length());
-			if ((turn == BLACK && piece == 'X') || (turn == WHITE && piece == 'O')) {
-				return true;
+			else {
+				if (flip)
+					state[0] = "" + state[0].substring(0,row*width+col)+(turn == BLACK ? 'X' : 'O')+state[0].substring(row*width+col+1,state[0].length());
+				if (pieceCounter > 0 && piece == (turn == BLACK ? 'X' : 'O')) {
+					if (flip) {
+						for (int direct = 0;direct<8;direct++) {
+							if (direct != direction && isFlippable(boardNumber, direct, false, null))
+								isFlippable(boardNumber, direct, true, state);
+						}
+					}
+					return true;
+				}
+			row += addRow;
+			col += addCol;
+			if (piece == (turn==BLACK ? 'O' : 'X'))
+				pieceCounter++;
 			}
-			x += addx;
-			y += addy;
 		}
 		return false;
 	}
@@ -459,9 +477,16 @@ public class Reversi extends TierGame {
 			System.out.println(reversiGame.primitiveValue().toString());
 			TierState[] moves = new TierState[16];
 			int y = reversiGame.validMoves(moves);
+			System.out.print("Valid Moves: ");
 			for (int x=0;x<y;x++) {
-				System.out.println(reversiGame.getStringMoves()[x]);
+				System.out.print(reversiGame.getStringMoves()[x]+",");
 			}
+			System.out.println();
+			System.out.print("Hashes: ");
+			for (int x=0;x<y;x++) {
+				System.out.print(moves[x].hash+",");
+			}
+			System.out.println();
 			//System.out.println(reversiGame.turn);
 			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 			try {
@@ -470,11 +495,15 @@ public class Reversi extends TierGame {
 				throw new Error(e);
 			}
 			int index = 0;
-			for (index=0;!reversiGame.getStringMoves()[index].equals(input);index++)
-				;
-			reversiGame.setState(new TierState(reversiGame.getTier()+1,new Long(moves[index].hash)));
+			for (index=0;index<reversiGame.getStringMoves().length;index++)
+				if(reversiGame.getStringMoves()[index].equals(input))
+					break;
+			if (index == reversiGame.getStringMoves().length) {
+				System.out.println("Invalid Move");
+				break;
+			}
+			reversiGame.setState(new TierState(reversiGame.getTier(),new Long(moves[index].hash)));
 			reversiGame.changeTurn();
-			System.out.println(reversiGame.turn);
 		}
 		
 /**
