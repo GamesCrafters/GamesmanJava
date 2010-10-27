@@ -60,11 +60,21 @@ public final class QuickCrossTopDown extends Game<QuickCrossState> {
 		//given state, returns groupings of names and child states
 	public Collection<Pair<String, QuickCrossState>> validMoves(
 			QuickCrossState pos) {
+		
+		//Below is for nonloopy game
+		ArrayList<Pair<String, QuickCrossState>> moves = new ArrayList<Pair<String, QuickCrossState>>(
+				boardSize-pos.numPieces);
+		QuickCrossState[] children = new QuickCrossState[boardSize - pos.numPieces];
+		
+		//Below is for loopy game
+		/*
 		ArrayList<Pair<String, QuickCrossState>> moves = new ArrayList<Pair<String, QuickCrossState>>(
 				pos.numPieces + 2*(boardSize - pos.numPieces));
 		QuickCrossState[] children = new QuickCrossState[pos.numPieces + 2 * (boardSize
 				- pos.numPieces)];
+		*/
 		String[] childNames = new String[children.length];
+		
 		for (int i = 0; i < children.length; i++) {
 			children[i] = newState();
 		}
@@ -72,8 +82,10 @@ public final class QuickCrossTopDown extends Game<QuickCrossState> {
 		//this fills up the children array
 		validMoves(pos, children);
 		int moveCount = 0;
-		//old code below
-		/*
+		
+		
+		//below is for nonloopy
+		
 		for (int row = 0; row < height; row++) {
 			for (int col = 0; col < width; col++) {
 				if (pos.getPiece(row, col) == ' ')
@@ -87,7 +99,10 @@ public final class QuickCrossTopDown extends Game<QuickCrossState> {
 					children[i]));
 		}
 		return moves;
-		*/
+		
+		
+		//below is for loopy
+		/*
 		for (int row = 0; row < height; row++) {
 			for (int col = 0; col < width; col++) {
 				//in this case 2 possible moves
@@ -110,11 +125,15 @@ public final class QuickCrossTopDown extends Game<QuickCrossState> {
 			moves.add(new Pair<String, QuickCrossState>(childNames[i], children[i]));
 		}
 		return moves;
+		*/
 	}
 
 	@Override
 	public int maxChildren() {
+		//nonloopy 
 		return boardSize;
+		//loopy
+		//return boardSize*2;
 	}
 
 	@Override
@@ -168,20 +187,20 @@ public final class QuickCrossTopDown extends Game<QuickCrossState> {
 	public int validMoves(QuickCrossState pos, QuickCrossState[] children) {
 
 		int numMoves = 0;
+		//nonloopy
 		
-		/*
-		char turn = pos.numPieces % 2 == 0 ? 'X' : 'O';
 		for (int i = 0; i < boardSize; i++) {
 			if (pos.getPiece(i) == ' ') {
 				children[numMoves].set(pos);
-				children[numMoves].setPiece(i, turn);
+				children[numMoves].setPiece(i, '-');
 				numMoves++;
 			}
 		}
-		return numMoves
-		*/
+		return numMoves;
+		
 
-	
+		//loopy
+		/*
 		for (int i = 0; i < (pos.numPieces + 2 * (boardSize - pos.numPieces)); i++){
 			if (pos.getPiece(i) == ' '){
 				children[numMoves].set(pos);
@@ -204,6 +223,7 @@ public final class QuickCrossTopDown extends Game<QuickCrossState> {
 			else throw new Error("cannot generate valid moves from given pos");
 		}
 		return numMoves;
+		*/
 	}
 
 	@Override
@@ -211,10 +231,10 @@ public final class QuickCrossTopDown extends Game<QuickCrossState> {
 		//char lastTurn = pos.numPieces % 2 == 0 ? 'O' : 'X';
 
 		//if last move was 1st player and currently even num moves have happened, 4 in a row is a win for me (the 2nd player)
-		Value WinorLose = pos.lastMoveOne == pos.evenNumMoves ? Value.WIN : Value.LOSE;
+		Value WinorLose = (pos.lastMoveOne == pos.evenNumMoves ? Value.WIN : Value.LOSE);
 		
 		char currPiece = '-';
-		
+		//try both pieces
 		for (int i = 0; i<2; i++){
 			//checks for a vertical win
 			for (int row = 0; row < height; row++) {
@@ -272,11 +292,12 @@ public final class QuickCrossTopDown extends Game<QuickCrossState> {
 	}
 
 	@Override
-    // Need to fix hashing. Random return values put in for now
+    // trinary hash + 2 bits at end for lastMoveOne and evenNumMoves
 	public long stateToHash(QuickCrossState pos) {
 		//long offset = tierOffsets[pos.numPieces];
 		//return offset + dh.setNumsAndHash(pos.board);
 		long retHash = 0;
+		
 		int index = 0;
 		for(int x = 0; x < width; x++){
 			for(int y = 0; y < height; y++){
@@ -293,13 +314,17 @@ public final class QuickCrossTopDown extends Game<QuickCrossState> {
 				index++;
 			}
 		}
+		//retHash = retHash << 1;
+		//if (pos.evenNumMoves){
+		//	retHash = retHash + 1;
+		//}
 		return retHash;
 	}
 
 	@Override
 	public long numHashes() {
 		//return tierOffsets[boardSize + 1];
-		return (long)Math.pow(3, boardSize);
+		return (long)Math.pow(3, boardSize) << 1;
 	}
 
 	
@@ -323,24 +348,30 @@ public final class QuickCrossTopDown extends Game<QuickCrossState> {
 		s.numPieces = tier;
 		*/
 		
-		
+		s.numPieces = 0;
 		long hashLeft = hash;
 		for (int index = width*height - 1; index >= 0; index--){
 			int y = index / width;
 			int x = index % width;
 			double base = Math.pow(3,index);
-			if (base > hashLeft){
+			if (hashLeft < base){
 				s.setPiece(x,y,' ');
 			}
-			else if(base * 2 > hashLeft){
+			else if(hashLeft < base * 2){
 				s.setPiece(x,y,'-');
+				s.numPieces++;
 				hashLeft = (long) (hashLeft - base);
 			}
-			else if(base * 2 <= hashLeft){
+			else if(hashLeft >= base*2){
 				s.setPiece(x,y,'|');
+				s.numPieces++;
 				hashLeft = (long) (hashLeft - (base * 2));
 			}
 		}
+		//s.evenNumMoves = false;
+		//if (hash % 2 == 1){
+		//	s.evenNumMoves = true;
+		//}
 	}
 
 	@Override
@@ -348,13 +379,13 @@ public final class QuickCrossTopDown extends Game<QuickCrossState> {
 			Record toStore) {
 		if (record == boardSize + 1) {
 			toStore.value = Value.TIE;
-			//how to calculate remoteness?
-			//toStore.remoteness = boardSize - recordState.numPieces;
+			toStore.remoteness = boardSize - recordState.numPieces;
 		} else if (record == boardSize + 2)
 			toStore.value = Value.UNDECIDED;
 		else if (record >= 0 && record <= boardSize) {
-			toStore.value = record % 2 == 0 ? Value.LOSE : Value.WIN;
-			//toStore.remoteness = (int) record;
+			//toStore.value = record % 2 == 0 ? Value.LOSE : Value.WIN;
+			toStore.value = (record & 1) == 1 ? Value.WIN : Value.LOSE;
+			toStore.remoteness = (int) record;
 		}
 	}
 
@@ -381,7 +412,7 @@ class QuickCrossState implements State {
 	//previous move was made by first player
 	boolean lastMoveOne = false;
 	//even number of moves so far
-	boolean evenNumMoves = false;
+	boolean evenNumMoves = true;
 
 	public QuickCrossState(int width, int height) {
 		this.width = width;
@@ -403,6 +434,8 @@ class QuickCrossState implements State {
 		int boardLength = board.length;
 		System.arraycopy(qcs.board, 0, board, 0, boardLength);
 		numPieces = qcs.numPieces;
+		lastMoveOne = qcs.lastMoveOne;
+		evenNumMoves = qcs.evenNumMoves;
 	}
 
 	public void setPiece(int row, int col, char piece) {
