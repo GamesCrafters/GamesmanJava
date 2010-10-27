@@ -74,7 +74,12 @@ public class Reversi extends TierGame {
 			return 1;
 		if (n==0)
 			throw new Error("Trying to take combination of 0");
-		return combination(n-1,k-1) + combination(n-1,k);
+		long answer = 1;
+		for (int x = n; x>n-k; x--)
+			answer *= x;
+		for (int x = k; x>1; x--)
+			answer /= x;
+		return (int) answer;
 	}
 
 	public Reversi(Configuration conf) {
@@ -158,7 +163,7 @@ public class Reversi extends TierGame {
 			}
 		}
 		//System.out.println(pos);
-		//System.out.println(majorHash+","+minorHash+"|"+whiteCounter+","+pieceCounter);
+		System.out.println(majorHash+","+minorHash+"|"+whiteCounter+","+pieceCounter);
 		return (majorHash + offsetTable[pieceCounter][whiteCounter]) * (int) Math.pow(2, pieceCounter) + minorHash;
 	}
 	
@@ -194,6 +199,7 @@ public class Reversi extends TierGame {
 		int currentTier = tier;
 		for (int pieceIndex = boardSize-1; pieceIndex >= 0; pieceIndex--) {
 			int combo = combination(pieceIndex+1,currentTier);
+			System.out.println(majorHash+","+combo+","+(pieceIndex+1)+","+currentTier);
 			if (majorHash >= combo) {
 				char test = orderOfPieces[currentTier-1];
 				board[pieceIndex / width][pieceIndex % height].setPiece(test);
@@ -465,7 +471,7 @@ public class Reversi extends TierGame {
 	public static void main(String[] args) {
 		Reversi reversiGame = null;
 		try {
-			reversiGame = new Reversi(new Configuration("../gamesman-java/jobs/Reversi4x4.job"));
+			reversiGame = new Reversi(new Configuration(args[0]));
 		}
 		catch (ClassNotFoundException c) {
 			throw new Error(c);
