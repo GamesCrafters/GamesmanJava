@@ -14,7 +14,7 @@ import edu.berkeley.gamesman.util.Pair;
 
 //The pieces are chars, ' ', '-', and '|'
 //public class QuickCross extends LoopyMutaGame {
-public class QuickCross{
+public class QuickCrossOld{
 	private static int width = 4;
 	private static int height = 4;
 	private int boardSize;
@@ -26,7 +26,7 @@ public class QuickCross{
 	
 	
 	//Constructor
-	public QuickCross(Configuration conf) {
+	public QuickCrossOld(Configuration conf) {
 		//super(conf);
 		width = conf.getInteger("gamesman.game.width", 4);
 		height = conf.getInteger("gamesman.game.height", 4);
