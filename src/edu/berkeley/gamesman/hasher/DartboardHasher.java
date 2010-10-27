@@ -372,4 +372,9 @@ public class DartboardHasher {
 		long end = System.nanoTime();
 		System.out.println(end - start);
 	}
+
+	public void set(int boardNum, char p) {
+		// TODO Auto-generated method stub
+		
+	}
 }
