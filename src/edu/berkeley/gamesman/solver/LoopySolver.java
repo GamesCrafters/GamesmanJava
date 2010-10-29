@@ -41,7 +41,7 @@ public class LoopySolver extends Solver {
 
 		});
 		long hashSpace = game.numHashes();
-		Record defaultRecord = game.getRecord();
+		Record defaultRecord = game.getRecord(); 
 		defaultRecord.value = Value.IMPOSSIBLE;
 		writeDb.fill(conf.getGame().recordToLong(null, defaultRecord), 0,
 				hashSpace);
@@ -67,7 +67,15 @@ public class LoopySolver extends Solver {
 					writeDb.getHandle());
 		}
 	}
-
+	/**
+	 * solve(): Solves the loopy game. Everything starts as impossible.
+	 * 
+	 * @param game
+	 * @param value
+	 * @param depth
+	 * @param readDh
+	 * @param writeDh
+	 */
 	private void solve(LoopyMutaGame game, Record value, int depth,
 			DatabaseHandle readDh, DatabaseHandle writeDh) {
 		long hash = game.getHash();
@@ -75,28 +83,29 @@ public class LoopySolver extends Solver {
 		Record bestValue;
 
 		switch (value.value) {
-		case IMPOSSIBLE:
+		case IMPOSSIBLE: //position not seen before
 			value.value = game.primitiveValue();
-			if (value.value != Value.UNDECIDED) {
+			if (value.value != Value.UNDECIDED) { //if children are calculated
 				value.remoteness = 0;
-				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
-				value.previousPosition();
-				int numParents = game.unmakeMove();
+				writeDb.putRecord(writeDh, hash, game.recordToLong(value)); //save value to database
+				value.previousPosition(); 
+				int numParents = game.unmakeMove(); //go to parents to update their values
 				for (int parent = 0; parent < numParents; parent++) {
 					fix(game, value, readDh, writeDh);
 					game.changeUnmakeMove();
 				}
 				game.remakeMove();
 			} else {
-				value.value = Value.DRAW;
+				value.value = Value.DRAW; //treat current position as draw
 				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
-				bestValue = recordPool.get();
+				bestValue = recordPool.get(); 
 				boolean unassigned = true;
 				int numChildren = game.makeMove();
-				for (int child = 0; child < numChildren; child++) {
+				for (int child = 0; child < numChildren; child++) { 
 					solve(game, value, depth + 1, readDh, writeDh);
 					if (value.value == Value.UNDECIDED) {
 						game.longToRecord(readDb.getRecord(readDh, hash), bestValue);
+						//set bestValue to value of current position
 					} else {
 						if (unassigned || value.value.isPreferableTo(bestValue.value)) {
 							unassigned = false;
@@ -125,6 +134,14 @@ public class LoopySolver extends Solver {
 		}
 	}
 
+	/**
+	 * fix(): Updates value of parent given child value. If value of child is draw
+	 * go up through parents to update values if database was changed.
+	 * @param game
+	 * @param value
+	 * @param readDh
+	 * @param writeDh
+	 */
 	private void fix(LoopyMutaGame game, Record value, DatabaseHandle readDh,
 			DatabaseHandle writeDh) {
 
@@ -134,14 +151,14 @@ public class LoopySolver extends Solver {
 		boolean update = false;
 
 		switch (value.value) {
-		case IMPOSSIBLE:
+		case IMPOSSIBLE: //have not seen this state before, do nothing
 			return;
 		default:
-			if (Value.DRAW.isPreferableTo(dbValue.value)) {
+			if (Value.DRAW.isPreferableTo(dbValue.value)) { 
 				throw new Error("Draw should not be > database Value");
 			} else if (dbValue.value.isPreferableTo(Value.DRAW)) {
-				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
-			} else if (dbValue.value == Value.DRAW) {
+				writeDb.putRecord(writeDh, hash, game.recordToLong(value)); //save value
+			} else if (dbValue.value == Value.DRAW) { //if value is draw, make next moves
 				boolean unassigned = true;
 				int numChildren = game.makeMove();
 				Record childValue = recordPool.get();
