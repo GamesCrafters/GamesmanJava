@@ -124,16 +124,25 @@ public final class YGame extends ConnectGame
         this.totalNumberOfNodes = 0;
 
         int nodes = (this.innerTriangleSegments % 3) * 3;
-
+        
         for (int i = 0; i < this.numberOfTriangles; i++)
         {
             assert Util.debug(DebugFacility.GAME, "nodesInThisTriangle[" + i
                     + "]: " + nodes);
 
+            char[] triangleNodes;
+            
+            if (nodes==0)   // 3 segment inner triangle has a single middle node
+            {
+                triangleNodes = new char[1];
+                this.nodesInThisTriangle[i] = 1;
+            }
+            else
+            {
+            triangleNodes = new char[nodes];
             this.nodesInThisTriangle[i] = nodes;
-
-            char[] triangleNodes = new char[nodes];
-
+            }
+            
             if ((nodes / 3) == this.innerTriangleSegments)
             {
                 this.transitionTriangleNumber = i;
