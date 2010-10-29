@@ -87,40 +87,19 @@ public final class YGame extends ConnectGame
     }
 
     /**
+     * Constructor
      * @param conf
-     *            The configuration object
+     * The YGame.job configuration file
      */
     public YGame(Configuration conf)
     {
         super(conf);
 
-        this.initializeYGame(conf.getInteger(
-                "gamesman.game.innerTriangleSegments", 2), conf.getInteger(
-                "gamesman.game.outerSegments", 4));
-    }
-
-    /**
-     * FOR TESTING PURPOSES ONLY. This is not using a configuration file!
-     * 
-     * @param innerTriangleSegmentsIn
-     * @param outerRingSegmentsIn
-     */
-    public YGame(int innerTriangleSegmentsIn, int outerRingSegmentsIn)
-    {
-        super(null);
-
-        this.initializeYGame(innerTriangleSegmentsIn, outerRingSegmentsIn);
-    }
-
-    /**
-     * @param innerTriangleSegmentsIn
-     * @param outerRingSegmentsIn
-     */
-    private void initializeYGame(int innerTriangleSegmentsIn,
-            int outerRingSegmentsIn)
-    {
-        this.innerTriangleSegments = innerTriangleSegmentsIn;
-        this.outerRingSegments = outerRingSegmentsIn;
+        this.innerTriangleSegments = conf.getInteger(
+                "gamesman.game.innerTriangleSegments", 2);
+        
+        this.outerRingSegments = conf.getInteger(
+                "gamesman.game.outerSegments", 4);
 
         // Allocate and initialize the board, which is an array of character arrays representing the triangles.
 
@@ -929,9 +908,10 @@ public final class YGame extends ConnectGame
     { 0.5479, 0.4218 },
     { 0.4505, 0.4213 } };
 
-    static public void main(String[] args)
+    static public void main(String[] args) throws ClassNotFoundException
     {
-        YGame game = new YGame(2, 4);
+        Configuration conf = new Configuration(args[0]);
+        YGame game = (YGame)conf.getGame();
 
         Vector<Node> neighbors;
 
@@ -955,7 +935,8 @@ public final class YGame extends ConnectGame
 
         assert (neighbors.size() == 4);
 
-        game = new YGame(4, 8);
+        conf = new Configuration(args[1]); //4x8
+        game = (YGame)conf.getGame();
 
         game.fillBoardWithPlayer('X');
 
@@ -970,7 +951,9 @@ public final class YGame extends ConnectGame
 
         assert (neighbors.size() == 3);
 
-        game = new YGame(3, 6);
+                conf = new Configuration(args[1]);  // 3x6
+        game = (YGame)conf.getGame();
+
 
         game.fillBoardWithPlayer('X');
 
@@ -1012,7 +995,7 @@ public final class YGame extends ConnectGame
 
         assert (neighbors.size() == 6);
         
-        neighbors = game.getNeighbors(1, 8, 'X');
+        neighbors = game.getNeighbors(2, 8, 'X');
 
         for (int i = 0; i < neighbors.size(); i++)
             System.out.println("Neighbor #" + i + ": " + neighbors.get(i));
