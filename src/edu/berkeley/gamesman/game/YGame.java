@@ -287,7 +287,7 @@ public final class YGame extends ConnectGame
      * @return
      * @see edu.berkeley.gamesman.game.YGame#getNeighbors(int, int, char)
      */
-    private Vector<Node> getNeighbors(Node node, char player)
+    public Vector<Node> getNeighbors(Node node, char player)
     {
         return (this.getNeighbors(node.triangle, node.index, player));
     }
@@ -322,11 +322,24 @@ public final class YGame extends ConnectGame
             numberOfNeighbors++;
         }
 
+        // Same layer neighbor (right) *2*
+
+        //this.neighborPool[numberOfNeighbors].trueIfInnerMode = trueIfInnerModeIn;
+        this.neighborPool[numberOfNeighbors].triangle = triangleIn;
+        this.neighborPool[numberOfNeighbors].index = Util.nonNegativeModulo(
+                (indexIn - 1), this.nodesInThisTriangle[triangleIn]);
+
+        if (this.getPlayerAt(this.neighborPool[numberOfNeighbors]) == player)
+        {
+            neighbors.add(this.neighborPool[numberOfNeighbors]);
+            numberOfNeighbors++;
+        }
+
         // Inner neighbors:
 
         if (isInnerTriangle(triangleIn) == false) // Outer triangle to (outer triangle or transition triangle)
         {
-            int segments = (this.nodesInThisTriangle[triangleIn] / 3);
+            int segments = (this.nodesInThisTriangle[triangleIn-1] / 3);
 
             //this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn - 1);   *3*
             this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
@@ -486,22 +499,9 @@ public final class YGame extends ConnectGame
             }//if (isCornerIndex(triangleIn, indexIn) == false)
         }//if (isInnerTriangle(triangleIn) == false)
 
-        // Same layer neighbor (right) *2*
-
-        //this.neighborPool[numberOfNeighbors].trueIfInnerMode = trueIfInnerModeIn;
-        this.neighborPool[numberOfNeighbors].triangle = triangleIn;
-        this.neighborPool[numberOfNeighbors].index = Util.nonNegativeModulo(
-                (indexIn - 1), this.nodesInThisTriangle[triangleIn]);
-
-        if (this.getPlayerAt(this.neighborPool[numberOfNeighbors]) == player)
-        {
-            neighbors.add(this.neighborPool[numberOfNeighbors]);
-            numberOfNeighbors++;
-        }
-
         // Outer neighbors:
 
-        if (triangleIn < (this.numberOfTriangles - 1)) // Outer nodes have no neighbors.
+        if (triangleIn < (this.numberOfTriangles -1)) // Outer nodes have no neighbors.
         {
             if (isInnerTriangle(triangleIn + 1) == false) // (Outer or transition triangle) to an outer triangle.
             {
