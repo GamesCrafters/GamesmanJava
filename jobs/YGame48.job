@@ -1,6 +1,6 @@
 gamesman.game = YGame
-gamesman.game.innerTriangleSegments = 3
-gamesman.game.outerSegments = 6
+gamesman.game.innerTriangleSegments = 4
+gamesman.game.outerSegments = 8
 gamesman.hasher = TieredItergameHasher
 gamesman.solver = TierSolver
 gamesman.database = MemoryDatabase:FileDatabase
