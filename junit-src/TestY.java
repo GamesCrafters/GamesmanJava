@@ -29,7 +29,6 @@ public class TestY
     @Test
     public void Test_Print_All()
     {
-
         int innerTriangleSegments = 2;
         int outerRingSegments = 4;
 
