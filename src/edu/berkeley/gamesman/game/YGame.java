@@ -15,18 +15,18 @@ public final class YGame extends ConnectGame
 {
     private int totalNumberOfNodes;
 
-    private int innerTriangleSegments;
-    private int outerRingSegments;
+    private final int innerTriangleSegments;
+    private final int outerRingSegments;
     private int numberOfTriangles; // Total number of triangles (or rows, rings, etc.)
 
-    private Vector<char[]> board;
-    private int[] nodesInThisTriangle;
+    private final Vector<char[]> board;
+    private final int[] nodesInThisTriangle;
     private int transitionTriangleNumber = -1;
 
-    private char[] unrolledCharBoard; // The full board (string) representation.
+    private final char[] unrolledCharBoard; // The full board (string) representation.
 
-    private Node[] neighborPool; // Preallocated neighbor nodes (3 through 6 of them)
-    private Vector<Node> neighbors;
+    private final Node[] neighborPool; // Preallocated neighbor nodes (3 through 6 of them)
+    private final Vector<Node> neighbors;
 
     private final int HEIGHT = 24;
     private final int WIDTH = 24;
@@ -919,7 +919,7 @@ public final class YGame extends ConnectGame
 
     static public void main(String[] args) throws ClassNotFoundException
     {
-        Configuration conf = new Configuration(args[0]);
+        Configuration conf = new Configuration(args[0]); // 2x4
         YGame game = (YGame)conf.getGame();
 
         Vector<Node> neighbors;
@@ -944,7 +944,27 @@ public final class YGame extends ConnectGame
 
         assert (neighbors.size() == 4);
 
-        conf = new Configuration(args[1]); //4x8
+        neighbors = game.getNeighbors(/* false, */2, 8, 'X');
+
+        for (int i = 0; i < neighbors.size(); i++)
+            System.out.println("Neighbor #" + i + ": " + neighbors.get(i));
+
+        System.out.println();
+
+        assert (neighbors.size() == 3);
+
+        // MISSING: triangle: 0, index: 1
+
+        neighbors = game.getNeighbors(/* false, */1, 0, 'X');
+
+        for (int i = 0; i < neighbors.size(); i++)
+            System.out.println("Neighbor #" + i + ": " + neighbors.get(i));
+
+        System.out.println();
+
+        assert (neighbors.size() == 6);
+
+        conf = new Configuration(args[1]); //   3x6
         game = (YGame)conf.getGame();
 
         game.fillBoardWithPlayer('X');
@@ -960,7 +980,7 @@ public final class YGame extends ConnectGame
 
         assert (neighbors.size() == 3);
 
-                conf = new Configuration(args[1]);  // 3x6
+                conf = new Configuration(args[2]);  // 4x8
         game = (YGame)conf.getGame();
 
 
