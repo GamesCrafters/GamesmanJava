@@ -329,7 +329,7 @@ public final class YGame extends ConnectGame
         {
             int segments = (this.nodesInThisTriangle[triangleIn-1] / 3);
 
-            //this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn - 1);   *3*
+            // this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn - 1); /*3*/
             this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
             this.neighborPool[numberOfNeighbors].index = Util.nonNegativeModulo(indexIn
                     - (indexIn / segments),this.nodesInThisTriangle[triangleIn-1]);
@@ -340,7 +340,7 @@ public final class YGame extends ConnectGame
                 numberOfNeighbors++;
             }
 
-            if (isCornerIndex(triangleIn, indexIn) == false) // The next inner neighbor only when it is not a corner.
+            if (isCornerIndex(triangleIn, indexIn) == false) // The next inner neighbor only when it is not a corner. /*4*/
             {
                 //this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn - 1);
                 this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
@@ -356,9 +356,9 @@ public final class YGame extends ConnectGame
         }
         else//if (isInnerTriangle(triangleIn) == false)
         {
-            if (isCornerIndex(triangleIn, indexIn) == false) // Triangle corners don't have any inner neighbors.
+            if (isCornerIndex(triangleIn, indexIn) == false) // Triangle corners don't have any inner neighbors. /*5*/
             {
-                if (isCornerIndex(triangleIn, indexIn - 1) == true) // After corner index
+                if (isCornerIndex(triangleIn, indexIn - 1) == true) // After corner index /*6*/
                 {
                     //this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
                     this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
@@ -392,7 +392,7 @@ public final class YGame extends ConnectGame
                 }
                 else
                 {
-                    if (isCornerIndex(triangleIn, indexIn + 1) == true) // Before corner index
+                    if (isCornerIndex(triangleIn, indexIn + 1) == true) // Before corner index /*7*/
                     {
                         //this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
                         this.neighborPool[numberOfNeighbors].triangle = triangleIn - 1;
@@ -491,9 +491,9 @@ public final class YGame extends ConnectGame
 
         if (triangleIn < (this.numberOfTriangles -1)) // Outer nodes have no neighbors.
         {
-            if (isInnerTriangle(triangleIn + 1) == false) // (Outer or transition triangle) to an outer triangle.
+            if (isInnerTriangle(triangleIn + 1) == false) // (Outer or transition triangle) to an outer triangle. /*8*/
             {
-                //this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
+                // this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn); /*9*/
                 this.neighborPool[numberOfNeighbors].triangle = triangleIn + 1;
                 this.neighborPool[numberOfNeighbors].index = indexIn
                         + (indexIn / triangleIn);
@@ -504,7 +504,7 @@ public final class YGame extends ConnectGame
                     numberOfNeighbors++;
                 }
 
-                if (isCornerIndex(triangleIn, indexIn)) // Corners
+                if (isCornerIndex(triangleIn, indexIn)) // Corners /*10*/
                 {
                     //this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn);
                     this.neighborPool[numberOfNeighbors].triangle = triangleIn + 1;
@@ -953,7 +953,7 @@ public final class YGame extends ConnectGame
 
         assert (neighbors.size() == 3);
 
-        // MISSING: triangle: 0, index: 1
+        // FIXME: missing outer neighbor (tr:0, index:1)
 
         neighbors = game.getNeighbors(/* false, */1, 0, 'X');
 
@@ -971,6 +971,8 @@ public final class YGame extends ConnectGame
 
         System.out.println(game.displayState());
 
+        // FIXME: missing outer neighbor too (tr:3, index:1)
+
         neighbors = game.getNeighbors(/*false,*/ 2, 0, 'X');
 
         for (int i = 0; i < neighbors.size(); i++)
@@ -978,11 +980,10 @@ public final class YGame extends ConnectGame
 
         System.out.println();
 
-        assert (neighbors.size() == 3);
+        assert (neighbors.size() == 6);
 
                 conf = new Configuration(args[2]);  // 4x8
         game = (YGame)conf.getGame();
-
 
         game.fillBoardWithPlayer('X');
 
@@ -995,7 +996,9 @@ public final class YGame extends ConnectGame
 
         System.out.println();
 
-        assert (neighbors.size() == 4);
+        assert (neighbors.size() == 6);
+
+        // FIXME: Outer neighbors are off by one (tr:5,index:5 and tr:5,index:6) instead of (tr:5,index:4 and tr:5,index:5)
 
         neighbors = game.getNeighbors(/*false,*/ 4, 4, 'X');
 
@@ -1004,7 +1007,10 @@ public final class YGame extends ConnectGame
 
         System.out.println();
 
-        assert (neighbors.size() == 4);
+        assert (neighbors.size() == 6);
+
+        // FIXME: Need a (correct) modulo on same layer (tr:4,index:18), inner layer (tr:3,index:15) and off by one for outer
+        // neighbors (tr:5,index:19 and tr:5,index:20)
 
         neighbors = game.getNeighbors(/*false,*/ 4, 17, 'X');
 
@@ -1013,7 +1019,9 @@ public final class YGame extends ConnectGame
 
         System.out.println();
 
-        assert (neighbors.size() == 4);
+        assert (neighbors.size() == 6);
+
+        // FIXME: Bad inner index (tr:0, index:1), off-by-one outer neighbors (tr:2, index:2 and tr:2, index:3)
         
         neighbors = game.getNeighbors(1, 1, 'X');
 
@@ -1024,6 +1032,9 @@ public final class YGame extends ConnectGame
 
         assert (neighbors.size() == 6);
         
+        // FIXME: Off by one inner neighbors (tr:1, index:6 and tr:1, index:5) and waaaay off on outer neighbors (tr:3, index:12 and
+        // tr:3, index: 13)
+
         neighbors = game.getNeighbors(2, 8, 'X');
 
         for (int i = 0; i < neighbors.size(); i++)
