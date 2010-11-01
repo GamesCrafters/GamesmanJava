@@ -5,7 +5,7 @@ import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.game.util.TierState;
 
-public class TicTacToeLoopy extends TicTacToe implements LoopyGame {
+public class TicTacToeLoopy extends TicTacToe implements LoopyGame<TierState> {
 
 	public TicTacToeLoopy(Configuration conf) {
 		super(conf);
@@ -35,5 +35,10 @@ public class TicTacToeLoopy extends TicTacToe implements LoopyGame {
 			return super.recordStates() + 1;
 		else
 			return super.recordToLong(recordState, fromRecord);
+	}
+
+	public int possibleParents(TierState pos, TierState[] children) {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 }
