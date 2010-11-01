@@ -4,11 +4,16 @@ import java.util.List;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
+import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.database.MemoryDatabase;
+import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.game.LoopyMutaGame;
+import edu.berkeley.gamesman.game.LoopyGameWrapper;
+import edu.berkeley.gamesman.game.TopDownGame;
+import edu.berkeley.gamesman.game.TopDownMutaGame;
 import edu.berkeley.gamesman.util.qll.Pool;
 import edu.berkeley.gamesman.util.qll.Factory;
 import edu.berkeley.gamesman.util.qll.RecycleLinkedList;
@@ -28,7 +33,13 @@ public class LoopySolver extends Solver {
 
 	@Override
 	public WorkUnit prepareSolve(final Configuration conf) {
-		final LoopyMutaGame game = (LoopyMutaGame) conf.getGame();
+		Game<?> g = conf.getGame();
+		final LoopyMutaGame game;
+		if (g instanceof LoopyMutaGame) {
+			game = (LoopyMutaGame) g;
+		} else {
+			game = wrapGame(conf, g);
+		}
 		recordPool = new Pool<Record>(new Factory<Record>() {
 
 			public Record newObject() {
@@ -58,9 +69,19 @@ public class LoopySolver extends Solver {
 
 		};
 	}
+	
+	private <S extends State> LoopyMutaGame wrapGame(Configuration conf, Game<S> g) {
+		return new LoopyGameWrapper<S>(conf, g);
+	}
 
 	public void solve(Configuration conf) {
-		LoopyMutaGame game = (LoopyMutaGame) conf.getGame();
+		Game<?> g = conf.getGame();
+		LoopyMutaGame game;
+		if (g instanceof LoopyMutaGame) {
+			game = (LoopyMutaGame) g;
+		} else {
+			game = wrapGame(conf, g);
+		}
 		for (int startNum = 0; startNum < game.numStartingPositions(); startNum++) {
 			game.setStartingPosition(startNum);
 			solve(game, game.getRecord(), 0, readDb.getHandle(),

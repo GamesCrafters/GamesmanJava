@@ -13,26 +13,65 @@ import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.qll.Factory;
 import edu.berkeley.gamesman.util.qll.RLLFactory;
 
-public class LoopyGameWrapper extends LoopyMutaGame {
-//public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame{
-//	private final Game<S> myGame;
-//	private final RecycleLinkedList<RecycleLinkedList<S>> moveLists;
-//	private final RecycleLinkedList<S> stateList;
-//	private final S[] possibleMoves;
-//	private final S[] startingPositions;
+//public class LoopyGameWrapper extends LoopyMutaGame {
+public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame{
+	private final Game<S> myGame;
+	private final RecycleLinkedList<RecycleLinkedList<S>> moveLists;
+	private final RecycleLinkedList<S> stateList;
+	private final S[] possibleMoves;
+	private final S[] startingPositions;
 
-	public LoopyGameWrapper(Configuration conf, LoopyGame g) {
+	public LoopyGameWrapper(Configuration conf, Game<S> g) {
 		super(conf);
-		if (!(g instanceof Game<?>)) {
-			throw new Error("Can only wrap games");
+		if (!(g instanceof LoopyGame<?>)) {
+			throw new Error("Can only wrap Loopy games");
 		}
-		// TODO Auto-generated constructor stub
+		myGame = g;
+		moveLists = new RecycleLinkedList<RecycleLinkedList<S>>(
+				new Factory<RecycleLinkedList<S>>() {
+					RLLFactory<S> gen = new RLLFactory<S>(new Factory<S>() {
+
+						public S newObject() {
+							return myGame.newState();
+						}
+
+						public void reset(S t) {
+						}
+					});
+
+					public RecycleLinkedList<S> newObject() {
+						return gen.getList();
+					}
+
+					public void reset(RecycleLinkedList<S> t) {
+						t.clear();
+					}
+
+				});
+		stateList = new RecycleLinkedList<S>(new Factory<S>() {
+
+			public S newObject() {
+				return myGame.newState();
+			}
+
+			public void reset(S t) {
+			}
+
+		});
+		stateList.add();
+		possibleMoves = myGame.newStateArray(myGame.maxChildren());
+		Collection<S> startingPositions = myGame.startingPositions();
+		this.startingPositions = startingPositions.toArray(myGame
+				.newStateArray(startingPositions.size()));
 	}
 
 	@Override
 	public boolean changeUnmakeMove() {
-		// TODO Auto-generated method stub
-		return false;
+		if (moveLists.getLast().isEmpty())
+			return false;
+		S m = moveLists.getLast().removeFirst();
+		stateList.getLast().set(m);
+		return true;
 	}
 
 	@Override
@@ -49,109 +88,127 @@ public class LoopyGameWrapper extends LoopyMutaGame {
 
 	@Override
 	public boolean changeMove() {
-		// TODO Auto-generated method stub
-		return false;
+		if (moveLists.getLast().isEmpty())
+			return false;
+		S m = moveLists.getLast().removeFirst();
+		stateList.getLast().set(m);
+		return true;
 	}
 
 	@Override
 	public String displayState() {
-		// TODO Auto-generated method stub
-		return null;
+		return myGame.displayState(stateList.getLast());
 	}
 
 	@Override
 	public long getHash() {
-		// TODO Auto-generated method stub
-		return 0;
+		return myGame.stateToHash(stateList.getLast());
 	}
 
 	@Override
 	public void longToRecord(long record, Record toStore) {
-		// TODO Auto-generated method stub
+		myGame.longToRecord(stateList.getLast(), record, toStore);
 
 	}
 
 	@Override
 	public int makeMove() {
-		// TODO Auto-generated method stub
-		return 0;
+		RecycleLinkedList<S> moves = moveLists.addLast();
+		int numMoves = myGame.validMoves(stateList.getLast(), possibleMoves);
+		if (numMoves == 0) {
+			moveLists.removeLast();
+			return 0;
+		} else {
+			for (int i = 0; i < numMoves; i++) {
+				S move = moves.add();
+				move.set(possibleMoves[i]);
+			}
+			S curState = stateList.addLast();
+			curState.set(moves.removeFirst());
+			return numMoves;
+		}
 	}
 
 	@Override
 	public Collection<String> moveNames() {
-		// TODO Auto-generated method stub
-		return null;
+		Collection<Pair<String, S>> validMoves = myGame.validMoves(stateList
+				.getLast());
+		ArrayList<String> moveNames = new ArrayList<String>(validMoves.size());
+		for (Pair<String, S> move : validMoves) {
+			moveNames.add(move.car);
+		}
+		return moveNames;
 	}
 
 	@Override
 	public int numStartingPositions() {
-		// TODO Auto-generated method stub
-		return 0;
+		return startingPositions.length;
 	}
 
 	@Override
 	public Value primitiveValue() {
-		// TODO Auto-generated method stub
-		return null;
+		return myGame.primitiveValue(stateList.getLast());
 	}
 
 	@Override
 	public long recordToLong(Record fromRecord) {
-		// TODO Auto-generated method stub
-		return 0;
+		return myGame.recordToLong(stateList.getLast(), fromRecord);
 	}
 
 	@Override
 	public void setFromString(String pos) {
-		// TODO Auto-generated method stub
-
+		setToState(myGame.stringToState(pos));
 	}
 
 	@Override
 	public void setStartingPosition(int i) {
-		// TODO Auto-generated method stub
 		setToState(startingPositions[i]);
-
+	}
+	
+	private void setToState(S pos) {
+		stateList.clear();
+		moveLists.clear();
+		S state = stateList.add();
+		state.set(pos);
 	}
 
 	@Override
 	public void setToHash(long hash) {
-		// TODO Auto-generated method stub
-
+		stateList.clear();
+		moveLists.clear();
+		S state = stateList.add();
+		myGame.hashToState(hash, state);
 	}
 
 	@Override
 	public void undoMove() {
-		// TODO Auto-generated method stub
-
+		moveLists.removeLast();
+		stateList.removeLast();
 	}
 
 	@Override
 	public String describe() {
-		// TODO Auto-generated method stub
-		//return null;
 		return myGame.describe();
 	}
 
 	@Override
 	public int maxChildren() {
-		// TODO Auto-generated method stub
-		//return 0;
 		return myGame.maxChildren();
 	}
 
 	@Override
 	public long numHashes() {
-		// TODO Auto-generated method stub
-		//return 0;
 		return myGame.numHashes();
 	}
 
 	@Override
 	public long recordStates() {
-		// TODO Auto-generated method stub
-		//return 0;
 		return myGame.recordStates();
+	}
+
+	@Override
+	public int possibleParents(State pos, State[] children) {
+		return ((LoopyGame) myGame).possibleParents(pos, children);
 	}
 
 }

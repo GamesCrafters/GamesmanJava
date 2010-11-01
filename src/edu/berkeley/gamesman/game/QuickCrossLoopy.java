@@ -14,7 +14,7 @@ import edu.berkeley.gamesman.util.Pair;
 /**
  * Top down Tic Tac Toe game by David modified for QuickCros
  */
-public final class QuickCrossLoopy extends Game<QuickCrossState> {
+public final class QuickCrossLoopy extends Game<QuickCrossState> implements LoopyGame<QuickCrossState> {
 	private final int width;
 	private final int height;
 	private final int boardSize;
@@ -354,6 +354,11 @@ public final class QuickCrossLoopy extends Game<QuickCrossState> {
 			return boardSize + 2;
 		else
 			throw new Error("Invalid Value");
+	}
+
+	public int possibleParents(QuickCrossState pos, QuickCrossState[] children) {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 }
 
