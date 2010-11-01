@@ -932,11 +932,7 @@ public final class YGame extends ConnectGame
                             reachedEdges[2] = true;
                         }
                     }
-                    Vector<Node> neighbors = getNeighbors(
-                            //currentNode.trueIfInnerMode, 
-                            currentNode
-                                    .getTriangle(), currentNode.getIndex(),
-                            player);
+                    Vector<Node> neighbors = getNeighbors(currentNode, player);
                     for (int i = 0; i < neighbors.size(); i++)
                     {
                         if (previousNode == null)
