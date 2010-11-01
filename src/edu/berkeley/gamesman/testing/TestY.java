@@ -383,6 +383,18 @@ public class TestY {
 	}
 	
 	
+	/*
+	 * 
+	 * 
+	 * 
+	 * Next test case: 3by6 YGame
+	 * note: tri0_ind0 needs clarification on clockwise neighbors.
+	 * 
+	 * 
+	 * 
+	 * 
+	 */
+	
 	@Test
 	public void Test_3by6_Tri0_Ind0()  {
 		Vector<Node> neighbors = ygame36.getNeighbors(0, 0,'X');
