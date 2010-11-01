@@ -388,8 +388,6 @@ public class TestY {
 	 * 
 	 * 
 	 * Next test case: 3by6 YGame
-	 * note: tri0_ind0 needs clarification on clockwise neighbors.
-	 * 
 	 * 
 	 * 
 	 * 
@@ -506,7 +504,7 @@ public class TestY {
 	@Test
 	public void Test_3by6_Tri1_Ind8()  {
 		Vector<Node> neighbors = ygame36.getNeighbors(1, 8,'X');
-		int exp[][] = { {1,0}, {0,0}, {1,7}, {2,10}, {2,11}};
+		int exp[][] = { {1,0}, {1,1}, {0,0}, {1,7}, {2,10}, {2,11}};
 
 		for (int i = 0; i < exp.length; i++){
 			assertEquals(exp[i][0], neighbors.get(i).getIndex());
@@ -842,7 +840,7 @@ public class TestY {
 	@Test
 	public void Test_3by6_Tri4_Ind2()  {
 		Vector<Node> neighbors = ygame36.getNeighbors(4, 2,'X');
-		int exp[][] = { {4,3}, {3,2}, {3,2}, {4,1}};
+		int exp[][] = { {4,3}, {3,2}, {3,1}, {4,1}};
 
 		for (int i = 0; i < exp.length; i++){
 			assertEquals(exp[i][0], neighbors.get(i).getIndex());
