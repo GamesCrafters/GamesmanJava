@@ -398,7 +398,7 @@ public class TestY {
 	@Test
 	public void Test_3by6_Tri0_Ind0()  {
 		Vector<Node> neighbors = ygame36.getNeighbors(0, 0,'X');
-		int exp[][] = { {}, {}, {}, {}}; 
+		int exp[][] = { {1,1}, {1,2}, {1,4}, {1,5}, {1,7}, {1,8}}; 
 
 		for (int i = 0; i < exp.length; i++){
 			assertEquals(exp[i][0], neighbors.get(i).getIndex());
