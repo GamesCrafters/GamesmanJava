@@ -104,4 +104,29 @@ public class Record implements Cloneable {
 		value = value.flipValue();
 		--remoteness;
 	}
+
+	public boolean isPreferableTo(Record other) {
+		if (conf.hasValue)
+			if (value.isPreferableTo(other.value))
+				return true;
+			else if (other.value.isPreferableTo(value))
+				return false;
+		if (conf.hasScore)
+			if (score > other.score)
+				return true;
+			else if (score < other.score)
+				return false;
+		if (conf.hasRemoteness)
+			if (!conf.hasValue || value.isPreferableTo(Value.DRAW)) {
+				if (remoteness < other.remoteness)
+					return true;
+				else if (remoteness > other.remoteness)
+					return false;
+			} else if (Value.DRAW.isPreferableTo(value))
+				if (remoteness > other.remoteness)
+					return true;
+				else if (remoteness < other.remoteness)
+					return false;
+		return false;
+	}
 }
