@@ -205,14 +205,19 @@ public class DartboardHasher {
 	}
 
 	private long hash(char[] pieces, boolean setNums) {
-		if (pieces.length != this.pieces.length)
-			throw new Error("Wrong number of pieces");
+		for (int piece = 0; piece < pieces.length; piece++) {
+			int digit = findDigit(pieces[piece]);
+			this.pieces[piece] = digit;
+		}
+		return rehash(setNums);
+	}
+
+	private long rehash(boolean setNums) {
 		long totalHash = 0L;
 		int[] count = countPool.get();
 		for (int piece = 0; piece < pieces.length; piece++) {
 			long hash = 0L;
-			int digit = findDigit(pieces[piece]);
-			this.pieces[piece] = digit;
+			int digit = pieces[piece];
 			count[digit]++;
 			for (int i = 0; i < digit; i++) {
 				if (count[i] > 0) {
@@ -374,7 +379,7 @@ public class DartboardHasher {
 	}
 
 	public void set(int boardNum, char p) {
-		// TODO Auto-generated method stub
-		
+		pieces[boardNum] = findDigit(p);
+		rehash(true);
 	}
 }
