@@ -206,6 +206,7 @@ public class LoopySolver extends Solver {
 					} else if (unassigned
 							|| childValue.value.isPreferableTo(bestValue.value)) {
 						bestValue.set(childValue);
+						unassigned = false;
 						update = true;
 					}
 					game.changeMove();
