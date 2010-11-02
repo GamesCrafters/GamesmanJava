@@ -179,20 +179,27 @@ public class LoopySolver extends Solver {
 		Record dbValue = recordPool.get();
 		long hash = game.getHash();
 		game.longToRecord(readDb.getRecord(readDh, hash), dbValue);
-		boolean update = false;
 		if (dbValue.value != Value.IMPOSSIBLE) {
 			if (Value.DRAW.isPreferableTo(dbValue.value)) {
 				throw new Error(
 						"Draw should not be > database Value unless fix has already been called numChildren times");
 			} else if (value.isPreferableTo(dbValue)) {
 				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
-				update = true; // save value
+				// save value
+				value.previousPosition();
+				int numParents = game.unmakeMove();
+				for (int parent = 0; parent < numParents; parent++) {
+					fix(game, value, readDh, writeDh);
+					game.changeUnmakeMove();
+				}
+				game.remakeMove();
+				value.nextPosition();
 			} else if (dbValue.value == Value.DRAW) {
 				// if value is draw, test for all children have returned
 				boolean unassigned = true;
 				int numChildren = game.makeMove();
-				Record childValue = recordPool.get();
 				Record bestValue = recordPool.get();
+				Record childValue = recordPool.get();
 				int child;
 				for (child = 0; child < numChildren; child++) {
 					game.longToRecord(readDb.getRecord(readDh, hash),
@@ -210,23 +217,22 @@ public class LoopySolver extends Solver {
 					}
 					game.changeMove();
 				}
+				recordPool.release(childValue);
 				if (child == numChildren) {
 					writeDb.putRecord(writeDh, hash,
 							game.recordToLong(bestValue));
-					update = true;
+					bestValue.previousPosition();
+					int numParents = game.unmakeMove();
+					for (int parent = 0; parent < numParents; parent++) {
+						fix(game, bestValue, readDh, writeDh);
+						game.changeUnmakeMove();
+					}
+					game.remakeMove();
+					bestValue.nextPosition();
+					// Not really necessary, but if anything is ever changed,
+					// this could cause a bug which would be a nightmare to find
 				}
 				recordPool.release(bestValue);
-				recordPool.release(childValue);
-			}
-			if (update) {
-				value.previousPosition();
-				int numParents = game.unmakeMove();
-				for (int parent = 0; parent < numParents; parent++) {
-					fix(game, value, readDh, writeDh);
-					game.changeUnmakeMove();
-				}
-				game.remakeMove();
-				value.nextPosition();
 			}
 		}
 		recordPool.release(dbValue);
