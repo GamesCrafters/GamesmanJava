@@ -1,4 +1,4 @@
-package                                                                                                                                                                                                                                                                                      edu.berkeley.gamesman.solver;
+package edu.berkeley.gamesman.solver;
 
 import java.util.List;
 
@@ -20,12 +20,14 @@ import edu.berkeley.gamesman.util.qll.RecycleLinkedList;
 
 /**
  * @author David, Brent, Nancy, Kevin, Peter, Sharmishtha, Raji
- *
+ * 
  */
 public class LoopySolver extends Solver {
 	Pool<Record> recordPool;
-	
-	protected RecycleLinkedList<Record[]> recordList; //Nancy: added this for else clause in solve loopy game function
+
+	protected RecycleLinkedList<Record[]> recordList; // Nancy: added this for
+														// else clause in solve
+														// loopy game function
 
 	public LoopySolver(Configuration conf) {
 		super(conf);
@@ -52,7 +54,7 @@ public class LoopySolver extends Solver {
 
 		});
 		long hashSpace = game.numHashes();
-		Record defaultRecord = game.getRecord(); 
+		Record defaultRecord = game.getRecord();
 		defaultRecord.value = Value.IMPOSSIBLE;
 		writeDb.fill(conf.getGame().recordToLong(null, defaultRecord), 0,
 				hashSpace);
@@ -69,8 +71,9 @@ public class LoopySolver extends Solver {
 
 		};
 	}
-	
-	private <S extends State> LoopyMutaGame wrapGame(Configuration conf, Game<S> g) {
+
+	private <S extends State> LoopyMutaGame wrapGame(Configuration conf,
+			Game<S> g) {
 		return new LoopyGameWrapper<S>(conf, g);
 	}
 
@@ -88,6 +91,7 @@ public class LoopySolver extends Solver {
 					writeDb.getHandle());
 		}
 	}
+
 	/**
 	 * solve(): Solves the loopy game. Everything starts as impossible.
 	 * 
@@ -104,37 +108,43 @@ public class LoopySolver extends Solver {
 		Record bestValue;
 
 		switch (value.value) {
-		case IMPOSSIBLE: //position not seen before
+		case IMPOSSIBLE: // position not seen before
 			value.value = game.primitiveValue();
-			if (value.value != Value.UNDECIDED) { //if children are calculated
+			if (value.value != Value.UNDECIDED) { // if position is primitive
 				value.remoteness = 0;
-				writeDb.putRecord(writeDh, hash, game.recordToLong(value)); //save value to database
-				value.previousPosition(); 
-				int numParents = game.unmakeMove(); //go to parents to update their values
+				writeDb.putRecord(writeDh, hash, game.recordToLong(value)); // save
+																			// value
+																			// to
+																			// database
+				value.previousPosition();
+				int numParents = game.unmakeMove(); // go to parents to update
+													// their values
 				for (int parent = 0; parent < numParents; parent++) {
 					fix(game, value, readDh, writeDh);
 					game.changeUnmakeMove();
 				}
 				game.remakeMove();
 			} else {
-				value.value = Value.DRAW; //treat current position as draw
+				value.value = Value.DRAW; // treat current position as draw
 				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
-				bestValue = recordPool.get(); 
+				bestValue = recordPool.get();
 				boolean unassigned = true;
 				int numChildren = game.makeMove();
-				for (int child = 0; child < numChildren; child++) { 
+				for (int child = 0; child < numChildren; child++) {
 					solve(game, value, depth + 1, readDh, writeDh);
 					if (value.value == Value.UNDECIDED) {
-						game.longToRecord(readDb.getRecord(readDh, hash), bestValue);
-						//set bestValue to value of current position
+						game.longToRecord(readDb.getRecord(readDh, hash),
+								bestValue);
+						// set bestValue to value in database
 					} else {
-						if (unassigned || value.value.isPreferableTo(bestValue.value)) {
-							unassigned = false;
+						if (unassigned
+								|| value.value.isPreferableTo(bestValue.value)) {
 							bestValue.set(value);
 							writeDb.putRecord(writeDh, hash,
 									game.recordToLong(bestValue));
 						}
 					}
+					unassigned = false;
 					game.changeMove();
 				}
 				value.set(bestValue);
@@ -156,8 +166,9 @@ public class LoopySolver extends Solver {
 	}
 
 	/**
-	 * fix(): Updates value of parent given child value. If value of child is draw
-	 * go up through parents to update values if database was changed.
+	 * fix(): Updates value of parent given child value. If value of child is
+	 * draw go up through parents to update values if database was changed.
+	 * 
 	 * @param game
 	 * @param value
 	 * @param readDh
@@ -165,40 +176,47 @@ public class LoopySolver extends Solver {
 	 */
 	private void fix(LoopyMutaGame game, Record value, DatabaseHandle readDh,
 			DatabaseHandle writeDh) {
-
 		Record dbValue = recordPool.get();
 		long hash = game.getHash();
 		game.longToRecord(readDb.getRecord(readDh, hash), dbValue);
 		boolean update = false;
-
-		switch (value.value) {
-		case IMPOSSIBLE: //have not seen this state before, do nothing
-			return;
-		default:
-			if (Value.DRAW.isPreferableTo(dbValue.value)) { 
-				throw new Error("Draw should not be > database Value");
-			} else if (dbValue.value.isPreferableTo(Value.DRAW)) {
-				writeDb.putRecord(writeDh, hash, game.recordToLong(value)); //save value
-			} else if (dbValue.value == Value.DRAW) { //if value is draw, make next moves
+		if (dbValue.value != Value.IMPOSSIBLE) {
+			if (Value.DRAW.isPreferableTo(dbValue.value)) {
+				throw new Error(
+						"Draw should not be > database Value unless fix has already been called numChildren times");
+			} else if (value.isPreferableTo(dbValue)) {
+				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
+				update = true; // save value
+			} else if (dbValue.value == Value.DRAW) {
+				// if value is draw, test for all children have returned
 				boolean unassigned = true;
 				int numChildren = game.makeMove();
 				Record childValue = recordPool.get();
-				for (int child = 0; child < numChildren; child++) {
+				Record bestValue = recordPool.get();
+				int child;
+				for (child = 0; child < numChildren; child++) {
 					game.longToRecord(readDb.getRecord(readDh, hash),
 							childValue);
+					childValue.previousPosition();
 					if (childValue.value == Value.DRAW) {
 						break;
 					} else if (childValue.value.isPreferableTo(Value.DRAW)) {
-						throw new Error("childValue should not be > DRAW");
+						throw new Error(
+								"childValue should not be > DRAW if parent value is DRAW");
 					} else if (unassigned
-							|| childValue.value.isPreferableTo(value.value)) {
-						value.set(childValue);
+							|| childValue.value.isPreferableTo(bestValue.value)) {
+						bestValue.set(childValue);
 						update = true;
 					}
 					game.changeMove();
 				}
-				value.previousPosition();
-				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
+				if (child == numChildren) {
+					writeDb.putRecord(writeDh, hash,
+							game.recordToLong(bestValue));
+					update = true;
+				}
+				recordPool.release(bestValue);
+				recordPool.release(childValue);
 			}
 			if (update) {
 				value.previousPosition();
@@ -208,7 +226,9 @@ public class LoopySolver extends Solver {
 					game.changeUnmakeMove();
 				}
 				game.remakeMove();
+				value.nextPosition();
 			}
 		}
+		recordPool.release(dbValue);
 	}
 }
