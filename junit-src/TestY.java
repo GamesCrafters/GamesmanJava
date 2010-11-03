@@ -1,18 +1,15 @@
-package edu.berkeley.gamesman.testing;
-
-import java.util.Arrays;
-
 import static org.junit.Assert.*;
 import java.util.Vector;
 import org.junit.*;
-import java.util.*;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.game.YGame;
 import edu.berkeley.gamesman.game.YGame.Node;
 
-import java.util.*;
-
+/**
+ * @author Daniel and hEADcRASH
+ *
+ */
 public class TestY {
     
 /*
@@ -72,11 +69,11 @@ public class TestY {
 
     @Before
     public void setUp() throws ClassNotFoundException{
-        conf24 = new Configuration("jobs\\YGame24.job");
+        conf24 = new Configuration("jobs/YGame24.job");
         ygame24 = (YGame)conf24.getGame();     
         ygame24.fillBoardWithPlayer('X');
         
-        conf36 = new Configuration("jobs\\YGame36.job");
+        conf36 = new Configuration("jobs/YGame36.job");
         ygame36 = (YGame)conf36.getGame();     
         ygame36.fillBoardWithPlayer('X');
     }
