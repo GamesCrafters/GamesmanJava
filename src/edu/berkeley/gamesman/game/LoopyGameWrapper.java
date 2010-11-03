@@ -17,6 +17,7 @@ import edu.berkeley.gamesman.util.qll.RLLFactory;
 public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame{
 	private final Game<S> myGame;
 	private final RecycleLinkedList<RecycleLinkedList<S>> moveLists;
+	private final RecycleLinkedList<RecycleLinkedList<S>> parentList;
 	private final RecycleLinkedList<S> stateList;
 	private final S[] possibleMoves;
 	private final S[] startingPositions;
@@ -83,6 +84,20 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame{
 	@Override
 	public int unmakeMove() {
 		// TODO Auto-generated method stub
+		RecycleLinkedList<S> parentList = moveLists.addLast();
+		int numMoves = myGame.possibleParents(stateList.getLast(), possibleMoves);
+		if (numMoves == 0) {
+			moveLists.removeLast();
+			return 0;
+		} else {
+			for (int i = 0; i < numMoves; i++) {
+				S move = moves.add();
+				move.set(possibleMoves[i]);
+			}
+			S curState = stateList.addLast();
+			curState.set(moves.removeFirst());
+			return numMoves;
+		}
 		return 0;
 	}
 
@@ -206,3 +221,4 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame{
 		return myGame.recordStates();
 	}
 }
+
