@@ -90,6 +90,10 @@ public final class QuickCross extends Game<QuickCrossState> implements LoopyGame
 	public int maxChildren() {
 		return boardSize*2;
 	}
+	
+	public int maxParents() {
+		return boardSize*2;
+	}
 
 	@Override
 	public String stateToString(QuickCrossState pos) {
