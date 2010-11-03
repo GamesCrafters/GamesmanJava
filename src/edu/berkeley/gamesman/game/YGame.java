@@ -9,7 +9,12 @@ import edu.berkeley.gamesman.util.Util;
 /**
  * The game Y
  * 
- * @author dnspies, headcrash, Igor, and Daniel
+ * @originalAuthor dnspies
+ * @author hEADcRASH, Igor, and Daniel
+ */
+/**
+ * @author headcrash
+ *
  */
 public final class YGame extends ConnectGame
 {
@@ -26,8 +31,12 @@ public final class YGame extends ConnectGame
 
     private final char[] unrolledCharBoard; // The full board (string) representation.
 
-    private final Node[] neighborPool; // Preallocated neighbor nodes (3 through 6 of them)
-    private Vector<Node> neighbors;
+    private Vector<Node>  neighbors;
+    private Node[] neighborPool;
+    private Vector<Node>  nodesOnSameTriangle;
+    private Vector<Node>  nodesOnInnerTriangle;
+    private Vector<Node>  nodesOnOuterTriangle;
+
 
     private final int HEIGHT = 24;
     private final int WIDTH = 24;
@@ -186,19 +195,25 @@ public final class YGame extends ConnectGame
 
         this.unrolledCharBoard = new char[this.totalNumberOfNodes];
 
-        // Allocate the array of possible neighbors (6 max)
-
+        // Preallocate the 3 types of neighbor vectors 
+        
+        this.nodesOnSameTriangle = new Vector<Node>(2);
+        this.nodesOnInnerTriangle = new Vector<Node>(3);
+        this.nodesOnOuterTriangle = new Vector<Node>(3);
+        
+        // .. and the pool of nodes used in the neighbor list:
+        
         this.neighborPool = new Node[6];
-
-        for (int i = 0; i < 6; i++)
+        
+        for (int i=0;i<6;i++)
         {
-            this.neighborPool[i] = new Node();
+            this.neighborPool[i]=new Node();
         }
 
-        // ..and the neighbor vector returned from getNeighbors (add one more for clockewiser shuffling)
+        // ..and the neighbor vector ultimately returned from getNeighbors/clockwiser
 
-        this.neighbors = new Vector<Node>(7);
-
+        this.neighbors = new Vector<Node>(6);
+        
         this.fillBoardWithPlayer(' ');
 
         // Allocate and initialize a 2-dimensional array to use for plotting ASCII the game board nodes.
@@ -284,11 +299,8 @@ public final class YGame extends ConnectGame
     }
     
     /**
-     * TODO: Return neighbors in clockwise order
-     * 
-     * @param trueIfInnerMode
      * @param triangleIn
-     * @param index
+     * @param indexIn
      * @param player
      * @return
      * A filtered vector (by player) with neighbors of this triangle,index  
@@ -296,10 +308,12 @@ public final class YGame extends ConnectGame
     public Vector<Node> getNeighbors(
             /* boolean trueIfInnerModeIn, */int triangleIn,
             int indexIn, char player)
-    {
+    {        
         int numberOfNeighbors = 0;
 
-        this.neighbors.clear();
+        this.nodesOnSameTriangle.clear();
+        this.nodesOnInnerTriangle.clear();
+        this.nodesOnOuterTriangle.clear();
 
         assert Util.debug(DebugFacility.GAME, "getNeighbors of triangle:"
                 + triangleIn + ", index:" + indexIn + ", player:" + player);
@@ -315,7 +329,7 @@ public final class YGame extends ConnectGame
 
         if (this.getPlayerAt(this.neighborPool[numberOfNeighbors]) == player)
         {
-            neighbors.add(this.neighborPool[numberOfNeighbors]);
+            nodesOnSameTriangle.add(this.neighborPool[numberOfNeighbors]);
             numberOfNeighbors++;
         }
 
@@ -328,7 +342,7 @@ public final class YGame extends ConnectGame
 
         if (this.getPlayerAt(this.neighborPool[numberOfNeighbors]) == player)
         {
-            neighbors.add(this.neighborPool[numberOfNeighbors]);
+            nodesOnSameTriangle.add(this.neighborPool[numberOfNeighbors]);
             numberOfNeighbors++;
         }
 
@@ -344,7 +358,7 @@ public final class YGame extends ConnectGame
 
             if (this.getPlayerAt(this.neighborPool[numberOfNeighbors]) == player)
             {
-                neighbors.add(this.neighborPool[numberOfNeighbors]);
+                nodesOnInnerTriangle.add(this.neighborPool[numberOfNeighbors]);
                 numberOfNeighbors++;
             }
 
@@ -357,7 +371,7 @@ public final class YGame extends ConnectGame
 
                 if (this.getPlayerAt(this.neighborPool[numberOfNeighbors]) == player)
                 {
-                    neighbors.add(this.neighborPool[numberOfNeighbors]);
+                    nodesOnInnerTriangle.add(this.neighborPool[numberOfNeighbors]);
                     numberOfNeighbors++;
                 }
             }
@@ -381,7 +395,7 @@ indexIn - 2,
 
                     if (this.getPlayerAt(this.neighborPool[numberOfNeighbors]) == player)
                     {
-                        neighbors.add(this.neighborPool[numberOfNeighbors]);
+                        nodesOnInnerTriangle.add(this.neighborPool[numberOfNeighbors]);
                         numberOfNeighbors++;
                     }
                     
@@ -395,13 +409,11 @@ indexIn - 2,
 
                         if (this.getPlayerAt(this.neighborPool[numberOfNeighbors]) == player)
                         {
-                            neighbors.add(this.neighborPool[numberOfNeighbors]);
+                            nodesOnInnerTriangle.add(this.neighborPool[numberOfNeighbors]);
                             numberOfNeighbors++;
                         }
                     }
               }
-                else
-                {
                     if (isCornerIndex(triangleIn, indexIn + 1) == true) // Before corner index /*7*/
                     {
                         //this.neighborPool[numberOfNeighbors].trueIfInnerMode = isInnerTriangle(triangleIn); /*16*/
@@ -413,7 +425,7 @@ indexIn + 2,
 
                         if (this.getPlayerAt(this.neighborPool[numberOfNeighbors]) == player)
                         {
-                            neighbors.add(this.neighborPool[numberOfNeighbors]);
+                            nodesOnInnerTriangle.add(this.neighborPool[numberOfNeighbors]);
                             numberOfNeighbors++;
                         }
                         
@@ -427,7 +439,7 @@ indexIn + 2,
 
                             if (this.getPlayerAt(this.neighborPool[numberOfNeighbors]) == player)
                             {
-                                neighbors.add(this.neighborPool[numberOfNeighbors]);
+                                nodesOnInnerTriangle.add(this.neighborPool[numberOfNeighbors]);
                                 numberOfNeighbors++;
                             }
                         }
@@ -443,7 +455,7 @@ indexIn + 2,
                         
                         if (this.getPlayerAt(this.neighborPool[numberOfNeighbors]) == player)
                         {
-                            neighbors.add(this.neighborPool[numberOfNeighbors]);
+                            nodesOnInnerTriangle.add(this.neighborPool[numberOfNeighbors]);
                             numberOfNeighbors++;
                         }
                     }
@@ -461,7 +473,7 @@ indexIn + 2,
 
                         if (this.getPlayerAt(this.neighborPool[numberOfNeighbors]) == player)
                         {
-                            neighbors.add(this.neighborPool[numberOfNeighbors]);
+                            nodesOnInnerTriangle.add(this.neighborPool[numberOfNeighbors]);
                             numberOfNeighbors++;
                         }
 
@@ -474,12 +486,11 @@ indexIn + 2,
 
                         if (this.getPlayerAt(this.neighborPool[numberOfNeighbors]) == player)
                         {
-                            neighbors
+                            nodesOnInnerTriangle
                                     .add(this.neighborPool[numberOfNeighbors]);
                             numberOfNeighbors++;
                         }
                     }
-                }
             }
         }
 
@@ -496,7 +507,7 @@ indexIn + 2,
 
                 if (this.getPlayerAt(this.neighborPool[numberOfNeighbors]) == player)
                 {
-                    neighbors.add(this.neighborPool[numberOfNeighbors]);
+                    nodesOnOuterTriangle.add(this.neighborPool[numberOfNeighbors]);
                     numberOfNeighbors++;
                 }
 
@@ -511,7 +522,7 @@ indexIn + 2,
 
                     if (this.getPlayerAt(this.neighborPool[numberOfNeighbors]) == player)
                     {
-                        neighbors.add(this.neighborPool[numberOfNeighbors]);
+                        nodesOnOuterTriangle.add(this.neighborPool[numberOfNeighbors]);
                         numberOfNeighbors++;
                     }
 
@@ -524,7 +535,7 @@ indexIn + 2,
 
                     if (this.getPlayerAt(this.neighborPool[numberOfNeighbors]) == player)
                     {
-                        neighbors.add(this.neighborPool[numberOfNeighbors]);
+                        nodesOnOuterTriangle.add(this.neighborPool[numberOfNeighbors]);
                         numberOfNeighbors++;
                     }
                 }
@@ -540,7 +551,7 @@ indexIn + 2,
 
                     if (this.getPlayerAt(this.neighborPool[numberOfNeighbors]) == player)
                     {
-                        neighbors.add(this.neighborPool[numberOfNeighbors]);
+                        nodesOnOuterTriangle.add(this.neighborPool[numberOfNeighbors]);
                         numberOfNeighbors++;
                     }
                 }
@@ -557,7 +568,7 @@ indexIn + 2,
 
                 if (this.getPlayerAt(this.neighborPool[numberOfNeighbors]) == player)
                 {
-                    neighbors.add(this.neighborPool[numberOfNeighbors]);
+                    nodesOnOuterTriangle.add(this.neighborPool[numberOfNeighbors]);
                     numberOfNeighbors++;
                 }
 
@@ -570,7 +581,7 @@ indexIn + 2,
 
                 if (this.getPlayerAt(this.neighborPool[numberOfNeighbors]) == player)
                 {
-                    neighbors.add(this.neighborPool[numberOfNeighbors]);
+                    nodesOnOuterTriangle.add(this.neighborPool[numberOfNeighbors]);
                     numberOfNeighbors++;
                 }
 
@@ -585,7 +596,7 @@ indexIn + 2,
 
                     if (this.getPlayerAt(this.neighborPool[numberOfNeighbors]) == player)
                     {
-                        neighbors.add(this.neighborPool[numberOfNeighbors]);
+                        nodesOnOuterTriangle.add(this.neighborPool[numberOfNeighbors]);
                         numberOfNeighbors++;
                     }
 
@@ -598,7 +609,7 @@ indexIn + 2,
 
                     if (this.getPlayerAt(this.neighborPool[numberOfNeighbors]) == player)
                     {
-                        neighbors.add(this.neighborPool[numberOfNeighbors]);
+                        nodesOnOuterTriangle.add(this.neighborPool[numberOfNeighbors]);
                         numberOfNeighbors++;
                     }
                 }
@@ -607,240 +618,163 @@ indexIn + 2,
 
         assert (numberOfNeighbors >= 3 && numberOfNeighbors <= 6);
         
-        this.neighbors = this.clockwiser(triangleIn, indexIn, this.neighbors);
+        this.neighbors = this.clockwiser(triangleIn, indexIn);
 
         return (neighbors);
     }
 
     /**
      * @param startingNode
-     * @param nodesToBeClockwised
+     * @param nodesOnSameTriangle
+     * @param nodesOnInnerTriangle
+     * @param nodesOnOuterTriangle
      * @return
      */
-    public Vector<Node> clockwiser(Node startingNode,
-            Vector<Node> nodesToBeClockwised)
+    public Vector<Node> clockwiser(Node startingNode)
     {
-        return (this.clockwiser(startingNode.triangle, startingNode.index,
-                nodesToBeClockwised));
+        return (this.clockwiser(startingNode.triangle, startingNode.index));
     }
 
     /**
      * @param triangleIn
      * @param indexIn
-     * @param nodesToBeClockwised
+     * @param nodesOnSameTriangle
+     * @param nodesOnInnerTriangle
+     * @param nodesOnOuterTriangle
      * @return
      */
-    public Vector<Node> clockwiser(int triangleIn, int indexIn,
-            Vector<Node> nodesToBeClockwised)
+    public Vector<Node> clockwiser(int triangleIn, int indexIn)
     {
-        int numberOfNodes = nodesToBeClockwised.size();
-        
-        int currentNode = 0;
+        assert( nodesOnSameTriangle.size() == 2);
+        assert( nodesOnInnerTriangle.size() >=0 && nodesOnInnerTriangle.size() <= 3);
+        assert( nodesOnOuterTriangle.size() >=0 && nodesOnOuterTriangle.size() <= 3);
+                
+        neighbors.clear();
 
-        Node tempNode;
-
-        assert (numberOfNodes >= 3 && numberOfNodes <= 6);
+        // Pick the left node ((index+1)%segments) on the same triangle first.
         
-        // First node is the one on the same triangle, left-hand side (must exist):
-        
-        for (int i = 0; i < numberOfNodes; i++)
+        if (nodesOnSameTriangle.get(0).index == Util.nonNegativeModulo(indexIn+1,this.nodesInThisTriangle[triangleIn]))
         {
-            if (nodesToBeClockwised.get(i).triangle == triangleIn)
-            {
-                int leftNodeIndex = Util
-.nonNegativeModulo(
-                        (indexIn + 1),
-                        this.nodesInThisTriangle[triangleIn]);
-
-                if (nodesToBeClockwised.get(i).index == leftNodeIndex)
-                {
-                    if (i != 0)
-                    {
-                        tempNode = nodesToBeClockwised.get(i);
-                        nodesToBeClockwised.add(0, tempNode);
-                        nodesToBeClockwised.remove(i);
-                    }
-                    currentNode++;
-                    break;
+            neighbors.add(nodesOnSameTriangle.get(0));
+            nodesOnSameTriangle.remove(0);
                 }
-            }
+        else
+        {    neighbors.add(nodesOnSameTriangle.get(1));
+        	nodesOnSameTriangle.remove(1);
         }
         
-        // Next nodes are the inner nodes, in decreasing order:
+        // Inners can be done by hand too, as there are only 0, 1, or 2 possible neighbors. Inners go in descending order.
 
-        if (this.isInnermostTriangle(triangleIn) == false)
-        {
-            int firstInnerNodeVectorIndex = -1;
-            int firstInnerNodeIndex = -1;
-            int secondInnerNodeVectorIndex = -1;
-            int secondInnerNodeIndex = -1;
+       if (nodesOnInnerTriangle.size()>0)
+       {
+           if (nodesOnInnerTriangle.size()==2)
+           {
+               if (this.isCornerIndex(triangleIn,indexIn+1)==true) // Handle index wrap-around for before corner nodes 
+               {
+                   if (nodesOnInnerTriangle.get(0).index==0)
+                   {
+                       neighbors.add(nodesOnInnerTriangle.get(0));
+                       nodesOnInnerTriangle.remove(0);
+                   }
+                   else
+                   {
+                       neighbors.add(nodesOnInnerTriangle.get(1));
+                       nodesOnInnerTriangle.remove(1);
+                   }
+               }
+               else               if ( nodesOnInnerTriangle.get(0).index > nodesOnInnerTriangle.get(1).index)
+               {
+                   neighbors.add(nodesOnInnerTriangle.get(0));
+                   nodesOnInnerTriangle.remove(0);
+               }
+               else
+               {
+                   neighbors.add(nodesOnInnerTriangle.get(1));
+                   nodesOnInnerTriangle.remove(1);
+               }
+           }
+           neighbors.add(nodesOnInnerTriangle.get(0));
+       }
 
-            for (int i = 0; i < numberOfNodes; i++)
-            {
-                if (nodesToBeClockwised.get(i).triangle == (triangleIn - 1))
-                {
-                    if (firstInnerNodeIndex == -1)
-                    {
-                        firstInnerNodeVectorIndex = i;
+       // Next node is the one on the same triangle, right-hand side (must exist):
 
-                        // Handle next-to-corner nodes (which will be 0 and #triangles-1 instead of #triangles, #triangles-1)
+       neighbors.add(nodesOnSameTriangle.get(0));
+      
+       // TODO: Handle the single node in the center of the 3 segment triangle! 
+       
+       // Outer neighbors are trickier, since there can be 0, 2, 3, or 6 possible neighbors:
+       
+       if (nodesOnOuterTriangle.size()>0)
+       {
+           int firstIndex=0, secondIndex=0;
 
-                        if (this.isCornerIndex(triangleIn, indexIn + 1)
-                                && (nodesToBeClockwised.get(i).index == 0))
-                        {
-                            firstInnerNodeIndex = this.nodesInThisTriangle[triangleIn - 1];
-                        }
-                        else
-                        {
-                            firstInnerNodeIndex = nodesToBeClockwised.get(i).index;
-                        }
-                    }
-                    else
-                    {
-                        secondInnerNodeVectorIndex = i;
+           if (isCornerIndex(triangleIn,indexIn)==true)
+           {
+               if (indexIn == 0)  // Handle index wrap-around for corner nodes
+               {
+               for(int i=1;i<3;i++)
+               {
+                   if ( nodesOnOuterTriangle.get(i).index > nodesOnOuterTriangle.get(firstIndex).index )
+                   {
+                       firstIndex = i;
+                   }
+               }
+               
+               for (int i=0; i<3;i++)
+               {
+                   if (nodesOnOuterTriangle.get(i).index==0)
+                   {
+                       secondIndex = i;
+                       break;
+                   }
+               }
+               }
+               else
+               {
+                   for(int i=1;i<3;i++)
+                   {
+                       if ( nodesOnOuterTriangle.get(i).index < nodesOnOuterTriangle.get(firstIndex).index )
+                       {
+                           firstIndex = i;
+                       }
+                   }
+                   
+                   for(int i=0;i<3;i++)
+                   {
+                       if ( nodesOnOuterTriangle.get(i).index == nodesOnOuterTriangle.get(firstIndex).index + 1 )
+                       {
+                           secondIndex = i;
+                           break;
+                       }
+                   }
+               }
+               
+               assert(firstIndex!=secondIndex);
+               
+               neighbors.add(nodesOnOuterTriangle.get(firstIndex));
+               neighbors.add(nodesOnOuterTriangle.get(secondIndex));
 
-                        // Handle next-to-corner nodes (which will be 0 and #triangles-1 instead of #triangles, #triangles-1)
-
-                        if (this.isCornerIndex(triangleIn, indexIn + 1)
-                                && (nodesToBeClockwised.get(i).index == 0))
-                        {
-                            secondInnerNodeIndex = this.nodesInThisTriangle[triangleIn - 1];
-                        }
-                        else
-                        {
-                            secondInnerNodeIndex = nodesToBeClockwised.get(i).index;
-                        }
-                        break;
-                    }
-                }
-            }
-
-            if (secondInnerNodeVectorIndex != -1) // Only if we have two inner nodes
-            {
-                assert (firstInnerNodeIndex != secondInnerNodeVectorIndex);
-
-                if (firstInnerNodeIndex < secondInnerNodeIndex)
-                {
-                    // Swap 'em
-                    tempNode = nodesToBeClockwised
-                            .get(secondInnerNodeVectorIndex);
-                    nodesToBeClockwised.remove(secondInnerNodeVectorIndex);
-                    nodesToBeClockwised
-                            .add(firstInnerNodeVectorIndex, tempNode);
-                }
-                currentNode++;
-            }
-            else
-            {
-                if (firstInnerNodeVectorIndex != -1)
-                {
-                    currentNode++;
-                }
-            }
-        }
-
-        // Next node is the one on the same triangle, right-hand side (must exist):
-        
-        for (int i = 0; i < numberOfNodes; i++)
-        {
-            if (nodesToBeClockwised.get(i).triangle == triangleIn)
-            {
-                int rightNodeIndex = Util
-.nonNegativeModulo(
-                        (indexIn - 1),
-                        this.nodesInThisTriangle[triangleIn]);
-
-                if (nodesToBeClockwised.get(i).index == rightNodeIndex)
-                {
-                    if (i != currentNode)
-                    {
-                        tempNode = nodesToBeClockwised.get(i);
-                        nodesToBeClockwised.add(tempNode);
-                        nodesToBeClockwised.remove(i);
-                    }
-                    currentNode++;
-                    break;
-                }
-            }
-        }
-
-        // Next nodes are the outer nodes, in increasing order:
-        
-        if (this.isOutermostRow(triangleIn) == false)
-        {
-            int firstOuterNodeVectorIndex = -1;
-            int firstOuterNodeIndex = -1;
-            int secondOuterNodeVectorIndex = -1;
-            int secondOuterNodeIndex = -1;
-
-            for (int i = 0; i < numberOfNodes; i++)
-            {
-                if (nodesToBeClockwised.get(i).triangle == (triangleIn + 1))
-                {
-                    if (firstOuterNodeIndex == -1)
-                    {
-                        firstOuterNodeVectorIndex = i;
-
-                        // Handle corner nodes (which will be 0 and #triangles-1 instead of #triangles, #triangles-1)
-
-                        if (this.isCornerIndex(triangleIn, indexIn)
-                                && (nodesToBeClockwised.get(i).index == 0))
-                        {
-                            firstOuterNodeIndex = this.nodesInThisTriangle[triangleIn + 1];
-                        }
-                        else
-                        {
-                            firstOuterNodeIndex = nodesToBeClockwised.get(i).index;
-                        }
-                    }
-                    else
-                    {
-                        secondOuterNodeVectorIndex = i;
-
-                        // Handle corner nodes (which will be 0 and #triangles-1 instead of #triangles, #triangles-1)
-
-                        if (this.isCornerIndex(triangleIn, indexIn)
-                                && (nodesToBeClockwised.get(i).index == 0))
-                        {
-                            secondOuterNodeIndex = this.nodesInThisTriangle[triangleIn + 1];
-                        }
-                        else
-                        {
-                            secondOuterNodeIndex = nodesToBeClockwised.get(i).index;
-                        }
-                        break;
-                    }
-                }
-            }
-
-            if (secondOuterNodeVectorIndex != -1) // Only if we have two outer nodes
-            {
-                assert (firstOuterNodeIndex != secondOuterNodeIndex);
-
-                if (firstOuterNodeIndex > secondOuterNodeIndex)
-                {
-                    // Swap 'em
-                    tempNode = nodesToBeClockwised
-                            .get(secondOuterNodeVectorIndex);
-                    nodesToBeClockwised.remove(secondOuterNodeVectorIndex);
-                    nodesToBeClockwised
-                            .add(firstOuterNodeVectorIndex, tempNode);
-                }
-                currentNode++;
-            }
-            else
-            {
-                if (firstOuterNodeVectorIndex != -1)
-                {
-                    currentNode++;
-                }
-            }
-        }
-
-        assert (currentNode == numberOfNodes);
-
-        return nodesToBeClockwised;
-
+               int thirdIndex = 3-firstIndex-secondIndex; // for debugging
+               
+               neighbors.add(nodesOnOuterTriangle.get(thirdIndex));
+           }
+           else
+           {
+               if (nodesOnOuterTriangle.get(0).index < nodesOnOuterTriangle.get(1).index)
+               {
+                   firstIndex = 0;
+                   secondIndex = 1;
+               }
+               else
+               {
+                   firstIndex = 1;
+                   secondIndex =0;
+               }
+               neighbors.add(nodesOnOuterTriangle.get(firstIndex));
+               neighbors.add(nodesOnOuterTriangle.get(secondIndex));
+           }
+       }
+       return neighbors;
     }
 
     /**
@@ -1016,7 +950,7 @@ indexIn + 2,
         else
         {
             displayString = new String(
-                    "UNABLE TO REPRESENT THIS CONFIGURATION IN 2D (yet):\n");
+                    "UNABLE TO REPRESENT THIS CONFIGURATION (triangle segments:"+this.innerTriangleSegments+", outer rows:"+this.outerRingSegments+" )IN 2D (yet):\n");
             displayString.concat(this.getCharArray().toString());
         }
 
@@ -1180,6 +1114,12 @@ indexIn + 2,
     {
         ClassLoader cl = ClassLoader.getSystemClassLoader();
         cl.setClassAssertionStatus("YGame", true);
+        
+        if (args.length < 3)
+        {
+            System.err.println("I'm expecting 3 command line arguments, the 2x4, 3x6, and 4x8 configuration files!");
+            System.exit(-1);
+        }
 
         Configuration conf = new Configuration(args[0]); // 2x4
         YGame game = (YGame)conf.getGame();
