@@ -205,10 +205,4 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame{
 	public long recordStates() {
 		return myGame.recordStates();
 	}
-
-	@Override
-	public int possibleParents(State pos, State[] children) {
-		return ((LoopyGame) myGame).possibleParents(pos, children);
-	}
-
 }
