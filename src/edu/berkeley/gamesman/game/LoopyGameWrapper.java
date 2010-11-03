@@ -17,9 +17,10 @@ import edu.berkeley.gamesman.util.qll.RLLFactory;
 public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame{
 	private final Game<S> myGame;
 	private final RecycleLinkedList<RecycleLinkedList<S>> moveLists;
-	private final RecycleLinkedList<RecycleLinkedList<S>> parentList;
+	private final RecycleLinkedList<RecycleLinkedList<S>> parentLists;
 	private final RecycleLinkedList<S> stateList;
 	private final S[] possibleMoves;
+	private final S[] possibleParents;
 	private final S[] startingPositions;
 
 	public LoopyGameWrapper(Configuration conf, Game<S> g) {
@@ -29,6 +30,27 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame{
 		}
 		myGame = g;
 		moveLists = new RecycleLinkedList<RecycleLinkedList<S>>(
+				new Factory<RecycleLinkedList<S>>() {
+					RLLFactory<S> gen = new RLLFactory<S>(new Factory<S>() {
+
+						public S newObject() {
+							return myGame.newState();
+						}
+
+						public void reset(S t) {
+						}
+					});
+
+					public RecycleLinkedList<S> newObject() {
+						return gen.getList();
+					}
+
+					public void reset(RecycleLinkedList<S> t) {
+						t.clear();
+					}
+
+				});
+		parentLists = new RecycleLinkedList<RecycleLinkedList<S>>(
 				new Factory<RecycleLinkedList<S>>() {
 					RLLFactory<S> gen = new RLLFactory<S>(new Factory<S>() {
 
@@ -61,6 +83,7 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame{
 		});
 		stateList.add();
 		possibleMoves = myGame.newStateArray(myGame.maxChildren());
+		possibleParents = myGame.newStateArray(((LoopyGame) myGame).maxParents());
 		Collection<S> startingPositions = myGame.startingPositions();
 		this.startingPositions = startingPositions.toArray(myGame
 				.newStateArray(startingPositions.size()));
@@ -77,28 +100,26 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame{
 
 	@Override
 	public void remakeMove() {
-		// TODO Auto-generated method stub
-
+		parentLists.removeLast();
+		stateList.removeLast();
 	}
 
 	@Override
 	public int unmakeMove() {
-		// TODO Auto-generated method stub
-		RecycleLinkedList<S> parentList = moveLists.addLast();
-		int numMoves = myGame.possibleParents(stateList.getLast(), possibleMoves);
-		if (numMoves == 0) {
+		RecycleLinkedList<S> parents = parentLists.addLast();
+		int numParents = ((LoopyGame) myGame).possibleParents(stateList.getLast(), possibleParents);
+		if (numParents == 0) {
 			moveLists.removeLast();
 			return 0;
 		} else {
-			for (int i = 0; i < numMoves; i++) {
-				S move = moves.add();
-				move.set(possibleMoves[i]);
+			for (int i = 0; i < numParents; i++) {
+				S parent = parents.add();
+				parent.set(possibleParents[i]);
 			}
 			S curState = stateList.addLast();
-			curState.set(moves.removeFirst());
-			return numMoves;
+			curState.set(parents.removeFirst());
+			return numParents;
 		}
-		return 0;
 	}
 
 	@Override
