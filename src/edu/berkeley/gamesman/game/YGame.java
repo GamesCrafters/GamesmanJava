@@ -64,7 +64,7 @@ public final class YGame extends ConnectGame
          */
         public Node()
         {
-            this(/*false,*/ 0, 0);
+            this(0, 0);
         }
 
         //public boolean isInInnerTriangle()
@@ -378,7 +378,7 @@ public final class YGame extends ConnectGame
         }
         else//if (isInnerTriangle(triangleIn) == false)
         {
-            if ((segments == 1) || (isCornerIndex(triangleIn, indexIn) == true))
+            if ((segments < 2) || (isCornerIndex(triangleIn, indexIn) == true))
             {
                 // There aren't any inner neighbors for corners or single segment triangles.
             }
@@ -1111,7 +1111,7 @@ indexIn + 2,
     { 0.4505, 0.4213 } };
 
     static public void main(String[] args) throws ClassNotFoundException
-    {
+    {    	
         ClassLoader cl = ClassLoader.getSystemClassLoader();
         cl.setClassAssertionStatus("YGame", true);
         
@@ -1120,15 +1120,18 @@ indexIn + 2,
             System.err.println("I'm expecting 3 command line arguments, the 2x4, 3x6, and 4x8 configuration files!");
             System.exit(-1);
         }
+        
+    	Configuration conf;
+    	YGame game;
+    	Vector<Node> neighbors;
 
-        Configuration conf = new Configuration(args[0]); // 2x4
-        YGame game = (YGame)conf.getGame();
-
-        Vector<Node> neighbors;
+/*
+         conf = new Configuration(args[0]); // 2x4
+         game = (YGame)conf.getGame();
 
         game.fillBoardWithPlayer('X');
 
-        neighbors = game.getNeighbors(/* false, */1, 0, 'X');
+        neighbors = game.getNeighbors(1, 0, 'X');
 
         for (int i = 0; i < neighbors.size(); i++)
             System.out.println("Neighbor #" + i + ": " + neighbors.get(i));
@@ -1137,7 +1140,7 @@ indexIn + 2,
 
         assert (neighbors.size() == 6);
 
-        neighbors = game.getNeighbors(/* false, */1, 3, 'X');
+        neighbors = game.getNeighbors(1, 3, 'X');
 
         for (int i = 0; i < neighbors.size(); i++)
             System.out.println("Neighbor #" + i + ": " + neighbors.get(i));
@@ -1146,7 +1149,7 @@ indexIn + 2,
 
         assert (neighbors.size() == 6);
 
-        neighbors = game.getNeighbors(/* false, */2, 0, 'X');
+        neighbors = game.getNeighbors(2, 0, 'X');
 
         for (int i = 0; i < neighbors.size(); i++)
             System.out.println("Neighbor #" + i + ": " + neighbors.get(i));
@@ -1155,7 +1158,7 @@ indexIn + 2,
 
         assert (neighbors.size() == 3);
 
-        neighbors = game.getNeighbors(/* false, */2, 1, 'X');
+        neighbors = game.getNeighbors(2, 1, 'X');
 
         for (int i = 0; i < neighbors.size(); i++)
             System.out.println("Neighbor #" + i + ": " + neighbors.get(i));
@@ -1164,7 +1167,7 @@ indexIn + 2,
 
         assert (neighbors.size() == 4);
 
-        neighbors = game.getNeighbors(/* false, */2, 8, 'X');
+        neighbors = game.getNeighbors(2, 8, 'X');
 
         for (int i = 0; i < neighbors.size(); i++)
             System.out.println("Neighbor #" + i + ": " + neighbors.get(i));
@@ -1180,7 +1183,7 @@ indexIn + 2,
 
         System.out.println(game.displayState());
 
-        neighbors = game.getNeighbors(/*false,*/ 2, 0, 'X');
+        neighbors = game.getNeighbors(2, 0, 'X');
 
         for (int i = 0; i < neighbors.size(); i++)
             System.out.println("Neighbor #" + i + ": " + neighbors.get(i));
@@ -1188,15 +1191,15 @@ indexIn + 2,
         System.out.println();
 
         assert (neighbors.size() == 6);
-
+*/
                 conf = new Configuration(args[2]);  // 4x8
         game = (YGame)conf.getGame();
 
         game.fillBoardWithPlayer('X');
-
+/*
         System.out.println(game.displayState());
 
-        neighbors = game.getNeighbors(/*false,*/ 4, 3, 'X');
+        neighbors = game.getNeighbors(4, 3, 'X');
 
         for (int i = 0; i < neighbors.size(); i++)
             System.out.println("Neighbor #" + i + ": " + neighbors.get(i));
@@ -1205,7 +1208,7 @@ indexIn + 2,
 
         assert (neighbors.size() == 6);
 
-        neighbors = game.getNeighbors(/*false,*/ 4, 4, 'X');
+        neighbors = game.getNeighbors(4, 4, 'X');
 
         for (int i = 0; i < neighbors.size(); i++)
             System.out.println("Neighbor #" + i + ": " + neighbors.get(i));
@@ -1214,7 +1217,7 @@ indexIn + 2,
 
         assert (neighbors.size() == 6);
 
-        neighbors = game.getNeighbors(/*false,*/ 4, 17, 'X');
+        neighbors = game.getNeighbors(4, 17, 'X');
 
         for (int i = 0; i < neighbors.size(); i++)
             System.out.println("Neighbor #" + i + ": " + neighbors.get(i));
@@ -1222,7 +1225,7 @@ indexIn + 2,
         System.out.println();
 
         assert (neighbors.size() == 6);
-        
+        */
         neighbors = game.getNeighbors(1, 1, 'X');
 
         for (int i = 0; i < neighbors.size(); i++)
