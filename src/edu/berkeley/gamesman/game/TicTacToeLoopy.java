@@ -37,7 +37,13 @@ public class TicTacToeLoopy extends TicTacToe implements LoopyGame<TierState> {
 			return super.recordToLong(recordState, fromRecord);
 	}
 
-	public int possibleParents(TierState pos, TierState[] children) {
+	public int possibleParents(TierState pos, TierState[] parents) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int maxParents() {
 		// TODO Auto-generated method stub
 		return 0;
 	}
