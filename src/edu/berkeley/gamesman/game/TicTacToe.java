@@ -67,9 +67,8 @@ public class TicTacToe extends RectangularDartboardGame {
 		myHasher.next(myIter);
 		while (myIter.hasNext()) {
 			int piece = myIter.next();
-			if (myHasher.get(piece) == ' ') {
-				bsb.removePiece(piece / gameWidth, piece % gameWidth);
-			} else {
+			bsb.removePiece(piece / gameWidth, piece % gameWidth);
+			if (myHasher.get(piece) != ' ') {
 				bsb.addPiece(piece / gameWidth, piece % gameWidth,
 						myHasher.get(piece));
 			}
