@@ -39,9 +39,10 @@ public class AtariGo extends RectangularDartboardGame {
 			return false;
 		else {
 			checked[row][col] = !current;
-			return canBreathe(row + 1, col, c) || canBreathe(row, col + 1, c)
-					|| canBreathe(row - 1, col, c)
-					|| canBreathe(row, col - 1, c);
+			boolean a = canBreathe(row + 1, col, c), b = canBreathe(row,
+					col + 1, c), d = canBreathe(row - 1, col, c), e = canBreathe(
+					row, col - 1, c);
+			return a || b || d || e;
 		}
 	}
 
