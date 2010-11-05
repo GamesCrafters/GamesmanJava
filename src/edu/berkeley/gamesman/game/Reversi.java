@@ -69,24 +69,6 @@ public class Reversi extends TierGame {
 		}
 	}
 
-	// number of ways to reorder white and black number of pieces
-	private int combination(int n, int k) {
-		if (n < 0 || k < 0)
-			throw new Error("Trying to take combination of a negative number");
-		if (n < k)
-			return 0;
-		if (n == k || k == 0)
-			return 1;
-		if (n == 0)
-			throw new Error("Trying to take combination of 0");
-		long answer = 1;
-		for (int x = n; x > n - k; x--)
-			answer *= x;
-		for (int x = k; x > 1; x--)
-			answer /= x;
-		return (int) answer;
-	}
-
 	public Reversi(Configuration conf) {
 		super(conf);
 		width = conf.getInteger("gamesman.game.width", 8);
@@ -126,7 +108,6 @@ public class Reversi extends TierGame {
 	public void setState(TierState pos) {
 		unhash(pos.tier, pos.hash);
 		isChildrenValid = false;
-		// not done. remember to set hash.
 	}
 
 	private void unhash(int tier, long hash) {
@@ -513,19 +494,6 @@ public class Reversi extends TierGame {
 					moves[index].hash)));
 			reversiGame.changeTurn();
 		}
-
-		/**
-		 * while (true) { if (input.equals("quit")) break;
-		 * reversiGame.setFromString(input);
-		 * System.out.println(reversiGame.displayState());
-		 * System.out.println(reversiGame.primitiveValue());
-		 * System.out.println(reversiGame.getHash()); BufferedReader br = new
-		 * BufferedReader(new InputStreamReader(System.in)); try { input =
-		 * br.readLine(); } catch (IOException e) { throw new Error(e); }
-		 * 
-		 * } reversiGame.setStartingPosition(1);
-		 * System.out.println(reversiGame.displayState());
-		 */
 	}
 
 }
