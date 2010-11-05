@@ -106,20 +106,29 @@ public class DartboardHasher {
 		calculateReplacements();
 	}
 
-	public void next() {
-		next(null);
+	public boolean next() {
+		return next(null);
 	}
 
-	public void next(ChangedIterator changed) {
+	public boolean next(ChangedIterator changed) {
+		return next(changed, 0);
+	}
+
+	private boolean next(int lowBit) {
+		return next(null, lowBit);
+	}
+
+	private boolean next(ChangedIterator changed, int lowBit) {
 		if (changed != null)
 			changed.reset();
 		int[] count = countPool.get();
 		int highest = 0;
 		int piece;
+		boolean didChange = false;
 		for (piece = 0; piece < pieces.length; piece++) {
 			int digit = pieces[piece];
 			count[digit]++;
-			if (digit < highest)
+			if (piece >= lowBit && digit < highest)
 				break;
 			else
 				highest = digit;
@@ -131,8 +140,22 @@ public class DartboardHasher {
 			} while (count[digit] == 0);
 			pieces[piece] = digit;
 			count[digit]--;
-			pieceHashes[piece] += reset(count, changed) + 1;
+			long removed = reset(count, changed);
 			count[digit]++;
+			if (lowBit == 0) {
+				pieceHashes[piece] += removed + 1;
+				hash++;
+			} else {
+				hash -= removed;
+				hash -= pieceHashes[piece];
+				pieceHashes[piece] = 0;
+				for (int d = 0; d < digit; d++) {
+					count[d]--;
+					pieceHashes[piece] += rearrange(piece, count);
+					count[d]++;
+				}
+				hash += pieceHashes[piece];
+			}
 			for (int i = 0; i < replacements.size(); i++) {
 				int[] replacement = replacements.get(i);
 				count[replacement[0]]--;
@@ -146,14 +169,99 @@ public class DartboardHasher {
 				count[replacement[1]]--;
 				count[replacement[0]]++;
 			}
-			hash++;
 			if (changed != null)
 				changed.add(piece);
-		} else {
-			reset(count, changed);
-			hash = 0L;
+			didChange = true;
 		}
 		countPool.release(count);
+		return didChange;
+	}
+
+	private boolean previous(int lowBit) {
+		int[] count = countPool.get();
+		int lowest = digits.length - 1;
+		int piece;
+		boolean didChange = false;
+		for (piece = 0; piece < pieces.length; piece++) {
+			int digit = pieces[piece];
+			count[digit]++;
+			if (piece >= lowBit && digit > lowest)
+				break;
+			else
+				lowest = digit;
+		}
+		if (piece < pieces.length) {
+			int digit = pieces[piece];
+			do {
+				digit--;
+			} while (count[digit] == 0);
+			pieces[piece] = digit;
+			count[digit]--;
+			long added = forset(count);
+			count[digit]++;
+			hash += added;
+			hash -= pieceHashes[piece];
+			pieceHashes[piece] = 0;
+			for (int d = 0; d < digit; d++) {
+				count[d]--;
+				pieceHashes[piece] += rearrange(piece, count);
+				count[d]++;
+			}
+			hash += pieceHashes[piece];
+			for (int i = 0; i < replacements.size(); i++) {
+				int[] replacement = replacements.get(i);
+				count[replacement[0]]--;
+				count[replacement[1]]++;
+				difs.get(i)[piece] = -pieceHashes[piece];
+				for (int j = 0; j < digit; j++) {
+					count[j]--;
+					difs.get(i)[piece] += rearrange(piece, count);
+					count[j]++;
+				}
+				count[replacement[1]]--;
+				count[replacement[0]]++;
+			}
+			didChange = true;
+		}
+		countPool.release(count);
+		return didChange;
+	}
+
+	private long forset(int[] count) {
+		long oldHashes = 0L;
+		int piece = 0;
+		int[] secondCount = countPool.get();
+		for (int digit = 0; digit < digits.length; digit++) {
+			int digitCount = count[digit];
+			for (int i = 0; i < digitCount; i++) {
+				oldHashes -= pieceHashes[piece];
+				for (int k = 0; k < digit; k++) {
+					secondCount[k]++;
+					pieceHashes[piece] += rearrange(piece, secondCount);
+					secondCount[k]--;
+				}
+				pieces[piece] = digit;
+				secondCount[digit]++;
+				oldHashes += pieceHashes[piece];
+				for (int j = 0; j < replacements.size(); j++) {
+					int[] replacement = replacements.get(j);
+					long[] dif = difs.get(j);
+					dif[piece] = 0L;
+					secondCount[replacement[0]]--;
+					secondCount[replacement[1]]++;
+					for (int k = 0; k < digit; k++) {
+						secondCount[k]--;
+						dif[piece] += rearrange(piece, secondCount);
+						secondCount[k]++;
+					}
+					secondCount[replacement[1]]--;
+					secondCount[replacement[0]]++;
+				}
+				piece++;
+			}
+		}
+		countPool.release(secondCount);
+		return oldHashes;
 	}
 
 	private long reset(int[] count) {
@@ -344,6 +452,64 @@ public class DartboardHasher {
 			hashDif += dif[piece];
 		}
 		countPool.release(count);
+	}
+
+
+	//TODO Handle case where old is not lowest
+	public void nextChildren(char old, char replace, long[] childArray) {
+		int[] replacement = null;
+		long[] dif = null;
+		int i;
+		for (i = 0; i < replacements.size(); i++) {
+			replacement = replacements.get(i);
+			if (digits[replacement[0]] == old
+					&& digits[replacement[1]] == replace) {
+				dif = difs.get(i);
+				break;
+			}
+		}
+		if (i == replacements.size())
+			throw new Error("No such replacement set");
+		getChildren(old, replace, childArray);
+		int firstOld;
+		for (firstOld = 0; firstOld < pieces.length; firstOld++) {
+			if (pieces[firstOld] == replacement[0])
+				break;
+		}
+		for (i = firstOld - 1; i >= 0; i--) {
+			while (pieces[i] != replacement[0])
+				next(i);
+			getChild(dif, replacement[1], i);
+		}
+		for (i = firstOld + 1; i < pieces.length; i++) {
+			if (childArray[i] == -1)
+				continue;
+			boolean finished = false;
+			while (pieces[i] != replacement[0] && !finished)
+				finished = next(i);
+			if (finished)
+				break;
+			getChild(dif, replacement[1], i);
+		}
+	}
+
+	private long getChild(long[] dif, int replaceNum, int i) {
+		long hashDif = 0L;
+		int[] count = countPool.get();
+		System.arraycopy(numType, 0, count, 0, numType.length);
+		count[replaceNum]++;
+		for (int piece = pieces.length - 1; piece > i; piece--) {
+			count[pieces[piece]]--;
+			hashDif += dif[piece];
+		}
+		long pDif = 0L;
+		for (int digit = 0; digit < replaceNum; digit++) {
+			count[digit]--;
+			pDif += rearrange(i, count);
+			count[digit]++;
+		}
+		countPool.release(count);
+		return hash + hashDif + pDif - pieceHashes[i];
 	}
 
 	public long getHash() {
