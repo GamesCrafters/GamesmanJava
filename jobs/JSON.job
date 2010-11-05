@@ -19,3 +19,6 @@ json.fields.y = centerRows,outerRows
 
 json.unsolved.connections = jobs/Connections.job
 json.fields.connections = side
+
+json.unsolved.ttt = jobs/TTT.job
+json.fields.ttt = width,height,pieces
