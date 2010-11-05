@@ -1,0 +1,7 @@
+gamesman.game = AtariGo
+gamesman.game.width = 3
+gamesman.game.height = 3
+gamesman.solver = TierSolver
+gamesman.database = MemoryDatabase:FileDatabase
+gamesman.db.uri = atari.db
+gamesman.debug.THREADING = true

@@ -261,4 +261,8 @@ public abstract class RectangularDartboardGame extends TierGame {
 		}
 	}
 
+	@Override
+	public String toString() {
+		return displayState();
+	}
 }
