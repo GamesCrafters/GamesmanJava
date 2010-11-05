@@ -173,7 +173,7 @@ public final class QuickCross extends Game<QuickCrossState> implements LoopyGame
 
 	public int possibleParents(QuickCrossState pos, QuickCrossState[] parents) {
 		int numParents = 0;
-		for (int i = 0; i < (pos.numPieces * 2); i++){
+		for (int i = 0; i < boardSize; i++){
 			if (pos.getPiece(i) == '-'){
 				parents[numParents].set(pos);
 				parents[numParents].setPiece(i, ' ');
@@ -326,11 +326,12 @@ public final class QuickCross extends Game<QuickCrossState> implements LoopyGame
 	@Override
 	public void longToRecord(QuickCrossState recordState, long record,
 			Record toStore) {
-		if (record == boardSize + 1) {
-			toStore.value = Value.TIE;
-			toStore.remoteness = boardSize - recordState.numPieces;
-		} else if (record == boardSize + 2)
+		if (record == boardSize + 1)
+			toStore.value = Value.IMPOSSIBLE;
+		else if (record == boardSize + 2)
 			toStore.value = Value.UNDECIDED;
+		else if (record == boardSize + 3)
+			toStore.value = Value.DRAW;
 		else if (record >= 0 && record <= boardSize) {
 			toStore.value = (record & 1) == 1 ? Value.WIN : Value.LOSE;
 			toStore.remoteness = (int) record;
@@ -341,12 +342,14 @@ public final class QuickCross extends Game<QuickCrossState> implements LoopyGame
 	public long recordToLong(QuickCrossState recordState, Record fromRecord) {
 		if (fromRecord.value == Value.WIN || fromRecord.value == Value.LOSE)
 			return fromRecord.remoteness;
-		else if (fromRecord.value == Value.TIE)
+		else if (fromRecord.value == Value.IMPOSSIBLE)
 			return boardSize + 1;
 		else if (fromRecord.value == Value.UNDECIDED)
 			return boardSize + 2;
+		else if (fromRecord.value == Value.DRAW)
+			return boardSize + 3;
 		else
-			throw new Error("Invalid Value");
+			throw new Error("Invalid Value :" + fromRecord.value);
 	}
 
 
