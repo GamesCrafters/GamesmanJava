@@ -261,6 +261,10 @@ public abstract class RectangularDartboardGame extends TierGame {
 		}
 	}
 
+	protected void set(int row, int col, char c) {
+		myHasher.set(row * gameWidth + col, c);
+	}
+
 	@Override
 	public String toString() {
 		return displayState();

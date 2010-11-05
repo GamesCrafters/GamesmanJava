@@ -38,13 +38,24 @@ public class TicTacToeLoopy extends TicTacToe implements LoopyGame<TierState> {
 	}
 
 	public int possibleParents(TierState pos, TierState[] parents) {
-		// TODO Auto-generated method stub
-		return 0;
+		int count = 0;
+		int tier = getTier();
+		char lastTurn = tier % 2 == 0 ? 'O' : 'X';
+		for (int row = 0; row < gameHeight; row++) {
+			for (int col = 0; col < gameWidth; col++) {
+				if (get(row, col) == lastTurn) {
+					parents[count].tier = tier - 1;
+					set(row, col, ' ');
+					parents[count].hash = myHasher.getHash();
+					set(row, col, lastTurn);
+				}
+			}
+		}
+		return count;
 	}
 
 	@Override
 	public int maxParents() {
-		// TODO Auto-generated method stub
-		return 0;
+		return gameSize;
 	}
 }
