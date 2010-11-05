@@ -109,7 +109,7 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame{
 		RecycleLinkedList<S> parents = parentLists.addLast();
 		int numParents = ((LoopyGame) myGame).possibleParents(stateList.getLast(), possibleParents);
 		if (numParents == 0) {
-			moveLists.removeLast();
+			parentLists.removeLast();
 			return 0;
 		} else {
 			for (int i = 0; i < numParents; i++) {
