@@ -1,9 +1,5 @@
 package edu.berkeley.gamesman.solver;
 
-import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.database.DatabaseHandle;
-import edu.berkeley.gamesman.game.LoopyMutaGame;
-
 public class Loopypseudo {
 /*
  * 	public void solve(Configuration conf) {

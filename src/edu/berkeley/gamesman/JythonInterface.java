@@ -3,7 +3,6 @@ package edu.berkeley.gamesman;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Properties;
 
@@ -36,17 +35,7 @@ public final class JythonInterface extends GamesmanApplication {
 	public int run(Properties props) {
 		// Preferences prefs =
 		// Preferences.userNodeForPackage(JythonInterface.class);
-
-		String consoleName = null; // prefs.get("console", null);
 		Consoles console = null;
-		if (consoleName != null) {
-			try {
-				console = Consoles.valueOf(consoleName);
-			} catch (IllegalArgumentException e) {
-				System.out.println(consoleName + " isn't one of "
-						+ Arrays.toString(Consoles.values()));
-			}
-		}
 		while (console == null) {
 			System.out.println("Available consoles:");
 			for (int i = 0; i < Consoles.values().length; i++)

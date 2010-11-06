@@ -17,7 +17,6 @@ public class C4CachedSolver extends TierSolver {
 	private final Pool<MemoryDatabase> writePagePool;
 	private int maxPage;
 	private long times[] = new long[8];
-	private final C4CachedSolver s = this;
 
 	public C4CachedSolver(final Configuration conf) {
 		super(conf);

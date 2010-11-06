@@ -130,7 +130,7 @@ public class DartboardHasher {
 			count[digit]++;
 			if (piece >= lowBit && digit < highest)
 				break;
-			else
+			else if (digit > highest)
 				highest = digit;
 		}
 		if (piece < pieces.length) {
@@ -187,7 +187,7 @@ public class DartboardHasher {
 			count[digit]++;
 			if (piece >= lowBit && digit > lowest)
 				break;
-			else
+			else if (digit < lowest)
 				lowest = digit;
 		}
 		if (piece < pieces.length) {
@@ -235,18 +235,18 @@ public class DartboardHasher {
 			int digitCount = count[digit];
 			for (int i = 0; i < digitCount; i++) {
 				oldHashes -= pieceHashes[piece];
+				secondCount[digit]++;
 				for (int k = 0; k < digit; k++) {
-					secondCount[k]++;
-					pieceHashes[piece] += rearrange(piece, secondCount);
 					secondCount[k]--;
+					pieceHashes[piece] += rearrange(piece, secondCount);
+					secondCount[k]++;
 				}
 				pieces[piece] = digit;
-				secondCount[digit]++;
 				oldHashes += pieceHashes[piece];
 				for (int j = 0; j < replacements.size(); j++) {
 					int[] replacement = replacements.get(j);
 					long[] dif = difs.get(j);
-					dif[piece] = 0L;
+					dif[piece] = -pieceHashes[piece];
 					secondCount[replacement[0]]--;
 					secondCount[replacement[1]]++;
 					for (int k = 0; k < digit; k++) {
@@ -454,9 +454,9 @@ public class DartboardHasher {
 		countPool.release(count);
 	}
 
-
-	//TODO Handle case where old is not lowest
-	public void nextChildren(char old, char replace, long[] childArray) {
+	private void fillChildren(char old, char replace, long[] childArray,
+			boolean prev) {
+		long curHash = hash;
 		int[] replacement = null;
 		long[] dif = null;
 		int i;
@@ -471,33 +471,53 @@ public class DartboardHasher {
 		if (i == replacements.size())
 			throw new Error("No such replacement set");
 		getChildren(old, replace, childArray);
-		int firstOld;
-		for (firstOld = 0; firstOld < pieces.length; firstOld++) {
-			if (pieces[firstOld] == replacement[0])
-				break;
+		int remainingPieces = 0;
+		for (int piece = 0; piece < pieces.length; piece++) {
+			if (childArray[piece] < 0)
+				remainingPieces++;
 		}
-		for (i = firstOld - 1; i >= 0; i--) {
-			while (pieces[i] != replacement[0])
-				next(i);
-			getChild(dif, replacement[1], i);
+		OUTER: while (remainingPieces > 0) {
+			boolean oldSeen = false, emptySeen = false, madeChange = false;
+			for (int piece = 0; piece < pieces.length; piece++) {
+				if (pieces[piece] == replacement[0]) {
+					oldSeen = true;
+					if (childArray[piece] < 0) {
+						childArray[piece] = getChild(dif, replacement[0],
+								replacement[1], piece);
+						remainingPieces--;
+						emptySeen = true;
+					}
+				} else if (childArray[piece] < 0)
+					emptySeen = true;
+				if (oldSeen && emptySeen && !madeChange) {
+					if (prev) {
+						if (!previous(piece))
+							break OUTER;
+					} else {
+						if (!next(piece))
+							break OUTER;
+					}
+					madeChange = true;
+				}
+			}
 		}
-		for (i = firstOld + 1; i < pieces.length; i++) {
-			if (childArray[i] == -1)
-				continue;
-			boolean finished = false;
-			while (pieces[i] != replacement[0] && !finished)
-				finished = next(i);
-			if (finished)
-				break;
-			getChild(dif, replacement[1], i);
-		}
+		unhash(curHash);
 	}
 
-	private long getChild(long[] dif, int replaceNum, int i) {
+	public void nextChildren(char old, char replace, long[] childArray) {
+		fillChildren(old, replace, childArray, false);
+	}
+
+	public void previousChildren(char old, char replace, long[] childArray) {
+		fillChildren(old, replace, childArray, true);
+	}
+
+	private long getChild(long[] dif, int oldNum, int replaceNum, int i) {
 		long hashDif = 0L;
 		int[] count = countPool.get();
 		System.arraycopy(numType, 0, count, 0, numType.length);
 		count[replaceNum]++;
+		count[oldNum]--;
 		for (int piece = pieces.length - 1; piece > i; piece--) {
 			count[pieces[piece]]--;
 			hashDif += dif[piece];
@@ -532,16 +552,32 @@ public class DartboardHasher {
 
 	public static void main(String[] args) {
 		DartboardHasher dh = new DartboardHasher(9, ' ', 'O', 'X');
+		DartboardHasher dh2 = new DartboardHasher(9, ' ', 'O', 'X');
 		dh.setNums(4, 2, 3);
+		dh2.setNums(3, 3, 3);
 		dh.setReplacements(' ', 'O');
 		long[] children = new long[9];
-		long start = System.nanoTime();
 		for (int i = 0; i < 1260; i++) {
-			dh.getChildren(' ', 'O', children);
+			if (dh.hash != i)
+				throw new Error("Hashes don't match");
+			System.out.println(dh.toString());
+			dh.previousChildren(' ', 'O', children);
+			if (children[3] == -1)
+				System.out.println("Nothing");
+			else {
+				dh2.unhash(children[3]);
+				System.out.println(dh2.toString());
+			}
+			dh.nextChildren(' ', 'O', children);
+			if (children[3] == -1)
+				System.out.println("Nothing");
+			else {
+				dh2.unhash(children[3]);
+				System.out.println(dh2.toString());
+			}
 			dh.next();
+			System.out.println();
 		}
-		long end = System.nanoTime();
-		System.out.println(end - start);
 	}
 
 	public void set(int boardNum, char p) {

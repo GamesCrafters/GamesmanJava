@@ -18,14 +18,6 @@ public final class Util {
 	private Util() {
 	}
 
-	public static byte[] decodeBase64(String in) {
-		return Base64.decode(in);
-	}
-
-	public static String encodeBase64(byte[] in) {
-		return Base64.encodeBytes(in);
-	}
-
 	static EnumSet<DebugFacility> debugOpts = EnumSet
 			.noneOf(DebugFacility.class);
 

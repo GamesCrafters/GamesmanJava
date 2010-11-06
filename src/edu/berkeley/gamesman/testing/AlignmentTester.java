@@ -35,9 +35,9 @@ public class AlignmentTester {
 		while (!in.equals("!")) {
 			row = Integer.parseInt(in.charAt(0) + "");
 			col = Integer.parseInt(in.charAt(1) + "");
-			state.put(row, col, game.opposite(state.lastMove));
+			state.put(row, col, Alignment.opposite(state.lastMove));
 			state.fireGuns(5);
-			state.setLastMove(game.opposite(state.lastMove));
+			state.setLastMove(Alignment.opposite(state.lastMove));
 			Value p = game.primitiveValue(state);
 			if (p != Value.UNDECIDED) {
 				if (p == Value.WIN) {

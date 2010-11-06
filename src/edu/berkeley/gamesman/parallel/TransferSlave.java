@@ -10,7 +10,6 @@ import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.database.DistributedDatabase;
 import edu.berkeley.gamesman.database.GZippedFileDatabase;
 import edu.berkeley.gamesman.database.ReadRecords;
-import edu.berkeley.gamesman.database.ReadZippedRecords;
 import edu.berkeley.gamesman.util.UndeterminedChunkOutputStream;
 
 public final class TransferSlave {

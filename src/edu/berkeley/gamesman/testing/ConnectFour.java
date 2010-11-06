@@ -11,7 +11,6 @@ import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.Connect4;
-import edu.berkeley.gamesman.game.HashState;
 import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.util.Pair;
 
@@ -45,8 +44,6 @@ class ConnectFour implements MouseListener {
 
 	final int gameHeight;
 
-	private final Configuration conf;
-
 	private Record nextRecord = null;
 
 	/**
@@ -71,7 +68,6 @@ class ConnectFour implements MouseListener {
 	 */
 	public ConnectFour(Configuration conf, DisplayFour disfour, boolean cX,
 			boolean cO) {
-		this.conf = conf;
 		game = (Connect4) conf.getGame();
 		int c, r;
 		compX = cX;

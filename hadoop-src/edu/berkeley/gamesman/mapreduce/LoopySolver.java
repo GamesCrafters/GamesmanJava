@@ -1,10 +1,10 @@
 package edu.berkeley.gamesman.mapreduce;
 
 import edu.berkeley.gamesman.core.GamesmanConf;
+import edu.berkeley.gamesman.core.State;
 
 import java.io.IOException;
 import java.util.Properties;
-import java.util.StringTokenizer;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -20,7 +20,8 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
 public class LoopySolver {
-	public static class NodeMapper extends Mapper<Object, Text, LongWritable, Message> {
+	public static class NodeMapper extends
+			Mapper<Object, Text, LongWritable, Message> {
 		private LongWritable tmp = new LongWritable();
 		private LoopyGame game;
 
@@ -28,17 +29,20 @@ public class LoopySolver {
 			Configuration conf = context.getConfiguration();
 			try {
 				GamesmanConf g = new GamesmanConf(conf);
-				game = new LoopyGameAdapter(g.getGame());
+				game = new LoopyGameAdapter<State>(g.getCheckedGame());
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
 		}
 
 		/**
-		 * @param key line number of file
-		 * @param value string representation of Node
+		 * @param key
+		 *            line number of file
+		 * @param value
+		 *            string representation of Node
 		 */
-		public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
+		public void map(Object key, Text value, Context context)
+				throws IOException, InterruptedException {
 			// it's text representation for now
 			Node n = Node.fromString(value.toString());
 			// expand the node
@@ -49,13 +53,15 @@ public class LoopySolver {
 					tmp.set(child);
 					context.write(tmp, Message.Expand(n.hash));
 				}
-			// otherwise propagate the solution upwards
+				// otherwise propagate the solution upwards
 			} else if (n.solved && n.parents.length > 0) {
-				// send to any (potentially new) parents that haven't gotten the message
+				// send to any (potentially new) parents that haven't gotten the
+				// message
 				// not sure how to do this if an explicit list isn't kept
 				for (long parent : n.parents) {
 					tmp.set(parent);
-					context.write(tmp, Message.Solve(n.hash, n.value, n.remoteness));
+					context.write(tmp,
+							Message.Solve(n.hash, n.value, n.remoteness));
 				}
 				// delete these from our parent list, since they got the message
 				n.parents = new long[0];
@@ -68,7 +74,8 @@ public class LoopySolver {
 		}
 	}
 
-	public static class MessageReducer extends Reducer<LongWritable,Message,LongWritable,Node> {
+	public static class MessageReducer extends
+			Reducer<LongWritable, Message, LongWritable, Node> {
 		private LongWritable result = new LongWritable();
 		private LoopyGame game;
 
@@ -76,17 +83,20 @@ public class LoopySolver {
 			Configuration conf = context.getConfiguration();
 			try {
 				GamesmanConf g = new GamesmanConf(conf);
-				game = new LoopyGameAdapter(g.getGame());
+				game = new LoopyGameAdapter<State>(g.getCheckedGame());
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
 		}
 
 		/**
-		 * @param key hash of node
-		 * @param messages messages, including the one packing the node
+		 * @param key
+		 *            hash of node
+		 * @param messages
+		 *            messages, including the one packing the node
 		 */
-		public void reduce(LongWritable key, Iterable<Message> messages, Context context) throws IOException, InterruptedException {
+		public void reduce(LongWritable key, Iterable<Message> messages,
+				Context context) throws IOException, InterruptedException {
 			Node n = null;
 			List<Message> buf = new ArrayList<Message>();
 			// we must first identify the target node
@@ -99,28 +109,29 @@ public class LoopySolver {
 			}
 			for (Message m : buf) {
 				switch (m.type) {
-					// either creating a new node or merging multiple parent edges
-					case Message.EXPAND:
-						if (n != null) {
-							n.addParent(m.hash);
-						} else {
-							n = new Node();
-							n.hash = key.get();
-							if (game.isPrimitive(n.hash)) {
-								n.value = game.evalPrimitive(n.hash);
-								n.remoteness = 0;
-								n.solved = true;
-								n.expanded = true;
-							}
-							n.addParent(m.hash);
+				// either creating a new node or merging multiple parent edges
+				case Message.EXPAND:
+					if (n != null) {
+						n.addParent(m.hash);
+					} else {
+						n = new Node();
+						n.hash = key.get();
+						if (game.isPrimitive(n.hash)) {
+							n.value = game.evalPrimitive(n.hash);
+							n.remoteness = 0;
+							n.solved = true;
+							n.expanded = true;
 						}
-						break;
-					// handle solve case - it's impossible for n to be null
-					case Message.SOLVE:
-						assert n != null;
-						if (!n.solved)
-							n.update(m); // updates remoteness, value, solved, rchildren
-						break;
+						n.addParent(m.hash);
+					}
+					break;
+				// handle solve case - it's impossible for n to be null
+				case Message.SOLVE:
+					assert n != null;
+					if (!n.solved)
+						n.update(m); // updates remoteness, value, solved,
+										// rchildren
+					break;
 				}
 			}
 			// emit the altered node as output
@@ -130,12 +141,14 @@ public class LoopySolver {
 
 	public static void main(String[] args) throws Exception {
 		Configuration conf = new Configuration();
-		String[] otherArgs = new GenericOptionsParser(conf, args).getRemainingArgs();
+		String[] otherArgs = new GenericOptionsParser(conf, args)
+				.getRemainingArgs();
 		if (otherArgs.length != 2) {
 			System.err.println("Usage: loopy-solve <in> <out>");
 			System.exit(2);
 		}
-		Properties props = edu.berkeley.gamesman.core.Configuration.readProperties("jobs/TTT.job");
+		Properties props = edu.berkeley.gamesman.core.Configuration
+				.readProperties("jobs/TTT.job");
 		for (String name : props.stringPropertyNames()) {
 			conf.set(name, props.getProperty(name));
 		}

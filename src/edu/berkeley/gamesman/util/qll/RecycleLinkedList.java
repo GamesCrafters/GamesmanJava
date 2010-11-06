@@ -20,6 +20,7 @@ public class RecycleLinkedList<T> extends QuickLinkedList<T> {
 		this(new RLLNullPool<T>(fact));
 	}
 
+	@SuppressWarnings("unchecked")
 	RecycleLinkedList(RLLNullPool<T> pool) {
 		super(pool);
 		myIterator = (RLLIterator) super.myIterator;

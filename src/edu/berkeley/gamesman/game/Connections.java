@@ -162,10 +162,7 @@ public final class Connections extends ConnectGame {
 			nextPoint = Util.getElement(c == 'X' ? xPoints : oPoints, 0,
 					nextPoint.col + 1);
 		} while (nextPoint != null);
-		if (nextPoint == null)
-			return false;
-		else
-			return nextPoint.row == boardSide;
+		return false;
 	}
 
 	private Point testWin(char c, Point p, int dir) {

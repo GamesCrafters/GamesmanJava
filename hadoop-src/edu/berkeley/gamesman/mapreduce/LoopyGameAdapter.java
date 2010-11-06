@@ -7,12 +7,12 @@ import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.core.State;
 
-public class LoopyGameAdapter implements LoopyGame {
-	private final Game game;
-	private final State[] tmp;
+public class LoopyGameAdapter<S extends State> implements LoopyGame {
+	private final Game<S> game;
+	private final S[] tmp;
 	private final List<Long> hashes;
 
-	public LoopyGameAdapter(Game g) {
+	public LoopyGameAdapter(Game<S> g) {
 		game = g;
 		tmp = game.newStateArray(game.maxChildren());
 		hashes = new ArrayList<Long>(tmp.length);
@@ -21,7 +21,7 @@ public class LoopyGameAdapter implements LoopyGame {
 	public Iterable<Long> getSuccessors(long hash) {
 		int number = game.validMoves(game.hashToState(hash), tmp);
 		hashes.clear();
-		for (int i=0; i < number; i++)
+		for (int i = 0; i < number; i++)
 			hashes.add(game.stateToHash(tmp[i]));
 		return hashes;
 	}
@@ -33,18 +33,23 @@ public class LoopyGameAdapter implements LoopyGame {
 	public int evalPrimitive(long hash) {
 		Value val = game.primitiveValue(game.hashToState(hash));
 		switch (val) {
-			case LOSE: return Node.LOSE;
-			case DRAW: return Node.DRAW;
-			case TIE: return Node.TIE;
-			case WIN: return Node.WIN;
-			default: throw new AssertionError();
+		case LOSE:
+			return Node.LOSE;
+		case DRAW:
+			return Node.DRAW;
+		case TIE:
+			return Node.TIE;
+		case WIN:
+			return Node.WIN;
+		default:
+			throw new AssertionError();
 		}
 	}
 
 	public Iterable<Long> getStartingPositions() {
 		List<Long> init = new ArrayList<Long>();
-		for (Object s : game.startingPositions())
-			init.add(game.stateToHash((State)s));
+		for (S s : game.startingPositions())
+			init.add(game.stateToHash(s));
 		return init;
 	}
 }

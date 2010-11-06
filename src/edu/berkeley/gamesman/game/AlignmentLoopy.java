@@ -1,15 +1,8 @@
 package edu.berkeley.gamesman.game;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Value;
-import edu.berkeley.gamesman.game.util.TierState;
-import edu.berkeley.gamesman.hasher.AlignmentHasher;
-import edu.berkeley.gamesman.util.DebugFacility;
-import edu.berkeley.gamesman.util.Pair;
-import edu.berkeley.gamesman.util.Util;
 
 /**
  * @author Kevin, Nancy
