@@ -260,8 +260,13 @@ public abstract class ConnectGame extends TierGame {
 		mmh.previousChildren(' ', turn, lastChildren);
 		long offset = hashOffsetForTier(tier + 1);
 		for (int i = 0; i < moveHashes.length; i++) {
-			firstChildren[i] += offset;
-			lastChildren[i] += offset;
+			if (firstChildren[i] < 0 || lastChildren[i] < 0
+					|| firstChildren[i] > lastChildren[i])
+				firstChildren[i] = lastChildren[i] = -1L;
+			else {
+				firstChildren[i] += offset;
+				lastChildren[i] += offset;
+			}
 		}
 		mmh.unhash(curHash);
 		return new RangeCache(db, null, conf, firstChildren, lastChildren);
