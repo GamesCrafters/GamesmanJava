@@ -3,9 +3,11 @@ package edu.berkeley.gamesman.solver;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.core.Record;
+import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.database.MemoryDatabase;
 import edu.berkeley.gamesman.game.Connect4;
+import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
@@ -47,8 +49,8 @@ public class C4CachedSolver extends TierSolver {
 
 	@Override
 	protected void solvePartialTier(Configuration conf, long start,
-			long hashes, TierSolverUpdater t, DatabaseHandle readDh,
-			DatabaseHandle writeDh) {
+			long hashes, TierSolverUpdater t, Database readDb,
+			DatabaseHandle readDh, Database writeDb, DatabaseHandle writeDh) {
 		final long firstNano;
 		long nano = 0;
 		final boolean debugSolver = Util.debug(DebugFacility.SOLVER);
@@ -210,6 +212,25 @@ public class C4CachedSolver extends TierSolver {
 					* (times[5] - times[6]) / sumTimes / 10D);
 			Util.debug(DebugFacility.SOLVER, "Finalizing: " + 1000 * times[7]
 					/ sumTimes / 10D);
+		}
+	}
+
+	@Override
+	protected int numSplits(int tier, long maxMem, long numHashes) {
+		TierGame game = (TierGame) conf.getGame();
+		long tierHashes = game.numHashesForTier(tier);
+		long thisTierSize = writeDb.requiredMem(game.hashOffsetForTier(tier),
+				tierHashes);
+		long lastTierSize = tier == game.numberOfTiers() - 1 ? 0 : readDb
+				.requiredMem(game.hashOffsetForTier(tier + 1),
+						game.numHashesForTier(tier + 1));
+		if (tierHashes == numHashes) {
+			return (int) ((thisTierSize + lastTierSize * game.maxChildren())
+					* 2 * numThreads / maxMem);
+		} else {
+			double frac = (double) numHashes / tierHashes;
+			return (int) ((thisTierSize + lastTierSize * game.maxChildren())
+					* 2 * numThreads / maxMem * frac);
 		}
 	}
 }

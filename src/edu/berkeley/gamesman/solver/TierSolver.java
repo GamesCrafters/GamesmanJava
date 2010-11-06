@@ -7,6 +7,7 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
 import edu.berkeley.gamesman.core.*;
+import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.game.util.TierState;
@@ -47,13 +48,13 @@ public class TierSolver extends Solver {
 
 	boolean parallelSolving;
 
-	private long times[] = new long[7];
+	protected long times[] = new long[7];
 
 	private final int minSplitSize;
 
 	protected void solvePartialTier(Configuration conf, long start,
-			long hashes, TierSolverUpdater t, DatabaseHandle readDh,
-			DatabaseHandle writeDh) {
+			long hashes, TierSolverUpdater t, Database readDb,
+			DatabaseHandle readDh, Database writeDb, DatabaseHandle writeDh) {
 		final long firstNano;
 		long nano = 0;
 		final boolean debugSolver = Util.debug(DebugFacility.SOLVER);
@@ -233,15 +234,7 @@ public class TierSolver extends Solver {
 				TierGame game = (TierGame) conf.getGame();
 				long fullStart = game.hashOffsetForTier(tier);
 				long fullSize = game.numHashesForTier(tier);
-				int numTiers = game.numberOfTiers();
-				splits = Math.max(
-						minSplits,
-						numSplits(
-								tier == numTiers - 1 ? 0 : readDb.requiredMem(
-										game.hashOffsetForTier(tier + 1),
-										game.numHashesForTier(tier + 1)),
-								writeDb.requiredMem(fullStart, fullSize),
-								maxMem));
+				splits = Math.max(minSplits, numSplits(tier, maxMem));
 				starts = writeDb.splitRange(fullStart, fullSize, splits,
 						minSplitSize);
 			}
@@ -254,10 +247,13 @@ public class TierSolver extends Solver {
 
 	private volatile boolean needs2Reset = false;
 
-	private int numSplits(long lastTierSize, long thisTierSize, long maxMem) {
-		return (int) ((thisTierSize + lastTierSize
-				* conf.getGame().maxChildren())
-				* 2 * numThreads / maxMem);
+	protected int numSplits(int tier, long maxMem) {
+		return numSplits(tier, maxMem,
+				((TierGame) conf.getGame()).numHashesForTier(tier));
+	}
+
+	protected int numSplits(int tier, long maxMem, long numHashes) {
+		return 1;
 	}
 
 	protected Pair<Long, Long> nextSlice(Configuration conf) {
@@ -339,8 +335,8 @@ public class TierSolver extends Solver {
 					readHandle = null;
 				else
 					readHandle = readDb.getHandle();
-				solvePartialTier(conf, slice.car, slice.cdr, updater,
-						readHandle, myWrite);
+				solvePartialTier(conf, slice.car, slice.cdr, updater, readDb,
+						readHandle, writeDb, myWrite);
 				writeDb.closeHandle(myWrite);
 			}
 			if (barr != null)
@@ -423,18 +419,7 @@ public class TierSolver extends Solver {
 		this.tier = tier;
 		updater = new TierSolverUpdater(numHashes);
 		parallelSolving = true;
-		TierGame game = (TierGame) conf.getGame();
-		double tierFrac = 0D;
-		if (tier < game.numberOfTiers() - 1) {
-			tierFrac = ((double) game.numHashesForTier(tier + 1))
-					/ game.numHashesForTier(tier);
-		}
-		long writeRequired = writeDb.requiredMem(startHash, numHashes);
-		splits = Math.max(
-				minSplits,
-				numSplits(tier == game.numberOfTiers() - 1 ? 0
-						: (long) (tierFrac * writeRequired), writeRequired,
-						maxMem));
+		splits = Math.max(minSplits, numSplits(tier, maxMem, numHashes));
 		starts = writeDb.splitRange(startHash, numHashes, splits, minSplitSize);
 		return new TierSolverWorkUnit(conf);
 	}

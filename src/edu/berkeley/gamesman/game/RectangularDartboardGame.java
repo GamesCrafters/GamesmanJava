@@ -6,6 +6,9 @@ import java.util.Collection;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Value;
+import edu.berkeley.gamesman.database.Database;
+import edu.berkeley.gamesman.database.RangeCache;
+import edu.berkeley.gamesman.database.DatabaseWrapper;
 import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.hasher.DartboardHasher;
 import edu.berkeley.gamesman.util.Pair;
@@ -263,6 +266,29 @@ public abstract class RectangularDartboardGame extends TierGame {
 
 	protected void set(int row, int col, char c) {
 		myHasher.set(row * gameWidth + col, c);
+	}
+
+	@Override
+	public DatabaseWrapper getCache(Database db, long numPositions) {
+		long[] firstChildren = new long[myChildren.length];
+		long[] lastChildren = new long[myChildren.length];
+		long curHash = myHasher.getHash();
+		char turn = tier % 2 == 0 ? 'X' : 'O';
+		myHasher.nextChildren(' ', turn, firstChildren);
+		myHasher.unhash(curHash + numPositions - 1);
+		myHasher.previousChildren(' ', turn, lastChildren);
+		long offset = hashOffsetForTier(tier + 1);
+		for (int i = 0; i < myChildren.length; i++) {
+			if (firstChildren[i] < 0 || lastChildren[i] < 0
+					|| firstChildren[i] > lastChildren[i])
+				firstChildren[i] = lastChildren[i] = -1L;
+			else {
+				firstChildren[i] += offset;
+				lastChildren[i] += offset;
+			}
+		}
+		myHasher.unhash(curHash);
+		return new RangeCache(db, null, conf, firstChildren, lastChildren);
 	}
 
 	@Override

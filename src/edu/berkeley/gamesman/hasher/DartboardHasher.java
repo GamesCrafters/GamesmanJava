@@ -476,6 +476,8 @@ public class DartboardHasher {
 			if (childArray[piece] < 0)
 				remainingPieces++;
 		}
+		if (remainingPieces == pieces.length)
+			return;
 		OUTER: while (remainingPieces > 0) {
 			boolean oldSeen = false, emptySeen = false, madeChange = false;
 			for (int piece = 0; piece < pieces.length; piece++) {
