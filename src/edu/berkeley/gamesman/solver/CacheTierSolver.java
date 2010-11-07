@@ -21,7 +21,7 @@ public class CacheTierSolver extends TierSolver {
 		TierState ts = game.hashToState(start);
 		game.setState(ts);
 		TierReadCache readCache = game.getCache(readDb, hashes, maxMem
-				/ numThreads - writeDb.requiredMem(start, hashes));
+				/ (2 * numThreads) - writeDb.requiredMem(start, hashes));
 		MemoryDatabase writeCache = new MemoryDatabase(writeDb, null, conf,
 				true, start, hashes);
 		writeDh = writeCache.getHandle();
