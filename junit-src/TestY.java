@@ -1045,6 +1045,22 @@ public class TestY {
         }
     }
     */
+    
+    @Test
+    public void Test_2by4_isWin1() {
+    	ygame24.fillBoardWithPlayer('X');
+    	
+    	assertTrue(ygame24.isWin('X'));   	
+    }
+    
+    @Test
+    public void Test_2by4_isWin2() {
+    	ygame24.fillBoardWithPlayer('O');
+    	
+    	//ygame24.setPlayerAt(triangle, index, player)
+    	assertTrue(ygame24.isWin('X'));   	
+    }
+    
     @AfterClass
     public static void oneTimeTearDown() {}
     
