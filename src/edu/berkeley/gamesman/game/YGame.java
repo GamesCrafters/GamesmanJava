@@ -919,23 +919,23 @@ public final class YGame extends ConnectGame
 
         boolean result = false;
         // go over the left edge from bottom up
-        for (int ind = 0; ind < this.nodesInThisTriangle[this.numberOfTriangles] / 3; ind++) 
+        for (int ind = 0; ind < this.nodesInThisTriangle[this.numberOfTriangles-1] / 3; ind++) 
         {
-            if (this.getPlayerAt(this.numberOfTriangles, ind) == player) 
+            if (this.getPlayerAt(this.numberOfTriangles-1, ind) == player) 
             {
                 // reached Edges [0] - left [1] - right [2] - bottom
-                final boolean[] reachedEdges = new boolean[2];
+                final boolean[] reachedEdges = new boolean[3];
                 reachedEdges[0] = true; // left edge is reached
                 Node previousNode = null;
-                final Node startNode = new Node(this./* false, */numberOfTriangles, ind);
-                Node currentNode = new Node(this./* false, */numberOfTriangles, ind);
+                final Node startNode = new Node(this.numberOfTriangles-1, ind);
+                Node currentNode = new Node(this.numberOfTriangles-1, ind);
                 boolean done = false;
 
                 do 
                 {
-                    if (currentNode.getTriangle() == this.numberOfTriangles) 
+                    if (currentNode.getTriangle() == this.numberOfTriangles-1) 
                     {
-                        final int div = (this.nodesInThisTriangle[this.numberOfTriangles] + 1) / 3;
+                        final int div = (this.nodesInThisTriangle[this.numberOfTriangles-1] + 1) / 3;
                         final int currentIndex = currentNode.getIndex();
                         if ((currentIndex >= div) && (currentIndex <= 2 * div)) 
                         {
