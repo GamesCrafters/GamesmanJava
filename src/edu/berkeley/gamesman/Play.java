@@ -40,7 +40,7 @@ public final class Play {
 		 * as having a configuration option)
 		 */
 		Scanner scan = new Scanner(System.in);
-		Record storeRecord = g.getRecord();
+		Record storeRecord = g.newRecord();
 		// Creates a Record object for storing unhashed records retrieved from
 		// the database
 		DatabaseHandle dh = db.getHandle();

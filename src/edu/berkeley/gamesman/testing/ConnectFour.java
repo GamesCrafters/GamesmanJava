@@ -114,7 +114,7 @@ class ConnectFour implements MouseListener {
 					nextRecord = null;
 				} else {
 					TierState state = game.stringToState(arrToString(board));
-					Record r = game.getRecord();
+					Record r = game.newRecord();
 					DatabaseHandle fdHandle = fd.getHandle();
 					game.longToRecord(state,
 							fd.getRecord(fdHandle, game.stateToHash(state)), r);
@@ -150,7 +150,7 @@ class ConnectFour implements MouseListener {
 			for (int i = 0; i < listMoves.size(); i++) {
 				TierState state = listMoves.get(i).cdr;
 				moveHashes[i] = game.stateToHash(state);
-				records[i] = game.getRecord();
+				records[i] = game.newRecord();
 				game.longToRecord(state, fd.getRecord(fdHandle, moveHashes[i]),
 						records[i]);
 			}

@@ -34,7 +34,7 @@ public class TopDownSolver extends Solver {
 			public Record[] newObject() {
 				Record[] retVal = new Record[game.maxChildren()];
 				for (int i = 0; i < retVal.length; i++)
-					retVal[i] = game.getRecord();
+					retVal[i] = game.newRecord();
 				return retVal;
 			}
 
@@ -74,7 +74,7 @@ public class TopDownSolver extends Solver {
 			game = wrapGame(conf, g);
 		}
 		long hashSpace = game.numHashes();
-		Record defaultRecord = game.getRecord();
+		Record defaultRecord = game.newRecord();
 		defaultRecord.value = Value.UNDECIDED;
 		writeDb.fill(game.recordToLong(defaultRecord), 0, hashSpace);
 		for (int startNum = 0; startNum < game.numStartingPositions(); startNum++) {
@@ -82,7 +82,7 @@ public class TopDownSolver extends Solver {
 			long currentTimeMillis = System.currentTimeMillis();
 			DatabaseHandle readHandle = readDb.getHandle();
 			DatabaseHandle writeHandle = writeDb.getHandle();
-			solve(game, game.getRecord(), 0, readHandle, writeHandle);
+			solve(game, game.newRecord(), 0, readHandle, writeHandle);
 			writeDb.closeHandle(writeHandle);
 			System.out.println(Util.millisToETA(System.currentTimeMillis()
 					- currentTimeMillis)

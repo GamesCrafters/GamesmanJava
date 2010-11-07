@@ -7,8 +7,8 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.database.Database;
-import edu.berkeley.gamesman.database.DatabaseWrapper;
-import edu.berkeley.gamesman.database.RangeCache;
+import edu.berkeley.gamesman.database.TierReadCache;
+import edu.berkeley.gamesman.game.util.DartboardCacher;
 import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.hasher.ChangedIterator;
 import edu.berkeley.gamesman.hasher.DartboardHasher;
@@ -27,6 +27,7 @@ public abstract class ConnectGame extends TierGame {
 	private int tier;
 	private final ChangedIterator changed;
 	private final long[] moveHashes;
+	private final DartboardCacher myCacher;
 
 	/**
 	 * @param conf
@@ -51,6 +52,7 @@ public abstract class ConnectGame extends TierGame {
 		mmh = new DartboardHasher(boardSize, ' ', 'O', 'X');
 		moveHashes = new long[boardSize];
 		changed = new ChangedIterator(boardSize);
+		myCacher = new DartboardCacher(conf, mmh);
 	}
 
 	protected abstract int getBoardSize();
@@ -250,25 +252,14 @@ public abstract class ConnectGame extends TierGame {
 	protected abstract boolean isWin(char c);
 
 	@Override
-	public DatabaseWrapper getCache(Database db, long numPositions) {
-		long[] firstChildren = new long[moveHashes.length];
-		long[] lastChildren = new long[moveHashes.length];
-		long curHash = mmh.getHash();
-		char turn = tier % 2 == 0 ? 'X' : 'O';
-		mmh.nextChildren(' ', turn, firstChildren);
-		mmh.unhash(curHash + numPositions - 1);
-		mmh.previousChildren(' ', turn, lastChildren);
-		long offset = hashOffsetForTier(tier + 1);
-		for (int i = 0; i < moveHashes.length; i++) {
-			if (firstChildren[i] < 0 || lastChildren[i] < 0
-					|| firstChildren[i] > lastChildren[i])
-				firstChildren[i] = lastChildren[i] = -1L;
-			else {
-				firstChildren[i] += offset;
-				lastChildren[i] += offset;
-			}
-		}
-		mmh.unhash(curHash);
-		return new RangeCache(db, null, conf, firstChildren, lastChildren);
+	public TierReadCache getCache(Database db, long numPositions,
+			long availableMem) {
+		return myCacher.getCache(db, numPositions, availableMem, tier,
+				hashOffsetForTier(tier + 1));
+	}
+
+	@Override
+	public TierReadCache nextCache() {
+		return myCacher.nextCache();
 	}
 }

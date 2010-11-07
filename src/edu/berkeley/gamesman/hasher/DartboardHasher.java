@@ -586,4 +586,8 @@ public class DartboardHasher {
 		pieces[boardNum] = findDigit(p);
 		rehash(true);
 	}
+
+	public int size() {
+		return pieces.length;
+	}
 }

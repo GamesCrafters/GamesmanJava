@@ -3,8 +3,8 @@ package edu.berkeley.gamesman.solver;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
-import edu.berkeley.gamesman.database.DatabaseWrapper;
 import edu.berkeley.gamesman.database.MemoryDatabase;
+import edu.berkeley.gamesman.database.TierReadCache;
 import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.game.util.TierState;
 
@@ -20,13 +20,23 @@ public class CacheTierSolver extends TierSolver {
 		TierGame game = (TierGame) conf.getGame();
 		TierState ts = game.hashToState(start);
 		game.setState(ts);
-		DatabaseWrapper readCache = game.getCache(readDb, hashes);
-		readDh = readCache.getHandle();
+		TierReadCache readCache = game.getCache(readDb, hashes, maxMem
+				/ numThreads - writeDb.requiredMem(start, hashes));
 		MemoryDatabase writeCache = new MemoryDatabase(writeDb, null, conf,
 				true, start, hashes);
 		writeDh = writeCache.getHandle();
-		super.solvePartialTier(conf, start, hashes, t, readCache, readDh,
-				writeCache, writeDh);
+		while (true) {
+			readDh = readCache.getHandle();
+			super.solvePartialTier(conf, start, readCache.numHashes(), t,
+					readCache, readDh, writeCache, writeDh);
+			if (readCache.numHashes() < hashes) {
+				game.nextHashInTier();
+				start += readCache.numHashes();
+				hashes -= readCache.numHashes();
+				readCache = game.nextCache();
+			} else
+				break;
+		}
 		writeCache.closeHandle(writeDh);
 		writeCache.flush();
 	}

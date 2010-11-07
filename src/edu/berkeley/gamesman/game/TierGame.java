@@ -6,7 +6,7 @@ import java.util.Collection;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.database.Database;
-import edu.berkeley.gamesman.database.DatabaseWrapper;
+import edu.berkeley.gamesman.database.TierReadCache;
 import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.hasher.TierHasher;
 import edu.berkeley.gamesman.util.Pair;
@@ -242,7 +242,12 @@ public abstract class TierGame extends Game<TierState> {
 		return new TierState(tier, hash);
 	}
 
-	public DatabaseWrapper getCache(Database db, long numPositions) {
+	public TierReadCache getCache(Database db, long numPositions,
+			long availableMem) {
+		throw new UnsupportedOperationException();
+	}
+
+	public TierReadCache nextCache() {
 		throw new UnsupportedOperationException();
 	}
 

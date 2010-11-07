@@ -39,12 +39,12 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 		int maxRemoteness = conf
 				.getInteger("gamesman.solver.maxRemoteness", -1);
 		hashSpace = game.numHashes();
-		Record defaultRecord = game.getRecord();
+		Record defaultRecord = game.newRecord();
 		defaultRecord.value = Value.UNDECIDED;
 		writeDb.fill(game.recordToLong(null, defaultRecord), 0, hashSpace);
 		DatabaseHandle dh = writeDb.getHandle();
 		long numPositionsZero = 0;
-		Record rec = game.getRecord();
+		Record rec = game.newRecord();
 		for (T s : game.startingPositions()) {
 			long hash = game.stateToHash(s);
 			Value isWin = game.primitiveValue(s);
@@ -96,8 +96,8 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 					game.describe()));
 			solveTask.setTotal(lastHashPlusOne - firstHash);
 			solveTask.setProgress(0);
-			Record rec = game.getRecord();
-			Record childrec = game.getRecord();
+			Record rec = game.newRecord();
+			Record childrec = game.newRecord();
 			T currentPos = game.newState();
 			T[] childPositions = game.newStateArray(game.maxChildren());
 			DatabaseHandle readDh = readDb.getHandle();

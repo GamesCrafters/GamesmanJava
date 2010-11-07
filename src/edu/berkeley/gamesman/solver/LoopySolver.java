@@ -42,7 +42,7 @@ public class LoopySolver extends Solver {
 		recordPool = new Pool<Record>(new Factory<Record>() {
 
 			public Record newObject() {
-				return game.getRecord();
+				return game.newRecord();
 			}
 
 			public void reset(Record t) {
@@ -51,7 +51,7 @@ public class LoopySolver extends Solver {
 
 		});
 		long hashSpace = game.numHashes();
-		Record defaultRecord = game.getRecord();
+		Record defaultRecord = game.newRecord();
 		defaultRecord.value = Value.IMPOSSIBLE;
 		writeDb.fill(conf.getGame().recordToLong(null, defaultRecord), 0,
 				hashSpace);
@@ -84,7 +84,7 @@ public class LoopySolver extends Solver {
 		}
 		for (int startNum = 0; startNum < game.numStartingPositions(); startNum++) {
 			game.setStartingPosition(startNum);
-			solve(game, game.getRecord(), 0, readDb.getHandle(),
+			solve(game, game.newRecord(), 0, readDb.getHandle(),
 					writeDb.getHandle());
 		}
 	}

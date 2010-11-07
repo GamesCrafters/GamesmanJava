@@ -101,7 +101,7 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 		int width = conf.getInteger("gamesman.game.width", 7);
 		int height = conf.getInteger("gamesman.game.height", 6);
 		Game<?> game = conf.getGame();
-		Record r = game.getRecord();
+		Record r = game.newRecord();
 		DatabaseHandle fdHandle = fd.getHandle();
 		Connect4 g = (Connect4) game;
 		g.longToRecord(g.hashToState(0), fd.getRecord(fdHandle, 0), r);

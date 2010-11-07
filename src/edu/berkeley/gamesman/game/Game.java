@@ -472,7 +472,7 @@ public abstract class Game<S extends State> {
 	 * @return A new Record object (if you wish to subclass Record for your
 	 *         game, you should over-ride this)
 	 */
-	public Record getRecord() {
+	public Record newRecord() {
 		return new Record(conf);
 	}
 }

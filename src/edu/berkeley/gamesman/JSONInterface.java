@@ -358,7 +358,7 @@ public class JSONInterface extends GamesmanApplication {
 			Database db = conf.db;
 			Game<T> g = conf.getCheckedGame();
 			if (db != null) {
-				Record rec = g.getRecord();
+				Record rec = g.newRecord();
 				DatabaseHandle handle = db.getHandle();
 				g.synchronizedLongToRecord(state,
 						db.getRecord(handle, g.synchronizedStateToHash(state)),

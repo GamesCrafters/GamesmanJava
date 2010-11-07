@@ -7,74 +7,41 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.util.qll.Factory;
+import edu.berkeley.gamesman.util.qll.Pool;
 
-public class RangeCache extends DatabaseWrapper {
+public class RangeCache extends TierReadCache {
 
-	private final MemoryDatabase[] slots;
-	private final long[] searchable;
+	private final Pool<MemoryDatabase> slotPool = new Pool<MemoryDatabase>(
+			new Factory<MemoryDatabase>() {
 
-	public RangeCache(Database db, String uri, Configuration conf,
-			long[] firstRecords, long[] lastRecords) {
-		super(db, uri, conf, true, firstFirst(firstRecords), maxNum(
-				firstRecords, lastRecords));
-		LinkedList<long[]> ranges = new LinkedList<long[]>();
-		for (int i = 0; i < firstRecords.length; i++) {
-			if (firstRecords[i] < 0L)
-				continue;
-			Iterator<long[]> iter = ranges.iterator();
-			while (iter.hasNext()) {
-				long[] testRange = iter.next();
-				if (firstRecords[i] <= testRange[1]
-						&& lastRecords[i] >= testRange[0]) {
-					firstRecords[i] = Math.min(firstRecords[i], testRange[0]);
-					lastRecords[i] = Math.max(lastRecords[i], testRange[1]);
-					iter.remove();
+				public MemoryDatabase newObject() {
+					MemoryDatabase md = new MemoryDatabase(db, null, conf,
+							false, true);
+					reset(md);
+					return md;
 				}
-			}
-			ranges.add(new long[] { firstRecords[i], lastRecords[i] });
-		}
-		Collections.sort(ranges, new Comparator<long[]>() {
 
-			@Override
-			public int compare(long[] o1, long[] o2) {
-				if (o1[0] > o2[0])
-					return 1;
-				else if (o1[0] < o2[0])
-					return -1;
-				else
-					return 0;
-			}
+				public void reset(MemoryDatabase t) {
+				}
+			});
+	private MemoryDatabase[] slots;
+	private long[] searchable;
+	private long numHashes;
 
-		});
-		slots = new MemoryDatabase[ranges.size()];
-		searchable = new long[ranges.size()];
-		Iterator<long[]> iter = ranges.iterator();
-		for (int i = 0; i < slots.length; i++) {
-			long[] next = iter.next();
-			slots[i] = new MemoryDatabase(db, null, conf, false, next[0],
-					next[1] - next[0] + 1);
-			searchable[i] = next[0];
-		}
+	public RangeCache(Database db, Configuration conf) {
+		super(db, conf);
 	}
 
-	private static long maxNum(long[] firstRecords, long[] lastRecords) {
-		long max = -1L;
-		for (int i = 0; i < firstRecords.length; i++)
-			if (lastRecords[i] > max)
-				max = lastRecords[i];
-		if (max < 0)
-			return 0L;
-		return max + 1 - firstFirst(firstRecords);
-	}
-
-	private static long firstFirst(long[] firstRecords) {
-		long min = Long.MAX_VALUE;
-		for (long l : firstRecords)
-			if (l >= 0 && l < min)
-				min = l;
-		if (min == Long.MAX_VALUE)
-			return 0L;
-		return min;
+	public static long memFor(Database db, long[] firstRecords,
+			long[] lastRecords) {
+		long total = 0L;
+		for (int i = 0; i < firstRecords.length; i++) {
+			if (firstRecords[i] >= 0 && lastRecords[i] >= 0)
+				total += db.requiredMem(firstRecords[i], lastRecords[i] + 1
+						- firstRecords[i]);
+		}
+		return total;
 	}
 
 	@Override
@@ -139,6 +106,59 @@ public class RangeCache extends DatabaseWrapper {
 		for (MemoryDatabase slot : slots)
 			total += slot.getSize();
 		return total;
+	}
+
+	@Override
+	public long numHashes() {
+		return numHashes;
+	}
+
+	public boolean setRanges(long[] firstRecords, long[] lastRecords,
+			long numHashes) {
+		if (slots != null)
+			for (MemoryDatabase slot : slots) {
+				slotPool.release(slot);
+			}
+		this.numHashes = numHashes;
+		LinkedList<long[]> ranges = new LinkedList<long[]>();
+		for (int i = 0; i < firstRecords.length; i++) {
+			if (firstRecords[i] < 0L)
+				continue;
+			Iterator<long[]> iter = ranges.iterator();
+			while (iter.hasNext()) {
+				long[] testRange = iter.next();
+				if (firstRecords[i] <= testRange[1]
+						&& lastRecords[i] >= testRange[0]) {
+					firstRecords[i] = Math.min(firstRecords[i], testRange[0]);
+					lastRecords[i] = Math.max(lastRecords[i], testRange[1]);
+					iter.remove();
+				}
+			}
+			ranges.add(new long[] { firstRecords[i], lastRecords[i] });
+		}
+		Collections.sort(ranges, new Comparator<long[]>() {
+
+			@Override
+			public int compare(long[] o1, long[] o2) {
+				if (o1[0] > o2[0])
+					return 1;
+				else if (o1[0] < o2[0])
+					return -1;
+				else
+					return 0;
+			}
+
+		});
+		slots = new MemoryDatabase[ranges.size()];
+		searchable = new long[ranges.size()];
+		Iterator<long[]> iter = ranges.iterator();
+		for (int i = 0; i < slots.length; i++) {
+			long[] next = iter.next();
+			slots[i] = slotPool.get();
+			slots[i].setRange(next[0], (int) (next[1] - next[0] + 1));
+			searchable[i] = next[0];
+		}
+		return true;
 	}
 
 }

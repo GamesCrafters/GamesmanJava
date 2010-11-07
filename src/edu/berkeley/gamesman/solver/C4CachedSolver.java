@@ -69,8 +69,8 @@ public class C4CachedSolver extends TierSolver {
 		long stepNum = current % STEP_SIZE;
 		Record[] vals = new Record[game.maxChildren()];
 		for (int i = 0; i < vals.length; i++)
-			vals[i] = game.getRecord();
-		Record prim = game.getRecord();
+			vals[i] = game.newRecord();
+		Record prim = game.newRecord();
 		TierState[] children = new TierState[game.maxChildren()];
 		for (int i = 0; i < children.length; i++)
 			children[i] = game.newState();
