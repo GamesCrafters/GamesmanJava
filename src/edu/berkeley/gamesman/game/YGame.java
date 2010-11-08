@@ -772,8 +772,13 @@ public final class YGame extends ConnectGame
         {
             if (this.nodesOnInnerTriangle.size() == 2) 
             {
-                if (this.isCornerIndex(triangleIn, indexIn + 1) == true)// Handle index wrap-around for before corner nodes
-
+                if (Util.nonNegativeModulo((indexIn + 1), this.nodesInThisTriangle[this.nodesOnInnerTriangle.get(0).triangle + 1]) == 0)// Handle
+                                                                                                                                        // index
+                                                                                                                                        // wrap-around
+                                                                                                                                        // for
+                                                                                                                                        // before
+                                                                                                                                        // corner
+                                                                                                                                        // nodes
                 {
                     if (this.nodesOnInnerTriangle.get(0).index == 0) 
                     {
