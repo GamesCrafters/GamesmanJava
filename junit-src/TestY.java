@@ -1057,8 +1057,85 @@ public class TestY {
     public void Test_2by4_isWin2() {
     	ygame24.fillBoardWithPlayer('O');
     	
-    	//ygame24.setPlayerAt(triangle, index, player)
+    	assertFalse(ygame24.isWin('X'));   	
+    }
+  
+    @Test
+    public void Test_2by4_isWin3() {
+    	ygame24.fillBoardWithPlayer('O');
+    	
+    	ygame24.setPlayerAt(2, 0, 'X');
+    	ygame24.setPlayerAt(1, 0, 'X');
+    	ygame24.setPlayerAt(0, 0, 'X');
+    	ygame24.setPlayerAt(0, 1, 'X');
+    	ygame24.setPlayerAt(0, 2, 'X');
+    	ygame24.setPlayerAt(1, 4, 'X');
+    	ygame24.setPlayerAt(2, 5, 'X');
+    	
     	assertTrue(ygame24.isWin('X'));   	
+    }
+    
+    @Test
+    public void Test_2by4_isWin4() {
+    	ygame24.fillBoardWithPlayer('O');
+    	
+    	ygame24.setPlayerAt(2, 0, 'X');
+    	ygame24.setPlayerAt(1, 0, 'X');
+    	ygame24.setPlayerAt(1, 8, 'X');
+    	ygame24.setPlayerAt(1, 7, 'X');
+    	ygame24.setPlayerAt(1, 6, 'X');
+    	ygame24.setPlayerAt(1, 5, 'X');
+    	ygame24.setPlayerAt(2, 7, 'X');
+    	
+    	assertTrue(ygame24.isWin('X'));   	
+    }
+    
+    @Test
+    public void Test_2by4_isWin5() {
+    	ygame24.fillBoardWithPlayer('O');
+    	
+    	ygame24.setPlayerAt(2, 0, 'X');
+    	ygame24.setPlayerAt(2, 11, 'X');
+    	ygame24.setPlayerAt(2, 10, 'X');
+    	ygame24.setPlayerAt(2, 9, 'X');
+    	ygame24.setPlayerAt(2, 8, 'X');
+    	
+    	assertTrue(ygame24.isWin('X'));   	
+    }
+    
+    @Test
+    public void Test_2by4_isWin6() {
+    	ygame24.fillBoardWithPlayer('O');
+    	
+    	ygame24.setPlayerAt(2, 0, 'X');
+    	ygame24.setPlayerAt(1, 0, 'X');
+    	ygame24.setPlayerAt(0, 0, 'X');
+    	ygame24.setPlayerAt(1, 1, 'X');
+    	ygame24.setPlayerAt(0, 1, 'X');
+    	ygame24.setPlayerAt(1, 2, 'X');
+    	ygame24.setPlayerAt(0, 2, 'X');
+    	ygame24.setPlayerAt(1, 3, 'X');
+    	ygame24.setPlayerAt(2, 4, 'X');
+    	
+    	assertTrue(ygame24.isWin('X'));   	
+    }
+    
+    @Test
+    public void Test_2by4_isWin7() {
+    	ygame24.fillBoardWithPlayer('O');
+    	
+    	ygame24.setPlayerAt(2, 2, 'X');
+    	ygame24.setPlayerAt(1, 2, 'X');
+    	ygame24.setPlayerAt(0, 3, 'X');
+    	ygame24.setPlayerAt(0, 2, 'X');
+    	ygame24.setPlayerAt(1, 3, 'X');
+    	ygame24.setPlayerAt(1, 4, 'X');
+    	ygame24.setPlayerAt(1, 5, 'X');
+    	ygame24.setPlayerAt(1, 6, 'X');
+    	ygame24.setPlayerAt(1, 7, 'X');
+    	ygame24.setPlayerAt(2, 10, 'X');
+    	
+    	assertFalse(ygame24.isWin('X'));   	
     }
     
     @AfterClass

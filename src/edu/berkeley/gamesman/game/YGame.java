@@ -111,8 +111,7 @@ public final class YGame extends ConnectGame
          */
         public boolean equals(final Node theNode) 
         {
-            return (// (trueIfInnerMode == theNode.isInInnerTriangle()) &&
-                    (this.triangle == theNode.getTriangle()) && (this.index == this.getIndex()));
+            return ((this.triangle == theNode.getTriangle()) && (this.index == theNode.getIndex()));
         }
     }
 
@@ -982,22 +981,22 @@ public final class YGame extends ConnectGame
                     {
                         if (previousNode == null) 
                         {
-                            previousNode = currentNode;
-                            currentNode = neighbors.get(i);// select the first node clock-wise
+                            previousNode = new Node( currentNode );
+                            currentNode = new Node ( neighbors.get(i) );// select the first node clock-wise
                             break;
                         }
                         else if (previousNode.equals(neighbors.get(i))) 
                         {
-                            previousNode = currentNode;
-                            currentNode = neighbors.get((i + 1)
-                                    % neighbors.size());// select next node after previous in clock-wise
+                            previousNode = new Node( currentNode );
+                            currentNode = new Node( neighbors.get((i + 1)
+                                    % neighbors.size()) );// select next node after previous in clock-wise
                             break;
                         }
                     }
                     done = currentNode.equals(startNode)
                     || (reachedEdges[1] && reachedEdges[2]);
                 }
-                while (done);
+                while (!done);
 
                 if (reachedEdges[1] && reachedEdges[2]) 
                 {
