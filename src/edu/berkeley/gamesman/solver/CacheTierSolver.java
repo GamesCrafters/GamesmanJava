@@ -19,26 +19,47 @@ public class CacheTierSolver extends TierSolver {
 			DatabaseHandle readDh, Database writeDb, DatabaseHandle writeDh) {
 		TierGame game = (TierGame) conf.getGame();
 		TierState ts = game.hashToState(start);
+		long tierHashes = game.numHashesForTier(tier);
+		long prevTierHashes = 0L;
+		if (tier < game.numberOfTiers() - 1)
+			prevTierHashes = game.numHashesForTier(tier + 1);
 		game.setState(ts);
-		TierReadCache readCache = game.getCache(readDb, hashes, maxMem
-				/ (2 * numThreads) - writeDb.requiredMem(start, hashes));
+		TierReadCache readCache;
+		if (tier < game.numberOfTiers() - 1) {
+			double writePortion = (double) tierHashes
+					/ (game.maxChildren() * prevTierHashes + tierHashes);
+			readCache = game.getCache(readDb, hashes, (long) (maxMem
+					* (1 - writePortion) / (2 * numThreads)));
+		} else
+			readCache = null;
 		MemoryDatabase writeCache = new MemoryDatabase(writeDb, null, conf,
-				true, start, hashes);
-		writeDh = writeCache.getHandle();
-		while (true) {
-			readDh = readCache.getHandle();
-			super.solvePartialTier(conf, start, readCache.numHashes(), t,
-					readCache, readDh, writeCache, writeDh);
-			if (readCache.numHashes() < hashes) {
-				game.nextHashInTier();
-				start += readCache.numHashes();
-				hashes -= readCache.numHashes();
-				readCache = game.nextCache();
-			} else
-				break;
+				true, true);
+		if (readCache == null) {
+			writeCache.setRange(start, (int) hashes);
+			writeDh = writeCache.getHandle();
+			readDh = null;
+			super.solvePartialTier(conf, start, hashes, t, readCache, readDh,
+					writeCache, writeDh);
+			writeCache.closeHandle(writeDh);
+			writeCache.flush();
+		} else {
+			while (true) {
+				writeCache.setRange(start, (int) readCache.numHashes());
+				writeDh = writeCache.getHandle();
+				readDh = readCache.getHandle();
+				super.solvePartialTier(conf, start, readCache.numHashes(), t,
+						readCache, readDh, writeCache, writeDh);
+				writeCache.closeHandle(writeDh);
+				writeCache.flush();
+				if (readCache.numHashes() < hashes) {
+					game.nextHashInTier();
+					start += readCache.numHashes();
+					hashes -= readCache.numHashes();
+					readCache = game.nextCache();
+				} else
+					break;
+			}
 		}
-		writeCache.closeHandle(writeDh);
-		writeCache.flush();
 	}
 
 	@Override

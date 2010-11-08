@@ -54,7 +54,8 @@ public class DartboardCacher {
 			if (firstChildren[i] >= 0 && lastChildren[i] >= 0) {
 				firstChildren[i] += childTierOffset;
 				lastChildren[i] += childTierOffset;
-			}
+			} else
+				firstChildren[i] = lastChildren[i] = -1L;
 		}
 		myCache.setRanges(firstChildren, lastChildren, numPositions);
 		return myCache;
