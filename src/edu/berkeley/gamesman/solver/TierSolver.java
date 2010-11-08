@@ -29,7 +29,7 @@ public class TierSolver extends Solver {
 		maxMem = conf.getLong("gamesman.memory", 1 << 25);
 		numThreads = conf.getInteger("gamesman.threads", 1);
 		minSplits = conf.getInteger("gamesman.split", numThreads);
-		minSplitSize = conf.getInteger("gamesman.minimum.split", 1024);
+		minSplitSize = conf.getInteger("gamesman.minimum.split", 1);
 	}
 
 	protected int splits;

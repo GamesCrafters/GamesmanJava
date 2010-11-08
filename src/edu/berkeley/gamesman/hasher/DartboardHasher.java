@@ -558,25 +558,29 @@ public class DartboardHasher {
 		dh.setNums(4, 2, 3);
 		dh2.setNums(3, 3, 3);
 		dh.setReplacements(' ', 'O');
-		long[] children = new long[9];
+		long[] childrenPrev = new long[9];
+		long[] childrenNext = new long[9];
 		for (int i = 0; i < 1260; i++) {
 			if (dh.hash != i)
 				throw new Error("Hashes don't match");
 			System.out.println(dh.toString());
-			dh.previousChildren(' ', 'O', children);
-			if (children[3] == -1)
+			dh.previousChildren(' ', 'O', childrenPrev);
+			if (childrenPrev[3] == -1)
 				System.out.println("Nothing");
 			else {
-				dh2.unhash(children[3]);
+				dh2.unhash(childrenPrev[3]);
 				System.out.println(dh2.toString());
 			}
-			dh.nextChildren(' ', 'O', children);
-			if (children[3] == -1)
+			dh.nextChildren(' ', 'O', childrenNext);
+			if (childrenNext[3] == -1)
 				System.out.println("Nothing");
 			else {
-				dh2.unhash(children[3]);
+				dh2.unhash(childrenNext[3]);
 				System.out.println(dh2.toString());
 			}
+			for (int child = 0; child < childrenPrev.length; child++)
+				if (childrenPrev[child] > childrenNext[child])
+					throw new Error("Wrong Order!");
 			dh.next();
 			System.out.println();
 		}

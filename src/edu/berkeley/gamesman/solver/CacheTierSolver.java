@@ -20,8 +20,11 @@ public class CacheTierSolver extends TierSolver {
 		TierGame game = (TierGame) conf.getGame();
 		TierState ts = game.hashToState(start);
 		game.setState(ts);
-		TierReadCache readCache = game.getCache(readDb, hashes, maxMem
-				/ (numThreads * 2) - writeDb.requiredMem(start, hashes));
+		long useMem = maxMem / (numThreads * 2)
+				- writeDb.requiredMem(start, hashes);
+		if (useMem < 0)
+			throw new Error("Not enough memory to build cache");
+		TierReadCache readCache = game.getCache(readDb, hashes, useMem);
 		MemoryDatabase writeCache = new MemoryDatabase(writeDb, null, conf,
 				true, start, hashes);
 		writeDh = writeCache.getHandle();

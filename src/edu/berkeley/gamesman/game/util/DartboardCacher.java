@@ -46,8 +46,11 @@ public class DartboardCacher {
 			}
 			if (RangeCache.memFor(myCache, firstChildren, lastChildren) <= availableMem)
 				break;
-			else
+			else {
 				numPositions /= 2;
+				if (numPositions == 0)
+					throw new Error("Not enough memory to build cache");
+			}
 		}
 		myHasher.unhash(curHash);
 		for (int i = 0; i < myHasher.size(); i++) {
