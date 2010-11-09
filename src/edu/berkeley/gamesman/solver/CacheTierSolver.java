@@ -24,21 +24,28 @@ public class CacheTierSolver extends TierSolver {
 				- writeDb.requiredMem(start, hashes);
 		if (useMem < 0)
 			throw new Error("Not enough memory to build cache");
-		TierReadCache readCache = game.getCache(readDb, hashes, useMem);
+		TierReadCache readCache = null;
+		if (readDb != null)
+			readCache = game.getCache(readDb, hashes, useMem);
 		MemoryDatabase writeCache = new MemoryDatabase(writeDb, null, conf,
 				true, start, hashes);
 		writeDh = writeCache.getHandle();
-		while (true) {
-			readDh = readCache.getHandle();
-			super.solvePartialTier(conf, start, readCache.numHashes(), t,
-					readCache, readDh, writeCache, writeDh);
-			if (readCache.numHashes() < hashes) {
-				game.nextHashInTier();
-				start += readCache.numHashes();
-				hashes -= readCache.numHashes();
-				readCache = game.nextCache();
-			} else
-				break;
+		if (readCache == null) {
+			super.solvePartialTier(conf, start, hashes, t, null, null,
+					writeCache, writeDh);
+		} else {
+			while (true) {
+				readDh = readCache.getHandle();
+				super.solvePartialTier(conf, start, readCache.numHashes(), t,
+						readCache, readDh, writeCache, writeDh);
+				if (readCache.numHashes() < hashes) {
+					game.nextHashInTier();
+					start += readCache.numHashes();
+					hashes -= readCache.numHashes();
+					readCache = game.nextCache();
+				} else
+					break;
+			}
 		}
 		writeCache.closeHandle(writeDh);
 		writeCache.flush();
