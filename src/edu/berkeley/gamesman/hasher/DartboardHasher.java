@@ -235,6 +235,7 @@ public class DartboardHasher {
 			int digitCount = count[digit];
 			for (int i = 0; i < digitCount; i++) {
 				oldHashes -= pieceHashes[piece];
+				pieceHashes[piece] = 0L;
 				secondCount[digit]++;
 				for (int k = 0; k < digit; k++) {
 					secondCount[k]--;
@@ -565,21 +566,22 @@ public class DartboardHasher {
 				throw new Error("Hashes don't match");
 			System.out.println(dh.toString());
 			dh.previousChildren(' ', 'O', childrenPrev);
-			if (childrenPrev[3] == -1)
+			if (childrenPrev[5] == -1)
 				System.out.println("Nothing");
 			else {
-				dh2.unhash(childrenPrev[3]);
+				dh2.unhash(childrenPrev[5]);
 				System.out.println(dh2.toString());
 			}
 			dh.nextChildren(' ', 'O', childrenNext);
-			if (childrenNext[3] == -1)
+			if (childrenNext[5] == -1)
 				System.out.println("Nothing");
 			else {
-				dh2.unhash(childrenNext[3]);
+				dh2.unhash(childrenNext[5]);
 				System.out.println(dh2.toString());
 			}
 			for (int child = 0; child < childrenPrev.length; child++)
-				if (childrenPrev[child] > childrenNext[child])
+				if (childrenPrev[child] > childrenNext[child]
+						&& childrenNext[child] > 0)
 					throw new Error("Wrong Order!");
 			dh.next();
 			System.out.println();
