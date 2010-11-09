@@ -591,7 +591,7 @@ public class DartboardHasher {
 		rehash(true);
 	}
 
-	public int size() {
+	public int boardSize() {
 		return pieces.length;
 	}
 }

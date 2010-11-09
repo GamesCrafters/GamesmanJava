@@ -23,15 +23,15 @@ public class DartboardCacher {
 			long availableMem, int tier, long childTierOffset) {
 		this.endPosition = myHasher.getHash() + numPositions;
 		this.availableMem = availableMem;
-		myCache = new RangeCache(db, conf);
+		myCache = new RangeCache(db, conf, (int) (availableMem / myHasher.boardSize()));
 		this.tier = tier;
 		this.childTierOffset = childTierOffset;
 		return nextCache();
 	}
 
 	public RangeCache nextCache() {
-		long[] firstChildren = new long[myHasher.size()];
-		long[] lastChildren = new long[myHasher.size()];
+		long[] firstChildren = new long[myHasher.boardSize()];
+		long[] lastChildren = new long[myHasher.boardSize()];
 		long curHash = myHasher.getHash();
 		char turn = tier % 2 == 0 ? 'X' : 'O';
 		myHasher.nextChildren(' ', turn, firstChildren);
@@ -39,7 +39,7 @@ public class DartboardCacher {
 		while (true) {
 			myHasher.unhash(curHash + numPositions - 1);
 			myHasher.previousChildren(' ', turn, lastChildren);
-			for (int i = 0; i < myHasher.size(); i++) {
+			for (int i = 0; i < myHasher.boardSize(); i++) {
 				if (firstChildren[i] < 0 || lastChildren[i] < 0
 						|| firstChildren[i] > lastChildren[i])
 					lastChildren[i] = -1L;
@@ -53,7 +53,7 @@ public class DartboardCacher {
 			}
 		}
 		myHasher.unhash(curHash);
-		for (int i = 0; i < myHasher.size(); i++) {
+		for (int i = 0; i < myHasher.boardSize(); i++) {
 			if (firstChildren[i] >= 0 && lastChildren[i] >= 0) {
 				firstChildren[i] += childTierOffset;
 				lastChildren[i] += childTierOffset;

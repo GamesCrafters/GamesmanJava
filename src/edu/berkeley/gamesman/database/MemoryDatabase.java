@@ -108,7 +108,6 @@ public class MemoryDatabase extends DatabaseWrapper {
 		if (!mutable && backChanges) {
 			firstByte = toByte(firstRecord);
 			numBytes = (int) (lastByte(firstRecord + numRecords) - firstByte);
-			System.gc();
 			memoryStorage = new byte[numBytes];
 			firstNum = toNum(firstRecord);
 			lastNum = toNum(firstRecord + numRecords);
@@ -256,7 +255,6 @@ public class MemoryDatabase extends DatabaseWrapper {
 			int retVal = numBytes
 					- (memoryStorage == null ? 0 : memoryStorage.length);
 			memoryStorage = null;
-			System.gc();
 			memoryStorage = new byte[numBytes];
 			return retVal;
 		} else
