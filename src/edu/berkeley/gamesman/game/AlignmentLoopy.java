@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.game;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Value;
+import edu.berkeley.gamesman.game.AlignmentState;
 
 /**
  * @author Kevin, Nancy
@@ -45,12 +46,43 @@ public class AlignmentLoopy extends Alignment implements LoopyGame<AlignmentStat
 
 	public int possibleParents(AlignmentState pos, AlignmentState[] parents) {
 		// TODO Auto-generated method stub
-		return 0;
+		//return 0;
+		//compare how many pieces are on the board and compare
+		//to the number of pieces on parent board
+		//if numpieces owned by current player less or equal than parents.numpieces then its slide
+		//if numpieces owned by current player > parents.numpieces then its place
+		int count = 0;
+		char lastTurn = pos.lastMove;
+		
+		for (int row = 0; row < gameHeight; row++) {
+			for (int col = 0; col < gameWidth; col++) {
+				if (pos.get(row, col) == lastTurn) {
+
+				}
+			}
+		}
+		return count;
+		
+		/*
+		 * check for placing pieces
+		 * 	for each of the current player's pieces
+		 * 		set next parent = current position 
+		 * 		set current piece = ' '
+		 * 
+		 * check for sliding pieces
+		 *  for each blank 
+		 * 		-check to see if opponent piece could have been there
+		 * 		if moving a piece from that parent would form a gun
+		 * 		in the current position that would kill that opponent 
+		 * 		piece
+		 * 	invariant = number of current pieces is the same	
+		 */
+		
 	}
 
 	@Override
 	public int maxParents() {
 		// TODO Auto-generated method stub
-		return 0;
+		return gameSize;
 	}
 }
