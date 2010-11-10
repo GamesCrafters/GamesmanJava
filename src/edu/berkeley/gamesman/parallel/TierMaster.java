@@ -162,7 +162,7 @@ public class TierMaster implements Runnable {
 						t.printStackTrace();
 						System.exit(1);
 					} else if (!et.hadErrors) {
-						et.error("local " + t.getStackTrace());
+						et.error("local", t);
 						sliceFailed(slice);
 						try {
 							Thread.sleep(SLEEP_TIME);
@@ -208,8 +208,10 @@ public class TierMaster implements Runnable {
 			jobFile = path + "/" + jobFile;
 		numSplits = (int) (conf.getFloat("gamesman.parallel.multiple", 1) * nodeNames.length);
 		maxMem = (long) (conf.getLong("gamesman.memory", 100000000) * 1.2);
-		minSplitSize = conf.getInteger("gamesman.parallel.minimum.split", Math
-				.max(1 << 20, conf.getInteger("gamesman.minimum.split", 1024)));
+		minSplitSize = conf.getInteger(
+				"gamesman.parallel.minimum.split",
+				Math.max(1 << 20,
+						conf.getInteger("gamesman.minimum.split", 1024)));
 		this.jobFile = jobFile;
 		dbTrack = SplitDatabase.openSplitDatabase(conf, true, true);
 		String dbUri = conf.getProperty("gamesman.db.uri");
@@ -325,8 +327,8 @@ public class TierMaster implements Runnable {
 		while (scan.hasNext())
 			nodes.add(scan.next());
 		scan.close();
-		TierMaster tm = new TierMaster(conf, jobFile, nodes
-				.toArray(new String[nodes.size()]));
+		TierMaster tm = new TierMaster(conf, jobFile,
+				nodes.toArray(new String[nodes.size()]));
 		tm.run();
 	}
 
