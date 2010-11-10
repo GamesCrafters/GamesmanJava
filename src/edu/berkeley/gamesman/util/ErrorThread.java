@@ -37,4 +37,11 @@ public class ErrorThread extends Thread {
 	public void setStream(InputStream es) {
 		myErrors = new Scanner(es);
 	}
+
+	public void error(String thisExtra, Throwable t) {
+		System.err.print((extra == null ? "" : (extra + ": "))
+				+ (thisExtra == null ? "" : (thisExtra + ": ")));
+		t.printStackTrace();
+		hadErrors = true;
+	}
 }
