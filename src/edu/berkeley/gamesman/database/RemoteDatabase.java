@@ -162,7 +162,7 @@ public class RemoteDatabase extends Database {
 				Database.skipFully(rh.is, skipNum);
 			}
 		} catch (IOException e) {
-			throw new Error(e);
+			throw new Error(server + ": ", e);
 		}
 	}
 
