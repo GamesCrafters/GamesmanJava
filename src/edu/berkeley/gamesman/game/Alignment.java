@@ -20,7 +20,7 @@ public class Alignment extends Game<AlignmentState> {
 	public final int piecesToWin;
 	private final AlignmentVariant variant; // should be an enum?
 	public final ArrayList<Pair<Integer, Integer>> openCells;
-	protected final AlignmentHasher myHasher; // changed to protected for AlignmentLoopy
+	private final AlignmentHasher myHasher; // changed to protected for AlignmentLoopy
 	
 	public Alignment(Configuration conf) {
 		super(conf);
