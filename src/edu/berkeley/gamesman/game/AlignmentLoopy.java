@@ -51,17 +51,20 @@ public class AlignmentLoopy extends Alignment implements LoopyGame<AlignmentStat
 		//to the number of pieces on parent board
 		//if numpieces owned by current player less or equal than parents.numpieces then its slide
 		//if numpieces owned by current player > parents.numpieces then its place
-		int count = 0;
+		int numParents = 0;
 		char lastTurn = pos.lastMove;
 		
 		for (int row = 0; row < gameHeight; row++) {
 			for (int col = 0; col < gameWidth; col++) {
-				if (pos.get(row, col) == lastTurn) {
-
+				if (pos.numPieces <= parents[numParents].numPieces){
+					if (pos.get(row,col) == lastTurn){
+						parents[numParents+1].set(pos);
+						pos.set
+					}
 				}
 			}
 		}
-		return count;
+		return numParents;
 		
 		/*
 		 * check for placing pieces
