@@ -4,7 +4,7 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Value;
 
 public class AtariGo extends RectangularDartboardGame {
-	boolean[][] checked = new boolean[gameHeight][gameWidth];
+	boolean[] checked = new boolean[gameSize];
 	boolean current;
 
 	public AtariGo(Configuration conf) {
@@ -15,33 +15,36 @@ public class AtariGo extends RectangularDartboardGame {
 	public Value primitiveValue() {
 		boolean hasWin = false;
 		char turn = getTier() % 2 == 0 ? 'X' : 'O';
+		int i = 0;
 		for (int row = 0; row < gameHeight; row++) {
 			for (int col = 0; col < gameWidth; col++) {
-				if ((!hasWin) && checked[row][col] == current
-						&& get(row, col) == turn)
-					hasWin = !canBreathe(row, col, turn);
+				if ((!hasWin) && checked[i] == current && get(i) == turn)
+					hasWin = !canBreathe(i, row, col, turn);
 				else
-					checked[row][col] = !current;
+					checked[i] = !current;
+				i++;
 			}
 		}
 		current = !current;
 		return hasWin ? Value.LOSE : Value.UNDECIDED;
 	}
 
-	public boolean canBreathe(int row, int col, char c) {
+	public boolean canBreathe(int i, int row, int col, char c) {
 		if (row < 0 || row >= gameHeight || col < 0 || col >= gameWidth) {
 			return false;
-		} else if (get(row, col) == ' ')
+		}
+		char cur = get(i);
+		if (cur == ' ')
 			return true;
-		else if (get(row, col) != c)
+		else if (cur != c)
 			return false;
-		else if (checked[row][col] != current)
+		else if (checked[i] != current)
 			return false;
 		else {
-			checked[row][col] = !current;
-			boolean a = canBreathe(row + 1, col, c), b = canBreathe(row,
-					col + 1, c), d = canBreathe(row - 1, col, c), e = canBreathe(
-					row, col - 1, c);
+			checked[i] = !current;
+			boolean a = canBreathe(i + gameWidth, row + 1, col, c), b = canBreathe(
+					i + 1, row, col + 1, c), d = canBreathe(i - gameWidth,
+					row - 1, col, c), e = canBreathe(i - 1, row, col - 1, c);
 			return a || b || d || e;
 		}
 	}
