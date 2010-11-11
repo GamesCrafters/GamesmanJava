@@ -581,7 +581,6 @@ public final class YGame extends ConnectGame
         // Outer neighbors:
 
         if (this.isOutermostRow(triangleIn) == false)// Outer nodes have no neighbors.
-
         {
             if (this.isInnerTriangle(triangleIn + 1) == false)// (Outer or transition triangle) to an outer triangle. /*8*/
 
@@ -745,7 +744,7 @@ public final class YGame extends ConnectGame
      */
     public Vector<Node> clockwiser(final int triangleIn, final int indexIn) 
     {
-        assert (this.nodesOnSameTriangle.size() == 2);
+        assert ((this.nodesOnSameTriangle.size() == 2) || (this.nodesOnSameTriangle.size() == 0));
         assert ((this.nodesOnInnerTriangle.size() >= 0) && (this.nodesOnInnerTriangle.size() <= 3));
         assert ((this.nodesOnOuterTriangle.size() >= 0) && (this.nodesOnOuterTriangle.size() <= 3));
 
@@ -770,14 +769,9 @@ public final class YGame extends ConnectGame
         if (this.nodesOnInnerTriangle.size() > 0) 
         {
             if (this.nodesOnInnerTriangle.size() == 2) 
-            {
-                if (Util.nonNegativeModulo((indexIn + 1), this.nodesInThisTriangle[this.nodesOnInnerTriangle.get(0).triangle + 1]) == 0)// Handle
-                                                                                                                                        // index
-                                                                                                                                        // wrap-around
-                                                                                                                                        // for
-                                                                                                                                        // before
-                                                                                                                                        // corner
-                                                                                                                                        // nodes
+            {  
+                // Handle index wrap-around for before corner nodes
+                if (Util.nonNegativeModulo((indexIn + 1), this.nodesInThisTriangle[this.nodesOnInnerTriangle.get(0).triangle + 1]) == 0)
                 {
                     if (this.nodesOnInnerTriangle.get(0).index == 0) 
                     {
@@ -790,16 +784,48 @@ public final class YGame extends ConnectGame
                         this.nodesOnInnerTriangle.remove(1);
                     }
                 }
-                else if (this.nodesOnInnerTriangle.get(0).index > this.nodesOnInnerTriangle
-                        .get(1).index) 
+                else
                 {
-                    this.neighbors.add(this.nodesOnInnerTriangle.get(0));
-                    this.nodesOnInnerTriangle.remove(0);
-                }
-                else 
-                {
-                    this.neighbors.add(this.nodesOnInnerTriangle.get(1));
-                    this.nodesOnInnerTriangle.remove(1);
+                    // Ok, this ginormous mess handles:
+                    // The 2x4 triangle having 2 "inner nodes" that are both on the same triangle.
+                    // The 3x4 triangle having 1 "inner node" on the same triangle and the other node at t:0,i:0.
+                    // `-> which is different before and after the corners.
+                    // The default case where inner indexes decrease for clockwise order.
+                    // The reason for the temporary variables is because the logic in the if statement is uuuuuuuuuugly.
+
+                    boolean hasOnlyOneSameTriangleInnerNode = ((this.nodesOnInnerTriangle.get(0).triangle == triangleIn) && (this.nodesOnInnerTriangle.get(1).triangle != triangleIn))||
+                    ((this.nodesOnInnerTriangle.get(0).triangle != triangleIn) && (this.nodesOnInnerTriangle.get(1).triangle == triangleIn));
+
+                    boolean hasTwoSameTriangleInnerNodes = ((this.nodesOnInnerTriangle.get(0).triangle == triangleIn) && (this.nodesOnInnerTriangle
+                            .get(1).triangle == triangleIn));
+
+                    int whichNodeIsClockwiseOnSameTriangleInnerNode = hasTwoSameTriangleInnerNodes ? (this.nodesOnInnerTriangle
+                            .get(0).index == Util.nonNegativeModulo(indexIn + 2, this.nodesInThisTriangle[triangleIn])) ? 0 : 1 : -1;
+
+                    this.isCornerIndex(triangleIn, Util.nonNegativeModulo(indexIn+1, this.nodesInThisTriangle[triangleIn]));
+
+                    boolean isAfterCorner = this.isCornerIndex(triangleIn, Util.nonNegativeModulo(indexIn-1, this.nodesInThisTriangle[triangleIn]));
+
+                    boolean isBeforeCorner = this.isCornerIndex(triangleIn, Util.nonNegativeModulo(indexIn + 1,
+                            this.nodesInThisTriangle[triangleIn]));
+
+                    int zeroZeroNodeIndex = ((this.nodesOnInnerTriangle.get(0).triangle == 0) && (this.nodesOnInnerTriangle.get(0).index==0)) ? 0 :
+                        ((this.nodesOnInnerTriangle.get(1).triangle == 0) && (this.nodesOnInnerTriangle.get(1).index==0)) ? 1 : -1;
+
+                    if ((((hasTwoSameTriangleInnerNodes == true) && (whichNodeIsClockwiseOnSameTriangleInnerNode == 0))
+                            || ((isAfterCorner == true) && (zeroZeroNodeIndex == 0))
+                            || ((isBeforeCorner == true) && (zeroZeroNodeIndex == 1)) || ((hasOnlyOneSameTriangleInnerNode == false)
+                                    && (hasTwoSameTriangleInnerNodes == false) && (this.nodesOnInnerTriangle.get(0).index > this.nodesOnInnerTriangle
+                                            .get(1).index))))
+                    {
+                        this.neighbors.add(this.nodesOnInnerTriangle.get(0));
+                        this.nodesOnInnerTriangle.remove(0);
+                    }
+                    else 
+                    {
+                        this.neighbors.add(this.nodesOnInnerTriangle.get(1));
+                        this.nodesOnInnerTriangle.remove(1);
+                    }
                 }
             }
             this.neighbors.add(this.nodesOnInnerTriangle.get(0));
@@ -808,8 +834,6 @@ public final class YGame extends ConnectGame
         // Next node is the one on the same triangle, right-hand side (must exist):
 
         this.neighbors.add(this.nodesOnSameTriangle.get(0));
-
-        // TODO: Handle the single node in the center of the 3 segment triangle!
 
         // Outer neighbors are trickier, since there can be 0, 2, 3, or 6 possible neighbors:
 
@@ -1244,6 +1268,17 @@ public final class YGame extends ConnectGame
         game.fillBoardWithPlayer('X');
 
         System.out.println(game.displayState());
+
+        neighbors = game.getNeighbors(1, 2, 'X');
+
+        for (int i = 0; i < neighbors.size(); i++)
+        {
+            System.out.println("Neighbor #" + i + ": " + neighbors.get(i));
+        }
+
+        System.out.println();
+
+        assert (neighbors.size() == 6);
 
         neighbors = game.getNeighbors(0, 0, 'X');
 
