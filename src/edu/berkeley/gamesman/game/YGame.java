@@ -712,11 +712,6 @@ public final class YGame extends ConnectGame
             }
         }
 
-        {
-            final int numberOfNeighbors = this.nodesOnSameTriangle.size()+this.nodesOnInnerTriangle.size()+this.nodesOnOuterTriangle.size();
-            assert ((numberOfNeighbors >= 3) && (numberOfNeighbors <= 6));
-        }
-
         this.neighbors = this.clockwiser(triangleIn, indexIn);
 
         return (this.neighbors);
