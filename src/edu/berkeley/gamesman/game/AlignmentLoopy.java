@@ -56,9 +56,9 @@ public class AlignmentLoopy extends Alignment implements LoopyGame<AlignmentStat
 		
 		for (int row = 0; row < gameHeight; row++) {
 			for (int col = 0; col < gameWidth; col++) {
-				if (pos.numPieces <= parents[numParents].numPieces){
+				if (pos.numPieces > parents[numParents].numPieces){
 					if (pos.get(row,col) == lastTurn){
-						parents[numParents+1].set(pos);
+						
 						//pos.set
 					}
 				}
