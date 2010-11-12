@@ -120,7 +120,9 @@ public class LoopySolver extends Solver {
 					fix(game, value, readDh, writeDh);
 					game.changeUnmakeMove();
 				}
-				game.remakeMove();
+				if (numParents > 0){
+					game.remakeMove();
+				}
 			} else {
 				value.value = Value.DRAW; // treat current position as draw
 				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
@@ -152,7 +154,9 @@ public class LoopySolver extends Solver {
 					fix(game, value, readDh, writeDh);
 					game.changeUnmakeMove();
 				}
-				game.remakeMove();
+				if (numParents > 0){
+					game.remakeMove();
+				}
 			}
 			value.value = Value.UNDECIDED;
 			break;
@@ -189,7 +193,9 @@ public class LoopySolver extends Solver {
 					fix(game, value, readDh, writeDh);
 					game.changeUnmakeMove();
 				}
-				game.remakeMove();
+				if (numParents > 0){
+					game.remakeMove();
+				}
 				value.nextPosition();
 			} else if (dbValue.value == Value.DRAW) {
 				// if value is draw, test for all children have returned
@@ -224,7 +230,9 @@ public class LoopySolver extends Solver {
 						fix(game, bestValue, readDh, writeDh);
 						game.changeUnmakeMove();
 					}
-					game.remakeMove();
+					if (numParents > 0){
+						game.remakeMove();
+					}
 					bestValue.nextPosition();
 					// Not really necessary, but if anything is ever changed,
 					// this could cause a bug which would be a nightmare to find
