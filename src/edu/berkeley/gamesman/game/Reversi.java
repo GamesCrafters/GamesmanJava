@@ -149,6 +149,7 @@ public class Reversi extends TierGame {
 	@Override
 	public String stateToString() {
 		String answer = "";
+		answer += (this.turn == BLACK ? 'X' : 'O');
 		for (int boardNumber = 0; boardNumber < boardSize; boardNumber++) {
 			answer += dbh.get(boardNumber);
 		}
@@ -243,13 +244,20 @@ public class Reversi extends TierGame {
 	@Override
 	public int validMoves(TierState[] moves) {
 		if (!(isChildrenValid))
-			getChildren();
-		System.arraycopy(children, 0, moves, 0, children.length);
+			getChildren(moves);
+		else
+			System.arraycopy(children, 0, moves, 0, children.length);
 		return children.length;
 	}
-
+	
 	private void getChildren() {
-		children = new TierState[0];
+		this.getChildren(new TierState[maxChildren()]);
+	}
+
+	private void getChildren(TierState[] moves) {
+		children = moves;
+		String originalString = stateToString();
+		int counter = 0;
 		stringMoves = new String[0]; // only for testing.
 		// looks at every spot on the board
 		for (int boardNumber = 0; boardNumber < boardSize; boardNumber++) {
@@ -278,21 +286,19 @@ public class Reversi extends TierGame {
 								+ (boardNumber / width) + ""
 								+ (boardNumber % height); // only for testing.
 						stringMoves = newStringMoves; // only for testing.
-						String[] stringState = { stateToString() };
+						String[] stringState = { stateToString().substring(1) };
 						boolean x = isFlippable(boardNumber, index, true,
 								stringState);
-						TierState[] newChildren = new TierState[children.length + 1];
-						System.arraycopy(children, 0, newChildren, 0,
-								children.length);
-//						newChildren[newChildren.length - 1] = new TierState(
-//								getTier() + 1, hash(stringState[0]));
-						children = newChildren;
+						children[counter].tier = getTier() + 1;
+						children[counter].hash = dbh.hash(stringState[0].toCharArray());
+						counter++;
 						break;
 					}
 				}
 			}
 		}
 		isChildrenValid = true;
+		dbh.hash(originalString.toCharArray());
 	}
 
 	private boolean isFlippable(int boardNumber, int direction, boolean flip,
