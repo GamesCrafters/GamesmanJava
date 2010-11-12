@@ -1057,18 +1057,44 @@ public class TestY {
      */
 
     @Test
-    public void Test_2by4_isWin1() {
+    public void Test_2by4_fullWinBoard()
+    {
         this.ygame24.fillBoardWithPlayer('X');
 
         Assert.assertTrue(this.ygame24.isWin('X'));   	
     }
 
     @Test
-    public void Test_2by4_isWin2() {
+    public void Test_2by4_fullLoseBoard()
+    {
         this.ygame24.fillBoardWithPlayer('O');
 
         //ygame24.setPlayerAt(triangle, index, player)
         Assert.assertFalse(this.ygame24.isWin('X'));
+    }
+
+    @Test
+    public void Test_2by4_winBoard1()
+    {
+        this.ygame24.fillBoardWithPlayer(' ');
+        int moves[][] =
+        {
+                { 2, 2 },
+                { 1, 2 },
+                { 2, 0 },
+                { 1, 4 },
+                { 2, 6 },
+                { 1, 5 },
+                { 0, 4 },
+                { 1, 7 },
+                { 2, 10 } };
+
+        for (int[] move : moves)
+        {
+            this.ygame24.setPlayerAt(move[0], move[1], 'X');
+        }
+
+        Assert.assertTrue(this.ygame24.isWin('X'));
     }
 
     @AfterClass
