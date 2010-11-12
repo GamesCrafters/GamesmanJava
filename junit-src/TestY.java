@@ -154,12 +154,12 @@ public class TestY {
         Vector<Node> neighbors = this.ygame24.getNeighbors(1, 0, 'X');
         int exp[][] =
         {
-        { 1, 1 },
-        { 0, 0 },
-        { 1, 8 },
-        { 2, 11 },
-        { 2, 0 },
-        { 2, 1 } };
+                { 1, 1 },
+                { 0, 0 },
+                { 1, 8 },
+                { 2, 11 },
+                { 2, 0 },
+                { 2, 1 } };
 
         for (int i = 0; i < exp.length; i++){
             Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
@@ -1068,7 +1068,7 @@ public class TestY {
         this.ygame24.fillBoardWithPlayer('O');
 
         //ygame24.setPlayerAt(triangle, index, player)
-        Assert.assertTrue(this.ygame24.isWin('X'));   	
+        Assert.assertFalse(this.ygame24.isWin('X'));
     }
 
     @AfterClass
