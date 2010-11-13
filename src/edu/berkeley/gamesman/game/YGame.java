@@ -327,387 +327,162 @@ public final class YGame extends ConnectGame
     public Vector<Node> getNeighbors(final int triangleIn, final int indexIn, final char player)
     {
         Node node = new Node();
-
         this.nodesOnSameTriangle.clear();
         this.nodesOnInnerTriangle.clear();
         this.nodesOnOuterTriangle.clear();
-
-        assert Util.debug(DebugFacility.GAME, "getNeighbors of triangle:"
-                + triangleIn + ", index:" + indexIn + ", player:" + player);
-
+        assert Util.debug(DebugFacility.GAME, "getNeighbors of triangle:" + triangleIn + ", index:" + indexIn + ", player:" + player);
         final int segments = (this.nodesInThisTriangle[triangleIn] / 3);
-
-        if (segments == 0) // Special case for point in the center
+        if (segments == 0) /* Special case for point in the center */
         {
             node.triangle = 1;
             node.index = 1;
-            if (this.getPlayerAt(node) == player)
-            {
-                this.nodesOnSameTriangle
-                .add(new Node(node));
-
-            }
+            this.nodesOnSameTriangle.add(new Node(node));
             node.triangle = 1;
             node.index = 2;
-            if (this.getPlayerAt(node) == player)
-            {
-                this.nodesOnSameTriangle
-                .add(new Node(node));
-
-            }
+            this.nodesOnSameTriangle.add(new Node(node));
             node.triangle = 1;
             node.index = 4;
-            if (this.getPlayerAt(node) == player)
-            {
-                this.nodesOnSameTriangle
-                .add(new Node(node));
-
-            }
+            this.nodesOnSameTriangle.add(new Node(node));
             node.triangle = 1;
             node.index = 5;
-            if (this.getPlayerAt(node) == player)
-            {
-                this.nodesOnSameTriangle
-                .add(new Node(node));
-
-            }
+            this.nodesOnSameTriangle.add(new Node(node));
             node.triangle = 1;
             node.index = 7;
-            if (this.getPlayerAt(node) == player)
-            {
-                this.nodesOnSameTriangle
-                .add(new Node(node));
-
-            }
+            this.nodesOnSameTriangle.add(new Node(node));
             node.triangle = 1;
             node.index = 8;
-            if (this.getPlayerAt(node) == player)
-            {
-                this.nodesOnSameTriangle
-                .add(new Node(node));
-
-            }
+            this.nodesOnSameTriangle.add(new Node(node));
             return (this.nodesOnSameTriangle);
         }
 
-        // Same-layer neighbor (left): *1*
-
-
+        /* Same-layer neighbor (left): *1* */
         node.triangle = triangleIn;
-        node.index = Util.nonNegativeModulo(
-                (indexIn + 1), (this.nodesInThisTriangle[triangleIn]));
+        node.index = Util.nonNegativeModulo( (indexIn + 1), (this.nodesInThisTriangle[triangleIn]));
+        this.nodesOnSameTriangle.add(new Node(node));
 
-        if (this.getPlayerAt(node) == player)
-        {
-            this.nodesOnSameTriangle.add(new Node(node));
-
-        }
-
-        // Same layer neighbor (right) *2*
-
-
+        /* Same layer neighbor (right) *2* */
         node.triangle = triangleIn;
-        node.index = Util.nonNegativeModulo(
-                (indexIn - 1), this.nodesInThisTriangle[triangleIn]);
+        node.index = Util.nonNegativeModulo( (indexIn - 1), this.nodesInThisTriangle[triangleIn]);
+        this.nodesOnSameTriangle.add(new Node(node));
 
-        if (this.getPlayerAt(node) == player)
-        {
-            this.nodesOnSameTriangle.add(new Node(node));
-
-        }
-
-        // Inner neighbors:
-
-        if (this.isInnerTriangle(triangleIn) == false)// Outer triangle to (outer triangle or transition triangle)
-
-        {
-            /* 3 */
+        /* Inner neighbors: */
+        if (this.isInnerTriangle(triangleIn) == false)/* Outer triangle to (outer triangle or transition triangle) */
+        { /* 3 */
             node.triangle = triangleIn - 1;
-            node.index = Util
-            .nonNegativeModulo(indexIn - (indexIn / segments),
-                    this.nodesInThisTriangle[triangleIn - 1]);
-
-            if (this.getPlayerAt(node) == player)
+            node.index = Util .nonNegativeModulo(indexIn - (indexIn / segments), this.nodesInThisTriangle[triangleIn - 1]);
+            this.nodesOnInnerTriangle.add(new Node(node));
+            if (this.isCornerIndex(triangleIn, indexIn) == false)/* The next inner neighbor only when it is not a corner. *//* 4 */
             {
-                this.nodesOnInnerTriangle.add(new Node(node));
-
-            }
-
-            if (this.isCornerIndex(triangleIn, indexIn) == false)// The next inner neighbor only when it is not a corner. /*4*/
-
-            {
-
                 node.triangle = triangleIn - 1;
-                node.index = indexIn
-                - (indexIn / segments) - 1;
-
-                if (this.getPlayerAt(node) == player)
-                {
-                    this.nodesOnInnerTriangle
-                    .add(new Node(node));
-
-                }
+                node.index = indexIn - (indexIn / segments) - 1;
+                this.nodesOnInnerTriangle.add(new Node(node));
             }
         }
-        else// if (isInnerTriangle(triangleIn) == false)
-
+        else
         {
-            if ((segments < 2) || (this.isCornerIndex(triangleIn, indexIn) == true)) 
-            {
-                // There aren't any inner neighbors for corners or single segment triangles.
-            }
-            else 
-            {
-                if (this.isCornerIndex(triangleIn, indexIn - 1) == true)// After corner index /*6*/
-
-                {
-                    /* 14 */
-                    node.triangle = triangleIn;
-                    node.index = Util
-                    .nonNegativeModulo(indexIn - 2,
-                            this.nodesInThisTriangle[triangleIn]);
-
-                    if (this.getPlayerAt(node) == player)
-                    {
-                        this.nodesOnInnerTriangle
-                        .add(new Node(node));
-
-                    }
-
-                    if (segments > 3) 
-                    {
-                        node.triangle = triangleIn - 1; /* 15 */
-                        node.index = Util
-                        .nonNegativeModulo(
-                                indexIn - 1 - (3 * indexIn / segments),
-                                this.nodesInThisTriangle[triangleIn - 1]);
-
-                        if (this.getPlayerAt(node) == player)
-                        {
-                            this.nodesOnInnerTriangle
-                            .add(new Node(node));
-
-                        }
-                    }
-                }
-                if (this.isCornerIndex(triangleIn, indexIn + 1) == true)// Before corner index /*7*/
-
-                {
-                    /* 16 */
-                    node.triangle = triangleIn;
-                    node.index = Util
-                    .nonNegativeModulo(indexIn + 2,
-                            this.nodesInThisTriangle[triangleIn]);
-
-                    if (this.getPlayerAt(node) == player)
-                    {
-                        this.nodesOnInnerTriangle
-                        .add(new Node(node));
-
-                    }
-
-                    if (segments > 3) 
-                    {
-                        node.triangle = triangleIn - 1; /* 7 */
-                        node.index = Util
-                        .nonNegativeModulo(
-                                indexIn - 2 - (3 * indexIn / segments),
-                                this.nodesInThisTriangle[triangleIn - 1]);
-
-                        if (this.getPlayerAt(node) == player)
-                        {
-                            this.nodesOnInnerTriangle
-                            .add(new Node(node));
-
-                        }
-                    }
-                }
-                if (segments == 2)
-                {
-                    // There are no inner neighbors
-                }
-                else if (segments == 3) 
-                {
-                    node.triangle = triangleIn - 1;
-                    node.index = 0;
-
-                    if (this.getPlayerAt(node) == player)
-                    {
-                        this.nodesOnInnerTriangle
-                        .add(new Node(node));
-
-                    }
+            /* if (isInnerTriangle(triangleIn) == false) */{
+                if ((segments < 2) || (this.isCornerIndex(triangleIn, indexIn) == true))
+                { /* There aren't any inner neighbors for corners or single segment triangles. */
                 }
                 else
                 {
-                    if ((this.isCornerIndex(triangleIn, indexIn + 1) == false) // Not a corner or before or after a corner.
-                            && (this.isCornerIndex(triangleIn, indexIn - 1) == false))
+                    if (this.isCornerIndex(triangleIn, indexIn - 1) == true)/* After corner index *//* 6 */
+                    { /* 14 */
+                        node.triangle = triangleIn;
+                        node.index = Util .nonNegativeModulo(indexIn - 2, this.nodesInThisTriangle[triangleIn]);
+                        this.nodesOnInnerTriangle.add(new Node(node));
+                        if (segments > 3)
+                        {
+                            node.triangle = triangleIn - 1;
+                            /* 15 */ node.index = Util .nonNegativeModulo( indexIn - 1 - (3 * indexIn / segments), this.nodesInThisTriangle[triangleIn - 1]);
+                            this.nodesOnInnerTriangle.add(new Node(node));
+                        }
+                    }
+                    if (this.isCornerIndex(triangleIn, indexIn + 1) == true)/* Before corner index *//* 7 */
+                    { /* 16 */
+                        node.triangle = triangleIn;
+                        node.index = Util .nonNegativeModulo(indexIn + 2, this.nodesInThisTriangle[triangleIn]);
+                        this.nodesOnInnerTriangle.add(new Node(node));
+                        if (segments > 3)
+                        {
+                            node.triangle = triangleIn - 1;
+                            /* 7 */ node.index = Util .nonNegativeModulo( indexIn - 2 - (3 * indexIn / segments), this.nodesInThisTriangle[triangleIn - 1]);
+                            this.nodesOnInnerTriangle.add(new Node(node));
+                        }
+                    }
+                    if (segments == 2)
+                    { /* There are no inner neighbors */
+                    }
+                    else
                     {
-                        /* 20 */
-                        node.triangle = triangleIn - 1;
-                        if (this.nodesInThisTriangle[triangleIn - 1] > 0) 
+                        if (segments == 3)
                         {
-                            node.index = Util
-                            .nonNegativeModulo(
-                                    indexIn - 1 - (3 * indexIn / segments),
-                                    this.nodesInThisTriangle[triangleIn - 1]);
+                            node.triangle = triangleIn - 1;
+                            node.index = 0;
+                            this.nodesOnInnerTriangle.add(new Node(node));
                         }
-
-                        if (this.getPlayerAt(node) == player)
+                        else
                         {
-                            this.nodesOnInnerTriangle
-                            .add(new Node(node));
-
-                        }
-
-                        /* 21 */
-                        node.triangle = triangleIn - 1;
-                        node.index = Util
-                        .nonNegativeModulo(indexIn - 2
-                                - (3 * indexIn / segments),
-                                this.nodesInThisTriangle[triangleIn - 1]);
-
-                        if (this.getPlayerAt(node) == player)
-                        {
-                            this.nodesOnInnerTriangle
-                            .add(new Node(node));
-
+                            if ((this.isCornerIndex(triangleIn, indexIn + 1) == false) /* Not a corner or before or after a corner. */
+                                    && (this.isCornerIndex(triangleIn, indexIn - 1) == false))
+                            { /* 20 */
+                                node.triangle = triangleIn - 1;
+                                if (this.nodesInThisTriangle[triangleIn - 1] > 0)
+                                {
+                                    node.index = Util.nonNegativeModulo(indexIn - 1 - (3 * indexIn / segments),
+                                            this.nodesInThisTriangle[triangleIn - 1]);
+                                }
+                                this.nodesOnInnerTriangle.add(new Node(node)); /* 21 */
+                                node.triangle = triangleIn - 1;
+                                node.index = Util .nonNegativeModulo(indexIn - 2 - (3 * indexIn / segments), this.nodesInThisTriangle[triangleIn - 1]);
+                                this.nodesOnInnerTriangle.add(new Node(node));
+                            }
                         }
                     }
                 }
             }
         }
 
-        // Outer neighbors:
-
-        if (this.isOutermostRow(triangleIn) == false)// Outer nodes have no neighbors.
+        /* Outer neighbors: */
+        if (this.isOutermostRow(triangleIn) == false)/* Outer nodes have no neighbors. */
         {
-            if (this.isInnerTriangle(triangleIn + 1) == false)// (Outer or transition triangle) to an outer triangle. /*8*/
-
-            {
-                /* 9 */
+            if (this.isInnerTriangle(triangleIn + 1) == false)/* (Outer or transition triangle) to an outer triangle. *//* 8 */
+            { /* 9 */
                 node.triangle = triangleIn + 1;
-                node.index = Util
-                .nonNegativeModulo(indexIn + (indexIn / segments),
-                        this.nodesInThisTriangle[triangleIn + 1]);
-
-                if (this.getPlayerAt(node) == player)
+                node.index = Util .nonNegativeModulo(indexIn + (indexIn / segments), this.nodesInThisTriangle[triangleIn + 1]);
+                this.nodesOnOuterTriangle.add(new Node(node));
+                if (this.isCornerIndex(triangleIn, indexIn)) /* Corners *//* 10 */
                 {
-                    this.nodesOnOuterTriangle
-                    .add(new Node(node));
-
-                }
-
-                if (this.isCornerIndex(triangleIn, indexIn)) // Corners /*10*/
-
-                {
-
                     node.triangle = triangleIn + 1;
-                    node.index = Util
-                    .nonNegativeModulo(indexIn + (indexIn / segments)
-                            - 1,
-                            this.nodesInThisTriangle[triangleIn + 1]);
-
-                    if (this.getPlayerAt(node) == player)
-                    {
-                        this.nodesOnOuterTriangle
-                        .add(new Node(node));
-
-                    }
-
-                    /* 19 */
+                    node.index = Util .nonNegativeModulo(indexIn + (indexIn / segments) - 1, this.nodesInThisTriangle[triangleIn + 1]);
+                    this.nodesOnOuterTriangle.add(new Node(node)); /* 19 */
                     node.triangle = triangleIn + 1;
-                    node.index = Util
-                    .nonNegativeModulo(indexIn + (indexIn / segments)
-                            + 1,
-                            this.nodesInThisTriangle[triangleIn + 1]);
-
-                    if (this.getPlayerAt(node) == player)
-                    {
-                        this.nodesOnOuterTriangle
-                        .add(new Node(node));
-
-                    }
-                }
-                // Not a corner
-                else 
-                {
-                    /* 11 */
+                    node.index = Util .nonNegativeModulo(indexIn + (indexIn / segments) + 1, this.nodesInThisTriangle[triangleIn + 1]);
+                    this.nodesOnOuterTriangle.add(new Node(node));
+                } /* Not a corner */
+                else
+                { /* 11 */
                     node.triangle = triangleIn + 1;
-                    node.index = Util
-                    .nonNegativeModulo(indexIn + (indexIn / segments)
-                            + 1,
-                            this.nodesInThisTriangle[triangleIn + 1]);
-
-                    if (this.getPlayerAt(node) == player)
-                    {
-                        this.nodesOnOuterTriangle
-                        .add(new Node(node));
-
-                    }
+                    node.index = Util .nonNegativeModulo(indexIn + (indexIn / segments) + 1, this.nodesInThisTriangle[triangleIn + 1]);
+                    this.nodesOnOuterTriangle.add(new Node(node));
                 }
-            }
-            // Inner to inner triangle
-            else 
-            {
-                /* 17 */
+            } /* Inner to inner triangle */
+            else
+            { /* 17 */
                 node.triangle = triangleIn + 1;
-                node.index = Util
-                .nonNegativeModulo(indexIn + 2
-                        + (3 * indexIn / segments),
-                        this.nodesInThisTriangle[triangleIn + 1]);
-
-                if (this.getPlayerAt(node) == player)
-                {
-                    this.nodesOnOuterTriangle
-                    .add(new Node(node));
-
-                }
-
-                /* 18 */
+                node.index = Util .nonNegativeModulo(indexIn + 2 + (3 * indexIn / segments), this.nodesInThisTriangle[triangleIn + 1]);
+                this.nodesOnOuterTriangle.add(new Node(node)); /* 18 */
                 node.triangle = triangleIn + 1;
-                node.index = Util
-                .nonNegativeModulo(indexIn + 1
-                        + (3 * indexIn / segments),
-                        this.nodesInThisTriangle[triangleIn + 1]);
-
-                if (this.getPlayerAt(node) == player)
-                {
-                    this.nodesOnOuterTriangle
-                    .add(new Node(node));
-
-                }
-
-                if (this.isCornerIndex(triangleIn, indexIn)) // Corners
-
-                {
-                    /* 13 */
+                node.index = Util .nonNegativeModulo(indexIn + 1 + (3 * indexIn / segments), this.nodesInThisTriangle[triangleIn + 1]);
+                this.nodesOnOuterTriangle.add(new Node(node));
+                if (this.isCornerIndex(triangleIn, indexIn)) /* Corners */
+                { /* 13 */
                     node.triangle = triangleIn + 1;
-                    node.index = Util
-                    .nonNegativeModulo(indexIn - 1
-                            + (3 * indexIn / segments),
-                            this.nodesInThisTriangle[triangleIn + 1]);
-
-                    if (this.getPlayerAt(node) == player)
-                    {
-                        this.nodesOnOuterTriangle
-                        .add(new Node(node));
-
-                    }
-
-                    /* 12 */
+                    node.index = Util .nonNegativeModulo(indexIn - 1 + (3 * indexIn / segments), this.nodesInThisTriangle[triangleIn + 1]);
+                    this.nodesOnOuterTriangle.add(new Node(node)); /* 12 */
                     node.triangle = triangleIn + 1;
-                    node.index = Util
-                    .nonNegativeModulo(indexIn - 2
-                            + (3 * indexIn / segments),
-                            this.nodesInThisTriangle[triangleIn + 1]);
-
-                    if (this.getPlayerAt(node) == player)
-                    {
-                        this.nodesOnOuterTriangle
-                        .add(new Node(node));
-
-                    }
+                    node.index = Util .nonNegativeModulo(indexIn - 2 + (3 * indexIn / segments), this.nodesInThisTriangle[triangleIn + 1]);
+                    this.nodesOnOuterTriangle.add(new Node(node));
                 }
             }
         }
@@ -720,6 +495,18 @@ public final class YGame extends ConnectGame
         else
         {
             this.neighbors.clear();
+        }
+
+        /* Cull out only player nodes */
+
+        int size = this.neighbors.size();
+
+        for (int i = size - 1; i >= 0; --i)
+        {
+            if (this.getPlayerAt(this.neighbors.get(i)) != player)
+            {
+                this.neighbors.remove(i);
+            }
         }
 
         return (this.neighbors);
@@ -753,23 +540,18 @@ public final class YGame extends ConnectGame
 
         this.neighbors.clear();
 
-        // Pick the left node ((index+1)%segments) on the same triangle first. TODO: This is probably not handled properly if
-        // there's only one (from getNeighbprs)
+        // Pick the left node ((index+1)%segments) on the same triangle first. 
 
-        if (this.nodesOnSameTriangle.size() > 0)
+        if (this.nodesOnSameTriangle.get(0).index == Util.nonNegativeModulo(indexIn + 1,
+                this.nodesInThisTriangle[triangleIn]))
         {
-            if ((this.nodesOnSameTriangle.size() == 1)
-                    || (this.nodesOnSameTriangle.get(0).index == Util.nonNegativeModulo(indexIn + 1,
-                            this.nodesInThisTriangle[triangleIn])))
-            {
-                this.neighbors.add(this.nodesOnSameTriangle.get(0));
-                this.nodesOnSameTriangle.remove(0);
-            }
-            else 
-            {
-                this.neighbors.add(this.nodesOnSameTriangle.get(1));
-                this.nodesOnSameTriangle.remove(1);
-            }
+            this.neighbors.add(this.nodesOnSameTriangle.get(0));
+            this.nodesOnSameTriangle.remove(0);
+        }
+        else 
+        {
+            this.neighbors.add(this.nodesOnSameTriangle.get(1));
+            this.nodesOnSameTriangle.remove(1);
         }
 
         // Inners can be done by hand too, as there are only 0, 1, or 2 possible neighbors. Inners go in descending order.
@@ -799,7 +581,7 @@ public final class YGame extends ConnectGame
                     // The 3x4 triangle having 1 "inner node" on the same triangle and the other node at t:0,i:0.
                     // `-> which is different before and after the corners.
                     // The default case where inner indexes decrease for clockwise order.
-                    // The reason for the temporary variables is because the logic in the if statement is uuuuuuuuuugly.
+                    // The reason for the temporary variables is because the logic of a combined if statement is uuuuuuuuuugly.
 
                     boolean hasOnlyOneSameTriangleInnerNode = ((this.nodesOnInnerTriangle.get(0).triangle == triangleIn) && (this.nodesOnInnerTriangle.get(1).triangle != triangleIn))||
                     ((this.nodesOnInnerTriangle.get(0).triangle != triangleIn) && (this.nodesOnInnerTriangle.get(1).triangle == triangleIn));
@@ -839,13 +621,9 @@ public final class YGame extends ConnectGame
             this.neighbors.add(this.nodesOnInnerTriangle.get(0));
         }
 
-        // Next node is the one on the same triangle, right-hand side. TODO: This is probably not handled properly if
-        // there's only one (from getNeighbprs)
+        // Next node is the one on the same triangle, right-hand side.
 
-        if (this.nodesOnSameTriangle.size() > 0)
-        {
-            this.neighbors.add(this.nodesOnSameTriangle.get(0));
-        }
+        this.neighbors.add(this.nodesOnSameTriangle.get(0));
 
         // Outer neighbors are trickier, since there can be 0, 2, 3, or 6 possible neighbors:
 
@@ -909,29 +687,22 @@ public final class YGame extends ConnectGame
             }
             else 
             {
-                // TODO: This probably doesn't handle the single case correctly.
-                if (this.nodesOnOuterTriangle.size() > 1)
+                if (this.nodesOnOuterTriangle.get(0).index < this.nodesOnOuterTriangle
+                        .get(1).index) 
                 {
-                    if (this.nodesOnOuterTriangle.get(0).index < this.nodesOnOuterTriangle
-                            .get(1).index) 
-                    {
-                        firstIndex = 0;
-                        secondIndex = 1;
-                    }
-                    else 
-                    {
-                        firstIndex = 1;
-                        secondIndex = 0;
-                    }
-                    this.neighbors.add(this.nodesOnOuterTriangle.get(firstIndex));
-                    this.neighbors.add(this.nodesOnOuterTriangle.get(secondIndex));
+                    firstIndex = 0;
+                    secondIndex = 1;
                 }
-                else
+                else 
                 {
-                    this.neighbors.add(this.nodesOnOuterTriangle.get(0));
+                    firstIndex = 1;
+                    secondIndex = 0;
                 }
+                this.neighbors.add(this.nodesOnOuterTriangle.get(firstIndex));
+                this.neighbors.add(this.nodesOnOuterTriangle.get(secondIndex));
             }
         }
+
         return this.neighbors;
     }
 
