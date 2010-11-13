@@ -712,7 +712,15 @@ public final class YGame extends ConnectGame
             }
         }
 
-        this.neighbors = this.clockwiser(triangleIn, indexIn);
+        if ((this.nodesOnSameTriangle.size() > 0) || (this.nodesOnInnerTriangle.size() > 0)
+                || (this.nodesOnOuterTriangle.size() > 0))
+        {
+            this.neighbors = this.clockwiser(triangleIn, indexIn);
+        }
+        else
+        {
+            this.neighbors.clear();
+        }
 
         return (this.neighbors);
     }
@@ -745,18 +753,23 @@ public final class YGame extends ConnectGame
 
         this.neighbors.clear();
 
-        // Pick the left node ((index+1)%segments) on the same triangle first.
+        // Pick the left node ((index+1)%segments) on the same triangle first. TODO: This is probably not handled properly if
+        // there's only one (from getNeighbprs)
 
-        if (this.nodesOnSameTriangle.get(0).index == Util.nonNegativeModulo(
-                indexIn + 1, this.nodesInThisTriangle[triangleIn])) 
+        if (this.nodesOnSameTriangle.size() > 0)
         {
-            this.neighbors.add(this.nodesOnSameTriangle.get(0));
-            this.nodesOnSameTriangle.remove(0);
-        }
-        else 
-        {
-            this.neighbors.add(this.nodesOnSameTriangle.get(1));
-            this.nodesOnSameTriangle.remove(1);
+            if ((this.nodesOnSameTriangle.size() == 1)
+                    || (this.nodesOnSameTriangle.get(0).index == Util.nonNegativeModulo(indexIn + 1,
+                            this.nodesInThisTriangle[triangleIn])))
+            {
+                this.neighbors.add(this.nodesOnSameTriangle.get(0));
+                this.nodesOnSameTriangle.remove(0);
+            }
+            else 
+            {
+                this.neighbors.add(this.nodesOnSameTriangle.get(1));
+                this.nodesOnSameTriangle.remove(1);
+            }
         }
 
         // Inners can be done by hand too, as there are only 0, 1, or 2 possible neighbors. Inners go in descending order.
@@ -826,9 +839,13 @@ public final class YGame extends ConnectGame
             this.neighbors.add(this.nodesOnInnerTriangle.get(0));
         }
 
-        // Next node is the one on the same triangle, right-hand side (must exist):
+        // Next node is the one on the same triangle, right-hand side. TODO: This is probably not handled properly if
+        // there's only one (from getNeighbprs)
 
-        this.neighbors.add(this.nodesOnSameTriangle.get(0));
+        if (this.nodesOnSameTriangle.size() > 0)
+        {
+            this.neighbors.add(this.nodesOnSameTriangle.get(0));
+        }
 
         // Outer neighbors are trickier, since there can be 0, 2, 3, or 6 possible neighbors:
 
@@ -892,19 +909,27 @@ public final class YGame extends ConnectGame
             }
             else 
             {
-                if (this.nodesOnOuterTriangle.get(0).index < this.nodesOnOuterTriangle
-                        .get(1).index) 
+                // TODO: This probably doesn't handle the single case correctly.
+                if (this.nodesOnOuterTriangle.size() > 1)
                 {
-                    firstIndex = 0;
-                    secondIndex = 1;
+                    if (this.nodesOnOuterTriangle.get(0).index < this.nodesOnOuterTriangle
+                            .get(1).index) 
+                    {
+                        firstIndex = 0;
+                        secondIndex = 1;
+                    }
+                    else 
+                    {
+                        firstIndex = 1;
+                        secondIndex = 0;
+                    }
+                    this.neighbors.add(this.nodesOnOuterTriangle.get(firstIndex));
+                    this.neighbors.add(this.nodesOnOuterTriangle.get(secondIndex));
                 }
-                else 
+                else
                 {
-                    firstIndex = 1;
-                    secondIndex = 0;
+                    this.neighbors.add(this.nodesOnOuterTriangle.get(0));
                 }
-                this.neighbors.add(this.nodesOnOuterTriangle.get(firstIndex));
-                this.neighbors.add(this.nodesOnOuterTriangle.get(secondIndex));
             }
         }
         return this.neighbors;
