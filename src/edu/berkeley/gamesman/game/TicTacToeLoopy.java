@@ -48,6 +48,7 @@ public class TicTacToeLoopy extends TicTacToe implements LoopyGame<TierState> {
 					set(row, col, ' ');
 					parents[count].hash = myHasher.getHash();
 					set(row, col, lastTurn);
+					count++;
 				}
 			}
 		}
