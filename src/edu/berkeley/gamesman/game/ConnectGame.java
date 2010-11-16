@@ -169,15 +169,19 @@ public abstract class ConnectGame extends TierGame {
 		mmh.getCharArray(arr);
 	}
 
+	protected final char[] makeCharArray() {
+		char[] arr = new char[mmh.boardSize()];
+		getCharArray(arr);
+		return arr;
+	}
+
 	protected final char get(int i) {
 		return mmh.get(i);
 	}
 
 	@Override
 	public String stateToString() {
-		char[] arr = new char[mmh.boardSize()];
-		getCharArray(arr);
-		return convertOutString(arr);
+		return convertOutString(makeCharArray());
 	}
 
 	public char[] convertInString(String s) {
