@@ -1,6 +1,7 @@
 package edu.berkeley.gamesman.core;
 
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Set;
@@ -81,8 +82,18 @@ public class Configuration {
 		try {
 			g = Util.typedForName(gamename, Game.class)
 					.getConstructor(Configuration.class).newInstance(this);
-		} catch (Exception e) {
-			throw new ClassNotFoundException(gamename, e);
+		} catch (IllegalArgumentException e) {
+			throw new Error(e);
+		} catch (SecurityException e) {
+			throw new Error(e);
+		} catch (InstantiationException e) {
+			throw new Error(e);
+		} catch (IllegalAccessException e) {
+			throw new Error(e);
+		} catch (InvocationTargetException e) {
+			throw new Error(e.getCause());
+		} catch (NoSuchMethodException e) {
+			throw new Error(e);
 		}
 		String fields = getProperty("record.fields", "VALUE,REMOTENESS");
 		String[] splitFields = fields.split(",");
