@@ -25,7 +25,7 @@ public final class Connections extends ConnectGame {
 		}
 
 		char getChar() {
-			return board[charNum];
+			return get(charNum);
 		}
 	}
 
@@ -52,7 +52,6 @@ public final class Connections extends ConnectGame {
 	private final Point[][] oPoints;
 	private final Edge[][] vertEdges;
 	private final Edge[][] horizEdges;
-	private final char[] board;
 
 	/**
 	 * @param conf
@@ -70,7 +69,6 @@ public final class Connections extends ConnectGame {
 		// Bottom to top; Left to right
 		horizEdges = new Edge[boardSide - 1][boardSide - 1];
 		// Bottom to top; Left to right (only shared edges)
-		board = new char[boardSize];
 		int ind = 0;
 		int horizInd = boardSide * boardSide;
 		for (int row = 0; row < boardSide; row++) {
@@ -129,16 +127,7 @@ public final class Connections extends ConnectGame {
 	}
 
 	@Override
-	protected char[] getCharArray() {
-		return board;
-	}
-
-	@Override
 	protected void setToCharArray(char[] myPieces) {
-		if (board != myPieces) {
-			for (int i = 0; i < board.length; i++)
-				board[i] = myPieces[i];
-		}
 	}
 
 	@Override

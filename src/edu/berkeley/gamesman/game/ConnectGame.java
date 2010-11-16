@@ -10,7 +10,6 @@ import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.TierReadCache;
 import edu.berkeley.gamesman.game.util.DartboardCacher;
 import edu.berkeley.gamesman.game.util.TierState;
-import edu.berkeley.gamesman.hasher.ChangedIterator;
 import edu.berkeley.gamesman.hasher.DartboardHasher;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
@@ -25,7 +24,6 @@ import edu.berkeley.gamesman.util.Util;
 public abstract class ConnectGame extends TierGame {
 	protected final DartboardHasher mmh;
 	private int tier;
-	private final ChangedIterator changed;
 	private final long[] moveHashes;
 	private final DartboardCacher myCacher;
 
@@ -51,7 +49,6 @@ public abstract class ConnectGame extends TierGame {
 		}
 		mmh = new DartboardHasher(boardSize, ' ', 'O', 'X');
 		moveHashes = new long[boardSize];
-		changed = new ChangedIterator(boardSize);
 		myCacher = new DartboardCacher(conf, mmh);
 	}
 
@@ -80,13 +77,7 @@ public abstract class ConnectGame extends TierGame {
 
 	@Override
 	public void nextHashInTier() {
-		mmh.next(changed);
-		char[] myArr = getCharArray();
-		while (changed.hasNext()) {
-			int piece = changed.next();
-			myArr[piece] = mmh.get(piece);
-		}
-		setToCharArray(myArr);
+		mmh.next();
 	}
 
 	@Override
@@ -106,25 +97,9 @@ public abstract class ConnectGame extends TierGame {
 
 	@Override
 	public void setFromString(String pos) {
-		setToCharArray(convertInString(pos));
-		stateMatchGame();
-	}
-
-	private void stateMatchGame() {
-		char[] arr = getCharArray();
-		tier = 0;
-		for (int i = 0; i < arr.length; i++) {
-			if (arr[i] != ' ')
-				tier++;
-		}
-		mmh.setNumsAndHash(getCharArray());
-		mmh.setReplacements(' ', ((tier % 2) == 0) ? 'X' : 'O');
-	}
-
-	private void gameMatchState() {
-		char[] charArray = getCharArray();
-		mmh.getCharArray(charArray);
-		setToCharArray(charArray);
+		char[] arr = convertInString(pos);
+		mmh.setNumsAndHash(arr);
+		setToCharArray(arr);
 	}
 
 	@Override
@@ -132,7 +107,6 @@ public abstract class ConnectGame extends TierGame {
 		tier = 0;
 		mmh.setNums(getBoardSize(), 0, 0);
 		mmh.setReplacements(' ', 'X');
-		gameMatchState();
 	}
 
 	@Override
@@ -141,7 +115,6 @@ public abstract class ConnectGame extends TierGame {
 		mmh.setNums(getBoardSize() - tier, tier / 2, (tier + 1) / 2);
 		mmh.setReplacements(' ', tier % 2 == 0 ? 'X' : 'O');
 		mmh.unhash(pos.hash);
-		gameMatchState();
 	}
 
 	@Override
@@ -192,11 +165,19 @@ public abstract class ConnectGame extends TierGame {
 			return 2;
 	}
 
-	protected abstract char[] getCharArray();
+	protected final void getCharArray(char[] arr) {
+		mmh.getCharArray(arr);
+	}
+
+	protected final char get(int i) {
+		return mmh.get(i);
+	}
 
 	@Override
 	public String stateToString() {
-		return convertOutString(getCharArray());
+		char[] arr = new char[mmh.boardSize()];
+		getCharArray(arr);
+		return convertOutString(arr);
 	}
 
 	public char[] convertInString(String s) {

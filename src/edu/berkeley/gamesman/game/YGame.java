@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.game;
 import java.util.Vector;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.hasher.ChangedIterator;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
@@ -30,6 +31,7 @@ public final class YGame extends ConnectGame
     private int transitionTriangleNumber = -1;
 
     private final char[] unrolledCharBoard;// The full board (string) representation.
+    private final ChangedIterator changedPieces;
 
     private Vector<Node> neighbors;
     //    private final Node[] neighborPool;
@@ -253,6 +255,7 @@ public final class YGame extends ConnectGame
                 this.ASCIIrepresentation[yCoord][xCoord] = '.';
             }
         }
+        this.changedPieces = new ChangedIterator(this.totalNumberOfNodes);        
         assert Util.debug(DebugFacility.GAME, this.displayState());
     }
 
@@ -281,13 +284,7 @@ public final class YGame extends ConnectGame
         return (this.totalNumberOfNodes);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see edu.berkeley.gamesman.game.ConnectGame#getCharArray()
-     */
-    @Override
-    protected char[] getCharArray() 
+    private char[] getCharArray() 
     {
         int charIndex = 0;
 
@@ -828,6 +825,16 @@ public final class YGame extends ConnectGame
         return result;
     }
 
+    @Override
+	public void nextHashInTier(){
+    	mmh.next(changedPieces);
+    	while(changedPieces.hasNext()){
+    		int index = changedPieces.next();
+    		int piece = get(index);
+    		//TODO Alter your representation of the board to match board[index] = piece
+    	}
+    }
+    
     /*
      * (non-Javadoc)
      * 
