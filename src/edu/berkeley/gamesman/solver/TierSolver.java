@@ -71,10 +71,8 @@ public class TierSolver extends Solver {
 		long stepNum = current % STEP_SIZE;
 		TierState curState = game.hashToState(start);
 		game.setState(curState);
-		Record[] vals = new Record[game.maxChildren()];
-		for (int i = 0; i < vals.length; i++)
-			vals[i] = game.newRecord();
-		Record prim = game.newRecord();
+		Record record = game.newRecord();
+		Record bestRecord = game.newRecord();
 		TierState[] children = new TierState[game.maxChildren()];
 		for (int i = 0; i < children.length; i++)
 			children[i] = game.newState();
@@ -102,24 +100,25 @@ public class TierSolver extends Solver {
 					nano = System.nanoTime();
 					times[2] += nano - lastNano;
 				}
+				bestRecord.value = Value.UNDECIDED;
 				for (int i = 0; i < len; i++) {
 					game.longToRecord(
 							children[i],
 							readDb.getRecord(readDh,
-									game.stateToHash(children[i])), vals[i]);
-					vals[i].previousPosition();
+									game.stateToHash(children[i])), record);
+					record.previousPosition();
+					if (bestRecord.value == Value.UNDECIDED
+							|| record.isPreferableTo(bestRecord))
+						bestRecord.set(record);
 				}
 				if (debugSolver) {
 					lastNano = nano;
 					nano = System.nanoTime();
 					times[3] += nano - lastNano;
 				}
-				Record newVal = game.combine(vals, 0, len);
 				writeDb.putRecord(writeDh, current,
-						game.recordToLong(curState, newVal));
-			} else if (pv == Value.IMPOSSIBLE) {
-				break;
-			} else {
+						game.recordToLong(curState, bestRecord));
+			} else if (pv != Value.IMPOSSIBLE) {
 				if (debugSolver) {
 					lastNano = nano;
 					nano = System.nanoTime();
@@ -128,10 +127,10 @@ public class TierSolver extends Solver {
 					nano = System.nanoTime();
 					times[3] += nano - lastNano;
 				}
-				prim.remoteness = 0;
-				prim.value = pv;
+				record.remoteness = 0;
+				record.value = pv;
 				writeDb.putRecord(writeDh, current,
-						game.recordToLong(curState, prim));
+						game.recordToLong(curState, record));
 			}
 			if (debugSolver) {
 				lastNano = nano;

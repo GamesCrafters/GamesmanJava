@@ -22,12 +22,6 @@ public abstract class Game<S extends State> {
 
 	protected final Configuration conf;
 
-	private Record[] valsBest = new Record[1];
-
-	private Record[] valsBestScore = new Record[1];
-
-	private Record[] valsBestRemoteness = new Record[1];
-
 	/**
 	 * @param conf
 	 *            The configuration object
@@ -273,111 +267,6 @@ public abstract class Game<S extends State> {
 	public abstract String describe();
 
 	/**
-	 * @param recordArray
-	 *            An array of records
-	 * @param offset
-	 *            The offset to start reading from
-	 * @param len
-	 *            The number of records to read through
-	 * @return The record with the best possible outcome
-	 */
-	public final Record combine(Record[] recordArray, int offset, int len) {
-		int size = len;
-		int lastSize;
-		Record[] arrVals = recordArray;
-		Value bestVal = Value.WIN;
-		if (conf.hasValue) {
-			lastSize = size;
-			size = 0;
-			bestVal = Value.LOSE;
-			for (int i = 0; i < lastSize; i++) {
-				Value value = arrVals[i + offset].value;
-				if (value.isPreferableTo(bestVal)) {
-					size = 1;
-					valsBest[0] = arrVals[i + offset];
-					bestVal = value;
-				} else if (value.equals(bestVal)) {
-					if (valsBest.length <= size) {
-						Record[] temp = valsBest;
-						valsBest = new Record[size + 1];
-						for (int c = 0; c < temp.length; c++)
-							valsBest[c] = temp[c];
-					}
-					valsBest[size++] = arrVals[i + offset];
-				}
-			}
-			arrVals = valsBest;
-			offset = 0;
-		}
-		if (conf.hasScore) {
-			lastSize = size;
-			size = 0;
-			int bestScore = Integer.MIN_VALUE;
-			for (int i = 0; i < lastSize; i++) {
-				int score = arrVals[i + offset].score;
-				if (score > bestScore) {
-					size = 1;
-					valsBestScore[0] = arrVals[i + offset];
-					bestScore = score;
-				} else if (score == bestScore) {
-					if (valsBestScore.length <= size) {
-						Record[] temp = valsBestScore;
-						valsBestScore = new Record[size + 1];
-						for (int c = 0; c < temp.length; c++)
-							valsBestScore[c] = temp[c];
-					}
-					valsBestScore[size++] = arrVals[i + offset];
-				}
-			}
-			arrVals = valsBestScore;
-			offset = 0;
-		}
-		if (conf.hasRemoteness) {
-			lastSize = size;
-			size = 0;
-			if (bestVal == Value.LOSE) {
-				int bestRemoteness = 0;
-				for (int i = 0; i < lastSize; i++) {
-					int remoteness = arrVals[i + offset].remoteness;
-					if (remoteness > bestRemoteness) {
-						size = 1;
-						valsBestRemoteness[0] = arrVals[i + offset];
-						bestRemoteness = remoteness;
-					} else if (remoteness == bestRemoteness) {
-						if (valsBestRemoteness.length <= size) {
-							Record[] temp = valsBestRemoteness;
-							valsBestRemoteness = new Record[size + 1];
-							for (int c = 0; c < temp.length; c++)
-								valsBestRemoteness[c] = temp[c];
-						}
-						valsBestRemoteness[size++] = arrVals[i + offset];
-					}
-				}
-			} else {
-				int bestRemoteness = Integer.MAX_VALUE;
-				for (int i = 0; i < lastSize; i++) {
-					int remoteness = arrVals[i].remoteness;
-					if (remoteness < bestRemoteness) {
-						size = 1;
-						valsBestRemoteness[0] = arrVals[i];
-						bestRemoteness = remoteness;
-					} else if (remoteness == bestRemoteness) {
-						if (valsBestRemoteness.length <= size) {
-							Record[] temp = valsBestRemoteness;
-							valsBestRemoteness = new Record[size + 1];
-							for (int c = 0; c < temp.length; c++)
-								valsBestRemoteness[c] = temp[c];
-						}
-						valsBestRemoteness[size++] = arrVals[i];
-					}
-				}
-			}
-			arrVals = valsBestRemoteness;
-		}
-		return arrVals[0];
-	}
-
-	/**
 	 * @return The total number of hashes
 	 */
 	public abstract long numHashes();
@@ -416,18 +305,6 @@ public abstract class Game<S extends State> {
 		for (int i = 1; i < len; i++)
 			arr[i] = newState();
 		return arr;
-	}
-
-	/**
-	 * @param recs
-	 *            A list of records
-	 * @return The best of the records
-	 * @see Game#combine(Record[], int, int)
-	 */
-	public final Record combine(List<Record> recs) {
-		Record[] recArray = new Record[recs.size()];
-		recArray = recs.toArray(recArray);
-		return combine(recArray, 0, recArray.length);
 	}
 
 	/**
@@ -474,5 +351,19 @@ public abstract class Game<S extends State> {
 	 */
 	public Record newRecord() {
 		return new Record(conf);
+	}
+
+	/**
+	 * @param recordArray
+	 *            An array of records
+	 * @return The record with the best possible outcome
+	 */
+	public Record combine(Record[] records) {
+		Record best = records[0];
+		for (int i = 1; i < records.length; i++) {
+			if (records[i].isPreferableTo(best))
+				best = records[i];
+		}
+		return best;
 	}
 }

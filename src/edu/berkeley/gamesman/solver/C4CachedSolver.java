@@ -67,10 +67,8 @@ public class C4CachedSolver extends TierSolver {
 				start, hashes)) / game.maxChildren());
 		long current = start;
 		long stepNum = current % STEP_SIZE;
-		Record[] vals = new Record[game.maxChildren()];
-		for (int i = 0; i < vals.length; i++)
-			vals[i] = game.newRecord();
-		Record prim = game.newRecord();
+		Record record = game.newRecord();
+		Record bestRecord = game.newRecord();
 		TierState[] children = new TierState[game.maxChildren()];
 		for (int i = 0; i < children.length; i++)
 			children[i] = game.newState();
@@ -118,6 +116,7 @@ public class C4CachedSolver extends TierSolver {
 					nano = System.nanoTime();
 					times[2] += nano - lastNano;
 				}
+				bestRecord.value = Value.UNDECIDED;
 				for (int i = 0; i < len; i++) {
 					int col = game.openColumn[i];
 					long childHash = game.stateToHash(children[i]);
@@ -137,17 +136,19 @@ public class C4CachedSolver extends TierSolver {
 						}
 					}
 					game.longToRecord(children[i], readPages[col].getRecord(
-							readHandles[col], childHash), vals[i]);
-					vals[i].previousPosition();
+							readHandles[col], childHash), record);
+					record.previousPosition();
+					if (bestRecord.value == Value.UNDECIDED
+							|| record.isPreferableTo(bestRecord))
+						bestRecord.set(record);
 				}
 				if (debugSolver) {
 					lastNano = nano;
 					nano = System.nanoTime();
 					times[3] += nano - lastNano;
 				}
-				Record newVal = game.combine(vals, 0, len);
 				writePage.putRecord(writePageDh, current,
-						game.recordToLong(curState, newVal));
+						game.recordToLong(curState, bestRecord));
 			} else if (pv == Value.IMPOSSIBLE) {
 				break;
 			} else {
@@ -159,10 +160,10 @@ public class C4CachedSolver extends TierSolver {
 					nano = System.nanoTime();
 					times[3] += nano - lastNano;
 				}
-				prim.remoteness = 0;
-				prim.value = pv;
+				record.remoteness = 0;
+				record.value = pv;
 				writePage.putRecord(writePageDh, current,
-						game.recordToLong(curState, prim));
+						game.recordToLong(curState, record));
 			}
 			if (debugSolver) {
 				lastNano = nano;

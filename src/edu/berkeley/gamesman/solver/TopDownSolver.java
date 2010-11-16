@@ -19,7 +19,7 @@ import edu.berkeley.gamesman.util.qll.RecycleLinkedList;
 public class TopDownSolver extends Solver {
 	protected boolean containsRemoteness;
 
-	protected RecycleLinkedList<Record[]> recordList;
+	protected RecycleLinkedList<Record> bestRecords;
 
 	/**
 	 * The default constructor
@@ -30,15 +30,12 @@ public class TopDownSolver extends Solver {
 	public TopDownSolver(final Configuration conf) {
 		super(conf);
 		final Game<?> game = conf.getGame();
-		recordList = new RecycleLinkedList<Record[]>(new Factory<Record[]>() {
-			public Record[] newObject() {
-				Record[] retVal = new Record[game.maxChildren()];
-				for (int i = 0; i < retVal.length; i++)
-					retVal[i] = game.newRecord();
-				return retVal;
+		bestRecords = new RecycleLinkedList<Record>(new Factory<Record>() {
+			public Record newObject() {
+				return game.newRecord();
 			}
 
-			public void reset(Record[] t) {
+			public void reset(Record t) {
 			}
 		});
 		containsRemoteness = conf.hasRemoteness;
@@ -107,19 +104,21 @@ public class TopDownSolver extends Solver {
 		Value pv = game.primitiveValue();
 		switch (pv) {
 		case UNDECIDED:
-			Record[] recs = recordList.addFirst();
+			Record bestRecord = bestRecords.push();
+			bestRecord.value = Value.UNDECIDED;
 			int numChildren = game.makeMove();
 			for (int child = 0; child < numChildren; child++) {
 				solve(game, value, depth + 1, readDh, writeDh);
-				recs[child].set(value);
-				recs[child].previousPosition();
+				value.previousPosition();
+				if (bestRecord.value == Value.UNDECIDED
+						|| value.isPreferableTo(bestRecord))
+					bestRecord.set(value);
 				game.changeMove();
 			}
 			if (numChildren > 0)
 				game.undoMove();
-			Record best = game.combine(recs, 0, numChildren);
-			value.set(best);
-			recordList.remove();
+			value.set(bestRecord);
+			bestRecords.pop();
 			break;
 		case IMPOSSIBLE:
 			throw new Error(
