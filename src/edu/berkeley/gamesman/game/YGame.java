@@ -825,29 +825,24 @@ public final class YGame extends ConnectGame
         return result;
     }
 
-    @Override
-	public void nextHashInTier(){
-    	mmh.next(changedPieces);
-        int charIndex = 0;
-        if(!changedPieces.hasNext())
-        	return;
-        int nextPiece = changedPieces.next();
-        for (int t = 0; t < this.board.size(); t++) 
-        {
-            final char[] triangle = this.board.get(t);
-
-            for (int n = 0; n < this.nodesInThisTriangle[t]; n++) 
-            {
-				if (charIndex == nextPiece) {
-					triangle[charIndex] = get(charIndex);
-					if (!changedPieces.hasNext())
-						return;
-					nextPiece = changedPieces.next();
-				}
-            	charIndex++;
-            }
-        }
-    }
+	@Override
+	public void nextHashInTier() {
+		mmh.next(changedPieces);
+		int lastIndex = 0;
+		int currentRowNum = 0;
+		char[] currentRow = board.get(0);
+		int rowIndex = 0;
+		while (changedPieces.hasNext()) {
+			int nextIndex = changedPieces.next();
+			rowIndex += nextIndex - lastIndex;
+			while (rowIndex >= currentRow.length) {
+				rowIndex -= currentRow.length;
+				currentRow = board.get(++currentRowNum);
+			}
+			currentRow[rowIndex] = get(nextIndex);
+			lastIndex = nextIndex;
+		}
+	}
     
     /*
      * (non-Javadoc)
