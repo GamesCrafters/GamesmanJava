@@ -5,7 +5,7 @@ package edu.berkeley.gamesman.core;
  * 
  * @author dnspies
  */
-public class Record implements Cloneable {
+public class Record implements Cloneable, Comparable<Record> {
 	private final Configuration conf;
 
 	/**
@@ -105,28 +105,29 @@ public class Record implements Cloneable {
 		--remoteness;
 	}
 
-	public boolean isPreferableTo(Record other) {
-		if (conf.hasValue)
-			if (value.isPreferableTo(other.value))
-				return true;
-			else if (other.value.isPreferableTo(value))
-				return false;
+	@Override
+	public int compareTo(Record other) {
+		if (conf.hasValue) {
+			int compare = value.compareTo(other.value);
+			if (compare != 0)
+				return compare;
+		}
 		if (conf.hasScore)
 			if (score > other.score)
-				return true;
+				return 1;
 			else if (score < other.score)
-				return false;
+				return -1;
 		if (conf.hasRemoteness)
-			if (!conf.hasValue || value.isPreferableTo(Value.DRAW)) {
+			if (!conf.hasValue || value.compareTo(Value.DRAW) > 0) {
 				if (remoteness < other.remoteness)
-					return true;
+					return 1;
 				else if (remoteness > other.remoteness)
-					return false;
-			} else if (Value.DRAW.isPreferableTo(value))
+					return -1;
+			} else if (Value.DRAW.compareTo(value) > 0)
 				if (remoteness > other.remoteness)
-					return true;
+					return 1;
 				else if (remoteness < other.remoteness)
-					return false;
-		return false;
+					return -1;
+		return 0;
 	}
 }

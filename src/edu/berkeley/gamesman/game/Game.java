@@ -361,7 +361,7 @@ public abstract class Game<S extends State> {
 	public Record combine(Record[] records) {
 		Record best = records[0];
 		for (int i = 1; i < records.length; i++) {
-			if (records[i].isPreferableTo(best))
+			if (records[i].compareTo(best) > 0)
 				best = records[i];
 		}
 		return best;

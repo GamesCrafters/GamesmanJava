@@ -120,7 +120,7 @@ public class LoopySolver extends Solver {
 					fix(game, value, readDh, writeDh);
 					game.changeUnmakeMove();
 				}
-				if (numParents > 0){
+				if (numParents > 0) {
 					game.remakeMove();
 				}
 			} else {
@@ -137,7 +137,7 @@ public class LoopySolver extends Solver {
 						// set bestValue to value in database
 					} else {
 						if (unassigned
-								|| value.value.isPreferableTo(bestValue.value)) {
+								|| value.value.compareTo(bestValue.value) > 0) {
 							bestValue.set(value);
 							writeDb.putRecord(writeDh, hash,
 									game.recordToLong(bestValue));
@@ -154,7 +154,7 @@ public class LoopySolver extends Solver {
 					fix(game, value, readDh, writeDh);
 					game.changeUnmakeMove();
 				}
-				if (numParents > 0){
+				if (numParents > 0) {
 					game.remakeMove();
 				}
 			}
@@ -181,10 +181,10 @@ public class LoopySolver extends Solver {
 		long hash = game.getHash();
 		game.longToRecord(readDb.getRecord(readDh, hash), dbValue);
 		if (dbValue.value != Value.IMPOSSIBLE) {
-			if (Value.DRAW.isPreferableTo(dbValue.value)) {
+			if (Value.DRAW.compareTo(dbValue.value) > 0) {
 				throw new Error(
 						"Draw should not be > database Value unless fix has already been called numChildren times");
-			} else if (value.isPreferableTo(dbValue)) {
+			} else if (value.compareTo(dbValue) > 0) {
 				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
 				// save value
 				value.previousPosition();
@@ -193,7 +193,7 @@ public class LoopySolver extends Solver {
 					fix(game, value, readDh, writeDh);
 					game.changeUnmakeMove();
 				}
-				if (numParents > 0){
+				if (numParents > 0) {
 					game.remakeMove();
 				}
 				value.nextPosition();
@@ -210,11 +210,11 @@ public class LoopySolver extends Solver {
 					childValue.previousPosition();
 					if (childValue.value == Value.DRAW) {
 						break;
-					} else if (childValue.value.isPreferableTo(Value.DRAW)) {
+					} else if (childValue.value.compareTo(Value.DRAW) > 0) {
 						throw new Error(
 								"childValue should not be > DRAW if parent value is DRAW");
 					} else if (unassigned
-							|| childValue.value.isPreferableTo(bestValue.value)) {
+							|| childValue.value.compareTo(bestValue.value) > 0) {
 						bestValue.set(childValue);
 						unassigned = false;
 					}
@@ -230,7 +230,7 @@ public class LoopySolver extends Solver {
 						fix(game, bestValue, readDh, writeDh);
 						game.changeUnmakeMove();
 					}
-					if (numParents > 0){
+					if (numParents > 0) {
 						game.remakeMove();
 					}
 					bestValue.nextPosition();

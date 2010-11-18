@@ -139,7 +139,7 @@ public class C4CachedSolver extends TierSolver {
 							readHandles[col], childHash), record);
 					record.previousPosition();
 					if (bestRecord.value == Value.UNDECIDED
-							|| record.isPreferableTo(bestRecord))
+							|| record.compareTo(bestRecord) > 0)
 						bestRecord.set(record);
 				}
 				if (debugSolver) {

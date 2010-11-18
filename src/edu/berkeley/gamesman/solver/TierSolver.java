@@ -108,7 +108,7 @@ public class TierSolver extends Solver {
 									game.stateToHash(children[i])), record);
 					record.previousPosition();
 					if (bestRecord.value == Value.UNDECIDED
-							|| record.isPreferableTo(bestRecord))
+							|| record.compareTo(bestRecord) > 0)
 						bestRecord.set(record);
 				}
 				if (debugSolver) {

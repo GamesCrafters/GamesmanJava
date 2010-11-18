@@ -373,24 +373,8 @@ public class Configuration {
 			newConf.db = db;
 			return newConf;
 		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-			return null;
+			throw new Error(e);
 		}
-	}
-
-	/**
-	 * @param key
-	 *            The key which maps to the Integer array
-	 * @param dfl
-	 *            The default if the given key isn't present
-	 * @return An array of integers separated by ", *"
-	 */
-	public Integer[] getIntegers(String key, Integer[] dfl) {
-		String iString = props.getProperty(key);
-		if (iString == null)
-			return dfl;
-		else
-			return Util.parseIntegers(iString.split(", *"));
 	}
 
 	/**
@@ -470,16 +454,7 @@ public class Configuration {
 		return new Configuration(props);
 	}
 
-	/**
-	 * You probably want to use load instead.
-	 * 
-	 * @param is
-	 *            An input stream to read from
-	 * @return The byte array in which a configuration might be stored
-	 * @throws IOException
-	 *             If an IOException occurs while reading
-	 */
-	public static byte[] loadBytes(InputStream is) throws IOException {
+	private static byte[] loadBytes(InputStream is) throws IOException {
 		int confLength = 0;
 		for (int i = 0; i < 4; i++) {
 			confLength <<= 8;

@@ -111,7 +111,7 @@ public class TopDownSolver extends Solver {
 				solve(game, value, depth + 1, readDh, writeDh);
 				value.previousPosition();
 				if (bestRecord.value == Value.UNDECIDED
-						|| value.isPreferableTo(bestRecord))
+						|| value.compareTo(bestRecord) > 0)
 					bestRecord.set(value);
 				game.changeMove();
 			}

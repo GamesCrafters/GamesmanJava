@@ -5,7 +5,7 @@ package edu.berkeley.gamesman.core;
  * 
  * @author dnspies
  */
-public enum Value {
+public enum Value implements Comparable<Value>{
 	/**
 	 * The player who just moved can force a win
 	 */
@@ -57,16 +57,6 @@ public enum Value {
 
 	public String toString() {
 		return this.name();
-	}
-
-	/**
-	 * @param otherValue
-	 *            The value to compare this one with
-	 * @return Is true only if this PrimitiveValue is better than otherValue.
-	 *         Order of values from worst to best: Lose, Tie, Win, Undecided
-	 */
-	public boolean isPreferableTo(Value otherValue) {
-		return (value > otherValue.value);
 	}
 
 	/**
