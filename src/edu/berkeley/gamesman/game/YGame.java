@@ -19,16 +19,16 @@ import edu.berkeley.gamesman.util.Util;
  */
 public final class YGame extends ConnectGame 
 {
-    private int totalNumberOfNodes;
+    private final int totalNumberOfNodes;
 
     private final int innerTriangleSegments;
     private final int outerRingSegments; // The next two
     private final int outerRows;
-    private int numberOfTriangles;// Total number of triangles (or rows, rings, etc.)
+    private final int numberOfTriangles;// Total number of triangles (or rows, rings, etc.)
 
     private final Vector<char[]> board;
     private final int[] nodesInThisTriangle;
-    private int transitionTriangleNumber = -1;
+    private final int transitionTriangleNumber;
 
     private final char[] unrolledCharBoard;// The full board (string) representation.
     private final ChangedIterator changedPieces;
@@ -154,7 +154,7 @@ public final class YGame extends ConnectGame
 
         this.nodesInThisTriangle = new int[this.numberOfTriangles];
 
-        this.totalNumberOfNodes = 0;
+        int transitionTriangleNumber = -1;
 
         int nodes = (this.innerTriangleSegments % 3) * 3;
 
@@ -179,12 +179,12 @@ public final class YGame extends ConnectGame
 
             if ((nodes / 3) == this.innerTriangleSegments) 
             {
-                this.transitionTriangleNumber = i;
+                transitionTriangleNumber = i;
             }
 
             this.board.add(triangleNodes);
 
-            if (this.transitionTriangleNumber == -1) 
+            if (transitionTriangleNumber == -1) 
             {
                 nodes += 9;
             }
@@ -194,19 +194,17 @@ public final class YGame extends ConnectGame
             }
         }
 
+        this.transitionTriangleNumber = transitionTriangleNumber;
+
         assert (this.transitionTriangleNumber >= 0);
 
-        for (int i = 0; i < this.numberOfTriangles; i++) 
-        {
-            this.totalNumberOfNodes += this.nodesInThisTriangle[i];
-        }
+		this.totalNumberOfNodes = (innerTriangleSegments + 1)
+				* (innerTriangleSegments + 2) / 2
+				+ (innerTriangleSegments * 2 + outerRows + 1) * outerRows / 2
+				* 3;
 
         assert Util.debug(DebugFacility.GAME, "totalNumberOfNodes: "
                 + this.totalNumberOfNodes);
-
-        // this.totalNumberOfNodes = 5 * ( this.numberOfTriangles * this.numberOfTriangles ) - ( 7 * this.numberOfTriangles ) + 3;
-
-        // Double checking the above calculation. This calculation doesn't appear to be correct for all cases.
 
         assert Util.debug(DebugFacility.GAME, "`->calculated: "
                 + (5 * (this.numberOfTriangles * this.numberOfTriangles)

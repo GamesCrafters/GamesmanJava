@@ -34,12 +34,17 @@ public abstract class ConnectGame extends TierGame {
 	public ConnectGame(Configuration conf) {
 		super(conf);
 		int boardSize;
+		// You can't call getBoardSize because the board size hasn't been
+		// initialized yet (the child constructor hasn't been called).
+		// It's either this or lazy initialization for the DartboardHasher
 		if (this instanceof YGame) {
-			/*
-			 * int boardSide = conf.getInteger("gamesman.game.outerRows", 2) +
-			 * 2; boardSize = boardSide * (boardSide - 1) / 2 * 3;
-			 */
-			boardSize = this.getBoardSize();
+			int innerTriangleSegments = conf.getInteger(
+					"gamesman.game.innerTriangleSegments", 2);
+			int outerRows = conf.getInteger("gamesman.game.outerRows", 2);
+			boardSize = (innerTriangleSegments + 1)
+					* (innerTriangleSegments + 2) / 2
+					+ (innerTriangleSegments * 2 + outerRows + 1) * outerRows
+					/ 2 * 3;
 		} else if (this instanceof Connections) {
 			int boardSide = conf.getInteger("gamesman.game.side", 4);
 			boardSize = boardSide * boardSide + (boardSide - 1)
