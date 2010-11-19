@@ -129,7 +129,7 @@ public class Reversi extends TierGame {
 	public Value primitiveValue() {
 		if (!(isChildrenValid))
 			getChildren();
-		if (children.length == 0) {
+		if (numChildren == 0) {
 			return numPieces[turn] > numPieces[Math.abs(turn - 1)] ? Value.WIN
 					: Value.LOSE;
 		} else {
@@ -294,7 +294,7 @@ public class Reversi extends TierGame {
 						String[] stringState = { stateToString().substring(1) };
 						boolean x = isFlippable(boardNumber, index, true,
 								stringState);
-						System.out.println(children[counter]);
+						System.out.println(stringState[0]);
 						children[counter].tier = getTier() + 1;
 						children[counter].hash = dbh.hash(stringState[0]
 								.toCharArray());
