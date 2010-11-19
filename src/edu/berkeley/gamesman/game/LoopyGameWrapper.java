@@ -71,10 +71,10 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame {
 
 	@Override
 	public boolean changeUnmakeMove() {
-		if (parentLists.getLast().isEmpty())
+		if (parentLists.getFirst().isEmpty())
 			return false;
-		S m = parentLists.getLast().removeFirst();
-		stateList.getLast().set(m);
+		S m = parentLists.getFirst().removeFirst();
+		stateList.getFirst().set(m);
 		statePool.release(m);
 		return true;
 	}
@@ -89,50 +89,47 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame {
 	@Override
 	public int unmakeMove() {
 		QuickLinkedList<S> parents = stateSetPool.get();
-		parentLists.push(parents);
-		int numParents = myGameLoopy.possibleParents(stateList.getLast(),
+		int numParents = myGameLoopy.possibleParents(stateList.getFirst(),
 				possibleParents);
+		parentLists.push(parents);
 		if (numParents == 0) {
 			stateSetPool.release(parentLists.pop());
 			return 0;
 		} else {
 			for (int i = 0; i < numParents; i++) {
 				S parent = statePool.get();
-				parents.add(parent);
 				parent.set(possibleParents[i]);
+				parents.add(parent);
 			}
-			S curState = statePool.get();
-			stateList.push(curState);
 			S parent = parents.removeFirst();
-			curState.set(parent);
-			statePool.release(parent);
+			stateList.push(parent);
 			return numParents;
 		}
 	}
 
 	@Override
 	public boolean changeMove() {
-		if (moveLists.getLast().isEmpty())
+		if (moveLists.getFirst().isEmpty())
 			return false;
-		S m = moveLists.getLast().removeFirst();
-		stateList.getLast().set(m);
+		S m = moveLists.getFirst().removeFirst();
+		stateList.getFirst().set(m);
 		statePool.release(m);
 		return true;
 	}
 
 	@Override
 	public String displayState() {
-		return myGame.displayState(stateList.getLast());
+		return myGame.displayState(stateList.getFirst());
 	}
 
 	@Override
 	public long getHash() {
-		return myGame.stateToHash(stateList.getLast());
+		return myGame.stateToHash(stateList.getFirst());
 	}
 
 	@Override
 	public void longToRecord(long record, Record toStore) {
-		myGame.longToRecord(stateList.getLast(), record, toStore);
+		myGame.longToRecord(stateList.getFirst(), record, toStore);
 
 	}
 
@@ -140,7 +137,7 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame {
 	public int makeMove() {
 		QuickLinkedList<S> moves = stateSetPool.get();
 		moveLists.push(moves);
-		int numMoves = myGame.validMoves(stateList.getLast(), possibleMoves);
+		int numMoves = myGame.validMoves(stateList.getFirst(), possibleMoves);
 		if (numMoves == 0) {
 			stateSetPool.release(moveLists.pop());
 			return 0;
@@ -162,7 +159,7 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame {
 	@Override
 	public Collection<String> moveNames() {
 		Collection<Pair<String, S>> validMoves = myGame.validMoves(stateList
-				.getLast());
+				.getFirst());
 		ArrayList<String> moveNames = new ArrayList<String>(validMoves.size());
 		for (Pair<String, S> move : validMoves) {
 			moveNames.add(move.car);
@@ -177,12 +174,12 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame {
 
 	@Override
 	public Value primitiveValue() {
-		return myGame.primitiveValue(stateList.getLast());
+		return myGame.primitiveValue(stateList.getFirst());
 	}
 
 	@Override
 	public long recordToLong(Record fromRecord) {
-		return myGame.recordToLong(stateList.getLast(), fromRecord);
+		return myGame.recordToLong(stateList.getFirst(), fromRecord);
 	}
 
 	@Override
@@ -236,5 +233,10 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame {
 	@Override
 	public long recordStates() {
 		return myGame.recordStates();
+	}
+
+	@Override
+	public String toString() {
+		return myGame.displayState(stateList.getFirst());
 	}
 }

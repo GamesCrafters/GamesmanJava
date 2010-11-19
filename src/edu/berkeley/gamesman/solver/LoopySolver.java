@@ -220,6 +220,8 @@ public class LoopySolver extends Solver {
 					}
 					game.changeMove();
 				}
+				if (numChildren > 0)
+					game.undoMove();
 				recordPool.release(childValue);
 				if (child == numChildren) {
 					writeDb.putRecord(writeDh, hash,
