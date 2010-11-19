@@ -130,4 +130,16 @@ public class Record implements Cloneable, Comparable<Record> {
 					return -1;
 		return 0;
 	}
+	
+	/*
+	 * public boolean compareTo(Record other){
+	 * 	if (other.value == Value.IMPOSSIBLE){
+	 *		return true;
+	 *	}
+	 *	else{
+	 *		return isPreferableTo(other);
+	 *	}
+	 *}	
+	 */
+		
 }
