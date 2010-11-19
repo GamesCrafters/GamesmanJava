@@ -20,7 +20,8 @@ public class Reversi extends TierGame {
 	private int turn; // 1 for black, 0 for white.
 	private final static int BLACK = 1;
 	private final static int WHITE = 0;
-	private TierState[] children;
+	private final TierState[] children;
+	private int numChildren;
 	private boolean isChildrenValid;
 	private final long[][][] offsetTable;
 	// offsetTable is a table of offsets based on the tier, or number of pieces
@@ -100,7 +101,7 @@ public class Reversi extends TierGame {
 		board[height / 2 - 1][width / 2].setPiece('O');
 		board[height / 2][width / 2].setPiece('X');
 		isChildrenValid = false;
-		children = new TierState[0];
+		children = newStateArray(maxChildren());
 		stringMoves = new String[0]; // only for testing.
 	}
 
@@ -193,7 +194,8 @@ public class Reversi extends TierGame {
 	public String displayState() {
 		String s = stateToString();
 		StringBuilder str = new StringBuilder((width + 3) * height);
-		str.append((s.charAt(0) == 'O' ? "White to Move" : "Black to Move") + "\n");
+		str.append((s.charAt(0) == 'O' ? "White to Move" : "Black to Move")
+				+ "\n");
 		s = s.substring(1);
 		for (int row = 0; row < height; row++)
 			str.append("|" + s.substring(row * width, row * width + width)
@@ -247,28 +249,16 @@ public class Reversi extends TierGame {
 	@Override
 	public int validMoves(TierState[] moves) {
 		if (!(isChildrenValid))
-			getChildren(moves);
-		else
-			System.arraycopy(children, 0, moves, 0, children.length);
-		return children.length;
-	}
-	
-	private void getChildren() {
-		this.getChildren(new TierState[maxChildren()]);
-		int counter = 0;
-		for (int x = 0; x < children.length; x++) {
-			if (children[x] != null)
-				counter++;
+			getChildren();
+		else {
+			for (int i = 0; i < numChildren; i++) {
+				moves[i].set(children[i]);
+			}
 		}
-		TierState[] tempChildren = new TierState[counter];
-		for (int y = 0; y < counter; y++) {
-			tempChildren[y] = children[y];
-		}
-		children = tempChildren;
+		return numChildren;
 	}
 
-	private void getChildren(TierState[] moves) {
-		children = moves;
+	private void getChildren() {
 		String originalString = stateToString();
 		int counter = 0;
 		stringMoves = new String[0]; // only for testing.
@@ -304,7 +294,8 @@ public class Reversi extends TierGame {
 								stringState);
 						System.out.println(children[counter]);
 						children[counter].tier = getTier() + 1;
-						children[counter].hash = dbh.hash(stringState[0].toCharArray());
+						children[counter].hash = dbh.hash(stringState[0]
+								.toCharArray());
 						counter++;
 						break;
 					}
