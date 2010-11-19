@@ -79,7 +79,7 @@ public class Reversi extends TierGame {
 		dbh = new DartboardHasher(boardSize, ' ', 'O', 'X');
 		offsetTable = new long[boardSize + 1][2][];
 		// initialize offset table
-		for (int tier = 0; tier < boardSize; tier++) {
+		for (int tier = 0; tier <= boardSize; tier++) {
 			long total = 0;
 			for (int turn = 0; turn < 2; turn++) {
 				offsetTable[tier][turn] = new long[tier + 1];
@@ -255,6 +255,8 @@ public class Reversi extends TierGame {
 				moves[i].set(children[i]);
 			}
 		}
+		if (numChildren == 0)
+			throw new Error("No children at this position");
 		return numChildren;
 	}
 
@@ -302,8 +304,9 @@ public class Reversi extends TierGame {
 				}
 			}
 		}
+		numChildren = counter;
 		isChildrenValid = true;
-		dbh.hash(originalString.toCharArray());
+		dbh.hash(originalString.substring(1).toCharArray());
 	}
 
 	private boolean isFlippable(int boardNumber, int direction, boolean flip,
@@ -497,4 +500,8 @@ public class Reversi extends TierGame {
 		}
 	}
 
+	@Override
+	public String toString() {
+		return displayState();
+	}
 }
