@@ -2,7 +2,6 @@ package edu.berkeley.gamesman.game;
 
 import java.lang.reflect.Array;
 import java.util.Collection;
-import java.util.List;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Value;

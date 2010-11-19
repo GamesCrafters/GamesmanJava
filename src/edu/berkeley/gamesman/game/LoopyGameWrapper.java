@@ -16,6 +16,7 @@ import edu.berkeley.gamesman.util.qll.RLLFactory;
 //public class LoopyGameWrapper extends LoopyMutaGame {
 public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame{
 	private final Game<S> myGame;
+	private final LoopyGame<S> myGameLoopy;
 	private final RecycleLinkedList<RecycleLinkedList<S>> moveLists;
 	private final RecycleLinkedList<RecycleLinkedList<S>> parentLists;
 	private final RecycleLinkedList<S> stateList;
@@ -23,12 +24,14 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame{
 	private final S[] possibleParents;
 	private final S[] startingPositions;
 
+	@SuppressWarnings("unchecked")
 	public LoopyGameWrapper(Configuration conf, Game<S> g) {
 		super(conf);
 		if (!(g instanceof LoopyGame<?>)) {
 			throw new Error("Can only wrap Loopy games");
 		}
 		myGame = g;
+		myGameLoopy = (LoopyGame<S>) g;
 		moveLists = new RecycleLinkedList<RecycleLinkedList<S>>(
 				new Factory<RecycleLinkedList<S>>() {
 					RLLFactory<S> gen = new RLLFactory<S>(new Factory<S>() {
@@ -83,7 +86,7 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame{
 		});
 		stateList.add();
 		possibleMoves = myGame.newStateArray(myGame.maxChildren());
-		possibleParents = myGame.newStateArray(((LoopyGame) myGame).maxParents());
+		possibleParents = myGame.newStateArray(myGameLoopy.maxParents());
 		Collection<S> startingPositions = myGame.startingPositions();
 		this.startingPositions = startingPositions.toArray(myGame
 				.newStateArray(startingPositions.size()));
@@ -107,7 +110,7 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame{
 	@Override
 	public int unmakeMove() {
 		RecycleLinkedList<S> parents = parentLists.addLast();
-		int numParents = ((LoopyGame) myGame).possibleParents(stateList.getLast(), possibleParents);
+		int numParents = myGameLoopy.possibleParents(stateList.getLast(), possibleParents);
 		if (numParents == 0) {
 			parentLists.removeLast();
 			return 0;
