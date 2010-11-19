@@ -45,6 +45,7 @@ public class Reversi extends TierGame {
 			this.row = row;
 			this.col = col;
 			this.boardNum = boardNum;
+			dbh.set(boardNum, ' ');
 		}
 
 		public char getPiece() {
@@ -75,19 +76,6 @@ public class Reversi extends TierGame {
 		boardSize = width * height;
 		board = new Cell[height][width];
 		dbh = new DartboardHasher(boardSize, ' ', 'O', 'X');
-		for (int row = 0; row < height; row++) {
-			for (int col = 0; col < width; col++) {
-				board[row][col] = new Cell(row, col, row * width + col);
-			}
-		}
-		board[height / 2 - 1][width / 2 - 1].setPiece('X');
-		board[height / 2][width / 2 - 1].setPiece('O');
-		board[height / 2 - 1][width / 2].setPiece('O');
-		board[height / 2][width / 2].setPiece('X');
-		turn = BLACK;
-		isChildrenValid = false;
-		children = new TierState[0];
-		stringMoves = new String[0]; // only for testing.
 		offsetTable = new long[boardSize + 1][2][];
 		// initialize offset table
 		for (int tier = 0; tier < boardSize; tier++) {
@@ -101,6 +89,19 @@ public class Reversi extends TierGame {
 				}
 			}
 		}
+		for (int row = 0; row < height; row++) {
+			for (int col = 0; col < width; col++) {
+				board[row][col] = new Cell(row, col, row * width + col);
+			}
+		}
+		turn = BLACK;
+		board[height / 2 - 1][width / 2 - 1].setPiece('X');
+		board[height / 2][width / 2 - 1].setPiece('O');
+		board[height / 2 - 1][width / 2].setPiece('O');
+		board[height / 2][width / 2].setPiece('X');
+		isChildrenValid = false;
+		children = new TierState[0];
+		stringMoves = new String[0]; // only for testing.
 	}
 
 	@Override
@@ -192,6 +193,8 @@ public class Reversi extends TierGame {
 	public String displayState() {
 		String s = stateToString();
 		StringBuilder str = new StringBuilder((width + 3) * height);
+		str.append((s.charAt(0) == 'O' ? "White to Move" : "Black to Move") + "\n");
+		s = s.substring(1);
 		for (int row = 0; row < height; row++)
 			str.append("|" + s.substring(row * width, row * width + width)
 					+ "|\n");
@@ -252,6 +255,16 @@ public class Reversi extends TierGame {
 	
 	private void getChildren() {
 		this.getChildren(new TierState[maxChildren()]);
+		int counter = 0;
+		for (int x = 0; x < children.length; x++) {
+			if (children[x] != null)
+				counter++;
+		}
+		TierState[] tempChildren = new TierState[counter];
+		for (int y = 0; y < counter; y++) {
+			tempChildren[y] = children[y];
+		}
+		children = tempChildren;
 	}
 
 	private void getChildren(TierState[] moves) {
@@ -289,6 +302,7 @@ public class Reversi extends TierGame {
 						String[] stringState = { stateToString().substring(1) };
 						boolean x = isFlippable(boardNumber, index, true,
 								stringState);
+						System.out.println(children[counter]);
 						children[counter].tier = getTier() + 1;
 						children[counter].hash = dbh.hash(stringState[0].toCharArray());
 						counter++;
@@ -443,14 +457,6 @@ public class Reversi extends TierGame {
 			this.turn = BLACK;
 	}
 
-	public String getTurn() {
-		if (turn == BLACK)
-			return "BLACK TO MOVE";
-		else if (turn == WHITE)
-			return "WHITE TO MOVE";
-		return "";
-	}
-
 	public String[] getStringMoves() {
 		return stringMoves;
 	}
@@ -464,7 +470,6 @@ public class Reversi extends TierGame {
 		}
 		String input;
 		while (true) {
-			System.out.println(reversiGame.getTurn());
 			System.out.println(reversiGame.displayState());
 			System.out.println(reversiGame.primitiveValue().toString());
 			TierState[] moves = new TierState[16];
