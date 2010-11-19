@@ -11,15 +11,43 @@ import edu.berkeley.gamesman.util.qll.RecycleLinkedList;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.qll.Factory;
+import edu.berkeley.gamesman.util.qll.Pool;
+import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 import edu.berkeley.gamesman.util.qll.RLLFactory;
 
 //public class LoopyGameWrapper extends LoopyMutaGame {
-public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame{
+public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame {
 	private final Game<S> myGame;
 	private final LoopyGame<S> myGameLoopy;
-	private final RecycleLinkedList<RecycleLinkedList<S>> moveLists;
-	private final RecycleLinkedList<RecycleLinkedList<S>> parentLists;
-	private final RecycleLinkedList<S> stateList;
+	private final Pool<QuickLinkedList<S>> stateSetPool = new Pool<QuickLinkedList<S>>(
+			new Factory<QuickLinkedList<S>>() {
+
+				@Override
+				public QuickLinkedList<S> newObject() {
+					return new QuickLinkedList<S>();
+				}
+
+				@Override
+				public void reset(QuickLinkedList<S> t) {
+					t.clear();
+				}
+
+			});
+	private final Pool<S> statePool = new Pool<S>(new Factory<S>() {
+
+		@Override
+		public S newObject() {
+			return myGame.newState();
+		}
+
+		@Override
+		public void reset(S t) {
+		}
+
+	});
+	private final QuickLinkedList<QuickLinkedList<S>> moveLists;
+	private final QuickLinkedList<QuickLinkedList<S>> parentLists;
+	private final QuickLinkedList<S> stateList;
 	private final S[] possibleMoves;
 	private final S[] possibleParents;
 	private final S[] startingPositions;
@@ -32,59 +60,10 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame{
 		}
 		myGame = g;
 		myGameLoopy = (LoopyGame<S>) g;
-		moveLists = new RecycleLinkedList<RecycleLinkedList<S>>(
-				new Factory<RecycleLinkedList<S>>() {
-					RLLFactory<S> gen = new RLLFactory<S>(new Factory<S>() {
-
-						public S newObject() {
-							return myGame.newState();
-						}
-
-						public void reset(S t) {
-						}
-					});
-
-					public RecycleLinkedList<S> newObject() {
-						return gen.getList();
-					}
-
-					public void reset(RecycleLinkedList<S> t) {
-						t.clear();
-					}
-
-				});
-		parentLists = new RecycleLinkedList<RecycleLinkedList<S>>(
-				new Factory<RecycleLinkedList<S>>() {
-					RLLFactory<S> gen = new RLLFactory<S>(new Factory<S>() {
-
-						public S newObject() {
-							return myGame.newState();
-						}
-
-						public void reset(S t) {
-						}
-					});
-
-					public RecycleLinkedList<S> newObject() {
-						return gen.getList();
-					}
-
-					public void reset(RecycleLinkedList<S> t) {
-						t.clear();
-					}
-
-				});
-		stateList = new RecycleLinkedList<S>(new Factory<S>() {
-
-			public S newObject() {
-				return myGame.newState();
-			}
-
-			public void reset(S t) {
-			}
-
-		});
-		stateList.add();
+		moveLists = new QuickLinkedList<QuickLinkedList<S>>();
+		parentLists = new QuickLinkedList<QuickLinkedList<S>>();
+		stateList = new QuickLinkedList<S>();
+		stateList.push(g.newState());
 		possibleMoves = myGame.newStateArray(myGame.maxChildren());
 		possibleParents = myGame.newStateArray(myGameLoopy.maxParents());
 		Collection<S> startingPositions = myGame.startingPositions();
@@ -94,33 +73,41 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame{
 
 	@Override
 	public boolean changeUnmakeMove() {
-		if (moveLists.getLast().isEmpty())
+		if (parentLists.getLast().isEmpty())
 			return false;
-		S m = moveLists.getLast().removeFirst();
+		S m = parentLists.getLast().removeFirst();
 		stateList.getLast().set(m);
+		statePool.release(m);
 		return true;
 	}
 
 	@Override
 	public void remakeMove() {
-		parentLists.removeLast();
-		stateList.removeLast();
+		QuickLinkedList<S> parentList = parentLists.pop();
+		stateSetPool.release(parentList);
+		statePool.release(stateList.pop());
 	}
 
 	@Override
 	public int unmakeMove() {
-		RecycleLinkedList<S> parents = parentLists.addLast();
-		int numParents = myGameLoopy.possibleParents(stateList.getLast(), possibleParents);
+		QuickLinkedList<S> parents = stateSetPool.get();
+		parentLists.push(parents);
+		int numParents = myGameLoopy.possibleParents(stateList.getLast(),
+				possibleParents);
 		if (numParents == 0) {
-			parentLists.removeLast();
+			stateSetPool.release(parentLists.pop());
 			return 0;
 		} else {
 			for (int i = 0; i < numParents; i++) {
-				S parent = parents.add();
+				S parent = statePool.get();
+				parents.add(parent);
 				parent.set(possibleParents[i]);
 			}
-			S curState = stateList.addLast();
-			curState.set(parents.removeFirst());
+			S curState = statePool.get();
+			stateList.push(curState);
+			S parent = parents.removeFirst();
+			curState.set(parent);
+			statePool.release(parent);
 			return numParents;
 		}
 	}
@@ -131,6 +118,7 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame{
 			return false;
 		S m = moveLists.getLast().removeFirst();
 		stateList.getLast().set(m);
+		statePool.release(m);
 		return true;
 	}
 
@@ -152,18 +140,23 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame{
 
 	@Override
 	public int makeMove() {
-		RecycleLinkedList<S> moves = moveLists.addLast();
+		QuickLinkedList<S> moves = stateSetPool.get();
+		moveLists.push(moves);
 		int numMoves = myGame.validMoves(stateList.getLast(), possibleMoves);
 		if (numMoves == 0) {
-			moveLists.removeLast();
+			stateSetPool.release(moveLists.pop());
 			return 0;
 		} else {
 			for (int i = 0; i < numMoves; i++) {
-				S move = moves.add();
+				S move = statePool.get();
 				move.set(possibleMoves[i]);
+				moves.add(move);
 			}
-			S curState = stateList.addLast();
-			curState.set(moves.removeFirst());
+			S curState = statePool.get();
+			S move = moves.removeFirst();
+			curState.set(move);
+			stateList.push(curState);
+			statePool.release(move);
 			return numMoves;
 		}
 	}
@@ -203,26 +196,28 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame{
 	public void setStartingPosition(int i) {
 		setToState(startingPositions[i]);
 	}
-	
+
 	private void setToState(S pos) {
 		stateList.clear();
 		moveLists.clear();
-		S state = stateList.add();
+		parentLists.clear();
+		S state = statePool.get();
 		state.set(pos);
+		stateList.push(state);
 	}
 
 	@Override
 	public void setToHash(long hash) {
-		stateList.clear();
-		moveLists.clear();
-		S state = stateList.add();
+		S state = statePool.get();
 		myGame.hashToState(hash, state);
+		setToState(state);
+		statePool.release(state);
 	}
 
 	@Override
 	public void undoMove() {
-		moveLists.removeLast();
-		stateList.removeLast();
+		stateSetPool.release(moveLists.pop());
+		statePool.release(stateList.pop());
 	}
 
 	@Override
@@ -245,4 +240,3 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame{
 		return myGame.recordStates();
 	}
 }
-
