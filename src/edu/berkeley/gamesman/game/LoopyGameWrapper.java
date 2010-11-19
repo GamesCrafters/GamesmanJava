@@ -6,14 +6,12 @@ import java.util.ArrayList;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Value;
-import edu.berkeley.gamesman.util.qll.RecycleLinkedList;
 
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.qll.Factory;
 import edu.berkeley.gamesman.util.qll.Pool;
 import edu.berkeley.gamesman.util.qll.QuickLinkedList;
-import edu.berkeley.gamesman.util.qll.RLLFactory;
 
 //public class LoopyGameWrapper extends LoopyMutaGame {
 public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame {
