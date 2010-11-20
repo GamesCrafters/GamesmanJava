@@ -25,3 +25,6 @@ json.fields.ttt = width,height,pieces
 
 json.unsolved.reversi = jobs/Reversi4x4.job
 json.fields.reversi = width,height
+
+json.unsolved.atarigo = jobs/AtariGo.job
+json.fields.atarigo = width,height
