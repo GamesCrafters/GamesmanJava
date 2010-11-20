@@ -1,8 +1,7 @@
 gamesman.game = Reversi
 gamesman.game.width = 4
 gamesman.game.height = 4
-gamesman.game.pieces = 3
 gamesman.solver = TierSolver
 gamesman.database = MemoryDatabase:FileDatabase
 gamesman.db.uri = Reversi44.db
-record.fields = VALUE,REMOTENESS
+gamesman.debug.THREADING = true
