@@ -22,3 +22,6 @@ json.fields.connections = side
 
 json.unsolved.ttt = jobs/TTT.job
 json.fields.ttt = width,height,pieces
+
+json.unsolved.reversi = jobs/Reversi4x4.job
+json.fields.reversi = width,height
