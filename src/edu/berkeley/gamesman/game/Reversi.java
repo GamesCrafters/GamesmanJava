@@ -19,6 +19,7 @@ public class Reversi extends TierGame {
 	private final Cell[][] board;
 	private final DartboardHasher dbh;
 	private int turn; // 1 for black, 0 for white.
+	private static final char[] pieces = { 'O', 'X' };
 	private final static int BLACK = 1;
 	private final static int WHITE = 0;
 	private final TierState[] children;
@@ -42,6 +43,7 @@ public class Reversi extends TierGame {
 	private class Cell {
 		final int row, col;
 		final int boardNum;
+		Cell[] neighbors = null;
 
 		public Cell(int row, int col, int boardNum) {
 			this.row = row;
@@ -68,6 +70,22 @@ public class Reversi extends TierGame {
 			if (!(p == ' ' || p == 'X' || p == 'O'))
 				throw new Error("Bad piece: " + p);
 			dbh.set(boardNum, p);
+		}
+
+		public Cell[] getNeighbors() {
+			if (neighbors == null) {
+				ArrayList<Cell> neighborList = new ArrayList<Cell>(8);
+				for (int row = this.row - 1; row <= this.row + 1; row++) {
+					for (int col = this.col - 1; col <= this.col + 1; col++) {
+						if (row < 0 || row >= height || col < 0 || col >= width)
+							neighborList.add(null);
+						else if (row != this.row || col != this.col)
+							neighborList.add(board[row][col]);
+					}
+				}
+				neighbors = neighborList.toArray(new Cell[neighborList.size()]);
+			}
+			return neighbors;
 		}
 	}
 
@@ -283,42 +301,45 @@ public class Reversi extends TierGame {
 		if (setStringMoves)
 			stringMoves = new String[0];
 		// looks at every spot on the board
-		for (int boardNumber = 0; boardNumber < boardSize; boardNumber++) {
-			// only a valid child if there is an empty space there
-			if (dbh.get(boardNumber) == ' ') {
-				int[] childrenNumbers = { boardNumber - width - 1,
-						boardNumber - width, boardNumber - width + 1,
-						boardNumber - 1, boardNumber + 1,
-						boardNumber + width - 1, boardNumber + width,
-						boardNumber + width + 1 };
-				// looks at each spot around the given spot
-				for (int index = 0; index < childrenNumbers.length; index++) {
-					// makes sure the spot is within bounds, then checks if
-					// there is an opposing piece next to it
-					if (((childrenNumbers[index] >= 0 && childrenNumbers[index] < boardSize))
-							&& (((turn == WHITE && dbh
-									.get(childrenNumbers[index]) == 'X') || (turn == BLACK && dbh
-									.get(childrenNumbers[index]) == 'O')) && isFlippable(
-									boardNumber, index, false, null))) {
-						if (setStringMoves) {
-							String[] newStringMoves = new String[stringMoves.length + 1];
-							System.arraycopy(stringMoves, 0, newStringMoves, 0,
-									stringMoves.length);
-							newStringMoves[newStringMoves.length - 1] = ""
-									+ (boardNumber / width) + ""
-									+ (boardNumber % height);
-							stringMoves = newStringMoves;
+		for (int row = 0; row < height; row++) {
+			for (int col = 0; col < width; col++) {
+				// only a valid child if there is an empty space there
+				if (board[row][col].getPiece() == ' ') {
+					Cell place = board[row][col];
+					Cell[] neighbors = place.getNeighbors();
+					// looks at each spot around the given spot
+					for (int index = 0; index < 8; index++) {
+						// makes sure the spot is within bounds, then checks if
+						// there is an opposing piece next to it
+						Cell neighbor = neighbors[index];
+						if (neighbor != null
+								&& neighbor.getPiece() == pieces[opposite(turn)]
+								&& isFlippable(place.boardNum, index, false,
+										null)) {
+							if (setStringMoves) {
+								String[] newStringMoves = new String[stringMoves.length + 1];
+								System.arraycopy(stringMoves, 0,
+										newStringMoves, 0, stringMoves.length);
+								newStringMoves[newStringMoves.length - 1] = ""
+										+ row + "" + col;
+								stringMoves = newStringMoves;
+							}
+							String[] stringState = { stateToString().substring(
+									1) };
+							boolean x = isFlippable(place.boardNum, index,
+									true, stringState);
+							int newWhitePieces = 0;
+							// TODO Set newWhitePieces to the correct number
+							int nextTier = getTier() + 1;
+							children[counter].tier = nextTier;
+							children[counter].hash = offsetTable[nextTier][opposite(turn)][newWhitePieces]
+									+ dbh.setNumsAndHash(stringState[0]
+											.toCharArray());
+							counter++;
+							dbh.setNumsAndHash(originalString.substring(1)
+									.toCharArray());
+							break;
 						}
-						String[] stringState = { stateToString().substring(1) };
-						boolean x = isFlippable(boardNumber, index, true,
-								stringState);
-						children[counter].tier = getTier() + 1;
-						children[counter].hash = dbh
-								.setNumsAndHash(stringState[0].toCharArray());
-						counter++;
-						dbh.setNumsAndHash(originalString.substring(1)
-								.toCharArray());
-						break;
 					}
 				}
 			}
@@ -326,6 +347,10 @@ public class Reversi extends TierGame {
 		numChildren = counter;
 		isChildrenValid = true;
 		dbh.setNumsAndHash(originalString.substring(1).toCharArray());
+	}
+
+	private int opposite(int turn) {
+		return turn == 0 ? 1 : 0;
 	}
 
 	private boolean isFlippable(int boardNumber, int direction, boolean flip,
