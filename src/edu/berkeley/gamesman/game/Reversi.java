@@ -144,12 +144,17 @@ public class Reversi extends TierGame {
 		numPieces[BLACK] = tier - offset;
 		dbh.setNums(boardSize - tier, numPieces[WHITE], numPieces[BLACK]);
 		dbh.unhash(hash);
+		char[] charBoard = new char[boardSize];
+		dbh.getCharArray(charBoard);
+		for (int i = 0; i < boardSize; i++) {
+			board[i / width][i % width].setPiece(charBoard[i]);
+		}
 	}
 
 	@Override
 	public Value primitiveValue() {
 		if (!(isChildrenValid))
-			getChildren(true); // use false. true only for testing
+			getChildren(true); // use false for solving. true only for testing
 		if (numChildren == 0) {
 			return numPieces[turn] > numPieces[Math.abs(turn - 1)] ? Value.WIN
 					: Value.LOSE;
@@ -199,7 +204,11 @@ public class Reversi extends TierGame {
 		else
 			throw new Error("Bad turn");
 		char[] woTurn = Arrays.copyOfRange(posArray, 1, posArray.length - 1);
+		for (int i = 0; i < woTurn.length; i++) {
+			board[i / width][i % width].setPiece(woTurn[i]);
+		}
 		dbh.setNumsAndHash(woTurn);
+		isChildrenValid = false;
 	}
 
 	@Override
@@ -286,7 +295,7 @@ public class Reversi extends TierGame {
 	@Override
 	public int validMoves(TierState[] moves) {
 		if (!(isChildrenValid))
-			getChildren(true); // use false. true only for testing
+			getChildren(true); // use false for solving. true only for testing
 		for (int i = 0; i < numChildren; i++) {
 			moves[i].set(children[i]);
 		}
@@ -329,7 +338,10 @@ public class Reversi extends TierGame {
 							boolean x = isFlippable(place.boardNum, index,
 									true, stringState);
 							int newWhitePieces = 0;
-							// TODO Set newWhitePieces to the correct number
+							for (int i = 0; i < stringState[0].length(); i++) {
+								if (stringState[0].charAt(i) == 'O')
+									newWhitePieces++;
+							}
 							int nextTier = getTier() + 1;
 							children[counter].tier = nextTier;
 							children[counter].hash = offsetTable[nextTier][opposite(turn)][newWhitePieces]
@@ -488,13 +500,6 @@ public class Reversi extends TierGame {
 		return fromRecord.remoteness * 3 + value;
 	}
 
-	public void changeTurn() {
-		if (this.turn == BLACK)
-			this.turn = WHITE;
-		else if (this.turn == WHITE)
-			this.turn = BLACK;
-	}
-
 	public String[] getStringMoves() {
 		return stringMoves;
 	}
@@ -507,11 +512,15 @@ public class Reversi extends TierGame {
 			throw new Error(c);
 		}
 		String input;
+		Value prim;
+		reversiGame.setStartingPosition(0);
 		while (true) {
 			System.out.println(reversiGame.displayState());
-			System.out.println(reversiGame.primitiveValue().toString());
+			prim = reversiGame.primitiveValue();
+			if (prim.value != 3)
+				break;
+			System.out.println(prim.toString());
 			TierState[] moves = reversiGame.newStateArray(16);
-			reversiGame.setStartingPosition(0);
 			int y = reversiGame.validMoves(moves);
 			System.out.print("Valid Moves: ");
 			for (int x = 0; x < y; x++) {
@@ -539,8 +548,17 @@ public class Reversi extends TierGame {
 				break;
 			}
 			reversiGame.setState(moves[index]);
-			reversiGame.changeTurn();
 		}
+		System.out.println("Game Over");
+		if (prim.value == 0)
+			System.out.println((reversiGame.turn == BLACK ? "White wins" : "Black wins"));
+		else if (prim.value == 2)
+			System.out.println("Tie");
+		else if (prim.value == 4)
+			System.out.println((reversiGame.turn == BLACK ? "Black wins" : "White wins"));
+		else
+			System.out.println("Bad result");
+		
 	}
 
 	@Override
