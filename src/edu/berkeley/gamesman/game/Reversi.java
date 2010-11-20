@@ -476,7 +476,7 @@ public class Reversi extends TierGame {
 	public static void main(String[] args) {
 		Reversi reversiGame = null;
 		try {
-			reversiGame = new Reversi(new Configuration(args[0]));
+			reversiGame = (Reversi) new Configuration(args[0]).getGame();
 		} catch (ClassNotFoundException c) {
 			throw new Error(c);
 		}
@@ -484,7 +484,8 @@ public class Reversi extends TierGame {
 		while (true) {
 			System.out.println(reversiGame.displayState());
 			System.out.println(reversiGame.primitiveValue().toString());
-			TierState[] moves = new TierState[16];
+			TierState[] moves = reversiGame.newStateArray(16);
+			reversiGame.setStartingPosition(0);
 			int y = reversiGame.validMoves(moves);
 			System.out.print("Valid Moves: ");
 			for (int x = 0; x < y; x++) {
