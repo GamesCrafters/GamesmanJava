@@ -1,6 +1,7 @@
 package edu.berkeley.gamesman.game;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -35,7 +36,7 @@ public class Reversi extends TierGame {
 	// ...
 	// 63 [64,...] ]
 
-	private String[] stringMoves; // only for testing.
+	private String[] stringMoves;
 	private final int[] numPieces = new int[2];
 
 	private class Cell {
@@ -112,9 +113,8 @@ public class Reversi extends TierGame {
 	}
 
 	private void unhash(int tier, long hash) {
-		if (hash > offsetTable[tier][1][0]) {
+		if (hash >= offsetTable[tier][1][0]) {
 			turn = 1;
-			hash -= offsetTable[tier][1][0];
 		} else {
 			turn = 0;
 		}
@@ -122,6 +122,9 @@ public class Reversi extends TierGame {
 		if (offset < 0)
 			offset = -offset - 2;
 		hash -= offsetTable[tier][turn][offset];
+		numPieces[WHITE] = offset;
+		numPieces[BLACK] = tier - offset;
+		dbh.setNums(boardSize - tier, numPieces[WHITE], numPieces[BLACK]);
 		dbh.unhash(hash);
 	}
 
@@ -139,8 +142,14 @@ public class Reversi extends TierGame {
 
 	@Override
 	public Collection<Pair<String, TierState>> validMoves() {
-		// TODO Auto-generated method stub
-		return null;
+		getChildren();
+		TierState[] states = newStateArray(numChildren);
+		validMoves(states);
+		ArrayList<Pair<String, TierState>> moves = new ArrayList<Pair<String, TierState>>();
+		for (int i = 0; i < numChildren; i++) {
+			moves.add(new Pair<String, TierState>(stringMoves[i], states[i]));
+		}
+		return moves;
 	}
 
 	@Override
@@ -205,6 +214,7 @@ public class Reversi extends TierGame {
 
 	@Override
 	public void setStartingPosition(int n) {
+		numPieces[BLACK] = numPieces[WHITE] = 0;
 		dbh.setNums(boardSize, 0, 0);
 		board[height / 2 - 1][width / 2 - 1].setPiece('X');
 		board[height / 2][width / 2 - 1].setPiece('O');
@@ -230,10 +240,19 @@ public class Reversi extends TierGame {
 	public void nextHashInTier() {
 		if (dbh.getHash() < dbh.numHashes() - 1)
 			dbh.next();
-		else {
+		else if (numPieces[BLACK] == 0) {
+			numPieces[BLACK] = numPieces[WHITE];
+			numPieces[WHITE] = 0;
+			dbh.setNums(boardSize - getTier(), 0, getTier());
+			if (turn != 0)
+				throw new RuntimeException("Tier finished");
+			else
+				turn++;
+		} else {
 			dbh.setNums(boardSize - getTier(), ++numPieces[WHITE],
 					--numPieces[BLACK]);
 		}
+		isChildrenValid = false;
 	}
 
 	@Override
@@ -295,8 +314,8 @@ public class Reversi extends TierGame {
 						boolean x = isFlippable(boardNumber, index, true,
 								stringState);
 						children[counter].tier = getTier() + 1;
-						children[counter].hash = dbh.hash(stringState[0]
-								.toCharArray());
+						children[counter].hash = dbh
+								.setNumsAndHash(stringState[0].toCharArray());
 						counter++;
 						break;
 					}
@@ -305,7 +324,7 @@ public class Reversi extends TierGame {
 		}
 		numChildren = counter;
 		isChildrenValid = true;
-		dbh.hash(originalString.substring(1).toCharArray());
+		dbh.setNumsAndHash(originalString.substring(1).toCharArray());
 	}
 
 	private boolean isFlippable(int boardNumber, int direction, boolean flip,

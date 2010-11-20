@@ -589,7 +589,9 @@ public class DartboardHasher {
 	}
 
 	public void set(int boardNum, char p) {
+		numType[pieces[boardNum]]--;
 		pieces[boardNum] = findDigit(p);
+		numType[pieces[boardNum]]++;
 		rehash(true);
 	}
 
