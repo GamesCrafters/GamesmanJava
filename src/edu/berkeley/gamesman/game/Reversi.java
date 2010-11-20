@@ -113,10 +113,10 @@ public class Reversi extends TierGame {
 	}
 
 	private void unhash(int tier, long hash) {
-		if (hash >= offsetTable[tier][1][0]) {
-			turn = 1;
+		if (hash >= offsetTable[tier][BLACK][0]) {
+			turn = BLACK;
 		} else {
-			turn = 0;
+			turn = WHITE;
 		}
 		int offset = Arrays.binarySearch(offsetTable[tier][turn], hash);
 		if (offset < 0)
@@ -131,7 +131,7 @@ public class Reversi extends TierGame {
 	@Override
 	public Value primitiveValue() {
 		if (!(isChildrenValid))
-			getChildren();
+			getChildren(true); // use false. true only for testing
 		if (numChildren == 0) {
 			return numPieces[turn] > numPieces[Math.abs(turn - 1)] ? Value.WIN
 					: Value.LOSE;
@@ -142,7 +142,7 @@ public class Reversi extends TierGame {
 
 	@Override
 	public Collection<Pair<String, TierState>> validMoves() {
-		getChildren();
+		getChildren(true);
 		TierState[] states = newStateArray(numChildren);
 		validMoves(states);
 		ArrayList<Pair<String, TierState>> moves = new ArrayList<Pair<String, TierState>>();
@@ -268,21 +268,20 @@ public class Reversi extends TierGame {
 	@Override
 	public int validMoves(TierState[] moves) {
 		if (!(isChildrenValid))
-			getChildren();
-		else {
-			for (int i = 0; i < numChildren; i++) {
-				moves[i].set(children[i]);
-			}
+			getChildren(true); // use false. true only for testing
+		for (int i = 0; i < numChildren; i++) {
+			moves[i].set(children[i]);
 		}
 		if (numChildren == 0)
 			throw new Error("No children at this position");
 		return numChildren;
 	}
 
-	private void getChildren() {
+	private void getChildren(boolean setStringMoves) {
 		String originalString = stateToString();
 		int counter = 0;
-		stringMoves = new String[0]; // only for testing.
+		if (setStringMoves)
+			stringMoves = new String[0];
 		// looks at every spot on the board
 		for (int boardNumber = 0; boardNumber < boardSize; boardNumber++) {
 			// only a valid child if there is an empty space there
@@ -301,15 +300,15 @@ public class Reversi extends TierGame {
 									.get(childrenNumbers[index]) == 'X') || (turn == BLACK && dbh
 									.get(childrenNumbers[index]) == 'O')) && isFlippable(
 									boardNumber, index, false, null))) {
-						String[] newStringMoves = new String[stringMoves.length + 1]; // only
-																						// for
-																						// testing.
-						System.arraycopy(stringMoves, 0, newStringMoves, 0,
-								stringMoves.length); // only for testing.
-						newStringMoves[newStringMoves.length - 1] = ""
-								+ (boardNumber / width) + ""
-								+ (boardNumber % height); // only for testing.
-						stringMoves = newStringMoves; // only for testing.
+						if (setStringMoves) {
+							String[] newStringMoves = new String[stringMoves.length + 1];
+							System.arraycopy(stringMoves, 0, newStringMoves, 0,
+									stringMoves.length);
+							newStringMoves[newStringMoves.length - 1] = ""
+									+ (boardNumber / width) + ""
+									+ (boardNumber % height);
+							stringMoves = newStringMoves;
+						}
 						String[] stringState = { stateToString().substring(1) };
 						boolean x = isFlippable(boardNumber, index, true,
 								stringState);
@@ -317,6 +316,8 @@ public class Reversi extends TierGame {
 						children[counter].hash = dbh
 								.setNumsAndHash(stringState[0].toCharArray());
 						counter++;
+						dbh.setNumsAndHash(originalString.substring(1)
+								.toCharArray());
 						break;
 					}
 				}
@@ -497,7 +498,6 @@ public class Reversi extends TierGame {
 				System.out.print(moves[x].hash + ",");
 			}
 			System.out.println();
-			// System.out.println(reversiGame.turn);
 			BufferedReader br = new BufferedReader(new InputStreamReader(
 					System.in));
 			try {
@@ -513,8 +513,7 @@ public class Reversi extends TierGame {
 				System.out.println("Invalid Move");
 				break;
 			}
-			reversiGame.setState(new TierState(reversiGame.getTier(), new Long(
-					moves[index].hash)));
+			reversiGame.setState(moves[index]);
 			reversiGame.changeTurn();
 		}
 	}
