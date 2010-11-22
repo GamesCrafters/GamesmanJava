@@ -2231,7 +2231,7 @@ public class TestY {
     	ygame36.setPlayerAt(1, 1, 'O');
     	ygame36.setPlayerAt(2, 1, 'O');
     	ygame36.setPlayerAt(4, 5, 'O');
-    	ygame36.setPlayerAt(4, 8, 'O');
+    	//ygame36.setPlayerAt(4, 8, 'O');
     	ygame36.setPlayerAt(3, 5, 'O');
     	ygame36.setPlayerAt(3, 6, 'O');
     	ygame36.setPlayerAt(3, 7, 'O');
@@ -2262,7 +2262,7 @@ public class TestY {
     	ygame36.setPlayerAt(1, 1, 'O');
     	ygame36.setPlayerAt(2, 1, 'O');
     	ygame36.setPlayerAt(4, 5, 'O');
-    	ygame36.setPlayerAt(4, 8, 'O');
+    	//ygame36.setPlayerAt(4, 8, 'O');
     	ygame36.setPlayerAt(3, 5, 'O');
     	ygame36.setPlayerAt(3, 6, 'O');
     	ygame36.setPlayerAt(3, 7, 'O');
@@ -2270,7 +2270,7 @@ public class TestY {
     	ygame36.setPlayerAt(3, 9, 'O');
     	ygame36.setPlayerAt(3, 10, 'O');
     	ygame36.setPlayerAt(4, 13, 'O');
-    	ygame36.setPlayerAt(2, 16, 'O');
+    	//ygame36.setPlayerAt(2, 16, 'O');
     	ygame36.setPlayerAt(4, 9, 'O');    	
     	
     	assertTrue(ygame36.isWin('O'));   	

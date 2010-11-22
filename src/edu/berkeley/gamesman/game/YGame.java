@@ -757,7 +757,7 @@ public final class YGame extends ConnectGame
 
         boolean result = false;
         // go over the left edge from bottom up
-        for (int ind = 0; ind < this.nodesInThisTriangle[this.numberOfTriangles-1] / 3; ind++) 
+        for (int ind = 0; ind <= this.nodesInThisTriangle[this.numberOfTriangles-1] / 3; ind++) 
         {
             if (this.getPlayerAt(this.numberOfTriangles-1, ind) == player) 
             {
@@ -787,6 +787,16 @@ public final class YGame extends ConnectGame
                         }
                     }
                     final Vector<Node> neighbors = this.getNeighbors(currentNode, player);
+                    //check whether all neighbors have peaces.
+                    //because someone's code fails to do so!
+                    int j = 0;
+                    while ( j<neighbors.size() )
+                    {
+                    	if (getPlayerAt( neighbors.get(j) ) != player)
+                    		neighbors.remove(j);
+                    	else
+                    		j++;
+                    }
                     for (int i = 0; i < neighbors.size(); i++) 
                     {
                         if (previousNode == null) 
