@@ -38,6 +38,7 @@ public class TicTacToeLoopy extends TicTacToe implements LoopyGame<TierState> {
 	}
 
 	public int possibleParents(TierState pos, TierState[] parents) {
+		setState(pos);
 		int count = 0;
 		int tier = getTier();
 		char lastTurn = tier % 2 == 0 ? 'O' : 'X';
