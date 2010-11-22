@@ -235,8 +235,8 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame {
 		return myGame.recordStates();
 	}
 
-//	@Override
-//	public String toString() {
-//		return myGame.displayState(stateList.getFirst());
-//	}
+	@Override
+	public String toString() {
+		return myGame.displayState(stateList.getFirst());
+	}
 }

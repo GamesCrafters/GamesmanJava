@@ -103,7 +103,6 @@ public class LoopySolver extends Solver {
 		long hash = game.getHash();
 		game.longToRecord(readDb.getRecord(readDh, hash), value);
 		Record bestValue;
-
 		switch (value.value) {
 		case IMPOSSIBLE: // position not seen before
 			value.value = game.primitiveValue();
@@ -153,7 +152,6 @@ public class LoopySolver extends Solver {
 					writeDb.putRecord(writeDh, hash,
 							game.recordToLong(bestValue));
 				value.set(bestValue);
-				recordPool.release(bestValue);
 				value.previousPosition();
 				int numParents = game.unmakeMove();
 				for (int parent = 0; parent < numParents; parent++) {
@@ -163,6 +161,7 @@ public class LoopySolver extends Solver {
 				if (numParents > 0) {
 					game.remakeMove();
 				}
+				recordPool.release(bestValue);
 			}
 			value.value = Value.UNDECIDED;
 			break;
@@ -187,10 +186,7 @@ public class LoopySolver extends Solver {
 		long hash = game.getHash();
 		game.longToRecord(readDb.getRecord(readDh, hash), dbValue);
 		if (dbValue.value != Value.IMPOSSIBLE) {
-			if (Value.DRAW.compareTo(dbValue.value) > 0) {
-				throw new Error(
-						"Draw should not be > database Value unless fix has already been called numChildren times");
-			} else if (value.compareTo(dbValue) > 0) {
+			if (value.compareTo(dbValue) > 0) {
 				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
 				// save value
 				value.previousPosition();
