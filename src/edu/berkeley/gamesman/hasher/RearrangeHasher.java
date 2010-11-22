@@ -10,7 +10,6 @@ public final class RearrangeHasher {
 	private DartboardHasher[] xMinor;
 	private DartboardHasher[] oMinor;
 	private int length;
-	private char[] chars;
 	private char[] board;
 	private char[] majorBoard;
 	private char[][] minorboard;
@@ -18,7 +17,6 @@ public final class RearrangeHasher {
 	private int numo;
 	private int nums;
 	private boolean OX = false; // true means X's turn
-	private int[] majorChildren;
 	private ChangedIterator c;
 	private ChangedIterator d;
 	private long hash = 0;
@@ -59,27 +57,27 @@ public final class RearrangeHasher {
 			rh.unhash(saved);
 		}
 		System.out.println("done");
-		long[] children = new long[10];
+//		long[] children = new long[10];
 		// children[9] = 0;
 		// rh.getChildren(' ', 'O', children);
-		int i = 0;
+//		int i = 0;
 		/*
 		 * while(children[i]!=0){ char[] childboard = new char[9];
 		 * rh.unhash(children[i]); rh.getCharArray(childboard);
 		 * //System.out.println(childboard); i++; }
 		 */
 		char[] childboard = new char[9];
-		long startTimeMs = System.currentTimeMillis();
+//		long startTimeMs = System.currentTimeMillis();
 		// int nexttime = 86574831;
-		int nexttime = 1000000;
-		int times = 1;
-		int k = 0;
-		int j = 0;
+//		int nexttime = 1000000;
+//		int times = 1;
+//		int k = 0;
+//		int j = 0;
 		/*
 		 * while(j<times){ while(k < nexttime){ rh.next(); rh.getChildren(' ',
 		 * 'O', children); k++; } j++; }
 		 */
-		long taskTimeMs = System.currentTimeMillis() - startTimeMs;
+//		long taskTimeMs = System.currentTimeMillis() - startTimeMs;
 		rh.getCharArray(childboard);
 		// System.out.println(childboard);
 		// System.out.println(taskTimeMs);
@@ -89,12 +87,10 @@ public final class RearrangeHasher {
 		xHash = new DartboardHasher(len, ' ', 'X');
 		oHash = new DartboardHasher(len, ' ', 'O');
 		length = len;
-		chars = new char[] { 'X', 'p', 'O', 'q' };
 		board = new char[len];
 		xMinor = new DartboardHasher[len + 1];
 		oMinor = new DartboardHasher[len + 1];
 		minorboard = new char[len + 1][];
-		majorChildren = new int[len];
 		c = new ChangedIterator();
 		d = new ChangedIterator();
 		majorBoard = new char[len];
@@ -171,7 +167,6 @@ public final class RearrangeHasher {
 	public long xhash(char[] board) {
 		int cnumx = 0;
 		int cnumo = 0;
-		int cnums = 0;
 		int sizeOfMinor = 0;
 		for (int i = 0; i < board.length; i++) {
 			if (board[i] == 'X') {
@@ -198,7 +193,6 @@ public final class RearrangeHasher {
 	public long ohash(char[] board) {
 		int cnumx = 0;
 		int cnumo = 0;
-		int cnums = 0;
 		int k = 0;
 		for (int i = 0; i < board.length; i++) {
 			if (board[i] == 'O') {
@@ -236,8 +230,6 @@ public final class RearrangeHasher {
 		char min;
 		DartboardHasher majorHash;
 		DartboardHasher minorHash;
-		DartboardHasher otherMajorHash;
-		DartboardHasher otherMinorHash;
 
 		int s;
 		if (i % 2 == 0) { // X's turn
@@ -247,8 +239,6 @@ public final class RearrangeHasher {
 			min = 'X';
 			majorHash = oHash;
 			minorHash = xMinor[s];
-			otherMajorHash = xHash;
-			otherMinorHash = oMinor[length - i + o];
 
 			numo = o;
 			numx = i - o;
@@ -260,8 +250,6 @@ public final class RearrangeHasher {
 			min = 'O';
 			majorHash = xHash;
 			minorHash = oMinor[s];
-			otherMajorHash = oHash;
-			otherMinorHash = xMinor[length - i + o];
 
 			numx = o;
 			numo = i - o;
@@ -365,15 +353,10 @@ public final class RearrangeHasher {
 		int newm = (OX ? numo : numx);
 		int intM = (OX ? numx : numo);
 		int intm = (OX ? numo : numx);
-		int oldM = (OX ? numo : numx);
-		int oldm = (OX ? numx : numo);
 		int newmL = length - newM;
 		int intmL = length - intM;
-		int oldmL = length - oldM;
 		char cNew = (OX ? 'X' : 'O');
 		char cOld = (OX ? 'O' : 'X');
-		DartboardHasher majorHash = (OX ? oHash : xHash);
-		DartboardHasher minorHash[] = (OX ? xMinor : oMinor);
 		long majorValue = 0;
 		long minorValue = 0;
 
@@ -467,8 +450,7 @@ public final class RearrangeHasher {
 	public void next(ChangedIterator changed) {
 		DartboardHasher minor;
 		DartboardHasher major;
-		char Mchar, mchar;
-		char[] minboard;
+		char Mchar;
 		int countmin;
 		hash++;
 		c.reset();
@@ -483,25 +465,19 @@ public final class RearrangeHasher {
 			major = oHash;
 			Mchar = 'O';
 			countmin = numx;
-			mchar = 'X';
-			minboard = minorboard[length - numo];
 		} else {
 			minor = oMinor[length - numx];
 			major = xHash;
 			Mchar = 'X';
 			countmin = numo;
-			mchar = 'O';
-			minboard = minorboard[length - numx];
 		}
 		// System.out.print("prev minor: ");
 		// System.out.println(mboard[length-numo]);
-		long prevmin = minor.getHash();
 		minor.next(c);
 		// System.out.print("next minor: ");
 		// System.out.println(minboard);
 		if (minor.getHash() == 0) {
 			minor.setNums(nums, countmin);
-			long prevmaj = major.getHash();
 			major.next(d);
 			if (major.getHash() == 0)
 				hash--;
