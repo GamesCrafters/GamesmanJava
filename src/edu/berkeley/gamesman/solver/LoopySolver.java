@@ -139,13 +139,19 @@ public class LoopySolver extends Solver {
 						if (unassigned
 								|| value.value.compareTo(bestValue.value) > 0) {
 							bestValue.set(value);
-							writeDb.putRecord(writeDh, hash,
-									game.recordToLong(bestValue));
+							if (bestValue.value.compareTo(Value.DRAW) > 0)
+								writeDb.putRecord(writeDh, hash,
+										game.recordToLong(bestValue));
 						}
 					}
 					unassigned = false;
 					game.changeMove();
 				}
+				if (numChildren > 0)
+					game.undoMove();
+				if (bestValue.value.compareTo(Value.DRAW) < 0)
+					writeDb.putRecord(writeDh, hash,
+							game.recordToLong(bestValue));
 				value.set(bestValue);
 				recordPool.release(bestValue);
 				value.previousPosition();
@@ -205,10 +211,13 @@ public class LoopySolver extends Solver {
 				Record childValue = recordPool.get();
 				int child;
 				for (child = 0; child < numChildren; child++) {
-					game.longToRecord(readDb.getRecord(readDh, hash),
+					game.longToRecord(readDb.getRecord(readDh, game.getHash()),
 							childValue);
+					if (childValue.value == Value.UNDECIDED)
+						throw new Error("No undecided in loopy solver");
 					childValue.previousPosition();
-					if (childValue.value == Value.DRAW) {
+					if (childValue.value == Value.DRAW
+							|| childValue.value == Value.IMPOSSIBLE) {
 						break;
 					} else if (childValue.value.compareTo(Value.DRAW) > 0) {
 						throw new Error(
