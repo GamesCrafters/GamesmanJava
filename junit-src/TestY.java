@@ -1,3 +1,5 @@
+import static org.junit.Assert.*;
+
 import java.util.Vector;
 
 import org.junit.AfterClass;
@@ -1995,6 +1997,285 @@ public class TestY {
         Assert.assertTrue(this.ygame24.isWin('X'));
     }
 
+    @Test
+    public void Test_2by4_isWin1() {
+    	ygame24.fillBoardWithPlayer('X');
+    	
+    	assertTrue(ygame24.isWin('X'));   	
+    }
+    
+    @Test
+    public void Test_2by4_isWin2() {
+    	ygame24.fillBoardWithPlayer('O');
+    	
+    	assertFalse(ygame24.isWin('X'));   	
+    }
+  
+    @Test
+    public void Test_2by4_isWin3() {
+    	ygame24.fillBoardWithPlayer('O');
+    	
+    	ygame24.setPlayerAt(2, 0, 'X');
+    	ygame24.setPlayerAt(1, 0, 'X');
+    	ygame24.setPlayerAt(0, 0, 'X');
+    	ygame24.setPlayerAt(0, 1, 'X');
+    	ygame24.setPlayerAt(0, 2, 'X');
+    	ygame24.setPlayerAt(1, 4, 'X');
+    	ygame24.setPlayerAt(2, 5, 'X');
+    	
+    	assertTrue(ygame24.isWin('X'));   	
+    }
+    
+    @Test
+    public void Test_2by4_isWin4() {
+    	ygame24.fillBoardWithPlayer('O');
+    	
+    	ygame24.setPlayerAt(2, 0, 'X');
+    	ygame24.setPlayerAt(1, 0, 'X');
+    	ygame24.setPlayerAt(1, 8, 'X');
+    	ygame24.setPlayerAt(1, 7, 'X');
+    	ygame24.setPlayerAt(1, 6, 'X');
+    	ygame24.setPlayerAt(1, 5, 'X');
+    	ygame24.setPlayerAt(2, 7, 'X');
+    	
+    	assertTrue(ygame24.isWin('X'));   	
+    }
+    
+    @Test
+    public void Test_2by4_isWin5() {
+    	ygame24.fillBoardWithPlayer('O');
+    	
+    	ygame24.setPlayerAt(2, 0, 'X');
+    	ygame24.setPlayerAt(2, 11, 'X');
+    	ygame24.setPlayerAt(2, 10, 'X');
+    	ygame24.setPlayerAt(2, 9, 'X');
+    	ygame24.setPlayerAt(2, 8, 'X');
+    	
+    	assertTrue(ygame24.isWin('X'));   	
+    }
+    
+    @Test
+    public void Test_2by4_isWin6() {
+    	ygame24.fillBoardWithPlayer('O');
+    	
+    	ygame24.setPlayerAt(2, 0, 'X');
+    	ygame24.setPlayerAt(1, 0, 'X');
+    	ygame24.setPlayerAt(0, 0, 'X');
+    	ygame24.setPlayerAt(1, 1, 'X');
+    	ygame24.setPlayerAt(0, 1, 'X');
+    	ygame24.setPlayerAt(1, 2, 'X');
+    	ygame24.setPlayerAt(0, 2, 'X');
+    	ygame24.setPlayerAt(1, 3, 'X');
+    	ygame24.setPlayerAt(2, 4, 'X');
+    	
+    	assertTrue(ygame24.isWin('X'));   	
+    }
+    
+    @Test
+    public void Test_2by4_isWin7() {
+    	ygame24.fillBoardWithPlayer('O');
+    	
+    	ygame24.setPlayerAt(2, 2, 'X');
+    	ygame24.setPlayerAt(1, 2, 'X');
+    	ygame24.setPlayerAt(0, 3, 'X');
+    	ygame24.setPlayerAt(0, 2, 'X');
+    	ygame24.setPlayerAt(1, 3, 'X');
+    	ygame24.setPlayerAt(1, 4, 'X');
+    	ygame24.setPlayerAt(1, 5, 'X');
+    	ygame24.setPlayerAt(1, 6, 'X');
+    	ygame24.setPlayerAt(1, 7, 'X');
+    	ygame24.setPlayerAt(2, 10, 'X');
+    	
+    	assertFalse(ygame24.isWin('X'));   	
+    }
+    
+    @Test
+    public void Test_2by4_isWin8() {
+    	ygame24.fillBoardWithPlayer('O');
+    	
+    	ygame24.setPlayerAt(2, 4, 'X');
+    	ygame24.setPlayerAt(1, 3, 'X');
+    	ygame24.setPlayerAt(1, 4, 'X');
+    	ygame24.setPlayerAt(0, 3, 'X');
+    	ygame24.setPlayerAt(1, 5, 'X');
+    	ygame24.setPlayerAt(0, 2, 'X');
+    	ygame24.setPlayerAt(0, 1, 'X');
+    	ygame24.setPlayerAt(1, 1, 'X');
+    	ygame24.setPlayerAt(0, 4, 'X');
+    	ygame24.setPlayerAt(1, 6, 'X');
+    	ygame24.setPlayerAt(2, 8, 'X');    	
+    	
+    	assertTrue(ygame24.isWin('X'));   	
+    }
+    
+    @Test
+    public void Test_2by4_isWin9() {
+    	ygame24.fillBoardWithPlayer('O');
+    	
+    	ygame24.setPlayerAt(2, 1, 'X');
+    	ygame24.setPlayerAt(1, 0, 'X');
+    	ygame24.setPlayerAt(2, 11, 'X');
+    	ygame24.setPlayerAt(2, 3, 'X');
+    	ygame24.setPlayerAt(1, 3, 'X');
+    	ygame24.setPlayerAt(1, 4, 'X');
+    	ygame24.setPlayerAt(1, 5, 'X');
+    	ygame24.setPlayerAt(2, 7, 'X');    	
+    	
+    	assertFalse(ygame24.isWin('X'));   	
+    }
+    
+    @Test
+    public void Test_2by4_isWin10() {
+    	ygame24.fillBoardWithPlayer('O');
+    	
+    	ygame24.setPlayerAt(1, 0, 'X');
+    	ygame24.setPlayerAt(1, 1, 'X');
+    	ygame24.setPlayerAt(1, 2, 'X');
+    	ygame24.setPlayerAt(1, 3, 'X');
+    	ygame24.setPlayerAt(1, 4, 'X');
+    	ygame24.setPlayerAt(1, 5, 'X');
+    	ygame24.setPlayerAt(1, 6, 'X');
+    	ygame24.setPlayerAt(1, 7, 'X');
+    	ygame24.setPlayerAt(1, 8, 'X');    	
+    	
+    	assertFalse(ygame24.isWin('X'));   	
+    }
+    
+    @Test
+    public void Test_2by4_isWin11() {
+    	ygame24.fillBoardWithPlayer('O');
+    	
+    	ygame24.setPlayerAt(2, 2, 'X');
+    	ygame24.setPlayerAt(1, 0, 'X');
+    	ygame24.setPlayerAt(1, 1, 'X');
+    	ygame24.setPlayerAt(1, 2, 'X');
+    	ygame24.setPlayerAt(1, 3, 'X');
+    	ygame24.setPlayerAt(1, 4, 'X');
+    	ygame24.setPlayerAt(1, 5, 'X');
+    	ygame24.setPlayerAt(1, 6, 'X');
+    	ygame24.setPlayerAt(1, 7, 'X');
+    	ygame24.setPlayerAt(1, 8, 'X');    	
+    	
+    	assertFalse(ygame24.isWin('X'));   	
+    }
+    
+    @Test
+    public void Test_2by4_isWin12() {
+    	ygame24.fillBoardWithPlayer('O');
+    	
+    	ygame24.setPlayerAt(2, 2, 'X');
+    	ygame24.setPlayerAt(2, 6, 'X');
+    	ygame24.setPlayerAt(2, 10, 'X');    	
+    	ygame24.setPlayerAt(1, 0, 'X');
+    	ygame24.setPlayerAt(1, 1, 'X');
+    	ygame24.setPlayerAt(1, 2, 'X');
+    	ygame24.setPlayerAt(1, 3, 'X');
+    	ygame24.setPlayerAt(1, 4, 'X');
+    	ygame24.setPlayerAt(1, 5, 'X');
+    	ygame24.setPlayerAt(1, 6, 'X');
+    	ygame24.setPlayerAt(1, 7, 'X');
+    	ygame24.setPlayerAt(1, 8, 'X');    	
+    	
+    	assertTrue(ygame24.isWin('X'));   	
+    }
+    
+    @Test
+    public void Test_3by6_isWin1() {
+    	ygame36.fillBoardWithPlayer('O');
+    	
+    	assertTrue(ygame36.isWin('O'));   	
+    }
+    
+    @Test
+    public void Test_3by6_isWin2() {
+    	ygame36.fillBoardWithPlayer('X');
+    	
+    	ygame36.setPlayerAt(4, 1, 'O');
+    	ygame36.setPlayerAt(4, 2, 'O');
+    	ygame36.setPlayerAt(4, 3, 'O');
+    	ygame36.setPlayerAt(4, 4, 'O');
+    	ygame36.setPlayerAt(4, 5, 'O');
+    	ygame36.setPlayerAt(2, 0, 'O');
+    	ygame36.setPlayerAt(2, 1, 'O');
+    	ygame36.setPlayerAt(2, 2, 'O');
+    	ygame36.setPlayerAt(3, 3, 'O');
+    	ygame36.setPlayerAt(2, 4, 'O');
+    	ygame36.setPlayerAt(2, 3, 'O');
+    	ygame36.setPlayerAt(0, 0, 'O');
+    	ygame36.setPlayerAt(1, 1, 'O');
+    	ygame36.setPlayerAt(1, 5, 'O');
+    	ygame36.setPlayerAt(1, 6, 'O');
+    	ygame36.setPlayerAt(2, 8, 'O');
+    	ygame36.setPlayerAt(3, 10, 'O');
+    	ygame36.setPlayerAt(4, 12, 'O');
+    	
+    	assertTrue(ygame36.isWin('O'));   	
+    }
+    
+    @Test
+    public void Test_3by6_isWin3() {
+    	ygame36.fillBoardWithPlayer('X');
+    	
+    	ygame36.setPlayerAt(4, 3, 'O');
+    	ygame36.setPlayerAt(3, 3, 'O');
+    	ygame36.setPlayerAt(2, 3, 'O');
+    	ygame36.setPlayerAt(1, 3, 'O');
+    	ygame36.setPlayerAt(1, 4, 'O');
+    	ygame36.setPlayerAt(1, 5, 'O');
+    	ygame36.setPlayerAt(1, 6, 'O');
+    	ygame36.setPlayerAt(2, 9, 'O');
+    	ygame36.setPlayerAt(3, 12, 'O');
+    	ygame36.setPlayerAt(4, 15, 'O');
+    	ygame36.setPlayerAt(2, 3, 'O');
+    	ygame36.setPlayerAt(0, 0, 'O');
+    	ygame36.setPlayerAt(1, 1, 'O');
+    	ygame36.setPlayerAt(2, 1, 'O');
+    	ygame36.setPlayerAt(4, 5, 'O');
+    	ygame36.setPlayerAt(4, 8, 'O');
+    	ygame36.setPlayerAt(3, 5, 'O');
+    	ygame36.setPlayerAt(3, 6, 'O');
+    	ygame36.setPlayerAt(3, 7, 'O');
+    	ygame36.setPlayerAt(3, 8, 'O');
+    	ygame36.setPlayerAt(3, 9, 'O');
+    	ygame36.setPlayerAt(3, 10, 'O');
+    	ygame36.setPlayerAt(4, 13, 'O');
+    	
+    	assertFalse(ygame36.isWin('O'));   	
+    }
+    
+    @Test
+    public void Test_3by6_isWin4() {
+    	ygame36.fillBoardWithPlayer('X');
+    	
+    	ygame36.setPlayerAt(4, 3, 'O');
+    	ygame36.setPlayerAt(3, 3, 'O');
+    	ygame36.setPlayerAt(2, 3, 'O');
+    	ygame36.setPlayerAt(1, 3, 'O');
+    	ygame36.setPlayerAt(1, 4, 'O');
+    	ygame36.setPlayerAt(1, 5, 'O');
+    	ygame36.setPlayerAt(1, 6, 'O');
+    	ygame36.setPlayerAt(2, 9, 'O');
+    	ygame36.setPlayerAt(3, 12, 'O');
+    	ygame36.setPlayerAt(4, 15, 'O');
+    	ygame36.setPlayerAt(2, 3, 'O');
+    	ygame36.setPlayerAt(0, 0, 'O');
+    	ygame36.setPlayerAt(1, 1, 'O');
+    	ygame36.setPlayerAt(2, 1, 'O');
+    	ygame36.setPlayerAt(4, 5, 'O');
+    	ygame36.setPlayerAt(4, 8, 'O');
+    	ygame36.setPlayerAt(3, 5, 'O');
+    	ygame36.setPlayerAt(3, 6, 'O');
+    	ygame36.setPlayerAt(3, 7, 'O');
+    	ygame36.setPlayerAt(3, 8, 'O');
+    	ygame36.setPlayerAt(3, 9, 'O');
+    	ygame36.setPlayerAt(3, 10, 'O');
+    	ygame36.setPlayerAt(4, 13, 'O');
+    	ygame36.setPlayerAt(2, 16, 'O');
+    	ygame36.setPlayerAt(4, 9, 'O');    	
+    	
+    	assertTrue(ygame36.isWin('O'));   	
+    }
+    
     @AfterClass
     public static void oneTimeTearDown() {}
 
