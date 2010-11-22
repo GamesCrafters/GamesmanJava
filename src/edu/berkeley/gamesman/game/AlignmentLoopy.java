@@ -51,20 +51,6 @@ public class AlignmentLoopy extends Alignment implements LoopyGame<AlignmentStat
 		//to the number of pieces on parent board
 		//if numpieces owned by current player less or equal than parents.numpieces then its slide
 		//if numpieces owned by current player > parents.numpieces then its place
-		int numParents = 0;
-		char lastTurn = pos.lastMove;
-		
-		for (int row = 0; row < gameHeight; row++) {
-			for (int col = 0; col < gameWidth; col++) {
-				if (pos.numPieces > parents[numParents].numPieces){
-					if (pos.get(row,col) == lastTurn){
-						
-						//pos.set
-					}
-				}
-			}
-		}
-		return numParents;
 		
 		/*
 		 * check for placing pieces
@@ -78,9 +64,44 @@ public class AlignmentLoopy extends Alignment implements LoopyGame<AlignmentStat
 		 * 		if moving a piece from that parent would form a gun
 		 * 		in the current position that would kill that opponent 
 		 * 		piece
-		 * 	invariant = number of current pieces is the same	
+		 * 	invariant: number of current pieces is the same	
 		 */
 		
+		int numParents = 0;
+		char lastTurn = pos.lastMove;
+		
+		for (int row = 0; row < gameHeight; row++) {
+			for (int col = 0; col < gameWidth; col++) {
+				if (pos.numPieces > parents[numParents].numPieces){
+					if (pos.get(row,col) == lastTurn){
+						//parents[numParents+1].set(pos);
+						//pos.set(' ');
+						//numParents++;
+					}
+				}
+				if(pos.numPieces <= parents[numParents].numPieces) {
+					if(pos.get(row,col) == lastTurn) {
+						for(int i = 0; i < gameHeight; i++) {
+							for(int j = 0; j < gameWidth; j++) {
+								if(pos.get(i,j) == ' ') {
+									//if(boolean): look in all four cardinal directions for gun shape
+									//facing toward this blank spot on the current board
+									// - use checkGun(i,j) method maybe?
+									//or check currentState and parentState for increase in
+									//number of dead pieces {
+										//parents[numParents+1].set(pos);
+										//pos.set(' ');
+										//numParents++;
+									//}
+
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return numParents;
 	}
 
 	@Override
