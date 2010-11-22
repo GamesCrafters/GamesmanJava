@@ -2,7 +2,7 @@ package edu.berkeley.gamesman.hasher;
 
 import java.util.Scanner;
 
-import edu.berkeley.gamesman.util.Util;
+import edu.berkeley.gamesman.util.CoefTable;
 
 public final class RearrangeHasher {
 	private DartboardHasher xHash;
@@ -12,8 +12,8 @@ public final class RearrangeHasher {
 	private int length;
 	private char[] chars;
 	private char[] board;
-	private char[] Mboard;
-	private char[][] mboard;
+	private char[] majorBoard;
+	private char[][] minorboard;
 	private int numx;
 	private int numo;
 	private int nums;
@@ -22,12 +22,11 @@ public final class RearrangeHasher {
 	private ChangedIterator c;
 	private ChangedIterator d;
 	private long hash = 0;
-	private char xChar;
-	private char oChar;
+	private final CoefTable ct;
 
 	public static void main(String[] args) {
 		Scanner sc = new Scanner(System.in);
-		RearrangeHasher rh = new RearrangeHasher(5, ' ', 'O', 'X');
+		RearrangeHasher rh = new RearrangeHasher(5);
 		int nums = 1;
 		int numo = 2;
 		int numx = 2;
@@ -62,7 +61,7 @@ public final class RearrangeHasher {
 		System.out.println("done");
 		long[] children = new long[10];
 		// children[9] = 0;
-		// rh.getChildren(' ', oChar, children);
+		// rh.getChildren(' ', 'O', children);
 		int i = 0;
 		/*
 		 * while(children[i]!=0){ char[] childboard = new char[9];
@@ -78,7 +77,7 @@ public final class RearrangeHasher {
 		int j = 0;
 		/*
 		 * while(j<times){ while(k < nexttime){ rh.next(); rh.getChildren(' ',
-		 * oChar, children); k++; } j++; }
+		 * 'O', children); k++; } j++; }
 		 */
 		long taskTimeMs = System.currentTimeMillis() - startTimeMs;
 		rh.getCharArray(childboard);
@@ -86,32 +85,30 @@ public final class RearrangeHasher {
 		// System.out.println(taskTimeMs);
 	}
 
-	public RearrangeHasher(int len, char... digits) {
-		oChar = digits[1];
-		xChar = digits[2];
-		xHash = new DartboardHasher(len, ' ', xChar);
-		oHash = new DartboardHasher(len, ' ', oChar);
+	public RearrangeHasher(int len) {
+		xHash = new DartboardHasher(len, ' ', 'X');
+		oHash = new DartboardHasher(len, ' ', 'O');
 		length = len;
-		chars = new char[] { xChar, 'p', oChar, 'q' };
+		chars = new char[] { 'X', 'p', 'O', 'q' };
 		board = new char[len];
 		xMinor = new DartboardHasher[len + 1];
 		oMinor = new DartboardHasher[len + 1];
-		mboard = new char[len + 1][];
+		minorboard = new char[len + 1][];
 		majorChildren = new int[len];
 		c = new ChangedIterator();
 		d = new ChangedIterator();
-		Mboard = new char[len];
+		majorBoard = new char[len];
 
 		for (int i = 0; i < len + 1; i++) {
-			xMinor[i] = new DartboardHasher(i, ' ', xChar);
-			oMinor[i] = new DartboardHasher(i, ' ', oChar);
-			mboard[i] = new char[i];
+			xMinor[i] = new DartboardHasher(i, ' ', 'X');
+			oMinor[i] = new DartboardHasher(i, ' ', 'O');
+			minorboard[i] = new char[i];
 		}
-
+		ct = new CoefTable();
 	}
 
 	public long numHashes() {
-		return Util.nCr(nums, numx + numo) * Util.nCr(numx + numo, numx);
+		return ct.get(length, numx + numo) * ct.get(numx + numo, numx);
 	}
 
 	public char get(int i) {
@@ -120,11 +117,20 @@ public final class RearrangeHasher {
 
 	public void setNums(int spaces, int o, int x) {
 		int i = 0;
-		for (i = 0; i < x; i++) {
-			board[i] = xChar;
-		}
-		for (; i < x + o; i++) {
-			board[i] = oChar;
+		if (OX) {
+			for (i = 0; i < x; i++) {
+				board[i] = 'O';
+			}
+			for (; i < x + o; i++) {
+				board[i] = 'X';
+			}
+		} else {
+			for (i = 0; i < x; i++) {
+				board[i] = 'X';
+			}
+			for (; i < x + o; i++) {
+				board[i] = 'O';
+			}
 		}
 		for (; i < length; i++) {
 			board[i] = ' ';
@@ -168,25 +174,25 @@ public final class RearrangeHasher {
 		int cnums = 0;
 		int sizeOfMinor = 0;
 		for (int i = 0; i < board.length; i++) {
-			if (board[i] == xChar) {
-				Mboard[i] = xChar;
+			if (board[i] == 'X') {
+				majorBoard[i] = 'X';
 				cnumx++;
-			} else if (board[i] == oChar) {
-				Mboard[i] = ' ';
-				mboard[length][sizeOfMinor] = oChar;
+			} else if (board[i] == 'O') {
+				majorBoard[i] = ' ';
+				minorboard[length][sizeOfMinor] = 'O';
 				cnumo++;
 				sizeOfMinor++;
 			} else {
-				Mboard[i] = ' ';
-				mboard[length][sizeOfMinor] = ' ';
+				majorBoard[i] = ' ';
+				minorboard[length][sizeOfMinor] = ' ';
 				sizeOfMinor++;
 			}
 		}
 		for (int i = 0; i < sizeOfMinor; i++) {
-			mboard[sizeOfMinor][i] = mboard[length][i];
+			minorboard[sizeOfMinor][i] = minorboard[length][i];
 		}
-		return xHash.hash(Mboard) * Util.nCr(length - cnumx, cnumo)
-				+ oMinor[length - cnumx].hash(mboard[sizeOfMinor]);
+		return xHash.hash(majorBoard) * ct.get(length - cnumx, cnumo)
+				+ oMinor[length - cnumx].hash(minorboard[sizeOfMinor]);
 	}
 
 	public long ohash(char[] board) {
@@ -195,25 +201,25 @@ public final class RearrangeHasher {
 		int cnums = 0;
 		int k = 0;
 		for (int i = 0; i < board.length; i++) {
-			if (board[i] == oChar) {
-				Mboard[i] = oChar;
+			if (board[i] == 'O') {
+				majorBoard[i] = 'O';
 				cnumo++;
-			} else if (board[i] == xChar) {
-				Mboard[i] = ' ';
-				mboard[length][k] = xChar;
+			} else if (board[i] == 'X') {
+				majorBoard[i] = ' ';
+				minorboard[length][k] = 'X';
 				cnumx++;
 				k++;
 			} else {
-				Mboard[i] = ' ';
-				mboard[length][k] = ' ';
+				majorBoard[i] = ' ';
+				minorboard[length][k] = ' ';
 				k++;
 			}
 		}
 		for (int i = 0; i < k; i++) {
-			mboard[k][i] = mboard[length][i];
+			minorboard[k][i] = minorboard[length][i];
 		}
-		return oHash.hash(Mboard) * Util.nCr(length - cnumo, cnumx)
-				+ xMinor[length - cnumo].hash(mboard[k]);
+		return oHash.hash(majorBoard) * ct.get(length - cnumo, cnumx)
+				+ xMinor[length - cnumo].hash(minorboard[k]);
 	}
 
 	public long getHash() {
@@ -237,8 +243,8 @@ public final class RearrangeHasher {
 		if (i % 2 == 0) { // X's turn
 			o = i / 2; // number of o's
 			s = length - o;
-			maj = oChar;
-			min = xChar;
+			maj = 'O';
+			min = 'X';
 			majorHash = oHash;
 			minorHash = xMinor[s];
 			otherMajorHash = xHash;
@@ -250,8 +256,8 @@ public final class RearrangeHasher {
 		} else {
 			o = (i + 1) / 2; // number of x's
 			s = length - o;
-			maj = xChar;
-			min = oChar;
+			maj = 'X';
+			min = 'O';
 			majorHash = xHash;
 			minorHash = oMinor[s];
 			otherMajorHash = oHash;
@@ -265,12 +271,12 @@ public final class RearrangeHasher {
 		// majorHash.setNums(s, o);
 		// minorHash.setNums(s - numotherpiece, numotherpiece);
 
-		long major = hash / (Util.nCr(s, numotherpiece));
-		long minor = hash % (Util.nCr(s, numotherpiece));
+		long major = hash / (ct.get(s, numotherpiece));
+		long minor = hash % (ct.get(s, numotherpiece));
 		majorHash.unhash(major);
-		majorHash.getCharArray(Mboard);
+		majorHash.getCharArray(majorBoard);
 		minorHash.unhash(minor);
-		minorHash.getCharArray(mboard[s]);
+		minorHash.getCharArray(minorboard[s]);
 		// System.out.print("mboard = ");
 		// System.out.println(mboard[s]);
 
@@ -278,9 +284,9 @@ public final class RearrangeHasher {
 		// System.out.println(mboard[s]);
 		int j = 0;
 		for (int k = 0; k < length; k++) {
-			if (Mboard[k] == maj) {
+			if (majorBoard[k] == maj) {
 				board[k] = maj;
-			} else if (mboard[s][j] == min) {
+			} else if (minorboard[s][j] == min) {
 				board[k] = min;
 				j++;
 			} else {
@@ -299,7 +305,7 @@ public final class RearrangeHasher {
 		for (int k = 0; k < pieces.length; k++) {
 			if (pieces[k] == ' ') {
 				nums++;
-			} else if (pieces[k] == oChar) {
+			} else if (pieces[k] == 'O') {
 				numo++;
 			} else
 				numx++;
@@ -364,8 +370,8 @@ public final class RearrangeHasher {
 		int newmL = length - newM;
 		int intmL = length - intM;
 		int oldmL = length - oldM;
-		char cNew = (OX ? xChar : oChar);
-		char cOld = (OX ? oChar : xChar);
+		char cNew = (OX ? 'X' : 'O');
+		char cOld = (OX ? 'O' : 'X');
 		DartboardHasher majorHash = (OX ? oHash : xHash);
 		DartboardHasher minorHash[] = (OX ? xMinor : oMinor);
 		long majorValue = 0;
@@ -373,51 +379,51 @@ public final class RearrangeHasher {
 
 		for (int i = 0, j = 0, M = 0, m = 0; i < length; i++) {
 			if (board[i] == cNew) {
-				Mboard[i] = cNew;
-				majorValue += Util.nCr(i, M + 1);
+				majorBoard[i] = cNew;
+				majorValue += ct.get(i, M + 1);
 				M++;
 			} else if (board[i] == cOld) {
-				Mboard[i] = ' ';
-				mboard[intmL][j] = cOld;
-				minorValue += Util.nCr(j, m + 1);
+				majorBoard[i] = ' ';
+				minorboard[intmL][j] = cOld;
+				minorValue += ct.get(j, m + 1);
 				j++;
 				m++;
 			} else if (board[i] == ' ') {
-				Mboard[i] = ' ';
-				mboard[intmL][j] = ' ';
+				majorBoard[i] = ' ';
+				minorboard[intmL][j] = ' ';
 				j++;
 			}
 		}
 
 		if ((length - intM - intm) > 0) {
 			for (int majorIndex = length - 1, minorIndex = intmL - 1, childIndex = length - 1, M = newM, m = newm; majorIndex >= 0; majorIndex--) {
-				if (Mboard[majorIndex] == cNew) {
-					majorValue += Util.nCr(majorIndex, M)
-							- Util.nCr(majorIndex, M - 1);
+				if (majorBoard[majorIndex] == cNew) {
+					majorValue += ct.get(majorIndex, M)
+							- ct.get(majorIndex, M - 1);
 					M--;
 					// System.out.println(majorValue);
 					childArray[childIndex] = -1;
 					childIndex--;
-				} else if (Mboard[majorIndex] == ' ') {
-					if (mboard[intmL][minorIndex] == cOld) {
-						minorValue += Util.nCr(minorIndex - 1, m)
-								- Util.nCr(minorIndex, m);
+				} else if (majorBoard[majorIndex] == ' ') {
+					if (minorboard[intmL][minorIndex] == cOld) {
+						minorValue += ct.get(minorIndex - 1, m)
+								- ct.get(minorIndex, m);
 						m--;
 						childArray[childIndex] = -1;
 						childIndex--;
-					} else if (mboard[intmL][minorIndex] == ' ') {
-						majorValue += Util.nCr(majorIndex, M); // Add a new
+					} else if (minorboard[intmL][minorIndex] == ' ') {
+						majorValue += ct.get(majorIndex, M); // Add a new
 						// piece
 						// to the major
 						// array
 						minorValue += 0; // Nothing needed here since we are not
 						// adding pieces to the minor array
 						childArray[childIndex] = majorValue
-								* Util.nCr(newmL, newm) + minorValue;
+								* ct.get(newmL, newm) + minorValue;
 						// Stores new childboard in childArray
 						// System.out.println(childArray[childIndex]);
 						childIndex--;
-						majorValue -= Util.nCr(majorIndex, M);
+						majorValue -= ct.get(majorIndex, M);
 					}
 					minorIndex--;
 				} else
@@ -434,12 +440,12 @@ public final class RearrangeHasher {
 
 	public void setReplacements(char[] replacements) {
 		if (OX) {
-			oHash.setReplacements(' ', oChar);
-			oMinor[length - numx].setReplacements(' ', oChar);
+			oHash.setReplacements(' ', 'O');
+			oMinor[length - numx].setReplacements(' ', 'O');
 
 		} else
-			xHash.setReplacements(' ', xChar);
-		xMinor[length - numo].setReplacements(' ', xChar);
+			xHash.setReplacements(' ', 'X');
+		xMinor[length - numo].setReplacements(' ', 'X');
 
 	}
 
@@ -475,17 +481,17 @@ public final class RearrangeHasher {
 		if (OX) {
 			minor = xMinor[length - numo];
 			major = oHash;
-			Mchar = oChar;
+			Mchar = 'O';
 			countmin = numx;
-			mchar = xChar;
-			minboard = mboard[length - numo];
+			mchar = 'X';
+			minboard = minorboard[length - numo];
 		} else {
 			minor = oMinor[length - numx];
 			major = xHash;
-			Mchar = xChar;
+			Mchar = 'X';
 			countmin = numo;
-			mchar = oChar;
-			minboard = mboard[length - numx];
+			mchar = 'O';
+			minboard = minorboard[length - numx];
 		}
 		// System.out.print("prev minor: ");
 		// System.out.println(mboard[length-numo]);
@@ -545,9 +551,9 @@ public final class RearrangeHasher {
  * for (int majorIndex = length - 1, oldMinorIndex = oldmL - 1, intMinorIndex =
  * intmL - 1, M = intM; majorIndex >= 0; majorIndex--) { if (Mboard[majorIndex]
  * == cOld) { Mboard[majorIndex] = ' '; mboard[intmL][intMinorIndex] = cOld;
- * minorValue += Util.nCr(intMinorIndex, intm); intMinorIndex--; } else if
+ * minorValue += ct.get(intMinorIndex, intm); intMinorIndex--; } else if
  * (Mboard[majorIndex] == ' ') { if (mboard[oldmL][oldMinorIndex] == cNew) {
- * Mboard[majorIndex] = cNew; majorValue += Util.nCr(majorIndex, M); M--;
+ * Mboard[majorIndex] = cNew; majorValue += ct.get(majorIndex, M); M--;
  * oldMinorIndex--; } else if (mboard[oldmL][oldMinorIndex] == ' ') {
  * intMinorIndex--; oldMinorIndex--; }
  * 
