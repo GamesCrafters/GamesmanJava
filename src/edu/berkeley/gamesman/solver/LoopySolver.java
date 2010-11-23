@@ -102,6 +102,10 @@ public class LoopySolver extends Solver {
 			DatabaseHandle readDh, DatabaseHandle writeDh) {
 		long hash = game.getHash();
 		game.longToRecord(readDb.getRecord(readDh, hash), value);
+		if (hash == 118)
+			System.out.println("118");
+		if (hash == 790)
+			System.out.println("790");
 		Record bestValue;
 		switch (value.value) {
 		case IMPOSSIBLE: // position not seen before
@@ -124,25 +128,24 @@ public class LoopySolver extends Solver {
 				value.value = Value.DRAW; // treat current position as draw
 				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
 				bestValue = recordPool.get();
-				bestValue.value = null;
 				boolean unassigned = true;
 				int numChildren = game.makeMove();
 				for (int child = 0; child < numChildren; child++) {
 					solve(game, value, depth + 1, readDh, writeDh);
 					if (value.value == Value.UNDECIDED) {
-						Record testValue = recordPool.get();
-						boolean valueNull = bestValue.value == null;
-						if (!valueNull)
-							testValue.set(bestValue);
-						game.longToRecord(readDb.getRecord(readDh, hash),
-								bestValue);
-						if (!valueNull && testValue.compareTo(bestValue) > 0)
-							throw new Error("Value got worse");
-						recordPool.release(testValue);
+						game.longToRecord(readDb.getRecord(readDh, hash), value);
 						// set bestValue to value in database
+						if (unassigned || value.compareTo(bestValue) > 0) {
+							bestValue.set(value);
+						} else if (value.compareTo(bestValue) < 0) {
+							if (!(child == numChildren - 1
+									&& bestValue.value.compareTo(Value.DRAW) <= 0 && value.value
+									.compareTo(Value.DRAW) < 0))
+								throw new Error("Value got worse");
+						}
 					} else {
-						if (unassigned
-								|| value.value.compareTo(bestValue.value) > 0) {
+						value.previousPosition();
+						if (unassigned || value.compareTo(bestValue) > 0) {
 							bestValue.set(value);
 							if (bestValue.value.compareTo(Value.DRAW) > 0)
 								writeDb.putRecord(writeDh, hash,
@@ -166,11 +169,11 @@ public class LoopySolver extends Solver {
 					game.remakeMove();
 				}
 				recordPool.release(bestValue);
+				value.nextPosition();
 			}
 			value.value = Value.UNDECIDED;
 			break;
 		default:
-			value.previousPosition();
 			break;
 		}
 	}
@@ -227,7 +230,7 @@ public class LoopySolver extends Solver {
 						throw new Error(
 								"childValue should not be > DRAW if parent value is DRAW");
 					} else if (unassigned
-							|| childValue.value.compareTo(bestValue.value) > 0) {
+							|| childValue.compareTo(bestValue) > 0) {
 						bestValue.set(childValue);
 						unassigned = false;
 					}
