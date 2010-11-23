@@ -268,6 +268,9 @@ public final class AlignmentState implements State {
 		fireGuns(piecesToWin, AlignmentVariant.STANDARD);
 	}
 
+	public boolean[] getGuns() {
+		return guns;
+	}
 	// =======================================================================================
 
 }
