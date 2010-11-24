@@ -49,6 +49,11 @@ public abstract class ConnectGame extends TierGame {
 			int boardSide = conf.getInteger("gamesman.game.side", 4);
 			boardSize = boardSide * boardSide + (boardSide - 1)
 					* (boardSide - 1);
+		} else if (this instanceof Y2) {
+			int centerRows = conf.getInteger("gamesman.game.centerRows", 2);
+			int outerRows = conf.getInteger("gamesman.game.outerRows", 2);
+			boardSize = centerRows * (centerRows + 1) / 2
+					+ (centerRows * 2 + outerRows - 1) * outerRows / 2 * 3;
 		} else {
 			throw new Error("Subclass not known to calculate board size");
 		}
