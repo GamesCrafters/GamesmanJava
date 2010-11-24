@@ -57,27 +57,27 @@ public final class RearrangeHasher {
 			rh.unhash(saved);
 		}
 		System.out.println("done");
-//		long[] children = new long[10];
+		// long[] children = new long[10];
 		// children[9] = 0;
 		// rh.getChildren(' ', 'O', children);
-//		int i = 0;
+		// int i = 0;
 		/*
 		 * while(children[i]!=0){ char[] childboard = new char[9];
 		 * rh.unhash(children[i]); rh.getCharArray(childboard);
 		 * //System.out.println(childboard); i++; }
 		 */
 		char[] childboard = new char[9];
-//		long startTimeMs = System.currentTimeMillis();
+		// long startTimeMs = System.currentTimeMillis();
 		// int nexttime = 86574831;
-//		int nexttime = 1000000;
-//		int times = 1;
-//		int k = 0;
-//		int j = 0;
+		// int nexttime = 1000000;
+		// int times = 1;
+		// int k = 0;
+		// int j = 0;
 		/*
 		 * while(j<times){ while(k < nexttime){ rh.next(); rh.getChildren(' ',
 		 * 'O', children); k++; } j++; }
 		 */
-//		long taskTimeMs = System.currentTimeMillis() - startTimeMs;
+		// long taskTimeMs = System.currentTimeMillis() - startTimeMs;
 		rh.getCharArray(childboard);
 		// System.out.println(childboard);
 		// System.out.println(taskTimeMs);
@@ -133,6 +133,7 @@ public final class RearrangeHasher {
 		}
 		numo = o;
 		numx = x;
+		nums = spaces;
 		if (o == x) {
 			oHash.setNums(length - o, o);
 			xHash.setNums(length - x - 1, x); // for getChildren
@@ -452,6 +453,7 @@ public final class RearrangeHasher {
 		DartboardHasher major;
 		char Mchar;
 		int countmin;
+		int countmax;
 		hash++;
 		c.reset();
 		d.reset();
@@ -465,28 +467,30 @@ public final class RearrangeHasher {
 			major = oHash;
 			Mchar = 'O';
 			countmin = numx;
+			countmax = numo;
 		} else {
 			minor = oMinor[length - numx];
 			major = xHash;
 			Mchar = 'X';
 			countmin = numo;
+			countmax = numx;
 		}
-		// System.out.print("prev minor: ");
-		// System.out.println(mboard[length-numo]);
-		minor.next(c);
-		// System.out.print("next minor: ");
-		// System.out.println(minboard);
-		if (minor.getHash() == 0) {
+		long minorRearrangements = ct.get(length - countmax, countmin);
+		if (minor.getHash() == minorRearrangements - 1) {
 			minor.setNums(nums, countmin);
-			major.next(d);
-			if (major.getHash() == 0)
+			long majorRearrangements = ct.get(length, countmax);
+			if (major.getHash() == majorRearrangements - 1)
 				hash--;
+			else
+				major.next(d);
 			while (d.hasNext()) {
 				int n = d.next();
 				board[n] = major.get(n);
 				if (changed != null)
 					changed.add(n);
 			}
+		} else {
+			minor.next(c);
 		}
 		int smallcounter = 0;
 		for (int a = 0; a < length; a++) {
@@ -500,17 +504,6 @@ public final class RearrangeHasher {
 				smallcounter++;
 			}
 		}
-
-		/*
-		 * int i = -1; int j = 0;
-		 * xMinor[length-numo].getCharArray(mboard[length-numo]);
-		 * System.out.print("next minorx: ");
-		 * System.out.println(mboard[length-numo]); while (c.hasNext()) { int n
-		 * = c.next(); //mboard[length - numx][n] = oMinor[length -
-		 * numx].get(n); while(true){ if(Mboard[j]==' '){ i++; if(n==i) break; }
-		 * j++; } System.out.print(n); System.out.println(j);
-		 * board[j]=minor.get(n); if(changed!=null) changed.add(j); j++; }
-		 */
 	}
 
 	public void setx() {
