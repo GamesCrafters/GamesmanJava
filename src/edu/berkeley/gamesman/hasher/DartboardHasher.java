@@ -6,6 +6,12 @@ import java.util.Arrays;
 import edu.berkeley.gamesman.util.qll.Pool;
 import edu.berkeley.gamesman.util.qll.Factory;
 
+/**
+ * For a given dartboard game, iterates over possible positions and provides
+ * child-replacement hashes
+ * 
+ * @author dnspies
+ */
 public class DartboardHasher {
 	private final int[] pieces;
 	private final int[] numType;
@@ -60,6 +66,12 @@ public class DartboardHasher {
 		}
 	}
 
+	/**
+	 * @param len
+	 *            The number of spaces on the board
+	 * @param digits
+	 *            The different possible pieces which can occupy this board
+	 */
 	public DartboardHasher(int len, final char... digits) {
 		pieces = new int[len];
 		pieceHashes = new long[len];
@@ -83,6 +95,13 @@ public class DartboardHasher {
 		}
 	}
 
+	/**
+	 * Sets the number of each type of digit. The arguments are in the same
+	 * order as this hasher's digits were initialized in.
+	 * 
+	 * @param numType
+	 *            The number of each type of digit. Should sum to len
+	 */
 	public void setNums(int... numType) {
 		if (numType.length != digits.length)
 			throw new Error("Wrong number of arguments");
@@ -94,6 +113,31 @@ public class DartboardHasher {
 		hash = 0L;
 	}
 
+	/**
+	 * <p>
+	 * Notifies this hasher which type of children should be memoized. The
+	 * arguments are pairs of chars such that the first one is the character in
+	 * the board string and the second one is the character it should be
+	 * replaced with.
+	 * </p>
+	 * 
+	 * <p>
+	 * Once this has been called, you may ask for getChildren for any pair of
+	 * provided replacements
+	 * </p>
+	 * 
+	 * Ex: <br />
+	 * <code>
+	 * DartboardHasher hasher = new DartboardHasher(9,' ','O','X');<br />
+	 * hasher.unhash("X OXO XO ");<br />
+	 * hasher.setReplacements(' ','O',' ','X');<br />
+	 * long[] children = new long[9];<br />
+	 * hasher.getChildren(' ','O',children);<br />
+	 * </code>
+	 * 
+	 * @param replacements
+	 *            The set of replacements allowed
+	 */
 	public void setReplacements(char... replacements) {
 		this.replacements.clear();
 		difs.clear();
@@ -106,10 +150,24 @@ public class DartboardHasher {
 		calculateReplacements();
 	}
 
+	/**
+	 * Iterates to the next arrangement (if possible)
+	 * 
+	 * @return Whether or not there are any remaining arrangements
+	 */
 	public boolean next() {
 		return next(null);
 	}
 
+	/**
+	 * Iterates to the next arrangement (if possible). After calling this, you
+	 * may iterate over the values in changed to know what was changed. They
+	 * will be returned in strictly increasing order
+	 * 
+	 * @param changed
+	 *            An iterator to be reset and filled.
+	 * @return Whether or not there are any remaining arrangements
+	 */
 	public boolean next(ChangedIterator changed) {
 		return next(changed, 0);
 	}
@@ -309,6 +367,15 @@ public class DartboardHasher {
 		return rearrange[n].get(k);
 	}
 
+	/**
+	 * Sets this hasher to match the passed array and returns the hash. Throws
+	 * an error if the number of each type does not match those specified in the
+	 * last call to setNums
+	 * 
+	 * @param pieces
+	 *            The array of chars to match
+	 * @return The hash of this arrangement
+	 */
 	public long hash(char[] pieces) {
 		return hash(pieces, false);
 	}
@@ -348,10 +415,25 @@ public class DartboardHasher {
 		return totalHash;
 	}
 
+	/**
+	 * This is equivalent to counting the number of each type in the array and
+	 * calling setNums for the respective values followed by then calling hash
+	 * on the array.
+	 * 
+	 * @param pieces
+	 *            The array of chars to match
+	 * @return The hash of this arrangement
+	 */
 	public long setNumsAndHash(char[] pieces) {
 		return hash(pieces, true);
 	}
 
+	/**
+	 * Sets this hasher to match the specified hash
+	 * 
+	 * @param hash
+	 *            The hash to set this to
+	 */
 	public void unhash(long hash) {
 		this.hash = hash;
 		int digit;
@@ -412,10 +494,19 @@ public class DartboardHasher {
 		return -1;
 	}
 
+	/**
+	 * @param piece
+	 *            The index into the internal array
+	 * @return The char currently at that index
+	 */
 	public char get(int piece) {
 		return digits[pieces[piece]];
 	}
 
+	/**
+	 * @return The total number of possible rearrangements for the last call to
+	 *         setNums
+	 */
 	public long numHashes() {
 		return rearrange(pieces.length, numType);
 	}
