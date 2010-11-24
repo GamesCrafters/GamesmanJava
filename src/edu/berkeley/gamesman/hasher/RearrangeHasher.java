@@ -21,6 +21,7 @@ public final class RearrangeHasher {
 	private ChangedIterator d;
 	private long hash = 0;
 	private final CoefTable ct;
+	private boolean majorChanged = true;
 
 	public static void main(String[] args) {
 		Scanner sc = new Scanner(System.in);
@@ -150,10 +151,12 @@ public final class RearrangeHasher {
 			OX = false;
 		}
 		hash = 0L;
+		majorChanged = true;
 	}
 
 	public long hash(char[] board) {
 		// System.out.println(board[100]);
+		majorChanged = true;
 		if (OX) {
 			long hVal = ohash(board);
 			unhash(hVal);
@@ -165,7 +168,7 @@ public final class RearrangeHasher {
 		}
 	}
 
-	public long xhash(char[] board) {
+	private long xhash(char[] board) {
 		int cnumx = 0;
 		int cnumo = 0;
 		int sizeOfMinor = 0;
@@ -187,11 +190,12 @@ public final class RearrangeHasher {
 		for (int i = 0; i < sizeOfMinor; i++) {
 			minorboard[sizeOfMinor][i] = minorboard[length][i];
 		}
+		majorChanged = true;
 		return xHash.hash(majorBoard) * ct.get(length - cnumx, cnumo)
 				+ oMinor[length - cnumx].hash(minorboard[sizeOfMinor]);
 	}
 
-	public long ohash(char[] board) {
+	private long ohash(char[] board) {
 		int cnumx = 0;
 		int cnumo = 0;
 		int k = 0;
@@ -213,6 +217,7 @@ public final class RearrangeHasher {
 		for (int i = 0; i < k; i++) {
 			minorboard[k][i] = minorboard[length][i];
 		}
+		majorChanged = true;
 		return oHash.hash(majorBoard) * ct.get(length - cnumo, cnumx)
 				+ xMinor[length - cnumo].hash(minorboard[k]);
 	}
@@ -283,6 +288,7 @@ public final class RearrangeHasher {
 				j++;
 			}
 		}
+		majorChanged = true;
 		// System.out.println("unhash: ");
 		// System.out.println(mboard[s]);
 	}
@@ -422,17 +428,6 @@ public final class RearrangeHasher {
 		// System.out.println(board);
 	}
 
-	public void setReplacements(char[] replacements) {
-		if (OX) {
-			oHash.setReplacements(' ', 'O');
-			oMinor[length - numx].setReplacements(' ', 'O');
-
-		} else
-			xHash.setReplacements(' ', 'X');
-		xMinor[length - numo].setReplacements(' ', 'X');
-
-	}
-
 	public void getCharArray(char[] copyTo) {
 		if (copyTo.length != board.length)
 			throw new Error("Wrong length char array");
@@ -477,6 +472,7 @@ public final class RearrangeHasher {
 		}
 		long minorRearrangements = ct.get(length - countmax, countmin);
 		if (minor.getHash() == minorRearrangements - 1) {
+			majorChanged = true;
 			minor.setNums(nums, countmin);
 			long majorRearrangements = ct.get(length, countmax);
 			if (major.getHash() == majorRearrangements - 1)
@@ -506,14 +502,12 @@ public final class RearrangeHasher {
 		}
 	}
 
-	public void setx() {
-		OX = false;
-		return;
-	}
-
-	public void seto() {
-		OX = true;
-		return;
+	public boolean majorChanged() {
+		if (majorChanged) {
+			majorChanged = false;
+			return true;
+		} else
+			return false;
 	}
 }
 /*

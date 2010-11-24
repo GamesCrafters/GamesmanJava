@@ -1,6 +1,7 @@
 package edu.berkeley.gamesman.solver;
 
 import edu.berkeley.gamesman.core.*;
+import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.game.util.TierState;
@@ -13,16 +14,16 @@ public class RearrangeSolver extends TierSolver {
 		super(conf);
 	}
 
+	@Override
 	protected void solvePartialTier(Configuration conf, long start,
-			long hashes, TierSolverUpdater t, DatabaseHandle readDh,
-			DatabaseHandle writeDh) {
+			long hashes, TierSolverUpdater t, Database readDb,
+			DatabaseHandle readDh, Database writeDb, DatabaseHandle writeDh) {
 		final long firstNano;
 		long nano = 0;
-		// final boolean debugSolver = Util.debug(DebugFacility.SOLVER);
-		final boolean debugSolver = true;
+		final boolean debugSolver = Util.debug(DebugFacility.SOLVER);
 		if (debugSolver) {
 			for (int i = 0; i < 7; i++) {
-				debugTimes[i] = 0;
+				times[i] = 0;
 			}
 			firstNano = System.nanoTime();
 			nano = firstNano;
@@ -33,10 +34,8 @@ public class RearrangeSolver extends TierSolver {
 		long stepNum = current % STEP_SIZE;
 		TierState curState = game.hashToState(start);
 		game.setState(curState);
-		Record[] vals = new Record[game.maxChildren()];
-		for (int i = 0; i < vals.length; i++)
-			vals[i] = new Record(conf);
-		Record prim = new Record(conf);
+		Record record = game.newRecord();
+		Record bestRecord = game.newRecord();
 		TierState[] children = new TierState[game.maxChildren()];
 		for (int i = 0; i < children.length; i++)
 			children[i] = game.newState();
@@ -44,70 +43,62 @@ public class RearrangeSolver extends TierSolver {
 		if (debugSolver) {
 			lastNano = nano;
 			nano = System.nanoTime();
-			debugTimes[0] = nano - lastNano;
+			times[0] = nano - lastNano;
 		}
-		Value pv = game.primitiveValue();
-		int boardSize = ((TierGame) conf.getGame()).numberOfTiers();
-		long minorRearrangements = 0;
-		int turnPieces;
-		turnPieces = (tier + 1) / 2;
-		minorRearrangements = Util.nCr(boardSize - 1 - turnPieces, tier
-				- turnPieces);
 		for (long count = 0L; count < hashes; count++) {
-			if (curState.hash % minorRearrangements == 0) {
-				pv = game.primitiveValue();
-			}
 			if (stepNum == STEP_SIZE) {
 				t.calculated(STEP_SIZE);
 				stepNum = 0;
 			}
+			Value pv = game.primitiveValue();
 			if (debugSolver) {
 				lastNano = nano;
 				nano = System.nanoTime();
-				debugTimes[1] += nano - lastNano;
+				times[1] += nano - lastNano;
 			}
 			if (pv == Value.UNDECIDED) {
 				int len = game.validMoves(children);
 				if (debugSolver) {
 					lastNano = nano;
 					nano = System.nanoTime();
-					debugTimes[2] += nano - lastNano;
+					times[2] += nano - lastNano;
 				}
+				bestRecord.value = Value.UNDECIDED;
 				for (int i = 0; i < len; i++) {
 					game.longToRecord(
 							children[i],
 							readDb.getRecord(readDh,
-									game.stateToHash(children[i])), vals[i]);
-					vals[i].previousPosition();
+									game.stateToHash(children[i])), record);
+					record.previousPosition();
+					if (bestRecord.value == Value.UNDECIDED
+							|| record.compareTo(bestRecord) > 0)
+						bestRecord.set(record);
 				}
 				if (debugSolver) {
 					lastNano = nano;
 					nano = System.nanoTime();
-					debugTimes[3] += nano - lastNano;
+					times[3] += nano - lastNano;
 				}
-				Record newVal = game.combine(vals);
 				writeDb.putRecord(writeDh, current,
-						game.recordToLong(curState, newVal));
-			} else if (pv == Value.IMPOSSIBLE) {
-				break;
-			} else {
+						game.recordToLong(curState, bestRecord));
+			} else if (pv != Value.IMPOSSIBLE) {
 				if (debugSolver) {
 					lastNano = nano;
 					nano = System.nanoTime();
-					debugTimes[2] += nano - lastNano;
+					times[2] += nano - lastNano;
 					lastNano = nano;
 					nano = System.nanoTime();
-					debugTimes[3] += nano - lastNano;
+					times[3] += nano - lastNano;
 				}
-				prim.remoteness = 0;
-				prim.value = pv;
+				record.remoteness = 0;
+				record.value = pv;
 				writeDb.putRecord(writeDh, current,
-						game.recordToLong(curState, prim));
+						game.recordToLong(curState, record));
 			}
 			if (debugSolver) {
 				lastNano = nano;
 				nano = System.nanoTime();
-				debugTimes[4] += nano - lastNano;
+				times[4] += nano - lastNano;
 			}
 			if (count < hashes - 1) {
 				game.nextHashInTier();
@@ -118,41 +109,26 @@ public class RearrangeSolver extends TierSolver {
 			if (debugSolver) {
 				lastNano = nano;
 				nano = System.nanoTime();
-				debugTimes[5] += nano - lastNano;
+				times[5] += nano - lastNano;
 				lastNano = nano;
 				nano = System.nanoTime();
-				debugTimes[6] += nano - lastNano;
-			}
-			if (curState.hash % 1000000 == 0) {
-				long sumTimes = nano - firstNano - debugTimes[6] * 6;
-				System.out.println("Initializing: " + 1000 * debugTimes[0]
-						/ sumTimes / 10D);
-				System.out.println("Primitive Value: " + 1000
-						* (debugTimes[1] - debugTimes[6]) / sumTimes / 10D);
-				System.out.println("Calculating Chilren: " + 1000
-						* (debugTimes[2] - debugTimes[6]) / sumTimes / 10D);
-				System.out.println("Reading Children: " + 1000
-						* (debugTimes[3] - debugTimes[6]) / sumTimes / 10D);
-				System.out.println("Storing records: " + 1000
-						* (debugTimes[4] - debugTimes[6]) / sumTimes / 10D);
-				System.out.println("Stepping: " + 1000
-						* (debugTimes[5] - debugTimes[6]) / sumTimes / 10D);
+				times[6] += nano - lastNano;
 			}
 		}
 		if (debugSolver) {
-			long sumTimes = nano - firstNano - debugTimes[6] * 6;
-			Util.debug(DebugFacility.SOLVER, "Initializing: " + 1000
-					* debugTimes[0] / sumTimes / 10D);
+			long sumTimes = nano - firstNano - times[6] * 6;
+			Util.debug(DebugFacility.SOLVER, "Initializing: " + 1000 * times[0]
+					/ sumTimes / 10D);
 			Util.debug(DebugFacility.SOLVER, "Primitive Value: " + 1000
-					* (debugTimes[1] - debugTimes[6]) / sumTimes / 10D);
+					* (times[1] - times[6]) / sumTimes / 10D);
 			Util.debug(DebugFacility.SOLVER, "Calculating Chilren: " + 1000
-					* (debugTimes[2] - debugTimes[6]) / sumTimes / 10D);
+					* (times[2] - times[6]) / sumTimes / 10D);
 			Util.debug(DebugFacility.SOLVER, "Reading Children: " + 1000
-					* (debugTimes[3] - debugTimes[6]) / sumTimes / 10D);
+					* (times[3] - times[6]) / sumTimes / 10D);
 			Util.debug(DebugFacility.SOLVER, "Storing records: " + 1000
-					* (debugTimes[4] - debugTimes[6]) / sumTimes / 10D);
+					* (times[4] - times[6]) / sumTimes / 10D);
 			Util.debug(DebugFacility.SOLVER, "Stepping: " + 1000
-					* (debugTimes[5] - debugTimes[6]) / sumTimes / 10D);
+					* (times[5] - times[6]) / sumTimes / 10D);
 		}
 	}
 }
