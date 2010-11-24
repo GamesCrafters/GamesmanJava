@@ -207,10 +207,7 @@ public class Reversi extends TierGame {
 			this.turn = WHITE;
 		else
 			throw new Error("Bad turn");
-		char[] woTurn = Arrays.copyOfRange(posArray, 1, posArray.length - 1);
-		for (int i = 0; i < woTurn.length; i++) {
-			board[i / width][i % width].setPiece(woTurn[i]);
-		}
+		char[] woTurn = Arrays.copyOfRange(posArray, 1, posArray.length);
 		dbh.setNumsAndHash(woTurn);
 		isChildrenValid = false;
 	}
@@ -232,8 +229,7 @@ public class Reversi extends TierGame {
 
 	@Override
 	public String displayState() {
-		StringBuilder sb = new StringBuilder((width + 1) * 2
-				* (height + 1));
+		StringBuilder sb = new StringBuilder((width + 1) * 2 * (height + 1));
 		for (int row = height - 1; row >= 0; row--) {
 			sb.append(row + 1);
 			for (int col = 0; col < width; col++) {
@@ -342,7 +338,7 @@ public class Reversi extends TierGame {
 								&& isFlippable(place.boardNum, index, false,
 										null)) {
 							if (setStringMoves) {
-								stringMoves[counter] = (col + 'A')
+								stringMoves[counter] = (char) (col + 'A')
 										+ Integer.toString(row + 1);
 							}
 							System.arraycopy(oldPosition, 0, tempPosition, 0,
