@@ -39,7 +39,7 @@ public class Reversi extends TierGame {
 	// ...
 	// 63 [64,...] ]
 
-	private String[] stringMoves;
+	private final String[] stringMoves;
 	private final int[] numPieces = new int[2];
 
 	private class Cell {
@@ -123,7 +123,7 @@ public class Reversi extends TierGame {
 		board[height / 2][width / 2].setPiece('X');
 		isChildrenValid = false;
 		children = newStateArray(maxChildren());
-		stringMoves = new String[0]; // only for testing.
+		stringMoves = new String[maxChildren()]; // only for testing.
 		oldPosition = new char[boardSize];
 		tempPosition = new char[boardSize];
 	}
@@ -232,15 +232,29 @@ public class Reversi extends TierGame {
 
 	@Override
 	public String displayState() {
-		String s = stateToString();
-		StringBuilder str = new StringBuilder((width + 3) * height);
-		str.append((s.charAt(0) == 'O' ? "White to Move" : "Black to Move")
-				+ "\n");
-		s = s.substring(1);
-		for (int row = 0; row < height; row++)
-			str.append("|" + s.substring(row * width, row * width + width)
-					+ "|\n");
-		return str.toString();
+		StringBuilder sb = new StringBuilder((width + 1) * 2
+				* (height + 1));
+		for (int row = height - 1; row >= 0; row--) {
+			sb.append(row + 1);
+			for (int col = 0; col < width; col++) {
+				sb.append(" ");
+				char piece = dbh.get(row * width + col);
+				if (piece == ' ')
+					sb.append('-');
+				else if (piece == 'X' || piece == 'O')
+					sb.append(piece);
+				else
+					throw new Error(piece + " is not a valid piece");
+			}
+			sb.append("\n");
+		}
+		sb.append(" ");
+		for (int col = 0; col < width; col++) {
+			sb.append(" ");
+			sb.append((char) ('A' + col));
+		}
+		sb.append("\n");
+		return sb.toString();
 	}
 
 	@Override
@@ -311,8 +325,6 @@ public class Reversi extends TierGame {
 	private void getChildren(boolean setStringMoves) {
 		dbh.getCharArray(oldPosition);
 		int counter = 0;
-		if (setStringMoves)
-			stringMoves = new String[0];
 		// looks at every spot on the board
 		for (int row = 0; row < height; row++) {
 			for (int col = 0; col < width; col++) {
@@ -330,12 +342,8 @@ public class Reversi extends TierGame {
 								&& isFlippable(place.boardNum, index, false,
 										null)) {
 							if (setStringMoves) {
-								String[] newStringMoves = new String[stringMoves.length + 1];
-								System.arraycopy(stringMoves, 0,
-										newStringMoves, 0, stringMoves.length);
-								newStringMoves[newStringMoves.length - 1] = ""
-										+ row + "" + col;
-								stringMoves = newStringMoves;
+								stringMoves[counter] = (col + 'A')
+										+ Integer.toString(row + 1);
 							}
 							System.arraycopy(oldPosition, 0, tempPosition, 0,
 									boardSize);
