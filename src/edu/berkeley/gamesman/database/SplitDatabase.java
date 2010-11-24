@@ -10,6 +10,12 @@ import java.util.Scanner;
 
 import edu.berkeley.gamesman.core.Configuration;
 
+/**
+ * A database wrapper for multiple underlying databases which may or may not be
+ * of the same type
+ * 
+ * @author dnspies
+ */
 public class SplitDatabase extends Database {
 	private final Database[] databaseList;
 	private final long[] firstByteIndices;

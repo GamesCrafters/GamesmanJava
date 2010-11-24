@@ -10,6 +10,11 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.util.qll.Factory;
 import edu.berkeley.gamesman.util.qll.Pool;
 
+/**
+ * A cache which simply contains separate ranges of records
+ * 
+ * @author dnspies
+ */
 public class RangeCache extends TierReadCache {
 
 	private final Pool<MemoryDatabase> slotPool = new Pool<MemoryDatabase>(
@@ -31,11 +36,22 @@ public class RangeCache extends TierReadCache {
 	private long numHashes;
 	private final int memPerChild;
 
+	/**
+	 * @param db The underlying database
+	 * @param conf The configuration object
+	 * @param memPerChild The maximum amount of memory each range is expected to take up
+	 */
 	public RangeCache(Database db, Configuration conf, int memPerChild) {
 		super(db, conf);
 		this.memPerChild = memPerChild;
 	}
 
+	/**
+	 * @param db A database for memory calculations
+	 * @param firstRecords The start points of each range
+	 * @param lastRecords The end points of each range
+	 * @return The amount of memory required for a range cache with the provided ranges
+	 */
 	public static long memFor(Database db, long[] firstRecords,
 			long[] lastRecords) {
 		long total = 0L;
@@ -123,6 +139,11 @@ public class RangeCache extends TierReadCache {
 		return numHashes;
 	}
 
+	/**
+	 * @param firstRecords The start points of each range
+	 * @param lastRecords The end points of each range
+	 * @param numHashes The number of hashes being solved which require this cache
+	 */
 	public void setRanges(long[] firstRecords, long[] lastRecords,
 			long numHashes) {
 		if (slots != null)
