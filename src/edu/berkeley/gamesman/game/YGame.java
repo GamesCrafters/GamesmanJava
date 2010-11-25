@@ -331,22 +331,22 @@ public final class YGame extends ConnectGame
         {
             node.triangle = 1;
             node.index = 1;
-            this.nodesOnSameTriangle.add(new Node(node));
+            this.neighbors.add(new Node(node));
             node.triangle = 1;
             node.index = 2;
-            this.nodesOnSameTriangle.add(new Node(node));
+            this.neighbors.add(new Node(node));
             node.triangle = 1;
             node.index = 4;
-            this.nodesOnSameTriangle.add(new Node(node));
+            this.neighbors.add(new Node(node));
             node.triangle = 1;
             node.index = 5;
-            this.nodesOnSameTriangle.add(new Node(node));
+            this.neighbors.add(new Node(node));
             node.triangle = 1;
             node.index = 7;
-            this.nodesOnSameTriangle.add(new Node(node));
+            this.neighbors.add(new Node(node));
             node.triangle = 1;
             node.index = 8;
-            this.nodesOnSameTriangle.add(new Node(node));
+            this.neighbors.add(new Node(node));
         }
         else
         {
@@ -427,7 +427,9 @@ public final class YGame extends ConnectGame
                                         node.index = Util.nonNegativeModulo(indexIn - 1 - (3 * indexIn / segments),
                                                 this.nodesInThisTriangle[triangleIn - 1]);
                                     }
-                                    this.nodesOnInnerTriangle.add(new Node(node)); /* 21 */
+                                    this.nodesOnInnerTriangle.add(new Node(node));
+
+                                    /* 21 */
                                     node.triangle = triangleIn - 1;
                                     node.index = Util .nonNegativeModulo(indexIn - 2 - (3 * indexIn / segments), this.nodesInThisTriangle[triangleIn - 1]);
                                     this.nodesOnInnerTriangle.add(new Node(node));
@@ -613,117 +615,46 @@ public final class YGame extends ConnectGame
 
         this.neighbors.add(this.nodesOnSameTriangle.get(0));
 
-        // Outer neighbors are trickier, since there can be 0, 2, 3, 4, or 6 possible neighbors:
+        // Outer neighbors are trickier, since there can be 0, 2, 3, 4, or 6 possible neighbors. 6 is handled specially above,
+        // otherwise, sort by ascending order (which will handle the 4 with a skip in the middle case). In corners, we add 2 to the
+        // index to handle the wrap-around 0 cases.. only for corners, though, since 2x4's will wrap the highest outer index to 0.
 
         if (this.nodesOnOuterTriangle.size() > 0) 
         {
-            int firstIndex = 0, secondIndex = -1, thirdIndex = -1;
+            int numberOfNodesOnOuterTriangle = this.nodesInThisTriangle[this.nodesOnOuterTriangle.get(0).triangle];
 
-            if (this.isCornerIndex(triangleIn, indexIn) == true) 
+            boolean didSwap;
+
+            do
             {
-                // Handles index wrap-around for corner nodes
+                didSwap = false;
 
                 for (int i = 1; i < this.nodesOnOuterTriangle.size(); i++)
                 {
-                    if (Util.nonNegativeModulo(this.nodesOnOuterTriangle.get(i).index + 2,
-                            this.nodesOnOuterTriangle.get(i).triangle) < Util.nonNegativeModulo(this.nodesOnOuterTriangle
-                                    .get(firstIndex).index + 2, this.nodesOnOuterTriangle.get(firstIndex).triangle))
-                    {
-                        firstIndex = i;
-                    }
-                }
+                    int index1ToCheck = this.nodesOnOuterTriangle.get(i - 1).index;
+                    int index2ToCheck = this.nodesOnOuterTriangle.get(i).index;
 
-                for (int i = 0; i < this.nodesOnOuterTriangle.size(); i++)
-                {
-                    if (Util.nonNegativeModulo(this.nodesOnOuterTriangle.get(i).index + 2,
-                            this.nodesOnOuterTriangle.get(i).triangle) == Util.nonNegativeModulo(this.nodesOnOuterTriangle
-                                    .get(firstIndex).index + 3, this.nodesOnOuterTriangle.get(firstIndex).triangle))
+                    if (indexIn == 0)
                     {
-                        secondIndex = i;
-                        break;
+                        index1ToCheck = Util.nonNegativeModulo(index1ToCheck + 2, numberOfNodesOnOuterTriangle);
+                        index2ToCheck = Util.nonNegativeModulo(index2ToCheck + 2, numberOfNodesOnOuterTriangle);
                     }
-                }
 
-                if (this.nodesOnOuterTriangle.size() > 2)
-                {
-                    for (int i = 0; i < this.nodesOnOuterTriangle.size(); i++)
+                    if (index1ToCheck > index2ToCheck)
                     {
-                        if (Util.nonNegativeModulo(this.nodesOnOuterTriangle.get(i).index + 2,
-                                this.nodesOnOuterTriangle.get(i).triangle) == Util.nonNegativeModulo(this.nodesOnOuterTriangle
-                                        .get(firstIndex).index + 4, this.nodesOnOuterTriangle.get(firstIndex).triangle))
-                        {
-                            thirdIndex = i;
-                            break;
-                        }
+                        int tempIndex = this.nodesOnOuterTriangle.get(i - 1).index;
+                        this.nodesOnOuterTriangle.get(i - 1).index = this.nodesOnOuterTriangle.get(i).index;
+                        this.nodesOnOuterTriangle.get(i).index = tempIndex;
+                        didSwap = true;
                     }
                 }
             }
-            else 
+            while (didSwap == true);
+
+            for (int i = 0; i < this.nodesOnOuterTriangle.size(); i++)
             {
-                for (int i = 1; i < this.nodesOnOuterTriangle.size(); i++)
-                {
-                    if (this.nodesOnOuterTriangle.get(i).index < this.nodesOnOuterTriangle
-                            .get(firstIndex).index) 
-                    {
-                        firstIndex = i;
-                    }
-                }
-
-                for (int i = 0; i < this.nodesOnOuterTriangle.size(); i++)
-                {
-                    if (this.nodesOnOuterTriangle.get(i).index == this.nodesOnOuterTriangle
-                            .get(firstIndex).index + 1) 
-                    {
-                        secondIndex = i;
-                        break;
-                    }
-                }
+                this.neighbors.add(this.nodesOnOuterTriangle.get(i));
             }
-
-            assert (firstIndex != secondIndex);
-
-            this.neighbors.add(this.nodesOnOuterTriangle.get(firstIndex));
-            this.nodesOnOuterTriangle.set(firstIndex, null);
-
-            this.neighbors.add(this.nodesOnOuterTriangle.get(secondIndex));
-            this.nodesOnOuterTriangle.set(secondIndex, null);
-
-            if ( thirdIndex != -1 )
-            {
-                this.neighbors.add(this.nodesOnOuterTriangle.get(thirdIndex));
-                this.nodesOnOuterTriangle.set(thirdIndex, null);
-            }
-
-            // Add the remaining outer node if there are 4-outers (e.g. 4x8 and index 0,0)
-            if (this.nodesOnOuterTriangle.size() == 4)
-            {
-                for (int i = 0; i < this.nodesOnOuterTriangle.size(); i++)
-                {
-                    if (this.nodesOnOuterTriangle.get(i) != null)
-                    {
-                        this.neighbors.add(this.nodesOnOuterTriangle.get(i));
-                        break;
-                    }
-                }
-            }
-        }
-        else 
-        {
-            int firstIndex, secondIndex;
-
-            if (this.nodesOnOuterTriangle.get(0).index < this.nodesOnOuterTriangle
-                    .get(1).index) 
-            {
-                firstIndex = 0;
-                secondIndex = 1;
-            }
-            else 
-            {
-                firstIndex = 1;
-                secondIndex = 0;
-            }
-            this.neighbors.add(this.nodesOnOuterTriangle.get(firstIndex));
-            this.neighbors.add(this.nodesOnOuterTriangle.get(secondIndex));
         }
 
         return this.neighbors;
@@ -820,10 +751,14 @@ public final class YGame extends ConnectGame
                     int j = 0;
                     while ( j<neighbors.size() )
                     {
-                    	if (getPlayerAt( neighbors.get(j) ) != player)
-                    		neighbors.remove(j);
-                    	else
-                    		j++;
+                        if (this.getPlayerAt( neighbors.get(j) ) != player)
+                        {
+                            neighbors.remove(j);
+                        }
+                        else
+                        {
+                            j++;
+                        }
                     }
                     for (int i = 0; i < neighbors.size(); i++) 
                     {
