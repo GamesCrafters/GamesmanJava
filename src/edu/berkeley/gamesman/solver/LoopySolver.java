@@ -11,6 +11,8 @@ import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.game.LoopyMutaGame;
 import edu.berkeley.gamesman.game.LoopyGameWrapper;
+import edu.berkeley.gamesman.util.DebugFacility;
+import edu.berkeley.gamesman.util.Util;
 import edu.berkeley.gamesman.util.qll.Pool;
 import edu.berkeley.gamesman.util.qll.Factory;
 import edu.berkeley.gamesman.util.qll.RecycleLinkedList;
@@ -20,7 +22,6 @@ import edu.berkeley.gamesman.util.qll.RecycleLinkedList;
  * 
  */
 public class LoopySolver extends Solver {
-	boolean debugPrintOn = false;
 	Pool<Record> recordPool;
 
 	protected RecycleLinkedList<Record[]> recordList; // Nancy: added this for
@@ -31,11 +32,6 @@ public class LoopySolver extends Solver {
 		super(conf);
 	}
 
-	private void debugPrint(String s){
-		if (debugPrintOn)
-			System.out.println(s);
-	}
-	
 	@Override
 	public WorkUnit prepareSolve(final Configuration conf) {
 		Game<?> g = conf.getGame();
@@ -108,18 +104,18 @@ public class LoopySolver extends Solver {
 			DatabaseHandle readDh, DatabaseHandle writeDh) {
 		long hash = game.getHash();
 		game.longToRecord(readDb.getRecord(readDh, hash), value);
-		//debugPrint(value);
+		// assert Util.debug(DebugFacility.SOLVER, value);
 		Record bestValue;
-		debugPrint(game.displayState());
-		debugPrint("" + value.value);
+		assert Util.debug(DebugFacility.SOLVER, game.displayState());
+		assert Util.debug(DebugFacility.SOLVER, "" + value.value);
 		if (value.value == Value.IMPOSSIBLE) { // position not seen before
 			value.value = game.primitiveValue();
-			debugPrint("" + value.value);
+			assert Util.debug(DebugFacility.SOLVER, "" + value.value);
 			if (value.value != Value.UNDECIDED) { // if position is primitive
 				value.remoteness = 0;
 				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
-				debugPrint("Just stored " + value);
-				debugPrint(game.displayState());
+				assert Util.debug(DebugFacility.SOLVER, "Just stored " + value);
+				assert Util.debug(DebugFacility.SOLVER, game.displayState());
 				// save value to database
 				value.previousPosition();
 				int numParents = game.unmakeMove();
@@ -139,7 +135,8 @@ public class LoopySolver extends Solver {
 				boolean assigned = false;
 				int numChildren = game.makeMove();
 				for (int child = 0; child < numChildren; child++) {
-					debugPrint("Going to solve child " + child);
+					assert Util.debug(DebugFacility.SOLVER,
+							"Going to solve child " + child);
 					solve(game, value, depth + 1, readDh, writeDh);
 					value.previousPosition();
 					if (!assigned || (value.compareTo(bestValue) > 0)) {
@@ -181,17 +178,18 @@ public class LoopySolver extends Solver {
 	 */
 	private void fix(LoopyMutaGame game, Record value, DatabaseHandle readDh,
 			DatabaseHandle writeDh) {
-		debugPrint("GOING TO FIX NOW");
-		debugPrint(game.displayState());
+		assert Util.debug(DebugFacility.SOLVER, "GOING TO FIX NOW");
+		assert Util.debug(DebugFacility.SOLVER, game.displayState());
 		Record dbValue = recordPool.get();
 		long hash = game.getHash();
 		game.longToRecord(readDb.getRecord(readDh, hash), dbValue);
-		if ((dbValue.value != Value.IMPOSSIBLE) && game.primitiveValue() == Value.UNDECIDED) {
-			debugPrint("HAS BEEN SEEN");
-			debugPrint("Old value is " + dbValue);
-			debugPrint("New value is " + value);
+		if ((dbValue.value != Value.IMPOSSIBLE)
+				&& game.primitiveValue() == Value.UNDECIDED) {
+			assert Util.debug(DebugFacility.SOLVER, "HAS BEEN SEEN");
+			assert Util.debug(DebugFacility.SOLVER, "Old value is " + dbValue);
+			assert Util.debug(DebugFacility.SOLVER, "New value is " + value);
 			if (value.compareTo(dbValue) > 0) {
-				debugPrint("USE NEW VALUE");
+				assert Util.debug(DebugFacility.SOLVER, "USE NEW VALUE");
 				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
 				// save value
 				value.previousPosition();
@@ -205,7 +203,8 @@ public class LoopySolver extends Solver {
 				}
 				value.nextPosition();
 			} else if (dbValue.value == Value.DRAW) {
-				debugPrint("TEST CHILDREN TO SEE IF LOOP");
+				assert Util.debug(DebugFacility.SOLVER,
+						"TEST CHILDREN TO SEE IF LOOP");
 				// if value is draw, test for all children have returned
 				boolean unassigned = true;
 				int numChildren = game.makeMove();
@@ -213,28 +212,28 @@ public class LoopySolver extends Solver {
 				Record childValue = recordPool.get();
 				int child;
 				for (child = 0; child < numChildren; child++) {
-					debugPrint("child " + child);
-					debugPrint(game.displayState());
+					assert Util.debug(DebugFacility.SOLVER, "child " + child);
+					assert Util
+							.debug(DebugFacility.SOLVER, game.displayState());
 					game.longToRecord(readDb.getRecord(readDh, game.getHash()),
 							childValue);
-					debugPrint("Value is " + childValue);
+					assert Util.debug(DebugFacility.SOLVER, "Value is "
+							+ childValue);
 					if (childValue.value == Value.UNDECIDED)
 						throw new Error("No undecided in loopy solver");
 					childValue.previousPosition();
 					if (childValue.value == Value.DRAW
 							|| childValue.value == Value.IMPOSSIBLE) {
-						debugPrint("CHILD " + child + " is " + childValue + " so break");
+						assert Util.debug(DebugFacility.SOLVER, "CHILD "
+								+ child + " is " + childValue + " so break");
 						break;
 					} else if (childValue.value.compareTo(Value.DRAW) > 0) {
-						debugPrint("Should be better than draw...is this an error? " + child);
-						bestValue.set(childValue);
-						unassigned = false;
-						break;
-						//throw new Error(
-								//"childValue should not be > DRAW if parent value is DRAW, child value is " + childValue);
+						throw new Error("Should be better than draw" + child);
 					} else if (unassigned
 							|| childValue.compareTo(bestValue) > 0) {
-						debugPrint("CHILD " + child + " is " + childValue + " so now assigned");
+						assert Util.debug(DebugFacility.SOLVER, "CHILD "
+								+ child + " is " + childValue
+								+ " so now assigned");
 						bestValue.set(childValue);
 						unassigned = false;
 					}
