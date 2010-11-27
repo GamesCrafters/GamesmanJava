@@ -20,6 +20,7 @@ import edu.berkeley.gamesman.util.qll.RecycleLinkedList;
  * 
  */
 public class LoopySolver extends Solver {
+	boolean debugPrintOn = false;
 	Pool<Record> recordPool;
 
 	protected RecycleLinkedList<Record[]> recordList; // Nancy: added this for
@@ -30,6 +31,11 @@ public class LoopySolver extends Solver {
 		super(conf);
 	}
 
+	private void debugPrint(String s){
+		if (debugPrintOn)
+			System.out.println(s);
+	}
+	
 	@Override
 	public WorkUnit prepareSolve(final Configuration conf) {
 		Game<?> g = conf.getGame();
@@ -102,16 +108,18 @@ public class LoopySolver extends Solver {
 			DatabaseHandle readDh, DatabaseHandle writeDh) {
 		long hash = game.getHash();
 		game.longToRecord(readDb.getRecord(readDh, hash), value);
-		//System.out.println(value);
+		//debugPrint(value);
 		Record bestValue;
-		System.out.println(game.displayState());
-		System.out.println(value.value);
+		debugPrint(game.displayState());
+		debugPrint("" + value.value);
 		if (value.value == Value.IMPOSSIBLE) { // position not seen before
 			value.value = game.primitiveValue();
-			System.out.println(value.value);
+			debugPrint("" + value.value);
 			if (value.value != Value.UNDECIDED) { // if position is primitive
 				value.remoteness = 0;
 				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
+				debugPrint("Just stored " + value);
+				debugPrint(game.displayState());
 				// save value to database
 				value.previousPosition();
 				int numParents = game.unmakeMove();
@@ -131,7 +139,7 @@ public class LoopySolver extends Solver {
 				boolean assigned = false;
 				int numChildren = game.makeMove();
 				for (int child = 0; child < numChildren; child++) {
-					System.out.println("Going to solve child " + child);
+					debugPrint("Going to solve child " + child);
 					solve(game, value, depth + 1, readDh, writeDh);
 					value.previousPosition();
 					if (!assigned || (value.compareTo(bestValue) > 0)) {
@@ -173,16 +181,17 @@ public class LoopySolver extends Solver {
 	 */
 	private void fix(LoopyMutaGame game, Record value, DatabaseHandle readDh,
 			DatabaseHandle writeDh) {
+		debugPrint("GOING TO FIX NOW");
+		debugPrint(game.displayState());
 		Record dbValue = recordPool.get();
 		long hash = game.getHash();
 		game.longToRecord(readDb.getRecord(readDh, hash), dbValue);
 		if ((dbValue.value != Value.IMPOSSIBLE) && game.primitiveValue() == Value.UNDECIDED) {
-			System.out.println("GOING TO FIX NOW");
-			System.out.println(game.displayState());
-			System.out.println("Old value is " + dbValue);
-			System.out.println("New value is " + value);
+			debugPrint("HAS BEEN SEEN");
+			debugPrint("Old value is " + dbValue);
+			debugPrint("New value is " + value);
 			if (value.compareTo(dbValue) > 0) {
-				System.out.println("USE NEW VALUE");
+				debugPrint("USE NEW VALUE");
 				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
 				// save value
 				value.previousPosition();
@@ -196,7 +205,7 @@ public class LoopySolver extends Solver {
 				}
 				value.nextPosition();
 			} else if (dbValue.value == Value.DRAW) {
-				System.out.println("TEST CHILDREN TO SEE IF LOOP");
+				debugPrint("TEST CHILDREN TO SEE IF LOOP");
 				// if value is draw, test for all children have returned
 				boolean unassigned = true;
 				int numChildren = game.makeMove();
@@ -204,21 +213,28 @@ public class LoopySolver extends Solver {
 				Record childValue = recordPool.get();
 				int child;
 				for (child = 0; child < numChildren; child++) {
+					debugPrint("child " + child);
+					debugPrint(game.displayState());
 					game.longToRecord(readDb.getRecord(readDh, game.getHash()),
 							childValue);
+					debugPrint("Value is " + childValue);
 					if (childValue.value == Value.UNDECIDED)
 						throw new Error("No undecided in loopy solver");
 					childValue.previousPosition();
 					if (childValue.value == Value.DRAW
 							|| childValue.value == Value.IMPOSSIBLE) {
-						System.out.println("CHILD " + child + " is " + childValue + " so break");
+						debugPrint("CHILD " + child + " is " + childValue + " so break");
 						break;
 					} else if (childValue.value.compareTo(Value.DRAW) > 0) {
-						throw new Error(
-								"childValue should not be > DRAW if parent value is DRAW, child value is " + childValue.value);
+						debugPrint("Problem with child " + child);
+						bestValue.set(childValue);
+						unassigned = false;
+						break;
+						//throw new Error(
+								//"childValue should not be > DRAW if parent value is DRAW, child value is " + childValue);
 					} else if (unassigned
 							|| childValue.compareTo(bestValue) > 0) {
-						System.out.println("CHILD " + child + " is " + childValue + " so now assigned");
+						debugPrint("CHILD " + child + " is " + childValue + " so now assigned");
 						bestValue.set(childValue);
 						unassigned = false;
 					}
