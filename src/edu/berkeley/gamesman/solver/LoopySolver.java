@@ -227,8 +227,6 @@ public class LoopySolver extends Solver {
 						assert Util.debug(DebugFacility.SOLVER, "CHILD "
 								+ child + " is " + childValue + " so break");
 						break;
-					} else if (childValue.value.compareTo(Value.DRAW) > 0) {
-						throw new Error("Should be better than draw" + child);
 					} else if (unassigned
 							|| childValue.compareTo(bestValue) > 0) {
 						assert Util.debug(DebugFacility.SOLVER, "CHILD "
