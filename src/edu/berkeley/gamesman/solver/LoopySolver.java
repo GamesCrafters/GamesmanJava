@@ -226,7 +226,7 @@ public class LoopySolver extends Solver {
 						debugPrint("CHILD " + child + " is " + childValue + " so break");
 						break;
 					} else if (childValue.value.compareTo(Value.DRAW) > 0) {
-						debugPrint("Problem with child " + child);
+						debugPrint("Should be better than draw...is this an error? " + child);
 						bestValue.set(childValue);
 						unassigned = false;
 						break;
