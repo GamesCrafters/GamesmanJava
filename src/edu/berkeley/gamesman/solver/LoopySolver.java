@@ -106,7 +106,7 @@ public class LoopySolver extends Solver {
 		game.longToRecord(readDb.getRecord(readDh, hash), value);
 		// assert Util.debug(DebugFacility.SOLVER, value);
 		Record bestValue;
-		assert Util.debug(DebugFacility.SOLVER, game.displayState());
+		assert Util.debug(DebugFacility.SOLVER, "\n" + game.displayState());
 		assert Util.debug(DebugFacility.SOLVER, "" + value.value);
 		if (value.value == Value.IMPOSSIBLE) { // position not seen before
 			value.value = game.primitiveValue();
@@ -115,7 +115,7 @@ public class LoopySolver extends Solver {
 				value.remoteness = 0;
 				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
 				assert Util.debug(DebugFacility.SOLVER, "Just stored " + value);
-				assert Util.debug(DebugFacility.SOLVER, game.displayState());
+				assert Util.debug(DebugFacility.SOLVER, "\n" + game.displayState());
 				// save value to database
 				value.previousPosition();
 				int numParents = game.unmakeMove();
@@ -179,7 +179,7 @@ public class LoopySolver extends Solver {
 	private void fix(LoopyMutaGame game, Record value, DatabaseHandle readDh,
 			DatabaseHandle writeDh) {
 		assert Util.debug(DebugFacility.SOLVER, "GOING TO FIX NOW");
-		assert Util.debug(DebugFacility.SOLVER, game.displayState());
+		assert Util.debug(DebugFacility.SOLVER, "\n" + game.displayState());
 		Record dbValue = recordPool.get();
 		long hash = game.getHash();
 		game.longToRecord(readDb.getRecord(readDh, hash), dbValue);
@@ -214,7 +214,7 @@ public class LoopySolver extends Solver {
 				for (child = 0; child < numChildren; child++) {
 					assert Util.debug(DebugFacility.SOLVER, "child " + child);
 					assert Util
-							.debug(DebugFacility.SOLVER, game.displayState());
+							.debug(DebugFacility.SOLVER, "\n" + game.displayState());
 					game.longToRecord(readDb.getRecord(readDh, game.getHash()),
 							childValue);
 					assert Util.debug(DebugFacility.SOLVER, "Value is "
