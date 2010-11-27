@@ -61,21 +61,15 @@ public final class QuickCross extends Game<QuickCrossState> implements LoopyGame
 		validMoves(pos, children);
 		int moveCount = 0;
 		
-		for (int row = 0; row < height; row++) {
-			for (int col = 0; col < width; col++) {
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
 				//in this case 2 possible moves
-				if (pos.getPiece(row, col) == ' ') {
-					childNames[moveCount++] = String
-							.valueOf('H' + (char) ('A' + col))
-							+ Integer.toString(row + 1);
-					childNames[moveCount++] = String
-							.valueOf('V' + (char) ('A' + col))
-							+ Integer.toString(row + 1);
+				if (pos.getPiece(x, y) == ' ') {
+					childNames[moveCount++] = "H" + (char) (65 + x) + (y+1);
+					childNames[moveCount++] = "V" + (char) (65 + x) + (y+1);
 				}
-				if (pos.getPiece(row, col) == '-' || pos.getPiece(row, col) == '|'){
-					childNames[moveCount++] = String
-							.valueOf('F' + (char) ('A' + col))
-							+ Integer.toString(row + 1);
+				if (pos.getPiece(x, y) == '-' || pos.getPiece(x, y) == '|'){
+					childNames[moveCount++] = "F" + (char) (65 + x) + (y+1);
 				}
 			}
 		}
@@ -103,11 +97,11 @@ public final class QuickCross extends Game<QuickCrossState> implements LoopyGame
 	@Override
 	public String displayState(QuickCrossState pos) {
 		StringBuilder sb = new StringBuilder((width + 1) * 2 * (height + 1));
-		for (int row = height - 1; row >= 0; row--) {
-			sb.append(row + 1);
-			for (int col = 0; col < width; col++) {
+		for (int y = height - 1; y >= 0; y--) {
+			sb.append(y + 1);
+			for (int x = 0; x < width; x++) {
 				sb.append(" ");
-				char piece = pos.getPiece(row, col);
+				char piece = pos.getPiece(x, y);
 				if (piece == ' ')
 					sb.append(' ');
 				else if (piece == '-' || piece == '|')
@@ -118,9 +112,9 @@ public final class QuickCross extends Game<QuickCrossState> implements LoopyGame
 			sb.append("\n");
 		}
 		sb.append(" ");
-		for (int col = 0; col < width; col++) {
+		for (int x = 0; x < width; x++) {
 			sb.append(" ");
-			sb.append((char) ('A' + col));
+			sb.append((char) ('A' + x));
 		}
 		sb.append("\n");
 		return sb.toString();
@@ -209,10 +203,10 @@ public final class QuickCross extends Game<QuickCrossState> implements LoopyGame
 		//try both pieces
 		for (int i = 0; i<2; i++){
 			//checks for a vertical win
-			for (int row = 0; row < height; row++) {
+			for (int y = 0; y < height; y++) {
 				int piecesInRow = 0;
-				for (int col = 0; col < width; col++) {
-					if (pos.getPiece(row, col) == currPiece) {
+				for (int x = 0; x < width; x++) {
+					if (pos.getPiece(x, y) == currPiece) {
 						piecesInRow++;
 						if (piecesInRow == piecesToWin)
 							return WinorLose;
@@ -223,10 +217,10 @@ public final class QuickCross extends Game<QuickCrossState> implements LoopyGame
 			}
 			
 			//checks for a horizontal win
-			for (int col = 0; col < width; col++) {
+			for (int x = 0; x < width; x++) {
 				int piecesInCol = 0;
-				for (int row = 0; row < height; row++) {
-					if (pos.getPiece(row, col) == currPiece) {
+				for (int y = 0; y < height; y++) {
+					if (pos.getPiece(x, y) == currPiece) {
 						piecesInCol++;
 						if (piecesInCol == piecesToWin)
 							return WinorLose;
@@ -234,28 +228,32 @@ public final class QuickCross extends Game<QuickCrossState> implements LoopyGame
 						piecesInCol = 0;
 				}
 			}
-			//checks for diagonal win /
-			for (int row = 0; row <= height - piecesToWin; row++) {
-				for (int col = 0; col <= width - piecesToWin; col++) {
-					int pieces;
-					for (pieces = 0; pieces < piecesToWin; pieces++) {
-						if (pos.getPiece(row + pieces, col + pieces) != currPiece)
-							break;
+			//first make sure diagonal possible
+			if (height >= piecesToWin && width >= piecesToWin){
+				//checks for diagonal win /
+				for (int y = 0; y <= height - piecesToWin; y++) {
+					for (int x = 0; x <= width - piecesToWin; x++) {
+						int pieces;
+						for (pieces = 0; pieces < piecesToWin; pieces++) {
+							if (pos.getPiece(x + pieces, y + pieces) != currPiece)
+								break;
+						}
+						if (pieces == piecesToWin)
+							return WinorLose;
 					}
-					if (pieces == piecesToWin)
-						return WinorLose;
 				}
-			}
-			//checks for diagonal win \
-			for (int row = 0; row <= height - piecesToWin; row++) {
-				for (int col = piecesToWin - 1; col < width; col++) {
-					int pieces;
-					for (pieces = 0; pieces < piecesToWin; pieces++) {
-						if (pos.getPiece(row + pieces, col - pieces) != currPiece)
-							break;
+				//checks for diagonal win \
+				for (int y = 0; y <= height - piecesToWin; y++) {
+					for (int x = width - 1; x > piecesToWin - 1; x--) {
+					//for (int x = piecesToWin - 1; x < width; x++) {
+						int pieces;
+						for (pieces = 0; pieces < piecesToWin; pieces++) {
+							if (pos.getPiece(x - pieces, y + pieces) != currPiece)
+								break;
+						}
+						if (pieces == piecesToWin)
+							return WinorLose;
 					}
-					if (pieces == piecesToWin)
-						return WinorLose;
 				}
 			}
 			currPiece = '|';
@@ -390,8 +388,8 @@ class QuickCrossState implements State {
 		evenNumMoves = qcs.evenNumMoves;
 	}
 
-	public void setPiece(int row, int col, char piece) {
-		setPiece(row * width + col, piece);
+	public void setPiece(int x, int y, char piece) {
+		setPiece(y * width + x, piece);
 	}
 
 	public void setPiece(int index, char piece) {
@@ -408,8 +406,8 @@ class QuickCrossState implements State {
 	}
 	
 
-	public char getPiece(int row, int col) {
-		return getPiece(row * width + col);
+	public char getPiece(int x, int y) {
+		return getPiece(y * width + x);
 	}
 
 	public char getPiece(int index) {
