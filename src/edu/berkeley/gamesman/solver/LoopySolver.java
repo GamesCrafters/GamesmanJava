@@ -102,9 +102,13 @@ public class LoopySolver extends Solver {
 			DatabaseHandle readDh, DatabaseHandle writeDh) {
 		long hash = game.getHash();
 		game.longToRecord(readDb.getRecord(readDh, hash), value);
+		//System.out.println(value);
 		Record bestValue;
+		System.out.println(game.displayState());
+		System.out.println(value.value);
 		if (value.value == Value.IMPOSSIBLE) { // position not seen before
 			value.value = game.primitiveValue();
+			System.out.println(value.value);
 			if (value.value != Value.UNDECIDED) { // if position is primitive
 				value.remoteness = 0;
 				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
@@ -127,9 +131,10 @@ public class LoopySolver extends Solver {
 				boolean assigned = false;
 				int numChildren = game.makeMove();
 				for (int child = 0; child < numChildren; child++) {
+					System.out.println("Going to solve child " + child);
 					solve(game, value, depth + 1, readDh, writeDh);
 					value.previousPosition();
-					if (!assigned || value.compareTo(bestValue) > 0) {
+					if (!assigned || (value.compareTo(bestValue) > 0)) {
 						if (value.value.compareTo(Value.DRAW) > 0)
 							writeDb.putRecord(writeDh, hash,
 									game.recordToLong(value));
@@ -171,8 +176,13 @@ public class LoopySolver extends Solver {
 		Record dbValue = recordPool.get();
 		long hash = game.getHash();
 		game.longToRecord(readDb.getRecord(readDh, hash), dbValue);
-		if (dbValue.value != Value.IMPOSSIBLE) {
+		if ((dbValue.value != Value.IMPOSSIBLE) && game.primitiveValue() == Value.UNDECIDED) {
+			System.out.println("GOING TO FIX NOW");
+			System.out.println(game.displayState());
+			System.out.println("Old value is " + dbValue);
+			System.out.println("New value is " + value);
 			if (value.compareTo(dbValue) > 0) {
+				System.out.println("USE NEW VALUE");
 				writeDb.putRecord(writeDh, hash, game.recordToLong(value));
 				// save value
 				value.previousPosition();
@@ -186,6 +196,7 @@ public class LoopySolver extends Solver {
 				}
 				value.nextPosition();
 			} else if (dbValue.value == Value.DRAW) {
+				System.out.println("TEST CHILDREN TO SEE IF LOOP");
 				// if value is draw, test for all children have returned
 				boolean unassigned = true;
 				int numChildren = game.makeMove();
@@ -200,12 +211,14 @@ public class LoopySolver extends Solver {
 					childValue.previousPosition();
 					if (childValue.value == Value.DRAW
 							|| childValue.value == Value.IMPOSSIBLE) {
+						System.out.println("CHILD " + child + " is " + childValue + " so break");
 						break;
 					} else if (childValue.value.compareTo(Value.DRAW) > 0) {
 						throw new Error(
-								"childValue should not be > DRAW if parent value is DRAW");
+								"childValue should not be > DRAW if parent value is DRAW, child value is " + childValue.value);
 					} else if (unassigned
 							|| childValue.compareTo(bestValue) > 0) {
+						System.out.println("CHILD " + child + " is " + childValue + " so now assigned");
 						bestValue.set(childValue);
 						unassigned = false;
 					}
