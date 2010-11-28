@@ -149,10 +149,13 @@ public class AlignmentLoopy extends Alignment implements LoopyGame<AlignmentStat
 				for(int col = 0; col < gameWidth; col++) {
 					if(pos.get(row,col) == ' ') {
 						pos.checkGun(row,col);
-						boolean[] guns = pos.getGuns();
+						int[] gunN = pos.getGun(row, col, 'n', lastTurn);
+						int[] gunS = pos.getGun(row, col, 's', lastTurn);
+						int[] gunE = pos.getGun(row, col, 'e', lastTurn);
+						int[] gunW = pos.getGun(row, col, 'w', lastTurn);
 						
 						//if the empty cell has at least one gun pointing to it, then consider it
-						if(guns[0] || guns[1] || guns[2] || guns[3]) {
+						//if(guns[0] || guns[1] || guns[2] || guns[3]) {
 							
 							//Scenario 1: guns were formed from slide move
 							/* for ( EVERY_GUN ) {
