@@ -2,6 +2,8 @@ package edu.berkeley.gamesman.game;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Value;
@@ -9,8 +11,8 @@ import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.qll.Factory;
-import edu.berkeley.gamesman.util.qll.RLLFactory;
-import edu.berkeley.gamesman.util.qll.RecycleLinkedList;
+import edu.berkeley.gamesman.util.qll.Pool;
+import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 
 /**
  * A wrapper for using the top-down solver with any game
@@ -22,10 +24,64 @@ import edu.berkeley.gamesman.util.qll.RecycleLinkedList;
  */
 public final class TopDownGame<S extends State> extends TopDownMutaGame {
 	private final Game<S> myGame;
-	private final RecycleLinkedList<RecycleLinkedList<S>> moveLists;
-	private final RecycleLinkedList<S> stateList;
-	private final S[] possibleMoves;
+	private final QuickLinkedList<SIterator> moveLists = new QuickLinkedList<SIterator>();
+	private final Pool<SIterator> moveArrayPool = new Pool<SIterator>(
+			new Factory<SIterator>() {
+
+				public SIterator newObject() {
+					return new SIterator();
+				}
+
+				public void reset(SIterator t) {
+					t.currentPlace = t.numPlaces = 0;
+				}
+
+			});
+	private final QuickLinkedList<S> stateList = new QuickLinkedList<S>();
+	private final Pool<S> statePool = new Pool<S>(new Factory<S>() {
+
+		public S newObject() {
+			return myGame.newState();
+		}
+
+		public void reset(S t) {
+		}
+
+	});
 	private final S[] startingPositions;
+
+	private class SIterator implements Iterator<S> {
+
+		private final S[] stateArray;
+		private int currentPlace = 0;
+		private int numPlaces = 0;
+
+		public SIterator() {
+			this.stateArray = myGame.newStateArray(myGame.maxChildren());
+		}
+
+		@Override
+		public boolean hasNext() {
+			return currentPlace < numPlaces;
+		}
+
+		@Override
+		public S next() throws NoSuchElementException {
+			if (hasNext())
+				return stateArray[currentPlace++];
+			throw new NoSuchElementException();
+		}
+
+		@Override
+		public void remove() throws UnsupportedOperationException {
+			throw new UnsupportedOperationException();
+		}
+
+		private void setToValidMoves() {
+			numPlaces = myGame.validMoves(stateList.getFirst(), stateArray);
+			currentPlace = 0;
+		}
+	}
 
 	/**
 	 * @param g
@@ -34,39 +90,7 @@ public final class TopDownGame<S extends State> extends TopDownMutaGame {
 	public TopDownGame(Configuration conf, Game<S> g) {
 		super(conf);
 		myGame = g;
-		moveLists = new RecycleLinkedList<RecycleLinkedList<S>>(
-				new Factory<RecycleLinkedList<S>>() {
-					RLLFactory<S> gen = new RLLFactory<S>(new Factory<S>() {
-
-						public S newObject() {
-							return myGame.newState();
-						}
-
-						public void reset(S t) {
-						}
-					});
-
-					public RecycleLinkedList<S> newObject() {
-						return gen.getList();
-					}
-
-					public void reset(RecycleLinkedList<S> t) {
-						t.clear();
-					}
-
-				});
-		stateList = new RecycleLinkedList<S>(new Factory<S>() {
-
-			public S newObject() {
-				return myGame.newState();
-			}
-
-			public void reset(S t) {
-			}
-
-		});
-		stateList.add();
-		possibleMoves = myGame.newStateArray(myGame.maxChildren());
+		stateList.push(statePool.get());
 		Collection<S> startingPositions = myGame.startingPositions();
 		this.startingPositions = startingPositions.toArray(myGame
 				.newStateArray(startingPositions.size()));
@@ -74,44 +98,43 @@ public final class TopDownGame<S extends State> extends TopDownMutaGame {
 
 	@Override
 	public boolean changeMove() {
-		if (moveLists.getLast().isEmpty())
+		if (!moveLists.getFirst().hasNext())
 			return false;
-		S m = moveLists.getLast().removeFirst();
-		stateList.getLast().set(m);
+		S m = moveLists.getFirst().next();
+		stateList.getFirst().set(m);
 		return true;
 	}
 
 	@Override
 	public String displayState() {
-		return myGame.displayState(stateList.getLast());
+		return myGame.displayState(stateList.getFirst());
 	}
 
 	@Override
 	public long getHash() {
-		return myGame.stateToHash(stateList.getLast());
+		return myGame.stateToHash(stateList.getFirst());
 	}
 
 	@Override
 	public int makeMove() {
-		RecycleLinkedList<S> moves = moveLists.addLast();
-		int numMoves = myGame.validMoves(stateList.getLast(), possibleMoves);
-		if (numMoves == 0) {
-			moveLists.removeLast();
-			return 0;
+		SIterator moves = moveArrayPool.get();
+		moves.setToValidMoves();
+		moveLists.push(moves);
+		if (moves.hasNext()) {
+			S curState = moves.next();
+			S newState = statePool.get();
+			newState.set(curState);
+			stateList.push(newState);
+			return moves.numPlaces;
 		} else {
-			for (int i = 0; i < numMoves; i++) {
-				S move = moves.add();
-				move.set(possibleMoves[i]);
-			}
-			S curState = stateList.addLast();
-			curState.set(moves.removeFirst());
-			return numMoves;
+			moveArrayPool.release(moveLists.pop());
+			return 0;
 		}
 	}
 
 	@Override
 	public Value primitiveValue() {
-		return myGame.primitiveValue(stateList.getLast());
+		return myGame.primitiveValue(stateList.getFirst());
 	}
 
 	@Override
@@ -121,29 +144,38 @@ public final class TopDownGame<S extends State> extends TopDownMutaGame {
 
 	@Override
 	public void setToHash(long hash) {
-		stateList.clear();
-		moveLists.clear();
-		S state = stateList.add();
+		clearLists();
+		S state = statePool.get();
 		myGame.hashToState(hash, state);
+		stateList.push(state);
 	}
 
 	private void setToState(S pos) {
-		stateList.clear();
-		moveLists.clear();
-		S state = stateList.add();
+		clearLists();
+		S state = statePool.get();
 		state.set(pos);
+		stateList.push(state);
+	}
+
+	private void clearLists() {
+		while (!stateList.isEmpty()) {
+			statePool.release(stateList.pop());
+		}
+		while (!moveLists.isEmpty()) {
+			moveArrayPool.release(moveLists.pop());
+		}
 	}
 
 	@Override
 	public void undoMove() {
-		moveLists.removeLast();
-		stateList.removeLast();
+		moveArrayPool.release(moveLists.pop());
+		statePool.release(stateList.pop());
 	}
 
 	@Override
 	public Collection<String> moveNames() {
 		Collection<Pair<String, S>> validMoves = myGame.validMoves(stateList
-				.getLast());
+				.getFirst());
 		ArrayList<String> moveNames = new ArrayList<String>(validMoves.size());
 		for (Pair<String, S> move : validMoves) {
 			moveNames.add(move.car);
@@ -163,12 +195,12 @@ public final class TopDownGame<S extends State> extends TopDownMutaGame {
 
 	@Override
 	public void longToRecord(long record, Record toStore) {
-		myGame.longToRecord(stateList.getLast(), record, toStore);
+		myGame.longToRecord(stateList.getFirst(), record, toStore);
 	}
 
 	@Override
 	public long recordToLong(Record fromRecord) {
-		return myGame.recordToLong(stateList.getLast(), fromRecord);
+		return myGame.recordToLong(stateList.getFirst(), fromRecord);
 	}
 
 	@Override

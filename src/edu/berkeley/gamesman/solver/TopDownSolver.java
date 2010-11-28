@@ -9,7 +9,7 @@ import edu.berkeley.gamesman.game.TopDownGame;
 import edu.berkeley.gamesman.game.TopDownMutaGame;
 import edu.berkeley.gamesman.util.*;
 import edu.berkeley.gamesman.util.qll.Factory;
-import edu.berkeley.gamesman.util.qll.RecycleLinkedList;
+import edu.berkeley.gamesman.util.qll.Pool;
 
 /**
  * A solver for top-down mutable games
@@ -18,8 +18,7 @@ import edu.berkeley.gamesman.util.qll.RecycleLinkedList;
  */
 public class TopDownSolver extends Solver {
 	protected boolean containsRemoteness;
-
-	protected RecycleLinkedList<Record> bestRecords;
+	protected final Pool<Record> recordPool;
 
 	/**
 	 * The default constructor
@@ -30,7 +29,7 @@ public class TopDownSolver extends Solver {
 	public TopDownSolver(final Configuration conf) {
 		super(conf);
 		final Game<?> game = conf.getGame();
-		bestRecords = new RecycleLinkedList<Record>(new Factory<Record>() {
+		recordPool = new Pool<Record>(new Factory<Record>() {
 			public Record newObject() {
 				return game.newRecord();
 			}
@@ -104,7 +103,7 @@ public class TopDownSolver extends Solver {
 		Value pv = game.primitiveValue();
 		switch (pv) {
 		case UNDECIDED:
-			Record bestRecord = bestRecords.push();
+			Record bestRecord = recordPool.get();
 			bestRecord.value = Value.UNDECIDED;
 			int numChildren = game.makeMove();
 			for (int child = 0; child < numChildren; child++) {
@@ -118,7 +117,7 @@ public class TopDownSolver extends Solver {
 			if (numChildren > 0)
 				game.undoMove();
 			value.set(bestRecord);
-			bestRecords.pop();
+			recordPool.release(bestRecord);
 			break;
 		case IMPOSSIBLE:
 			throw new Error(
