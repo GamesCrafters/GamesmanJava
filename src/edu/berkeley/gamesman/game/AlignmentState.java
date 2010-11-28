@@ -275,7 +275,10 @@ public final class AlignmentState implements State {
 		//char NE = ' ';
 		//char SW = ' ';
 		//char SE = ' ';
-
+		/*
+		 * for each position at (row, col), find guns pointing to that position from given direction
+		 * We call this method four times in each direction under possibleParents.
+		 */
 		switch(direction) {
 			case 'n': 
 				for(int i = col; i < board.length; i++){
@@ -288,11 +291,11 @@ public final class AlignmentState implements State {
 							coord[3] = i + 1;
 							coord[4] = row + 1;
 							coord[5] = i + 1;
+							break;
 						}
-					break;
 					}
-				break;
 				}
+				break;
 			case 's':
 				for(int i = col; i > 0; i--){
 					//if the piece at this position matches opponent's piece, then check if gun formed
@@ -304,11 +307,11 @@ public final class AlignmentState implements State {
 							coord[3] = i - 1;
 							coord[4] = row + 1;
 							coord[5] = i - 1;
+							break;
 						}
-					break;
 					}
-				break;
 				}	
+				break;
 			case 'e':
 				for(int i = row; i < board.length ; i++){
 					//if the piece at this position matches opponent's piece, then check if gun formed
@@ -320,11 +323,11 @@ public final class AlignmentState implements State {
 							coord[3] = col - 1;
 							coord[4] = i + 1;
 							coord[5] = col - 1;
+							break;
 						}
-					break;
 					}
-				break;
 				}	
+				break;
 			case 'w':
 				for(int i = row; i > 0; i--){
 					//if the piece at this position matches opponent's piece, then check if gun formed
@@ -336,11 +339,11 @@ public final class AlignmentState implements State {
 							coord[3] = col - 1;
 							coord[4] = i + 1;
 							coord[5] = col - 1;
+							break;
 						}
-					break;
 					}
+				}
 				break;
-				}	
 		}
 		
 		return coord;
