@@ -385,7 +385,7 @@ public final class YGame extends ConnectGame
                         { /* 14 */
                             node.triangle = triangleIn;
                             node.index = Util .nonNegativeModulo(indexIn - 2, this.nodesInThisTriangle[triangleIn]);
-                            this.nodesOnInnerTriangle.add(new Node(node));
+                            this.nodesOnSameTriangle.add(new Node(node));
                             if (segments > 3)
                             {
                                 node.triangle = triangleIn - 1;
@@ -397,11 +397,12 @@ public final class YGame extends ConnectGame
                         { /* 16 */
                             node.triangle = triangleIn;
                             node.index = Util .nonNegativeModulo(indexIn + 2, this.nodesInThisTriangle[triangleIn]);
-                            this.nodesOnInnerTriangle.add(new Node(node));
+                            this.nodesOnSameTriangle.add(new Node(node));
                             if (segments > 3)
                             {
                                 node.triangle = triangleIn - 1;
-                                /* 7 */ node.index = Util .nonNegativeModulo( indexIn - 2 - (3 * indexIn / segments), this.nodesInThisTriangle[triangleIn - 1]);
+                                /* 7 */node.index = Util.nonNegativeModulo(indexIn - 3 - (3 * indexIn / segments),
+                                        this.nodesInThisTriangle[triangleIn - 1]);
                                 this.nodesOnInnerTriangle.add(new Node(node));
                             }
                         }
@@ -420,18 +421,18 @@ public final class YGame extends ConnectGame
                             {
                                 if ((this.isCornerIndex(triangleIn, indexIn + 1) == false) /* Not a corner or before or after a corner. */
                                         && (this.isCornerIndex(triangleIn, indexIn - 1) == false))
-                                { /* 20 */
+                                { /* 21 */
                                     node.triangle = triangleIn - 1;
-                                    if (this.nodesInThisTriangle[triangleIn - 1] > 0)
-                                    {
-                                        node.index = Util.nonNegativeModulo(indexIn - 1 - (3 * indexIn / segments),
-                                                this.nodesInThisTriangle[triangleIn - 1]);
-                                    }
+                                    // if (this.nodesInThisTriangle[triangleIn - 1] > 0)
+                                    // {
+                                    node.index = Util.nonNegativeModulo(indexIn - 0 - (3 * indexIn / segments),
+                                            this.nodesInThisTriangle[triangleIn - 1]);
+                                    // }
                                     this.nodesOnInnerTriangle.add(new Node(node));
 
-                                    /* 21 */
+                                    /* 20 */
                                     node.triangle = triangleIn - 1;
-                                    node.index = Util .nonNegativeModulo(indexIn - 2 - (3 * indexIn / segments), this.nodesInThisTriangle[triangleIn - 1]);
+                                    node.index = Util .nonNegativeModulo(indexIn - 1 - (3 * indexIn / segments), this.nodesInThisTriangle[triangleIn - 1]);
                                     this.nodesOnInnerTriangle.add(new Node(node));
                                 }
                             }
@@ -524,24 +525,49 @@ public final class YGame extends ConnectGame
      */
     public Vector<Node> clockwiser(final int triangleIn, final int indexIn) 
     {
-        assert ((this.nodesOnSameTriangle.size() == 2) || (this.nodesOnSameTriangle.size() == 0));
+        assert ((this.nodesOnSameTriangle.size() == 3) || (this.nodesOnSameTriangle.size() == 2) || (this.nodesOnSameTriangle
+                .size() == 0));
         assert ((this.nodesOnInnerTriangle.size() >= 0) && (this.nodesOnInnerTriangle.size() <= 3));
         assert ((this.nodesOnOuterTriangle.size() >= 0) && (this.nodesOnOuterTriangle.size() <= 3));
 
+        boolean isAfterCorner = this.isCornerIndex(triangleIn, Util.nonNegativeModulo(indexIn - 1,
+                this.nodesInThisTriangle[triangleIn]));
+
+        boolean isBeforeCorner = this.isCornerIndex(triangleIn, Util.nonNegativeModulo(indexIn + 1,
+                this.nodesInThisTriangle[triangleIn]));
+
+        int numberOfSameTriangleNeighbors = this.nodesOnSameTriangle.size();
+
         this.neighbors.clear();
 
-        // Pick the left node ((index+1)%segments) on the same triangle first. 
+        // Pick the left node ((index+1)%segments) on the same triangle first. It's in a for loop, because there can be 3 same
+        // triangle neighbors (4x8, tr:1, ind:3) or 4 (2x4 tr:0, ind:1)
 
-        if (this.nodesOnSameTriangle.get(0).index == Util.nonNegativeModulo(indexIn + 1,
-                this.nodesInThisTriangle[triangleIn]))
+        for (int i = 0; i < numberOfSameTriangleNeighbors; i++)
         {
-            this.neighbors.add(this.nodesOnSameTriangle.get(0));
-            this.nodesOnSameTriangle.remove(0);
+            if (this.nodesOnSameTriangle.get(i).index == Util.nonNegativeModulo(indexIn + 1, this.nodesInThisTriangle[triangleIn]))
+            {
+                this.neighbors.add(this.nodesOnSameTriangle.get(i));
+                this.nodesOnSameTriangle.remove(i);
+                break;
+            }
         }
-        else 
+
+        // Handle a 2nd (of 3 or 4) "same triangle" neighbor (that are before corners .. after corners have 1 on the same and 2
+        // after the inner(s))
+
+        if ((numberOfSameTriangleNeighbors > 2) && (isBeforeCorner))
         {
-            this.neighbors.add(this.nodesOnSameTriangle.get(1));
-            this.nodesOnSameTriangle.remove(1);
+            for (int i = 0; i < numberOfSameTriangleNeighbors; i++)
+            {
+                if (this.nodesOnSameTriangle.get(i).index == Util.nonNegativeModulo(indexIn + 2,
+                        this.nodesInThisTriangle[triangleIn]))
+                {
+                    this.neighbors.add(this.nodesOnSameTriangle.get(i));
+                    this.nodesOnSameTriangle.remove(i);
+                    break;
+                }
+            }
         }
 
         // Inners can be done by hand too, as there are only 0, 1, or 2 possible neighbors. Inners go in descending order.
@@ -566,54 +592,93 @@ public final class YGame extends ConnectGame
                 }
                 else
                 {
-                    // Ok, this ginormous mess handles:
-                    // The 2x4 triangle having 2 "inner nodes" that are both on the same triangle.
-                    // The 3x4 triangle having 1 "inner node" on the same triangle and the other node at t:0,i:0.
-                    // `-> which is different before and after the corners.
-                    // The default case where inner indexes decrease for clockwise order.
-                    // The reason for the temporary variables is because the logic of a combined if statement is uuuuuuuuuugly.
-
-                    boolean hasOnlyOneSameTriangleInnerNode = ((this.nodesOnInnerTriangle.get(0).triangle == triangleIn) && (this.nodesOnInnerTriangle.get(1).triangle != triangleIn))||
-                    ((this.nodesOnInnerTriangle.get(0).triangle != triangleIn) && (this.nodesOnInnerTriangle.get(1).triangle == triangleIn));
-
-                    boolean hasTwoSameTriangleInnerNodes = ((this.nodesOnInnerTriangle.get(0).triangle == triangleIn) && (this.nodesOnInnerTriangle
-                            .get(1).triangle == triangleIn));
-
-                    int whichNodeIsClockwiseOnSameTriangleInnerNode = hasTwoSameTriangleInnerNodes ? (this.nodesOnInnerTriangle
-                            .get(0).index == Util.nonNegativeModulo(indexIn + 2, this.nodesInThisTriangle[triangleIn])) ? 0 : 1 : -1;
-
-                    this.isCornerIndex(triangleIn, Util.nonNegativeModulo(indexIn+1, this.nodesInThisTriangle[triangleIn]));
-
-                    boolean isAfterCorner = this.isCornerIndex(triangleIn, Util.nonNegativeModulo(indexIn-1, this.nodesInThisTriangle[triangleIn]));
-
-                    boolean isBeforeCorner = this.isCornerIndex(triangleIn, Util.nonNegativeModulo(indexIn + 1,
-                            this.nodesInThisTriangle[triangleIn]));
-
-                    int zeroZeroNodeIndex = ((this.nodesOnInnerTriangle.get(0).triangle == 0) && (this.nodesOnInnerTriangle.get(0).index==0)) ? 0 :
-                        ((this.nodesOnInnerTriangle.get(1).triangle == 0) && (this.nodesOnInnerTriangle.get(1).index==0)) ? 1 : -1;
-
-                    if ((((hasTwoSameTriangleInnerNodes == true) && (whichNodeIsClockwiseOnSameTriangleInnerNode == 0))
-                            || ((isAfterCorner == true) && (zeroZeroNodeIndex == 0))
-                            || ((isBeforeCorner == true) && (zeroZeroNodeIndex == 1)) || ((hasOnlyOneSameTriangleInnerNode == false)
-                                    && (hasTwoSameTriangleInnerNodes == false) && (this.nodesOnInnerTriangle.get(0).index > this.nodesOnInnerTriangle
-                                            .get(1).index))))
+                    if (false)
                     {
-                        this.neighbors.add(this.nodesOnInnerTriangle.get(0));
-                        this.nodesOnInnerTriangle.remove(0);
+                        // Ok, this ginormous mess handles:
+                        // The 2x4 triangle having 2 "inner nodes" that are both on the same triangle.
+                        // The 3x4 triangle having 1 "inner node" on the same triangle and the other node at t:0,i:0.
+                        // `-> which is different before and after the corners.
+                        // The default case where inner indexes decrease for clockwise order.
+                        // The reason for the temporary variables is because the logic of a combined if statement is uuuuuuuuuugly.
+
+                        // ALWAYS FALSE
+                        // boolean hasOnlyOneSameTriangleInnerNode = ((this.nodesOnInnerTriangle.get(0).triangle == triangleIn) &&
+                        // (this.nodesOnInnerTriangle.get(1).triangle != triangleIn))||
+                        // ((this.nodesOnInnerTriangle.get(0).triangle != triangleIn) && (this.nodesOnInnerTriangle.get(1).triangle ==
+                        // triangleIn));
+
+                        // ALWAYS FALSE
+                        // boolean hasTwoSameTriangleInnerNodes = ((this.nodesOnInnerTriangle.get(0).triangle == triangleIn) &&
+                        // (this.nodesOnInnerTriangle
+                        // .get(1).triangle == triangleIn));
+
+                        // ALWAYS -1
+                        // int whichNodeIsClockwiseOnSameTriangleInnerNode = hasTwoSameTriangleInnerNodes ? (this.nodesOnInnerTriangle
+                        // int whichNodeIsClockwiseOnSameTriangleInnerNode = false ? (this.nodesOnInnerTriangle.get(0).index == Util
+                        // .nonNegativeModulo(indexIn + 2, this.nodesInThisTriangle[triangleIn])) ? 0 : 1 : -1;
+
+                        int zeroZeroNodeIndex = ((this.nodesOnInnerTriangle.get(0).triangle == 0) && (this.nodesOnInnerTriangle.get(0).index==0)) ? 0 :
+                            ((this.nodesOnInnerTriangle.get(1).triangle == 0) && (this.nodesOnInnerTriangle.get(1).index==0)) ? 1 : -1;
+
+                        System.out.println(zeroZeroNodeIndex);
+
+                        // if ((((hasTwoSameTriangleInnerNodes == true) && (whichNodeIsClockwiseOnSameTriangleInnerNode == 0))
+                        // if ((((false == true) && (whichNodeIsClockwiseOnSameTriangleInnerNode == 0))
+                        if ((((false == true) && (-1 == 0))
+                                || ((isAfterCorner == true) && (zeroZeroNodeIndex == 0))
+                                // || ((isBeforeCorner == true) && (zeroZeroNodeIndex == 1)) || ((hasOnlyOneSameTriangleInnerNode ==
+                                // false)
+                                || ((isBeforeCorner == true) && (zeroZeroNodeIndex == 1)) || ((false == false)
+                                        // && (hasTwoSameTriangleInnerNodes == false) && (this.nodesOnInnerTriangle.get(0).index >
+                                        // this.nodesOnInnerTriangle
+                                        && (false == false) && (this.nodesOnInnerTriangle.get(0).index > this.nodesOnInnerTriangle
+                                                .get(1).index))))
+                        {
+                        }
                     }
-                    else 
+                    else
                     {
-                        this.neighbors.add(this.nodesOnInnerTriangle.get(1));
-                        this.nodesOnInnerTriangle.remove(1);
+                        int differenceInInnerIndex = Math.abs(this.nodesOnInnerTriangle.get(0).index - this.nodesOnInnerTriangle.get(1).index);
+
+                        if (((differenceInInnerIndex == 1) && (this.nodesOnInnerTriangle.get(0).index > this.nodesOnInnerTriangle
+                                .get(1).index))
+                                || ((differenceInInnerIndex == 2) && (this.nodesOnInnerTriangle.get(0).index == 0)))
+                        {
+                            this.neighbors.add(this.nodesOnInnerTriangle.get(0));
+                            this.nodesOnInnerTriangle.remove(0);
+                        }
+                        else 
+                        {
+                            this.neighbors.add(this.nodesOnInnerTriangle.get(1));
+                            this.nodesOnInnerTriangle.remove(1);
+                        }
                     }
                 }
             }
             this.neighbors.add(this.nodesOnInnerTriangle.get(0));
         }
 
-        // Next node is the one on the same triangle, right-hand side.
+        // Handle a 3rd (of 3 or 4) "same triangle" neighbor (that are before corners .. after corners have 1 on the same and 2
+        // after the inner(s))
+
+        if ((numberOfSameTriangleNeighbors > 2) && (isAfterCorner))
+        {
+            for (int i = 0; i < numberOfSameTriangleNeighbors; i++)
+            {
+                if (this.nodesOnSameTriangle.get(i).index == Util.nonNegativeModulo(indexIn - 2,
+                        this.nodesInThisTriangle[triangleIn]))
+                {
+                    this.neighbors.add(this.nodesOnSameTriangle.get(i));
+                    this.nodesOnSameTriangle.remove(i);
+                    break;
+                }
+            }
+        }
+
+        // Finally add the last "remaining same triangle" neighbor.
 
         this.neighbors.add(this.nodesOnSameTriangle.get(0));
+        this.nodesOnSameTriangle.remove(0);
 
         // Outer neighbors are trickier, since there can be 0, 2, 3, 4, or 6 possible neighbors. 6 is handled specially above,
         // otherwise, sort by ascending order (which will handle the 4 with a skip in the middle case). In corners, we add 2 to the
