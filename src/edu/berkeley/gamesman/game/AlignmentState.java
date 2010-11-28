@@ -5,6 +5,7 @@ import edu.berkeley.gamesman.game.util.Bullet;
 
 public final class AlignmentState implements State {
 	private final boolean[] guns = new boolean[] { false, false, false, false };
+	private final boolean[] guns2 = new boolean[] { false, false, false, false };
 	// private ArrayList<Bullet> myBullets = new ArrayList<Bullet>();
 	public final char[][] board; // chars are 'X', 'O' and ' ' (X plays first)
 	// should be char[] to accomodate
@@ -285,11 +286,12 @@ public final class AlignmentState implements State {
 					//if the piece at this position matches opponent's piece, then check if gun formed
 					if (board[row][i] == opponent){
 						if ((board[row-1][i+1] == opponent) && (board[row+1][i+1] == opponent)){
-							coord[0] = row;
-							coord[1] = i;
-							coord[2] = row - 1;
+							guns2[0] = true; 
+							coord[0] = row;  
+							coord[1] = i;    
+							coord[2] = row - 1; //store NW piece
 							coord[3] = i + 1;
-							coord[4] = row + 1;
+							coord[4] = row + 1; //store NE piece
 							coord[5] = i + 1;
 							break;
 						}
@@ -301,11 +303,12 @@ public final class AlignmentState implements State {
 					//if the piece at this position matches opponent's piece, then check if gun formed
 					if (board[row][i] == opponent){
 						if ((board[row-1][i-1] == opponent) && (board[row+1][i-1] == opponent)){
-							coord[0] = row;
+							guns2[1] = true;
+							coord[0] = row; //store x,y coord of base of gun
 							coord[1] = i;
-							coord[2] = row - 1;
+							coord[2] = row - 1; //store SW piece
 							coord[3] = i - 1;
-							coord[4] = row + 1;
+							coord[4] = row + 1; //store SE piece
 							coord[5] = i - 1;
 							break;
 						}
@@ -317,12 +320,13 @@ public final class AlignmentState implements State {
 					//if the piece at this position matches opponent's piece, then check if gun formed
 					if (board[i][col] == opponent){
 						if ((board[i][col-1] == opponent) && (board[i][col+1] == opponent)){
-							coord[0] = i;
+							guns2[2] = true;
+							coord[0] = i; //store x,y coord of base of gun
 							coord[1] = col;
-							coord[2] = i - 1;
+							coord[2] = i - 1; //store SE
 							coord[3] = col - 1;
-							coord[4] = i + 1;
-							coord[5] = col - 1;
+							coord[4] = i - 1; //store NE
+							coord[5] = col + 1;
 							break;
 						}
 					}
@@ -333,12 +337,13 @@ public final class AlignmentState implements State {
 					//if the piece at this position matches opponent's piece, then check if gun formed
 					if (board[i][col] == opponent){
 						if ((board[i][col-1] == opponent) && (board[i][col+1] == opponent)){
-							coord[0] = i;
+							guns2[3] = true;
+							coord[0] = i; //store x,y coord of base
 							coord[1] = col;
-							coord[2] = i - 1;
+							coord[2] = i + 1; //store SW piece
 							coord[3] = col - 1;
-							coord[4] = i + 1;
-							coord[5] = col - 1;
+							coord[4] = i + 1; //store NW piece
+							coord[5] = col + 1;
 							break;
 						}
 					}
@@ -349,6 +354,13 @@ public final class AlignmentState implements State {
 		return coord;
 		
 	}
+	
+	//same as checkGun, but for specific player
+	public boolean[] checkEnemyGun(int row, int col, char opponent){
+		return guns2;
+	}
+	
+	
 	// =======================================================================================
 
 }
