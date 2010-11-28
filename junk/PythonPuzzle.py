@@ -92,7 +92,7 @@ class PythonPuzzle(Game):
 				num += 1
 			return num
 		else:
-			return [Pair(str(x), state.do_move(x)) for x in state.generate_moves()]
+			return [Pair(str(x), PythonState(state.do_move(x))) for x in state.generate_moves()]
 
 	def primitiveScore(self,state):
 		return state.gameinst.primitive_score()
@@ -102,7 +102,7 @@ class PythonPuzzle(Game):
 		if state.is_a_solution():
 			#print "solution", state
 			return Value.WIN
-		elif state.is_a_deadend():
+		elif state.is_deadend():
 			#print "deadend", state
 			return Value.LOSE
 		elif state.is_illegal():

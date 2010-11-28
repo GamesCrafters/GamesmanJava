@@ -5,7 +5,7 @@ gamesman.game.dots = 0
 gamesman.game.exactSol = 0
 gamesman.solver = BreadthFirstSolver
 gamesman.hasher = NullHasher
-gamesman.db.uri = tcross_binArt=1_circle=0_dots=0_exactSol=0.db
+gamesman.db.uri = tcross_binArt_1_circle_0_dots_0_exactSol_0.db
 gamesman.database = MemoryDatabase:FileDatabase
 gamesman.debug.SOLVER = true
 gamesman.threads = 1

@@ -8,7 +8,7 @@ gamesman.game.dots = {d}
 gamesman.game.exactSol = {e}
 gamesman.solver = BreadthFirstSolver
 gamesman.hasher = NullHasher
-gamesman.db.uri = tcross_binArt={b}_circle={c}_dots={d}_exactSol={e}.db
+gamesman.db.uri = tcross_binArt_{b}_circle_{c}_dots_{d}_exactSol_{e}.db
 gamesman.database = MemoryDatabase:FileDatabase
 gamesman.debug.SOLVER = true
 gamesman.threads = 1
