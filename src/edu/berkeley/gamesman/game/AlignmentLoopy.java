@@ -214,6 +214,25 @@ public class AlignmentLoopy extends Alignment implements LoopyGame<AlignmentStat
 							 * REUSE_STEP_&_SLIDE_CODE_FOR_BOARD_WHERE_PLAYER'S_PIECE_WAS_IN_EMPTY_SPACE
 							 * BUT_DON'T_COUNT_MOVES_THAT_COULD_HAVE_BLOCKED_THE_GUN_FROM_SHOOTING
 							 */
+							for(int i = 0; i < allGuns.length; i++){
+								int x = allGuns[i][0]; //coords of base of current gun
+								int y = allGuns[i][1];
+									//reuse set but don't count moves that could have blocked gun
+								for (int r = 0; row < gameHeight; r++) {
+									for (int c = 0; col < gameWidth; c++) {
+										if (pos.numPieces > parents[numParents].numPieces){
+											
+											if (pos.get(r,c) == lastTurn){
+												
+												parents[numParents].set(pos);
+												parents[numParents].put(r, c, ' ');
+												numParents++;
+											}
+										}
+									}
+								}
+							}
+								
 							
 						}
 
