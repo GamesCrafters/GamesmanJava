@@ -148,14 +148,33 @@ public class AlignmentLoopy extends Alignment implements LoopyGame<AlignmentStat
 			for(int row = 0; row < gameHeight; row++) {
 				for(int col = 0; col < gameWidth; col++) {
 					if(pos.get(row,col) == ' ') {
-						pos.checkGun(row,col);
+						int[][] allGuns = new int[4][6];
 						int[] gunN = pos.getGun(row, col, 'n', lastTurn);
 						int[] gunS = pos.getGun(row, col, 's', lastTurn);
 						int[] gunE = pos.getGun(row, col, 'e', lastTurn);
 						int[] gunW = pos.getGun(row, col, 'w', lastTurn);
+						int index = 0;
+						if (gunN[0] != 0 && gunN[1] != 0) {
+							allGuns[index] = gunN;
+							index++;
+						}
+						if (gunS[0] != 0 && gunS[1] != 0){
+							allGuns[index] = gunS;
+							index++;
+						}
+						if (gunE[0] != 0 && gunE[1] != 0){
+							allGuns[index] = gunE;
+							index++;
+						}
+						if (gunW[0] != 0 && gunW[1] != 0){
+							allGuns[index] = gunW;
+							index++;
+						}
 						
+						
+						boolean[] guns = pos.checkEnemyGun(row, col, lastTurn);
 						//if the empty cell has at least one gun pointing to it, then consider it
-						//if(guns[0] || guns[1] || guns[2] || guns[3]) {
+						if(guns[0] || guns[1] || guns[2] || guns[3]) {
 							
 							//Scenario 1: guns were formed from slide move
 							/* for ( EVERY_GUN ) {
@@ -169,6 +188,23 @@ public class AlignmentLoopy extends Alignment implements LoopyGame<AlignmentStat
 							 * 		}
 							 * }
 							 */	
+							for(int i = 0; i < allGuns.length; i++) {
+								for(int p = 0; p < 6; p = p + 2) {
+									//for every empty cell adjacent
+									for(int r = -1; r < 2; r++) {
+										for(int c = -1; c < 2; c++) {
+											if((r != 0) && (c != 0) && (pos.get(r,c) == ' ')) {
+												parents[numParents].set(pos);
+												parents[numParents].put(row, col, lastTurn);
+												parents[numParents].movePiece(allGuns[i][p], allGuns[i][p+1], r, c, parents[numParents]);
+												numParents++;
+											}
+										}
+									}
+								}
+							}
+							
+
 							
 							//Scenario 2: gun was already formed
 							/* 
