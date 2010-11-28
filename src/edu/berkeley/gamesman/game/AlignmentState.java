@@ -268,8 +268,83 @@ public final class AlignmentState implements State {
 		fireGuns(piecesToWin, AlignmentVariant.STANDARD);
 	}
 
-	public boolean[] getGuns() {
-		return guns;
+	public int[] getGun(int row, int col, char direction, char opponent) {
+		int[] coord = new int[6];
+		//char base = board[row][col];
+		//char NW = ' ';
+		//char NE = ' ';
+		//char SW = ' ';
+		//char SE = ' ';
+
+		switch(direction) {
+			case 'n': 
+				for(int i = col; i < board.length; i++){
+					//if the piece at this position matches opponent's piece, then check if gun formed
+					if (board[row][i] == opponent){
+						if ((board[row-1][i+1] == opponent) && (board[row+1][i+1] == opponent)){
+							coord[0] = row;
+							coord[1] = i;
+							coord[2] = row - 1;
+							coord[3] = i + 1;
+							coord[4] = row + 1;
+							coord[5] = i + 1;
+						}
+					break;
+					}
+				break;
+				}
+			case 's':
+				for(int i = col; i > 0; i--){
+					//if the piece at this position matches opponent's piece, then check if gun formed
+					if (board[row][i] == opponent){
+						if ((board[row-1][i-1] == opponent) && (board[row+1][i-1] == opponent)){
+							coord[0] = row;
+							coord[1] = i;
+							coord[2] = row - 1;
+							coord[3] = i - 1;
+							coord[4] = row + 1;
+							coord[5] = i - 1;
+						}
+					break;
+					}
+				break;
+				}	
+			case 'e':
+				for(int i = row; i < board.length ; i++){
+					//if the piece at this position matches opponent's piece, then check if gun formed
+					if (board[i][col] == opponent){
+						if ((board[i][col-1] == opponent) && (board[i][col+1] == opponent)){
+							coord[0] = i;
+							coord[1] = col;
+							coord[2] = i - 1;
+							coord[3] = col - 1;
+							coord[4] = i + 1;
+							coord[5] = col - 1;
+						}
+					break;
+					}
+				break;
+				}	
+			case 'w':
+				for(int i = row; i > 0; i--){
+					//if the piece at this position matches opponent's piece, then check if gun formed
+					if (board[i][col] == opponent){
+						if ((board[i][col-1] == opponent) && (board[i][col+1] == opponent)){
+							coord[0] = i;
+							coord[1] = col;
+							coord[2] = i - 1;
+							coord[3] = col - 1;
+							coord[4] = i + 1;
+							coord[5] = col - 1;
+						}
+					break;
+					}
+				break;
+				}	
+		}
+		
+		return coord;
+		
 	}
 	// =======================================================================================
 
