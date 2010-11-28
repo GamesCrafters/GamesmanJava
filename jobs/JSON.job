@@ -14,6 +14,9 @@ json.fields.connect4 = width,height,pieces
 json.unsolved.pegsolitaire = jobs/TriangularPegSolitaire.job
 json.fields.pegsolitaire = size,start
 
+json.unsolved.tcross = jobs/tripleCross/TCross_b.job
+json.fields.tcross = binArt,circle,dots,exactSol
+
 json.unsolved.y = jobs/YGame.job
 json.fields.y = centerRows,outerRows
 
