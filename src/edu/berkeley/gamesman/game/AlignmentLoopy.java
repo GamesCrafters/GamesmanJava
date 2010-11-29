@@ -72,41 +72,38 @@ public class AlignmentLoopy extends Alignment implements LoopyGame<AlignmentStat
 		//if numpieces owned by current player less or equal than parents.numpieces then its slide
 		//if numpieces owned by current player > parents.numpieces then its place
 		
+		//UPDATE: I don't think our original idea for determining if the possible parents are
+		//	specifically from a set move or slide move will work, since we're building the parents
+		//	from scratch. Maybe we should set up some kind of static variable where we store which
+		//	kinds of moves we make whenever we "set" or "slide" a piece, and maybe also if guns
+		//	shoots pieces or something
+		//
+		//	For now this gets all possible parents, including from set, slide, or shooting...
 
 		int numParents = 0;
 		char lastTurn = pos.lastMove;
 		
 		//get the parents of a "set" move
-		for (int row = 0; row < gameHeight; row++) {
-			for (int col = 0; col < gameWidth; col++) {
-				if (pos.numPieces > parents[numParents].numPieces){
-					if (pos.get(row,col) == lastTurn){
-						parents[numParents].set(pos);
-						parents[numParents].put(row, col, ' ');
-						numParents++;
-					}
-				}
-			}
-		}
-		
-		//get the parents of a "slide" move
-		//if(pos.numPieces == parents[numParents].numPieces) {
-			//for every piece on the board, the piece could have been moved there from a space
-			//adjacent to it, which has now become an empty space. So, possible parents are
-			//all boards where the current piece is empty, and one empty space next to it is this
-			//piece
+		//if (pos.numPieces > parents[numParents].numPieces){
 		for (int row = 0; row < gameHeight; row++) {
 			for (int col = 0; col < gameWidth; col++) {
 				if (pos.get(row,col) == lastTurn){
-						
-					//for every adjacent cell
+					parents[numParents].set(pos);
+					parents[numParents].put(row, col, ' ');
+					numParents++;
+				}
+			}
+		}
+
+		//get the parents of a "slide" move
+		//if(pos.numPieces == parents[numParents].numPieces) {
+		for (int row = 0; row < gameHeight; row++) {
+			for (int col = 0; col < gameWidth; col++) {
+				if (pos.get(row,col) == lastTurn){
 					for (int i = -1; i <= 1; i++) {
 						for (int j = -1; j <= 1; j++) {
-								
-							//if adjacent cell is in bounds, and it's empty, then build parent
-							if( ((row + i) >= 0) && ((col + j) >= 0)
-									&& (pos.get(row + i,col + j) == ' ')) {
-									
+							if( ((row + i) >= 0) && ((col + j) >= 0) //adj cell is in bounds
+									&& (pos.get(row + i,col + j) == ' ')) {//adj cell is empty
 								parents[numParents].set(pos);
 								parents[numParents].put(row, col, ' ');
 								parents[numParents].put(row + i, col + j, lastTurn);
@@ -118,9 +115,8 @@ public class AlignmentLoopy extends Alignment implements LoopyGame<AlignmentStat
 			}
 		}
 		
-		//get parents that exist before "getting shot" which can only happen after a "slide" move 
-		//if(pos.numPieces < parents[numParents].numPieces) {
-			/*
+		//get parents which are boards that can exist right before a piece "gets shot"
+		/*
 			for every empty space, if a gun exists on the current board and it's pointing to
 			this space, it is possible that a piece existed on this space and was shot right
 			before this turn. There are 2 scenarios:
@@ -144,6 +140,7 @@ public class AlignmentLoopy extends Alignment implements LoopyGame<AlignmentStat
 			    	 - the opponent could not have set or slid into an empty cell that forms the gun
 			    	 	so do all possible set and slide moves except the ones that form the gun
 			 */
+		//if(pos.numPieces < parents[numParents].numPieces) {
 		for(int row = 0; row < gameHeight; row++) {
 			for(int col = 0; col < gameWidth; col++) {
 				if(pos.get(row,col) == ' ') {
@@ -153,19 +150,18 @@ public class AlignmentLoopy extends Alignment implements LoopyGame<AlignmentStat
 					int[] gunE = pos.getGun(row, col, 'e', lastTurn);
 					int[] gunW = pos.getGun(row, col, 'w', lastTurn);
 					int index = 0;
+					//Note: if the gun doesn't exists, then gunN[0],gunN[1] would be 0,0 because it's initialized
+					// to be 0,0. A gun cannot have a base piece at 0,0 so we know this is good enough for checking
 					if (gunN[0] != 0 && gunN[1] != 0) {
 						allGuns[index] = gunN;
 						index++;
-					}
-					if (gunS[0] != 0 && gunS[1] != 0){
+					} if (gunS[0] != 0 && gunS[1] != 0){
 						allGuns[index] = gunS;
 						index++;
-					}
-					if (gunE[0] != 0 && gunE[1] != 0){
+					} if (gunE[0] != 0 && gunE[1] != 0){
 						allGuns[index] = gunE;
 						index++;
-					}
-					if (gunW[0] != 0 && gunW[1] != 0){
+					} if (gunW[0] != 0 && gunW[1] != 0){
 						allGuns[index] = gunW;
 						index++;
 					}						
@@ -184,15 +180,17 @@ public class AlignmentLoopy extends Alignment implements LoopyGame<AlignmentStat
 						 * 		}
 						 * }
 						 */	
-						for(int i = 0; i < allGuns.length; i++) {
+						for(int g = 0; g < allGuns.length; g++) {
+							if(allGuns[g][0] == 0 && allGuns[g][0] == 0) {
+								break;
+							}
 							for(int p = 0; p < 6; p = p + 2) {
-								//for every empty cell adjacent
 								for(int r = -1; r < 2; r++) {
 									for(int c = -1; c < 2; c++) {
 										if((r != 0) && (c != 0) && (pos.get(r,c) == ' ')) {
 											parents[numParents].set(pos);
 											parents[numParents].put(row, col, lastTurn);
-											parents[numParents].movePiece(allGuns[i][p], allGuns[i][p+1], r, c, parents[numParents]);
+											parents[numParents].movePiece(allGuns[g][p], allGuns[g][p+1], r, c, parents[numParents]);
 											numParents++;
 										}
 									}
@@ -202,6 +200,9 @@ public class AlignmentLoopy extends Alignment implements LoopyGame<AlignmentStat
 						//Scenario 2: gun was already formed, then include all possible moves
 						//except those that form the gun
 						for(int g = 0; g < allGuns.length; g++){
+							if(allGuns[g][0] == 0 && allGuns[g][0] == 0) {
+								break;
+							}
 							int x1 = allGuns[g][0]; //coords of base of current gun
 							int y1 = allGuns[g][1];
 							int x2 = allGuns[g][2];
@@ -212,8 +213,8 @@ public class AlignmentLoopy extends Alignment implements LoopyGame<AlignmentStat
 							for (int r = 0; r < gameHeight; r++) {
 								for (int c = 0; c < gameWidth; c++) {
 							//		if (pos.numPieces > parents[numParents].numPieces){
-									if (pos.get(r,c) == lastTurn
-											&&((x1 != r && y1 != c)
+									if ((pos.get(r,c) == lastTurn)
+											&& ((x1 != r && y1 != c)
 													|| (x2 != r && y2 != c)
 													|| (x3 != r && y3 != c))) {
 										parents[numParents].set(pos);
@@ -226,8 +227,8 @@ public class AlignmentLoopy extends Alignment implements LoopyGame<AlignmentStat
 							//if(pos.numPieces == parents[numParents].numPieces) {
 							for (int r = 0; r < gameHeight; r++) {
 								for (int c = 0; c < gameWidth; c++) {
-									if (pos.get(r,c) == lastTurn
-											&&((x1 != r && y1 != c)
+									if ((pos.get(r,c) == lastTurn)
+											&& ((x1 != r && y1 != c)
 													|| (x2 != r && y2 != c)
 													|| (x3 != r && y3 != c))) {
 										for (int i = -1; i <= 1; i++) {
