@@ -15,7 +15,6 @@ import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 import edu.berkeley.gamesman.util.qll.Pool;
 import edu.berkeley.gamesman.util.qll.Factory;
-import edu.berkeley.gamesman.util.qll.RecycleLinkedList;
 
 /**
  * @author David, Brent, Nancy, Kevin, Peter, Sharmishtha, Raji
@@ -23,10 +22,6 @@ import edu.berkeley.gamesman.util.qll.RecycleLinkedList;
  */
 public class LoopySolver extends Solver {
 	Pool<Record> recordPool;
-
-	protected RecycleLinkedList<Record[]> recordList; // Nancy: added this for
-														// else clause in solve
-														// loopy game function
 
 	public LoopySolver(Configuration conf) {
 		super(conf);
