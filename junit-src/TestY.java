@@ -2276,6 +2276,56 @@ public class TestY {
     	assertTrue(ygame36.isWin('O'));   	
     }
     
+    @Test
+    public void Test_4by8_isWin1() {
+    	ygame48.fillBoardWithPlayer('X');
+    	
+    	ygame48.setPlayerAt(5, 2, 'O');
+    	ygame48.setPlayerAt(4, 2, 'O');
+    	ygame48.setPlayerAt(3, 2, 'O');
+    	ygame48.setPlayerAt(2, 2, 'O');
+    	ygame48.setPlayerAt(1, 2, 'O');
+    	ygame48.setPlayerAt(0, 1, 'O');
+    	ygame48.setPlayerAt(1, 6, 'O');
+    	ygame48.setPlayerAt(2, 8, 'O');
+    	ygame48.setPlayerAt(3, 10, 'O');
+    	ygame48.setPlayerAt(4, 12, 'O');
+    	ygame48.setPlayerAt(5, 14, 'O');
+    	ygame48.setPlayerAt(0, 2, 'O');
+    	ygame48.setPlayerAt(1, 9, 'O');
+    	ygame48.setPlayerAt(2, 12, 'O');
+    	ygame48.setPlayerAt(3, 15, 'O');
+    	ygame48.setPlayerAt(4, 18, 'O');
+    	ygame48.setPlayerAt(5, 21, 'O');
+    	
+    	assertTrue(ygame48.isWin('O'));   	
+    }
+    
+    @Test
+    public void Test_4by8_isWin2() {
+    	ygame48.fillBoardWithPlayer(' ');
+    	
+    	ygame48.setPlayerAt(5, 2, 'O');
+    	ygame48.setPlayerAt(4, 2, 'O');
+    	ygame48.setPlayerAt(3, 2, 'O');
+    	ygame48.setPlayerAt(2, 2, 'O');
+    	ygame48.setPlayerAt(1, 2, 'O');
+    	ygame48.setPlayerAt(0, 1, 'O');
+    	ygame48.setPlayerAt(1, 6, 'O');
+    	ygame48.setPlayerAt(2, 8, 'O');
+    	ygame48.setPlayerAt(3, 10, 'X');
+    	ygame48.setPlayerAt(4, 12, 'O');
+    	ygame48.setPlayerAt(5, 14, 'O');
+    	ygame48.setPlayerAt(0, 2, 'O');
+    	ygame48.setPlayerAt(1, 9, 'O');
+    	ygame48.setPlayerAt(2, 12, 'O');
+    	ygame48.setPlayerAt(3, 15, 'O');
+    	ygame48.setPlayerAt(4, 18, 'O');
+    	ygame48.setPlayerAt(5, 21, 'O');
+    	
+    	assertFalse(ygame48.isWin('O'));   	
+    }
+    
     @AfterClass
     public static void oneTimeTearDown() {}
 
