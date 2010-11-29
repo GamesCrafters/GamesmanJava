@@ -174,6 +174,8 @@ public class JSONInterface extends GamesmanApplication {
 				System.out.println("Loading solved database " + filename);
 				Database db = Database.openDatabase(filename);
 				return db.getConfiguration();
+			} else {
+				assert Util.debug(DebugFacility.JSON, "Database at " + filename + " does not exist! Using unsolved.");
 			}
 		} catch (Error fe) {
 			fe.printStackTrace();
@@ -375,6 +377,7 @@ public class JSONInterface extends GamesmanApplication {
 				if (conf.hasScore) {
 					request.setScore(rec.score);
 				}
+				assert Util.debug(DebugFacility.JSON, "    Response: value="+request.getValue()+"; remote="+rec.remoteness+"; score="+rec.score);
 			} else {
 				Value pv = g.synchronizedPrimitiveValue(state);
 				if (pv != Value.UNDECIDED) {

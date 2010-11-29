@@ -5,6 +5,12 @@ json.databasedirectory = solved/
 json.unsolved.rubik = jobs/Rubik.job
 json.fields.rubik =
 
+json.unsolved.fcg = jobs/FCG.job
+json.fields.fcg =
+
+json.unsolved.lightsout = jobs/LightsOut.job
+json.fields.lightsout = size
+
 json.unsolved.pyraminx = jobs/Pyraminx.job
 json.fields.pyraminx =
 
@@ -31,3 +37,6 @@ json.fields.reversi = width,height
 
 json.unsolved.atarigo = jobs/AtariGo.job
 json.fields.atarigo = width,height
+
+gamesman.debug.JSON = false
+

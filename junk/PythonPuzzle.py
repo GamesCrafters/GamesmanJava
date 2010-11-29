@@ -134,8 +134,8 @@ class PythonPuzzle(Game):
 		if "maxRemoteness" not in self.gameinst.__dict__:
 			return 256
 		if "maxScore" not in self.gameinst.__dict__:
-			return self.gameinst.Remoteness() + 1 + 1
-		return 2 * (self.gameinst.maxRemoteness() + 1) * (self.gameinst.maxScore() + 1) + 1
+			return self.gameinst.maxRemoteness + 1 + 1
+		return 2 * (self.gameinst.maxRemoteness + 1) * (self.gameinst.maxScore + 1) + 1
 
 	# FIXME!
 	def maxChildren(self):
