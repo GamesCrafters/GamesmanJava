@@ -1744,7 +1744,7 @@ public class TestY {
     @Test
     public void Test_4by8_Tri5_Ind3()  {
         Vector<Node> neighbors = this.ygame48.getNeighbors(5, 3,'X');
-        int exp[][] = { {5,4}, {4,3}, {4,3}, {5,2}};
+        int exp[][] = { {5,4}, {4,3}, {4,2}, {5,2}};
 
         for (int i = 0; i < exp.length; i++){
             Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
@@ -1981,7 +1981,7 @@ public class TestY {
         {
                 { 2, 2 },
                 { 1, 2 },
-                { 2, 0 },
+                { 0, 2 },
                 { 1, 4 },
                 { 2, 6 },
                 { 1, 5 },
