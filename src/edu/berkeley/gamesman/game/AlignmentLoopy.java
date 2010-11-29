@@ -90,28 +90,27 @@ public class AlignmentLoopy extends Alignment implements LoopyGame<AlignmentStat
 		}
 		
 		//get the parents of a "slide" move
-		if(pos.numPieces == parents[numParents].numPieces) {
+		//if(pos.numPieces == parents[numParents].numPieces) {
 			//for every piece on the board, the piece could have been moved there from a space
 			//adjacent to it, which has now become an empty space. So, possible parents are
 			//all boards where the current piece is empty, and one empty space next to it is this
 			//piece
-			for (int row = 0; row < gameHeight; row++) {
-				for (int col = 0; col < gameWidth; col++) {
-					if (pos.get(row,col) == lastTurn){
+		for (int row = 0; row < gameHeight; row++) {
+			for (int col = 0; col < gameWidth; col++) {
+				if (pos.get(row,col) == lastTurn){
 						
-						//for every adjacent cell
-						for (int i = -1; i <= 1; i++) {
-							for (int j = -1; j <= 1; j++) {
+					//for every adjacent cell
+					for (int i = -1; i <= 1; i++) {
+						for (int j = -1; j <= 1; j++) {
 								
-								//if adjacent cell is in bounds, and it's empty, then build parent
-								if( ((row + i) >= 0) && ((col + j) >= 0)
+							//if adjacent cell is in bounds, and it's empty, then build parent
+							if( ((row + i) >= 0) && ((col + j) >= 0)
 									&& (pos.get(row + i,col + j) == ' ')) {
 									
-									parents[numParents].set(pos);
-									parents[numParents].put(row, col, ' ');
-									parents[numParents].put(row + i, col + j, lastTurn);
-									numParents++;
-								}
+								parents[numParents].set(pos);
+								parents[numParents].put(row, col, ' ');
+								parents[numParents].put(row + i, col + j, lastTurn);
+								numParents++;
 							}
 						}
 					}
@@ -120,7 +119,7 @@ public class AlignmentLoopy extends Alignment implements LoopyGame<AlignmentStat
 		}
 		
 		//get parents that exist before "getting shot" which can only happen after a "slide" move 
-		if(pos.numPieces < parents[numParents].numPieces) {
+		//if(pos.numPieces < parents[numParents].numPieces) {
 			/*
 			for every empty space, if a gun exists on the current board and it's pointing to
 			this space, it is possible that a piece existed on this space and was shot right
@@ -142,102 +141,112 @@ public class AlignmentLoopy extends Alignment implements LoopyGame<AlignmentStat
 			  Scenario 2:
 			   - find every possible parent for the current board configuration except that:
 			    	 - insert the player's piece in this empty cell
-			    	 - the opponent could not have set or slid into an empty cell that blocks the
-			    	 	gun from shooting the player's piece, so don't count those moves
+			    	 - the opponent could not have set or slid into an empty cell that forms the gun
+			    	 	so do all possible set and slide moves except the ones that form the gun
 			 */
-			for(int row = 0; row < gameHeight; row++) {
-				for(int col = 0; col < gameWidth; col++) {
-					if(pos.get(row,col) == ' ') {
-						int[][] allGuns = new int[4][6];
-						int[] gunN = pos.getGun(row, col, 'n', lastTurn);
-						int[] gunS = pos.getGun(row, col, 's', lastTurn);
-						int[] gunE = pos.getGun(row, col, 'e', lastTurn);
-						int[] gunW = pos.getGun(row, col, 'w', lastTurn);
-						int index = 0;
-						if (gunN[0] != 0 && gunN[1] != 0) {
-							allGuns[index] = gunN;
-							index++;
-						}
-						if (gunS[0] != 0 && gunS[1] != 0){
-							allGuns[index] = gunS;
-							index++;
-						}
-						if (gunE[0] != 0 && gunE[1] != 0){
-							allGuns[index] = gunE;
-							index++;
-						}
-						if (gunW[0] != 0 && gunW[1] != 0){
-							allGuns[index] = gunW;
-							index++;
-						}
-						
-						
-						boolean[] guns = pos.checkEnemyGun(row, col, lastTurn);
-						//if the empty cell has at least one gun pointing to it, then consider it
-						if(guns[0] || guns[1] || guns[2] || guns[3]) {
-							
-							//Scenario 1: guns were formed from slide move
-							/* for ( EVERY_GUN ) {
-							 * 		for( EVERY_PIECE_THAT_FORMS_THIS_GUN ) {
-							 * 			for( EVERY_EMPTY_CELL_ADJACENT_TO_THIS_GUN) {
-							 * 				parents[numParents].set(pos);
-							 * 				parents[numParents].put(row, col, lastTurn);
-							 * 				parents[numParents].movePiece(PIECE_X, PIECE_Y, EMPTY_ADJ_CELL_X, EMPTY_ADJ_CELL_Y, parents[numParents])
-							 *				numParents++;
-							 *			}
-							 * 		}
-							 * }
-							 */	
-							for(int i = 0; i < allGuns.length; i++) {
-								for(int p = 0; p < 6; p = p + 2) {
-									//for every empty cell adjacent
-									for(int r = -1; r < 2; r++) {
-										for(int c = -1; c < 2; c++) {
-											if((r != 0) && (c != 0) && (pos.get(r,c) == ' ')) {
-												parents[numParents].set(pos);
-												parents[numParents].put(row, col, lastTurn);
-												parents[numParents].movePiece(allGuns[i][p], allGuns[i][p+1], r, c, parents[numParents]);
-												numParents++;
-											}
-										}
-									}
-								}
-							}
-							
-
-							
-							//Scenario 2: gun was already formed
-							/* 
-							 * parents[numParents].set(pos);
-							 * parents[numParents].put(row, col, lastTurn);
-							 * 
-							 * REUSE_STEP_&_SLIDE_CODE_FOR_BOARD_WHERE_PLAYER'S_PIECE_WAS_IN_EMPTY_SPACE
-							 * BUT_DON'T_COUNT_MOVES_THAT_COULD_HAVE_BLOCKED_THE_GUN_FROM_SHOOTING
-							 */
-							for(int i = 0; i < allGuns.length; i++){
-								int x = allGuns[i][0]; //coords of base of current gun
-								int y = allGuns[i][1];
-									//reuse set but don't count moves that could have blocked gun
-								for (int r = 0; row < gameHeight; r++) {
-									for (int c = 0; col < gameWidth; c++) {
-										if (pos.numPieces > parents[numParents].numPieces){
-											
-											if (pos.get(r,c) == lastTurn){
-												
-												parents[numParents].set(pos);
-												parents[numParents].put(r, c, ' ');
-												numParents++;
-											}
-										}
-									}
-								}
-							}
-								
-							
-						}
-
+		for(int row = 0; row < gameHeight; row++) {
+			for(int col = 0; col < gameWidth; col++) {
+				if(pos.get(row,col) == ' ') {
+					int[][] allGuns = new int[4][6];
+					int[] gunN = pos.getGun(row, col, 'n', lastTurn);
+					int[] gunS = pos.getGun(row, col, 's', lastTurn);
+					int[] gunE = pos.getGun(row, col, 'e', lastTurn);
+					int[] gunW = pos.getGun(row, col, 'w', lastTurn);
+					int index = 0;
+					if (gunN[0] != 0 && gunN[1] != 0) {
+						allGuns[index] = gunN;
+						index++;
 					}
-				}
+					if (gunS[0] != 0 && gunS[1] != 0){
+						allGuns[index] = gunS;
+						index++;
+					}
+					if (gunE[0] != 0 && gunE[1] != 0){
+						allGuns[index] = gunE;
+						index++;
+					}
+					if (gunW[0] != 0 && gunW[1] != 0){
+						allGuns[index] = gunW;
+						index++;
+					}						
+					boolean[] guns = pos.checkEnemyGun(row, col, lastTurn);
+					//if the empty cell has at least one gun pointing to it, then consider it
+					if(guns[0] || guns[1] || guns[2] || guns[3]) {
+						//Scenario 1: guns were formed from slide move
+						/* for ( EVERY_GUN ) {
+						 * 		for( EVERY_PIECE_THAT_FORMS_THIS_GUN ) {
+						 * 			for( EVERY_EMPTY_CELL_ADJACENT_TO_THIS_GUN) {
+						 * 				parents[numParents].set(pos);
+						 * 				parents[numParents].put(row, col, lastTurn);
+						 * 				parents[numParents].movePiece(PIECE_X, PIECE_Y, EMPTY_ADJ_CELL_X, EMPTY_ADJ_CELL_Y, parents[numParents])
+						 *				numParents++;
+						 *			}
+						 * 		}
+						 * }
+						 */	
+						for(int i = 0; i < allGuns.length; i++) {
+							for(int p = 0; p < 6; p = p + 2) {
+								//for every empty cell adjacent
+								for(int r = -1; r < 2; r++) {
+									for(int c = -1; c < 2; c++) {
+										if((r != 0) && (c != 0) && (pos.get(r,c) == ' ')) {
+											parents[numParents].set(pos);
+											parents[numParents].put(row, col, lastTurn);
+											parents[numParents].movePiece(allGuns[i][p], allGuns[i][p+1], r, c, parents[numParents]);
+											numParents++;
+										}
+									}
+								}
+							}
+						}
+						//Scenario 2: gun was already formed, then include all possible moves
+						//except those that form the gun
+						for(int g = 0; g < allGuns.length; g++){
+							int x1 = allGuns[g][0]; //coords of base of current gun
+							int y1 = allGuns[g][1];
+							int x2 = allGuns[g][2];
+							int y2 = allGuns[g][3];
+							int x3 = allGuns[g][4];
+							int y3 = allGuns[g][5];
+							//reuse the set code, but never remove a piece in the gun
+							for (int r = 0; r < gameHeight; r++) {
+								for (int c = 0; c < gameWidth; c++) {
+							//		if (pos.numPieces > parents[numParents].numPieces){
+									if (pos.get(r,c) == lastTurn
+											&&((x1 != r && y1 != c)
+													|| (x2 != r && y2 != c)
+													|| (x3 != r && y3 != c))) {
+										parents[numParents].set(pos);
+										parents[numParents].put(r, c, ' ');
+										numParents++;
+									}
+								}
+							}
+							//slide, but don't slide a piece from the gun
+							//if(pos.numPieces == parents[numParents].numPieces) {
+							for (int r = 0; r < gameHeight; r++) {
+								for (int c = 0; c < gameWidth; c++) {
+									if (pos.get(r,c) == lastTurn
+											&&((x1 != r && y1 != c)
+													|| (x2 != r && y2 != c)
+													|| (x3 != r && y3 != c))) {
+										for (int i = -1; i <= 1; i++) {
+											for (int j = -1; j <= 1; j++) {
+												if( ((r + i) >= 0) && ((c + j) >= 0)
+														&& (pos.get(r + i,c + j) == ' ')) {
+													parents[numParents].set(pos);
+													parents[numParents].put(r, c, ' ');
+													parents[numParents].put(r + i, c + j, lastTurn);
+													numParents++;
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}	
 			}
 		}
 		return numParents;
