@@ -329,6 +329,7 @@ public final class YGame extends ConnectGame
         final int segments = (this.nodesInThisTriangle[triangleIn] / 3);
         if (segments == 0) /* Special case for point in the center */
         {
+            this.neighbors.clear();
             node.triangle = 1;
             node.index = 1;
             this.neighbors.add(new Node(node));
