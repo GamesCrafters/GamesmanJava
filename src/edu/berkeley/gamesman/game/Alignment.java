@@ -18,7 +18,7 @@ import edu.berkeley.gamesman.util.Util;
 public class Alignment extends Game<AlignmentState> {
 	protected final int gameWidth, gameHeight, gameSize; // changed to protected for AlignmentLoopy
 	public final int piecesToWin;
-	private final AlignmentVariant variant; // should be an enum?
+	protected final AlignmentVariant variant; // should be an enum?
 	public final ArrayList<Pair<Integer, Integer>> openCells;
 	private final AlignmentHasher myHasher; // changed to protected for AlignmentLoopy
 	
