@@ -90,7 +90,7 @@ import edu.berkeley.gamesman.util.Util;
  * protected int putBytes(final DatabaseHandle dh, final byte[] arr, int off,<br />
  * &nbsp;&nbsp;final int maxLen, final boolean edgesAreCorrect){<br />
  * &nbsp;&nbsp;if(!edgesAreCorrect){<br />
- * &nbsp;&nbsp;&nbsp;&nbsp;return super.getBytes(dh, arr, off, maxLen, false);<br />
+ * &nbsp;&nbsp;&nbsp;&nbsp;return super.putBytes(dh, arr, off, maxLen, false);<br />
  * &nbsp;&nbsp;}<br />
  * &nbsp;&nbsp;final int numBytes = Math.min(maxLen,dh.lastByteIndex-dh.location);<br />
  * &nbsp;&nbsp;//Your code, numBytes is the number of bytes to read.<br />
