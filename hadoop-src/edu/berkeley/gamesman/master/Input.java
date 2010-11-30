@@ -69,7 +69,7 @@ public class Input implements InputFormat<LongWritable, LongWritable> {
 	int tier= conf.getInt("tier", -1);
 	if (tier < 0)
 		throw new Error("No tier specified");
-	int numMachines = 8; //= conf.getInteger(“numMachines”, 8); 	//Default of 8
+	int numMachines = 8; //= conf.getInteger(ï¿½numMachinesï¿½, 8); 	//Default of 8
 	TierGame game = null; //= conf.getGame();
 	long numPos = game.numHashesForTier(tier);
 	splits = numMachines;
