@@ -2326,6 +2326,566 @@ public class TestY {
     	assertFalse(ygame48.isWin('O'));   	
     }
     
+    /*
+     * Sparse tests...
+     */
+    
+    @Test
+    public void SparseSparseTest_2by4_isWin3() {
+    	
+    	ygame24.setPlayerAt(2, 0, 'X');
+    	ygame24.setPlayerAt(1, 0, 'X');
+    	ygame24.setPlayerAt(0, 0, 'X');
+    	ygame24.setPlayerAt(0, 1, 'X');
+    	ygame24.setPlayerAt(0, 2, 'X');
+    	ygame24.setPlayerAt(1, 4, 'X');
+    	ygame24.setPlayerAt(2, 5, 'X');
+    	
+    	ygame24.setPlayetAt(2,1,'O');
+    	Vector<Node> neighbors = this.ygame24.getNeighbors(2, 1,'O');
+        int exp[][] = { {1,0}, {2,0}};
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+        
+        exp[][] = { {2,2}, {1,1}};
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+        
+        
+    	ygame24.setPlayetAt(1,1,'O');
+        neighbors = this.ygame24.getNeighbors(1, 1,'O');
+        exp[][] = { {0,0}, {1,0}};
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+        
+        exp[][] = {{1,2}, {0,1}, {2,1}, {2,2}};
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+        
+        
+        
+        
+    	ygame24.setPlayetAt(1,2,'O');
+        neighbors = this.ygame24.getNeighbors(1, 2,'O');
+        exp[][] = { {0,2}, {0,1}};
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+        exp[][] = {{1,3}, {1,1}, {2,2}, {2,3}};
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+        
+        
+      
+    	ygame24.setPlayetAt(1,3,'O');
+        neighbors = this.ygame24.getNeighbors(1, 3,'O');
+        exp[][] = { {2,5}, {1,4}, {0,2}};
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+        exp[][] = {{1,2}, {2,3}, {2,4}};
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+        
+        
+        
+        ygame24.setPlayetAt(0,3,'O');
+        neighbors = this.ygame24.getNeighbors(0, 3,'O');
+        exp[][] = { {0,1}, {0,2}, {1,4}};
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+        exp[][] = { {0,4}, {0,5}, {1,5} };
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+    	
+    }
+    
+    @Test
+    public void SparseTest_2by4_isWin4() {    	
+    	ygame24.setPlayerAt(2, 0, 'X');
+    	ygame24.setPlayerAt(1, 0, 'X');
+    	ygame24.setPlayerAt(1, 8, 'X');
+    	ygame24.setPlayerAt(1, 7, 'X');
+    	ygame24.setPlayerAt(1, 6, 'X');
+    	ygame24.setPlayerAt(1, 5, 'X');
+    	ygame24.setPlayerAt(2, 7, 'X');
+    	
+    	ygame24.setPlayetAt(2,1,'O');
+    	Vector<Node> neighbors = this.ygame24.getNeighbors(2, 1,'O');
+        int exp[][] = { {1,0}, {2,0}};
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+        exp[][] = { {1,1},{2,2} };
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+    	
+    	
+        ygame24.setPlayetAt(0,5,'O');
+        neighbors = this.ygame24.getNeighbors(0, 5,'O');
+        exp[][] = { {1,7}, {1,8}};
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+        exp[][] = { {0,0}, {0,1} , {0,3}, {0,4}};
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+    	
+        ygame24.setPlayetAt(0,4,'O');
+        neighbors = this.ygame24.getNeighbors(0, 4,'O');
+        exp[][] = {{1,5},{1,6}, {1,7},{0,5}};
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+        exp[][] = {{0,3}};
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+        
+        
+        ygame24.setPlayetAt(2,8,'O');
+        neighbors = this.ygame24.getNeighbors(2, 8,'O');
+        exp[][] = {{1,6},{2,7}};
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+        exp[][] = { {2,9}};
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+        
+        
+        ygame24.setPlayetAt(2,10,'O');
+        neighbors = this.ygame24.getNeighbors(2, 10,'O');
+        exp[][] = {{1,8},{1,7}};
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+        exp[][] = { {2,11}, {2,9} };
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+        
+        
+        
+        ygame24.setPlayetAt(2,11,'O');
+        neighbors = this.ygame24.getNeighbors(2, 11,'O');
+        exp[][] = {{2,0}, {1,0}, {1,8}, {2,10}};
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
+        }      
+        
+    }
+    
+    @Test
+    public void SparseTest_2by4_isWin5() {
+    	
+    	ygame24.setPlayerAt(2, 0, 'X');
+    	ygame24.setPlayerAt(2, 11, 'X');
+    	ygame24.setPlayerAt(2, 10, 'X');
+    	ygame24.setPlayerAt(2, 9, 'X');
+    	ygame24.setPlayerAt(2, 8, 'X');
+    	
+    	
+    	ygame24.setPlayetAt(1,0,'O');
+    	Vector<Node> neighbors = this.ygame24.getNeighbors(1, 0,'O');
+        int exp[][] = {{2,11},{2,0}};
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+        exp[][] = { {1, 1},{ 0, 0 },{ 1, 8 },{ 2, 1 } };
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+    	
+        ygame24.setPlayetAt(1,7,'O');
+        neighbors = this.ygame24.getNeighbors(1, 7,'O');
+        exp[][] = {{2,9},{2,10}};
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+        exp[][] = {{1,8}, {0,5} , {0,4}, {1,6}};
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+    	   	
+    }
+    
+    @Test
+    public void SparseTest_2by4_isWin6() {
+    	
+    	ygame24.setPlayerAt(2, 0, 'X');
+    	ygame24.setPlayerAt(1, 0, 'X');
+    	ygame24.setPlayerAt(0, 0, 'X');
+    	ygame24.setPlayerAt(1, 1, 'X');
+    	ygame24.setPlayerAt(0, 1, 'X');
+    	ygame24.setPlayerAt(1, 2, 'X');
+    	ygame24.setPlayerAt(0, 2, 'X');
+    	ygame24.setPlayerAt(1, 3, 'X');
+    	ygame24.setPlayerAt(2, 4, 'X');
+    	
+    	
+    	 ygame24.setPlayetAt(0,5,'O');
+    	 Vector<Node> neighbors = this.ygame24.getNeighbors(0, 5,'O');
+         int exp[][] = {{0,0},{0,1}};
+
+         for (int i = 0; i < exp.length; i++){
+             Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
+             Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
+         }
+         exp[][] = {{0,3}, {0,4}, {1,7}, {1,8}};
+
+         for (int i = 0; i < exp.length; i++){
+             Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
+             Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+         }
+         
+         
+         ygame24.setPlayetAt(0,3,'O');
+         neighbors = this.ygame24.getNeighbors(0, 3,'O');
+         exp[][] = {{0,5},{0,1},{0,2}};
+
+         for (int i = 0; i < exp.length; i++){
+             Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
+             Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
+         }
+         exp[][] = {{0,4}, {1,4}, {1,5}};
+
+         for (int i = 0; i < exp.length; i++){
+             Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
+             Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+         }
+         
+         
+         ygame24.setPlayetAt(0,4,'O');
+         neighbors = this.ygame24.getNeighbors(0, 4,'O');
+         exp[][] = {{0,5},{0,3}};
+
+         for (int i = 0; i < exp.length; i++){
+             Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
+             Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
+         }
+         exp[][] = {{1,5}, {1,6}, {1,7}};
+
+         for (int i = 0; i < exp.length; i++){
+             Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
+             Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+         }
+         
+         ygame24.setPlayetAt(2,2,'O');
+         neighbors = this.ygame24.getNeighbors(2,2,'O');
+         exp[][] = {{1,2},{1,1}};
+
+         for (int i = 0; i < exp.length; i++){
+             Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
+             Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
+         }
+         exp[][] = {{2,3}, {2,1}};
+
+         for (int i = 0; i < exp.length; i++){
+             Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
+             Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+         }
+         
+         ygame24.setPlayetAt(2,6,'O');
+         neighbors = this.ygame24.getNeighbors(2,6,'O');
+
+         Assert.assertNull(neighbors);
+    }
+    
+    @Test
+    public void SparseTest_2by4_isWin7() {    	
+    	ygame24.setPlayerAt(2, 2, 'X');
+    	ygame24.setPlayerAt(1, 2, 'X');
+    	ygame24.setPlayerAt(0, 3, 'X');
+    	ygame24.setPlayerAt(0, 2, 'X');
+    	ygame24.setPlayerAt(1, 3, 'X');
+    	ygame24.setPlayerAt(1, 4, 'X');
+    	ygame24.setPlayerAt(1, 5, 'X');
+    	ygame24.setPlayerAt(1, 6, 'X');
+    	ygame24.setPlayerAt(1, 7, 'X');
+    	ygame24.setPlayerAt(2, 10, 'X');
+    	
+    	ygame24.setPlayetAt(1,4,'O');
+        Vector<Node> neighbors = this.ygame24.getNeighbors(1, 4,'O');
+        int exp[][] = {{0,3} , {0,2}, {1,3}, {2,5}, {2,6}};
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+        exp[][] = {{1,5}};
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+        
+        ygame24.setPlayetAt(0,4,'O');
+        neighbors = this.ygame24.getNeighbors(0, 4,'O');
+        exp[][] = {{0,3}};
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+        exp[][] = {{0,5}, {1,5}, {1,6}, {1,7}};
+
+        for (int i = 0; i < exp.length; i++){
+            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+        }
+    }
+    
+    @Test
+    public void SparseTest_2by4_isWin8() {
+    	ygame24.fillBoardWithPlayer('O');
+    	
+    	ygame24.setPlayerAt(2, 4, 'X');
+    	ygame24.setPlayerAt(1, 3, 'X');
+    	ygame24.setPlayerAt(1, 4, 'X');
+    	ygame24.setPlayerAt(0, 3, 'X');
+    	ygame24.setPlayerAt(1, 5, 'X');
+    	ygame24.setPlayerAt(0, 2, 'X');
+    	ygame24.setPlayerAt(0, 1, 'X');
+    	ygame24.setPlayerAt(1, 1, 'X');
+    	ygame24.setPlayerAt(0, 4, 'X');
+    	ygame24.setPlayerAt(1, 6, 'X');
+    	ygame24.setPlayerAt(2, 8, 'X');    	
+    	
+    	assertTrue(ygame24.isWin('X'));   	
+    }
+    
+    @Test
+    public void SparseTest_2by4_isWin9() {
+    	ygame24.fillBoardWithPlayer('O');
+    	
+    	ygame24.setPlayerAt(2, 1, 'X');
+    	ygame24.setPlayerAt(1, 0, 'X');
+    	ygame24.setPlayerAt(2, 11, 'X');
+    	ygame24.setPlayerAt(2, 3, 'X');
+    	ygame24.setPlayerAt(1, 3, 'X');
+    	ygame24.setPlayerAt(1, 4, 'X');
+    	ygame24.setPlayerAt(1, 5, 'X');
+    	ygame24.setPlayerAt(2, 7, 'X');    	
+    	
+    	assertFalse(ygame24.isWin('X'));   	
+    }
+    
+    @Test
+    public void SparseTest_2by4_isWin10() {
+    	ygame24.fillBoardWithPlayer('O');
+    	
+    	ygame24.setPlayerAt(1, 0, 'X');
+    	ygame24.setPlayerAt(1, 1, 'X');
+    	ygame24.setPlayerAt(1, 2, 'X');
+    	ygame24.setPlayerAt(1, 3, 'X');
+    	ygame24.setPlayerAt(1, 4, 'X');
+    	ygame24.setPlayerAt(1, 5, 'X');
+    	ygame24.setPlayerAt(1, 6, 'X');
+    	ygame24.setPlayerAt(1, 7, 'X');
+    	ygame24.setPlayerAt(1, 8, 'X');    	
+    	
+    	assertFalse(ygame24.isWin('X'));   	
+    }
+    
+    @Test
+    public void SparseTest_2by4_isWin11() {
+    	ygame24.fillBoardWithPlayer('O');
+    	
+    	ygame24.setPlayerAt(2, 2, 'X');
+    	ygame24.setPlayerAt(1, 0, 'X');
+    	ygame24.setPlayerAt(1, 1, 'X');
+    	ygame24.setPlayerAt(1, 2, 'X');
+    	ygame24.setPlayerAt(1, 3, 'X');
+    	ygame24.setPlayerAt(1, 4, 'X');
+    	ygame24.setPlayerAt(1, 5, 'X');
+    	ygame24.setPlayerAt(1, 6, 'X');
+    	ygame24.setPlayerAt(1, 7, 'X');
+    	ygame24.setPlayerAt(1, 8, 'X');    	
+    	
+    	assertFalse(ygame24.isWin('X'));   	
+    }
+    
+    @Test
+    public void SparseTest_2by4_isWin12() {
+    	ygame24.fillBoardWithPlayer('O');
+    	
+    	ygame24.setPlayerAt(2, 2, 'X');
+    	ygame24.setPlayerAt(2, 6, 'X');
+    	ygame24.setPlayerAt(2, 10, 'X');    	
+    	ygame24.setPlayerAt(1, 0, 'X');
+    	ygame24.setPlayerAt(1, 1, 'X');
+    	ygame24.setPlayerAt(1, 2, 'X');
+    	ygame24.setPlayerAt(1, 3, 'X');
+    	ygame24.setPlayerAt(1, 4, 'X');
+    	ygame24.setPlayerAt(1, 5, 'X');
+    	ygame24.setPlayerAt(1, 6, 'X');
+    	ygame24.setPlayerAt(1, 7, 'X');
+    	ygame24.setPlayerAt(1, 8, 'X');    	
+    	
+    	assertTrue(ygame24.isWin('X'));   	
+    }
+    
+    @Test
+    public void SparseTest_3by6_isWin1() {
+    	ygame36.fillBoardWithPlayer('O');
+    	
+    	assertTrue(ygame36.isWin('O'));   	
+    }
+    
+    @Test
+    public void SparseTest_3by6_isWin2() {
+    	ygame36.fillBoardWithPlayer('X');
+    	
+    	ygame36.setPlayerAt(4, 1, 'O');
+    	ygame36.setPlayerAt(4, 2, 'O');
+    	ygame36.setPlayerAt(4, 3, 'O');
+    	ygame36.setPlayerAt(4, 4, 'O');
+    	ygame36.setPlayerAt(4, 5, 'O');
+    	ygame36.setPlayerAt(2, 0, 'O');
+    	ygame36.setPlayerAt(2, 1, 'O');
+    	ygame36.setPlayerAt(2, 2, 'O');
+    	ygame36.setPlayerAt(3, 3, 'O');
+    	ygame36.setPlayerAt(2, 4, 'O');
+    	ygame36.setPlayerAt(2, 3, 'O');
+    	ygame36.setPlayerAt(0, 0, 'O');
+    	ygame36.setPlayerAt(1, 1, 'O');
+    	ygame36.setPlayerAt(1, 5, 'O');
+    	ygame36.setPlayerAt(1, 6, 'O');
+    	ygame36.setPlayerAt(2, 8, 'O');
+    	ygame36.setPlayerAt(3, 10, 'O');
+    	ygame36.setPlayerAt(4, 12, 'O');
+    	
+    	assertTrue(ygame36.isWin('O'));   	
+    }
+    
+    @Test
+    public void SparseTest_3by6_isWin3() {
+    	ygame36.fillBoardWithPlayer('X');
+    	
+    	ygame36.setPlayerAt(4, 3, 'O');
+    	ygame36.setPlayerAt(3, 3, 'O');
+    	ygame36.setPlayerAt(2, 3, 'O');
+    	ygame36.setPlayerAt(1, 3, 'O');
+    	ygame36.setPlayerAt(1, 4, 'O');
+    	ygame36.setPlayerAt(1, 5, 'O');
+    	ygame36.setPlayerAt(1, 6, 'O');
+    	ygame36.setPlayerAt(2, 9, 'O');
+    	ygame36.setPlayerAt(3, 12, 'O');
+    	ygame36.setPlayerAt(4, 15, 'O');
+    	ygame36.setPlayerAt(2, 3, 'O');
+    	ygame36.setPlayerAt(0, 0, 'O');
+    	ygame36.setPlayerAt(1, 1, 'O');
+    	ygame36.setPlayerAt(2, 1, 'O');
+    	ygame36.setPlayerAt(4, 5, 'O');
+    	//ygame36.setPlayerAt(4, 8, 'O');
+    	ygame36.setPlayerAt(3, 5, 'O');
+    	ygame36.setPlayerAt(3, 6, 'O');
+    	ygame36.setPlayerAt(3, 7, 'O');
+    	ygame36.setPlayerAt(3, 8, 'O');
+    	ygame36.setPlayerAt(3, 9, 'O');
+    	ygame36.setPlayerAt(3, 10, 'O');
+    	ygame36.setPlayerAt(4, 13, 'O');
+    	
+    	assertFalse(ygame36.isWin('O'));   	
+    }
+    
+    @Test
+    public void SparseTest_3by6_isWin4() {
+    	ygame36.fillBoardWithPlayer('X');
+    	
+    	ygame36.setPlayerAt(4, 3, 'O');
+    	ygame36.setPlayerAt(3, 3, 'O');
+    	ygame36.setPlayerAt(2, 3, 'O');
+    	ygame36.setPlayerAt(1, 3, 'O');
+    	ygame36.setPlayerAt(1, 4, 'O');
+    	ygame36.setPlayerAt(1, 5, 'O');
+    	ygame36.setPlayerAt(1, 6, 'O');
+    	ygame36.setPlayerAt(2, 9, 'O');
+    	ygame36.setPlayerAt(3, 12, 'O');
+    	ygame36.setPlayerAt(4, 15, 'O');
+    	ygame36.setPlayerAt(2, 3, 'O');
+    	ygame36.setPlayerAt(0, 0, 'O');
+    	ygame36.setPlayerAt(1, 1, 'O');
+    	ygame36.setPlayerAt(2, 1, 'O');
+    	ygame36.setPlayerAt(4, 5, 'O');
+    	//ygame36.setPlayerAt(4, 8, 'O');
+    	ygame36.setPlayerAt(3, 5, 'O');
+    	ygame36.setPlayerAt(3, 6, 'O');
+    	ygame36.setPlayerAt(3, 7, 'O');
+    	ygame36.setPlayerAt(3, 8, 'O');
+    	ygame36.setPlayerAt(3, 9, 'O');
+    	ygame36.setPlayerAt(3, 10, 'O');
+    	ygame36.setPlayerAt(4, 13, 'O');
+    	//ygame36.setPlayerAt(2, 16, 'O');
+    	ygame36.setPlayerAt(4, 9, 'O');    	
+    	
+    	assertTrue(ygame36.isWin('O'));   	
+    }
+    
+    
+    
     @AfterClass
     public static void oneTimeTearDown() {}
 
