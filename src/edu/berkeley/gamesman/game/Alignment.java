@@ -209,6 +209,7 @@ public class Alignment extends Game<AlignmentState> {
 	@Override
 	public Collection<Pair<String, AlignmentState>> validMoves(
 			AlignmentState pos) {
+		
 		ArrayList<String> childStrings = new ArrayList<String>();
 		for (int row = 0; row < gameHeight; row++) {
 			for (int col = 0; col < gameWidth; col++) {
@@ -218,21 +219,23 @@ public class Alignment extends Game<AlignmentState> {
 				}
 			}
 		}
-		
+
 		if (variant != AlignmentVariant.NO_SLIDE) {
 			char pl = opposite(pos.lastMove);
 			AlignmentState childPos = new AlignmentState(pos);
+			
 			for (int row = 0; row < gameHeight; row++) {
 				for (int col = 0; col < gameWidth; col++) {
 					if (pl == pos.get(row, col)) {
 						for(int adjRow = row-1; adjRow <= row+1; adjRow++ ){
 							for(int adjCol = col-1; adjCol <= col+1; adjCol++){
 								childPos.set(pos);
-								if (childPos.movePiece(row, col, adjRow, adjCol, childPos)){
+								if (childPos.legalMove(row, col, adjRow, adjCol)){
 									childStrings.add(Character.toString(
 											(char) ('a' + col)) + (row + 1) +
 											(char) ('a' + adjCol) + (adjRow + 1)
 										);
+									
 								}
 							}
 						}
@@ -277,8 +280,9 @@ public class Alignment extends Game<AlignmentState> {
 					if (pl == pos.get(row, col)) {
 						for(int adjRow = row-1; adjRow <= row+1; adjRow++ ){
 							for(int adjCol = col-1; adjCol <= col+1; adjCol++){
+								if (moves >= children.length) { break; }
 								children[moves].set(pos);
-								if (children[moves].movePiece(row, col, adjRow, adjCol, pos)){
+								if (children[moves].movePiece(row, col, adjRow, adjCol, children[moves])){
 									//children[moves].set(pos);
 									children[moves].fireGuns(piecesToWin, variant);
 									children[moves].setLastMove(pl);

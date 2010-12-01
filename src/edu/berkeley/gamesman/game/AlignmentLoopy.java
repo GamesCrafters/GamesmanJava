@@ -94,6 +94,10 @@ public class AlignmentLoopy extends Alignment implements LoopyGame<AlignmentStat
 				}
 			}
 		}
+		
+		if (variant == AlignmentVariant.NO_SLIDE){ /* will have no slide parents if NO_SLIDE variant */
+			return numParents;
+		}
 
 		//get the parents of a "slide" move
 		//if(pos.numPieces == parents[numParents].numPieces) {
@@ -102,7 +106,8 @@ public class AlignmentLoopy extends Alignment implements LoopyGame<AlignmentStat
 				if (pos.get(row,col) == lastTurn){
 					for (int i = -1; i <= 1; i++) {
 						for (int j = -1; j <= 1; j++) {
-							if( ((row + i) >= 0) && ((col + j) >= 0) //adj cell is in bounds
+							if( (row + i >= 0 && col + j >= 0) //adj cell is in bounds
+									&& (row+i < gameHeight && col+j < gameWidth)
 									&& (pos.get(row + i,col + j) == ' ')) {//adj cell is empty
 								parents[numParents].set(pos);
 								parents[numParents].put(row, col, ' ');
@@ -187,10 +192,12 @@ public class AlignmentLoopy extends Alignment implements LoopyGame<AlignmentStat
 							for(int p = 0; p < 6; p = p + 2) {
 								for(int r = -1; r < 2; r++) {
 									for(int c = -1; c < 2; c++) {
-										if((r != 0) && (c != 0) && (pos.get(r,c) == ' ')) {
+										if ((row + r >= 0) && (col + c >= 0)
+												&& (row + r < gameHeight && col + c < gameWidth)
+												&& (pos.get(row + r, col + c) == ' ')) {
 											parents[numParents].set(pos);
-											parents[numParents].put(row, col, lastTurn);
-											parents[numParents].movePiece(allGuns[g][p], allGuns[g][p+1], r, c, parents[numParents]);
+											parents[numParents].put(row + r, col + c, lastTurn);
+											parents[numParents].movePiece(allGuns[g][p], allGuns[g][p+1], row + r, col + c, parents[numParents]);
 											numParents++;
 										}
 									}
@@ -234,6 +241,7 @@ public class AlignmentLoopy extends Alignment implements LoopyGame<AlignmentStat
 										for (int i = -1; i <= 1; i++) {
 											for (int j = -1; j <= 1; j++) {
 												if( ((r + i) >= 0) && ((c + j) >= 0)
+														&& (r+i < gameHeight && c+j < gameWidth)
 														&& (pos.get(r + i,c + j) == ' ')) {
 													parents[numParents].set(pos);
 													parents[numParents].put(r, c, ' ');
@@ -256,6 +264,6 @@ public class AlignmentLoopy extends Alignment implements LoopyGame<AlignmentStat
 	@Override
 	public int maxParents() {
 		// TODO Auto-generated method stub
-		return gameSize;
+		return gameSize*gameSize*gameSize; /* temporary solution... need to find a better bound */
 	}
 }

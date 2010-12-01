@@ -206,6 +206,18 @@ public final class AlignmentState implements State {
 		return false;
 	}
 
+	/**
+	 * alternate way of calling movePiece with less ambiguity
+	 */
+	boolean movePiece(int row0, int col0, int row1, int col1){
+		if (legalMove(row0, col0, row1, col1)) {
+			board[row1][col1] = board[row0][col0];
+			board[row0][col0] = ' ';
+			return true;
+		}
+		return false;
+	}
+
 	/** true if the square (x0,y0) is one of 8 points adjacent to (x1, y1) */
 	boolean adjacent(int x0, int y0, int x1, int y1) {
 		return (Math.abs(y1 - y0) <= 1 && Math.abs(x1 - x0) <= 1 && !(x1 == x0 && y1 == y0));
