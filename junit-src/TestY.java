@@ -2341,7 +2341,7 @@ public class TestY {
     	ygame24.setPlayerAt(1, 4, 'X');
     	ygame24.setPlayerAt(2, 5, 'X');
     	
-    	ygame24.setPlayetAt(2,1,'O');
+    	ygame24.setPlayerAt(2,1,'O');
     	Vector<Node> neighbors = this.ygame24.getNeighbors(2, 1,'O');
         int exp[][] = { {1,0}, {2,0}};
 
@@ -2350,80 +2350,80 @@ public class TestY {
             Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
         }
         
-        exp[][] = { {2,2}, {1,1}};
+        exp = new int[][]{ {2,2}, {1,1}};
 
         for (int i = 0; i < exp.length; i++){
-            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
-            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+            Assert.assertNotSame(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotSame(exp[i][1], neighbors.get(i).getIndex());
         }
         
         
-    	ygame24.setPlayetAt(1,1,'O');
+    	ygame24.setPlayerAt(1,1,'O');
         neighbors = this.ygame24.getNeighbors(1, 1,'O');
-        exp[][] = { {0,0}, {1,0}};
+        exp = new int[][]{ {0,0}, {1,0}};
 
         for (int i = 0; i < exp.length; i++){
             Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
             Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
         }
         
-        exp[][] = {{1,2}, {0,1}, {2,1}, {2,2}};
+        exp = new int[][]{{1,2}, {0,1}, {2,1}, {2,2}};
 
         for (int i = 0; i < exp.length; i++){
-            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
-            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+            Assert.assertNotSame(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotSame(exp[i][1], neighbors.get(i).getIndex());
         }
         
         
         
         
-    	ygame24.setPlayetAt(1,2,'O');
+    	ygame24.setPlayerAt(1,2,'O');
         neighbors = this.ygame24.getNeighbors(1, 2,'O');
-        exp[][] = { {0,2}, {0,1}};
+        exp = new int[][]{ {0,2}, {0,1}};
 
         for (int i = 0; i < exp.length; i++){
             Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
             Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
         }
-        exp[][] = {{1,3}, {1,1}, {2,2}, {2,3}};
+        exp = new int[][]{{1,3}, {1,1}, {2,2}, {2,3}};
 
         for (int i = 0; i < exp.length; i++){
-            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
-            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+            Assert.assertNotSame(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotSame(exp[i][1], neighbors.get(i).getIndex());
         }
         
         
       
-    	ygame24.setPlayetAt(1,3,'O');
+    	ygame24.setPlayerAt(1,3,'O');
         neighbors = this.ygame24.getNeighbors(1, 3,'O');
-        exp[][] = { {2,5}, {1,4}, {0,2}};
+        exp = new int[][]{ {2,5}, {1,4}, {0,2}};
 
         for (int i = 0; i < exp.length; i++){
             Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
             Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
         }
-        exp[][] = {{1,2}, {2,3}, {2,4}};
+        exp = new int[][]{{1,2}, {2,3}, {2,4}};
 
         for (int i = 0; i < exp.length; i++){
-            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
-            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+            Assert.assertNotSame(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotSame(exp[i][1], neighbors.get(i).getIndex());
         }
         
         
         
-        ygame24.setPlayetAt(0,3,'O');
+        ygame24.setPlayerAt(0,3,'O');
         neighbors = this.ygame24.getNeighbors(0, 3,'O');
-        exp[][] = { {0,1}, {0,2}, {1,4}};
+        exp = new int[][]{ {0,1}, {0,2}, {1,4}};
 
         for (int i = 0; i < exp.length; i++){
             Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
             Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
         }
-        exp[][] = { {0,4}, {0,5}, {1,5} };
+        exp = new int[][]{ {0,4}, {0,5}, {1,5} };
 
         for (int i = 0; i < exp.length; i++){
-            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
-            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+            Assert.assertNotSame(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotSame(exp[i][1], neighbors.get(i).getIndex());
         }
     	
     }
@@ -2438,7 +2438,7 @@ public class TestY {
     	ygame24.setPlayerAt(1, 5, 'X');
     	ygame24.setPlayerAt(2, 7, 'X');
     	
-    	ygame24.setPlayetAt(2,1,'O');
+    	ygame24.setPlayerAt(2,1,'O');
     	Vector<Node> neighbors = this.ygame24.getNeighbors(2, 1,'O');
         int exp[][] = { {1,0}, {2,0}};
 
@@ -2446,81 +2446,81 @@ public class TestY {
             Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
             Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
         }
-        exp[][] = { {1,1},{2,2} };
+        exp = new int[][]{ {1,1},{2,2} };
 
         for (int i = 0; i < exp.length; i++){
-            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
-            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+            Assert.assertNotSame(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotSame(exp[i][1], neighbors.get(i).getIndex());
         }
     	
     	
-        ygame24.setPlayetAt(0,5,'O');
+        ygame24.setPlayerAt(0,5,'O');
         neighbors = this.ygame24.getNeighbors(0, 5,'O');
-        exp[][] = { {1,7}, {1,8}};
+        exp = new int[][]{ {1,7}, {1,8}};
 
         for (int i = 0; i < exp.length; i++){
             Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
             Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
         }
-        exp[][] = { {0,0}, {0,1} , {0,3}, {0,4}};
+        exp = new int[][]{ {0,0}, {0,1} , {0,3}, {0,4}};
 
         for (int i = 0; i < exp.length; i++){
-            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
-            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+            Assert.assertNotSame(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotSame(exp[i][1], neighbors.get(i).getIndex());
         }
     	
-        ygame24.setPlayetAt(0,4,'O');
+        ygame24.setPlayerAt(0,4,'O');
         neighbors = this.ygame24.getNeighbors(0, 4,'O');
-        exp[][] = {{1,5},{1,6}, {1,7},{0,5}};
+        exp = new int[][]{{1,5},{1,6}, {1,7},{0,5}};
 
         for (int i = 0; i < exp.length; i++){
             Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
             Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
         }
-        exp[][] = {{0,3}};
+        exp = new int[][]{{0,3}};
 
         for (int i = 0; i < exp.length; i++){
-            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
-            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+            Assert.assertNotSame(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotSame(exp[i][1], neighbors.get(i).getIndex());
         }
         
         
-        ygame24.setPlayetAt(2,8,'O');
+        ygame24.setPlayerAt(2,8,'O');
         neighbors = this.ygame24.getNeighbors(2, 8,'O');
-        exp[][] = {{1,6},{2,7}};
+        exp = new int[][]{{1,6},{2,7}};
 
         for (int i = 0; i < exp.length; i++){
             Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
             Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
         }
-        exp[][] = { {2,9}};
+        exp = new int[][]{ {2,9}};
 
         for (int i = 0; i < exp.length; i++){
-            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
-            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+            Assert.assertNotSame(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotSame(exp[i][1], neighbors.get(i).getIndex());
         }
         
         
-        ygame24.setPlayetAt(2,10,'O');
+        ygame24.setPlayerAt(2,10,'O');
         neighbors = this.ygame24.getNeighbors(2, 10,'O');
-        exp[][] = {{1,8},{1,7}};
+        exp = new int[][]{{1,8},{1,7}};
 
         for (int i = 0; i < exp.length; i++){
             Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
             Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
         }
-        exp[][] = { {2,11}, {2,9} };
+        exp = new int[][]{ {2,11}, {2,9} };
 
         for (int i = 0; i < exp.length; i++){
-            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
-            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+            Assert.assertNotSame(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotSame(exp[i][1], neighbors.get(i).getIndex());
         }
         
         
         
-        ygame24.setPlayetAt(2,11,'O');
+        ygame24.setPlayerAt(2,11,'O');
         neighbors = this.ygame24.getNeighbors(2, 11,'O');
-        exp[][] = {{2,0}, {1,0}, {1,8}, {2,10}};
+        exp = new int[][]{{2,0}, {1,0}, {1,8}, {2,10}};
 
         for (int i = 0; i < exp.length; i++){
             Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
@@ -2539,7 +2539,7 @@ public class TestY {
     	ygame24.setPlayerAt(2, 8, 'X');
     	
     	
-    	ygame24.setPlayetAt(1,0,'O');
+    	ygame24.setPlayerAt(1,0,'O');
     	Vector<Node> neighbors = this.ygame24.getNeighbors(1, 0,'O');
         int exp[][] = {{2,11},{2,0}};
 
@@ -2547,26 +2547,26 @@ public class TestY {
             Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
             Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
         }
-        exp[][] = { {1, 1},{ 0, 0 },{ 1, 8 },{ 2, 1 } };
+        exp = new int[][]{ {1, 1},{ 0, 0 },{ 1, 8 },{ 2, 1 } };
 
         for (int i = 0; i < exp.length; i++){
-            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
-            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+            Assert.assertNotSame(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotSame(exp[i][1], neighbors.get(i).getIndex());
         }
     	
-        ygame24.setPlayetAt(1,7,'O');
+        ygame24.setPlayerAt(1,7,'O');
         neighbors = this.ygame24.getNeighbors(1, 7,'O');
-        exp[][] = {{2,9},{2,10}};
+        exp = new int[][]{{2,9},{2,10}};
 
         for (int i = 0; i < exp.length; i++){
             Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
             Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
         }
-        exp[][] = {{1,8}, {0,5} , {0,4}, {1,6}};
+        exp = new int[][]{{1,8}, {0,5} , {0,4}, {1,6}};
 
         for (int i = 0; i < exp.length; i++){
-            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
-            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+            Assert.assertNotSame(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotSame(exp[i][1], neighbors.get(i).getIndex());
         }
     	   	
     }
@@ -2585,7 +2585,7 @@ public class TestY {
     	ygame24.setPlayerAt(2, 4, 'X');
     	
     	
-    	 ygame24.setPlayetAt(0,5,'O');
+    	 ygame24.setPlayerAt(0,5,'O');
     	 Vector<Node> neighbors = this.ygame24.getNeighbors(0, 5,'O');
          int exp[][] = {{0,0},{0,1}};
 
@@ -2593,61 +2593,61 @@ public class TestY {
              Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
              Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
          }
-         exp[][] = {{0,3}, {0,4}, {1,7}, {1,8}};
+         exp = new int[][]{{0,3}, {0,4}, {1,7}, {1,8}};
 
          for (int i = 0; i < exp.length; i++){
-             Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
-             Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+             Assert.assertNotSame(exp[i][0], neighbors.get(i).getTriangle());
+             Assert.assertNotSame(exp[i][1], neighbors.get(i).getIndex());
          }
          
          
-         ygame24.setPlayetAt(0,3,'O');
+         ygame24.setPlayerAt(0,3,'O');
          neighbors = this.ygame24.getNeighbors(0, 3,'O');
-         exp[][] = {{0,5},{0,1},{0,2}};
+         exp = new int[][]{{0,5},{0,1},{0,2}};
 
          for (int i = 0; i < exp.length; i++){
              Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
              Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
          }
-         exp[][] = {{0,4}, {1,4}, {1,5}};
+         exp = new int[][]{{0,4}, {1,4}, {1,5}};
 
          for (int i = 0; i < exp.length; i++){
-             Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
-             Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+             Assert.assertNotSame(exp[i][0], neighbors.get(i).getTriangle());
+             Assert.assertNotSame(exp[i][1], neighbors.get(i).getIndex());
          }
          
          
-         ygame24.setPlayetAt(0,4,'O');
+         ygame24.setPlayerAt(0,4,'O');
          neighbors = this.ygame24.getNeighbors(0, 4,'O');
-         exp[][] = {{0,5},{0,3}};
+         exp = new int[][]{{0,5},{0,3}};
 
          for (int i = 0; i < exp.length; i++){
              Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
              Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
          }
-         exp[][] = {{1,5}, {1,6}, {1,7}};
+         exp = new int[][]{{1,5}, {1,6}, {1,7}};
 
          for (int i = 0; i < exp.length; i++){
-             Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
-             Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+             Assert.assertNotSame(exp[i][0], neighbors.get(i).getTriangle());
+             Assert.assertNotSame(exp[i][1], neighbors.get(i).getIndex());
          }
          
-         ygame24.setPlayetAt(2,2,'O');
+         ygame24.setPlayerAt(2,2,'O');
          neighbors = this.ygame24.getNeighbors(2,2,'O');
-         exp[][] = {{1,2},{1,1}};
+         exp = new int[][]{{1,2},{1,1}};
 
          for (int i = 0; i < exp.length; i++){
              Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
              Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
          }
-         exp[][] = {{2,3}, {2,1}};
+         exp = new int[][]{{2,3}, {2,1}};
 
          for (int i = 0; i < exp.length; i++){
-             Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
-             Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+             Assert.assertNotSame(exp[i][0], neighbors.get(i).getTriangle());
+             Assert.assertNotSame(exp[i][1], neighbors.get(i).getIndex());
          }
          
-         ygame24.setPlayetAt(2,6,'O');
+         ygame24.setPlayerAt(2,6,'O');
          neighbors = this.ygame24.getNeighbors(2,6,'O');
 
          Assert.assertNull(neighbors);
@@ -2666,7 +2666,7 @@ public class TestY {
     	ygame24.setPlayerAt(1, 7, 'X');
     	ygame24.setPlayerAt(2, 10, 'X');
     	
-    	ygame24.setPlayetAt(1,4,'O');
+    	ygame24.setPlayerAt(1,4,'O');
         Vector<Node> neighbors = this.ygame24.getNeighbors(1, 4,'O');
         int exp[][] = {{0,3} , {0,2}, {1,3}, {2,5}, {2,6}};
 
@@ -2674,26 +2674,26 @@ public class TestY {
             Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
             Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
         }
-        exp[][] = {{1,5}};
+        exp = new int[][]{{1,5}};
 
         for (int i = 0; i < exp.length; i++){
-            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
-            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+            Assert.assertNotSame(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotSame(exp[i][1], neighbors.get(i).getIndex());
         }
         
-        ygame24.setPlayetAt(0,4,'O');
+        ygame24.setPlayerAt(0,4,'O');
         neighbors = this.ygame24.getNeighbors(0, 4,'O');
-        exp[][] = {{0,3}};
+        exp = new int[][]{{0,3}};
 
         for (int i = 0; i < exp.length; i++){
             Assert.assertEquals(exp[i][0], neighbors.get(i).getTriangle());
             Assert.assertEquals(exp[i][1], neighbors.get(i).getIndex());
         }
-        exp[][] = {{0,5}, {1,5}, {1,6}, {1,7}};
+        exp = new int[][]{{0,5}, {1,5}, {1,6}, {1,7}};
 
         for (int i = 0; i < exp.length; i++){
-            Assert.assertNotEquals(exp[i][0], neighbors.get(i).getTriangle());
-            Assert.assertNotEquals(exp[i][1], neighbors.get(i).getIndex());
+            Assert.assertNotSame(exp[i][0], neighbors.get(i).getTriangle());
+            Assert.assertNotSame(exp[i][1], neighbors.get(i).getIndex());
         }
     }
     
