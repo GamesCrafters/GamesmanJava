@@ -23,11 +23,15 @@ import edu.berkeley.gamesman.core.GamesmanConf;
 
 public class HadoopTierMapper extends
 		Mapper<Range, NullWritable, IntWritable, RangeFile> {
-	private final RangeFile mapValue = new RangeFile();
-	private final IntWritable tier = new IntWritable();
+		private final RangeFile mapValue = new RangeFile();
+		private final IntWritable tier = new IntWritable();
         private TierSolver solver;
         private TierGame game;
+        private FileDatabase writeDb;
         private FileDatabase readDb;
+        private boolean doZip;
+        private String path; 
+        private String writeURI;
 
 	Configuration conf;
 	FileSystem fs;
@@ -43,13 +47,11 @@ public class HadoopTierMapper extends
 			fs = FileSystem.get(conf);
 			tier.set(conf.getInt("tier", -1));
                         solver = new TierSolver(this.conf);
+            path = this.conf.getProperty("gamesman.remote.path");
+            doZip = conf.getBoolean("gamesman.remote.zipped", false);
 
 
-                        //TODO: BRIAN HAS NO HEAD!!!!!!!!!!!
-
-
-
-
+            //TODO: What do we do about getting the database HEAD!!!!!!!!!!!
 
 
 		} catch (ClassNotFoundException e) {
@@ -69,24 +71,50 @@ public class HadoopTierMapper extends
 		    DatabaseHeader head = new DatabaseHeader(headBytes);
                     int prevTier = tier.get() + 1;
                     String name = conf.toString() + "_" + tier.get() + "_" + key.firstRecord;
-                    if (prevTier < game.numberOfTiers()) {
+            
+             //setting write database file name, path etc and initializing it*******
+            path = this.conf.getProperty("gamesman.remote.path");
+            String foldUri = conf.getProperty("gamesman.parallel.dbfolder");
+            doZip = conf.getBoolean("gamesman.remote.zipped", false);    
+            writeURI = foldUri + "/s" + firstHash + ".db";
+            String zipURI = null;
+            if(doZip){ 
+            	zipURI = writeURI;
+            	writeURI = writeURI + ".uz";
+            }   
+            writeDb = Database.openDatabase(writeURI, conf, true, head);
+			solver.setWriteDb(writeDb);
+			//***********************************************************************
+           
+			
+			//setting read database if it is needed**********************************
+			if (prevTier < game.numberOfTiers()) {
 				long firstTierRecord = game.hashOffsetForTier(prevTier);
 				long numTierRecords = game.numHashesForTier(prevTier);
-				readDb = new FileDatabase(name, conf, true, firstHash, numHashes, head.getHeader(
-						firstTierRecord, numTierRecords));
-				solver.setReadDb(readDb);
-			} else {
-				readDb = null;
+			//TODO: how do we get the read database??? 
+			readDb = new FileDatabase(name, conf, true, firstHash, numHashes, head.getHeader(
+			firstTierRecord, numTierRecords));
+			solver.setReadDb(readDb);
+			} 
+            else {
+            	readDb = null;
 			}
-
-
+			//***********************************************************************
+                    
 
             int t = tier.get();
             int threads = conf.getInteger("gamesman.threads", 1);
             List<WorkUnit> list = null;
-	    WorkUnit wu = solver.prepareSolve(conf, t, firstHash, numHashes);
-
-            wu.conquer();
+            WorkUnit wu = solver.prepareSolve(conf, t, firstHash, numHashes);
+            wu.conquer(); //solve it
+            
+            if (readDb != null){
+            	readDb.close();
+            }
+            
+            if(doZip){
+            	
+            }
 		// TODO: Add tier slave stuff
 
             
