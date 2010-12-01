@@ -25,7 +25,6 @@ public class HadoopTierMaster implements Runnable {
 		game = (TierGame) gamesmanConf.getGame();
                 job = new Job(hadoopConf, "hadoop tier solver");
 
-
 		job.setOutputKeyClass(IntWritable.class);
 		job.setOutputValueClass(FileStatus.class);
 		job.setMapperClass(HadoopTierMapper.class);
