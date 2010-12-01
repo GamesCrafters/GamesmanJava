@@ -1,41 +1,31 @@
 package edu.berkeley.gamesman.master;
 
 
-import org.apache.hadoop.mapred.InputSplit;
+import org.apache.hadoop.mapreduce.InputSplit;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 
 /**
  * Created by IntelliJ IDEA.
- * User: user
+ * User: Dan
  * Date: Nov 30, 2010
  * Time: 10:14:16 AM
  * To change this template use File | Settings | File Templates.
  */
-public class Split implements InputSplit {
+public class Split extends InputSplit {
 	private final static String[] hosts = new String[0];
-	long first;
-	long num;				//CHANGE TO LONG since HASHES IS LONG VAL
+	Range r;
 	public Split() {
 	}
-	public Split(long first, long num) {
-		this.first = first;
-		this.num = num;
+	public Split(Range r) {
+		this.r = r;
 	}
+        @Override
 	public long getLength() throws IOException {
-		return num;
+		return r.getLength();
 	}
+         @Override
 	public String[] getLocations() throws IOException {
 		return hosts;
-	}
-	public void readFields(DataInput in) throws IOException {
-		first = in.readLong();
-		num = in.readInt();
-	}
-	public void write(DataOutput out) throws IOException {
-		out.writeLong(first);
-		out.writeLong(num);
 	}
 }
