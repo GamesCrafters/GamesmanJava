@@ -8,8 +8,6 @@ import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.util.*;
 
 public class RearrangeSolver extends TierSolver {
-	private long debugTimes[] = new long[7];
-
 	public RearrangeSolver(Configuration conf) {
 		super(conf);
 	}

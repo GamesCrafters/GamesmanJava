@@ -10,10 +10,15 @@ public class Range implements WritableComparable<Range> {
 	long firstRecord;
 	long numRecords;
 
-        public Range(long first, long numRecords) {
-            this.firstRecord = first;
-            this.numRecords = numRecords;
-        }
+	public Range(long first, long numRecords) {
+		this.firstRecord = first;
+		this.numRecords = numRecords;
+	}
+
+	public Range() {
+		// All Writable classes must include an empty constructor
+	}
+
 	@Override
 	public void write(DataOutput out) throws IOException {
 		out.writeLong(firstRecord);
@@ -49,8 +54,8 @@ public class Range implements WritableComparable<Range> {
 			return false;
 	}
 
-        public long getLength() {
-            return numRecords;
-        }
+	public long getLength() {
+		return numRecords;
+	}
 
 }

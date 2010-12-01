@@ -593,52 +593,52 @@ public final class YGame extends ConnectGame
                 }
                 else
                 {
-                    if (false)
-                    {
-                        // Ok, this ginormous mess handles:
-                        // The 2x4 triangle having 2 "inner nodes" that are both on the same triangle.
-                        // The 3x4 triangle having 1 "inner node" on the same triangle and the other node at t:0,i:0.
-                        // `-> which is different before and after the corners.
-                        // The default case where inner indexes decrease for clockwise order.
-                        // The reason for the temporary variables is because the logic of a combined if statement is uuuuuuuuuugly.
-
-                        // ALWAYS FALSE
-                        // boolean hasOnlyOneSameTriangleInnerNode = ((this.nodesOnInnerTriangle.get(0).triangle == triangleIn) &&
-                        // (this.nodesOnInnerTriangle.get(1).triangle != triangleIn))||
-                        // ((this.nodesOnInnerTriangle.get(0).triangle != triangleIn) && (this.nodesOnInnerTriangle.get(1).triangle ==
-                        // triangleIn));
-
-                        // ALWAYS FALSE
-                        // boolean hasTwoSameTriangleInnerNodes = ((this.nodesOnInnerTriangle.get(0).triangle == triangleIn) &&
-                        // (this.nodesOnInnerTriangle
-                        // .get(1).triangle == triangleIn));
-
-                        // ALWAYS -1
-                        // int whichNodeIsClockwiseOnSameTriangleInnerNode = hasTwoSameTriangleInnerNodes ? (this.nodesOnInnerTriangle
-                        // int whichNodeIsClockwiseOnSameTriangleInnerNode = false ? (this.nodesOnInnerTriangle.get(0).index == Util
-                        // .nonNegativeModulo(indexIn + 2, this.nodesInThisTriangle[triangleIn])) ? 0 : 1 : -1;
-
-                        int zeroZeroNodeIndex = ((this.nodesOnInnerTriangle.get(0).triangle == 0) && (this.nodesOnInnerTriangle.get(0).index==0)) ? 0 :
-                            ((this.nodesOnInnerTriangle.get(1).triangle == 0) && (this.nodesOnInnerTriangle.get(1).index==0)) ? 1 : -1;
-
-                        System.out.println(zeroZeroNodeIndex);
-
-                        // if ((((hasTwoSameTriangleInnerNodes == true) && (whichNodeIsClockwiseOnSameTriangleInnerNode == 0))
-                        // if ((((false == true) && (whichNodeIsClockwiseOnSameTriangleInnerNode == 0))
-                        if ((((false == true) && (-1 == 0))
-                                || ((isAfterCorner == true) && (zeroZeroNodeIndex == 0))
-                                // || ((isBeforeCorner == true) && (zeroZeroNodeIndex == 1)) || ((hasOnlyOneSameTriangleInnerNode ==
-                                // false)
-                                || ((isBeforeCorner == true) && (zeroZeroNodeIndex == 1)) || ((false == false)
-                                        // && (hasTwoSameTriangleInnerNodes == false) && (this.nodesOnInnerTriangle.get(0).index >
-                                        // this.nodesOnInnerTriangle
-                                        && (false == false) && (this.nodesOnInnerTriangle.get(0).index > this.nodesOnInnerTriangle
-                                                .get(1).index))))
-                        {
-                        }
-                    }
-                    else
-                    {
+//                    if (false)
+//                    {
+//                        // Ok, this ginormous mess handles:
+//                        // The 2x4 triangle having 2 "inner nodes" that are both on the same triangle.
+//                        // The 3x4 triangle having 1 "inner node" on the same triangle and the other node at t:0,i:0.
+//                        // `-> which is different before and after the corners.
+//                        // The default case where inner indexes decrease for clockwise order.
+//                        // The reason for the temporary variables is because the logic of a combined if statement is uuuuuuuuuugly.
+//
+//                        // ALWAYS FALSE
+//                        // boolean hasOnlyOneSameTriangleInnerNode = ((this.nodesOnInnerTriangle.get(0).triangle == triangleIn) &&
+//                        // (this.nodesOnInnerTriangle.get(1).triangle != triangleIn))||
+//                        // ((this.nodesOnInnerTriangle.get(0).triangle != triangleIn) && (this.nodesOnInnerTriangle.get(1).triangle ==
+//                        // triangleIn));
+//
+//                        // ALWAYS FALSE
+//                        // boolean hasTwoSameTriangleInnerNodes = ((this.nodesOnInnerTriangle.get(0).triangle == triangleIn) &&
+//                        // (this.nodesOnInnerTriangle
+//                        // .get(1).triangle == triangleIn));
+//
+//                        // ALWAYS -1
+//                        // int whichNodeIsClockwiseOnSameTriangleInnerNode = hasTwoSameTriangleInnerNodes ? (this.nodesOnInnerTriangle
+//                        // int whichNodeIsClockwiseOnSameTriangleInnerNode = false ? (this.nodesOnInnerTriangle.get(0).index == Util
+//                        // .nonNegativeModulo(indexIn + 2, this.nodesInThisTriangle[triangleIn])) ? 0 : 1 : -1;
+//
+//                        int zeroZeroNodeIndex = ((this.nodesOnInnerTriangle.get(0).triangle == 0) && (this.nodesOnInnerTriangle.get(0).index==0)) ? 0 :
+//                            ((this.nodesOnInnerTriangle.get(1).triangle == 0) && (this.nodesOnInnerTriangle.get(1).index==0)) ? 1 : -1;
+//
+//                        System.out.println(zeroZeroNodeIndex);
+//
+//                        // if ((((hasTwoSameTriangleInnerNodes == true) && (whichNodeIsClockwiseOnSameTriangleInnerNode == 0))
+//                        // if ((((false == true) && (whichNodeIsClockwiseOnSameTriangleInnerNode == 0))
+//                        if ((((false == true) && (-1 == 0))
+//                                || ((isAfterCorner == true) && (zeroZeroNodeIndex == 0))
+//                                // || ((isBeforeCorner == true) && (zeroZeroNodeIndex == 1)) || ((hasOnlyOneSameTriangleInnerNode ==
+//                                // false)
+//                                || ((isBeforeCorner == true) && (zeroZeroNodeIndex == 1)) || ((false == false)
+//                                        // && (hasTwoSameTriangleInnerNodes == false) && (this.nodesOnInnerTriangle.get(0).index >
+//                                        // this.nodesOnInnerTriangle
+//                                        && (false == false) && (this.nodesOnInnerTriangle.get(0).index > this.nodesOnInnerTriangle
+//                                                .get(1).index))))
+//                        {
+//                        }
+//                    }
+//                    else
+//                    {
                         int differenceInInnerIndex = Math.abs(this.nodesOnInnerTriangle.get(0).index - this.nodesOnInnerTriangle.get(1).index);
 
                         if (((differenceInInnerIndex == 1) && (this.nodesOnInnerTriangle.get(0).index > this.nodesOnInnerTriangle
@@ -653,7 +653,7 @@ public final class YGame extends ConnectGame
                             this.neighbors.add(this.nodesOnInnerTriangle.get(1));
                             this.nodesOnInnerTriangle.remove(1);
                         }
-                    }
+//                    }
                 }
             }
             this.neighbors.add(this.nodesOnInnerTriangle.get(0));

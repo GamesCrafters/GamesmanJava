@@ -343,7 +343,7 @@ public class Reversi extends TierGame {
 							}
 							System.arraycopy(oldPosition, 0, tempPosition, 0,
 									boardSize);
-							boolean x = isFlippable(place.boardNum, index,
+							isFlippable(place.boardNum, index,
 									true, tempPosition);
 							int newWhitePieces = 0;
 							for (int i = 0; i < boardSize; i++) {
