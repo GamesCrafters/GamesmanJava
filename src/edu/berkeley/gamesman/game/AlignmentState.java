@@ -290,17 +290,17 @@ public final class AlignmentState implements State {
 		int[] coord = new int[6]; // coord[baseX][baseY][diagLeftX][diagLeftY][diagRightX][diagRightY]
 		switch(direction) {
 			case 'n': 
-				for(int i = col; i < board.length; i++){
+				for(int i = row; i < board.length; i++){
 					//if the piece at this position matches opponent's piece, then check if gun formed
-					if (board[row][i] == opponent){
-						if ((i+1 < board.length) && (row-1 >= 0) && (row+1 < board.length)
-								&& (board[row-1][i+1] == opponent) && (board[row+1][i+1] == opponent)) {
+					if (board[i][col] == opponent){
+						if ((i+1 < board.length) && (col-1 >= 0) && (col+1 < board.length)
+								&& (board[i+1][col-1] == opponent) && (board[i+1][col+1] == opponent)) {
 							guns2[0] = true; 
-							coord[0] = row;  
+							coord[0] = col;  
 							coord[1] = i;    
-							coord[2] = row - 1; //store NW piece
+							coord[2] = col - 1; //store NW piece
 							coord[3] = i + 1;
-							coord[4] = row + 1; //store NE piece
+							coord[4] = col + 1; //store NE piece
 							coord[5] = i + 1;
 							break;
 						}
@@ -308,17 +308,17 @@ public final class AlignmentState implements State {
 				}
 				break;
 			case 's':
-				for(int i = col; i > 0; i--){
+				for(int i = row; i > 0; i--){
 					//if the piece at this position matches opponent's piece, then check if gun formed
-					if(board[row][i] == opponent){
-						if ((i-1 >= 0) && (row-1 >= 0) && (row+1 < board.length) &&
-								(board[row-1][i-1] == opponent) && (board[row+1][i-1] == opponent)) {
+					if(board[col][i] == opponent){
+						if ((i-1 >= 0) && (col-1 >= 0) && (col+1 < board.length) &&
+								(board[i-1][col-1] == opponent) && (board[i-1][col+1] == opponent)) {
 							guns2[1] = true;
-							coord[0] = row; //store x,y coord of base of gun
+							coord[0] = col; //store x,y coord of base of gun
 							coord[1] = i;
-							coord[2] = row - 1; //store SW piece
+							coord[2] = col - 1; //store SW piece
 							coord[3] = i - 1;
-							coord[4] = row + 1; //store SE piece
+							coord[4] = col + 1; //store SE piece
 							coord[5] = i - 1;
 							break;
 						}
@@ -326,36 +326,36 @@ public final class AlignmentState implements State {
 				}	
 				break;
 			case 'e':
-				for(int i = row; i < board.length ; i++){
+				for(int i = col; i < board.length ; i++){
 					//if the piece at this position matches opponent's piece, then check if gun formed
-					if (board[i][col] == opponent){
-						if ((i-1 >= 0) && (col-1 >= 0) && (col+1 < board.length) &&
-								(board[i-1][col-1] == opponent) && (board[i-1][col+1] == opponent)) {
+					if (board[row][i] == opponent){
+						if ((i-1 >= 0) && (row-1 >= 0) && (row+1 < board.length) &&
+								(board[row-1][i-1] == opponent) && (board[row+1][i-1] == opponent)) {
 							guns2[2] = true;
 							coord[0] = i; //store x,y coord of base of gun
-							coord[1] = col;
+							coord[1] = row;
 							coord[2] = i - 1; //store SE
-							coord[3] = col - 1;
+							coord[3] = row - 1;
 							coord[4] = i - 1; //store NE
-							coord[5] = col + 1;
+							coord[5] = row + 1;
 							break;
 						}
 					}
 				}	
 				break;
 			case 'w':
-				for(int i = row; i > 0; i--){
+				for(int i = col; i > 0; i--){
 					//if the piece at this position matches opponent's piece, then check if gun formed
-					if (board[i][col] == opponent){
-						if ((i+1 < board.length) && (col-1 >= 0) && (col+1 < board.length) &&
-								(board[i+1][col-1] == opponent) && (board[i+1][col+1] == opponent)) {
+					if (board[row][i] == opponent){
+						if ((i+1 < board.length) && (row-1 >= 0) && (row+1 < board.length) &&
+								(board[row-1][i+1] == opponent) && (board[row+1][i+1] == opponent)) {
 							guns2[3] = true;
 							coord[0] = i; //store x,y coord of base
-							coord[1] = col;
+							coord[1] = row;
 							coord[2] = i + 1; //store SW piece
-							coord[3] = col - 1;
+							coord[3] = row - 1;
 							coord[4] = i + 1; //store NW piece
-							coord[5] = col + 1;
+							coord[5] = row + 1;
 							break;
 						}
 					}
