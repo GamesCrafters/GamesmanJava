@@ -230,6 +230,8 @@ public final class QuickCross extends Game<QuickCrossState> implements LoopyGame
 			}
 			//first make sure diagonal possible
 			if (height >= piecesToWin && width >= piecesToWin){
+				
+				
 				//checks for diagonal win /
 				for (int y = 0; y <= height - piecesToWin; y++) {
 					for (int x = 0; x <= width - piecesToWin; x++) {
@@ -244,7 +246,7 @@ public final class QuickCross extends Game<QuickCrossState> implements LoopyGame
 				}
 				//checks for diagonal win \
 				for (int y = 0; y <= height - piecesToWin; y++) {
-					for (int x = width - 1; x > piecesToWin - 1; x--) {
+					for (int x = width - 1; x >= piecesToWin - 1; x--) {
 					//for (int x = piecesToWin - 1; x < width; x++) {
 						int pieces;
 						for (pieces = 0; pieces < piecesToWin; pieces++) {
