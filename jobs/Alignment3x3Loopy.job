@@ -1,8 +1,8 @@
 gamesman.game = AlignmentLoopy
 gamesman.game.width = 3
 gamesman.game.height = 3
-gamesman.game.pieces = 5
-gamesman.game.variant = 0
+gamesman.game.pieces = 3
+gamesman.game.variant = 1
 gamesman.solver = LoopySolver
 record.fields = VALUE,REMOTENESS
 gamesman.db.uri = Alignment33Loopy.db
