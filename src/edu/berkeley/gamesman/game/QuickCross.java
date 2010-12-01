@@ -324,13 +324,13 @@ public final class QuickCross extends Game<QuickCrossState> implements LoopyGame
 	@Override
 	public void longToRecord(QuickCrossState recordState, long record,
 			Record toStore) {
-		if (record == boardSize + 1)
+		if (record == boardSize*2 + 1)
 			toStore.value = Value.IMPOSSIBLE;
-		else if (record == boardSize + 2)
+		else if (record == boardSize*2 + 2)
 			toStore.value = Value.UNDECIDED;
-		else if (record == boardSize + 3)
+		else if (record == boardSize*2 + 3)
 			toStore.value = Value.DRAW;
-		else if (record >= 0 && record <= boardSize) {
+		else if (record >= 0 && record <= boardSize*2) {
 			toStore.value = (record & 1) == 1 ? Value.WIN : Value.LOSE;
 			toStore.remoteness = (int) record;
 		}
@@ -341,11 +341,11 @@ public final class QuickCross extends Game<QuickCrossState> implements LoopyGame
 		if (fromRecord.value == Value.WIN || fromRecord.value == Value.LOSE)
 			return fromRecord.remoteness;
 		else if (fromRecord.value == Value.IMPOSSIBLE)
-			return boardSize + 1;
+			return boardSize*2 + 1;
 		else if (fromRecord.value == Value.UNDECIDED)
-			return boardSize + 2;
+			return boardSize*2 + 2;
 		else if (fromRecord.value == Value.DRAW)
-			return boardSize + 3;
+			return boardSize*2 + 3;
 		else
 			throw new Error("Invalid Value :" + fromRecord.value);
 	}
