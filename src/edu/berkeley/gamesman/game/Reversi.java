@@ -207,7 +207,7 @@ public class Reversi extends TierGame {
 			this.turn = WHITE;
 		else
 			throw new Error("Bad turn");
-		char[] woTurn = Arrays.copyOfRange(posArray, 1, posArray.length);
+		char[] woTurn = Arrays.copyOfRange(posArray, 1, posArray.length - 1);
 		dbh.setNumsAndHash(woTurn);
 		isChildrenValid = false;
 	}
@@ -343,8 +343,8 @@ public class Reversi extends TierGame {
 							}
 							System.arraycopy(oldPosition, 0, tempPosition, 0,
 									boardSize);
-							isFlippable(place.boardNum, index,
-									true, tempPosition);
+							isFlippable(place.boardNum, index, true,
+									tempPosition);
 							int newWhitePieces = 0;
 							for (int i = 0; i < boardSize; i++) {
 								if (tempPosition[i] == 'O')
