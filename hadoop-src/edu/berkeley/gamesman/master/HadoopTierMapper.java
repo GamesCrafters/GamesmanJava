@@ -37,6 +37,8 @@ public class HadoopTierMapper extends
 	public void map(Range key, NullWritable value, Context context)
 			throws IOException {
 		// TODO: Add tier slave stuff
+
+            
 		FileStatus finalFile = null;
 		boolean successful = false;
 		while (!successful) {
