@@ -1,5 +1,5 @@
 gamesman.game = YGame
-gamesman.game.innerTriangleSegments = 4
+gamesman.game.centerRows = 5
 gamesman.game.outerRows = 4
 gamesman.hasher = TieredItergameHasher
 gamesman.solver = TierSolver

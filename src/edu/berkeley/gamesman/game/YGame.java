@@ -137,16 +137,8 @@ public final class YGame extends ConnectGame
 
         // Allocate and initialize the board, which is an array of character arrays representing the triangles.
 
-        if ((this.innerTriangleSegments % 3) == 2) 
-        {
-            this.numberOfTriangles = this.outerRingSegments
-            - this.innerTriangleSegments + 1;
-        }
-        else 
-        {
-            this.numberOfTriangles = this.outerRingSegments
-            - this.innerTriangleSegments + 2;
-        }
+		this.numberOfTriangles = this.innerTriangleSegments / 3 + 1
+				+ this.outerRows;
 
         assert Util.debug(DebugFacility.GAME, "numberOfTriangles: "
                 + this.numberOfTriangles);
