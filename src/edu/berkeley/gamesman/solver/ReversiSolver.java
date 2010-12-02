@@ -238,10 +238,11 @@ public class ReversiSolver extends Solver {
 				long fullSize = game.numHashesForTier(tier);
 				splits = Math.max(minSplits, numSplits(tier, maxMem));
 				if (finalRun) {
-					fullSize /= 2;
 					finalRun = false;
-				} else
+				} else {
 					finalRun = true;
+					fullSize /= 2;
+				}
 				starts = writeDb.splitRange(fullStart, fullSize, splits,
 						minSplitSize);
 			}
@@ -342,8 +343,12 @@ public class ReversiSolver extends Solver {
 					readHandle = null;
 				else
 					readHandle = readDb.getHandle();
-				solvePartialTier(conf, slice.car, slice.cdr, updater, readDb,
-						readHandle, writeDb, myWrite);
+				if (finalRun)
+					secondRun(conf, slice.car, slice.cdr, updater, readDb,
+							readHandle, writeDb, myWrite);
+				else
+					solvePartialTier(conf, slice.car, slice.cdr, updater,
+							readDb, readHandle, writeDb, myWrite);
 				writeDb.closeHandle(myWrite);
 			}
 			if (barr != null)
@@ -430,4 +435,29 @@ public class ReversiSolver extends Solver {
 		starts = writeDb.splitRange(startHash, numHashes, splits, minSplitSize);
 		return new ReversiSolverWorkUnit(conf);
 	}
+
+	public void secondRun(Configuration conf, long start, long hashes,
+			ReversiSolverUpdater t, Database readDb, DatabaseHandle readDh,
+			Database writeDb, DatabaseHandle writeDh) {
+		Reversi game = (Reversi) conf.getGame();
+		long otherSide = game.numHashesForTier(tier) / 2;
+		Record r1 = game.newRecord(), r2 = game.newRecord();
+		for (long pos = start; pos < start + hashes; pos++) {
+			game.longToRecord(null, readDb.getRecord(readDh, pos), r1);
+			game.longToRecord(null, readDb.getRecord(readDh, pos + otherSide),
+					r2);
+			if (r1.remoteness == 0 && r2.remoteness != 0) {
+				r1.set(r2);
+				r1.previousPosition();
+				writeDb.putRecord(writeDh, pos, game.recordToLong(null, r1));
+			}
+			if (r2.remoteness == 0 && r1.remoteness != 0) {
+				r2.set(r1);
+				r2.previousPosition();
+				writeDb.putRecord(writeDh, pos + otherSide,
+						game.recordToLong(null, r2));
+			}
+		}
+	}
+
 }
