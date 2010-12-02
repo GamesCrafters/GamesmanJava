@@ -865,36 +865,52 @@ public final class YGame extends ConnectGame
 	@Override
 	public char[] convertInString(String s) {
 		int[] nextNode = new int[transitionTriangleNumber + 1];
+		int[] totalSizes = getTotalSizes();
 		char[] charArray = s.toCharArray();
 		char[] newChars = new char[totalNumberOfNodes];
-		int curIndex = inHelper(transitionTriangleNumber, charArray, newChars,
-				0, nextNode);
+		int curIndex = 0;
+		for (int row = 0; row <= this.innerTriangleSegments; row++) {
+			curIndex += inHelper(transitionTriangleNumber, charArray, newChars,
+					0, nextNode, totalSizes);
+		}
 		for (int triangle = numberOfTriangles; triangle > transitionTriangleNumber; triangle--) {
 			for (int i = 0; i < nodesInThisTriangle[triangle]; i++) {
-				newChars[getIndex(triangle, i)] = charArray[curIndex++];
+				newChars[getIndex(triangle, i, totalSizes)] = charArray[curIndex++];
 			}
 		}
 		return newChars;
 	}
 
-	private int inHelper(int triangle, char[] charArray, char[] newChars,
-			int curIndex, int[] nextNode) {
+	private int[] getTotalSizes() {
+		int[] totalSizes = new int[transitionTriangleNumber + 1];
+		int totalSize = 0;
+		for (int triangle = 0; triangle <= transitionTriangleNumber; triangle++) {
+			totalSizes[triangle] = totalSize;
+			totalSize += nodesInThisTriangle[triangle];
+		}
+		return totalSizes;
+	}
+
+	private int inHelper(final int triangle, final char[] charArray,
+			final char[] newChars, int curIndex, final int[] nextNode,
+			final int[] totalSizes) {
 		if (nextNode[triangle] == -1) {
 			throw new Error("Recursion should have ended already");
 		} else if (nextNode[triangle] == 0) {
-			newChars[getIndex(triangle, 0)] = charArray[curIndex++];
+			newChars[getIndex(triangle, 0, totalSizes)] = charArray[curIndex++];
 			nextNode[triangle] = 1;
 		} else {
 			int otherSide = nodesInThisTriangle[triangle] - nextNode[triangle];
 			if (otherSide - nextNode[triangle] > nextNode[triangle]) {
-				newChars[getIndex(triangle, otherSide)] = charArray[curIndex++];
-				curIndex = outHelper(triangle - 1, charArray, newChars,
-						curIndex, nextNode);
-				newChars[getIndex(triangle, nextNode[triangle])] = charArray[curIndex++];
+				newChars[getIndex(triangle, otherSide, totalSizes)] = charArray[curIndex++];
+				if (nextNode[triangle] > 1)
+					curIndex = outHelper(triangle - 1, charArray, newChars,
+							curIndex, nextNode, totalSizes);
+				newChars[getIndex(triangle, nextNode[triangle], totalSizes)] = charArray[curIndex++];
 				nextNode[triangle]++;
 			} else if (otherSide - nextNode[triangle] == nextNode[triangle]) {
 				for (int i = otherSide; i >= nextNode[triangle]; i--)
-					newChars[getIndex(triangle, i)] = charArray[curIndex++];
+					newChars[getIndex(triangle, i, totalSizes)] = charArray[curIndex++];
 				nextNode[triangle] = -1;
 			} else {
 				throw new Error("Recursion should have ended already");
@@ -906,36 +922,45 @@ public final class YGame extends ConnectGame
 	@Override
 	public String convertOutString(char[] charArray) {
 		int[] nextNode = new int[transitionTriangleNumber + 1];
+		int[] totalSizes = getTotalSizes();
 		char[] newChars = new char[totalNumberOfNodes];
-		int curIndex = outHelper(transitionTriangleNumber, charArray, newChars,
-				0, nextNode);
+		int curIndex = 0;
+		for (int row = 0; row <= this.innerTriangleSegments; row++) {
+			curIndex += outHelper(transitionTriangleNumber, charArray, newChars,
+					0, nextNode, totalSizes);
+		}
 		for (int triangle = numberOfTriangles; triangle > transitionTriangleNumber; triangle--) {
 			for (int i = 0; i < nodesInThisTriangle[triangle]; i++) {
-				newChars[curIndex++] = charArray[getIndex(triangle, i)];
+				newChars[curIndex++] = charArray[getIndex(triangle, i,
+						totalSizes)];
 			}
 		}
 		return new String(newChars);
 	}
 
-	private int outHelper(int triangle, char[] charArray, char[] newChars,
-			int curIndex, int[] nextNode) {
+	private int outHelper(final int triangle, final char[] charArray,
+			final char[] newChars, int curIndex, final int[] nextNode,
+			final int[] totalSizes) {
 		if (nextNode[triangle] == -1) {
 			throw new Error("Recursion should have ended already");
 		} else if (nextNode[triangle] == 0) {
-			newChars[curIndex++] = charArray[getIndex(triangle, 0)];
+			newChars[curIndex++] = charArray[getIndex(triangle, 0, totalSizes)];
 			nextNode[triangle] = 1;
 		} else {
 			int otherSide = nodesInThisTriangle[triangle] - nextNode[triangle];
 			if (otherSide - nextNode[triangle] > nextNode[triangle]) {
-				newChars[curIndex++] = charArray[getIndex(triangle, otherSide)];
-				curIndex = outHelper(triangle - 1, charArray, newChars,
-						curIndex, nextNode);
+				newChars[curIndex++] = charArray[getIndex(triangle, otherSide,
+						totalSizes)];
+				if (nextNode[triangle] > 1)
+					curIndex = outHelper(triangle - 1, charArray, newChars,
+							curIndex, nextNode, totalSizes);
 				newChars[curIndex++] = charArray[getIndex(triangle,
-						nextNode[triangle])];
+						nextNode[triangle], totalSizes)];
 				nextNode[triangle]++;
 			} else if (otherSide - nextNode[triangle] == nextNode[triangle]) {
 				for (int i = otherSide; i >= nextNode[triangle]; i--)
-					newChars[curIndex++] = charArray[getIndex(triangle, i)];
+					newChars[curIndex++] = charArray[getIndex(triangle, i,
+							totalSizes)];
 				nextNode[triangle] = -1;
 			} else {
 				throw new Error("Recursion should have ended already");
@@ -944,10 +969,10 @@ public final class YGame extends ConnectGame
 		return curIndex;
 	}
 
-	private int getIndex(int innerTriangle, int index) {
-		if (innerTriangle > transitionTriangleNumber || innerTriangle < 0)
-			throw new Error("Not an inner triangle");
-		return innerTriangle * (innerTriangle + 1) / 2 + index;
+	private int getIndex(int triangle, int index, int[] totalSizes) {
+		if (triangle >= totalSizes.length || triangle < 0)
+			throw new Error("Not in passed sizes");
+		return totalSizes[triangle] + index;
 	}
 
     @Override
