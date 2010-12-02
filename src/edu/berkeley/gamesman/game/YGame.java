@@ -1048,6 +1048,8 @@ public final class YGame extends ConnectGame
 			char c = s[i];
 			if (c >= 'A' && c <= 'Z') {
 				s[i] = mmh.get(c - 'A');
+				if(s[i] == ' ')
+					s[i] = '-';
 			}
 		}
 		return new String(s);
