@@ -52,8 +52,6 @@ public class TierSolver extends Solver {
 
 	private final int minSplitSize;
 
-	boolean finalRun = true;
-
 	protected void solvePartialTier(Configuration conf, long start,
 			long hashes, TierSolverUpdater t, Database readDb,
 			DatabaseHandle readDh, Database writeDb, DatabaseHandle writeDh) {
@@ -223,8 +221,7 @@ public class TierSolver extends Solver {
 					e.printStackTrace();
 				}
 			}
-			if (finalRun)
-				--tier;
+			--tier;
 			needs2Sync = false;
 			if (tier < 0) {
 				updater.complete();
@@ -237,8 +234,6 @@ public class TierSolver extends Solver {
 				long fullStart = game.hashOffsetForTier(tier);
 				long fullSize = game.numHashesForTier(tier);
 				splits = Math.max(minSplits, numSplits(tier, maxMem));
-				if (TierSolver.this instanceof ReversiSolver && finalRun)
-					fullSize /= 2;
 				starts = writeDb.splitRange(fullStart, fullSize, splits,
 						minSplitSize);
 			}
@@ -312,9 +307,9 @@ public class TierSolver extends Solver {
 		}
 	}
 
-	protected class TierSolverWorkUnit implements WorkUnit {
+	private final class TierSolverWorkUnit implements WorkUnit {
 
-		protected int index;
+		private int index;
 
 		Configuration conf;
 
