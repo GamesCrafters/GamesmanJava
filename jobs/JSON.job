@@ -24,7 +24,7 @@ json.unsolved.tcross = jobs/tripleCross/TCross_b.job
 json.fields.tcross = binArt,circle,dots,exactSol
 
 json.unsolved.y = jobs/YGame.job
-json.fields.y = centerRows,outerRows
+json.fields.y = innerTriangleSegments,outerRows
 
 json.unsolved.connections = jobs/Connections.job
 json.fields.connections = side
