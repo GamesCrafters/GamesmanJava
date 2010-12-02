@@ -52,7 +52,7 @@ public class ReversiSolver extends Solver {
 
 	private final int minSplitSize;
 
-	boolean finalRun = false;
+	boolean finalRun = true;
 
 	protected void solvePartialTier(Configuration conf, long start,
 			long hashes, ReversiSolverUpdater t, Database readDb,
