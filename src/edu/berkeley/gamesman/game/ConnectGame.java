@@ -39,7 +39,7 @@ public abstract class ConnectGame extends TierGame {
 		// It's either this or lazy initialization for the DartboardHasher
 		if (this instanceof YGame) {
 			int innerTriangleSegments = conf.getInteger(
-					"gamesman.game.innerTriangleSegments", 2);
+					"gamesman.game.centerRows", 3) - 1;
 			int outerRows = conf.getInteger("gamesman.game.outerRows", 2);
 			boardSize = (innerTriangleSegments + 1)
 					* (innerTriangleSegments + 2) / 2

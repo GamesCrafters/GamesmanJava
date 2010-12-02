@@ -129,7 +129,7 @@ public final class YGame extends ConnectGame
         super(conf);
 
         this.innerTriangleSegments = conf.getInteger(
-                "gamesman.game.innerTriangleSegments", 2);
+                "gamesman.game.centerRows", 3) - 1;
 
         this.outerRows = conf.getInteger("gamesman.game.outerRows", 2);
 
