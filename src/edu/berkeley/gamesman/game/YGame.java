@@ -863,32 +863,22 @@ public final class YGame extends ConnectGame
     }
 
 	@Override
-	public char[] convertInString(String s) {
-		int[] nextNode = new int[transitionTriangleNumber + 1];
+	public char[] convertInString(String chars) {
+		int[] nextNode = new int[numberOfTriangles];
 		int[] totalSizes = getTotalSizes();
-		char[] charArray = s.toCharArray();
+		char[] charArray = chars.toCharArray();
 		char[] newChars = new char[totalNumberOfNodes];
 		int curIndex = 0;
 		for (int row = 0; row <= this.innerTriangleSegments; row++) {
-			curIndex += inHelper(transitionTriangleNumber, charArray, newChars,
-					0, nextNode, totalSizes);
+			curIndex = inHelper(transitionTriangleNumber, charArray, newChars,
+					curIndex, nextNode, totalSizes);
 		}
-		for (int triangle = numberOfTriangles; triangle > transitionTriangleNumber; triangle--) {
+		for (int triangle = numberOfTriangles - 1; triangle > transitionTriangleNumber; triangle--) {
 			for (int i = 0; i < nodesInThisTriangle[triangle]; i++) {
 				newChars[getIndex(triangle, i, totalSizes)] = charArray[curIndex++];
 			}
 		}
 		return newChars;
-	}
-
-	private int[] getTotalSizes() {
-		int[] totalSizes = new int[transitionTriangleNumber + 1];
-		int totalSize = 0;
-		for (int triangle = 0; triangle <= transitionTriangleNumber; triangle++) {
-			totalSizes[triangle] = totalSize;
-			totalSize += nodesInThisTriangle[triangle];
-		}
-		return totalSizes;
 	}
 
 	private int inHelper(final int triangle, final char[] charArray,
@@ -904,7 +894,7 @@ public final class YGame extends ConnectGame
 			if (otherSide - nextNode[triangle] > nextNode[triangle]) {
 				newChars[getIndex(triangle, otherSide, totalSizes)] = charArray[curIndex++];
 				if (nextNode[triangle] > 1)
-					curIndex = outHelper(triangle - 1, charArray, newChars,
+					curIndex = inHelper(triangle - 1, charArray, newChars,
 							curIndex, nextNode, totalSizes);
 				newChars[getIndex(triangle, nextNode[triangle], totalSizes)] = charArray[curIndex++];
 				nextNode[triangle]++;
@@ -919,17 +909,27 @@ public final class YGame extends ConnectGame
 		return curIndex;
 	}
 
+	private int[] getTotalSizes() {
+		int[] totalSizes = new int[numberOfTriangles];
+		int totalSize = 0;
+		for (int triangle = 0; triangle < numberOfTriangles; triangle++) {
+			totalSizes[triangle] = totalSize;
+			totalSize += nodesInThisTriangle[triangle];
+		}
+		return totalSizes;
+	}
+
 	@Override
 	public String convertOutString(char[] charArray) {
-		int[] nextNode = new int[transitionTriangleNumber + 1];
+		int[] nextNode = new int[numberOfTriangles];
 		int[] totalSizes = getTotalSizes();
 		char[] newChars = new char[totalNumberOfNodes];
 		int curIndex = 0;
 		for (int row = 0; row <= this.innerTriangleSegments; row++) {
-			curIndex += outHelper(transitionTriangleNumber, charArray, newChars,
-					0, nextNode, totalSizes);
+			curIndex = outHelper(transitionTriangleNumber, charArray, newChars,
+					curIndex, nextNode, totalSizes);
 		}
-		for (int triangle = numberOfTriangles; triangle > transitionTriangleNumber; triangle--) {
+		for (int triangle = numberOfTriangles - 1; triangle > transitionTriangleNumber; triangle--) {
 			for (int i = 0; i < nodesInThisTriangle[triangle]; i++) {
 				newChars[curIndex++] = charArray[getIndex(triangle, i,
 						totalSizes)];
@@ -970,8 +970,6 @@ public final class YGame extends ConnectGame
 	}
 
 	private int getIndex(int triangle, int index, int[] totalSizes) {
-		if (triangle >= totalSizes.length || triangle < 0)
-			throw new Error("Not in passed sizes");
 		return totalSizes[triangle] + index;
 	}
 
