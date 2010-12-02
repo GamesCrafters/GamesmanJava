@@ -42,6 +42,30 @@ public final class YGame extends ConnectGame
 
     private final int HEIGHT = 24;
     private final int WIDTH = 24;
+    
+	private static final String yRep12 = "                   J\n\n\n"
+			+ "         R                   K\n" + "                   D\n\n\n"
+			+ "          I        A        E\n\n"
+			+ "   Q                                 L\n"
+			+ "               C       B\n\n"
+			+ "         H                    F\n" + "                   G\n"
+			+ "   P                                 M\n"
+			+ "             O           N\n";
+	private static final String yRep21 = "                 G\n\n\n"
+			+ "         O       A       H\n\n\n"
+			+ "     N       F       B       I\n\n\n"
+			+ "         E       D       C\n\n"
+			+ "M                                 J\n"
+			+ "             L       K\n";
+	private static final String yRep31 = "                             K\n\n"
+			+ "                     V               L\n"
+			+ "                             B\n\n"
+			+ "               U                           M\n"
+			+ "                        J         C\n\n\n"
+			+ "           T       I         A         D       N\n\n\n"
+			+ "              H         G         F        E\n\n"
+			+ "       S                                          O\n"
+			+ "                   R         Q         P\n";
 
     private char ASCIIrepresentation[][];
 
@@ -999,7 +1023,13 @@ public final class YGame extends ConnectGame
                 displayString.concat("\n");
                 displayString.concat(this.ASCIIrepresentation[y].toString());
             }
-        }
+		} else if (this.innerTriangleSegments == 1 && outerRows == 2) {
+			return displayState(yRep12);
+		} else if (this.innerTriangleSegments == 2 && outerRows == 1) {
+			return displayState(yRep21);
+		} else if (this.innerTriangleSegments == 3 && outerRows == 1) {
+			return displayState(yRep31);
+		}
         else 
         {
             displayString = new String(
@@ -1012,6 +1042,17 @@ public final class YGame extends ConnectGame
         return (displayString);
     }
 
+	private String displayState(String yRep) {
+		char[] s = yRep.toCharArray();
+		for (int i = 0; i < s.length; i++) {
+			char c = s[i];
+			if (c >= 'A' && c <= 'Z') {
+				s[i] = mmh.get(c - 'A');
+			}
+		}
+		return new String(s);
+	}
+    
     /**
      * @param triangleIn
      * @param indexIn
