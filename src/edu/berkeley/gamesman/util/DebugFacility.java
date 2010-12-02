@@ -59,7 +59,7 @@ public enum DebugFacility {
 	/**
 	 * Debug facility for local-machine multithreading
 	 */
-	THREADING(null, "edu.berkeley.gamesman.solver.TierSolver"),
+	THREADING(null, "edu.berkeley.gamesman.solver"),
 	/**
 	 * Debug facility for Record class
 	 */
