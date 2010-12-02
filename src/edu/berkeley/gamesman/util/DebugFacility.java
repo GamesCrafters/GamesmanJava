@@ -53,13 +53,13 @@ public enum DebugFacility {
 	 */
 	MASTER("edu.berkeley.gamesman.master"),
 	/**
+	 * Debug facility for local-machine multithreading
+	 */
+	THREADING("edu.berkeley.gamesman.solver"),
+	/**
 	 * Debug facility for bitwise manipulation functions
 	 */
 	BITWISE(null, "edu.berkeley.gamesman.core.Record"),
-	/**
-	 * Debug facility for local-machine multithreading
-	 */
-	THREADING(null, "edu.berkeley.gamesman.solver"),
 	/**
 	 * Debug facility for Record class
 	 */
