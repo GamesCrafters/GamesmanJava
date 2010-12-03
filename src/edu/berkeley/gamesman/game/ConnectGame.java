@@ -65,62 +65,62 @@ public abstract class ConnectGame extends TierGame {
 	protected abstract int getBoardSize();
 
 	@Override
-	public void getState(TierState state) {
+	public final void getState(TierState state) {
 		state.tier = tier;
 		state.hash = mmh.getHash();
 	}
 
 	@Override
-	public int getTier() {
+	public final int getTier() {
 		return tier;
 	}
 
 	@Override
-	public boolean hasNextHashInTier() {
+	public final boolean hasNextHashInTier() {
 		return mmh.numHashes() - 1 > mmh.getHash();
 	}
 
 	@Override
-	public int maxChildren() {
+	public final int maxChildren() {
 		return getBoardSize();
 	}
 
 	@Override
-	public void nextHashInTier() {
+	public final void nextHashInTier() {
 		mmh.next();
 	}
 
 	@Override
-	public long numHashesForTier(int tier) {
+	public final long numHashesForTier(int tier) {
 		return Util.nCr(getBoardSize(), tier) * Util.nCr(tier, tier / 2);
 	}
 
 	@Override
-	public int numStartingPositions() {
+	public final int numStartingPositions() {
 		return 1;
 	}
 
 	@Override
-	public int numberOfTiers() {
+	public final int numberOfTiers() {
 		return getBoardSize() + 1;
 	}
 
 	@Override
-	public void setFromString(String pos) {
+	public final void setFromString(String pos) {
 		char[] arr = convertInString(pos);
 		mmh.setNumsAndHash(arr);
 		setToCharArray(arr);
 	}
 
 	@Override
-	public void setStartingPosition(int n) {
+	public final void setStartingPosition(int n) {
 		tier = 0;
 		mmh.setNums(getBoardSize(), 0, 0);
 		mmh.setReplacements(' ', 'X');
 	}
 
 	@Override
-	public void setState(TierState pos) {
+	public final void setState(TierState pos) {
 		tier = pos.tier;
 		mmh.setNums(getBoardSize() - tier, tier / 2, (tier + 1) / 2);
 		mmh.setReplacements(' ', tier % 2 == 0 ? 'X' : 'O');
@@ -128,7 +128,7 @@ public abstract class ConnectGame extends TierGame {
 	}
 
 	@Override
-	public Collection<Pair<String, TierState>> validMoves() {
+	public final Collection<Pair<String, TierState>> validMoves() {
 		char turn = tier % 2 == 0 ? 'X' : 'O';
 		mmh.getChildren(' ', turn, moveHashes);
 		ArrayList<Pair<String, TierState>> moves = new ArrayList<Pair<String, TierState>>(
@@ -153,7 +153,7 @@ public abstract class ConnectGame extends TierGame {
 	}
 
 	@Override
-	public int validMoves(TierState[] moves) {
+	public final int validMoves(TierState[] moves) {
 		char turn = tier % 2 == 0 ? 'X' : 'O';
 		mmh.getChildren(' ', turn, moveHashes);
 		int numChildren = 0;
@@ -168,7 +168,7 @@ public abstract class ConnectGame extends TierGame {
 	}
 
 	@Override
-	public long recordStates() {
+	public final long recordStates() {
 		if (conf.hasRemoteness)
 			return getBoardSize() + 1;
 		else
@@ -190,7 +190,7 @@ public abstract class ConnectGame extends TierGame {
 	}
 
 	@Override
-	public String stateToString() {
+	public final String stateToString() {
 		return convertOutString(makeCharArray());
 	}
 
@@ -205,7 +205,7 @@ public abstract class ConnectGame extends TierGame {
 	protected abstract void setToCharArray(char[] myPieces);
 
 	@Override
-	public Value primitiveValue() {
+	public final Value primitiveValue() {
 		Value result;
 		if ((tier & 1) == 1)
 			result = isWin('X') ? Value.LOSE : Value.UNDECIDED;
@@ -219,7 +219,7 @@ public abstract class ConnectGame extends TierGame {
 	}
 
 	@Override
-	public long recordToLong(TierState recordState, Record fromRecord) {
+	public final long recordToLong(TierState recordState, Record fromRecord) {
 		if (conf.hasRemoteness) {
 			return fromRecord.remoteness;
 		} else {
@@ -235,7 +235,7 @@ public abstract class ConnectGame extends TierGame {
 	}
 
 	@Override
-	public void longToRecord(TierState recordState, long state, Record toStore) {
+	public final void longToRecord(TierState recordState, long state, Record toStore) {
 		if ((state & 1) == 1)
 			toStore.value = Value.WIN;
 		else
@@ -247,14 +247,14 @@ public abstract class ConnectGame extends TierGame {
 	protected abstract boolean isWin(char c);
 
 	@Override
-	public TierReadCache getCache(Database db, long numPositions,
+	public final TierReadCache getCache(Database db, long numPositions,
 			long availableMem) {
 		return myCacher.getCache(db, numPositions, availableMem, tier,
 				hashOffsetForTier(tier + 1));
 	}
 
 	@Override
-	public TierReadCache nextCache() {
+	public final TierReadCache nextCache() {
 		return myCacher.nextCache();
 	}
 }

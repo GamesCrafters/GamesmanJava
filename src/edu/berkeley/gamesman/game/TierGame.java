@@ -122,7 +122,7 @@ public abstract class TierGame extends Game<TierState> {
 	public abstract int getTier();
 
 	@Override
-	public synchronized String stateToString(TierState pos) {
+	public final synchronized String stateToString(TierState pos) {
 		setState(pos);
 		return stateToString();
 	}
@@ -133,7 +133,7 @@ public abstract class TierGame extends Game<TierState> {
 	public abstract String stateToString();
 
 	@Override
-	public synchronized TierState stringToState(String pos) {
+	public final synchronized TierState stringToState(String pos) {
 		setFromString(pos);
 		TierState ts = newState();
 		getState(ts);

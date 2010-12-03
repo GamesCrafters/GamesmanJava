@@ -175,7 +175,8 @@ public class JSONInterface extends GamesmanApplication {
 				Database db = Database.openDatabase(filename);
 				return db.getConfiguration();
 			} else {
-				assert Util.debug(DebugFacility.JSON, "Database at " + filename + " does not exist! Using unsolved.");
+				assert Util.debug(DebugFacility.JSON, "Database at " + filename
+						+ " does not exist! Using unsolved.");
 			}
 		} catch (Error fe) {
 			fe.printStackTrace();
@@ -262,16 +263,18 @@ public class JSONInterface extends GamesmanApplication {
 
 			T state = game.synchronizedStringToState(board);
 
+			if (!game.synchronizedStateToString(state).equals(board))
+				throw new Error("Board does not match");
+
 			// Access to this list must be synchronized!
 			final List<GamestateResponse> responseArray = Collections
 					.synchronizedList(new ArrayList<GamestateResponse>());
 
 			Value pv = game.synchronizedPrimitiveValue(state);
-			Collection<Pair<String, T>> states = game
-					.synchronizedValidMoves(state);
-			Iterator<Pair<String, T>> iter = states.iterator();
 			if (game.getPlayerCount() <= 1 || pv == Value.UNDECIDED) {
-				// Game is not over yet...
+				Collection<Pair<String, T>> states = game
+						.synchronizedValidMoves(state);
+				Iterator<Pair<String, T>> iter = states.iterator();
 				Thread[] recordThreads = new Thread[states.size()];
 				for (int i = 0; i < recordThreads.length; i++) {
 					final Pair<String, T> next = iter.next();
@@ -377,7 +380,9 @@ public class JSONInterface extends GamesmanApplication {
 				if (conf.hasScore) {
 					request.setScore(rec.score);
 				}
-				assert Util.debug(DebugFacility.JSON, "    Response: value="+request.getValue()+"; remote="+rec.remoteness+"; score="+rec.score);
+				assert Util.debug(DebugFacility.JSON, "    Response: value="
+						+ request.getValue() + "; remote=" + rec.remoteness
+						+ "; score=" + rec.score);
 			} else {
 				Value pv = g.synchronizedPrimitiveValue(state);
 				if (pv != Value.UNDECIDED) {
