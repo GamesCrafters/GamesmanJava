@@ -1,9 +1,9 @@
 package edu.berkeley.gamesman.game;
 
+import java.util.Arrays;
 import java.util.Vector;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.hasher.ChangedIterator;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
@@ -26,13 +26,10 @@ public final class YGame extends ConnectGame
     private final int outerRows;
     private final int numberOfTriangles;// Total number of triangles (or rows, rings, etc.)
 
-    private final Vector<char[]> board;
+    private final Node[][] board;
     private final int[] nodesInThisTriangle;
     private final int transitionTriangleNumber;
     private final int[] translateOutArray;
-
-    private final char[] unrolledCharBoard;// The full board (string) representation.
-    private final ChangedIterator changedPieces;
 
     private Vector<Node> neighbors;
     //    private final Node[] neighborPool;
@@ -74,35 +71,19 @@ public final class YGame extends ConnectGame
      */
     public final class Node 
     {
-        private int triangle;
-        private int index;
+        private final int triangle;
+        private final int index;
+        private final int totalIndex;
 
         /**
          * @param triangleIn
          * @param indexIn
          */
-        public Node(final int triangleIn, final int indexIn) 
+        public Node(final int triangleIn, final int indexIn, final int totalIndex) 
         {
             this.triangle = triangleIn;
             this.index = indexIn;
-        }
-
-        /**
-         * @param nodeToCopy
-         */
-        public Node(final Node nodeToCopy) 
-        {
-            this.triangle = nodeToCopy.triangle;
-            this.index = nodeToCopy.index;
-        }
-
-        /**
-         * Default (empty) constructor to be filled in with findNeighbors()
-         * call.
-         */
-        public Node() 
-        {
-            this(0, 0);
+            this.totalIndex = totalIndex;
         }
 
         /**
@@ -140,6 +121,10 @@ public final class YGame extends ConnectGame
         {
             return ((this.triangle == theNode.getTriangle()) && (this.index == theNode.getIndex()));
         }
+
+        public char getChar(){
+        	return mmh.get(totalIndex);
+        }
     }
 
     /**
@@ -167,7 +152,7 @@ public final class YGame extends ConnectGame
         assert Util.debug(DebugFacility.GAME, "numberOfTriangles: "
                 + this.numberOfTriangles);
 
-        this.board = new Vector<char[]>(this.numberOfTriangles);
+        this.board = new Node[this.numberOfTriangles][];
 
         this.nodesInThisTriangle = new int[this.numberOfTriangles];
 
@@ -175,22 +160,24 @@ public final class YGame extends ConnectGame
 
         int nodes = (this.innerTriangleSegments % 3) * 3;
 
+        int totalIndex = 0;
+
         for (int i = 0; i < this.numberOfTriangles; i++) 
         {
             assert Util.debug(DebugFacility.GAME, "nodesInThisTriangle[" + i
                     + "]: " + nodes);
 
-            char[] triangleNodes;
+            Node[] triangleNodes;
 
             if (nodes == 0) // 3 segment inner triangle has a single middle node
 
             {
-                triangleNodes = new char[1];
+                triangleNodes = new Node[1];
                 this.nodesInThisTriangle[i] = 1;
             }
             else 
             {
-                triangleNodes = new char[nodes];
+                triangleNodes = new Node[nodes];
                 this.nodesInThisTriangle[i] = nodes;
             }
 
@@ -199,7 +186,11 @@ public final class YGame extends ConnectGame
                 transitionTriangleNumber = i;
             }
 
-            this.board.add(triangleNodes);
+			for (int index = 0; index < triangleNodes.length; index++) {
+				triangleNodes[index] = new Node(i, index, totalIndex++);
+			}
+
+            this.board[i] = triangleNodes;
 
             if (transitionTriangleNumber == -1) 
             {
@@ -226,10 +217,6 @@ public final class YGame extends ConnectGame
         assert Util.debug(DebugFacility.GAME, "`->calculated: "
                 + (5 * (this.numberOfTriangles * this.numberOfTriangles)
                         - (7 * this.numberOfTriangles) + 3));
-
-        // Allocate the full board (string) representation.
-
-        this.unrolledCharBoard = new char[this.totalNumberOfNodes];
 
         // Preallocate the 3 types of neighbor vectors
 
@@ -270,61 +257,49 @@ public final class YGame extends ConnectGame
                 this.ASCIIrepresentation[yCoord][xCoord] = '.';
             }
         }
-        this.changedPieces = new ChangedIterator(this.totalNumberOfNodes);        
         translateOutArray = outArray();
         assert Util.debug(DebugFacility.GAME, this.displayState());
     }
 
 	public int[] outArray() {
 		int[] nextNode = new int[numberOfTriangles];
-		int[] totalSizes = getTotalSizes();
 		int[] outArray = new int[totalNumberOfNodes];
 		int curIndex = 0;
 		for (int row = 0; row <= this.innerTriangleSegments; row++) {
 			curIndex = inHelper(transitionTriangleNumber, outArray, curIndex,
-					nextNode, totalSizes);
+					nextNode);
 		}
 		for (int triangle = numberOfTriangles - 1; triangle > transitionTriangleNumber; triangle--) {
 			for (int i = 0; i < nodesInThisTriangle[triangle]; i++) {
-				outArray[getIndex(triangle, i, totalSizes)] = curIndex++;
+				outArray[getIndex(triangle, i)] = curIndex++;
 			}
 		}
 		return outArray;
 	}
-	
-	private int[] getTotalSizes() {
-		int[] totalSizes = new int[numberOfTriangles];
-		int totalSize = 0;
-		for (int triangle = 0; triangle < numberOfTriangles; triangle++) {
-			totalSizes[triangle] = totalSize;
-			totalSize += nodesInThisTriangle[triangle];
-		}
-		return totalSizes;
-	}
 
-	private int getIndex(int triangle, int index, int[] totalSizes) {
-		return totalSizes[triangle] + index;
+	private int getIndex(int triangle, int index) {
+		return board[triangle][index].totalIndex;
 	}
 
 	private int inHelper(final int triangle, final int[] outArray,
-			int curIndex, final int[] nextNode, final int[] totalSizes) {
+			int curIndex, final int[] nextNode) {
 		if (nextNode[triangle] == -1) {
 			throw new Error("Recursion should have ended already");
 		} else if (nextNode[triangle] == 0) {
-			outArray[getIndex(triangle, 0, totalSizes)] = curIndex++;
+			outArray[getIndex(triangle, 0)] = curIndex++;
 			nextNode[triangle] = 1;
 		} else {
 			int otherSide = nodesInThisTriangle[triangle] - nextNode[triangle];
 			if (otherSide - nextNode[triangle] > nextNode[triangle]) {
-				outArray[getIndex(triangle, otherSide, totalSizes)] = curIndex++;
+				outArray[getIndex(triangle, otherSide)] = curIndex++;
 				if (nextNode[triangle] > 1)
 					curIndex = inHelper(triangle - 1, outArray, curIndex,
-							nextNode, totalSizes);
-				outArray[getIndex(triangle, nextNode[triangle], totalSizes)] = curIndex++;
+							nextNode);
+				outArray[getIndex(triangle, nextNode[triangle])] = curIndex++;
 				nextNode[triangle]++;
 			} else if (otherSide - nextNode[triangle] == nextNode[triangle]) {
 				for (int i = otherSide; i >= nextNode[triangle]; i--)
-					outArray[getIndex(triangle, i, totalSizes)] = curIndex++;
+					outArray[getIndex(triangle, i)] = curIndex++;
 				nextNode[triangle] = -1;
 			} else {
 				throw new Error("Recursion should have ended already");
@@ -338,13 +313,9 @@ public final class YGame extends ConnectGame
      */
     public void fillBoardWithPlayer(final char player) 
     {
-        for (int i = 0; i < this.numberOfTriangles; i++) 
-        {
-            for (int c = 0; c < this.nodesInThisTriangle[i]; c++) 
-            {
-                this.board.get(i)[c] = player;
-            }
-        }
+    	char[] board = new char[totalNumberOfNodes];
+    	Arrays.fill(board, player);
+    	mmh.setNumsAndHash(board);
     }
 
     /*
@@ -356,23 +327,6 @@ public final class YGame extends ConnectGame
     public int getBoardSize() 
     {
         return (this.totalNumberOfNodes);
-    }
-
-    private char[] getCharArray() 
-    {
-        int charIndex = 0;
-
-        for (int t = 0; t < this.board.size(); t++) 
-        {
-            final char[] triangle = this.board.get(t);
-
-            for (int n = 0; n < this.nodesInThisTriangle[t]; n++) 
-            {
-                this.unrolledCharBoard[charIndex++] = triangle[n];
-            }
-        }
-
-        return this.unrolledCharBoard;
     }
 
     /**
@@ -397,7 +351,7 @@ public final class YGame extends ConnectGame
      */
     public Vector<Node> getNeighbors(final int triangleIn, final int indexIn, final char player)
     {
-        Node node = new Node();
+        int triangle, index;
         this.nodesOnSameTriangle.clear();
         this.nodesOnInnerTriangle.clear();
         this.nodesOnOuterTriangle.clear();
@@ -406,48 +360,48 @@ public final class YGame extends ConnectGame
         if (segments == 0) /* Special case for point in the center */
         {
             this.neighbors.clear();
-            node.triangle = 1;
-            node.index = 1;
-            this.neighbors.add(new Node(node));
-            node.triangle = 1;
-            node.index = 2;
-            this.neighbors.add(new Node(node));
-            node.triangle = 1;
-            node.index = 4;
-            this.neighbors.add(new Node(node));
-            node.triangle = 1;
-            node.index = 5;
-            this.neighbors.add(new Node(node));
-            node.triangle = 1;
-            node.index = 7;
-            this.neighbors.add(new Node(node));
-            node.triangle = 1;
-            node.index = 8;
-            this.neighbors.add(new Node(node));
+            triangle = 1;
+            index = 1;
+            this.neighbors.add(board[triangle][index]);
+            triangle = 1;
+            index = 2;
+            this.neighbors.add(board[triangle][index]);
+            triangle = 1;
+            index = 4;
+            this.neighbors.add(board[triangle][index]);
+            triangle = 1;
+            index = 5;
+            this.neighbors.add(board[triangle][index]);
+            triangle = 1;
+            index = 7;
+            this.neighbors.add(board[triangle][index]);
+            triangle = 1;
+            index = 8;
+            this.neighbors.add(board[triangle][index]);
         }
         else
         {
             /* Same-layer neighbor (left): *1* */
-            node.triangle = triangleIn;
-            node.index = Util.nonNegativeModulo( (indexIn + 1), (this.nodesInThisTriangle[triangleIn]));
-            this.nodesOnSameTriangle.add(new Node(node));
+            triangle = triangleIn;
+            index = Util.nonNegativeModulo( (indexIn + 1), (this.nodesInThisTriangle[triangleIn]));
+            this.nodesOnSameTriangle.add(board[triangle][index]);
 
             /* Same layer neighbor (right) *2* */
-            node.triangle = triangleIn;
-            node.index = Util.nonNegativeModulo( (indexIn - 1), this.nodesInThisTriangle[triangleIn]);
-            this.nodesOnSameTriangle.add(new Node(node));
+            triangle = triangleIn;
+            index = Util.nonNegativeModulo( (indexIn - 1), this.nodesInThisTriangle[triangleIn]);
+            this.nodesOnSameTriangle.add(board[triangle][index]);
 
             /* Inner neighbors: */
             if (this.isInnerTriangle(triangleIn) == false)/* Outer triangle to (outer triangle or transition triangle) */
             { /* 3 */
-                node.triangle = triangleIn - 1;
-                node.index = Util .nonNegativeModulo(indexIn - (indexIn / segments), this.nodesInThisTriangle[triangleIn - 1]);
-                this.nodesOnInnerTriangle.add(new Node(node));
+                triangle = triangleIn - 1;
+                index = Util .nonNegativeModulo(indexIn - (indexIn / segments), this.nodesInThisTriangle[triangleIn - 1]);
+                this.nodesOnInnerTriangle.add(board[triangle][index]);
                 if (this.isCornerIndex(triangleIn, indexIn) == false)/* The next inner neighbor only when it is not a corner. *//* 4 */
                 {
-                    node.triangle = triangleIn - 1;
-                    node.index = indexIn - (indexIn / segments) - 1;
-                    this.nodesOnInnerTriangle.add(new Node(node));
+                    triangle = triangleIn - 1;
+                    index = indexIn - (indexIn / segments) - 1;
+                    this.nodesOnInnerTriangle.add(board[triangle][index]);
                 }
             }
             else
@@ -460,27 +414,27 @@ public final class YGame extends ConnectGame
                     {
                         if (this.isCornerIndex(triangleIn, indexIn - 1) == true)/* After corner index *//* 6 */
                         { /* 14 */
-                            node.triangle = triangleIn;
-                            node.index = Util .nonNegativeModulo(indexIn - 2, this.nodesInThisTriangle[triangleIn]);
-                            this.nodesOnSameTriangle.add(new Node(node));
+                            triangle = triangleIn;
+                            index = Util .nonNegativeModulo(indexIn - 2, this.nodesInThisTriangle[triangleIn]);
+                            this.nodesOnSameTriangle.add(board[triangle][index]);
                             if (segments > 3)
                             {
-                                node.triangle = triangleIn - 1;
-                                /* 15 */ node.index = Util .nonNegativeModulo( indexIn - 1 - (3 * indexIn / segments), this.nodesInThisTriangle[triangleIn - 1]);
-                                this.nodesOnInnerTriangle.add(new Node(node));
+                                triangle = triangleIn - 1;
+                                /* 15 */ index = Util .nonNegativeModulo( indexIn - 1 - (3 * indexIn / segments), this.nodesInThisTriangle[triangleIn - 1]);
+                                this.nodesOnInnerTriangle.add(board[triangle][index]);
                             }
                         }
                         if (this.isCornerIndex(triangleIn, indexIn + 1) == true)/* Before corner index *//* 7 */
                         { /* 16 */
-                            node.triangle = triangleIn;
-                            node.index = Util .nonNegativeModulo(indexIn + 2, this.nodesInThisTriangle[triangleIn]);
-                            this.nodesOnSameTriangle.add(new Node(node));
+                            triangle = triangleIn;
+                            index = Util .nonNegativeModulo(indexIn + 2, this.nodesInThisTriangle[triangleIn]);
+                            this.nodesOnSameTriangle.add(board[triangle][index]);
                             if (segments > 3)
                             {
-                                node.triangle = triangleIn - 1;
-                                /* 7 */node.index = Util.nonNegativeModulo(indexIn - 3 - (3 * indexIn / segments),
+                                triangle = triangleIn - 1;
+                                /* 7 */index = Util.nonNegativeModulo(indexIn - 3 - (3 * indexIn / segments),
                                         this.nodesInThisTriangle[triangleIn - 1]);
-                                this.nodesOnInnerTriangle.add(new Node(node));
+                                this.nodesOnInnerTriangle.add(board[triangle][index]);
                             }
                         }
                         if (segments == 2)
@@ -490,27 +444,27 @@ public final class YGame extends ConnectGame
                         {
                             if (segments == 3)
                             {
-                                node.triangle = triangleIn - 1;
-                                node.index = 0;
-                                this.nodesOnInnerTriangle.add(new Node(node));
+                                triangle = triangleIn - 1;
+                                index = 0;
+                                this.nodesOnInnerTriangle.add(board[triangle][index]);
                             }
                             else
                             {
                                 if ((this.isCornerIndex(triangleIn, indexIn + 1) == false) /* Not a corner or before or after a corner. */
                                         && (this.isCornerIndex(triangleIn, indexIn - 1) == false))
                                 { /* 21 */
-                                    node.triangle = triangleIn - 1;
+                                    triangle = triangleIn - 1;
                                     // if (this.nodesInThisTriangle[triangleIn - 1] > 0)
                                     // {
-                                    node.index = Util.nonNegativeModulo(indexIn - 0 - (3 * indexIn / segments),
+                                    index = Util.nonNegativeModulo(indexIn - 0 - (3 * indexIn / segments),
                                             this.nodesInThisTriangle[triangleIn - 1]);
                                     // }
-                                    this.nodesOnInnerTriangle.add(new Node(node));
+                                    this.nodesOnInnerTriangle.add(board[triangle][index]);
 
                                     /* 20 */
-                                    node.triangle = triangleIn - 1;
-                                    node.index = Util .nonNegativeModulo(indexIn - 1 - (3 * indexIn / segments), this.nodesInThisTriangle[triangleIn - 1]);
-                                    this.nodesOnInnerTriangle.add(new Node(node));
+                                    triangle = triangleIn - 1;
+                                    index = Util .nonNegativeModulo(indexIn - 1 - (3 * indexIn / segments), this.nodesInThisTriangle[triangleIn - 1]);
+                                    this.nodesOnInnerTriangle.add(board[triangle][index]);
                                 }
                             }
                         }
@@ -523,41 +477,41 @@ public final class YGame extends ConnectGame
             {
                 if (this.isInnerTriangle(triangleIn + 1) == false)/* (Outer or transition triangle) to an outer triangle. *//* 8 */
                 { /* 9 */
-                    node.triangle = triangleIn + 1;
-                    node.index = Util .nonNegativeModulo(indexIn + (indexIn / segments), this.nodesInThisTriangle[triangleIn + 1]);
-                    this.nodesOnOuterTriangle.add(new Node(node));
+                    triangle = triangleIn + 1;
+                    index = Util .nonNegativeModulo(indexIn + (indexIn / segments), this.nodesInThisTriangle[triangleIn + 1]);
+                    this.nodesOnOuterTriangle.add(board[triangle][index]);
                     if (this.isCornerIndex(triangleIn, indexIn)) /* Corners *//* 10 */
                     {
-                        node.triangle = triangleIn + 1;
-                        node.index = Util .nonNegativeModulo(indexIn + (indexIn / segments) - 1, this.nodesInThisTriangle[triangleIn + 1]);
-                        this.nodesOnOuterTriangle.add(new Node(node)); /* 19 */
-                        node.triangle = triangleIn + 1;
-                        node.index = Util .nonNegativeModulo(indexIn + (indexIn / segments) + 1, this.nodesInThisTriangle[triangleIn + 1]);
-                        this.nodesOnOuterTriangle.add(new Node(node));
+                        triangle = triangleIn + 1;
+                        index = Util .nonNegativeModulo(indexIn + (indexIn / segments) - 1, this.nodesInThisTriangle[triangleIn + 1]);
+                        this.nodesOnOuterTriangle.add(board[triangle][index]); /* 19 */
+                        triangle = triangleIn + 1;
+                        index = Util .nonNegativeModulo(indexIn + (indexIn / segments) + 1, this.nodesInThisTriangle[triangleIn + 1]);
+                        this.nodesOnOuterTriangle.add(board[triangle][index]);
                     } /* Not a corner */
                     else
                     { /* 11 */
-                        node.triangle = triangleIn + 1;
-                        node.index = Util .nonNegativeModulo(indexIn + (indexIn / segments) + 1, this.nodesInThisTriangle[triangleIn + 1]);
-                        this.nodesOnOuterTriangle.add(new Node(node));
+                        triangle = triangleIn + 1;
+                        index = Util .nonNegativeModulo(indexIn + (indexIn / segments) + 1, this.nodesInThisTriangle[triangleIn + 1]);
+                        this.nodesOnOuterTriangle.add(board[triangle][index]);
                     }
                 } /* Inner to inner triangle */
                 else
                 { /* 17 */
-                    node.triangle = triangleIn + 1;
-                    node.index = Util .nonNegativeModulo(indexIn + 2 + (3 * indexIn / segments), this.nodesInThisTriangle[triangleIn + 1]);
-                    this.nodesOnOuterTriangle.add(new Node(node)); /* 18 */
-                    node.triangle = triangleIn + 1;
-                    node.index = Util .nonNegativeModulo(indexIn + 1 + (3 * indexIn / segments), this.nodesInThisTriangle[triangleIn + 1]);
-                    this.nodesOnOuterTriangle.add(new Node(node));
+                    triangle = triangleIn + 1;
+                    index = Util .nonNegativeModulo(indexIn + 2 + (3 * indexIn / segments), this.nodesInThisTriangle[triangleIn + 1]);
+                    this.nodesOnOuterTriangle.add(board[triangle][index]); /* 18 */
+                    triangle = triangleIn + 1;
+                    index = Util .nonNegativeModulo(indexIn + 1 + (3 * indexIn / segments), this.nodesInThisTriangle[triangleIn + 1]);
+                    this.nodesOnOuterTriangle.add(board[triangle][index]);
                     if (this.isCornerIndex(triangleIn, indexIn)) /* Corners */
                     { /* 13 */
-                        node.triangle = triangleIn + 1;
-                        node.index = Util .nonNegativeModulo(indexIn - 1 + (3 * indexIn / segments), this.nodesInThisTriangle[triangleIn + 1]);
-                        this.nodesOnOuterTriangle.add(new Node(node)); /* 12 */
-                        node.triangle = triangleIn + 1;
-                        node.index = Util .nonNegativeModulo(indexIn - 2 + (3 * indexIn / segments), this.nodesInThisTriangle[triangleIn + 1]);
-                        this.nodesOnOuterTriangle.add(new Node(node));
+                        triangle = triangleIn + 1;
+                        index = Util .nonNegativeModulo(indexIn - 1 + (3 * indexIn / segments), this.nodesInThisTriangle[triangleIn + 1]);
+                        this.nodesOnOuterTriangle.add(board[triangle][index]); /* 12 */
+                        triangle = triangleIn + 1;
+                        index = Util .nonNegativeModulo(indexIn - 2 + (3 * indexIn / segments), this.nodesInThisTriangle[triangleIn + 1]);
+                        this.nodesOnOuterTriangle.add(board[triangle][index]);
                     }
                 }
             }
@@ -784,9 +738,9 @@ public final class YGame extends ConnectGame
 
                     if (index1ToCheck > index2ToCheck)
                     {
-                        int tempIndex = this.nodesOnOuterTriangle.get(i - 1).index;
-                        this.nodesOnOuterTriangle.get(i - 1).index = this.nodesOnOuterTriangle.get(i).index;
-                        this.nodesOnOuterTriangle.get(i).index = tempIndex;
+                        Node tempNode = this.nodesOnOuterTriangle.get(i - 1);
+                        this.nodesOnOuterTriangle.set(i - 1, this.nodesOnOuterTriangle.get(i));
+                        this.nodesOnOuterTriangle.set(i, tempNode);
                         didSwap = true;
                     }
                 }
@@ -866,8 +820,8 @@ public final class YGame extends ConnectGame
                 final boolean[] reachedEdges = new boolean[3];
                 reachedEdges[0] = true; // left edge is reached
                 Node previousNode = null;
-                final Node startNode = new Node(this.numberOfTriangles-1, ind);
-                Node currentNode = new Node(this.numberOfTriangles-1, ind);
+                final Node startNode = board[this.numberOfTriangles-1][ind];
+                Node currentNode = board[this.numberOfTriangles-1][ind];
                 boolean done = false;
 
                 do 
@@ -906,15 +860,15 @@ public final class YGame extends ConnectGame
                     {
                         if (previousNode == null) 
                         {
-                            previousNode = new Node( currentNode );
-                            currentNode = new Node ( neighbors.get(i) );// select the first node clock-wise
+                            previousNode = currentNode;
+                            currentNode = neighbors.get(i);// select the first node clock-wise
                             break;
                         }
                         else if (previousNode.equals(neighbors.get(i))) 
                         {
-                            previousNode = new Node( currentNode );
-                            currentNode = new Node( neighbors.get((i + 1)
-                                    % neighbors.size()) );// select next node after previous in clock-wise
+                            previousNode = currentNode;
+                            currentNode = neighbors.get((i + 1)
+                                    % neighbors.size());// select next node after previous in clock-wise
                             break;
                         }
                     }
@@ -961,25 +915,6 @@ public final class YGame extends ConnectGame
 	public int translateOut(int i) {
 		return translateOutArray[i];
 	}
-	
-    @Override
-    public void nextHashInTier() {
-        this.mmh.next(this.changedPieces);
-        int lastIndex = 0;
-        int currentRowNum = 0;
-        char[] currentRow = this.board.get(0);
-        int rowIndex = 0;
-        while (this.changedPieces.hasNext()) {
-            int nextIndex = this.changedPieces.next();
-            rowIndex += nextIndex - lastIndex;
-            while (rowIndex >= currentRow.length) {
-                rowIndex -= currentRow.length;
-                currentRow = this.board.get(++currentRowNum);
-            }
-            currentRow[rowIndex] = this.get(nextIndex);
-            lastIndex = nextIndex;
-        }
-    }
 
     /*
      * (non-Javadoc)
@@ -989,17 +924,6 @@ public final class YGame extends ConnectGame
     @Override
     protected void setToCharArray(final char[] myPieces) 
     {
-        int charIndex = 0;
-
-        for (int t = 0; t < this.board.size(); t++) 
-        {
-            final char[] triangle = this.board.get(t);
-
-            for (int n = 0; n < this.nodesInThisTriangle[t]; n++) 
-            {
-                triangle[n] = myPieces[charIndex++];
-            }
-        }
     }
 
     /*
@@ -1036,7 +960,9 @@ public final class YGame extends ConnectGame
                     "UNABLE TO REPRESENT THIS CONFIGURATION (triangle segments:"
                     + this.innerTriangleSegments + ", outer rows:"
                     + this.outerRingSegments + " )IN 2D (yet):\n");
-            displayString.concat(this.getCharArray().toString());
+            char[] charArray = new char[totalNumberOfNodes];
+            mmh.getCharArray(charArray);
+            displayString = displayString.concat(new String(charArray));
         }
 
         return (displayString);
@@ -1062,7 +988,7 @@ public final class YGame extends ConnectGame
      */
     public char getPlayerAt(final int triangle, final int index) 
     {
-        return this.board.get(triangle)[index];
+        return this.board[triangle][index].getChar();
     }
 
     /**
@@ -1072,7 +998,7 @@ public final class YGame extends ConnectGame
      */
     public char getPlayerAt(final Node node) 
     {
-        return this.board.get(node.triangle)[node.index];
+        return node.getChar();
     }
 
     /**
@@ -1084,7 +1010,7 @@ public final class YGame extends ConnectGame
      */
     public void setPlayerAt(final int triangle, final int index, final char player) 
     {
-        this.board.get(triangle)[index] = player;
+    	mmh.set(board[triangle][index].totalIndex, player);
     }
 
     /*
