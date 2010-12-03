@@ -327,6 +327,9 @@ public class JSONInterface extends GamesmanApplication {
 
 			T state = game.synchronizedStringToState(board);
 
+			if (!game.synchronizedStateToString(state).equals(board))
+				throw new Error("Board does not match");
+
 			response = fillResponseFields(config, state, false);
 
 			return response;
