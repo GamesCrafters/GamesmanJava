@@ -37,7 +37,11 @@ public class HadoopTierMaster implements Runnable {
 	public void run() {
 		for (int tier = game.numberOfTiers() - 1; tier >= 0; tier--) {
 			hadoopConf.setInt("tier", tier);
+
 			solve(tier);
+                        String dbUri = gamesmanConf.getProperty("gamesman.hadoop.tierDb");
+                        dbUri = dbUri + "_" + tier + ".db";
+                        hadoopConf.set("lastTierDb", dbUri);
 		}
 	}
 

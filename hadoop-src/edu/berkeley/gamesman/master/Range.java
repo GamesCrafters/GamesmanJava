@@ -7,8 +7,8 @@ import java.io.IOException;
 import org.apache.hadoop.io.WritableComparable;
 
 public class Range implements WritableComparable<Range> {
-	long firstRecord;
-	long numRecords;
+	public long firstRecord;
+	public long numRecords;
 
 	public Range(long first, long numRecords) {
 		this.firstRecord = first;

@@ -86,12 +86,12 @@ public class HadoopTierMapper extends
 		byte recordsPerGroup = (byte) conf.getInteger("recordsPerGroup", -1);
 		byte recordGroupByteLength = (byte) conf.getInteger(
 				"recordGroupByteLength", -1);
-		String readUri = conf.getProperty("gamesman.hadoop.dbfolder");
+		String readUri = conf.getProperty("gamesman.hadoop.lastTierDb");
 		headBytes[16] = recordsPerGroup;
 		headBytes[17] = recordGroupByteLength;
 		DatabaseHeader head = new DatabaseHeader(conf, firstHash, numHashes);
 		int prevTier = tier.get() + 1;
-		readUri = readUri + "_" + prevTier + ".db";
+                
 		if (prevTier < game.numberOfTiers() - 1) {
 			readDb = new SplitFileSystemDatabase(new Path(readUri), is, fs);
 		} else {

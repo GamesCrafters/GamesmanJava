@@ -8,8 +8,8 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.io.Writable;
 
 public class RangeFile implements Writable {
-	private Range myRange;
-	private FileStatus myFile;
+	public Range myRange;
+	public FileStatus myFile;
 
 	public RangeFile() {
 		myRange = new Range();
