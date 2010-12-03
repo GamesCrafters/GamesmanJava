@@ -1,7 +1,6 @@
 package edu.berkeley.gamesman.master;
 
 import java.io.IOException;
-import java.util.List;
 
 import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.database.Database;

@@ -18,8 +18,9 @@ public class RangeFile implements Writable {
 
 	@Override
 	public void write(DataOutput out) throws IOException {
+                out.writeChars(myFile.getPath().toString());
 		myRange.write(out);
-		myFile.write(out);
+
 	}
 
 	@Override
