@@ -5,7 +5,9 @@ import java.util.List;
 
 import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.database.Database;
+import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.database.DatabaseHeader;
+import edu.berkeley.gamesman.database.GZippedFileDatabase;
 import edu.berkeley.gamesman.database.SplitFileSystemDatabase;
 import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.solver.TierSolver;
@@ -33,7 +35,7 @@ public class HadoopTierMapper extends
 
 	Configuration conf;
 	FileSystem fs;
-        FSDataInputStream is;
+	FSDataInputStream is;
 
 	@Override
 	public void setup(Context context) {
@@ -61,24 +63,24 @@ public class HadoopTierMapper extends
 		long firstHash = key.firstRecord;
 		long numHashes = key.numRecords;
 		byte[] headBytes = new byte[18];
-                for (int i = 0; i < 18; i++) {
-                            headBytes[i] = 0;
-                }
-                byte recordsPerGroup = (byte) conf.getInteger("recordsPerGroup", -1);
-                byte recordGroupByteLength = (byte) conf.getInteger("recordGroupByteLength", -1);
-                String readUri = conf.getProperty("gamesman.hadoop.dbfolder");
-                headBytes[16] = recordsPerGroup;
-                headBytes[17] = recordGroupByteLength;
+		for (int i = 0; i < 18; i++) {
+			headBytes[i] = 0;
+		}
+		byte recordsPerGroup = (byte) conf.getInteger("recordsPerGroup", -1);
+		byte recordGroupByteLength = (byte) conf.getInteger(
+				"recordGroupByteLength", -1);
+		String readUri = conf.getProperty("gamesman.hadoop.dbfolder");
+		headBytes[16] = recordsPerGroup;
+		headBytes[17] = recordGroupByteLength;
 		DatabaseHeader temp = new DatabaseHeader(headBytes);
-                DatabaseHeader head = temp.getHeader(firstHash, numHashes);
+		DatabaseHeader head = temp.getHeader(firstHash, numHashes);
 		int prevTier = tier.get() + 1;
-                readUri = readUri + "_" + prevTier + ".db";
-                if (prevTier < game.numberOfTiers()) {
-                    readDb = new SplitFileSystemDatabase(new Path(readUri), is, fs);
-                } else {
-                    readDb = null;
-                }
-
+		readUri = readUri + "_" + prevTier + ".db";
+		if (prevTier < game.numberOfTiers()) {
+			readDb = new SplitFileSystemDatabase(new Path(readUri), is, fs);
+		} else {
+			readDb = null;
+		}
 
 		// setting write database file name, path etc and initializing it*******
 		String foldUri = conf.getProperty("gamesman.hadoop.dbfolder");
@@ -102,18 +104,46 @@ public class HadoopTierMapper extends
 		}
 
 		if (doZip) {
-                    
-		}
-            
-                long length = numHashes;
-                boolean isdir = false;
-                int block_replication = conf.getInteger("block_replication", 3);
-                long blocksize = conf.getLong("blocksize", 64);
-                //DONNO
-                long modification_time = 0;
 
-                Path path = new Path(writeURI);
-		FileStatus finalFile = new FileStatus(length, isdir, block_replication, blocksize, modification_time, path);
+			int threads = conf.getInteger("gamesman.threads", 1);
+			long time = System.currentTimeMillis();
+			long maxMem = conf.getLong("gamesman.memory", Integer.MAX_VALUE);
+			Database readFrom = writeDb;
+			GZippedFileDatabase writeTo;
+			try {
+				writeTo = new GZippedFileDatabase(zipURI, conf, readFrom,
+						maxMem);
+			} catch (IOException e) {
+				throw new Error(e);
+			}
+			Thread[] threadList = new Thread[threads];
+			DatabaseHandle[] readHandle = new DatabaseHandle[threads];
+			for (int i = 0; i < threads; i++) {
+				readHandle[i] = readFrom.getHandle();
+				threadList[i] = new Thread(writeTo);
+				threadList[i].start();
+			}
+			for (int i = 0; i < threads; i++) {
+				while (threadList[i].isAlive())
+					try {
+						threadList[i].join();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+
+			}
+		}
+
+		long length = numHashes;
+		boolean isdir = false;
+		int block_replication = conf.getInteger("block_replication", 3);
+		long blocksize = conf.getLong("blocksize", 64);
+		// DONNO
+		long modification_time = 0;
+
+		Path path = new Path(writeURI);
+		FileStatus finalFile = new FileStatus(length, isdir, block_replication,
+				blocksize, modification_time, path);
 		boolean successful = false;
 		while (!successful) {
 			try {
