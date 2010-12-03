@@ -1,5 +1,7 @@
 package edu.berkeley.gamesman.database;
 
+import edu.berkeley.gamesman.core.Configuration;
+
 /**
  * Contains specific information about a database that's not in the
  * configuration object. Specifically:<br />
@@ -122,6 +124,24 @@ public final class DatabaseHeader {
 			recordsPerGroup = (firstByte << 2) | (secondByte >> 6);
 			recordGroupByteLength = secondByte & 63;
 			recordGroupByteBits = -1;
+		}
+	}
+
+	public DatabaseHeader(Configuration conf, long firstRecord, long numRecords) {
+		recordGroupByteBits = conf.getInteger("recordGroupByteBits", -1);
+		if (recordGroupByteBits < 0) {
+			superCompress = true;
+			this.firstRecord = firstRecord;
+			this.numRecords = numRecords;
+			this.recordsPerGroup = conf.getInteger("recordsPerGroup", -1);
+			this.recordGroupByteLength = conf.getInteger(
+					"recordGroupByteLength", -1);
+		} else {
+			superCompress = false;
+			this.firstRecord = firstRecord;
+			this.numRecords = numRecords;
+			this.recordsPerGroup = 1;
+			this.recordGroupByteLength = 1 << recordGroupByteBits;
 		}
 	}
 

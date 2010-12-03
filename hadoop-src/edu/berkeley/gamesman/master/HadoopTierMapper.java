@@ -1,6 +1,7 @@
 package edu.berkeley.gamesman.master;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 
 import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.database.Database;
@@ -46,7 +47,24 @@ public class HadoopTierMapper extends
 
 			fs = FileSystem.get(conf);
 			tier.set(conf.getInt("tier", -1));
-			solver = new TierSolver(this.conf);
+			Class<? extends TierSolver> solverc = Class.forName(conf.get(""))
+					.asSubclass(TierSolver.class);
+			try {
+				solver = solverc.getConstructor(Configuration.class)
+						.newInstance(conf);
+			} catch (IllegalArgumentException e) {
+				throw new Error(e);
+			} catch (SecurityException e) {
+				throw new Error(e);
+			} catch (InstantiationException e) {
+				throw new Error(e);
+			} catch (IllegalAccessException e) {
+				throw new Error(e);
+			} catch (InvocationTargetException e) {
+				throw new Error(e.getCause());
+			} catch (NoSuchMethodException e) {
+				throw new Error(e);
+			}
 			doZip = conf.getBoolean("gamesman.remote.zipped", false);
 
 		} catch (ClassNotFoundException e) {
@@ -71,11 +89,10 @@ public class HadoopTierMapper extends
 		String readUri = conf.getProperty("gamesman.hadoop.dbfolder");
 		headBytes[16] = recordsPerGroup;
 		headBytes[17] = recordGroupByteLength;
-		DatabaseHeader temp = new DatabaseHeader(headBytes);
-		DatabaseHeader head = temp.getHeader(firstHash, numHashes);
+		DatabaseHeader head = new DatabaseHeader(conf, firstHash, numHashes);
 		int prevTier = tier.get() + 1;
 		readUri = readUri + "_" + prevTier + ".db";
-		if (prevTier < game.numberOfTiers()) {
+		if (prevTier < game.numberOfTiers() - 1) {
 			readDb = new SplitFileSystemDatabase(new Path(readUri), is, fs);
 		} else {
 			readDb = null;
