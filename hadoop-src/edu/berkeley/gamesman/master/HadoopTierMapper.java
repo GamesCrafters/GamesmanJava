@@ -6,7 +6,6 @@ import java.util.List;
 import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHeader;
-import edu.berkeley.gamesman.database.FileDatabase;
 import edu.berkeley.gamesman.database.SplitFileSystemDatabase;
 import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.solver.TierSolver;
@@ -67,13 +66,13 @@ public class HadoopTierMapper extends
                 }
                 byte recordsPerGroup = (byte) conf.getInteger("recordsPerGroup", -1);
                 byte recordGroupByteLength = (byte) conf.getInteger("recordGroupByteLength", -1);
-                String readUri = conf.getProperty("gamesman.hadoop.readDB");
+                String readUri = conf.getProperty("gamesman.hadoop.dbfolder");
                 headBytes[16] = recordsPerGroup;
                 headBytes[17] = recordGroupByteLength;
 		DatabaseHeader temp = new DatabaseHeader(headBytes);
                 DatabaseHeader head = temp.getHeader(firstHash, numHashes);
 		int prevTier = tier.get() + 1;
-                readUri = readUri + "_" + prevTier;
+                readUri = readUri + "_" + prevTier + ".db";
                 if (prevTier < game.numberOfTiers()) {
                     readDb = new SplitFileSystemDatabase(new Path(readUri), is, fs);
                 } else {
@@ -82,9 +81,9 @@ public class HadoopTierMapper extends
 
 
 		// setting write database file name, path etc and initializing it*******
-		String foldUri = conf.getProperty("gamesman.parallel.dbfolder");
-		doZip = conf.getBoolean("gamesman.remote.zipped", false);
-		writeURI = foldUri + "/s" + firstHash + ".db";
+		String foldUri = conf.getProperty("gamesman.hadoop.dbfolder");
+		doZip = conf.getBoolean("gamesman.hadoop.zipped", false);
+		writeURI = foldUri + "_" + tier.get() + "_" + firstHash + ".db";
 		String zipURI = null;
 		if (doZip) {
 			zipURI = writeURI;
@@ -95,8 +94,6 @@ public class HadoopTierMapper extends
 		// ***********************************************************************
 
 		int t = tier.get();
-		int threads = conf.getInteger("gamesman.threads", 1);
-		List<WorkUnit> list = null;
 		WorkUnit wu = solver.prepareSolve(conf, t, firstHash, numHashes);
 		wu.conquer(); // solve it
 
@@ -105,11 +102,18 @@ public class HadoopTierMapper extends
 		}
 
 		if (doZip) {
-
+                    
 		}
-		// TODO: Add tier slave stuff
+            
+                long length = numHashes;
+                boolean isdir = false;
+                int block_replication = conf.getInteger("block_replication", 3);
+                long blocksize = conf.getLong("blocksize", 64);
+                //DONNO
+                long modification_time = 0;
 
-		FileStatus finalFile = null;
+                Path path = new Path(writeURI);
+		FileStatus finalFile = new FileStatus(length, isdir, block_replication, blocksize, modification_time, path);
 		boolean successful = false;
 		while (!successful) {
 			try {
