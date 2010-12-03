@@ -5,7 +5,7 @@ import edu.berkeley.gamesman.game.util.Bullet;
 
 public final class AlignmentState implements State {
 	private final boolean[] guns = new boolean[] { false, false, false, false };
-	private final boolean[] guns2 = new boolean[] { false, false, false, false }; //guns exist far away, guns2[n][s][e][w]
+	private boolean[] guns2 = new boolean[] { false, false, false, false }; //guns exist far away, guns2[n][s][e][w]
 	// private ArrayList<Bullet> myBullets = new ArrayList<Bullet>();
 	public final char[][] board; // chars are 'X', 'O' and ' ' (X plays first)
 	// should be char[] to accomodate
@@ -299,9 +299,9 @@ public final class AlignmentState implements State {
 							coord[0] = col;  
 							coord[1] = i;    
 							coord[2] = col - 1; //store NW piece
-							coord[3] = i + 1;
+							coord[3] = i - 1;
 							coord[4] = col + 1; //store NE piece
-							coord[5] = i + 1;
+							coord[5] = i - 1;
 							break;
 						}
 					}
@@ -317,9 +317,9 @@ public final class AlignmentState implements State {
 							coord[0] = col; //store x,y coord of base of gun
 							coord[1] = i;
 							coord[2] = col - 1; //store SW piece
-							coord[3] = i - 1;
+							coord[3] = i + 1;
 							coord[4] = col + 1; //store SE piece
-							coord[5] = i - 1;
+							coord[5] = i + 1;
 							break;
 						}
 					}
@@ -334,9 +334,9 @@ public final class AlignmentState implements State {
 							guns2[2] = true;
 							coord[0] = i; //store x,y coord of base of gun
 							coord[1] = row;
-							coord[2] = i - 1; //store SE
+							coord[2] = i + 1; //store SE
 							coord[3] = row - 1;
-							coord[4] = i - 1; //store NE
+							coord[4] = i + 1; //store NE
 							coord[5] = row + 1;
 							break;
 						}
@@ -352,9 +352,9 @@ public final class AlignmentState implements State {
 							guns2[3] = true;
 							coord[0] = i; //store x,y coord of base
 							coord[1] = row;
-							coord[2] = i + 1; //store SW piece
+							coord[2] = i - 1; //store SW piece
 							coord[3] = row - 1;
-							coord[4] = i + 1; //store NW piece
+							coord[4] = i - 1; //store NW piece
 							coord[5] = row + 1;
 							break;
 						}
