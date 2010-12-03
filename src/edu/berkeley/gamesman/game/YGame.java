@@ -844,18 +844,18 @@ public final class YGame extends ConnectGame
                     final Vector<Node> neighbors = this.getNeighbors(currentNode, player);
                     //check whether all neighbors have peaces.
                     //because someone's code fails to do so!
-                    int j = 0;
-                    while ( j<neighbors.size() )
-                    {
-                        if (this.getPlayerAt( neighbors.get(j) ) != player)
-                        {
-                            neighbors.remove(j);
-                        }
-                        else
-                        {
-                            j++;
-                        }
-                    }
+                    // int j = 0;
+                    // while ( j<neighbors.size() )
+                    // {
+                    // if (this.getPlayerAt( neighbors.get(j) ) != player)
+                    // {
+                    // neighbors.remove(j);
+                    // }
+                    // else
+                    // {
+                    // j++;
+                    // }
+                    // }
                     for (int i = 0; i < neighbors.size(); i++) 
                     {
                         if (previousNode == null) 
