@@ -403,7 +403,10 @@ public class JSONInterface extends GamesmanApplication {
 					request.setScore(score);
 				}
 			}
-			request.setBoard(g.synchronizedStateToString(state));
+			String boardString = g.synchronizedStateToString(state);
+			if (!g.synchronizedStringToState(boardString).equals(state))
+				throw new Error("States do not match");
+			request.setBoard(boardString);
 			return request;
 		}
 	}
