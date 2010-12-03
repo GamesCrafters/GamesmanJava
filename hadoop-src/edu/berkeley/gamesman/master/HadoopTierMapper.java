@@ -24,7 +24,7 @@ public class HadoopTierMapper extends
 	private final IntWritable tier = new IntWritable();
 	private TierSolver solver;
 	private TierGame game;
-	private FileDatabase writeDb;
+	private Database writeDb;
 	private FileDatabase readDb;
 	private boolean doZip;
 	private String writeURI;
@@ -45,8 +45,6 @@ public class HadoopTierMapper extends
 			solver = new TierSolver(this.conf);
 			doZip = conf.getBoolean("gamesman.remote.zipped", false);
 
-			// TODO: What do we do about getting the database HEAD!!!!!!!!!!!
-
 		} catch (ClassNotFoundException e) {
 			throw new Error(e);
 		} catch (IOException e) {
@@ -60,8 +58,16 @@ public class HadoopTierMapper extends
 		long firstHash = key.firstRecord;
 		long numHashes = key.numRecords;
 		byte[] headBytes = new byte[18];
-		Database.readFully(System.in, headBytes, 0, 18);
-		DatabaseHeader head = new DatabaseHeader(headBytes);
+                for (int i = 0; i < 18; i++) {
+                            headBytes[i] = 0;
+                }
+                byte recordsPerGroup = (byte) conf.getInteger("recordsPerGroup", -1);
+                byte recordGroupByteLength = (byte) conf.getInteger("recordGroupByteLength", -1);
+
+                headBytes[16] = recordsPerGroup;
+                headBytes[17] = recordGroupByteLength;
+		DatabaseHeader temp = new DatabaseHeader(headBytes);
+                DatabaseHeader head = temp.getHeader(firstHash, numHashes);
 		int prevTier = tier.get() + 1;
 		String name = conf.toString() + "_" + tier.get() + "_"
 				+ key.firstRecord;
@@ -75,8 +81,7 @@ public class HadoopTierMapper extends
 			zipURI = writeURI;
 			writeURI = writeURI + ".uz";
 		}
-		writeDb = (FileDatabase) Database.openDatabase(writeURI, conf, true,
-				head);
+		writeDb = Database.openDatabase(writeURI, conf, true, head);
 		solver.setWriteDb(writeDb);
 		// ***********************************************************************
 
