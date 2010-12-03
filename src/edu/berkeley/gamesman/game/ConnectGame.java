@@ -108,6 +108,19 @@ public abstract class ConnectGame extends TierGame {
 	@Override
 	public final void setFromString(String pos) {
 		char[] arr = convertInString(pos);
+		int xCount = 0, oCount = 0;
+		for (int i = 0; i < arr.length; i++) {
+			if (arr[i] == 'X')
+				xCount++;
+			else if (arr[i] == 'O')
+				oCount++;
+			else if (arr[i] != ' ')
+				throw new Error("Bad board string");
+		}
+		if (xCount - oCount < 0 || xCount - oCount > 1)
+			throw new Error("Bad board string");
+		tier = xCount + oCount;
+		mmh.setReplacements(' ', tier % 2 == 0 ? 'X' : 'O');
 		mmh.setNumsAndHash(arr);
 		setToCharArray(arr);
 	}
@@ -235,7 +248,8 @@ public abstract class ConnectGame extends TierGame {
 	}
 
 	@Override
-	public final void longToRecord(TierState recordState, long state, Record toStore) {
+	public final void longToRecord(TierState recordState, long state,
+			Record toStore) {
 		if ((state & 1) == 1)
 			toStore.value = Value.WIN;
 		else
