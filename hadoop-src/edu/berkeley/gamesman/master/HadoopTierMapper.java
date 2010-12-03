@@ -7,10 +7,13 @@ import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHeader;
 import edu.berkeley.gamesman.database.FileDatabase;
+import edu.berkeley.gamesman.database.SplitFileSystemDatabase;
 import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.solver.TierSolver;
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -25,12 +28,13 @@ public class HadoopTierMapper extends
 	private TierSolver solver;
 	private TierGame game;
 	private Database writeDb;
-	private FileDatabase readDb;
+	private SplitFileSystemDatabase readDb;
 	private boolean doZip;
 	private String writeURI;
 
 	Configuration conf;
 	FileSystem fs;
+        FSDataInputStream is;
 
 	@Override
 	public void setup(Context context) {
@@ -63,14 +67,19 @@ public class HadoopTierMapper extends
                 }
                 byte recordsPerGroup = (byte) conf.getInteger("recordsPerGroup", -1);
                 byte recordGroupByteLength = (byte) conf.getInteger("recordGroupByteLength", -1);
-
+                String readUri = conf.getProperty("gamesman.hadoop.readDB");
                 headBytes[16] = recordsPerGroup;
                 headBytes[17] = recordGroupByteLength;
 		DatabaseHeader temp = new DatabaseHeader(headBytes);
                 DatabaseHeader head = temp.getHeader(firstHash, numHashes);
 		int prevTier = tier.get() + 1;
-		String name = conf.toString() + "_" + tier.get() + "_"
-				+ key.firstRecord;
+                readUri = readUri + "_" + prevTier;
+                if (prevTier < game.numberOfTiers()) {
+                    readDb = new SplitFileSystemDatabase(new Path(readUri), is, fs);
+                } else {
+                    readDb = null;
+                }
+
 
 		// setting write database file name, path etc and initializing it*******
 		String foldUri = conf.getProperty("gamesman.parallel.dbfolder");
@@ -83,20 +92,6 @@ public class HadoopTierMapper extends
 		}
 		writeDb = Database.openDatabase(writeURI, conf, true, head);
 		solver.setWriteDb(writeDb);
-		// ***********************************************************************
-
-		// setting read database if it is
-		// needed**********************************
-		if (prevTier < game.numberOfTiers()) {
-			long firstTierRecord = game.hashOffsetForTier(prevTier);
-			long numTierRecords = game.numHashesForTier(prevTier);
-			// TODO: how do we get the read database???
-			readDb = new FileDatabase(name, conf, true, firstHash, numHashes,
-					head.getHeader(firstTierRecord, numTierRecords));
-			solver.setReadDb(readDb);
-		} else {
-			readDb = null;
-		}
 		// ***********************************************************************
 
 		int t = tier.get();
