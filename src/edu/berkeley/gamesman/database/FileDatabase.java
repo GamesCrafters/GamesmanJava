@@ -102,14 +102,15 @@ public final class FileDatabase extends Database {
 		}
 		if (!overwriteEdgesOk)
 			return super.getBytes(dh, arr, off, maxLen, false);
+		int numBytes = (int) Math.min(maxLen, dh.lastByteIndex - dh.location);
 		try {
-			int numBytes = (int) Math.min(maxLen, dh.lastByteIndex
-					- dh.location);
 			fd.read(arr, off, numBytes);
 			dh.location += numBytes;
 			return numBytes;
 		} catch (IOException e) {
-			throw new Error(e);
+			throw new Error("While reading " + numBytes + " bytes "
+					+ dh.location + " - " + (dh.location + numBytes)
+					+ " into arr[" + off + "-" + (off + numBytes) + "]", e);
 		}
 	}
 
@@ -134,14 +135,15 @@ public final class FileDatabase extends Database {
 		}
 		if (!edgesAreCorrect)
 			return super.putBytes(dh, arr, off, maxLen, false);
+		int numBytes = (int) Math.min(maxLen, dh.lastByteIndex - dh.location);
 		try {
-			int numBytes = (int) Math.min(maxLen, dh.lastByteIndex
-					- dh.location);
 			fd.write(arr, off, numBytes);
 			dh.location += numBytes;
 			return numBytes;
 		} catch (IOException e) {
-			throw new Error(e);
+			throw new Error("While writing " + numBytes + " bytes "
+					+ dh.location + " - " + (dh.location + numBytes)
+					+ " from arr[" + off + "-" + (off + numBytes) + "]", e);
 		}
 	}
 
