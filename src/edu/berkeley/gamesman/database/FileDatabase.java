@@ -105,13 +105,13 @@ public final class FileDatabase extends Database {
 		int numBytes = (int) Math.min(maxLen, dh.lastByteIndex - dh.location);
 		try {
 			fd.read(arr, off, numBytes);
-			dh.location += numBytes;
-			return numBytes;
 		} catch (IOException e) {
 			throw new Error("While reading " + numBytes + " bytes "
 					+ dh.location + " - " + (dh.location + numBytes)
 					+ " into arr[" + off + "-" + (off + numBytes) + "]", e);
 		}
+		dh.location += numBytes;
+		return numBytes;
 	}
 
 	@Override
@@ -138,13 +138,13 @@ public final class FileDatabase extends Database {
 		int numBytes = (int) Math.min(maxLen, dh.lastByteIndex - dh.location);
 		try {
 			fd.write(arr, off, numBytes);
-			dh.location += numBytes;
-			return numBytes;
 		} catch (IOException e) {
 			throw new Error("While writing " + numBytes + " bytes "
 					+ dh.location + " - " + (dh.location + numBytes)
 					+ " from arr[" + off + "-" + (off + numBytes) + "]", e);
 		}
+		dh.location += numBytes;
+		return numBytes;
 	}
 
 	@Override
