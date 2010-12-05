@@ -109,7 +109,8 @@ public final class FileDatabase extends Database {
 			throw new Error("While reading " + numBytes + " bytes "
 					+ (dh.location + offset) + " - "
 					+ (dh.location + offset + numBytes) + " into arr[" + off
-					+ "-" + (off + numBytes) + "]", e);
+					+ "-" + (off + numBytes) + "].  arr has length "
+					+ arr.length, e);
 		}
 		dh.location += numBytes;
 		return numBytes;
@@ -143,7 +144,8 @@ public final class FileDatabase extends Database {
 			throw new Error("While writing " + numBytes + " bytes "
 					+ (dh.location + offset) + " - "
 					+ (dh.location + offset + numBytes) + " from arr[" + off
-					+ "-" + (off + numBytes) + "]", e);
+					+ "-" + (off + numBytes) + "].  arr has length "
+					+ arr.length, e);
 		}
 		dh.location += numBytes;
 		return numBytes;
