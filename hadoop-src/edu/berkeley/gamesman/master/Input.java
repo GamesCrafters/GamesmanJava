@@ -7,14 +7,16 @@ import java.util.List;
 import edu.berkeley.gamesman.core.GamesmanConf;
 import edu.berkeley.gamesman.game.TierGame;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.*;
 
 /**
  * Created by IntelliJ IDEA. User: user Date: Nov 30, 2010 Time: 10:03:34 AM To
  * change this template use File | Settings | File Templates.
  */
-public class Input extends InputFormat<Range, Void> {
-	public class Reader extends RecordReader<Range, Void> {
+public class Input extends InputFormat<Range, IntWritable> {
+	public class Reader extends RecordReader<Range, IntWritable> {
+		private final IntWritable ZERO = new IntWritable(0);
 		private Split mySplit;
 		private boolean read = false;
 		private Range key = null;
@@ -52,15 +54,15 @@ public class Input extends InputFormat<Range, Void> {
 		}
 
 		@Override
-		public Void getCurrentValue() {
-			return null;
+		public IntWritable getCurrentValue() {
+			return ZERO;
 		}
 
 	}
 
 	@Override
-	public List<InputSplit> getSplits(JobContext Job) throws IOException {
-		Configuration conf = Job.getConfiguration();
+	public List<InputSplit> getSplits(JobContext job) throws IOException {
+		Configuration conf = job.getConfiguration();
 		int tier = conf.getInt("tier", -1);
 		GamesmanConf gc;
 		try {
@@ -87,10 +89,9 @@ public class Input extends InputFormat<Range, Void> {
 	}
 
 	@Override
-	public RecordReader<Range, Void> createRecordReader(InputSplit is,
+	public RecordReader<Range, IntWritable> createRecordReader(InputSplit is,
 			TaskAttemptContext context) throws IOException {
 		Reader rr = new Reader();
-		rr.initialize(is, context);
 		return rr;
 	}
 

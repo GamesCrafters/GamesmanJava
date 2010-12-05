@@ -1,29 +1,33 @@
 package edu.berkeley.gamesman.master;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 
 import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.database.Database;
-import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.database.DatabaseHeader;
 import edu.berkeley.gamesman.database.GZippedFileDatabase;
 import edu.berkeley.gamesman.database.SplitFileSystemDatabase;
 import edu.berkeley.gamesman.game.TierGame;
+import edu.berkeley.gamesman.solver.Solver;
 import edu.berkeley.gamesman.solver.TierSolver;
+import edu.berkeley.gamesman.util.Util;
+
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.GamesmanConf;
 
 public class HadoopTierMapper extends
-		Mapper<Range, NullWritable, IntWritable, RangeFile> {
+		Mapper<Range, IntWritable, IntWritable, RangeFile> {
 	private final RangeFile mapValue = new RangeFile();
 	private final IntWritable tier = new IntWritable();
 	private TierSolver solver;
@@ -47,11 +51,15 @@ public class HadoopTierMapper extends
 
 			fs = FileSystem.get(conf);
 			tier.set(conf.getInt("tier", -1));
-			Class<? extends TierSolver> solverc = Class.forName(conf.get(""))
+			if (tier.get() == -1)
+				throw new Error("No tier specified");
+			String solverName = this.conf.getProperty("gamesman.solver");
+			Class<? extends TierSolver> solverc = Util.typedForName(
+					"edu.berkeley.gamesman.solver." + solverName, Solver.class)
 					.asSubclass(TierSolver.class);
 			try {
 				solver = solverc.getConstructor(Configuration.class)
-						.newInstance(conf);
+						.newInstance(this.conf);
 			} catch (IllegalArgumentException e) {
 				throw new Error(e);
 			} catch (SecurityException e) {
@@ -66,7 +74,6 @@ public class HadoopTierMapper extends
 				throw new Error(e);
 			}
 			doZip = conf.getBoolean("gamesman.remote.zipped", false);
-
 		} catch (ClassNotFoundException e) {
 			throw new Error(e);
 		} catch (IOException e) {
@@ -74,26 +81,29 @@ public class HadoopTierMapper extends
 		}
 	}
 
+	private class HadoopMapperRunnable implements Runnable {
+		WorkUnit w;
+
+		HadoopMapperRunnable(WorkUnit u) {
+			w = u;
+		}
+
+		public void run() {
+			w.conquer();
+		}
+	}
+
 	@Override
-	public void map(Range key, NullWritable value, Context context)
+	public void map(Range key, IntWritable value, Context context)
 			throws IOException {
 		long firstHash = key.firstRecord;
 		long numHashes = key.numRecords;
-		byte[] headBytes = new byte[18];
-		for (int i = 0; i < 18; i++) {
-			headBytes[i] = 0;
-		}
-		byte recordsPerGroup = (byte) conf.getInteger("recordsPerGroup", -1);
-		byte recordGroupByteLength = (byte) conf.getInteger(
-				"recordGroupByteLength", -1);
-		String readUri = conf.getProperty("gamesman.hadoop.lastTierDb");
-		headBytes[16] = recordsPerGroup;
-		headBytes[17] = recordGroupByteLength;
 		DatabaseHeader head = new DatabaseHeader(conf, firstHash, numHashes);
 		int prevTier = tier.get() + 1;
-                Path readPath = new Path(readUri);
-                is = fs.open(readPath);
 		if (prevTier < game.numberOfTiers() - 1) {
+			String readUri = conf.getProperty("gamesman.hadoop.lastTierDb");
+			Path readPath = new Path(readUri);
+			is = fs.open(readPath);
 			readDb = new SplitFileSystemDatabase(readPath, is, fs);
 		} else {
 			readDb = null;
@@ -102,7 +112,8 @@ public class HadoopTierMapper extends
 		// setting write database file name, path etc and initializing it*******
 		String foldUri = conf.getProperty("gamesman.hadoop.dbfolder");
 		doZip = conf.getBoolean("gamesman.hadoop.zipped", false);
-		writeURI = foldUri + "_" + tier.get() + "_" + firstHash + ".db";
+		writeURI = foldUri + File.separator + "s" + tier.get() + "_"
+				+ firstHash + ".db";
 		String zipURI = null;
 		if (doZip) {
 			zipURI = writeURI;
@@ -112,18 +123,36 @@ public class HadoopTierMapper extends
 		solver.setWriteDb(writeDb);
 		// ***********************************************************************
 
-		int t = tier.get();
-		WorkUnit wu = solver.prepareSolve(conf, t, firstHash, numHashes);
-		wu.conquer(); // solve it
+		int tier = this.tier.get();
+		int threads = conf.getInteger("gamesman.threads", 1);
+		List<WorkUnit> list = null;
+		WorkUnit wu = solver.prepareSolve(conf, tier, firstHash, numHashes);
+		if (threads > 1)
+			list = wu.divide(threads);
+		else {
+			list = new ArrayList<WorkUnit>(1);
+			list.add(wu);
+		}
+		ArrayList<Thread> myThreads = new ArrayList<Thread>(list.size());
 
+		ThreadGroup solverGroup = new ThreadGroup("Solver Group: "
+				+ game.describe());
+		for (WorkUnit w : list) {
+			Thread t = new Thread(solverGroup, new HadoopMapperRunnable(w));
+			t.start();
+			myThreads.add(t);
+		}
+		for (Thread t : myThreads)
+			while (t.isAlive())
+				try {
+					t.join();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 		if (readDb != null) {
 			readDb.close();
 		}
-
 		if (doZip) {
-
-			int threads = conf.getInteger("gamesman.threads", 1);
-			long time = System.currentTimeMillis();
 			long maxMem = conf.getLong("gamesman.memory", Integer.MAX_VALUE);
 			Database readFrom = writeDb;
 			GZippedFileDatabase writeTo;
@@ -134,9 +163,7 @@ public class HadoopTierMapper extends
 				throw new Error(e);
 			}
 			Thread[] threadList = new Thread[threads];
-			DatabaseHandle[] readHandle = new DatabaseHandle[threads];
 			for (int i = 0; i < threads; i++) {
-				readHandle[i] = readFrom.getHandle();
 				threadList[i] = new Thread(writeTo);
 				threadList[i].start();
 			}
@@ -149,23 +176,21 @@ public class HadoopTierMapper extends
 					}
 
 			}
+			writeTo.close();
 		}
-
-		long length = numHashes;
-		boolean isdir = false;
-		int block_replication = conf.getInteger("block_replication", 3);
-		long blocksize = conf.getLong("blocksize", 64);
-		// DONNO
-		long modification_time = 0;
-
-		Path path = new Path(writeURI);
-		FileStatus finalFile = new FileStatus(length, isdir, block_replication,
-				blocksize, modification_time, path);
+		writeDb.close();
+		Path p;
+		if (zipURI == null)
+			p = new Path(writeURI);
+		else
+			p = new Path(zipURI);
+		fs.copyFromLocalFile(p, p);
+		FileStatus finalFile = fs.getFileStatus(p);
 		boolean successful = false;
 		while (!successful) {
 			try {
 				mapValue.set(key, finalFile);
-				context.write(tier, mapValue);
+				context.write(this.tier, mapValue);
 				successful = true;
 			} catch (InterruptedException e) {
 				successful = false;

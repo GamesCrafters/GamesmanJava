@@ -57,4 +57,9 @@ public class Range implements WritableComparable<Range> {
 	public long getLength() {
 		return numRecords;
 	}
+
+	public void set(Range r) {
+		firstRecord = r.firstRecord;
+		numRecords = r.numRecords;
+	}
 }

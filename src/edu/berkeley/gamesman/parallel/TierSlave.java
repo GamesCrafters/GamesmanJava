@@ -12,7 +12,6 @@ import java.util.Scanner;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.database.Database;
-import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.database.DatabaseHeader;
 import edu.berkeley.gamesman.database.DistributedDatabase;
 import edu.berkeley.gamesman.database.GZippedFileDatabase;
@@ -180,9 +179,7 @@ public class TierSlave implements TaskFactory, Runnable {
 				throw new Error(e);
 			}
 			Thread[] threadList = new Thread[threads];
-			DatabaseHandle[] readHandle = new DatabaseHandle[threads];
 			for (int i = 0; i < threads; i++) {
-				readHandle[i] = readFrom.getHandle();
 				threadList[i] = new Thread(writeTo);
 				threadList[i].start();
 			}

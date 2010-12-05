@@ -1,0 +1,7 @@
+gamesman.game = TicTacToe
+gamesman.solver = CacheTierSolver
+gamesman.database = FileDatabase
+gamesman.hadoop.tierDb = ttt
+gamesman.hadoop.zipped = true
+gamesman.hadoop.dbfolder = ttt_fold
+gamesman.debug.THREADING = true
