@@ -91,9 +91,10 @@ public class HadoopTierMapper extends
 		headBytes[17] = recordGroupByteLength;
 		DatabaseHeader head = new DatabaseHeader(conf, firstHash, numHashes);
 		int prevTier = tier.get() + 1;
-                
+                Path readPath = new Path(readUri);
+                is = fs.open(readPath);
 		if (prevTier < game.numberOfTiers() - 1) {
-			readDb = new SplitFileSystemDatabase(new Path(readUri), is, fs);
+			readDb = new SplitFileSystemDatabase(readPath, is, fs);
 		} else {
 			readDb = null;
 		}
