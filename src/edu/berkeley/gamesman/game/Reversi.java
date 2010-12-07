@@ -370,14 +370,13 @@ public class Reversi extends TierGame {
 		if (setStringMoves && counter == 0) {
 			turn = opposite(turn);
 			getChildren(false);
-			turn = opposite(turn);
 			if (numChildren > 0) {
 				stringMoves[0] = "pass";
 				children[0].tier = getTier();
-				children[0].hash = dbh.getHash()
-						+ offsetTable[getTier()][1][0] * (turn == 0 ? 1 : -1);
+				children[0].hash = getHash();
 				counter = 1;
 			}
+			turn = opposite(turn);
 		}
 		numChildren = counter;
 		isChildrenValid = true;
