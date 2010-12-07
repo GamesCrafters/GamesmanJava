@@ -345,11 +345,7 @@ public class Reversi extends TierGame {
 									boardSize);
 							isFlippable(place.boardNum, index, true,
 									tempPosition);
-							int newWhitePieces = 0;
-							for (int i = 0; i < boardSize; i++) {
-								if (tempPosition[i] == 'O')
-									newWhitePieces++;
-							}
+							int newWhitePieces = count(tempPosition);
 							int nextTier = getTier() + 1;
 							children[counter].tier = nextTier;
 							children[counter].hash = offsetTable[nextTier][opposite(turn)][newWhitePieces]
@@ -362,8 +358,29 @@ public class Reversi extends TierGame {
 				}
 			}
 		}
+		/*
+		if (setStringMoves && counter == 0) {
+			stringMoves[counter] = "pass";
+			children[counter].tier = getTier();
+			int numWhitePieces = count(oldPosition);
+			children[counter].hash = (turn == 0) ? dbh.getHash()
+					+ offsetTable[getTier()][0][numWhitePieces]
+					: dbh.getHash()
+							- offsetTable[getTier()][0][numWhitePieces];
+			counter++;
+		}
+		*/
 		numChildren = counter;
 		isChildrenValid = true;
+	}
+
+	private int count(char[] pos) {
+		int numWhite = 0;
+		for (int i = 0; i < boardSize; i++) {
+			if (pos[i] == 'O')
+				numWhite++;
+		}
+		return numWhite;
 	}
 
 	private int opposite(int turn) {
