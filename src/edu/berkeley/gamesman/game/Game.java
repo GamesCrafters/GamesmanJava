@@ -132,8 +132,11 @@ public abstract class Game<S extends State> {
 
 	/**
 	 * Given a board state return its primitive "value". Usually this value
-	 * includes WIN, LOSE, and perhaps TIE Return UNDECIDED if this is not a
-	 * primitive state
+	 * includes WIN, LOSE, and perhaps TIE. Return UNDECIDED if this is not a
+	 * primitive state. This method should be as efficient as possible, since it
+	 * will be used repeatedly by the solver. For instance, in Chess this
+	 * version of primitiveValue should probably be
+	 * "Has the king been captured?" rather than "Is it Checkmate?"
 	 * 
 	 * @param pos
 	 *            The primitive State
@@ -142,13 +145,26 @@ public abstract class Game<S extends State> {
 	public abstract Value primitiveValue(S pos);
 
 	/**
+	 * This is primitiveValue according to the letter of the rules. In other
+	 * words, this should return LOSE for a checkmate position (Note that
+	 * remoteness 2 from capture the king is not sufficient for a checkmate. You
+	 * also must verify that the king is in check or else it's a stalemate).
+	 * 
+	 * @param pos
+	 * @return
+	 */
+	public Value strictPrimitiveValue(S pos) {
+		return primitiveValue(pos);
+	}
+
+	/**
 	 * @param pos
 	 *            The current position
 	 * @return The primitive value of the position. Generally LOSE,TIE, or
 	 *         UNDECIDED (for positions which aren't primitive)
 	 */
-	public synchronized final Value synchronizedPrimitiveValue(S pos) {
-		return primitiveValue(pos);
+	public synchronized final Value synchronizedStrictPrimitiveValue(S pos) {
+		return strictPrimitiveValue(pos);
 	}
 
 	/**

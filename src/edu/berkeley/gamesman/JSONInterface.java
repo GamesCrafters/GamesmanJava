@@ -270,7 +270,7 @@ public class JSONInterface extends GamesmanApplication {
 			final List<GamestateResponse> responseArray = Collections
 					.synchronizedList(new ArrayList<GamestateResponse>());
 
-			Value pv = game.synchronizedPrimitiveValue(state);
+			Value pv = game.synchronizedStrictPrimitiveValue(state);
 			if (game.getPlayerCount() <= 1 || pv == Value.UNDECIDED) {
 				Collection<Pair<String, T>> states = game
 						.synchronizedValidMoves(state);
@@ -387,7 +387,7 @@ public class JSONInterface extends GamesmanApplication {
 						+ request.getValue() + "; remote=" + rec.remoteness
 						+ "; score=" + rec.score);
 			} else {
-				Value pv = g.synchronizedPrimitiveValue(state);
+				Value pv = g.synchronizedStrictPrimitiveValue(state);
 				if (pv != Value.UNDECIDED) {
 					if (g.getPlayerCount() > 1 && isChildState) {
 						if (pv == Value.WIN)

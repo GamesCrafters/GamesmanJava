@@ -85,6 +85,12 @@ public abstract class TierGame extends Game<TierState> {
 		return primitiveValue();
 	}
 
+	@Override
+	public synchronized Value strictPrimitiveValue(TierState pos) {
+		setState(pos);
+		return strictPrimitiveValue();
+	}
+
 	/**
 	 * Assumes the given state.
 	 * 
@@ -249,6 +255,10 @@ public abstract class TierGame extends Game<TierState> {
 
 	public TierReadCache nextCache() {
 		throw new UnsupportedOperationException();
+	}
+
+	public Value strictPrimitiveValue() {
+		return primitiveValue();
 	}
 
 }

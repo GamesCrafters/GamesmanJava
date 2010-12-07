@@ -46,7 +46,7 @@ public final class Play {
 		DatabaseHandle dh = db.getHandle();
 		// Each thread accessing a database must maintain its own DatabaseHandle
 		// for that Database. This deals with many multi-threading issues
-		while (g.primitiveValue(position) == Value.UNDECIDED) {
+		while (g.strictPrimitiveValue(position) == Value.UNDECIDED) {
 			System.out.println(g.displayState(position));
 			g.longToRecord(position, db.getRecord(dh, g.stateToHash(position)),
 					storeRecord); // This line hashes the current position,

@@ -157,14 +157,23 @@ public class Reversi extends TierGame {
 
 	@Override
 	public Value primitiveValue() {
+		return primitiveValue(false);
+	}
+
+	private Value primitiveValue(boolean strict) {
 		if (!(isChildrenValid))
-			getChildren(false); // use false for solving. true only for testing
+			getChildren(strict);
 		if (numChildren == 0) {
 			return numPieces[turn] > numPieces[Math.abs(turn - 1)] ? Value.WIN
 					: Value.LOSE;
 		} else {
 			return Value.UNDECIDED;
 		}
+	}
+
+	@Override
+	public Value strictPrimitiveValue() {
+		return primitiveValue(true);
 	}
 
 	@Override
@@ -358,18 +367,18 @@ public class Reversi extends TierGame {
 				}
 			}
 		}
-		/*
 		if (setStringMoves && counter == 0) {
-			stringMoves[counter] = "pass";
-			children[counter].tier = getTier();
-			int numWhitePieces = count(oldPosition);
-			children[counter].hash = (turn == 0) ? dbh.getHash()
-					+ offsetTable[getTier()][0][numWhitePieces]
-					: dbh.getHash()
-							- offsetTable[getTier()][0][numWhitePieces];
-			counter++;
+			turn = opposite(turn);
+			getChildren(false);
+			turn = opposite(turn);
+			if (numChildren > 0) {
+				stringMoves[0] = "pass";
+				children[0].tier = getTier();
+				children[0].hash = dbh.getHash()
+						+ offsetTable[getTier()][1][0] * (turn == 0 ? 1 : -1);
+				counter = 1;
+			}
 		}
-		*/
 		numChildren = counter;
 		isChildrenValid = true;
 	}

@@ -120,7 +120,7 @@ public final class GamesmanMain extends GamesmanApplication {
 		if (board == null)
 			throw new Error("Please specify a hash to evaluate");
 		long val = Long.parseLong(board);
-		System.out.println(gm.primitiveValue(gm.hashToState(val)));
+		System.out.println(gm.strictPrimitiveValue(gm.hashToState(val)));
 	}
 
 	// public void executetestRPC(){

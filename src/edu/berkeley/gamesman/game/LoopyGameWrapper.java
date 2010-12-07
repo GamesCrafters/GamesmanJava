@@ -178,6 +178,11 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame {
 	}
 
 	@Override
+	public Value strictPrimitiveValue() {
+		return myGame.strictPrimitiveValue(stateList.getFirst());
+	}
+
+	@Override
 	public long recordToLong(Record fromRecord) {
 		return myGame.recordToLong(stateList.getFirst(), fromRecord);
 	}

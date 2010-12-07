@@ -51,6 +51,12 @@ public abstract class TopDownMutaGame extends Game<HashState> {
 		return primitiveValue();
 	}
 
+	@Override
+	public Value strictPrimitiveValue(HashState pos) {
+		setToHash(pos.hash);
+		return strictPrimitiveValue();
+	}
+
 	/**
 	 * @return The primitive value of the current position
 	 */
@@ -187,4 +193,8 @@ public abstract class TopDownMutaGame extends Game<HashState> {
 	}
 
 	public abstract long recordToLong(Record fromRecord);
+
+	public Value strictPrimitiveValue() {
+		return primitiveValue();
+	}
 }
