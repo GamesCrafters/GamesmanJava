@@ -24,19 +24,19 @@ public final class RearrangeHasher {
 	private boolean majorChanged = true;
 
 	public static void main(String[] args) {
-		Scanner sc = new Scanner(System.in);
-		RearrangeHasher rh = new RearrangeHasher(5);
-		int nums = 1;
-		int numo = 2;
-		int numx = 2;
+		//Scanner sc = new Scanner(System.in);
+		RearrangeHasher rh = new RearrangeHasher(13);
+		int nums = 5;
+		int numo = 4;
+		int numx = 4;
 		rh.setNums(nums, numo, numx);
-		long[] q = new long[9];
-		char[] c = "OOXX ".toCharArray();
-		rh.hash(c);
-		rh.next();
+		long[] q = new long[13];
+		char[] c = "XXXXOOOO     ".toCharArray();
+		System.out.println(rh.hash(c));
 		rh.getChildren(' ', ' ', q);
 		rh.printHash(q);
-		rh.printBoard(q);
+		return;
+		/*rh.printBoard(q);
 		rh.getCharArray(c);
 		System.out.println(c);
 		while (sc.next().equals("0")) {
@@ -67,7 +67,7 @@ public final class RearrangeHasher {
 		 * rh.unhash(children[i]); rh.getCharArray(childboard);
 		 * //System.out.println(childboard); i++; }
 		 */
-		char[] childboard = new char[9];
+		//char[] childboard = new char[9];
 		// long startTimeMs = System.currentTimeMillis();
 		// int nexttime = 86574831;
 		// int nexttime = 1000000;
@@ -79,9 +79,10 @@ public final class RearrangeHasher {
 		 * 'O', children); k++; } j++; }
 		 */
 		// long taskTimeMs = System.currentTimeMillis() - startTimeMs;
-		rh.getCharArray(childboard);
+		//rh.getCharArray(childboard);
 		// System.out.println(childboard);
 		// System.out.println(taskTimeMs);
+		
 	}
 
 	public RearrangeHasher(int len) {
@@ -114,8 +115,8 @@ public final class RearrangeHasher {
 
 	public void setNums(int spaces, int o, int x) {
 		int i = 0;
-		if (OX) {
-			for (i = 0; i < x; i++) {
+		if (o==x) {
+			for (i = 0; i < o; i++) {
 				board[i] = 'O';
 			}
 			for (; i < x + o; i++) {
@@ -486,6 +487,7 @@ public final class RearrangeHasher {
 					changed.add(n);
 			}
 		} else {
+			majorChanged = false;
 			minor.next(c);
 		}
 		int smallcounter = 0;
@@ -503,22 +505,6 @@ public final class RearrangeHasher {
 	}
 
 	public boolean majorChanged() {
-		if (majorChanged) {
-			majorChanged = false;
-			return true;
-		} else
-			return false;
+		return majorChanged;
 	}
 }
-/*
- * for (int majorIndex = length - 1, oldMinorIndex = oldmL - 1, intMinorIndex =
- * intmL - 1, M = intM; majorIndex >= 0; majorIndex--) { if (Mboard[majorIndex]
- * == cOld) { Mboard[majorIndex] = ' '; mboard[intmL][intMinorIndex] = cOld;
- * minorValue += ct.get(intMinorIndex, intm); intMinorIndex--; } else if
- * (Mboard[majorIndex] == ' ') { if (mboard[oldmL][oldMinorIndex] == cNew) {
- * Mboard[majorIndex] = cNew; majorValue += ct.get(majorIndex, M); M--;
- * oldMinorIndex--; } else if (mboard[oldmL][oldMinorIndex] == ' ') {
- * intMinorIndex--; oldMinorIndex--; }
- * 
- * } }
- */
