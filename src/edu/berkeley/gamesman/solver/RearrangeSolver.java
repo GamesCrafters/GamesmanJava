@@ -4,6 +4,7 @@ import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.TierGame;
+import edu.berkeley.gamesman.game.RearrangeTierGame;
 import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.util.*;
 
@@ -43,12 +44,16 @@ public class RearrangeSolver extends TierSolver {
 			nano = System.nanoTime();
 			times[0] = nano - lastNano;
 		}
+		Value pv = game.primitiveValue();
 		for (long count = 0L; count < hashes; count++) {
 			if (stepNum == STEP_SIZE) {
 				t.calculated(STEP_SIZE);
 				stepNum = 0;
 			}
-			Value pv = game.primitiveValue();
+			
+			if(((RearrangeTierGame)game).majorChanged()){
+				pv = game.primitiveValue();
+			}
 			if (debugSolver) {
 				lastNano = nano;
 				nano = System.nanoTime();
