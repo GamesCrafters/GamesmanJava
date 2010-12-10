@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.berkeley.gamesman.core.GamesmanConf;
 import edu.berkeley.gamesman.game.TierGame;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.IntWritable;
@@ -64,15 +63,16 @@ public class Input extends InputFormat<Range, IntWritable> {
 	public List<InputSplit> getSplits(JobContext job) throws IOException {
 		Configuration conf = job.getConfiguration();
 		int tier = conf.getInt("tier", -1);
-		GamesmanConf gc;
+		edu.berkeley.gamesman.core.Configuration gc;
 		try {
-			gc = new GamesmanConf(conf);
+			gc = edu.berkeley.gamesman.core.Configuration.deserialize(conf
+					.get("gamesman.configuration"));
 		} catch (ClassNotFoundException e) {
 			throw new Error(e);
 		}
 		if (tier < 0)
 			throw new Error("No tier specified");
-		int numMachines = 8; // = conf.getInteger(�numMachines�, 8); //Default
+		int numMachines = 8; // = conf.getInteger("numMachines", 8); //Default
 								// of 8
 		TierGame game = (TierGame) gc.getGame();
 		long numPos = game.numHashesForTier(tier);

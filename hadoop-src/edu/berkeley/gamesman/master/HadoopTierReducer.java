@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.GamesmanConf;
 import edu.berkeley.gamesman.database.GZippedFileSystemDatabase;
 import edu.berkeley.gamesman.database.SplitDatabase;
 import org.apache.hadoop.fs.*;
@@ -25,7 +24,7 @@ public class HadoopTierReducer extends
 		try {
 			org.apache.hadoop.conf.Configuration conf = context
 					.getConfiguration();
-			this.conf = new GamesmanConf(conf);
+			this.conf = Configuration.deserialize(conf.get("gamesman.configuration"));
 			fs = FileSystem.get(conf);
 			tier.set(conf.getInt("tier", -1));
 			if (tier.get() == -1)

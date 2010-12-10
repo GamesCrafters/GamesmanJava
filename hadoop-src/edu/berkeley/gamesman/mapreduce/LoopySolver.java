@@ -1,6 +1,5 @@
 package edu.berkeley.gamesman.mapreduce;
 
-import edu.berkeley.gamesman.core.GamesmanConf;
 import edu.berkeley.gamesman.core.State;
 
 import java.io.IOException;
@@ -28,7 +27,8 @@ public class LoopySolver {
 		protected void setup(Context context) {
 			Configuration conf = context.getConfiguration();
 			try {
-				GamesmanConf g = new GamesmanConf(conf);
+				edu.berkeley.gamesman.core.Configuration g = edu.berkeley.gamesman.core.Configuration
+						.deserialize(conf.get("gamesman.configuration"));
 				game = new LoopyGameAdapter<State>(g.getCheckedGame());
 			} catch (Exception e) {
 				throw new RuntimeException(e);
@@ -82,7 +82,8 @@ public class LoopySolver {
 		protected void setup(Context context) {
 			Configuration conf = context.getConfiguration();
 			try {
-				GamesmanConf g = new GamesmanConf(conf);
+				edu.berkeley.gamesman.core.Configuration g = edu.berkeley.gamesman.core.Configuration
+						.deserialize(conf.get("gamesman.configuration"));
 				game = new LoopyGameAdapter<State>(g.getCheckedGame());
 			} catch (Exception e) {
 				throw new RuntimeException(e);

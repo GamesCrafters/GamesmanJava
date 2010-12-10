@@ -24,7 +24,6 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.GamesmanConf;
 
 public class HadoopTierMapper extends
 		Mapper<Range, IntWritable, IntWritable, RangeFile> {
@@ -46,7 +45,7 @@ public class HadoopTierMapper extends
 		try {
 			org.apache.hadoop.conf.Configuration conf = context
 					.getConfiguration();
-			this.conf = new GamesmanConf(conf);
+			this.conf = Configuration.deserialize(conf.get("gamesman.configuration"));
 			game = (TierGame) this.conf.getGame();
 
 			fs = FileSystem.get(conf);

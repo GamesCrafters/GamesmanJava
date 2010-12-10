@@ -20,7 +20,7 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author Steven Schlansker
  */
-public class Configuration {
+public final class Configuration {
 	private final Game<?> g;
 
 	/**
@@ -452,6 +452,19 @@ public class Configuration {
 		Properties props = new Properties();
 		props.load(bais);
 		return new Configuration(props);
+	}
+
+	public static Configuration deserialize(String s) throws IOException,
+			ClassNotFoundException {
+		Properties props = new Properties();
+		props.load(new StringReader(s));
+		return new Configuration(props);
+	}
+
+	public String serialize() throws IOException {
+		StringWriter writer = new StringWriter();
+		props.store(writer, "");
+		return writer.toString();
 	}
 
 	private static byte[] loadBytes(InputStream is) throws IOException {

@@ -6,12 +6,11 @@ import java.io.IOException;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import edu.berkeley.gamesman.core.GamesmanConf;
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.game.TierGame;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Job;
@@ -19,13 +18,12 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
 public class HadoopTierMaster implements Runnable {
-	private final Configuration hadoopConf;
-	private final GamesmanConf gamesmanConf;
+	private final org.apache.hadoop.conf.Configuration hadoopConf;
+	private final Configuration gamesmanConf;
 	private final TierGame game;
 	private final FileSystem fs;
 	private final Path outputDirectory = new Path("temp_output");
 	private Job job;
-	public static Configuration theConf;
 
 	public HadoopTierMaster(GenericOptionsParser gop, String confFile)
 			throws IOException, ClassNotFoundException {
@@ -38,7 +36,8 @@ public class HadoopTierMaster implements Runnable {
 		for (Entry<Object, Object> e : props.entrySet())
 			hadoopConf.set(e.getKey().toString(), e.getValue().toString());
 		fs = FileSystem.get(hadoopConf);
-		gamesmanConf = new GamesmanConf(hadoopConf);
+		gamesmanConf = Configuration.deserialize(hadoopConf
+				.get("gamesman.configuration"));
 		game = (TierGame) gamesmanConf.getGame();
 	}
 
@@ -54,7 +53,6 @@ public class HadoopTierMaster implements Runnable {
 			if (fs.exists(outputDirectory))
 				fs.delete(outputDirectory, true);
 			hadoopConf.setInt("tier", tier);
-			theConf = hadoopConf;
 			job = new Job(hadoopConf, "hadoop tier solver");
 			job.setJarByClass(HadoopTierMaster.class);
 			job.setOutputKeyClass(IntWritable.class);
