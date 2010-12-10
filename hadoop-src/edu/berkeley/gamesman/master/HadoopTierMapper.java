@@ -16,7 +16,6 @@ import edu.berkeley.gamesman.solver.Solver;
 import edu.berkeley.gamesman.solver.TierSolver;
 import edu.berkeley.gamesman.util.Util;
 
-import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -39,7 +38,6 @@ public class HadoopTierMapper extends
 
 	Configuration conf;
 	FileSystem fs;
-	FSDataInputStream is;
 
 	@Override
 	public void setup(Context context) {
@@ -108,9 +106,8 @@ public class HadoopTierMapper extends
 		DatabaseHeader head = new DatabaseHeader(conf, firstHash, numHashes);
 		int prevTier = tier.get() + 1;
 		if (prevTier < game.numberOfTiers()) {
-			Path readPath = new Path(readUri);
-			is = fs.open(readPath);
-			readDb = new SplitFileSystemDatabase(readPath, is, fs);
+			readDb = new SplitFileSystemDatabase(fs, readUri, firstHash,
+					numHashes);
 			solver.setReadDb(readDb);
 		} else {
 			readDb = null;
@@ -164,8 +161,8 @@ public class HadoopTierMapper extends
 			Database readFrom = writeDb;
 			GZippedFileDatabase writeTo;
 			try {
-				writeTo = new GZippedFileDatabase(zipURI, conf, readFrom,
-						maxMem);
+				writeTo = new GZippedFileDatabase(zipURI + "_local", conf,
+						readFrom, maxMem);
 			} catch (IOException e) {
 				throw new Error(e);
 			}
@@ -191,7 +188,7 @@ public class HadoopTierMapper extends
 			pLocal = new Path(writeURI + "_local");
 			p = new Path(writeURI);
 		} else {
-			pLocal = new Path(writeURI + "_local");
+			pLocal = new Path(zipURI + "_local");
 			p = new Path(zipURI);
 		}
 		fs.copyFromLocalFile(pLocal, p);

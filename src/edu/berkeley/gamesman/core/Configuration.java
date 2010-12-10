@@ -398,8 +398,7 @@ public final class Configuration {
 			confLength <<= 8;
 			confLength |= is.read();
 		}
-		byte[] skippedBytes = new byte[confLength];
-		is.read(skippedBytes);
+		Database.skipFully(is, confLength);
 	}
 
 	/**

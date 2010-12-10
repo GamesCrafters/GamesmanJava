@@ -183,8 +183,13 @@ public abstract class Database {
 					throw new Error(e);
 				}
 		if (numRecords == -1) {
-			firstRecord = 0;
-			numRecords = conf.getGame().numHashes();
+			if (header != null && header.numRecords != -1) {
+				firstRecord = header.firstRecord;
+				numRecords = header.numRecords;
+			} else {
+				firstRecord = 0;
+				numRecords = conf.getGame().numHashes();
+			}
 		}
 		this.conf = conf;
 		this.solve = solve;

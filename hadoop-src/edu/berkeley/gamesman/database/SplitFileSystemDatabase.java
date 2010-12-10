@@ -8,38 +8,80 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-public class SplitFileSystemDatabase extends FileSystemDatabase {
-	private final Database[] databaseList;
+import edu.berkeley.gamesman.core.Configuration;
+
+/**
+ * A database wrapper for multiple underlying databases which may or may not be
+ * of the same type
+ * 
+ * @author dnspies
+ */
+public class SplitFileSystemDatabase extends Database {
+	private final GZippedFileSystemDatabase[] databaseList;
 	private final long[] firstByteIndices;
 	private final int[] firstNums;
 	private final long[] lastByteIndices;
 	private final int[] lastNums;
+	private long size;
 
-	public SplitFileSystemDatabase(Path uri, FSDataInputStream is, FileSystem fs) {
-		super(uri, is);
-		Scanner dbStream = new Scanner(is);
+	private static class Info {
+		public Info(FileSystem fs, String uri, long firstRecord, long numRecords)
+				throws IOException {
+			this.fs = fs;
+			this.uri = uri;
+			this.solve = false;
+			this.firstRecord = firstRecord;
+			this.numRecords = numRecords;
+			FSDataInputStream in = fs.open(new Path(uri));
+			byte[] headBytes = new byte[18];
+			in.readFully(headBytes);
+			this.header = new DatabaseHeader(headBytes);
+			try {
+				conf = Configuration.load(in);
+			} catch (ClassNotFoundException e) {
+				throw new Error(e);
+			}
+			dbStream = new Scanner(in);
+		}
+
+		private final String uri;
+		private final Configuration conf;
+		private final boolean solve;
+		private final long firstRecord;
+		private final long numRecords;
+		private final DatabaseHeader header;
+		private final Scanner dbStream;
+		private final FileSystem fs;
+	}
+
+	public SplitFileSystemDatabase(FileSystem fs, String uri, long firstRecord,
+			long numRecords) throws IOException {
+		this(new Info(fs, uri, firstRecord, numRecords));
+	}
+
+	private SplitFileSystemDatabase(Info info) throws IOException {
+		super(info.uri, info.conf, info.solve, info.firstRecord,
+				info.numRecords, info.header);
+		Scanner dbStream = info.dbStream;
 		ArrayList<GZippedFileSystemDatabase> databaseList = new ArrayList<GZippedFileSystemDatabase>();
 		String dbType = dbStream.next();
 		while (!dbType.equals("end")) {
-			Path dbUri = new Path(dbStream.next());
+			String dbUri = dbStream.next();
 			long dbFirstRecord = dbStream.nextLong();
 			long dbNumRecords = dbStream.nextLong();
-			try {
-				databaseList.add(new GZippedFileSystemDatabase(dbUri,
-						dbFirstRecord, dbNumRecords, fs.open(dbUri)));
-			} catch (IOException e) {
-				throw new Error(e);
-			}
+			databaseList.add(new GZippedFileSystemDatabase(info.fs, dbUri,
+					dbFirstRecord, dbNumRecords));
 			dbType = dbStream.next();
 		}
-		this.databaseList = databaseList.toArray(new Database[databaseList
-				.size()]);
+		dbStream.close();
+		this.databaseList = databaseList
+				.toArray(new GZippedFileSystemDatabase[databaseList.size()]);
 		firstByteIndices = new long[databaseList.size()];
 		firstNums = new int[databaseList.size()];
 		lastByteIndices = new long[databaseList.size()];
 		lastNums = new int[databaseList.size()];
 		for (int i = 0; i < lastByteIndices.length; i++) {
-			Database db = this.databaseList[i];
+			GZippedFileSystemDatabase db = this.databaseList[i];
 			long dbFirstRecord = db.firstRecord();
 			firstByteIndices[i] = toByte(dbFirstRecord);
 			firstNums[i] = toNum(dbFirstRecord);
@@ -47,6 +89,12 @@ public class SplitFileSystemDatabase extends FileSystemDatabase {
 			lastByteIndices[i] = lastByte(dbLastRecord);
 			lastNums[i] = toNum(dbLastRecord);
 		}
+	}
+
+	@Override
+	public void close() {
+		for (GZippedFileSystemDatabase d : databaseList)
+			d.close();
 	}
 
 	@Override
@@ -165,9 +213,54 @@ public class SplitFileSystemDatabase extends FileSystemDatabase {
 	}
 
 	@Override
-	protected void closeDatabase() {
-		for (Database d : databaseList) {
-			d.close();
+	public long getSize() {
+		int percent = 0;
+		Thread[] threads = new Thread[8];
+		for (int i = 0; i < databaseList.length; i++) {
+			final GZippedFileSystemDatabase d = databaseList[i];
+			if (i * 100 / databaseList.length > percent) {
+				percent = i * 100 / databaseList.length;
+				for (Thread t : threads) {
+					if (t != null) {
+						try {
+							t.join();
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+				System.out.println(percent + "%: " + d.firstRecord()
+						+ " records = " + size + " bytes");
+			}
+			if (threads[i & 7] != null && threads[i & 7].isAlive())
+				try {
+					threads[i & 7].join();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			threads[i & 7] = new Thread() {
+				public void run() {
+					long mySize = d.getSize();
+					synchronized (SplitFileSystemDatabase.this) {
+						size += mySize;
+					}
+				}
+			};
+			threads[i & 7].start();
 		}
+		for (Thread t : threads)
+			if (t != null)
+				try {
+					t.join();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+		return size;
+	}
+
+	@Override
+	protected void putBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
+			int len) {
+		throw new UnsupportedOperationException();
 	}
 }
