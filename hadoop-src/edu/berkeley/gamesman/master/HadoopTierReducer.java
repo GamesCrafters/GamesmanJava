@@ -1,5 +1,6 @@
 package edu.berkeley.gamesman.master;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 
@@ -58,5 +59,6 @@ public class HadoopTierReducer extends
 		writeDb.close();
 		Path dbLocalPath = new Path(dbUri + "_local");
 		fs.copyFromLocalFile(dbLocalPath, dbPath);
+		new File(dbUri + "_local").delete();
 	}
 }

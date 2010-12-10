@@ -181,17 +181,22 @@ public class HadoopTierMapper extends
 
 			}
 			writeTo.close();
-		}
-		writeDb.close();
+			writeDb.close();
+			new File(writeURI + "_local").delete();
+		} else
+			writeDb.close();
 		Path p, pLocal;
 		if (zipURI == null) {
 			pLocal = new Path(writeURI + "_local");
 			p = new Path(writeURI);
+			fs.copyFromLocalFile(pLocal, p);
+			new File(writeURI + "_local").delete();
 		} else {
 			pLocal = new Path(zipURI + "_local");
 			p = new Path(zipURI);
+			fs.copyFromLocalFile(pLocal, p);
+			new File(zipURI + "_local").delete();
 		}
-		fs.copyFromLocalFile(pLocal, p);
 		FileStatus finalFile = fs.getFileStatus(p);
 		boolean successful = false;
 		while (!successful) {
