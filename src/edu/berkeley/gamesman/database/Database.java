@@ -198,60 +198,19 @@ public abstract class Database {
 			firstContainedRecord = header.firstRecord;
 			this.firstRecord = Math.max(firstRecord, firstContainedRecord);
 			numContainedRecords = header.numRecords;
-			this.numRecords = Math.max(Math.min(firstRecord + numRecords,
-					firstContainedRecord + numContainedRecords)
-					- this.firstRecord, 0);
+			this.numRecords = Math.max(
+					Math.min(firstRecord + numRecords, firstContainedRecord
+							+ numContainedRecords)
+							- this.firstRecord, 0);
 		} else {
 			double requiredCompression = Double.parseDouble(conf.getProperty(
 					"record.compression", "0")) / 100;
-			double compression;
-			if (requiredCompression == 0D) {
-				superCompress = false;
-				int bits = (int) (Math.log(totalStates) / Math.log(2));
-				if ((1 << bits) < totalStates)
-					++bits;
-				int recordGroupByteLength = (bits + 7) >> 3;
-				int recordGroupByteBits = 0;
-				recordGroupByteLength >>= 1;
-				while (recordGroupByteLength > 0) {
-					recordGroupByteBits++;
-					recordGroupByteLength >>= 1;
-				}
-				this.recordGroupByteBits = recordGroupByteBits;
-				this.recordGroupByteLength = 1 << recordGroupByteBits;
-				recordsPerGroup = 1;
-			} else {
-				superCompress = true;
-				int recordGuess;
-				int bitLength;
-				double log2;
-				log2 = Math.log(totalStates) / Math.log(2);
-				if (log2 > 8) {
-					recordGuess = 1;
-					bitLength = (int) Math.ceil(log2);
-					compression = (log2 / 8) / ((bitLength + 7) >> 3);
-					while (compression < requiredCompression) {
-						recordGuess++;
-						bitLength = (int) Math.ceil(recordGuess * log2);
-						compression = (recordGuess * log2 / 8)
-								/ ((bitLength + 7) >> 3);
-					}
-				} else {
-					bitLength = 8;
-					recordGuess = (int) (8D / log2);
-					compression = recordGuess * log2 / 8;
-					while (compression < requiredCompression) {
-						bitLength += 8;
-						recordGuess = (int) (bitLength / log2);
-						compression = (recordGuess * log2 / 8)
-								/ (bitLength >> 3);
-					}
-				}
-				recordsPerGroup = recordGuess;
-				recordGroupByteLength = (bigIntTotalStates.pow(recordsPerGroup)
-						.bitLength() + 7) >> 3;
-				recordGroupByteBits = -1;
-			}
+			header = new DatabaseHeader(requiredCompression, totalStates,
+					firstRecord, numRecords);
+			superCompress = header.superCompress;
+			recordsPerGroup = header.recordsPerGroup;
+			recordGroupByteLength = header.recordGroupByteLength;
+			recordGroupByteBits = header.recordGroupByteBits;
 			firstContainedRecord = this.firstRecord = firstRecord;
 			numContainedRecords = this.numRecords = numRecords;
 		}
@@ -277,7 +236,6 @@ public abstract class Database {
 		assert Util.debug(DebugFacility.DATABASE, recordsPerGroup
 				+ " records per group\n" + recordGroupByteLength
 				+ " bytes per group");
-
 	}
 
 	/**
@@ -325,8 +283,8 @@ public abstract class Database {
 			return getRecord(
 					getRecordsAsLongGroup(dh, byteIndex, num, num + 1), num);
 		else
-			return getRecord(getRecordsAsBigIntGroup(dh, byteIndex, num,
-					num + 1), num);
+			return getRecord(
+					getRecordsAsBigIntGroup(dh, byteIndex, num, num + 1), num);
 	}
 
 	/**
@@ -348,8 +306,8 @@ public abstract class Database {
 			putRecordsAsGroup(dh, byteIndex, num, num + 1,
 					setRecord(0L, num, r));
 		else
-			putRecordsAsGroup(dh, byteIndex, num, num + 1, setRecord(
-					BigInteger.ZERO, num, r));
+			putRecordsAsGroup(dh, byteIndex, num, num + 1,
+					setRecord(BigInteger.ZERO, num, r));
 	}
 
 	/**
@@ -1381,8 +1339,8 @@ public abstract class Database {
 			else if (num == recordsPerGroup - 1)
 				return recordGroup.divide(multipliers[num]).longValue();
 			else
-				return recordGroup.divide(multipliers[num]).mod(
-						bigIntTotalStates).longValue();
+				return recordGroup.divide(multipliers[num])
+						.mod(bigIntTotalStates).longValue();
 		else
 			return recordGroup.longValue();
 	}

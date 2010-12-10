@@ -51,6 +51,10 @@ public final class FileDatabase extends Database {
 			throws IOException {
 		super(uri, config, solve, firstRecord, numRecords, header);
 		myFile = new File(uri);
+		File parentFile = myFile.getParentFile();
+		if (parentFile != null && !parentFile.exists()) {
+			parentFile.mkdirs();
+		}
 		if (solve) {
 			FileOutputStream fos = new FileOutputStream(myFile);
 			store(fos, uri);

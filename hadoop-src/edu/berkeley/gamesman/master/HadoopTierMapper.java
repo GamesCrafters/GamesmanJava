@@ -35,6 +35,7 @@ public class HadoopTierMapper extends
 	private SplitFileSystemDatabase readDb;
 	private boolean doZip;
 	private String writeURI;
+	private String readUri;
 
 	Configuration conf;
 	FileSystem fs;
@@ -45,13 +46,16 @@ public class HadoopTierMapper extends
 		try {
 			org.apache.hadoop.conf.Configuration conf = context
 					.getConfiguration();
-			this.conf = Configuration.deserialize(conf.get("gamesman.configuration"));
+			this.conf = Configuration.deserialize(conf
+					.get("gamesman.configuration"));
 			game = (TierGame) this.conf.getGame();
-
 			fs = FileSystem.get(conf);
 			tier.set(conf.getInt("tier", -1));
 			if (tier.get() == -1)
 				throw new Error("No tier specified");
+			if (tier.get() < game.numberOfTiers() - 1) {
+				readUri = conf.get("gamesman.hadoop.lastTierDb");
+			}
 			String solverName = this.conf.getProperty("gamesman.solver");
 			Class<? extends TierSolver> solverc = Util.typedForName(
 					"edu.berkeley.gamesman.solver." + solverName, Solver.class)
@@ -97,13 +101,17 @@ public class HadoopTierMapper extends
 			throws IOException {
 		long firstHash = key.firstRecord;
 		long numHashes = key.numRecords;
+		if (numHashes == 0)
+			return;
+		else if (numHashes < 0)
+			throw new RuntimeException("Negative number of hashes");
 		DatabaseHeader head = new DatabaseHeader(conf, firstHash, numHashes);
 		int prevTier = tier.get() + 1;
-		if (prevTier < game.numberOfTiers() - 1) {
-			String readUri = conf.getProperty("gamesman.hadoop.lastTierDb");
+		if (prevTier < game.numberOfTiers()) {
 			Path readPath = new Path(readUri);
 			is = fs.open(readPath);
 			readDb = new SplitFileSystemDatabase(readPath, is, fs);
+			solver.setReadDb(readDb);
 		} else {
 			readDb = null;
 		}
@@ -118,7 +126,7 @@ public class HadoopTierMapper extends
 			zipURI = writeURI;
 			writeURI = writeURI + ".uz";
 		}
-		writeDb = Database.openDatabase(writeURI, conf, true, head);
+		writeDb = Database.openDatabase(writeURI + "_local", conf, true, head);
 		solver.setWriteDb(writeDb);
 		// ***********************************************************************
 
@@ -178,12 +186,15 @@ public class HadoopTierMapper extends
 			writeTo.close();
 		}
 		writeDb.close();
-		Path p;
-		if (zipURI == null)
+		Path p, pLocal;
+		if (zipURI == null) {
+			pLocal = new Path(writeURI + "_local");
 			p = new Path(writeURI);
-		else
+		} else {
+			pLocal = new Path(writeURI + "_local");
 			p = new Path(zipURI);
-		fs.copyFromLocalFile(p, p);
+		}
+		fs.copyFromLocalFile(pLocal, p);
 		FileStatus finalFile = fs.getFileStatus(p);
 		boolean successful = false;
 		while (!successful) {

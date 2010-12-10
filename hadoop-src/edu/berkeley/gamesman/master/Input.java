@@ -72,7 +72,7 @@ public class Input extends InputFormat<Range, IntWritable> {
 		}
 		if (tier < 0)
 			throw new Error("No tier specified");
-		int numMachines = 8; // = conf.getInteger("numMachines", 8); //Default
+		int numMachines = 1; // = conf.getInteger("numMachines", 8); //Default
 								// of 8
 		TierGame game = (TierGame) gc.getGame();
 		long numPos = game.numHashesForTier(tier);

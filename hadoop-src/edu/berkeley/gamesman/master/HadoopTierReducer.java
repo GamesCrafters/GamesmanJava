@@ -24,7 +24,8 @@ public class HadoopTierReducer extends
 		try {
 			org.apache.hadoop.conf.Configuration conf = context
 					.getConfiguration();
-			this.conf = Configuration.deserialize(conf.get("gamesman.configuration"));
+			this.conf = Configuration.deserialize(conf
+					.get("gamesman.configuration"));
 			fs = FileSystem.get(conf);
 			tier.set(conf.getInt("tier", -1));
 			if (tier.get() == -1)
@@ -33,8 +34,8 @@ public class HadoopTierReducer extends
 			dbUri = dbUri + "_" + tier.get() + ".db";
 			dbPath = new Path(dbUri);
 			// writeDB = new SplitFileSystemDatabase(new Path(dbUri), is, fs);
-			writeDb = SplitDatabase.openSplitDatabase(dbUri, this.conf, true,
-					true);
+			writeDb = SplitDatabase.openSplitDatabase(dbUri + "_local",
+					this.conf, true, true);
 
 		} catch (ClassNotFoundException e) {
 			throw new Error(e);
@@ -55,6 +56,7 @@ public class HadoopTierReducer extends
 					firstRecord, numRecords);
 		}
 		writeDb.close();
-		fs.copyFromLocalFile(dbPath, dbPath);
+		Path dbLocalPath = new Path(dbUri + "_local");
+		fs.copyFromLocalFile(dbLocalPath, dbPath);
 	}
 }

@@ -1,5 +1,7 @@
 package edu.berkeley.gamesman.database;
 
+import java.math.BigInteger;
+
 import edu.berkeley.gamesman.core.Configuration;
 
 /**
@@ -145,6 +147,59 @@ public final class DatabaseHeader {
 		}
 	}
 
+	public DatabaseHeader(double requiredCompression, long totalStates,
+			long firstRecord, long numRecords) {
+		this.firstRecord = firstRecord;
+		this.numRecords = numRecords;
+		double compression;
+		if (requiredCompression == 0D) {
+			superCompress = false;
+			int bits = (int) (Math.log(totalStates) / Math.log(2));
+			if ((1 << bits) < totalStates)
+				++bits;
+			int recordGroupByteLength = (bits + 7) >> 3;
+			int recordGroupByteBits = 0;
+			recordGroupByteLength >>= 1;
+			while (recordGroupByteLength > 0) {
+				recordGroupByteBits++;
+				recordGroupByteLength >>= 1;
+			}
+			this.recordGroupByteBits = recordGroupByteBits;
+			this.recordGroupByteLength = 1 << recordGroupByteBits;
+			recordsPerGroup = 1;
+		} else {
+			superCompress = true;
+			int recordGuess;
+			int bitLength;
+			double log2;
+			log2 = Math.log(totalStates) / Math.log(2);
+			if (log2 > 8) {
+				recordGuess = 1;
+				bitLength = (int) Math.ceil(log2);
+				compression = (log2 / 8) / ((bitLength + 7) >> 3);
+				while (compression < requiredCompression) {
+					recordGuess++;
+					bitLength = (int) Math.ceil(recordGuess * log2);
+					compression = (recordGuess * log2 / 8)
+							/ ((bitLength + 7) >> 3);
+				}
+			} else {
+				bitLength = 8;
+				recordGuess = (int) (8D / log2);
+				compression = recordGuess * log2 / 8;
+				while (compression < requiredCompression) {
+					bitLength += 8;
+					recordGuess = (int) (bitLength / log2);
+					compression = (recordGuess * log2 / 8) / (bitLength >> 3);
+				}
+			}
+			recordsPerGroup = recordGuess;
+			recordGroupByteLength = (BigInteger.valueOf(totalStates)
+					.pow(recordsPerGroup).bitLength() + 7) >> 3;
+			recordGroupByteBits = -1;
+		}
+	}
+
 	/**
 	 * The first 8 bytes is firstRecord. The next 8 bytes is numRecords.<br />
 	 * If superCompress, the next 10 bits are recordsPerGroup and the last 6
@@ -186,5 +241,18 @@ public final class DatabaseHeader {
 		else
 			return new DatabaseHeader(firstRecord, numRecords,
 					recordGroupByteBits);
+	}
+
+	public static void setHeaderInfo(Configuration gamesmanConf,
+			float recordCompression, long recordStates) {
+		DatabaseHeader tempHeader = new DatabaseHeader(recordCompression,
+				recordStates, 0, -1);
+		gamesmanConf.setProperty("recordGroupByteBits",
+				Integer.toString(tempHeader.recordGroupByteBits));
+		gamesmanConf.setProperty("recordsPerGroup",
+				Integer.toString(tempHeader.recordsPerGroup));
+		gamesmanConf.setProperty("recordGroupByteLength",
+				Integer.toString(tempHeader.recordGroupByteLength));
+
 	}
 }

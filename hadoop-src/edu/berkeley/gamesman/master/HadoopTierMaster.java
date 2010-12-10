@@ -1,16 +1,13 @@
 package edu.berkeley.gamesman.master;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Map.Entry;
-import java.util.Properties;
 
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.database.DatabaseHeader;
 import edu.berkeley.gamesman.game.TierGame;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Job;
@@ -28,17 +25,13 @@ public class HadoopTierMaster implements Runnable {
 	public HadoopTierMaster(GenericOptionsParser gop, String confFile)
 			throws IOException, ClassNotFoundException {
 		hadoopConf = gop.getConfiguration();
-		File f = new File(confFile);
-		FileInputStream fis = new FileInputStream(f);
-		Properties props = new Properties();
-		props.load(fis);
-		fis.close();
-		for (Entry<Object, Object> e : props.entrySet())
-			hadoopConf.set(e.getKey().toString(), e.getValue().toString());
+		gamesmanConf = new Configuration(confFile);
 		fs = FileSystem.get(hadoopConf);
-		gamesmanConf = Configuration.deserialize(hadoopConf
-				.get("gamesman.configuration"));
 		game = (TierGame) gamesmanConf.getGame();
+		DatabaseHeader.setHeaderInfo(gamesmanConf,
+				gamesmanConf.getFloat("record.compression", 0F),
+				game.recordStates());
+		hadoopConf.set("gamesman.configuration", gamesmanConf.serialize());
 	}
 
 	@Override
@@ -55,6 +48,7 @@ public class HadoopTierMaster implements Runnable {
 			hadoopConf.setInt("tier", tier);
 			job = new Job(hadoopConf, "hadoop tier solver");
 			job.setJarByClass(HadoopTierMaster.class);
+			job.setMapOutputValueClass(RangeFile.class);
 			job.setOutputKeyClass(IntWritable.class);
 			job.setOutputValueClass(FileStatus.class);
 			job.setMapperClass(HadoopTierMapper.class);
@@ -65,6 +59,8 @@ public class HadoopTierMaster implements Runnable {
 			do {
 				try {
 					success = job.waitForCompletion(true);
+					System.out.println("On tier " + tier + ", success = "
+							+ success);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 					continue;
@@ -74,7 +70,7 @@ public class HadoopTierMaster implements Runnable {
 				String dbUri = gamesmanConf
 						.getProperty("gamesman.hadoop.tierDb");
 				dbUri = dbUri + "_" + tier + ".db";
-				hadoopConf.set("lastTierDb", dbUri);
+				hadoopConf.set("gamesman.hadoop.lastTierDb", dbUri);
 			} while (!success);
 		} catch (IOException e1) {
 			throw new Error(e1);
