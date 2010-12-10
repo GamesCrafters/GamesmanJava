@@ -74,7 +74,8 @@ public final class YGame extends ConnectGame
         private final int triangle;
         private final int index;
         private final int totalIndex;
-
+        private Node[] neighbors;
+        
         /**
          * @param triangleIn
          * @param indexIn
@@ -86,6 +87,11 @@ public final class YGame extends ConnectGame
             this.totalIndex = totalIndex;
         }
 
+		public void setNeighbors() {
+			Vector<Node> neighbors = getNeighbors(this);
+			this.neighbors = neighbors.toArray(new Node[neighbors.size()]);
+		}
+        
         /**
          * @return
          */
@@ -258,6 +264,11 @@ public final class YGame extends ConnectGame
             }
         }
         translateOutArray = outArray();
+		for (Node[] triangleNodes:board) {
+			for(Node node:triangleNodes){
+				node.setNeighbors();
+			}
+		}
         assert Util.debug(DebugFacility.GAME, this.displayState());
     }
 
@@ -838,11 +849,11 @@ public final class YGame extends ConnectGame
                 Node currentNode = board[this.numberOfTriangles-1][ind];
 				boolean leftReached = false, rightReached = false, bottomReached = false;
 				OUTER: while (true) {
-                    final Vector<Node> neighbors = this.getNeighbors(currentNode);
+                    final Node[] neighbors = currentNode.neighbors;
 					int neighborIndex = -2;
 					if (previousNode == null) {
-						for (int i = 0; i < neighbors.size(); i++) {
-							Node neighbor = neighbors.get(i);
+						for (int i = 0; i < neighbors.length; i++) {
+							Node neighbor = neighbors[i];
 							if (neighbor.triangle == outerTriangle
 									&& neighbor.index == ind + 1) {
 								if (ind == div) {
@@ -854,8 +865,8 @@ public final class YGame extends ConnectGame
 							}
 						}
 					} else {
-						for (int i = 0; i < neighbors.size(); i++){
-							Node neighbor = neighbors.get(i);
+						for (int i = 0; i < neighbors.length; i++){
+							Node neighbor = neighbors[i];
 							if (neighbor == previousNode) {
 								neighborIndex = i;
 								break;
@@ -865,9 +876,9 @@ public final class YGame extends ConnectGame
 					Node nextNode;
 					do {
 						neighborIndex++;
-						if(neighborIndex == neighbors.size())
+						if(neighborIndex == neighbors.length)
 							neighborIndex = 0;
-						nextNode = neighbors.get(neighborIndex);
+						nextNode = neighbors[neighborIndex];
 						if (currentNode.triangle == outerTriangle
 								&& nextNode.triangle == outerTriangle
 								&& (nextNode.index - currentNode.index == 1 || currentNode.index > 1
