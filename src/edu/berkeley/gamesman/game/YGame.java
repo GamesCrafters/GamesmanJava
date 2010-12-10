@@ -826,11 +826,10 @@ public final class YGame extends ConnectGame
     public boolean isWin(final char player) 
     {
         assert Util.debug(DebugFacility.GAME, this.displayState());
-
-        boolean result = false;
         final int div = this.nodesInThisTriangle[this.numberOfTriangles-1] / 3;
         final int outerTriangle = this.numberOfTriangles - 1;
         // go over the left edge from top down
+        boolean firstTime = true;
         for (int ind = div; ind >= 0; ind--) 
         {
             if (this.getPlayerAt(outerTriangle, ind) == player) 
@@ -876,15 +875,19 @@ public final class YGame extends ConnectGame
 							if(currentNode.index >= div && currentNode.index <= 2 * div){
 								rightReached = true;
 							}
-							if ((currentNode.index <= div && previousNode != null)
-									|| currentNode.index >= 2 * div
-									|| currentNode.index == 0) {
-								bottomReached = currentNode.index >= 2 * div || currentNode.index == 0;
-								leftReached = currentNode.index <= div;
-								if(currentNode.index == 0){
-									leftReached = true;
+							if (currentNode.index <= div
+									|| currentNode.index >= 2 * div) {
+								if (currentNode.index == div && firstTime) {
+									firstTime = false;
+								} else {
+									bottomReached = currentNode.index >= 2 * div
+											|| currentNode.index == 0;
+									leftReached = currentNode.index <= div;
+									if (currentNode.index == 0) {
+										leftReached = true;
+									}
+									break OUTER;
 								}
-								break OUTER;
 							}
 						}
 					} while (nextNode.getChar() != player);
@@ -897,7 +900,7 @@ public final class YGame extends ConnectGame
 					ind = currentNode.index;
             }
         }
-        return result;
+        return false;
     }
 
 	@Override
