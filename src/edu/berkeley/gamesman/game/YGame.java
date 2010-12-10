@@ -811,8 +811,8 @@ public final class YGame extends ConnectGame
         assert Util.debug(DebugFacility.GAME, this.displayState());
 
         boolean result = false;
-        // go over the left edge from bottom up
-        for (int ind = 0; ind <= this.nodesInThisTriangle[this.numberOfTriangles-1] / 3; ind++) 
+        // go over the left edge from top down
+        for (int ind = this.nodesInThisTriangle[this.numberOfTriangles-1] / 3; ind >= 0; ind--) 
         {
             if (this.getPlayerAt(this.numberOfTriangles-1, ind) == player) 
             {
