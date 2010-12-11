@@ -27,8 +27,11 @@ public final class RearrangeTest {
 		Configuration confToCompareTo = dbToCompareTo.getConfiguration();
 		
 		//for testing Connections
-		ConnectGame gBeingTested = (ConnectGame) confBeingTested.getGame(); 
+		ConnectGame gBeingTested = (ConnectGame)confBeingTested.getGame(); 
 		gToCompareTo = (ConnectGame) confToCompareTo.getGame();
+		
+		//Game gBeingTested = confBeingTested.getGame(); 
+		//Game TTTgToCompareTo = confToCompareTo.getGame();
 		
 		recordToTest = new Record(confBeingTested);
 		recordToCompare = new Record(confToCompareTo);
@@ -37,7 +40,7 @@ public final class RearrangeTest {
 		//compares RearrangeHasher/RearrangeSolver
 		//database with DartboardHasher/TierSolver database
 														
-		//testGame(gBeingTested,gToCompareTo,dbBeingTested,dbToCompareTo);
+		//testGame(gBeingTested,TTTgToCompareTo,dbBeingTested,dbToCompareTo);
 		//tests TicTacToe
 	}
 	
@@ -65,6 +68,10 @@ public final class RearrangeTest {
 			
 			long hashesLeftInTier = gToCompareTo.numHashesForTier(currTier);
 			while(hashesLeftInTier > 0){
+				
+				if(hashesLeftInTier%100000==0){
+					System.out.println(hashesLeftInTier);
+				}
 				
 				long rhhash = rh.getHash();
 				rh.getCharArray(board);
