@@ -36,53 +36,6 @@ public final class RearrangeHasher {
 		rh.getChildren(' ', ' ', q);
 		rh.printHash(q);
 		return;
-		/*rh.printBoard(q);
-		rh.getCharArray(c);
-		System.out.println(c);
-		while (sc.next().equals("0")) {
-			rh.next();
-			long saved = rh.getHash();
-			rh.getChildren(' ', ' ', q);
-			rh.getCharArray(c);
-			rh.printBoard(c);
-			System.out.println();
-			if (numo == numx) {
-				rh.setNums(nums - 1, numo, numx + 1);
-			} else {
-				rh.setNums(nums - 1, numo + 1, numx);
-			}
-			rh.printHash(q);
-			System.out.println();
-			rh.printBoard(q);
-			rh.setNums(nums, numo, numx);
-			rh.unhash(saved);
-		}
-		System.out.println("done");
-		// long[] children = new long[10];
-		// children[9] = 0;
-		// rh.getChildren(' ', 'O', children);
-		// int i = 0;
-		/*
-		 * while(children[i]!=0){ char[] childboard = new char[9];
-		 * rh.unhash(children[i]); rh.getCharArray(childboard);
-		 * //System.out.println(childboard); i++; }
-		 */
-		//char[] childboard = new char[9];
-		// long startTimeMs = System.currentTimeMillis();
-		// int nexttime = 86574831;
-		// int nexttime = 1000000;
-		// int times = 1;
-		// int k = 0;
-		// int j = 0;
-		/*
-		 * while(j<times){ while(k < nexttime){ rh.next(); rh.getChildren(' ',
-		 * 'O', children); k++; } j++; }
-		 */
-		// long taskTimeMs = System.currentTimeMillis() - startTimeMs;
-		//rh.getCharArray(childboard);
-		// System.out.println(childboard);
-		// System.out.println(taskTimeMs);
-		
 	}
 
 	public RearrangeHasher(int len) {
@@ -112,6 +65,14 @@ public final class RearrangeHasher {
 	public char get(int i) {
 		return board[i];
 	}
+	
+	public int boardSize(){
+		return length;
+	}
+	
+	public void set(int index, char turn){
+		board[index] = turn;
+	}
 
 	public void setNums(int spaces, int o, int x) {
 		int i = 0;
@@ -139,14 +100,14 @@ public final class RearrangeHasher {
 		if (o == x) {
 			oHash.setNums(length - o, o);
 			xHash.setNums(length - x - 1, x); // for getChildren
-			// oMinor[length - x - 1].setNums(spaces - 1, o); // for getChildren
+			
 			oMinor[length - x].setNums(spaces, o);
 			xMinor[length - o].setNums(spaces, x);
 			OX = true;
 		} else {
 			xHash.setNums(length - x, x);
 			oHash.setNums(length - o - 1, o); // for getChildren
-			// xMinor[length - o - 1].setNums(spaces - 1, x); // for getChildren
+
 			xMinor[length - o].setNums(spaces, x);
 			oMinor[length - x].setNums(spaces, o);
 			OX = false;
@@ -263,20 +224,14 @@ public final class RearrangeHasher {
 			OX = false;
 		}
 		int numotherpiece = i - o;
-		// majorHash.setNums(s, o);
-		// minorHash.setNums(s - numotherpiece, numotherpiece);
-
+		
 		long major = hash / (ct.get(s, numotherpiece));
 		long minor = hash % (ct.get(s, numotherpiece));
 		majorHash.unhash(major);
 		majorHash.getCharArray(majorBoard);
 		minorHash.unhash(minor);
 		minorHash.getCharArray(minorboard[s]);
-		// System.out.print("mboard = ");
-		// System.out.println(mboard[s]);
 
-		// System.out.print("mboard = ");
-		// System.out.println(mboard[s]);
 		int j = 0;
 		for (int k = 0; k < length; k++) {
 			if (majorBoard[k] == maj) {
@@ -357,16 +312,36 @@ public final class RearrangeHasher {
 	}
 
 	public void getChildren(char old, char replace, long[] childArray) {
-		int newM = (OX ? numx + 1 : numo + 1);
+		/*int newM = (OX ? numx + 1 : numo + 1);
 		int newm = (OX ? numo : numx);
 		int intM = (OX ? numx : numo);
-		int intm = (OX ? numo : numx);
-		int newmL = length - newM;
-		int intmL = length - intM;
-		char cNew = (OX ? 'X' : 'O');
-		char cOld = (OX ? 'O' : 'X');
+		int intm = (OX ? numo : numx);*/
+		/*char cNew = (OX ? 'X' : 'O');
+		char cOld = (OX ? 'O' : 'X');*/
 		long majorValue = 0;
 		long minorValue = 0;
+		
+		int newM, newm, intM, intm;
+		char cNew, cOld;
+		
+		if(OX){
+			newM = numx+1;
+			newm = numo;
+			intM = numx;
+			intm = numo;
+			cNew = 'X';
+			cOld = 'O';
+		}else{
+			newM = numo + 1;
+			newm = numx;
+			intM = numo;
+			intm = numx;
+			cNew = 'O';
+			cOld = 'X';
+		}
+		
+		int newmL = length - newM;
+		int intmL = length - intM;
 
 		for (int i = 0, j = 0, M = 0, m = 0; i < length; i++) {
 			if (board[i] == cNew) {
@@ -392,7 +367,6 @@ public final class RearrangeHasher {
 					majorValue += ct.get(majorIndex, M)
 							- ct.get(majorIndex, M - 1);
 					M--;
-					// System.out.println(majorValue);
 					childArray[childIndex] = -1;
 					childIndex--;
 				} else if (majorBoard[majorIndex] == ' ') {
@@ -407,12 +381,9 @@ public final class RearrangeHasher {
 						// piece
 						// to the major
 						// array
-						minorValue += 0; // Nothing needed here since we are not
-						// adding pieces to the minor array
+						minorValue += 0; 
 						childArray[childIndex] = majorValue
 								* ct.get(newmL, newm) + minorValue;
-						// Stores new childboard in childArray
-						// System.out.println(childArray[childIndex]);
 						childIndex--;
 						majorValue -= ct.get(majorIndex, M);
 					}
@@ -426,7 +397,6 @@ public final class RearrangeHasher {
 			}
 		} else
 			throw new Error("Too many pieces!");
-		// System.out.println(board);
 	}
 
 	public void getCharArray(char[] copyTo) {
