@@ -276,11 +276,7 @@ public abstract class RearrangeDartboardGame extends RearrangeTierGame {
 	}
 
 	@Override
-	public boolean majorChanged() {
-		if (majorChanged) {
-			majorChanged = false;
-			return true;
-		} else
-			return false;
+	public boolean majorChanged(){
+		return myHasher.majorChanged();
 	}
 }
