@@ -1,10 +1,8 @@
 gamesman.game = YGame
 gamesman.game.centerRows = 4
 gamesman.game.outerRows = 3
-gamesman.hasher = TieredItergameHasher
 gamesman.solver = TierSolver
 gamesman.database = MemoryDatabase:FileDatabase
 gamesman.db.uri = ygame.db
 gamesman.debug.THREADING = true
-gamesman.debug.SOLVER = true
 record.fields = VALUE,REMOTENESS

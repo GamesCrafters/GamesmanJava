@@ -129,7 +129,7 @@ public final class YGame extends ConnectGame
         }
 
         public char getChar(){
-        	return mmh.get(totalIndex);
+        	return get(totalIndex);
         }
     }
 
@@ -326,7 +326,7 @@ public final class YGame extends ConnectGame
     {
     	char[] board = new char[totalNumberOfNodes];
     	Arrays.fill(board, player);
-    	mmh.setNumsAndHash(board);
+    	setNumsAndHash(board);
     }
 
     /*
@@ -983,7 +983,7 @@ public final class YGame extends ConnectGame
                     + this.innerTriangleSegments + ", outer rows:"
                     + this.outerRingSegments + " )IN 2D (yet):\n");
             char[] charArray = new char[totalNumberOfNodes];
-            mmh.getCharArray(charArray);
+            getCharArray(charArray);
             displayString = displayString.concat(new String(charArray));
         }
 
@@ -995,7 +995,7 @@ public final class YGame extends ConnectGame
 		for (int i = 0; i < s.length; i++) {
 			char c = s[i];
 			if (c >= 'A' && c <= 'Z') {
-				s[i] = mmh.get(c - 'A');
+				s[i] = get(c - 'A');
 				if(s[i] == ' ')
 					s[i] = '-';
 			}
@@ -1032,7 +1032,7 @@ public final class YGame extends ConnectGame
      */
     public void setPlayerAt(final int triangle, final int index, final char player) 
     {
-    	mmh.set(board[triangle][index].totalIndex, player);
+    	set(board[triangle][index].totalIndex, player);
     }
 
     /*
