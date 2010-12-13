@@ -6,7 +6,8 @@ import edu.berkeley.gamesman.game.util.BitSetBoard;
 import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.hasher.ChangedIterator;
 
-public class TicTacToe extends RectangularDartboardGame {
+public class TicTacToe extends RectangularDartboardGame implements
+		RearrangeGame {
 	private final BitSetBoard bsb;
 	private final int piecesToWin;
 	private final ChangedIterator myIter = new ChangedIterator();
@@ -73,5 +74,10 @@ public class TicTacToe extends RectangularDartboardGame {
 						myHasher.get(piece));
 			}
 		}
+	}
+
+	@Override
+	public boolean majorChanged() {
+		return myHasher.majorChanged();
 	}
 }

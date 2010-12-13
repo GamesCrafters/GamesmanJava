@@ -1,5 +1,6 @@
 package edu.berkeley.gamesman.game;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -11,7 +12,6 @@ import edu.berkeley.gamesman.database.TierReadCache;
 import edu.berkeley.gamesman.game.util.DartboardCacher;
 import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.hasher.DartboardHasher;
-import edu.berkeley.gamesman.hasher.RearrangeHasher;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
@@ -22,9 +22,8 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author dnspies
  */
-public abstract class ConnectGame extends TierGame {
+public abstract class ConnectGame extends TierGame implements RearrangeGame{
 	private final DartboardHasher mmh;
-	private final RearrangeHasher otherHasher;
 	private int tier;
 	private final long[] moveHashes;
 	private final DartboardCacher myCacher;
@@ -59,17 +58,32 @@ public abstract class ConnectGame extends TierGame {
 		} else {
 			throw new Error("Subclass not known to calculate board size");
 		}
-		boolean useRearrangeHasher = conf.getBoolean(
-				"gamesman.game.rearrange.hasher", false);
-		if (useRearrangeHasher) {
-			mmh = null;
-			otherHasher = new RearrangeHasher(boardSize);
-			myCacher = null;
-		} else {
-			mmh = new DartboardHasher(boardSize, ' ', 'O', 'X');
-			otherHasher = null;
-			myCacher = new DartboardCacher(conf, mmh);
+		String hasherType = conf.getProperty("gamesman.game.hasher",
+				DartboardHasher.class.getName());
+		if (!hasherType.contains(".")) {
+			hasherType = "edu.berkeley.gamesman.hasher." + hasherType;
 		}
+		try {
+			Class<? extends DartboardHasher> hasherClass = Class.forName(
+					hasherType).asSubclass(DartboardHasher.class);
+			mmh = hasherClass.getConstructor(Integer.TYPE, char[].class)
+					.newInstance(boardSize, new char[] { ' ', 'O', 'X' });
+		} catch (ClassNotFoundException e) {
+			throw new Error(e);
+		} catch (IllegalArgumentException e) {
+			throw new Error(e);
+		} catch (SecurityException e) {
+			throw new Error(e);
+		} catch (InstantiationException e) {
+			throw new Error(e);
+		} catch (IllegalAccessException e) {
+			throw new Error(e);
+		} catch (InvocationTargetException e) {
+			throw new Error(e.getCause());
+		} catch (NoSuchMethodException e) {
+			throw new Error(e);
+		}
+		myCacher = new DartboardCacher(conf, mmh);
 		moveHashes = new long[boardSize];
 	}
 
@@ -82,10 +96,7 @@ public abstract class ConnectGame extends TierGame {
 	}
 
 	private final long hashInTier() {
-		if (mmh == null)
-			return otherHasher.getHash();
-		else
-			return mmh.getHash();
+		return mmh.getHash();
 	}
 
 	@Override
@@ -99,10 +110,7 @@ public abstract class ConnectGame extends TierGame {
 	}
 
 	private long numHashesForTier() {
-		if (mmh == null)
-			return otherHasher.numHashes();
-		else
-			return mmh.numHashes();
+		return mmh.numHashes();
 	}
 
 	@Override
@@ -112,10 +120,7 @@ public abstract class ConnectGame extends TierGame {
 
 	@Override
 	public final void nextHashInTier() {
-		if (mmh == null)
-			otherHasher.next();
-		else
-			mmh.next();
+		mmh.next();
 	}
 
 	@Override
@@ -161,35 +166,22 @@ public abstract class ConnectGame extends TierGame {
 	@Override
 	public final void setStartingPosition(int n) {
 		tier = 0;
-		if (mmh == null) {
-			otherHasher.setNums(getBoardSize(), 0, 0);
-		} else {
-			mmh.setNums(getBoardSize(), 0, 0);
-			mmh.setReplacements(' ', 'X');
-		}
+		mmh.setNums(getBoardSize(), 0, 0);
+		mmh.setReplacements(' ', 'X');
 	}
 
 	@Override
 	public final void setState(TierState pos) {
 		tier = pos.tier;
-		if (mmh == null) {
-			otherHasher
-					.setNums(getBoardSize() - tier, tier / 2, (tier + 1) / 2);
-			otherHasher.unhash(pos.hash);
-		} else {
-			mmh.setNums(getBoardSize() - tier, tier / 2, (tier + 1) / 2);
-			mmh.setReplacements(' ', tier % 2 == 0 ? 'X' : 'O');
-			mmh.unhash(pos.hash);
-		}
+		mmh.setNums(getBoardSize() - tier, tier / 2, (tier + 1) / 2);
+		mmh.setReplacements(' ', tier % 2 == 0 ? 'X' : 'O');
+		mmh.unhash(pos.hash);
 	}
 
 	@Override
 	public final Collection<Pair<String, TierState>> validMoves() {
 		char turn = tier % 2 == 0 ? 'X' : 'O';
-		if (mmh == null)
-			otherHasher.getChildren(' ', turn, moveHashes);
-		else
-			mmh.getChildren(' ', turn, moveHashes);
+		mmh.getChildren(' ', turn, moveHashes);
 		ArrayList<Pair<String, TierState>> moves = new ArrayList<Pair<String, TierState>>(
 				moveHashes.length);
 		for (int i = 0; i < moveHashes.length; i++) {
@@ -214,10 +206,7 @@ public abstract class ConnectGame extends TierGame {
 	@Override
 	public final int validMoves(TierState[] moves) {
 		char turn = tier % 2 == 0 ? 'X' : 'O';
-		if (mmh == null)
-			otherHasher.getChildren(' ', turn, moveHashes);
-		else
-			mmh.getChildren(' ', turn, moveHashes);
+		mmh.getChildren(' ', turn, moveHashes);
 		int numChildren = 0;
 		for (int i = 0; i < moveHashes.length; i++) {
 			if (moveHashes[i] >= 0) {
@@ -238,10 +227,7 @@ public abstract class ConnectGame extends TierGame {
 	}
 
 	protected final void getCharArray(char[] arr) {
-		if (mmh == null)
-			otherHasher.getCharArray(arr);
-		else
-			mmh.getCharArray(arr);
+		mmh.getCharArray(arr);
 	}
 
 	protected final char[] makeCharArray() {
@@ -251,10 +237,7 @@ public abstract class ConnectGame extends TierGame {
 	}
 
 	protected final char get(int i) {
-		if (mmh == null)
-			return otherHasher.get(i);
-		else
-			return mmh.get(i);
+		return mmh.get(i);
 	}
 
 	@Override
@@ -297,7 +280,7 @@ public abstract class ConnectGame extends TierGame {
 			case WIN:
 				return 1L;
 			default:
-				return 0L;
+				throw new Error("WIN/LOSE are only values");
 			}
 		}
 	}
@@ -328,10 +311,7 @@ public abstract class ConnectGame extends TierGame {
 	}
 
 	public final long setNumsAndHash(char[] pieces) {
-		if (mmh == null)
-			return otherHasher.setNumsAndHash(pieces);
-		else
-			return mmh.setNumsAndHash(pieces);
+		return mmh.setNumsAndHash(pieces);
 	}
 
 	public final void set(int index, char piece) {
@@ -339,5 +319,10 @@ public abstract class ConnectGame extends TierGame {
 			throw new UnsupportedOperationException();
 		else
 			mmh.set(index, piece);
+	}
+	
+	@Override
+	public boolean majorChanged(){
+		return mmh.majorChanged();
 	}
 }

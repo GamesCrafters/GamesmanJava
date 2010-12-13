@@ -1,5 +1,6 @@
 package edu.berkeley.gamesman.game;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -27,9 +28,33 @@ public abstract class RectangularDartboardGame extends TierGame {
 		gameWidth = conf.getInteger("gamesman.game.width", 3);
 		gameHeight = conf.getInteger("gamesman.game.height", 3);
 		gameSize = gameWidth * gameHeight;
-		myHasher = new DartboardHasher(gameSize, ' ', 'O', 'X');
 		myChildren = new long[gameSize];
 		this.tieType = tieType;
+		String hasherType = conf.getProperty("gamesman.game.hasher",
+				DartboardHasher.class.getName());
+		if (!hasherType.contains(".")) {
+			hasherType = "edu.berkeley.gamesman.hasher." + hasherType;
+		}
+		try {
+			Class<? extends DartboardHasher> hasherClass = Class.forName(
+					hasherType).asSubclass(DartboardHasher.class);
+			myHasher = hasherClass.getConstructor(Integer.TYPE, char[].class)
+					.newInstance(gameSize, new char[] { ' ', 'O', 'X' });
+		} catch (ClassNotFoundException e) {
+			throw new Error(e);
+		} catch (IllegalArgumentException e) {
+			throw new Error(e);
+		} catch (SecurityException e) {
+			throw new Error(e);
+		} catch (InstantiationException e) {
+			throw new Error(e);
+		} catch (IllegalAccessException e) {
+			throw new Error(e);
+		} catch (InvocationTargetException e) {
+			throw new Error(e.getCause());
+		} catch (NoSuchMethodException e) {
+			throw new Error(e);
+		}
 		myCacher = new DartboardCacher(conf, myHasher);
 	}
 

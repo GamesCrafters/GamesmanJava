@@ -1,4 +1,5 @@
-gamesman.game = RearrangeTicTacToe
+gamesman.game = TicTacToe
+gamesman.game.hasher = RearrangeHasher
 gamesman.solver = RearrangeSolver
 gamesman.database = MemoryDatabase:FileDatabase
 gamesman.db.uri = ttt.db

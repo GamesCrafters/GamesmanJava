@@ -1,10 +1,10 @@
 package edu.berkeley.gamesman.hasher;
 
-import java.util.Scanner;
+import java.util.Arrays;
 
 import edu.berkeley.gamesman.util.CoefTable;
 
-public final class RearrangeHasher {
+public final class RearrangeHasher extends DartboardHasher {
 	private DartboardHasher xHash;
 	private DartboardHasher oHash;
 	private DartboardHasher[] xMinor;
@@ -24,7 +24,7 @@ public final class RearrangeHasher {
 	private boolean majorChanged = true;
 
 	public static void main(String[] args) {
-		//Scanner sc = new Scanner(System.in);
+		// Scanner sc = new Scanner(System.in);
 		RearrangeHasher rh = new RearrangeHasher(13);
 		int nums = 5;
 		int numo = 4;
@@ -38,7 +38,10 @@ public final class RearrangeHasher {
 		return;
 	}
 
-	public RearrangeHasher(int len) {
+	public RearrangeHasher(int len, char... types) {
+		super(len, ' ', 'O', 'X');
+		if (!Arrays.equals(types, new char[] { ' ', 'O', 'X' }))
+			throw new Error("Types are not correct");
 		xHash = new DartboardHasher(len, ' ', 'X');
 		oHash = new DartboardHasher(len, ' ', 'O');
 		length = len;
@@ -58,25 +61,31 @@ public final class RearrangeHasher {
 		ct = new CoefTable();
 	}
 
+	@Override
 	public long numHashes() {
 		return ct.get(length, numx + numo) * ct.get(numx + numo, numx);
 	}
 
+	@Override
 	public char get(int i) {
 		return board[i];
 	}
-	
-	public int boardSize(){
+
+	@Override
+	public int boardSize() {
 		return length;
 	}
-	
-	public void set(int index, char turn){
+
+	@Override
+	public void set(int index, char turn) {
 		board[index] = turn;
 	}
 
-	public void setNums(int spaces, int o, int x) {
+	@Override
+	public void setNums(int... types) {
+		int spaces = types[0], o = types[1], x = types[2];
 		int i = 0;
-		if (o==x) {
+		if (o == x) {
 			for (i = 0; i < o; i++) {
 				board[i] = 'O';
 			}
@@ -100,7 +109,7 @@ public final class RearrangeHasher {
 		if (o == x) {
 			oHash.setNums(length - o, o);
 			xHash.setNums(length - x - 1, x); // for getChildren
-			
+
 			oMinor[length - x].setNums(spaces, o);
 			xMinor[length - o].setNums(spaces, x);
 			OX = true;
@@ -116,6 +125,7 @@ public final class RearrangeHasher {
 		majorChanged = true;
 	}
 
+	@Override
 	public long hash(char[] board) {
 		// System.out.println(board[100]);
 		majorChanged = true;
@@ -184,10 +194,12 @@ public final class RearrangeHasher {
 				+ xMinor[length - cnumo].hash(minorboard[k]);
 	}
 
+	@Override
 	public long getHash() {
 		return hash;
 	}
 
+	@Override
 	public void unhash(long hash) {
 		int i = numo + numx;
 		this.hash = hash;
@@ -224,7 +236,7 @@ public final class RearrangeHasher {
 			OX = false;
 		}
 		int numotherpiece = i - o;
-		
+
 		long major = hash / (ct.get(s, numotherpiece));
 		long minor = hash % (ct.get(s, numotherpiece));
 		majorHash.unhash(major);
@@ -249,6 +261,7 @@ public final class RearrangeHasher {
 		// System.out.println(mboard[s]);
 	}
 
+	@Override
 	public long setNumsAndHash(char[] pieces) {
 		numo = 0;
 		numx = 0;
@@ -311,27 +324,29 @@ public final class RearrangeHasher {
 		System.out.print("]");
 	}
 
+	@Override
 	public void getChildren(char old, char replace, long[] childArray) {
-		/*int newM = (OX ? numx + 1 : numo + 1);
-		int newm = (OX ? numo : numx);
-		int intM = (OX ? numx : numo);
-		int intm = (OX ? numo : numx);*/
-		/*char cNew = (OX ? 'X' : 'O');
-		char cOld = (OX ? 'O' : 'X');*/
+		/*
+		 * int newM = (OX ? numx + 1 : numo + 1); int newm = (OX ? numo : numx);
+		 * int intM = (OX ? numx : numo); int intm = (OX ? numo : numx);
+		 */
+		/*
+		 * char cNew = (OX ? 'X' : 'O'); char cOld = (OX ? 'O' : 'X');
+		 */
 		long majorValue = 0;
 		long minorValue = 0;
-		
+
 		int newM, newm, intM, intm;
 		char cNew, cOld;
-		
-		if(OX){
-			newM = numx+1;
+
+		if (OX) {
+			newM = numx + 1;
 			newm = numo;
 			intM = numx;
 			intm = numo;
 			cNew = 'X';
 			cOld = 'O';
-		}else{
+		} else {
 			newM = numo + 1;
 			newm = numx;
 			intM = numo;
@@ -339,7 +354,7 @@ public final class RearrangeHasher {
 			cNew = 'O';
 			cOld = 'X';
 		}
-		
+
 		int newmL = length - newM;
 		int intmL = length - intM;
 
@@ -381,7 +396,7 @@ public final class RearrangeHasher {
 						// piece
 						// to the major
 						// array
-						minorValue += 0; 
+						minorValue += 0;
 						childArray[childIndex] = majorValue
 								* ct.get(newmL, newm) + minorValue;
 						childIndex--;
@@ -399,6 +414,7 @@ public final class RearrangeHasher {
 			throw new Error("Too many pieces!");
 	}
 
+	@Override
 	public void getCharArray(char[] copyTo) {
 		if (copyTo.length != board.length)
 			throw new Error("Wrong length char array");
@@ -409,17 +425,21 @@ public final class RearrangeHasher {
 
 	/**
 	 * @param changed
+	 * @return
 	 */
-	public void next() {
-		next(null);
+	@Override
+	public boolean next() {
+		return next(null);
 	}
 
-	public void next(ChangedIterator changed) {
+	@Override
+	public boolean next(ChangedIterator changed) {
 		DartboardHasher minor;
 		DartboardHasher major;
 		char Mchar;
 		int countmin;
 		int countmax;
+		boolean advanced = true;
 		hash++;
 		c.reset();
 		d.reset();
@@ -446,9 +466,10 @@ public final class RearrangeHasher {
 			majorChanged = true;
 			minor.setNums(nums, countmin);
 			long majorRearrangements = ct.get(length, countmax);
-			if (major.getHash() == majorRearrangements - 1)
+			if (major.getHash() == majorRearrangements - 1) {
 				hash--;
-			else
+				advanced = false;
+			} else
 				major.next(d);
 			while (d.hasNext()) {
 				int n = d.next();
@@ -472,9 +493,32 @@ public final class RearrangeHasher {
 				smallcounter++;
 			}
 		}
+		return advanced;
 	}
 
+	@Override
 	public boolean majorChanged() {
 		return majorChanged;
+	}
+
+	@Override
+	public void setReplacements(char... replacements) {
+	}
+
+	@Override
+	public void nextChildren(char old, char replace, long[] childArray) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void previousChildren(char old, char replace, long[] childArray) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String toString() {
+		char[] stringArr = new char[length];
+		getCharArray(stringArr);
+		return new String(stringArr);
 	}
 }

@@ -4,7 +4,7 @@ import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.TierGame;
-import edu.berkeley.gamesman.game.RearrangeTierGame;
+import edu.berkeley.gamesman.game.RearrangeGame;
 import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.util.*;
 
@@ -51,7 +51,7 @@ public class RearrangeSolver extends TierSolver {
 				stepNum = 0;
 			}
 			
-			if(((RearrangeTierGame)game).majorChanged()){
+			if(((RearrangeGame)game).majorChanged()){
 				pv = game.primitiveValue();
 			}
 			if (debugSolver) {
