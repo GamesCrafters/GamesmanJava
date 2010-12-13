@@ -1,4 +1,5 @@
 gamesman.game = TicTacToe
+gamesman.game.hasher = DartboardHasher2
 gamesman.solver = TierSolver
 gamesman.database = MemoryDatabase:FileDatabase
 gamesman.db.uri = ttt.db

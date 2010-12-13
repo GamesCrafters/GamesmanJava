@@ -14,56 +14,111 @@ import edu.berkeley.gamesman.util.qll.Factory;
  */
 public class DartboardHasher2 extends DartboardHasher {
 	private final int[] pieces;
-	private final int[] numType;
+	private final Count numType;
 	private final long[] pieceHashes;
 	private final char[] digits;
 	private ArrayList<int[]> replacements = new ArrayList<int[]>();
 	private ArrayList<long[]> moveDifs = new ArrayList<long[]>();
 	private ArrayList<long[]> difs = new ArrayList<long[]>();
-	private final RearrangeFunction[] rearrange;
 	private long hash;
-	private Pool<int[]> countPool;
+	private Pool<Count> countPool;
 
-	private static class RearrangeFunction {
-		final long value;
-		final RearrangeFunction[] innerValues;
+	private class Count {
+		private int pieces = 0;
+		private boolean negDigit = false;
+		private final int[] digitCount;
+		private long hashValue = 1L;
 
-		public RearrangeFunction(int pieceTypes, int numPieces) {
-			this(1L, pieceTypes, numPieces);
+		public Count(int numDigits) {
+			digitCount = new int[numDigits];
 		}
 
-		private RearrangeFunction(long current, int pieceTypes,
-				int remainingPieces) {
-			value = current;
-			if (pieceTypes == 1) {
-				innerValues = null;
-			} else if (pieceTypes < 1) {
-				throw new Error(
-						"There should always be at least one piece type");
+		public void incr(int type) {
+			digitCount[type]++;
+			if (digitCount[type] > 0) {
+				pieces++;
+				hashValue = hashValue * pieces / digitCount[type];
+			} else if (digitCount[type] == 0)
+				negDigit = false;
+			else
+				throw new Error("Multiple negatives not caught");
+		}
+
+		public void decr(int type) {
+			if (digitCount[type] > 0) {
+				hashValue = hashValue * digitCount[type] / pieces;
+				pieces--;
 			} else {
-				innerValues = new RearrangeFunction[remainingPieces + 1];
-				for (int i = 0; i <= remainingPieces; i++) {
-					innerValues[i] = new RearrangeFunction(current,
-							pieceTypes - 1, remainingPieces - i);
-					current = current * (remainingPieces - i) / (i + 1);
+				if (negDigit)
+					throw new Error(
+							"Cannot have more than one negative at a time");
+				negDigit = true;
+			}
+			digitCount[type]--;
+		}
+
+		public long getDecr(int type) {
+			if (negDigit)
+				return 0L;
+			else {
+				return hashValue * digitCount[type] / pieces;
+			}
+		}
+
+		public void reset() {
+			pieces = 0;
+			Arrays.fill(digitCount, 0);
+			hashValue = 1L;
+			negDigit = false;
+		}
+
+		public int get(int digit) {
+			return digitCount[digit];
+		}
+
+		public void trade(int i, int j) {
+			if (digitCount[i] > 0 && digitCount[j] >= 0) {
+				digitCount[j]++;
+				hashValue = hashValue * digitCount[i] / digitCount[j];
+				digitCount[i]--;
+			} else {
+				incr(j);
+				decr(i);
+			}
+		}
+
+		public void setCount(Count otherCount) {
+			System.arraycopy(otherCount.digitCount, 0, digitCount, 0,
+					digits.length);
+			pieces = otherCount.pieces;
+			negDigit = otherCount.negDigit;
+			hashValue = otherCount.hashValue;
+		}
+
+		public void setCount(int[] numType) {
+			reset();
+			for (int type = 0; type < digits.length; type++) {
+				if (numType[type] < 0) {
+					if (numType[type] == -1)
+						decr(type);
+					else
+						throw new Error(
+								"Cannot have more than one negative at a time");
+				} else {
+					for (int i = 0; i < numType[type]; i++) {
+						incr(type);
+					}
 				}
 			}
 		}
 
-		private long get(int[] k, int off) {
-			if (innerValues == null) {
-				if (off < k.length - 1)
-					throw new Error("k too long");
-				else
-					return value;
-			} else if (k[off] < innerValues.length && k[off] >= 0)
-				return innerValues[k[off]].get(k, off + 1);
-			else
-				return 0L;
-		}
-
-		public long get(int[] k) {
-			return get(k, 0);
+		@Override
+		public boolean equals(Object other) {
+			if (other instanceof Count) {
+				Count c = (Count) other;
+				return Arrays.equals(digitCount, c.digitCount);
+			} else
+				return false;
 		}
 	}
 
@@ -73,28 +128,24 @@ public class DartboardHasher2 extends DartboardHasher {
 	 * @param digits
 	 *            The different possible pieces which can occupy this board
 	 */
-	public DartboardHasher2(int len, final char... digits) {
+	public DartboardHasher2(final int len, final char... digits) {
 		super(len, digits);
 		pieces = new int[len];
 		pieceHashes = new long[len];
 		this.digits = new char[digits.length];
-		countPool = new Pool<int[]>(new Factory<int[]>() {
+		countPool = new Pool<Count>(new Factory<Count>() {
 
-			public int[] newObject() {
-				return new int[digits.length];
+			public Count newObject() {
+				return new Count(len);
 			}
 
-			public void reset(int[] t) {
-				Arrays.fill(t, 0);
+			public void reset(Count t) {
+				t.reset();
 			}
 
 		});
-		numType = new int[digits.length];
+		numType = countPool.get();
 		System.arraycopy(digits, 0, this.digits, 0, digits.length);
-		rearrange = new RearrangeFunction[len + 1];
-		for (int i = 0; i <= len; i++) {
-			rearrange[i] = new RearrangeFunction(digits.length, i);
-		}
 	}
 
 	/**
@@ -108,9 +159,9 @@ public class DartboardHasher2 extends DartboardHasher {
 	public void setNums(int... numType) {
 		if (numType.length != digits.length)
 			throw new Error("Wrong number of arguments");
-		System.arraycopy(numType, 0, this.numType, 0, numType.length);
-		int[] count = countPool.get();
-		System.arraycopy(numType, 0, count, 0, numType.length);
+		this.numType.setCount(numType);
+		Count count = countPool.get();
+		count.setCount(this.numType);
 		reset(count);
 		countPool.release(count);
 		hash = 0L;
@@ -187,13 +238,13 @@ public class DartboardHasher2 extends DartboardHasher {
 	private boolean next(ChangedIterator changed, int lowBit) {
 		if (changed != null)
 			changed.reset();
-		int[] count = countPool.get();
+		Count count = countPool.get();
 		int highest = 0;
 		int piece;
 		boolean didChange = false;
 		for (piece = 0; piece < pieces.length; piece++) {
 			int digit = pieces[piece];
-			count[digit]++;
+			count.incr(digit);
 			if (piece >= lowBit && digit < highest)
 				break;
 			else if (digit > highest)
@@ -203,11 +254,11 @@ public class DartboardHasher2 extends DartboardHasher {
 			int digit = pieces[piece];
 			do {
 				digit++;
-			} while (count[digit] == 0);
+			} while (count.get(digit) == 0);
 			pieces[piece] = digit;
-			count[digit]--;
+			count.decr(digit);
 			long removed = reset(count, changed);
-			count[digit]++;
+			count.incr(digit);
 			if (lowBit == 0) {
 				pieceHashes[piece] += removed + 1;
 				hash++;
@@ -216,24 +267,18 @@ public class DartboardHasher2 extends DartboardHasher {
 				hash -= pieceHashes[piece];
 				pieceHashes[piece] = 0;
 				for (int d = 0; d < digit; d++) {
-					count[d]--;
-					pieceHashes[piece] += rearrange(piece, count);
-					count[d]++;
+					pieceHashes[piece] += count.getDecr(d);
 				}
 				hash += pieceHashes[piece];
 			}
 			for (int i = 0; i < replacements.size(); i++) {
 				int[] replacement = replacements.get(i);
-				count[replacement[0]]--;
-				count[replacement[1]]++;
+				count.trade(replacement[0], replacement[1]);
 				difs.get(i)[piece] = -pieceHashes[piece];
 				for (int j = 0; j < digit; j++) {
-					count[j]--;
-					difs.get(i)[piece] += rearrange(piece, count);
-					count[j]++;
+					difs.get(i)[piece] += count.getDecr(j);
 				}
-				count[replacement[1]]--;
-				count[replacement[0]]++;
+				count.trade(replacement[1], replacement[0]);
 			}
 			if (changed != null)
 				changed.add(piece);
@@ -244,13 +289,13 @@ public class DartboardHasher2 extends DartboardHasher {
 	}
 
 	private boolean previous(int lowBit) {
-		int[] count = countPool.get();
+		Count count = countPool.get();
 		int lowest = digits.length - 1;
 		int piece;
 		boolean didChange = false;
 		for (piece = 0; piece < pieces.length; piece++) {
 			int digit = pieces[piece];
-			count[digit]++;
+			count.incr(digit);
 			if (piece >= lowBit && digit > lowest)
 				break;
 			else if (digit < lowest)
@@ -260,32 +305,26 @@ public class DartboardHasher2 extends DartboardHasher {
 			int digit = pieces[piece];
 			do {
 				digit--;
-			} while (count[digit] == 0);
+			} while (count.get(digit) == 0);
 			pieces[piece] = digit;
-			count[digit]--;
+			count.decr(digit);
 			long added = forset(count);
-			count[digit]++;
+			count.incr(digit);
 			hash += added;
 			hash -= pieceHashes[piece];
 			pieceHashes[piece] = 0;
 			for (int d = 0; d < digit; d++) {
-				count[d]--;
-				pieceHashes[piece] += rearrange(piece, count);
-				count[d]++;
+				pieceHashes[piece] += count.getDecr(d);
 			}
 			hash += pieceHashes[piece];
 			for (int i = 0; i < replacements.size(); i++) {
 				int[] replacement = replacements.get(i);
-				count[replacement[0]]--;
-				count[replacement[1]]++;
+				count.trade(replacement[0], replacement[1]);
 				difs.get(i)[piece] = -pieceHashes[piece];
 				for (int j = 0; j < digit; j++) {
-					count[j]--;
-					difs.get(i)[piece] += rearrange(piece, count);
-					count[j]++;
+					difs.get(i)[piece] += count.getDecr(j);
 				}
-				count[replacement[1]]--;
-				count[replacement[0]]++;
+				count.trade(replacement[1], replacement[0]);
 			}
 			didChange = true;
 		}
@@ -293,20 +332,18 @@ public class DartboardHasher2 extends DartboardHasher {
 		return didChange;
 	}
 
-	private long forset(int[] count) {
+	private long forset(Count count) {
 		long oldHashes = 0L;
 		int piece = 0;
-		int[] secondCount = countPool.get();
+		Count secondCount = countPool.get();
 		for (int digit = 0; digit < digits.length; digit++) {
-			int digitCount = count[digit];
+			int digitCount = count.get(digit);
 			for (int i = 0; i < digitCount; i++) {
 				oldHashes -= pieceHashes[piece];
 				pieceHashes[piece] = 0L;
-				secondCount[digit]++;
+				secondCount.incr(digit);
 				for (int k = 0; k < digit; k++) {
-					secondCount[k]--;
-					pieceHashes[piece] += rearrange(piece, secondCount);
-					secondCount[k]++;
+					pieceHashes[piece] += secondCount.getDecr(k);
 				}
 				pieces[piece] = digit;
 				oldHashes += pieceHashes[piece];
@@ -316,24 +353,21 @@ public class DartboardHasher2 extends DartboardHasher {
 					long[] moveDif = moveDifs.get(j);
 					dif[piece] = -pieceHashes[piece];
 					moveDif[piece] = 0L;
-					secondCount[replacement[0]]--;
-					secondCount[replacement[1]]++;
+					secondCount.trade(replacement[0], replacement[1]);
 					for (int k = 0; k < digit || digit == replacement[0]
 							&& k < replacement[1]; k++) {
-						secondCount[k]--;
+						long arrangement = secondCount.getDecr(k);
 						if (k < digit) {
-							dif[piece] += rearrange(piece, secondCount);
+							dif[piece] += arrangement;
 							if (k >= replacement[1]) {
-								moveDif[piece] -= rearrange(piece, secondCount);
+								moveDif[piece] -= arrangement;
 							}
 						} else if (k < replacement[1])
-							moveDif[piece] += rearrange(piece, secondCount);
+							moveDif[piece] += arrangement;
 						else
 							throw new Error("Why am I here?");
-						secondCount[k]++;
 					}
-					secondCount[replacement[1]]--;
-					secondCount[replacement[0]]++;
+					secondCount.trade(replacement[1], replacement[0]);
 				}
 				piece++;
 			}
@@ -342,23 +376,23 @@ public class DartboardHasher2 extends DartboardHasher {
 		return oldHashes;
 	}
 
-	private long reset(int[] count) {
+	private long reset(Count count) {
 		return reset(count, null);
 	}
 
-	private long reset(int[] count, ChangedIterator changed) {
+	private long reset(Count count, ChangedIterator changed) {
 		long oldHashes = 0L;
 		int piece = 0;
-		int[] secondCount = countPool.get();
+		Count secondCount = countPool.get();
 		for (int digit = digits.length - 1; digit >= 0; digit--) {
-			int digitCount = count[digit];
+			int digitCount = count.get(digit);
 			for (int i = 0; i < digitCount; i++) {
 				if (pieces[piece] != digit) {
 					pieces[piece] = digit;
 					if (changed != null)
 						changed.add(piece);
 				}
-				secondCount[digit]++;
+				secondCount.incr(digit);
 				oldHashes += pieceHashes[piece];
 				pieceHashes[piece] = 0L;
 				for (int j = 0; j < replacements.size(); j++) {
@@ -367,34 +401,27 @@ public class DartboardHasher2 extends DartboardHasher {
 					long[] moveDif = moveDifs.get(j);
 					dif[piece] = 0L;
 					moveDif[piece] = 0L;
-					secondCount[replacement[0]]--;
-					secondCount[replacement[1]]++;
+					secondCount.trade(replacement[0], replacement[1]);
 					for (int k = 0; k < digit || digit == replacement[0]
 							&& k < replacement[1]; k++) {
-						secondCount[k]--;
+						long arrangement = secondCount.getDecr(k);
 						if (k < digit) {
-							dif[piece] += rearrange(piece, secondCount);
+							dif[piece] += arrangement;
 							if (k >= replacement[1]) {
-								moveDif[piece] -= rearrange(piece, secondCount);
+								moveDif[piece] -= arrangement;
 							}
 						} else if (k < replacement[1])
-							moveDif[piece] += rearrange(piece, secondCount);
+							moveDif[piece] += arrangement;
 						else
 							throw new Error("Why am I here?");
-						secondCount[k]++;
 					}
-					secondCount[replacement[1]]--;
-					secondCount[replacement[0]]++;
+					secondCount.trade(replacement[1], replacement[0]);
 				}
 				piece++;
 			}
 		}
 		countPool.release(secondCount);
 		return oldHashes;
-	}
-
-	private long rearrange(int n, int[] k) {
-		return rearrange[n].get(k);
 	}
 
 	/**
@@ -421,24 +448,19 @@ public class DartboardHasher2 extends DartboardHasher {
 
 	private long rehash(boolean setNums) {
 		long totalHash = 0L;
-		int[] count = countPool.get();
+		Count count = countPool.get();
 		for (int piece = 0; piece < pieces.length; piece++) {
 			long hash = 0L;
 			int digit = pieces[piece];
-			count[digit]++;
-			for (int i = 0; i < digit; i++) {
-				if (count[i] > 0) {
-					count[i]--;
-					hash += rearrange(piece, count);
-					count[i]++;
-				}
-			}
+			count.incr(digit);
+			for (int i = 0; i < digit; i++)
+				hash += count.getDecr(i);
 			pieceHashes[piece] = hash;
 			totalHash += hash;
 		}
 		if (setNums) {
-			System.arraycopy(count, 0, numType, 0, count.length);
-		} else if (!Arrays.equals(numType, count))
+			numType.setCount(count);
+		} else if (!numType.equals(count))
 			throw new Error("Wrong number of pieces");
 		countPool.release(count);
 		this.hash = totalHash;
@@ -470,16 +492,14 @@ public class DartboardHasher2 extends DartboardHasher {
 	public void unhash(long hash) {
 		this.hash = hash;
 		int digit;
-		int[] count = countPool.get();
-		System.arraycopy(numType, 0, count, 0, numType.length);
+		Count count = countPool.get();
+		count.setCount(numType);
 		for (int piece = pieces.length - 1; piece >= 0; piece--) {
 			long digitHash = 0L;
 			long pieceHash = 0L;
 			if (hash > 0) {
 				for (digit = 0; true; digit++) {
-					count[digit]--;
-					digitHash = rearrange(piece, count);
-					count[digit]++;
+					digitHash = count.getDecr(digit);
 					if (hash >= digitHash) {
 						hash -= digitHash;
 						pieceHash += digitHash;
@@ -488,11 +508,11 @@ public class DartboardHasher2 extends DartboardHasher {
 				}
 				pieceHashes[piece] = pieceHash;
 			} else {
-				for (digit = 0; count[digit] == 0; digit++)
+				for (digit = 0; count.get(digit) == 0; digit++)
 					;
 				pieceHashes[piece] = 0L;
 			}
-			count[digit]--;
+			count.decr(digit);
 			pieces[piece] = digit;
 		}
 		countPool.release(count);
@@ -504,25 +524,23 @@ public class DartboardHasher2 extends DartboardHasher {
 			int[] rPair = replacements.get(replacement);
 			long[] rDifs = difs.get(replacement);
 			long[] moveDif = moveDifs.get(replacement);
-			int[] count = countPool.get();
-			count[rPair[0]]--;
-			count[rPair[1]]++;
+			Count count = countPool.get();
+			count.trade(rPair[0], rPair[1]);
 			for (int piece = 0; piece < pieces.length; piece++) {
-				count[pieces[piece]]++;
+				count.incr(pieces[piece]);
 				rDifs[piece] = -pieceHashes[piece];
 				moveDif[piece] = 0L;
 				for (int digit = 0; digit < pieces[piece]
 						|| (pieces[piece] == rPair[0] && digit < rPair[1]); digit++) {
-					count[digit]--;
+					long arrangement = count.getDecr(digit);
 					if (digit < pieces[piece]) {
-						rDifs[piece] += rearrange(piece, count);
+						rDifs[piece] += arrangement;
 						if (digit >= rPair[1])
-							moveDif[piece] -= rearrange(piece, count);
+							moveDif[piece] -= arrangement;
 					} else if (digit < rPair[1])
-						moveDif[piece] += rearrange(piece, count);
+						moveDif[piece] += arrangement;
 					else
 						throw new Error("Why am I here?");
-					count[digit]++;
 				}
 			}
 			countPool.release(count);
@@ -553,7 +571,7 @@ public class DartboardHasher2 extends DartboardHasher {
 	 */
 	@Override
 	public long numHashes() {
-		return rearrange(pieces.length, numType);
+		return numType.hashValue;
 	}
 
 	@Override
@@ -574,18 +592,13 @@ public class DartboardHasher2 extends DartboardHasher {
 		if (i == replacements.size())
 			throw new Error("No such replacement set");
 		long hashDif = 0L;
-		int[] count = countPool.get();
-		System.arraycopy(numType, 0, count, 0, numType.length);
-		count[replacement[1]]++;
 		for (int piece = pieces.length - 1; piece >= 0; piece--) {
-			count[pieces[piece]]--;
 			hashDif += dif[piece];
 			if (pieces[piece] == replacement[0]) {
 				childArray[piece] = hash + hashDif + moveDif[piece];
 			} else
 				childArray[piece] = -1;
 		}
-		countPool.release(count);
 	}
 
 	private void fillChildren(char old, char replace, long[] childArray,
@@ -652,19 +665,17 @@ public class DartboardHasher2 extends DartboardHasher {
 
 	private long getChild(long[] dif, int oldNum, int replaceNum, int i) {
 		long hashDif = 0L;
-		int[] count = countPool.get();
-		System.arraycopy(numType, 0, count, 0, numType.length);
-		count[replaceNum]++;
-		count[oldNum]--;
+		Count count = countPool.get();
+		count.setCount(numType);
+		count.trade(oldNum, replaceNum);
 		for (int piece = pieces.length - 1; piece > i; piece--) {
-			count[pieces[piece]]--;
+			count.decr(pieces[piece]);
 			hashDif += dif[piece];
 		}
 		long pDif = 0L;
 		for (int digit = 0; digit < replaceNum; digit++) {
-			count[digit]--;
-			pDif += rearrange(i, count);
-			count[digit]++;
+			long arrangement = count.getDecr(digit);
+			pDif += arrangement;
 		}
 		countPool.release(count);
 		return hash + hashDif + pDif - pieceHashes[i];
@@ -727,9 +738,7 @@ public class DartboardHasher2 extends DartboardHasher {
 
 	@Override
 	public void set(int boardNum, char p) {
-		numType[pieces[boardNum]]--;
 		pieces[boardNum] = findDigit(p);
-		numType[pieces[boardNum]]++;
 		rehash(true);
 	}
 
@@ -737,7 +746,7 @@ public class DartboardHasher2 extends DartboardHasher {
 	public int boardSize() {
 		return pieces.length;
 	}
-	
+
 	public boolean majorChanged() {
 		return true;
 	}
