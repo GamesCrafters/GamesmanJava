@@ -5,3 +5,4 @@ gamesman.hadoop.tierDb = ttt
 gamesman.hadoop.zipped = true
 gamesman.hadoop.dbfolder = ttt_fold
 gamesman.debug.THREADING = true
+gamesman.db.uri = hadoopTTT.db

@@ -1,6 +1,10 @@
 package edu.berkeley.gamesman.database;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -22,6 +26,11 @@ public class SplitFileSystemDatabase extends Database {
 	private final int[] firstNums;
 	private final long[] lastByteIndices;
 	private final int[] lastNums;
+	private final ArrayList<String> dbTypeList;
+	private final ArrayList<String> uriList;
+	private final ArrayList<Long> firstRecordList;
+	private final ArrayList<Long> numRecordsList;
+	private final String uri;
 	private long size;
 
 	private static class Info {
@@ -44,6 +53,57 @@ public class SplitFileSystemDatabase extends Database {
 			dbStream = new Scanner(in);
 		}
 
+		public Info(String uri, Configuration conf, FileSystem fs,
+				boolean solve, DatabaseHeader header) throws IOException {
+			this.fs = fs;
+			this.uri = uri;
+			this.solve = solve;
+			this.firstRecord = 0;
+			this.numRecords = -1;
+			if (solve) {
+				this.conf = conf;
+				this.header = header;
+				dbStream = null;
+			} else {
+				FileInputStream in = new FileInputStream(uri);
+				if (header == null) {
+					byte[] headBytes = new byte[18];
+					Database.readFully(in, headBytes, 0, 18);
+					this.header = new DatabaseHeader(headBytes);
+				} else {
+					this.header = header;
+					Database.skipFully(in, 18);
+				}
+				if (conf == null) {
+					try {
+						this.conf = Configuration.load(in);
+					} catch (ClassNotFoundException e) {
+						throw new Error(e);
+					}
+				} else {
+					this.conf = conf;
+					Configuration.skipConf(in);
+				}
+				dbStream = new Scanner(in);
+			}
+		}
+
+		public Info(String uri, Configuration conf, boolean solve,
+				long firstRecord, long numRecords, DatabaseHeader header)
+				throws IOException {
+			this.uri = uri;
+			this.conf = conf;
+			this.solve = solve;
+			this.firstRecord = firstRecord;
+			this.numRecords = numRecords;
+			this.header = header;
+			FileInputStream in = new FileInputStream(uri);
+			Database.skipFully(in, 18);
+			Configuration.skipConf(in);
+			dbStream = new Scanner(in);
+			fs = FileSystem.get(new org.apache.hadoop.conf.Configuration());
+		}
+
 		private final String uri;
 		private final Configuration conf;
 		private final boolean solve;
@@ -59,42 +119,89 @@ public class SplitFileSystemDatabase extends Database {
 		this(new Info(fs, uri, firstRecord, numRecords));
 	}
 
+	public SplitFileSystemDatabase(String uri, Configuration conf,
+			FileSystem fs, boolean solve, DatabaseHeader header)
+			throws IOException {
+		this(new Info(uri, conf, fs, solve, header));
+	}
+
+	public SplitFileSystemDatabase(String uri, Configuration conf,
+			boolean solve, long firstRecord, long numRecords,
+			DatabaseHeader header) throws IOException {
+		this(new Info(uri, conf, solve, firstRecord, numRecords, header));
+	}
+
 	private SplitFileSystemDatabase(Info info) throws IOException {
 		super(info.uri, info.conf, info.solve, info.firstRecord,
 				info.numRecords, info.header);
-		Scanner dbStream = info.dbStream;
-		ArrayList<GZippedFileSystemDatabase> databaseList = new ArrayList<GZippedFileSystemDatabase>();
-		String dbType = dbStream.next();
-		while (!dbType.equals("end")) {
-			String dbUri = dbStream.next();
-			long dbFirstRecord = dbStream.nextLong();
-			long dbNumRecords = dbStream.nextLong();
-			databaseList.add(new GZippedFileSystemDatabase(info.fs, dbUri,
-					dbFirstRecord, dbNumRecords));
-			dbType = dbStream.next();
-		}
-		dbStream.close();
-		this.databaseList = databaseList
-				.toArray(new GZippedFileSystemDatabase[databaseList.size()]);
-		firstByteIndices = new long[databaseList.size()];
-		firstNums = new int[databaseList.size()];
-		lastByteIndices = new long[databaseList.size()];
-		lastNums = new int[databaseList.size()];
-		for (int i = 0; i < lastByteIndices.length; i++) {
-			GZippedFileSystemDatabase db = this.databaseList[i];
-			long dbFirstRecord = db.firstRecord();
-			firstByteIndices[i] = toByte(dbFirstRecord);
-			firstNums[i] = toNum(dbFirstRecord);
-			long dbLastRecord = dbFirstRecord + db.numRecords();
-			lastByteIndices[i] = lastByte(dbLastRecord);
-			lastNums[i] = toNum(dbLastRecord);
+		uri = info.uri;
+		if (solve) {
+			dbTypeList = new ArrayList<String>();
+			uriList = new ArrayList<String>();
+			firstRecordList = new ArrayList<Long>();
+			numRecordsList = new ArrayList<Long>();
+			databaseList = null;
+			firstByteIndices = null;
+			firstNums = null;
+			lastByteIndices = null;
+			lastNums = null;
+		} else {
+			Scanner dbStream = info.dbStream;
+			ArrayList<GZippedFileSystemDatabase> databaseList = new ArrayList<GZippedFileSystemDatabase>();
+			String dbType = dbStream.next();
+			while (!dbType.equals("end")) {
+				String dbUri = dbStream.next();
+				long dbFirstRecord = dbStream.nextLong();
+				long dbNumRecords = dbStream.nextLong();
+				databaseList.add(new GZippedFileSystemDatabase(info.fs, dbUri,
+						dbFirstRecord, dbNumRecords));
+				dbType = dbStream.next();
+			}
+			dbStream.close();
+			this.databaseList = databaseList
+					.toArray(new GZippedFileSystemDatabase[databaseList.size()]);
+			firstByteIndices = new long[databaseList.size()];
+			firstNums = new int[databaseList.size()];
+			lastByteIndices = new long[databaseList.size()];
+			lastNums = new int[databaseList.size()];
+			for (int i = 0; i < lastByteIndices.length; i++) {
+				GZippedFileSystemDatabase db = this.databaseList[i];
+				long dbFirstRecord = db.firstRecord();
+				firstByteIndices[i] = toByte(dbFirstRecord);
+				firstNums[i] = toNum(dbFirstRecord);
+				long dbLastRecord = dbFirstRecord + db.numRecords();
+				lastByteIndices[i] = lastByte(dbLastRecord);
+				lastNums[i] = toNum(dbLastRecord);
+			}
+			dbTypeList = null;
+			uriList = null;
+			firstRecordList = null;
+			numRecordsList = null;
 		}
 	}
 
 	@Override
 	public void close() {
-		for (GZippedFileSystemDatabase d : databaseList)
-			d.close();
+		if (solve) {
+			try {
+				FileOutputStream out = new FileOutputStream(uri);
+				store(out, uri);
+				PrintStream ps = new PrintStream(out);
+				for (int i = 0; i < dbTypeList.size(); i++) {
+					ps.println(dbTypeList.get(i));
+					ps.println(uriList.get(i));
+					ps.println(firstRecordList.get(i));
+					ps.println(numRecordsList.get(i));
+				}
+				ps.println("end");
+				ps.close();
+			} catch (IOException e) {
+				throw new Error(e);
+			}
+		} else {
+			for (GZippedFileSystemDatabase d : databaseList)
+				d.close();
+		}
 	}
 
 	@Override
@@ -262,5 +369,26 @@ public class SplitFileSystemDatabase extends Database {
 	protected void putBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
 			int len) {
 		throw new UnsupportedOperationException();
+	}
+
+	public void addTierFirstAndCloseStream(InputStream in) {
+		final ArrayList<String> dbTypeList = new ArrayList<String>();
+		final ArrayList<String> uriList = new ArrayList<String>();
+		final ArrayList<Long> firstRecordList = new ArrayList<Long>();
+		final ArrayList<Long> numRecordsList = new ArrayList<Long>();
+		Scanner scan = new Scanner(in);
+		String dbType = scan.next();
+		while (!dbType.equals("end")) {
+			dbTypeList.add(dbType);
+			uriList.add(scan.next());
+			firstRecordList.add(scan.nextLong());
+			numRecordsList.add(scan.nextLong());
+			dbType = scan.next();
+		}
+		scan.close();
+		this.dbTypeList.addAll(0, dbTypeList);
+		this.uriList.addAll(0, uriList);
+		this.firstRecordList.addAll(0, firstRecordList);
+		this.numRecordsList.addAll(0, numRecordsList);
 	}
 }

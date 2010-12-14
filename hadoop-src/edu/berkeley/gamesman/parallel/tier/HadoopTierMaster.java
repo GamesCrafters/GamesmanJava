@@ -2,12 +2,15 @@ package edu.berkeley.gamesman.parallel.tier;
 
 import java.io.IOException;
 
+import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHeader;
+import edu.berkeley.gamesman.database.SplitFileSystemDatabase;
 import edu.berkeley.gamesman.game.TierGame;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Job;
@@ -20,6 +23,7 @@ public class HadoopTierMaster implements Runnable {
 	private final TierGame game;
 	private final FileSystem fs;
 	private final Path outputDirectory = new Path("temp_output");
+	private final SplitFileSystemDatabase outputDB;
 	private Job job;
 
 	public HadoopTierMaster(GenericOptionsParser gop, String confFile)
@@ -32,6 +36,9 @@ public class HadoopTierMaster implements Runnable {
 				gamesmanConf.getFloat("record.compression", 0F),
 				game.recordStates());
 		hadoopConf.set("gamesman.configuration", gamesmanConf.serialize());
+		String uri = gamesmanConf.getProperty("gamesman.db.uri");
+		outputDB = new SplitFileSystemDatabase(uri, gamesmanConf, fs, true,
+				new DatabaseHeader(gamesmanConf, 0, -1));
 	}
 
 	@Override
@@ -39,6 +46,7 @@ public class HadoopTierMaster implements Runnable {
 		for (int tier = game.numberOfTiers() - 1; tier >= 0; tier--) {
 			solve(tier);
 		}
+		outputDB.close();
 	}
 
 	private void solve(int tier) {
@@ -70,6 +78,15 @@ public class HadoopTierMaster implements Runnable {
 				String dbUri = gamesmanConf
 						.getProperty("gamesman.hadoop.tierDb");
 				dbUri = dbUri + "_" + tier + ".db";
+				FSDataInputStream in = fs.open(new Path(dbUri));
+				Database.skipFully(in, 18);
+				Configuration.skipConf(in);
+				outputDB.addTierFirstAndCloseStream(in);
+				String lastLastTier = hadoopConf
+						.get("gamesman.hadoop.lastTierDb");
+				if (lastLastTier != null) {
+					fs.delete(new Path(lastLastTier), false);
+				}
 				hadoopConf.set("gamesman.hadoop.lastTierDb", dbUri);
 			} while (!success);
 		} catch (IOException e1) {
