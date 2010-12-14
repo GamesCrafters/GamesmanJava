@@ -47,6 +47,14 @@ public class HadoopTierMaster implements Runnable {
 			solve(tier);
 		}
 		outputDB.close();
+		String lastLastTier = hadoopConf.get("gamesman.hadoop.lastTierDb");
+		if (lastLastTier != null) {
+			try {
+				fs.delete(new Path(lastLastTier), false);
+			} catch (IOException e) {
+				throw new Error(e);
+			}
+		}
 	}
 
 	private void solve(int tier) {
@@ -89,8 +97,8 @@ public class HadoopTierMaster implements Runnable {
 				}
 				hadoopConf.set("gamesman.hadoop.lastTierDb", dbUri);
 			} while (!success);
-		} catch (IOException e1) {
-			throw new Error(e1);
+		} catch (IOException e) {
+			throw new Error(e);
 		}
 	}
 

@@ -72,18 +72,26 @@ public class Input extends InputFormat<Range, IntWritable> {
 		}
 		if (tier < 0)
 			throw new Error("No tier specified");
-		int numMachines = 1; // = conf.getInteger("numMachines", 8); //Default
-								// of 8
+		int splits;
+		try {
+			edu.berkeley.gamesman.core.Configuration gamesmanConf = edu.berkeley.gamesman.core.Configuration
+					.deserialize(conf.get("gamesman.configuration"));
+			int numMachines = gamesmanConf.getInteger(
+					"gamesman.parallel.numMachines", 1);
+			splits = numMachines
+					* gamesmanConf.getInteger("gamesman.parallel.multiple", 1);
+		} catch (ClassNotFoundException e) {
+			throw new Error(e);
+		}
 		TierGame game = (TierGame) gc.getGame();
-		long numPos = game.numHashesForTier(tier);
-		int splits = numMachines;
 		List<InputSplit> is = new ArrayList<InputSplit>();
-		long First = game.hashOffsetForTier(tier);
-		long increment = (int) (((float) numPos) / numMachines);
+		final long firstHash = game.hashOffsetForTier(tier);
+		long numHashes = game.numHashesForTier(tier);
+		long prevHash = firstHash;
 		for (int i = 0; i < splits; i++) {
-			long next = First + increment; // Not sure if hashes work this way
-			is.add(new Split(new Range(First, increment)));
-			First = next;
+			long nextHash = firstHash + numHashes * (i + 1) / splits;
+			is.add(new Split(new Range(prevHash, nextHash - prevHash)));
+			prevHash = nextHash;
 		}
 		return is;
 	}
