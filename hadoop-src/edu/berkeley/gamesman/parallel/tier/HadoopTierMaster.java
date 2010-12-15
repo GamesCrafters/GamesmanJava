@@ -74,6 +74,8 @@ public class HadoopTierMaster implements Runnable {
 		do {
 			try {
 				success = job.waitForCompletion(true);
+				if (!success)
+					throw new Error("Tier " + tier + " failed");
 				fs.delete(outputDirectory, true);
 				System.out
 						.println("On tier " + tier + ", success = " + success);
