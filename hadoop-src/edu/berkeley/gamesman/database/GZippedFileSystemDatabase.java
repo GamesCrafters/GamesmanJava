@@ -143,6 +143,8 @@ public class GZippedFileSystemDatabase extends Database {
 	@Override
 	protected synchronized void prepareRange(DatabaseHandle dh, long byteIndex,
 			int firstNum, long numBytes, int lastNum) {
+		if (numBytes < 0)
+			throw new Error("Negative number of bytes passed");
 		GZipHandle gzh = (GZipHandle) dh;
 		long thisEntry = byteIndex / entrySize;
 		int numEntries = (int) ((byteIndex + numBytes + entrySize - 1)

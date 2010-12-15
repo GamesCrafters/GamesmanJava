@@ -53,7 +53,7 @@ public class HadoopTierReducer extends
 			long firstRecord = temp.myRange.firstRecord;
 			long numRecords = temp.myRange.numRecords;
 			String uri = temp.myFile.getPath().toString();
-			writeDb.addDb(GZippedFileSystemDatabase.class.getName(), uri,
+			writeDb.insertDb(GZippedFileSystemDatabase.class.getName(), uri,
 					firstRecord, numRecords);
 		}
 		writeDb.close();
