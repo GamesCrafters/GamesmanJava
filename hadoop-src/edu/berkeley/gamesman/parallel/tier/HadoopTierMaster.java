@@ -62,7 +62,7 @@ public class HadoopTierMaster implements Runnable {
 	private void solve(int tier) throws IOException {
 		hadoopConf.setInt("tier", tier);
 		job = new Job(hadoopConf, "hadoop tier solver");
-		job.setJarByClass(HadoopTierMaster.class);
+		job.setJarByClass(HadoopTierMapper.class);
 		job.setMapOutputValueClass(RangeFile.class);
 		job.setOutputKeyClass(IntWritable.class);
 		job.setOutputValueClass(FileStatus.class);
