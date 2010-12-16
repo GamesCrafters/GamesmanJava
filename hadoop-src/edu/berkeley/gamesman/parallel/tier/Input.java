@@ -87,7 +87,7 @@ public class Input extends InputFormat<Range, IntWritable> {
 			long minSplit = gamesmanConf.getLong(
 					"gamesman.parallel.minimum.split", 1L << 20);
 			if (averageSplit < minSplit) {
-				splits = (int) (numHashes / minSplit);
+				splits = Math.max((int) (numHashes / minSplit), 1);
 			}
 		} catch (ClassNotFoundException e) {
 			throw new Error(e);
