@@ -81,8 +81,8 @@ public class Input extends InputFormat<Range, IntWritable> {
 					.deserialize(conf.get("gamesman.configuration"));
 			int numMachines = gamesmanConf.getInteger(
 					"gamesman.parallel.numMachines", 1);
-			splits = numMachines
-					* gamesmanConf.getInteger("gamesman.parallel.multiple", 1);
+			splits = (int) (numMachines * gamesmanConf.getFloat(
+					"gamesman.parallel.multiple", 1F));
 			long averageSplit = numHashes / splits;
 			long minSplit = gamesmanConf.getLong(
 					"gamesman.parallel.minimum.split", 1L << 20);
