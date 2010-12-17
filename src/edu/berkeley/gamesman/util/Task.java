@@ -51,7 +51,7 @@ public abstract class Task {
 	 * @param f
 	 *            the Factory to use from here on out.
 	 */
-	public static void setTaskFactory(TaskFactory f) {
+	public synchronized static void setTaskFactory(TaskFactory f) {
 		factory = f;
 	}
 

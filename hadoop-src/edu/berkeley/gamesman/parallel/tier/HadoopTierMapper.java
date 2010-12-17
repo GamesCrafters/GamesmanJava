@@ -15,6 +15,8 @@ import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.solver.Solver;
 import edu.berkeley.gamesman.solver.TierSolver;
 import edu.berkeley.gamesman.solver.TierSolverUpdater;
+import edu.berkeley.gamesman.util.Task;
+import edu.berkeley.gamesman.util.TaskFactory;
 import edu.berkeley.gamesman.util.Util;
 
 import org.apache.hadoop.fs.FileStatus;
@@ -26,7 +28,8 @@ import org.apache.hadoop.mapreduce.Mapper;
 import edu.berkeley.gamesman.core.Configuration;
 
 public class HadoopTierMapper extends
-		Mapper<Range, IntWritable, IntWritable, RangeFile> {
+		Mapper<Range, IntWritable, IntWritable, RangeFile> implements
+		TaskFactory {
 	private static class HadoopMapUpdater extends TierSolverUpdater {
 		private final Context cont;
 		private final Range key;
@@ -70,6 +73,7 @@ public class HadoopTierMapper extends
 	@Override
 	public void setup(Context context) {
 		try {
+			Task.setTaskFactory(this);
 			org.apache.hadoop.conf.Configuration conf = context
 					.getConfiguration();
 			this.conf = Configuration.deserialize(conf
@@ -248,5 +252,45 @@ public class HadoopTierMapper extends
 				e.printStackTrace();
 			}
 		}
+	}
+
+	private class TierMapperTextTask extends Task {
+		private String name;
+
+		TierMapperTextTask(String name) {
+			this.name = name;
+		}
+
+		private long start;
+
+		@Override
+		protected void begin() {
+			start = System.currentTimeMillis();
+		}
+
+		@Override
+		public void complete() {
+			System.out.println("\nCompleted task " + name + " in "
+					+ Util.millisToETA(System.currentTimeMillis() - start)
+					+ ".");
+		}
+
+		@Override
+		public void update() {
+			long elapsedMillis = System.currentTimeMillis() - start;
+			double fraction = (double) completed / total;
+			System.out.print("Task: "
+					+ name
+					+ ", "
+					+ String.format("%4.02f", fraction * 100)
+					+ "% ETA "
+					+ Util.millisToETA((long) (elapsedMillis / fraction)
+							- elapsedMillis) + " remains\n");
+		}
+	}
+
+	@Override
+	public Task createTask(String name) {
+		return new TierMapperTextTask(name);
 	}
 }

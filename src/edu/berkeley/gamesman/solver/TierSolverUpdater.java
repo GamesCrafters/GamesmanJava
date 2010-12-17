@@ -6,14 +6,16 @@ import edu.berkeley.gamesman.util.Task;
 
 public class TierSolverUpdater {
 	private long total = 0;
+	private final long totalProgress;
 
-	protected Task t;
+	protected final Task t;
 
 	TierSolverUpdater(Configuration conf) {
 		this(conf, conf.getGame().numHashes());
 	}
 
 	public TierSolverUpdater(Configuration conf, long totalProgress) {
+		this.totalProgress = totalProgress;
 		TierGame myGame = (TierGame) conf.getGame();
 		t = Task.beginTask("Tier solving \"" + myGame.describe() + "\"");
 		t.setTotal(totalProgress);
@@ -27,8 +29,9 @@ public class TierSolverUpdater {
 	}
 
 	public void complete() {
-		if (t != null)
+		if (t != null) {
+			t.setProgress(totalProgress);
 			t.complete();
-		t = null;
+		}
 	}
 }
