@@ -196,7 +196,7 @@ public class TierSolver extends Solver {
 				}
 			}
 		}
-		updater = new TierSolverUpdater();
+		updater = new TierSolverUpdater(conf);
 		parallelSolving = false;
 		flusher.run();
 		needs2Reset = false;
@@ -372,36 +372,6 @@ public class TierSolver extends Solver {
 		}
 	}
 
-	final class TierSolverUpdater {
-
-		private long total = 0;
-
-		private Task t;
-
-		TierSolverUpdater() {
-			this(conf.getGame().numHashes());
-		}
-
-		TierSolverUpdater(long totalProgress) {
-			TierGame myGame = (TierGame) conf.getGame();
-			t = Task.beginTask("Tier solving \"" + myGame.describe() + "\"");
-			t.setTotal(totalProgress);
-		}
-
-		synchronized void calculated(int howMuch) {
-			total += howMuch;
-			if (t != null) {
-				t.setProgress(total);
-			}
-		}
-
-		public void complete() {
-			if (t != null)
-				t.complete();
-			t = null;
-		}
-	}
-
 	/**
 	 * @param conf
 	 *            The configuration object
@@ -414,9 +384,9 @@ public class TierSolver extends Solver {
 	 * @return A WorkUnit for solving solveSpace
 	 */
 	public WorkUnit prepareSolve(Configuration conf, int tier, long startHash,
-			long numHashes) {
+			long numHashes, TierSolverUpdater updater) {
 		this.tier = tier;
-		updater = new TierSolverUpdater(numHashes);
+		this.updater = updater;
 		parallelSolving = true;
 		splits = Math.max(minSplits, numSplits(tier, maxMem, numHashes));
 		starts = writeDb.splitRange(startHash, numHashes, splits, minSplitSize);

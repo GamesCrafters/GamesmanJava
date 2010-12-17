@@ -16,7 +16,7 @@ public abstract class Task {
 
 	private static TaskFactory factory;
 
-	protected long completed, total;
+	public long completed, total;
 
 	protected Task() {
 	}

@@ -14,6 +14,7 @@ import edu.berkeley.gamesman.database.SplitFileSystemDatabase;
 import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.solver.Solver;
 import edu.berkeley.gamesman.solver.TierSolver;
+import edu.berkeley.gamesman.solver.TierSolverUpdater;
 import edu.berkeley.gamesman.util.Util;
 
 import org.apache.hadoop.fs.FileStatus;
@@ -26,6 +27,33 @@ import edu.berkeley.gamesman.core.Configuration;
 
 public class HadoopTierMapper extends
 		Mapper<Range, IntWritable, IntWritable, RangeFile> {
+	private static class HadoopMapUpdater extends TierSolverUpdater {
+		private final Context cont;
+		private final Range key;
+
+		public HadoopMapUpdater(Configuration conf, Context cont, Range key) {
+			super(conf, key.numRecords);
+			this.cont = cont;
+			this.key = key;
+			key.setProgress(0L);
+			cont.progress();
+		}
+
+		@Override
+		protected synchronized void calculated(int howMuch) {
+			super.calculated(howMuch);
+			key.setProgress(t.completed);
+			cont.progress();
+		}
+
+		@Override
+		public void complete() {
+			super.complete();
+			key.setProgress(key.numRecords);
+			cont.progress();
+		}
+	}
+
 	private final RangeFile mapValue = new RangeFile();
 	private final IntWritable tier = new IntWritable();
 	private TierSolver solver;
@@ -137,7 +165,8 @@ public class HadoopTierMapper extends
 		int tier = this.tier.get();
 		int threads = conf.getInteger("gamesman.threads", 1);
 		List<WorkUnit> list = null;
-		WorkUnit wu = solver.prepareSolve(conf, tier, firstHash, numHashes);
+		WorkUnit wu = solver.prepareSolve(conf, tier, firstHash, numHashes,
+				new HadoopMapUpdater(conf, context, key));
 		if (threads > 1)
 			list = wu.divide(threads);
 		else {

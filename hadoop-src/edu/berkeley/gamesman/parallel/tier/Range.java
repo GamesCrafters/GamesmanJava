@@ -9,10 +9,12 @@ import org.apache.hadoop.io.WritableComparable;
 public class Range implements WritableComparable<Range> {
 	public long firstRecord;
 	public long numRecords;
+	public long completed;
 
 	public Range(long first, long numRecords) {
 		this.firstRecord = first;
 		this.numRecords = numRecords;
+		this.completed = 0L;
 	}
 
 	public Range() {
@@ -23,12 +25,14 @@ public class Range implements WritableComparable<Range> {
 	public void write(DataOutput out) throws IOException {
 		out.writeLong(firstRecord);
 		out.writeLong(numRecords);
+		out.writeLong(completed);
 	}
 
 	@Override
 	public void readFields(DataInput in) throws IOException {
 		firstRecord = in.readLong();
 		numRecords = in.readLong();
+		completed = in.readLong();
 	}
 
 	@Override
@@ -61,5 +65,10 @@ public class Range implements WritableComparable<Range> {
 	public void set(Range r) {
 		firstRecord = r.firstRecord;
 		numRecords = r.numRecords;
+		completed = r.completed;
+	}
+
+	public void setProgress(long completed) {
+		this.completed = completed;
 	}
 }
