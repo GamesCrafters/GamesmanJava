@@ -141,9 +141,9 @@ public class LoopySolver {
 	}
 
 	public static void main(String[] args) throws Exception {
-		Configuration conf = new Configuration();
-		String[] otherArgs = new GenericOptionsParser(conf, args)
-				.getRemainingArgs();
+		GenericOptionsParser gop = new GenericOptionsParser(args);
+		String[] otherArgs = gop.getRemainingArgs();
+		Configuration conf = gop.getConfiguration();
 		if (otherArgs.length != 2) {
 			System.err.println("Usage: loopy-solve <in> <out>");
 			System.exit(2);

@@ -124,6 +124,10 @@ public class HadoopTierMapper extends
 			writeURI = writeURI + ".uz";
 		}
 		writeDb = Database.openDatabase(writeURI + "_local", conf, true, head);
+		File localFile = new File(writeURI + "_local");
+		File localParent = localFile.getParentFile();
+		localParent.setWritable(true, false);
+		localFile.setWritable(true, false);
 		solver.setWriteDb(writeDb);
 		// ***********************************************************************
 
@@ -163,6 +167,8 @@ public class HadoopTierMapper extends
 			try {
 				writeTo = new GZippedFileDatabase(zipURI + "_local", conf,
 						readFrom, maxMem);
+				File localZipFile = new File(zipURI + "_local");
+				localZipFile.setWritable(true, false);
 			} catch (IOException e) {
 				throw new Error(e);
 			}
