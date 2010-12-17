@@ -127,7 +127,10 @@ public class HadoopTierMapper extends
 		File localFile = new File(writeURI + "_local");
 		File localParent = localFile.getParentFile();
 		localParent.setWritable(true, false);
+		localParent.setExecutable(true, false);
+		localParent.setReadable(true, false);
 		localFile.setWritable(true, false);
+		localFile.setReadable(true, false);
 		solver.setWriteDb(writeDb);
 		// ***********************************************************************
 
@@ -169,6 +172,7 @@ public class HadoopTierMapper extends
 						readFrom, maxMem);
 				File localZipFile = new File(zipURI + "_local");
 				localZipFile.setWritable(true, false);
+				localZipFile.setReadable(true, false);
 			} catch (IOException e) {
 				throw new Error(e);
 			}
