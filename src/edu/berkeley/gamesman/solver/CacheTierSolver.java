@@ -14,9 +14,10 @@ public class CacheTierSolver extends TierSolver {
 		super(conf);
 	}
 
+	@Override
 	protected void solvePartialTier(Configuration conf, long start,
-			long hashes, TierSolverUpdater t, Database readDb,
-			DatabaseHandle readDh, Database writeDb, DatabaseHandle writeDh) {
+			long hashes, Database readDb, DatabaseHandle readDh,
+			Database writeDb, DatabaseHandle writeDh) {
 		TierGame game = (TierGame) conf.getGame();
 		TierState ts = game.hashToState(start);
 		game.setState(ts);
@@ -31,12 +32,12 @@ public class CacheTierSolver extends TierSolver {
 				true, start, hashes);
 		writeDh = writeCache.getHandle();
 		if (readCache == null) {
-			super.solvePartialTier(conf, start, hashes, t, null, null,
-					writeCache, writeDh);
+			super.solvePartialTier(conf, start, hashes, null, null, writeCache,
+					writeDh);
 		} else {
 			while (true) {
 				readDh = readCache.getHandle();
-				super.solvePartialTier(conf, start, readCache.numHashes(), t,
+				super.solvePartialTier(conf, start, readCache.numHashes(),
 						readCache, readDh, writeCache, writeDh);
 				if (readCache.numHashes() < hashes) {
 					game.nextHashInTier();

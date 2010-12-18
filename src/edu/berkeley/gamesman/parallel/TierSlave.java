@@ -16,8 +16,8 @@ import edu.berkeley.gamesman.database.DatabaseHeader;
 import edu.berkeley.gamesman.database.DistributedDatabase;
 import edu.berkeley.gamesman.database.GZippedFileDatabase;
 import edu.berkeley.gamesman.game.TierGame;
+import edu.berkeley.gamesman.master.LocalMasterTextTask;
 import edu.berkeley.gamesman.solver.TierSolver;
-import edu.berkeley.gamesman.solver.TierSolverUpdater;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Task;
 import edu.berkeley.gamesman.util.TaskFactory;
@@ -136,14 +136,13 @@ public class TierSlave implements TaskFactory, Runnable {
 	}
 
 	public Task createTask(String name) {
-		return new TierSlaveTextTask(name);
+		return new LocalMasterTextTask(name);
 	}
 
 	public void run() {
 		int threads = conf.getInteger("gamesman.threads", 1);
 		List<WorkUnit> list = null;
-		WorkUnit wu = solver.prepareSolve(conf, tier, firstHash, numHashes,
-				new TierSolverUpdater(conf, numHashes));
+		WorkUnit wu = solver.prepareSolve(conf, tier, firstHash, numHashes);
 		if (threads > 1)
 			list = wu.divide(threads);
 		else {
@@ -214,41 +213,6 @@ public class TierSlave implements TaskFactory, Runnable {
 
 		public void run() {
 			w.conquer();
-		}
-	}
-
-	private class TierSlaveTextTask extends Task {
-		private String name;
-
-		TierSlaveTextTask(String name) {
-			this.name = name;
-		}
-
-		private long start;
-
-		@Override
-		protected void begin() {
-			start = System.currentTimeMillis();
-		}
-
-		@Override
-		public void complete() {
-			System.out.println("\nCompleted task " + name + " in "
-					+ Util.millisToETA(System.currentTimeMillis() - start)
-					+ ".");
-		}
-
-		@Override
-		public void update() {
-			long elapsedMillis = System.currentTimeMillis() - start;
-			double fraction = (double) completed / total;
-			System.out.print("Task: "
-					+ name
-					+ ", "
-					+ String.format("%4.02f", fraction * 100)
-					+ "% ETA "
-					+ Util.millisToETA((long) (elapsedMillis / fraction)
-							- elapsedMillis) + " remains\n");
 		}
 	}
 }

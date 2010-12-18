@@ -15,8 +15,8 @@ public class RearrangeSolver extends TierSolver {
 
 	@Override
 	protected void solvePartialTier(Configuration conf, long start,
-			long hashes, TierSolverUpdater t, Database readDb,
-			DatabaseHandle readDh, Database writeDb, DatabaseHandle writeDh) {
+			long hashes, Database readDb, DatabaseHandle readDh,
+			Database writeDb, DatabaseHandle writeDh) {
 		final long firstNano;
 		long nano = 0;
 		final boolean debugSolver = Util.debug(DebugFacility.SOLVER);
@@ -47,11 +47,11 @@ public class RearrangeSolver extends TierSolver {
 		Value pv = game.primitiveValue();
 		for (long count = 0L; count < hashes; count++) {
 			if (stepNum == STEP_SIZE) {
-				t.calculated(STEP_SIZE);
+				updater.calculated(STEP_SIZE);
 				stepNum = 0;
 			}
-			
-			if(((RearrangeGame)game).majorChanged()){
+
+			if (((RearrangeGame) game).majorChanged()) {
 				pv = game.primitiveValue();
 			}
 			if (debugSolver) {

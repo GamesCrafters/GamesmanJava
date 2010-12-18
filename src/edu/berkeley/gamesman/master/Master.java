@@ -57,6 +57,13 @@ public final class Master implements TaskFactory, Runnable {
 		assert Util.debug(DebugFacility.MASTER, "Done initializing Master");
 	}
 
+	public Master(Configuration conf) {
+		solver = null;
+		database = null;
+		this.conf = conf;
+		game = conf.getGame();
+	}
+
 	public void run(boolean closeDB) {
 		int threads = conf.getInteger("gamesman.threads", 1);
 		assert Util.debug(DebugFacility.MASTER, "Launching " + threads
@@ -108,41 +115,6 @@ public final class Master implements TaskFactory, Runnable {
 					.debug(DebugFacility.MASTER, "LocalMasterRunnable begin");
 			w.conquer();
 			assert Util.debug(DebugFacility.MASTER, "LocalMasterRunnable end");
-		}
-	}
-
-	private class LocalMasterTextTask extends Task {
-		private String name;
-
-		LocalMasterTextTask(String name) {
-			this.name = name;
-		}
-
-		private long start;
-
-		@Override
-		protected void begin() {
-			start = System.currentTimeMillis();
-		}
-
-		@Override
-		public void complete() {
-			System.out.println("\nCompleted task " + name + " in "
-					+ Util.millisToETA(System.currentTimeMillis() - start)
-					+ ".");
-		}
-
-		@Override
-		public void update() {
-			long elapsedMillis = System.currentTimeMillis() - start;
-			double fraction = (double) completed / total;
-			System.out.print("Task: "
-					+ name
-					+ ", "
-					+ String.format("%4.02f", fraction * 100)
-					+ "% ETA "
-					+ Util.millisToETA((long) (elapsedMillis / fraction)
-							- elapsedMillis) + " remains\r");
 		}
 	}
 

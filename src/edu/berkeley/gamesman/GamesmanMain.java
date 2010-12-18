@@ -69,13 +69,15 @@ public final class GamesmanMain extends GamesmanApplication {
 			m.run();
 		}
 
-		assert Util.debug(DebugFacility.CORE, "Finished run, tearing down...");
+		assert Util.debug(DebugFacility.CORE, "Finished run");
 		return 0;
 	}
 
 	/**
 	 * Diagnostic call to unhash an arbitrary value to a game board
-	 * @param <T> The state type of the game
+	 * 
+	 * @param <T>
+	 *            The state type of the game
 	 */
 	public <T extends State> void executeunhash() {
 		Game<T> gm = conf.getCheckedGame();
@@ -86,7 +88,9 @@ public final class GamesmanMain extends GamesmanApplication {
 
 	/**
 	 * Diagnostic call to view all child moves of a given hashed game state
-	 * @param <T> The state type of the game
+	 * 
+	 * @param <T>
+	 *            The state type of the game
 	 */
 	public <T extends State> void executegenmoves() {
 		Game<T> gm = conf.getCheckedGame();
@@ -100,7 +104,9 @@ public final class GamesmanMain extends GamesmanApplication {
 
 	/**
 	 * Hash a single board with the given hasher and print it.
-	 * @param <T> The state type of the game
+	 * 
+	 * @param <T>
+	 *            The state type of the game
 	 */
 	public <T extends State> void executehash() {
 		Game<T> gm = conf.getCheckedGame();
@@ -112,7 +118,9 @@ public final class GamesmanMain extends GamesmanApplication {
 
 	/**
 	 * Evaluate a single board and return its primitive value.
-	 * @param <T> The state type of the game
+	 * 
+	 * @param <T>
+	 *            The state type of the game
 	 */
 	public <T extends State> void executeevaluate() {
 		Game<T> gm = conf.getCheckedGame();

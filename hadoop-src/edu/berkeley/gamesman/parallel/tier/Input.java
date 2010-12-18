@@ -31,10 +31,7 @@ public class Input extends InputFormat<Range, IntWritable> {
 
 		@Override
 		public float getProgress() throws IOException {
-			if (read)
-				return (float) key.completed / key.numRecords;
-			else
-				return 0F;
+			return 0F;
 		}
 
 		@Override

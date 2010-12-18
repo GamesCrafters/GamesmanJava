@@ -53,8 +53,8 @@ public class TierSolver extends Solver {
 	private final int minSplitSize;
 
 	protected void solvePartialTier(Configuration conf, long start,
-			long hashes, TierSolverUpdater t, Database readDb,
-			DatabaseHandle readDh, Database writeDb, DatabaseHandle writeDh) {
+			long hashes, Database readDb, DatabaseHandle readDh,
+			Database writeDb, DatabaseHandle writeDh) {
 		final long firstNano;
 		long nano = 0;
 		final boolean debugSolver = Util.debug(DebugFacility.SOLVER);
@@ -84,7 +84,7 @@ public class TierSolver extends Solver {
 		}
 		for (long count = 0L; count < hashes; count++) {
 			if (stepNum == STEP_SIZE) {
-				t.calculated(STEP_SIZE);
+				updater.calculated(STEP_SIZE);
 				stepNum = 0;
 			}
 			Value pv = game.primitiveValue();
@@ -334,7 +334,7 @@ public class TierSolver extends Solver {
 					readHandle = null;
 				else
 					readHandle = readDb.getHandle();
-				solvePartialTier(conf, slice.car, slice.cdr, updater, readDb,
+				solvePartialTier(conf, slice.car, slice.cdr, readDb,
 						readHandle, writeDb, myWrite);
 				writeDb.closeHandle(myWrite);
 			}
@@ -384,9 +384,9 @@ public class TierSolver extends Solver {
 	 * @return A WorkUnit for solving solveSpace
 	 */
 	public WorkUnit prepareSolve(Configuration conf, int tier, long startHash,
-			long numHashes, TierSolverUpdater updater) {
+			long numHashes) {
 		this.tier = tier;
-		this.updater = updater;
+		this.updater = new TierSolverUpdater(conf, numHashes);
 		parallelSolving = true;
 		splits = Math.max(minSplits, numSplits(tier, maxMem, numHashes));
 		starts = writeDb.splitRange(startHash, numHashes, splits, minSplitSize);

@@ -4,7 +4,7 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.util.Task;
 
-public class TierSolverUpdater {
+public final class TierSolverUpdater {
 	private long total = 0;
 	private final long totalProgress;
 
@@ -28,7 +28,7 @@ public class TierSolverUpdater {
 		}
 	}
 
-	public void complete() {
+	public synchronized void complete() {
 		if (t != null) {
 			t.setProgress(totalProgress);
 			t.complete();

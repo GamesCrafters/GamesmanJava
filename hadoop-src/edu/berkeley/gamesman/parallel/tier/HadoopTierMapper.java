@@ -12,9 +12,9 @@ import edu.berkeley.gamesman.database.DatabaseHeader;
 import edu.berkeley.gamesman.database.GZippedFileDatabase;
 import edu.berkeley.gamesman.database.SplitFileSystemDatabase;
 import edu.berkeley.gamesman.game.TierGame;
+import edu.berkeley.gamesman.master.LocalMasterTextTask;
 import edu.berkeley.gamesman.solver.Solver;
 import edu.berkeley.gamesman.solver.TierSolver;
-import edu.berkeley.gamesman.solver.TierSolverUpdater;
 import edu.berkeley.gamesman.util.Task;
 import edu.berkeley.gamesman.util.TaskFactory;
 import edu.berkeley.gamesman.util.Util;
@@ -30,33 +30,6 @@ import edu.berkeley.gamesman.core.Configuration;
 public class HadoopTierMapper extends
 		Mapper<Range, IntWritable, IntWritable, RangeFile> implements
 		TaskFactory {
-	private static class HadoopMapUpdater extends TierSolverUpdater {
-		private final Context cont;
-		private final Range key;
-
-		public HadoopMapUpdater(Configuration conf, Context cont, Range key) {
-			super(conf, key.numRecords);
-			this.cont = cont;
-			this.key = key;
-			key.setProgress(0L);
-			cont.progress();
-		}
-
-		@Override
-		protected synchronized void calculated(int howMuch) {
-			super.calculated(howMuch);
-			key.setProgress(t.completed);
-			cont.progress();
-		}
-
-		@Override
-		public void complete() {
-			super.complete();
-			key.setProgress(key.numRecords);
-			cont.progress();
-		}
-	}
-
 	private final RangeFile mapValue = new RangeFile();
 	private final IntWritable tier = new IntWritable();
 	private TierSolver solver;
@@ -66,6 +39,7 @@ public class HadoopTierMapper extends
 	private boolean doZip;
 	private String writeURI;
 	private String readUri;
+	private Context currentContext;
 
 	Configuration conf;
 	FileSystem fs;
@@ -129,6 +103,9 @@ public class HadoopTierMapper extends
 	@Override
 	public void map(Range key, IntWritable value, Context context)
 			throws IOException {
+		synchronized (this) {
+			currentContext = context;
+		}
 		long firstHash = key.firstRecord;
 		long numHashes = key.numRecords;
 		if (numHashes == 0)
@@ -169,8 +146,7 @@ public class HadoopTierMapper extends
 		int tier = this.tier.get();
 		int threads = conf.getInteger("gamesman.threads", 1);
 		List<WorkUnit> list = null;
-		WorkUnit wu = solver.prepareSolve(conf, tier, firstHash, numHashes,
-				new HadoopMapUpdater(conf, context, key));
+		WorkUnit wu = solver.prepareSolve(conf, tier, firstHash, numHashes);
 		if (threads > 1)
 			list = wu.divide(threads);
 		else {
@@ -252,40 +228,42 @@ public class HadoopTierMapper extends
 				e.printStackTrace();
 			}
 		}
+		synchronized (this) {
+			currentContext = null;
+		}
 	}
 
-	private class TierMapperTextTask extends Task {
-		private String name;
+	private class TierMapperTextTask extends LocalMasterTextTask {
 
-		TierMapperTextTask(String name) {
-			this.name = name;
+		protected TierMapperTextTask(String name) {
+			super(name);
 		}
 
-		private long start;
-
 		@Override
-		protected void begin() {
-			start = System.currentTimeMillis();
+		public void begin() {
+			synchronized (HadoopTierMapper.this) {
+				if (currentContext != null)
+					currentContext.progress();
+			}
+			super.begin();
 		}
 
 		@Override
 		public void complete() {
-			System.out.println("\nCompleted task " + name + " in "
-					+ Util.millisToETA(System.currentTimeMillis() - start)
-					+ ".");
+			synchronized (HadoopTierMapper.this) {
+				if (currentContext != null)
+					currentContext.progress();
+			}
+			super.complete();
 		}
 
 		@Override
 		public void update() {
-			long elapsedMillis = System.currentTimeMillis() - start;
-			double fraction = (double) completed / total;
-			System.out.print("Task: "
-					+ name
-					+ ", "
-					+ String.format("%4.02f", fraction * 100)
-					+ "% ETA "
-					+ Util.millisToETA((long) (elapsedMillis / fraction)
-							- elapsedMillis) + " remains\n");
+			synchronized (HadoopTierMapper.this) {
+				if (currentContext != null)
+					currentContext.progress();
+			}
+			super.update();
 		}
 	}
 

@@ -6,10 +6,11 @@ import java.util.concurrent.Semaphore;
 import java.util.zip.GZIPOutputStream;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.master.Master;
 import edu.berkeley.gamesman.util.qll.Factory;
 import edu.berkeley.gamesman.util.ChunkInputStream;
 import edu.berkeley.gamesman.util.Pair;
-import edu.berkeley.gamesman.util.Util;
+import edu.berkeley.gamesman.util.Task;
 import edu.berkeley.gamesman.util.qll.Pool;
 import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 
@@ -88,6 +89,8 @@ public class GZippedFileDatabase extends GZippedDatabase implements Runnable {
 		this.readFrom = readFrom;
 		nextStart = firstByteIndex;
 		writeBuffer = null;
+		zipping = Task.beginTask("Zipping to " + uri);
+		zipping.setTotal(numEntries);
 	}
 
 	private final QuickLinkedList<Pair<ByteArrayOutputStream, Long>> waitingCaches;
@@ -99,6 +102,7 @@ public class GZippedFileDatabase extends GZippedDatabase implements Runnable {
 	private final Database readFrom;
 	private final FileOutputStream fos;
 	private final int numEntries;
+	private final Task zipping;
 	private long thisEntry;
 	private long handleEntry;
 	private long nextStart;
@@ -126,6 +130,7 @@ public class GZippedFileDatabase extends GZippedDatabase implements Runnable {
 			} catch (IOException e) {
 				throw new Error(e);
 			}
+			zipping.complete();
 		} else {
 			try {
 				fis.close();
@@ -234,10 +239,9 @@ public class GZippedFileDatabase extends GZippedDatabase implements Runnable {
 				}
 			}
 			while (true) {
-				if ((thisEntry - firstEntry) % 1000 == 0) {
-					System.out.println("Starting entry "
-							+ (thisEntry - firstEntry) + "/" + numEntries);
-				}
+				if ((thisEntry - firstEntry) % 1000 == 0
+						&& (thisEntry - firstEntry) > 0)
+					zipping.setProgress(thisEntry - firstEntry);
 				try {
 					entryPoints[(int) (thisEntry - firstEntry)] = fos
 							.getChannel().position();
@@ -298,7 +302,6 @@ public class GZippedFileDatabase extends GZippedDatabase implements Runnable {
 	 */
 	public static void main(String[] args) throws IOException,
 			ClassNotFoundException {
-		long time = System.currentTimeMillis();
 		String db1 = args[0];
 		String zipDb = args[1];
 		int entryKB;
@@ -323,6 +326,7 @@ public class GZippedFileDatabase extends GZippedDatabase implements Runnable {
 		outConf.setProperty("gamesman.db.uri", zipDb);
 		outConf.setProperty("gamesman.db.zip.entryKB",
 				Integer.toString(entryKB));
+		Task.setTaskFactory(new Master(readFrom.getConfiguration()));
 		GZippedFileDatabase writeTo = new GZippedFileDatabase(zipDb, outConf,
 				readFrom, maxMem);
 		Thread[] threadList = new Thread[numThreads];
@@ -342,8 +346,6 @@ public class GZippedFileDatabase extends GZippedDatabase implements Runnable {
 		}
 		readFrom.close();
 		writeTo.close();
-		System.out.println("Zipped in "
-				+ Util.millisToETA(System.currentTimeMillis() - time));
 	}
 
 	/**
@@ -397,6 +399,7 @@ public class GZippedFileDatabase extends GZippedDatabase implements Runnable {
 		handlePool = null;
 		fos = null;
 		writeBuffer = null;
+		zipping = null;
 	}
 
 	/**
@@ -435,6 +438,7 @@ public class GZippedFileDatabase extends GZippedDatabase implements Runnable {
 		readFrom = null;
 		nextStart = firstByteIndex;
 		writeBuffer = new byte[gzipWorst];
+		zipping = null;
 	}
 
 	private final long[] entryPoints;
