@@ -1,6 +1,5 @@
 package edu.berkeley.gamesman.hasher;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 
 import edu.berkeley.gamesman.util.qll.Pool;
@@ -17,9 +16,10 @@ public class DartboardHasher2 extends DartboardHasher {
 	private final Count numType;
 	private final long[] pieceHashes;
 	private final char[] digits;
-	private ArrayList<int[]> replacements = new ArrayList<int[]>();
-	private ArrayList<long[]> moveDifs = new ArrayList<long[]>();
-	private ArrayList<long[]> difs = new ArrayList<long[]>();
+	private int[][] replacements = new int[0][];
+	private long[][] moveDifs;
+	private long[][] difs;
+	private int replacementSize = 0;
 	private long hash;
 	private Pool<Count> countPool;
 
@@ -194,15 +194,15 @@ public class DartboardHasher2 extends DartboardHasher {
 	 */
 	@Override
 	public void setReplacements(char... replacements) {
-		this.replacements.clear();
-		difs.clear();
-		moveDifs.clear();
-		for (int replacement = 0; replacement < replacements.length; replacement += 2) {
-			this.replacements.add(new int[] {
-					findDigit(replacements[replacement]),
-					findDigit(replacements[replacement + 1]) });
-			difs.add(new long[pieces.length]);
-			moveDifs.add(new long[pieces.length]);
+		replacementSize = replacements.length / 2;
+		if (this.replacements.length < replacementSize) {
+			this.replacements = new int[replacementSize][2];
+			this.difs = new long[replacementSize][pieces.length];
+			this.moveDifs = new long[replacementSize][pieces.length];
+		}
+		for (int replacement = 0; replacement < replacementSize; replacement++) {
+			this.replacements[replacement][0] = findDigit(replacements[replacement * 2]);
+			this.replacements[replacement][1] = findDigit(replacements[replacement * 2 + 1]);
 		}
 		calculateReplacements();
 	}
@@ -271,12 +271,12 @@ public class DartboardHasher2 extends DartboardHasher {
 				}
 				hash += pieceHashes[piece];
 			}
-			for (int i = 0; i < replacements.size(); i++) {
-				int[] replacement = replacements.get(i);
+			for (int i = 0; i < replacementSize; i++) {
+				int[] replacement = replacements[i];
 				count.trade(replacement[0], replacement[1]);
-				difs.get(i)[piece] = -pieceHashes[piece];
+				difs[i][piece] = -pieceHashes[piece];
 				for (int j = 0; j < digit; j++) {
-					difs.get(i)[piece] += count.getDecr(j);
+					difs[i][piece] += count.getDecr(j);
 				}
 				count.trade(replacement[1], replacement[0]);
 			}
@@ -317,12 +317,12 @@ public class DartboardHasher2 extends DartboardHasher {
 				pieceHashes[piece] += count.getDecr(d);
 			}
 			hash += pieceHashes[piece];
-			for (int i = 0; i < replacements.size(); i++) {
-				int[] replacement = replacements.get(i);
+			for (int i = 0; i < replacementSize; i++) {
+				int[] replacement = replacements[i];
 				count.trade(replacement[0], replacement[1]);
-				difs.get(i)[piece] = -pieceHashes[piece];
+				difs[i][piece] = -pieceHashes[piece];
 				for (int j = 0; j < digit; j++) {
-					difs.get(i)[piece] += count.getDecr(j);
+					difs[i][piece] += count.getDecr(j);
 				}
 				count.trade(replacement[1], replacement[0]);
 			}
@@ -347,10 +347,10 @@ public class DartboardHasher2 extends DartboardHasher {
 				}
 				pieces[piece] = digit;
 				oldHashes += pieceHashes[piece];
-				for (int j = 0; j < replacements.size(); j++) {
-					int[] replacement = replacements.get(j);
-					long[] dif = difs.get(j);
-					long[] moveDif = moveDifs.get(j);
+				for (int j = 0; j < replacementSize; j++) {
+					int[] replacement = replacements[j];
+					long[] dif = difs[j];
+					long[] moveDif = moveDifs[j];
 					dif[piece] = -pieceHashes[piece];
 					moveDif[piece] = 0L;
 					secondCount.trade(replacement[0], replacement[1]);
@@ -395,10 +395,10 @@ public class DartboardHasher2 extends DartboardHasher {
 				secondCount.incr(digit);
 				oldHashes += pieceHashes[piece];
 				pieceHashes[piece] = 0L;
-				for (int j = 0; j < replacements.size(); j++) {
-					int[] replacement = replacements.get(j);
-					long[] dif = difs.get(j);
-					long[] moveDif = moveDifs.get(j);
+				for (int j = 0; j < replacementSize; j++) {
+					int[] replacement = replacements[j];
+					long[] dif = difs[j];
+					long[] moveDif = moveDifs[j];
 					dif[piece] = 0L;
 					moveDif[piece] = 0L;
 					secondCount.trade(replacement[0], replacement[1]);
@@ -520,10 +520,10 @@ public class DartboardHasher2 extends DartboardHasher {
 	}
 
 	private void calculateReplacements() {
-		for (int replacement = 0; replacement < replacements.size(); replacement++) {
-			int[] rPair = replacements.get(replacement);
-			long[] rDifs = difs.get(replacement);
-			long[] moveDif = moveDifs.get(replacement);
+		for (int replacement = 0; replacement < replacementSize; replacement++) {
+			int[] rPair = replacements[replacement];
+			long[] rDifs = difs[replacement];
+			long[] moveDif = moveDifs[replacement];
 			Count count = countPool.get();
 			count.trade(rPair[0], rPair[1]);
 			for (int piece = 0; piece < pieces.length; piece++) {
@@ -580,16 +580,16 @@ public class DartboardHasher2 extends DartboardHasher {
 		long[] dif = null;
 		long[] moveDif = null;
 		int i;
-		for (i = 0; i < replacements.size(); i++) {
-			replacement = replacements.get(i);
+		for (i = 0; i < replacementSize; i++) {
+			replacement = replacements[i];
 			if (digits[replacement[0]] == old
 					&& digits[replacement[1]] == replace) {
-				dif = difs.get(i);
-				moveDif = moveDifs.get(i);
+				dif = difs[i];
+				moveDif = moveDifs[i];
 				break;
 			}
 		}
-		if (i == replacements.size())
+		if (i == replacementSize)
 			throw new Error("No such replacement set");
 		long hashDif = 0L;
 		for (int piece = pieces.length - 1; piece >= 0; piece--) {
@@ -607,15 +607,15 @@ public class DartboardHasher2 extends DartboardHasher {
 		int[] replacement = null;
 		long[] dif = null;
 		int i;
-		for (i = 0; i < replacements.size(); i++) {
-			replacement = replacements.get(i);
+		for (i = 0; i < replacementSize; i++) {
+			replacement = replacements[i];
 			if (digits[replacement[0]] == old
 					&& digits[replacement[1]] == replace) {
-				dif = difs.get(i);
+				dif = difs[i];
 				break;
 			}
 		}
-		if (i == replacements.size())
+		if (i == replacementSize)
 			throw new Error("No such replacement set");
 		getChildren(old, replace, childArray);
 		int remainingPieces = 0;
