@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import edu.berkeley.gamesman.core.WorkUnit;
 import edu.berkeley.gamesman.database.Database;
@@ -40,6 +41,7 @@ public class HadoopTierMapper extends
 	private String writeURI;
 	private String readUri;
 	private Context currentContext;
+	private final Random r = new Random();
 
 	Configuration conf;
 	FileSystem fs;
@@ -212,8 +214,15 @@ public class HadoopTierMapper extends
 			new File(writeURI + "_local").delete();
 		} else {
 			pLocal = new Path(zipURI + "_local");
+			Path tempPath = new Path(zipURI + r.nextLong());
 			p = new Path(zipURI);
-			fs.copyFromLocalFile(pLocal, p);
+			if (!fs.exists(p)) {
+				fs.copyFromLocalFile(pLocal, tempPath);
+				if (fs.exists(p))
+					fs.delete(tempPath, false);
+				else
+					fs.rename(tempPath, p);
+			}
 			new File(zipURI + "_local").delete();
 		}
 		FileStatus finalFile = fs.getFileStatus(p);
