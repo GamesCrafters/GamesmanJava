@@ -42,6 +42,7 @@ public class HadoopTierMapper extends
 	private String readUri;
 	private Context currentContext;
 	private final Random r = new Random();
+	private IOException failure;
 
 	Configuration conf;
 	FileSystem fs;
@@ -206,7 +207,8 @@ public class HadoopTierMapper extends
 			new File(writeURI + "_local").delete();
 		} else
 			writeDb.close();
-		Path p, pLocal;
+		Path p;
+		final Path pLocal;
 		if (zipURI == null) {
 			pLocal = new Path(writeURI + "_local");
 			p = new Path(writeURI);
@@ -214,28 +216,42 @@ public class HadoopTierMapper extends
 			new File(writeURI + "_local").delete();
 		} else {
 			pLocal = new Path(zipURI + "_local");
-			Path tempPath = new Path(zipURI + r.nextLong());
+			final Path tempPath = new Path(zipURI + r.nextLong());
 			p = new Path(zipURI);
 			if (!fs.exists(p)) {
-				fs.copyFromLocalFile(pLocal, tempPath);
-				if (fs.exists(p))
-					fs.delete(tempPath, false);
-				else
-					fs.rename(tempPath, p);
+				Thread t = new Thread() {
+					@Override
+					public void run() {
+						try {
+							fs.copyFromLocalFile(pLocal, tempPath);
+							failure = null;
+						} catch (IOException e) {
+							failure = e;
+						}
+					}
+				};
+				t.start();
+				context.progress();
+				while (t.isAlive()) {
+					try {
+						t.join(60000L);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					context.progress();
+				}
+				if (failure != null)
+					throw new Error(failure);
+				fs.rename(tempPath, p);
 			}
 			new File(zipURI + "_local").delete();
 		}
 		FileStatus finalFile = fs.getFileStatus(p);
-		boolean successful = false;
-		while (!successful) {
-			try {
-				mapValue.set(key, finalFile);
-				context.write(this.tier, mapValue);
-				successful = true;
-			} catch (InterruptedException e) {
-				successful = false;
-				e.printStackTrace();
-			}
+		try {
+			mapValue.set(key, finalFile);
+			context.write(this.tier, mapValue);
+		} catch (InterruptedException e) {
+			throw new Error(e);
 		}
 		synchronized (this) {
 			currentContext = null;
