@@ -12,9 +12,8 @@ import edu.berkeley.gamesman.util.qll.Factory;
  * @author dnspies
  */
 public class DartboardHasher2 extends DartboardHasher {
-	private final int[] pieces;
+	private final Piece[] pieces;
 	private final Count numType;
-	private final long[] pieceHashes;
 	private final char[] digits;
 	private int[][] replacements = new int[0][];
 	private long[][] moveDifs;
@@ -22,6 +21,11 @@ public class DartboardHasher2 extends DartboardHasher {
 	private int replacementSize = 0;
 	private long hash;
 	private Pool<Count> countPool;
+
+	private class Piece {
+		int digit;
+		long hash;
+	}
 
 	private class Count {
 		private int pieces = 0;
@@ -130,8 +134,10 @@ public class DartboardHasher2 extends DartboardHasher {
 	 */
 	public DartboardHasher2(final int len, final char... digits) {
 		super(len, digits);
-		pieces = new int[len];
-		pieceHashes = new long[len];
+		pieces = new Piece[len];
+		for (int i = 0; i < len; i++) {
+			pieces[i] = new Piece();
+		}
 		this.digits = new char[digits.length];
 		countPool = new Pool<Count>(new Factory<Count>() {
 
@@ -243,7 +249,7 @@ public class DartboardHasher2 extends DartboardHasher {
 		int piece;
 		boolean didChange = false;
 		for (piece = 0; piece < pieces.length; piece++) {
-			int digit = pieces[piece];
+			int digit = pieces[piece].digit;
 			count.incr(digit);
 			if (piece >= lowBit && digit < highest)
 				break;
@@ -251,30 +257,33 @@ public class DartboardHasher2 extends DartboardHasher {
 				highest = digit;
 		}
 		if (piece < pieces.length) {
-			int digit = pieces[piece];
+			int digit = pieces[piece].digit;
 			do {
 				digit++;
 			} while (count.get(digit) == 0);
-			pieces[piece] = digit;
+			pieces[piece].digit = digit;
 			count.decr(digit);
 			long removed = reset(count, changed);
 			count.incr(digit);
+			long pieceHash;
 			if (lowBit == 0) {
-				pieceHashes[piece] += removed + 1;
+				pieces[piece].hash += removed + 1;
+				pieceHash = pieces[piece].hash;
 				hash++;
 			} else {
 				hash -= removed;
-				hash -= pieceHashes[piece];
-				pieceHashes[piece] = 0;
+				hash -= pieces[piece].hash;
+				pieceHash = 0L;
 				for (int d = 0; d < digit; d++) {
-					pieceHashes[piece] += count.getDecr(d);
+					pieceHash += count.getDecr(d);
 				}
-				hash += pieceHashes[piece];
+				pieces[piece].hash = pieceHash;
+				hash += pieceHash;
 			}
 			for (int i = 0; i < replacementSize; i++) {
 				int[] replacement = replacements[i];
 				count.trade(replacement[0], replacement[1]);
-				difs[i][piece] = -pieceHashes[piece];
+				difs[i][piece] = -pieceHash;
 				for (int j = 0; j < digit; j++) {
 					difs[i][piece] += count.getDecr(j);
 				}
@@ -294,7 +303,7 @@ public class DartboardHasher2 extends DartboardHasher {
 		int piece;
 		boolean didChange = false;
 		for (piece = 0; piece < pieces.length; piece++) {
-			int digit = pieces[piece];
+			int digit = pieces[piece].digit;
 			count.incr(digit);
 			if (piece >= lowBit && digit > lowest)
 				break;
@@ -302,25 +311,25 @@ public class DartboardHasher2 extends DartboardHasher {
 				lowest = digit;
 		}
 		if (piece < pieces.length) {
-			int digit = pieces[piece];
+			int digit = pieces[piece].digit;
 			do {
 				digit--;
 			} while (count.get(digit) == 0);
-			pieces[piece] = digit;
+			pieces[piece].digit = digit;
 			count.decr(digit);
 			long added = forset(count);
 			count.incr(digit);
-			hash += added;
-			hash -= pieceHashes[piece];
-			pieceHashes[piece] = 0;
+			hash += added - pieces[piece].hash;
+			long pieceHash = 0;
 			for (int d = 0; d < digit; d++) {
-				pieceHashes[piece] += count.getDecr(d);
+				pieceHash += count.getDecr(d);
 			}
-			hash += pieceHashes[piece];
+			pieces[piece].hash = pieceHash;
+			hash += pieceHash;
 			for (int i = 0; i < replacementSize; i++) {
 				int[] replacement = replacements[i];
 				count.trade(replacement[0], replacement[1]);
-				difs[i][piece] = -pieceHashes[piece];
+				difs[i][piece] = -pieceHash;
 				for (int j = 0; j < digit; j++) {
 					difs[i][piece] += count.getDecr(j);
 				}
@@ -339,19 +348,20 @@ public class DartboardHasher2 extends DartboardHasher {
 		for (int digit = 0; digit < digits.length; digit++) {
 			int digitCount = count.get(digit);
 			for (int i = 0; i < digitCount; i++) {
-				oldHashes -= pieceHashes[piece];
-				pieceHashes[piece] = 0L;
+				oldHashes -= pieces[piece].hash;
+				long pieceHash = 0L;
 				secondCount.incr(digit);
 				for (int k = 0; k < digit; k++) {
-					pieceHashes[piece] += secondCount.getDecr(k);
+					pieceHash += secondCount.getDecr(k);
 				}
-				pieces[piece] = digit;
-				oldHashes += pieceHashes[piece];
+				pieces[piece].digit = digit;
+				pieces[piece].hash = pieceHash;
+				oldHashes += pieceHash;
 				for (int j = 0; j < replacementSize; j++) {
 					int[] replacement = replacements[j];
 					long[] dif = difs[j];
 					long[] moveDif = moveDifs[j];
-					dif[piece] = -pieceHashes[piece];
+					dif[piece] = -pieceHash;
 					moveDif[piece] = 0L;
 					secondCount.trade(replacement[0], replacement[1]);
 					for (int k = 0; k < digit || digit == replacement[0]
@@ -387,14 +397,14 @@ public class DartboardHasher2 extends DartboardHasher {
 		for (int digit = digits.length - 1; digit >= 0; digit--) {
 			int digitCount = count.get(digit);
 			for (int i = 0; i < digitCount; i++) {
-				if (pieces[piece] != digit) {
-					pieces[piece] = digit;
+				if (pieces[piece].digit != digit) {
+					pieces[piece].digit = digit;
 					if (changed != null)
 						changed.add(piece);
 				}
 				secondCount.incr(digit);
-				oldHashes += pieceHashes[piece];
-				pieceHashes[piece] = 0L;
+				oldHashes += pieces[piece].hash;
+				pieces[piece].hash = 0L;
 				for (int j = 0; j < replacementSize; j++) {
 					int[] replacement = replacements[j];
 					long[] dif = difs[j];
@@ -441,7 +451,7 @@ public class DartboardHasher2 extends DartboardHasher {
 	private long hash(char[] pieces, boolean setNums) {
 		for (int piece = 0; piece < pieces.length; piece++) {
 			int digit = findDigit(pieces[piece]);
-			this.pieces[piece] = digit;
+			this.pieces[piece].digit = digit;
 		}
 		return rehash(setNums);
 	}
@@ -451,11 +461,11 @@ public class DartboardHasher2 extends DartboardHasher {
 		Count count = countPool.get();
 		for (int piece = 0; piece < pieces.length; piece++) {
 			long hash = 0L;
-			int digit = pieces[piece];
+			int digit = pieces[piece].digit;
 			count.incr(digit);
 			for (int i = 0; i < digit; i++)
 				hash += count.getDecr(i);
-			pieceHashes[piece] = hash;
+			pieces[piece].hash = hash;
 			totalHash += hash;
 		}
 		if (setNums) {
@@ -506,14 +516,14 @@ public class DartboardHasher2 extends DartboardHasher {
 					} else
 						break;
 				}
-				pieceHashes[piece] = pieceHash;
+				pieces[piece].hash = pieceHash;
 			} else {
 				for (digit = 0; count.get(digit) == 0; digit++)
 					;
-				pieceHashes[piece] = 0L;
+				pieces[piece].hash = 0L;
 			}
 			count.decr(digit);
-			pieces[piece] = digit;
+			pieces[piece].digit = digit;
 		}
 		countPool.release(count);
 		calculateReplacements();
@@ -527,13 +537,14 @@ public class DartboardHasher2 extends DartboardHasher {
 			Count count = countPool.get();
 			count.trade(rPair[0], rPair[1]);
 			for (int piece = 0; piece < pieces.length; piece++) {
-				count.incr(pieces[piece]);
-				rDifs[piece] = -pieceHashes[piece];
+				int pieceDigit = pieces[piece].digit;
+				count.incr(pieceDigit);
+				rDifs[piece] = -pieces[piece].hash;
 				moveDif[piece] = 0L;
-				for (int digit = 0; digit < pieces[piece]
-						|| (pieces[piece] == rPair[0] && digit < rPair[1]); digit++) {
+				for (int digit = 0; digit < pieceDigit
+						|| (pieceDigit == rPair[0] && digit < rPair[1]); digit++) {
 					long arrangement = count.getDecr(digit);
-					if (digit < pieces[piece]) {
+					if (digit < pieceDigit) {
 						rDifs[piece] += arrangement;
 						if (digit >= rPair[1])
 							moveDif[piece] -= arrangement;
@@ -562,7 +573,7 @@ public class DartboardHasher2 extends DartboardHasher {
 	 */
 	@Override
 	public char get(int piece) {
-		return digits[pieces[piece]];
+		return digits[pieces[piece].digit];
 	}
 
 	/**
@@ -594,7 +605,7 @@ public class DartboardHasher2 extends DartboardHasher {
 		long hashDif = 0L;
 		for (int piece = pieces.length - 1; piece >= 0; piece--) {
 			hashDif += dif[piece];
-			if (pieces[piece] == replacement[0]) {
+			if (pieces[piece].digit == replacement[0]) {
 				childArray[piece] = hash + hashDif + moveDif[piece];
 			} else
 				childArray[piece] = -1;
@@ -628,7 +639,7 @@ public class DartboardHasher2 extends DartboardHasher {
 		OUTER: while (remainingPieces > 0) {
 			boolean oldSeen = false, emptySeen = false, madeChange = false;
 			for (int piece = 0; piece < pieces.length; piece++) {
-				if (pieces[piece] == replacement[0]) {
+				if (pieces[piece].digit == replacement[0]) {
 					oldSeen = true;
 					if (childArray[piece] < 0) {
 						childArray[piece] = getChild(dif, replacement[0],
@@ -669,7 +680,7 @@ public class DartboardHasher2 extends DartboardHasher {
 		count.setCount(numType);
 		count.trade(oldNum, replaceNum);
 		for (int piece = pieces.length - 1; piece > i; piece--) {
-			count.decr(pieces[piece]);
+			count.decr(pieces[piece].digit);
 			hashDif += dif[piece];
 		}
 		long pDif = 0L;
@@ -678,7 +689,7 @@ public class DartboardHasher2 extends DartboardHasher {
 			pDif += arrangement;
 		}
 		countPool.release(count);
-		return hash + hashDif + pDif - pieceHashes[i];
+		return hash + hashDif + pDif - pieces[i].hash;
 	}
 
 	public long getHash() {
@@ -738,7 +749,7 @@ public class DartboardHasher2 extends DartboardHasher {
 
 	@Override
 	public void set(int boardNum, char p) {
-		pieces[boardNum] = findDigit(p);
+		pieces[boardNum].digit = findDigit(p);
 		rehash(true);
 	}
 
