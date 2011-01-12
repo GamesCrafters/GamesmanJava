@@ -65,7 +65,7 @@ public final class Play {
 			System.out.println(availableMoves);
 			String moveString = scan.nextLine();
 			for (Pair<String, S> move : moves) {
-				if (move.car.equals(moveString)) {
+				if (move.car.toUpperCase().equals(moveString.toUpperCase())) {
 					position = move.cdr;
 					break;
 				}
