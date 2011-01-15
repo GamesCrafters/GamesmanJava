@@ -17,24 +17,42 @@ public class DartboardHasher2 extends DartboardHasher {
 		private final int oldPiece;
 		private final int newPiece;
 
-		// private final Group[] groups;
+		private final Group[] groups;
 		private final Piece[] pieces;
 
 		private Replacement(int oldPiece, int newPiece) {
 			this.oldPiece = oldPiece;
 			this.newPiece = newPiece;
-			// this.groups = new Group[numType.get(oldPiece)];
+			this.groups = new Group[numType.get(oldPiece)];
+			for (int i = 0; i < groups.length; i++)
+				groups[i] = new Group();
 			this.pieces = new Piece[DartboardHasher2.this.pieces.length];
 			for (int i = 0; i < pieces.length; i++)
 				pieces[i] = new Piece();
 		}
 
-		// private class Group {
-		// int lastStart, thisStart;
-		// }
+		private class Group {
+			int bottom;
+			long dif = 0L, moveDif;
+		}
 
 		private class Piece {
-			long dif, moveDif;
+			int myGroup = -1;
+			long dif = 0L;
+
+			public void setGroup(int group) {
+				if (myGroup >= 0)
+					groups[myGroup].dif -= dif;
+				if (group >= 0)
+					groups[group].dif += dif;
+				myGroup = group;
+			}
+
+			public void setDif(long dif) {
+				if (myGroup >= 0)
+					groups[myGroup].dif += dif - this.dif;
+				this.dif = dif;
+			}
 		}
 	}
 
@@ -164,6 +182,7 @@ public class DartboardHasher2 extends DartboardHasher {
 		}
 		this.digits = new char[digits.length];
 		countPool = new Pool<Count>(new Factory<Count>() {
+			private final int len = digits.length;
 
 			public Count newObject() {
 				return new Count(len);
@@ -190,6 +209,7 @@ public class DartboardHasher2 extends DartboardHasher {
 		if (numType.length != digits.length)
 			throw new Error("Wrong number of arguments");
 		this.numType.setCount(numType);
+		resetReplacements();
 		Count count = countPool.get();
 		count.setCount(this.numType);
 		reset(count);
@@ -305,24 +325,36 @@ public class DartboardHasher2 extends DartboardHasher {
 			}
 			for (int i = 0; i < replacementSize; i++) {
 				Replacement replacement = replacements[i];
-				long dif = -pieceHash, moveDif = 0L;
-				count.trade(replacement.oldPiece, replacement.newPiece);
-				for (int k = 0; k < digit || digit == replacement.oldPiece
-						&& k < replacement.newPiece; k++) {
-					long arrangement = count.getDecr(k);
-					if (k < digit) {
-						dif += arrangement;
-						if (k >= replacement.newPiece) {
-							moveDif -= arrangement;
-						}
-					} else if (k < replacement.newPiece)
-						moveDif += arrangement;
-					else
-						throw new Error("Why am I here?");
+				int group = count.get(replacement.oldPiece) - 1;
+				if (group >= 0) {
+					long dif = -pieceHash, moveDif = 0L;
+					count.trade(replacement.oldPiece, replacement.newPiece);
+					for (int k = 0; k < digit || digit == replacement.oldPiece
+							&& k < replacement.newPiece; k++) {
+						long arrangement = count.getDecr(k);
+						if (k < digit) {
+							dif += arrangement;
+							if (k >= replacement.newPiece) {
+								moveDif -= arrangement;
+							}
+						} else if (k < replacement.newPiece)
+							moveDif += arrangement;
+						else
+							throw new Error("Why am I here?");
+					}
+					if (digit == replacement.oldPiece) {
+						replacement.groups[group].bottom = piece;
+						replacement.groups[group].moveDif = moveDif;
+						group--;
+					}
+					replacement.pieces[piece].setGroup(group);
+					replacement.pieces[piece].setDif(dif);
+					count.trade(replacement.newPiece, replacement.oldPiece);
+				} else if (group == -1) {
+					replacement.pieces[piece].setGroup(-1);
+				} else {
+					throw new Error("Bad group number " + group);
 				}
-				replacement.pieces[piece].dif = dif;
-				replacement.pieces[piece].moveDif = moveDif;
-				count.trade(replacement.newPiece, replacement.oldPiece);
 			}
 			if (changed != null)
 				changed.add(piece);
@@ -363,24 +395,36 @@ public class DartboardHasher2 extends DartboardHasher {
 			hash += pieceHash;
 			for (int i = 0; i < replacementSize; i++) {
 				Replacement replacement = replacements[i];
-				long dif = -pieceHash, moveDif = 0L;
-				count.trade(replacement.oldPiece, replacement.newPiece);
-				for (int k = 0; k < digit || digit == replacement.oldPiece
-						&& k < replacement.newPiece; k++) {
-					long arrangement = count.getDecr(k);
-					if (k < digit) {
-						dif += arrangement;
-						if (k >= replacement.newPiece) {
-							moveDif -= arrangement;
-						}
-					} else if (k < replacement.newPiece)
-						moveDif += arrangement;
-					else
-						throw new Error("Why am I here?");
+				int group = count.get(replacement.oldPiece) - 1;
+				if (group >= 0) {
+					long dif = -pieceHash, moveDif = 0L;
+					count.trade(replacement.oldPiece, replacement.newPiece);
+					for (int k = 0; k < digit || digit == replacement.oldPiece
+							&& k < replacement.newPiece; k++) {
+						long arrangement = count.getDecr(k);
+						if (k < digit) {
+							dif += arrangement;
+							if (k >= replacement.newPiece) {
+								moveDif -= arrangement;
+							}
+						} else if (k < replacement.newPiece)
+							moveDif += arrangement;
+						else
+							throw new Error("Why am I here?");
+					}
+					if (digit == replacement.oldPiece) {
+						replacement.groups[group].bottom = piece;
+						replacement.groups[group].moveDif = moveDif;
+						group--;
+					}
+					replacement.pieces[piece].setGroup(group);
+					replacement.pieces[piece].setDif(dif);
+					count.trade(replacement.newPiece, replacement.oldPiece);
+				} else if (group == -1) {
+					replacement.pieces[piece].setGroup(-1);
+				} else {
+					throw new Error("Bad group number " + group);
 				}
-				replacement.pieces[piece].dif = dif;
-				replacement.pieces[piece].moveDif = moveDif;
-				count.trade(replacement.newPiece, replacement.oldPiece);
 			}
 			didChange = true;
 		}
@@ -406,26 +450,39 @@ public class DartboardHasher2 extends DartboardHasher {
 				oldHashes += pieceHash;
 				for (int j = 0; j < replacementSize; j++) {
 					Replacement replacement = replacements[j];
-					long dif = -pieceHash, moveDif = 0L;
-					secondCount.trade(replacement.oldPiece,
-							replacement.newPiece);
-					for (int k = 0; k < digit || digit == replacement.oldPiece
-							&& k < replacement.newPiece; k++) {
-						long arrangement = secondCount.getDecr(k);
-						if (k < digit) {
-							dif += arrangement;
-							if (k >= replacement.newPiece) {
-								moveDif -= arrangement;
-							}
-						} else if (k < replacement.newPiece)
-							moveDif += arrangement;
-						else
-							throw new Error("Why am I here?");
+					int group = secondCount.get(replacement.oldPiece) - 1;
+					if (group >= 0) {
+						long dif = -pieceHash, moveDif = 0L;
+						secondCount.trade(replacement.oldPiece,
+								replacement.newPiece);
+						for (int k = 0; k < digit
+								|| digit == replacement.oldPiece
+								&& k < replacement.newPiece; k++) {
+							long arrangement = secondCount.getDecr(k);
+							if (k < digit) {
+								dif += arrangement;
+								if (k >= replacement.newPiece) {
+									moveDif -= arrangement;
+								}
+							} else if (k < replacement.newPiece)
+								moveDif += arrangement;
+							else
+								throw new Error("Why am I here?");
+						}
+						if (digit == replacement.oldPiece) {
+							replacement.groups[group].bottom = piece;
+							replacement.groups[group].moveDif = moveDif;
+							group--;
+						}
+						replacement.pieces[piece].setGroup(group);
+						replacement.pieces[piece].setDif(dif);
+						secondCount.trade(replacement.newPiece,
+								replacement.oldPiece);
+					} else if (group == -1) {
+						replacement.pieces[piece].setGroup(-1);
+					} else {
+						throw new Error("Bad group number " + group);
 					}
-					replacement.pieces[piece].dif = dif;
-					replacement.pieces[piece].moveDif = moveDif;
-					secondCount.trade(replacement.newPiece,
-							replacement.oldPiece);
 				}
 				piece++;
 			}
@@ -455,26 +512,39 @@ public class DartboardHasher2 extends DartboardHasher {
 				pieces[piece].hash = 0L;
 				for (int j = 0; j < replacementSize; j++) {
 					Replacement replacement = replacements[j];
-					long dif = 0L, moveDif = 0L;
-					secondCount.trade(replacement.oldPiece,
-							replacement.newPiece);
-					for (int k = 0; k < digit || digit == replacement.oldPiece
-							&& k < replacement.newPiece; k++) {
-						long arrangement = secondCount.getDecr(k);
-						if (k < digit) {
-							dif += arrangement;
-							if (k >= replacement.newPiece) {
-								moveDif -= arrangement;
-							}
-						} else if (k < replacement.newPiece)
-							moveDif += arrangement;
-						else
-							throw new Error("Why am I here?");
+					int group = secondCount.get(replacement.oldPiece) - 1;
+					if (group >= 0) {
+						long dif = 0L, moveDif = 0L;
+						secondCount.trade(replacement.oldPiece,
+								replacement.newPiece);
+						for (int k = 0; k < digit
+								|| digit == replacement.oldPiece
+								&& k < replacement.newPiece; k++) {
+							long arrangement = secondCount.getDecr(k);
+							if (k < digit) {
+								dif += arrangement;
+								if (k >= replacement.newPiece) {
+									moveDif -= arrangement;
+								}
+							} else if (k < replacement.newPiece)
+								moveDif += arrangement;
+							else
+								throw new Error("Why am I here?");
+						}
+						if (digit == replacement.oldPiece) {
+							replacement.groups[group].bottom = piece;
+							replacement.groups[group].moveDif = moveDif;
+							group--;
+						}
+						replacement.pieces[piece].setGroup(group);
+						replacement.pieces[piece].setDif(dif);
+						secondCount.trade(replacement.newPiece,
+								replacement.oldPiece);
+					} else if (group == -1) {
+						replacement.pieces[piece].setGroup(-1);
+					} else {
+						throw new Error("Bad group number " + group);
 					}
-					replacement.pieces[piece].dif = dif;
-					replacement.pieces[piece].moveDif = moveDif;
-					secondCount.trade(replacement.newPiece,
-							replacement.oldPiece);
 				}
 				piece++;
 			}
@@ -523,6 +593,8 @@ public class DartboardHasher2 extends DartboardHasher {
 			throw new Error("Wrong number of pieces");
 		countPool.release(count);
 		this.hash = totalHash;
+		if (setNums)
+			resetReplacements();
 		calculateReplacements();
 		return totalHash;
 	}
@@ -578,29 +650,50 @@ public class DartboardHasher2 extends DartboardHasher {
 		calculateReplacements();
 	}
 
+	private void resetReplacements() {
+		for (int replacement = 0; replacement < replacementSize; replacement++) {
+			this.replacements[replacement] = new Replacement(
+					this.replacements[replacement].oldPiece,
+					this.replacements[replacement].newPiece);
+		}
+	}
+
 	private void calculateReplacements() {
 		for (int replacement = 0; replacement < replacementSize; replacement++) {
 			Replacement rPair = replacements[replacement];
+			int group = -1;
 			Count count = countPool.get();
 			count.trade(rPair.oldPiece, rPair.newPiece);
 			for (int piece = 0; piece < pieces.length; piece++) {
 				int pieceDigit = pieces[piece].digit;
+				if (pieceDigit == rPair.oldPiece)
+					group++;
 				count.incr(pieceDigit);
-				long dif = -pieces[piece].hash, moveDif = 0L;
-				for (int digit = 0; digit < pieceDigit
-						|| (pieceDigit == rPair.oldPiece && digit < rPair.newPiece); digit++) {
-					long arrangement = count.getDecr(digit);
-					if (digit < pieceDigit) {
-						dif += arrangement;
-						if (digit >= rPair.newPiece)
-							moveDif -= arrangement;
-					} else if (digit < rPair.newPiece)
-						moveDif += arrangement;
-					else
-						throw new Error("Why am I here?");
-				}
-				rPair.pieces[piece].dif = dif;
-				rPair.pieces[piece].moveDif = moveDif;
+				if (group >= 0) {
+					long dif = -pieces[piece].hash, moveDif = 0L;
+					for (int digit = 0; digit < pieceDigit
+							|| (pieceDigit == rPair.oldPiece && digit < rPair.newPiece); digit++) {
+						long arrangement = count.getDecr(digit);
+						if (digit < pieceDigit) {
+							dif += arrangement;
+							if (digit >= rPair.newPiece)
+								moveDif -= arrangement;
+						} else if (digit < rPair.newPiece)
+							moveDif += arrangement;
+						else
+							throw new Error("Why am I here?");
+					}
+					if (pieceDigit == rPair.oldPiece) {
+						rPair.groups[group].bottom = piece;
+						rPair.groups[group].moveDif = moveDif;
+						rPair.pieces[piece].setGroup(group - 1);
+					} else
+						rPair.pieces[piece].setGroup(group);
+					rPair.pieces[piece].setDif(dif);
+				} else if (group == -1)
+					rPair.pieces[piece].setGroup(-1);
+				else
+					throw new Error("Bad group " + group);
 			}
 			countPool.release(count);
 		}
@@ -648,16 +741,12 @@ public class DartboardHasher2 extends DartboardHasher {
 			throw new Error("No such replacement set");
 		long hashDif = 0L;
 		int numReplacements = numType.get(replacement.oldPiece);
-		int c = numReplacements - 1;
-		for (int piece = pieces.length - 1; piece >= 0; piece--) {
-			hashDif += replacement.pieces[piece].dif;
-			if (pieces[piece].digit == replacement.oldPiece) {
-				if (places != null)
-					places[c] = piece;
-				childArray[c] = hash + hashDif
-						+ replacement.pieces[piece].moveDif;
-				c--;
-			}
+		for (int groupNum = numReplacements - 1; groupNum >= 0; groupNum--) {
+			Replacement.Group group = replacement.groups[groupNum];
+			hashDif += group.dif;
+			if (places != null)
+				places[groupNum] = group.bottom;
+			childArray[groupNum] = hash + hashDif + group.moveDif;
 		}
 		return numReplacements;
 	}

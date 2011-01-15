@@ -77,9 +77,10 @@ public class DartboardHasher {
 		pieceHashes = new long[len];
 		this.digits = new char[digits.length];
 		countPool = new Pool<int[]>(new Factory<int[]>() {
+			private final int len = digits.length;
 
 			public int[] newObject() {
-				return new int[digits.length];
+				return new int[len];
 			}
 
 			public void reset(int[] t) {
