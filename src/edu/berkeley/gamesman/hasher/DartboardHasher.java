@@ -511,7 +511,12 @@ public class DartboardHasher {
 		return rearrange(pieces.length, numType);
 	}
 
-	public void getChildren(char old, char replace, long[] childArray) {
+	public final int getChildren(char old, char replace, long[] childArray) {
+		return getChildren(old, replace, null, childArray);
+	}
+
+	public int getChildren(char old, char replace, int[] places,
+			long[] childArray) {
 		int[] replacement = null;
 		long[] dif = null;
 		int i;
@@ -529,6 +534,8 @@ public class DartboardHasher {
 		int[] count = countPool.get();
 		System.arraycopy(numType, 0, count, 0, numType.length);
 		count[replacement[1]]++;
+		int numReplacements = numType[replacement[0]];
+		int c = numReplacements - 1;
 		for (int piece = pieces.length - 1; piece >= 0; piece--) {
 			count[pieces[piece]]--;
 			if (pieces[piece] == replacement[0]) {
@@ -538,12 +545,15 @@ public class DartboardHasher {
 					pDif += rearrange(piece, count);
 					count[digit]++;
 				}
-				childArray[piece] = hash + hashDif + pDif - pieceHashes[piece];
-			} else
-				childArray[piece] = -1;
+				if (places != null)
+					places[c] = piece;
+				childArray[c] = hash + hashDif + pDif - pieceHashes[piece];
+				c--;
+			}
 			hashDif += dif[piece];
 		}
 		countPool.release(count);
+		return numReplacements;
 	}
 
 	private void fillChildren(char old, char replace, long[] childArray,
@@ -562,7 +572,13 @@ public class DartboardHasher {
 		}
 		if (i == replacements.size())
 			throw new Error("No such replacement set");
-		getChildren(old, replace, childArray);
+		long[] childHashes = new long[numType[replacement[0]]];
+		int[] positions = new int[numType[replacement[0]]];
+		int numChildren = getChildren(old, replace, positions, childHashes);
+		Arrays.fill(childArray, -1L);
+		for (i = 0; i < numChildren; i++) {
+			childArray[positions[i]] = childHashes[i];
+		}
 		int remainingPieces = 0;
 		for (int piece = 0; piece < pieces.length; piece++) {
 			if (childArray[piece] < 0)

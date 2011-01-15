@@ -70,19 +70,17 @@ public abstract class RectangularDartboardGame extends TierGame {
 
 	@Override
 	public Collection<Pair<String, TierState>> validMoves() {
-		myHasher.getChildren(' ', tier % 2 == 0 ? 'X' : 'O', myChildren);
+		int[] places = new int[myChildren.length];
+		int numChildren = myHasher.getChildren(' ', tier % 2 == 0 ? 'X' : 'O',
+				places, myChildren);
 		ArrayList<Pair<String, TierState>> validMoves = new ArrayList<Pair<String, TierState>>(
 				gameSize - tier);
-		int pos = 0;
-		for (int row = 0; row < gameHeight; row++) {
-			for (int col = 0; col < gameWidth; col++) {
-				if (myChildren[pos] >= 0) {
-					validMoves.add(new Pair<String, TierState>(String
-							.valueOf((char) (col + 'A')) + (row + 1), newState(
-							tier + 1, myChildren[pos])));
-				}
-				pos++;
-			}
+		for (int child = 0; child < numChildren; child++) {
+			int pos = places[child];
+			int row = pos / gameWidth, col = pos % gameWidth;
+			validMoves.add(new Pair<String, TierState>(String
+					.valueOf((char) (col + 'A')) + (row + 1), newState(
+					tier + 1, myChildren[child])));
 		}
 		return validMoves;
 	}
@@ -186,16 +184,13 @@ public abstract class RectangularDartboardGame extends TierGame {
 
 	@Override
 	public int validMoves(TierState[] moves) {
-		myHasher.getChildren(' ', tier % 2 == 0 ? 'X' : 'O', myChildren);
-		int moveCount = 0;
-		for (int i = 0; i < myChildren.length; i++) {
-			if (myChildren[i] >= 0) {
-				moves[moveCount].tier = tier + 1;
-				moves[moveCount].hash = myChildren[i];
-				moveCount++;
-			}
+		int numChildren = myHasher.getChildren(' ', tier % 2 == 0 ? 'X' : 'O',
+				myChildren);
+		for (int i = 0; i < numChildren; i++) {
+			moves[i].tier = tier + 1;
+			moves[i].hash = myChildren[i];
 		}
-		return moveCount;
+		return numChildren;
 	}
 
 	@Override

@@ -22,7 +22,7 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author dnspies
  */
-public abstract class ConnectGame extends TierGame implements RearrangeGame{
+public abstract class ConnectGame extends TierGame implements RearrangeGame {
 	private final DartboardHasher mmh;
 	private int tier;
 	private final long[] moveHashes;
@@ -181,15 +181,14 @@ public abstract class ConnectGame extends TierGame implements RearrangeGame{
 	@Override
 	public final Collection<Pair<String, TierState>> validMoves() {
 		char turn = tier % 2 == 0 ? 'X' : 'O';
-		mmh.getChildren(' ', turn, moveHashes);
+		int[] places = new int[moveHashes.length];
+		int numMoves = mmh.getChildren(' ', turn, places, moveHashes);
 		ArrayList<Pair<String, TierState>> moves = new ArrayList<Pair<String, TierState>>(
 				moveHashes.length);
-		for (int i = 0; i < moveHashes.length; i++) {
-			if (moveHashes[i] >= 0) {
-				moves.add(new Pair<String, TierState>(Integer
-						.toString(translateOut(i)), newState(tier + 1,
-						moveHashes[i])));
-			}
+		for (int i = 0; i < numMoves; i++) {
+			moves.add(new Pair<String, TierState>(Integer
+					.toString(translateOut(places[i])), newState(tier + 1,
+					moveHashes[i])));
 		}
 		return moves;
 	}
@@ -206,14 +205,10 @@ public abstract class ConnectGame extends TierGame implements RearrangeGame{
 	@Override
 	public final int validMoves(TierState[] moves) {
 		char turn = tier % 2 == 0 ? 'X' : 'O';
-		mmh.getChildren(' ', turn, moveHashes);
-		int numChildren = 0;
-		for (int i = 0; i < moveHashes.length; i++) {
-			if (moveHashes[i] >= 0) {
-				moves[numChildren].tier = tier + 1;
-				moves[numChildren].hash = moveHashes[i];
-				numChildren++;
-			}
+		int numChildren = mmh.getChildren(' ', turn, moveHashes);
+		for (int i = 0; i < numChildren; i++) {
+			moves[i].tier = tier + 1;
+			moves[i].hash = moveHashes[i];
 		}
 		return numChildren;
 	}
@@ -320,9 +315,9 @@ public abstract class ConnectGame extends TierGame implements RearrangeGame{
 		else
 			mmh.set(index, piece);
 	}
-	
+
 	@Override
-	public boolean majorChanged(){
+	public boolean majorChanged() {
 		return mmh.majorChanged();
 	}
 }

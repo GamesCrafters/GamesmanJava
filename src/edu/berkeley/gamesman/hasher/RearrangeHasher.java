@@ -30,11 +30,11 @@ public final class RearrangeHasher extends DartboardHasher {
 		int numo = 4;
 		int numx = 4;
 		rh.setNums(nums, numo, numx);
-		long[] q = new long[13];
+		long[] q = new long[5];
 		char[] c = "XXXXOOOO     ".toCharArray();
 		System.out.println(rh.hash(c));
 		rh.getChildren(' ', ' ', q);
-		rh.printHash(q);
+		System.out.println(Arrays.toString(q));
 		return;
 	}
 
@@ -315,17 +315,9 @@ public final class RearrangeHasher extends DartboardHasher {
 		System.out.println();
 	}
 
-	public void printHash(long[] array) {
-		System.out.print("[");
-		for (int i = 0; i < array.length - 1; i++) {
-			System.out.print(array[i] + " ");
-		}
-		System.out.print(array[array.length - 1]);
-		System.out.print("]");
-	}
-
 	@Override
-	public void getChildren(char old, char replace, long[] childArray) {
+	public int getChildren(char old, char replace, int[] places,
+			long[] childArray) {
 		/*
 		 * int newM = (OX ? numx + 1 : numo + 1); int newm = (OX ? numo : numx);
 		 * int intM = (OX ? numx : numo); int intm = (OX ? numo : numx);
@@ -376,20 +368,20 @@ public final class RearrangeHasher extends DartboardHasher {
 			}
 		}
 
+		int c = nums - 1;
+
 		if ((length - intM - intm) > 0) {
 			for (int majorIndex = length - 1, minorIndex = intmL - 1, childIndex = length - 1, M = newM, m = newm; majorIndex >= 0; majorIndex--) {
 				if (majorBoard[majorIndex] == cNew) {
 					majorValue += ct.get(majorIndex, M)
 							- ct.get(majorIndex, M - 1);
 					M--;
-					childArray[childIndex] = -1;
 					childIndex--;
 				} else if (majorBoard[majorIndex] == ' ') {
 					if (minorboard[intmL][minorIndex] == cOld) {
 						minorValue += ct.get(minorIndex - 1, m)
 								- ct.get(minorIndex, m);
 						m--;
-						childArray[childIndex] = -1;
 						childIndex--;
 					} else if (minorboard[intmL][minorIndex] == ' ') {
 						majorValue += ct.get(majorIndex, M); // Add a new
@@ -397,8 +389,11 @@ public final class RearrangeHasher extends DartboardHasher {
 						// to the major
 						// array
 						minorValue += 0;
-						childArray[childIndex] = majorValue
-								* ct.get(newmL, newm) + minorValue;
+						if (places != null)
+							places[c] = childIndex;
+						childArray[c] = majorValue * ct.get(newmL, newm)
+								+ minorValue;
+						c--;
 						childIndex--;
 						majorValue -= ct.get(majorIndex, M);
 					}
@@ -406,12 +401,9 @@ public final class RearrangeHasher extends DartboardHasher {
 				} else
 					throw new Error("GetChildren Error");
 			}
-		} else if ((length - intM - intm) == 0) {
-			for (int i = 0; i < childArray.length; i++) {
-				childArray[i] = -1;
-			}
-		} else
+		} else if ((length - intM - intm) != 0)
 			throw new Error("Too many pieces!");
+		return nums;
 	}
 
 	@Override

@@ -364,8 +364,7 @@ public class DartboardHasher2 extends DartboardHasher {
 			for (int i = 0; i < replacementSize; i++) {
 				Replacement replacement = replacements[i];
 				long dif = -pieceHash, moveDif = 0L;
-				count.trade(replacement.oldPiece,
-						replacement.newPiece);
+				count.trade(replacement.oldPiece, replacement.newPiece);
 				for (int k = 0; k < digit || digit == replacement.oldPiece
 						&& k < replacement.newPiece; k++) {
 					long arrangement = count.getDecr(k);
@@ -381,8 +380,7 @@ public class DartboardHasher2 extends DartboardHasher {
 				}
 				replacement.pieces[piece].dif = dif;
 				replacement.pieces[piece].moveDif = moveDif;
-				count.trade(replacement.newPiece,
-						replacement.oldPiece);
+				count.trade(replacement.newPiece, replacement.oldPiece);
 			}
 			didChange = true;
 		}
@@ -636,7 +634,8 @@ public class DartboardHasher2 extends DartboardHasher {
 	}
 
 	@Override
-	public void getChildren(char old, char replace, long[] childArray) {
+	public int getChildren(char old, char replace, int[] places,
+			long[] childArray) {
 		Replacement replacement = null;
 		int i;
 		for (i = 0; i < replacementSize; i++) {
@@ -648,14 +647,19 @@ public class DartboardHasher2 extends DartboardHasher {
 		if (i == replacementSize)
 			throw new Error("No such replacement set");
 		long hashDif = 0L;
+		int numReplacements = numType.get(replacement.oldPiece);
+		int c = numReplacements - 1;
 		for (int piece = pieces.length - 1; piece >= 0; piece--) {
 			hashDif += replacement.pieces[piece].dif;
 			if (pieces[piece].digit == replacement.oldPiece) {
-				childArray[piece] = hash + hashDif
+				if (places != null)
+					places[c] = piece;
+				childArray[c] = hash + hashDif
 						+ replacement.pieces[piece].moveDif;
-			} else
-				childArray[piece] = -1;
+				c--;
+			}
 		}
+		return numReplacements;
 	}
 
 	private void fillChildren(char old, char replace, long[] childArray,
@@ -671,7 +675,13 @@ public class DartboardHasher2 extends DartboardHasher {
 		}
 		if (i == replacementSize)
 			throw new Error("No such replacement set");
-		getChildren(old, replace, childArray);
+		long[] childHashes = new long[numType.get(replacement.oldPiece)];
+		int[] positions = new int[childHashes.length];
+		int numChildren = getChildren(old, replace, positions, childHashes);
+		Arrays.fill(childArray, -1L);
+		for (i = 0; i < numChildren; i++) {
+			childArray[positions[i]] = childHashes[i];
+		}
 		int remainingPieces = 0;
 		for (int piece = 0; piece < pieces.length; piece++) {
 			if (childArray[piece] < 0)

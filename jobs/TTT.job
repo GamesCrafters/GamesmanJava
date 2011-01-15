@@ -1,4 +1,6 @@
 gamesman.game = TicTacToe
+gamesman.game.width = 3
+gamesman.game.height = 3
 gamesman.game.hasher = DartboardHasher2
 gamesman.solver = TierSolver
 gamesman.database = MemoryDatabase:FileDatabase
