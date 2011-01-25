@@ -34,7 +34,7 @@ public class QuartoMinorHasher {
 					if (isLowest(p, fixedWall)) {
 						boolean[] newFixedWall = fixedWall.clone();
 						for (int i = 0; i < 3; i++) {
-							if (p.get(i) < p.get(i + 1))
+							if (p.get(i) > p.get(i + 1))
 								newFixedWall[i] = true;
 						}
 						int pNum = p.pieceNum;
@@ -52,7 +52,7 @@ public class QuartoMinorHasher {
 
 		private boolean isLowest(Piece p, boolean[] fixedWall) {
 			for (int i = 0; i < 3; i++) {
-				if (p.get(i) > p.get(i + 1) && !fixedWall[i])
+				if (p.get(i) < p.get(i + 1) && !fixedWall[i])
 					return false;
 			}
 			return true;
@@ -76,7 +76,7 @@ public class QuartoMinorHasher {
 		private void dropState(Piece p) {
 			for (int i = 0; i < 3; i++) {
 				if (!fixedWall[i]) {
-					if (p.get(i) > p.get(i + 1)) {
+					if (p.get(i) < p.get(i + 1)) {
 						makeSwitch(p, i, i + 1);
 						if (i > 0)
 							i -= 2;
@@ -84,7 +84,7 @@ public class QuartoMinorHasher {
 				}
 			}
 			for (int i = 0; i < 3; i++) {
-				fixedWall[i] |= p.get(i) < p.get(i + 1);
+				fixedWall[i] |= p.get(i) > p.get(i + 1);
 			}
 		}
 
@@ -254,7 +254,7 @@ public class QuartoMinorHasher {
 		int[] b = new int[5];
 		for (long i = 0L; i < 1575; i++) {
 			qmh.unhash(i, b);
-			System.out.println(Arrays.toString(b));
+			System.out.println(i + ": " + Arrays.toString(b));
 		}
 	}
 }
