@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 
-public class QuartoHasher {
+public class QuartoMinorHasher {
 	private static long pick(int n, int k) {
 		if (k == 0)
 			return 1L;
@@ -118,7 +118,7 @@ public class QuartoHasher {
 		private void applyRotation(Rotation r) {
 			int newNum = 0;
 			for (int i = 0; i < 4; i++) {
-				newNum = QuartoHasher.set(newNum, i, get(r.places[i]));
+				newNum = QuartoMinorHasher.set(newNum, i, get(r.places[i]));
 			}
 			pieceNum = newNum;
 		}
@@ -126,17 +126,17 @@ public class QuartoHasher {
 		public void reverseRotation(Rotation r) {
 			int newNum = 0;
 			for (int i = 0; i < 4; i++) {
-				newNum = QuartoHasher.set(newNum, r.places[i], get(i));
+				newNum = QuartoMinorHasher.set(newNum, r.places[i], get(i));
 			}
 			pieceNum = newNum;
 		}
 
 		private int get(int i) {
-			return QuartoHasher.get(pieceNum, i);
+			return QuartoMinorHasher.get(pieceNum, i);
 		}
 
 		private void set(int i, int n) {
-			pieceNum = QuartoHasher.set(pieceNum, i, n);
+			pieceNum = QuartoMinorHasher.set(pieceNum, i, n);
 		}
 
 		@Override
@@ -162,7 +162,7 @@ public class QuartoHasher {
 
 	private final Position[] tierTables = new Position[17];
 
-	public QuartoHasher() {
+	public QuartoMinorHasher() {
 		QuickLinkedList<Piece> unused = new QuickLinkedList<Piece>();
 		for (int i = 1; i < 16; i++) {
 			unused.add(new Piece(i));
@@ -173,14 +173,11 @@ public class QuartoHasher {
 		}
 	}
 
-	public static void main(String[] args) {
-		QuartoHasher qh = new QuartoHasher();
-		System.out.println(qh.hash(new int[] { 0, 1, 2, 3, 4 }));
+	private long numHashesForTier(int tier) {
+		return tierTables[tier].numHashes;
 	}
 
-	//Approximate but buggy off-by-one everywhere
 	private long hash(int[] board) {
-		int[] nums = new int[16];
 		Piece[] myBoard = new Piece[board.length];
 		for (int i = 0; i < board.length; i++) {
 			myBoard[i] = new Piece(board[i] ^ board[0]);
@@ -189,25 +186,22 @@ public class QuartoHasher {
 		Position p = tierTables[board.length - 1];
 		int i;
 		for (i = 1; i < board.length; i++) {
-			if (p == null)
+			if (p.inner == null)
 				break;
 			myBoard[i].applyRotation(rot);
 			rot.dropState(myBoard[i]);
-			if (p.inner == null)
-				break;
 			p = p.inner[myBoard[i].pieceNum];
-			nums[myBoard[i].pieceNum] = -1;
-		}
-		int c = 0;
-		for (int k = 0; k < 16; k++) {
-			if (nums[k] >= 0)
-				nums[k] = c++;
+			if (p == null)
+				throw new NullPointerException();
 		}
 		long hash = p.offset;
 		for (; i < board.length; i++) {
 			myBoard[i].applyRotation(rot);
-			hash += nums[myBoard[i].pieceNum]
-					* pick(16 - i, board.length - 1 - i);
+			int num = myBoard[i].pieceNum;
+			for (int k = 0; k < i; k++)
+				if (myBoard[k].pieceNum < myBoard[i].pieceNum)
+					num--;
+			hash += num * pick(16 - i - 1, board.length - i - 1);
 		}
 		return hash;
 	}
