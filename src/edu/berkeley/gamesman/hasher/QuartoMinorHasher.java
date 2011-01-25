@@ -142,7 +142,7 @@ public class QuartoMinorHasher {
 		@Override
 		public String toString() {
 			StringBuilder sb = new StringBuilder(4);
-			for (int i = 0; i < 4; i++) {
+			for (int i = 3; i >= 0; i--) {
 				sb.append(get(i));
 			}
 			return sb.toString();
