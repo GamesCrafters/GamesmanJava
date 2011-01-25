@@ -1,41 +1,61 @@
 package edu.berkeley.gamesman.hasher;
 
-import java.util.LinkedList;
-import java.util.TreeSet;
+import java.util.Arrays;
 
 import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 
 public class QuartoHasher {
+	private static long pick(int n, int k) {
+		if (k == 0)
+			return 1L;
+		else
+			return n * pick(n - 1, k - 1);
+	}
+
 	private class Position {
-		private final Rotation rotation;
-		private final long arrangements;
-
 		private final Position[] inner;
+		private final long offset;
+		private final long numHashes;
 
-		Position(Rotation rotation, long arrangements,
-				QuickLinkedList<Piece> unused) {
-			this.rotation = rotation;
-			this.arrangements = arrangements;
-			if (rotation.fixedWall[0] && rotation.fixedWall[1]
-					&& rotation.fixedWall[2])
+		Position(QuickLinkedList<Piece> unused, boolean[] fixedWall,
+				long offset, int remainingPieces) {
+			this.offset = offset;
+			fixedWall = fixedWall.clone();
+			if (remainingPieces == 0
+					|| (fixedWall[0] && fixedWall[1] && fixedWall[2])) {
 				inner = null;
-			else {
+				numHashes = pick(unused.size(), remainingPieces);
+			} else {
 				inner = new Position[16];
 				QuickLinkedList<Piece>.QLLIterator pieceIter = unused
 						.iterator();
+				long numHashes = 0L;
 				while (pieceIter.hasNext()) {
 					Piece p = pieceIter.next();
-					int pNum = p.pieceNum;
-					p.applyRotation(rotation);
-					pieceIter.remove();
-					Rotation newRot = rotation.clone();
-					newRot.dropState(p);
-					inner[pNum] = new Position(newRot, arrangements
-							/ unused.size(), unused);
-					p.reverseRotation(rotation);
-					pieceIter.add(p);
+					if (isLowest(p, fixedWall)) {
+						for (int i = 0; i < 3; i++) {
+							if (p.get(i) < p.get(i + 1))
+								fixedWall[i] = true;
+						}
+						int pNum = p.pieceNum;
+						pieceIter.remove();
+						inner[pNum] = new Position(unused, fixedWall, offset,
+								remainingPieces - 1);
+						offset += inner[pNum].numHashes;
+						numHashes += inner[pNum].numHashes;
+						pieceIter.add(p);
+					}
 				}
+				this.numHashes = numHashes;
 			}
+		}
+
+		private boolean isLowest(Piece p, boolean[] fixedWall) {
+			for (int i = 0; i < 3; i++) {
+				if (p.get(i) > p.get(i + 1) && !fixedWall[i])
+					return false;
+			}
+			return true;
 		}
 	}
 
@@ -81,10 +101,19 @@ public class QuartoHasher {
 		public Rotation clone() {
 			return new Rotation(this);
 		}
+
+		@Override
+		public String toString() {
+			return Arrays.toString(places);
+		}
 	}
 
 	private class Piece {
 		int pieceNum;
+
+		public Piece(int i) {
+			pieceNum = i;
+		}
 
 		private void applyRotation(Rotation r) {
 			int newNum = 0;
@@ -109,6 +138,15 @@ public class QuartoHasher {
 		private void set(int i, int n) {
 			pieceNum = QuartoHasher.set(pieceNum, i, n);
 		}
+
+		@Override
+		public String toString() {
+			StringBuilder sb = new StringBuilder(4);
+			for (int i = 0; i < 4; i++) {
+				sb.append(get(i));
+			}
+			return sb.toString();
+		}
 	}
 
 	private static int set(int num, int i, int n) {
@@ -122,7 +160,20 @@ public class QuartoHasher {
 		return (num >> i) & 1;
 	}
 
-	public QuartoHasher() {
+	private final Position[] tierTables = new Position[17];
 
+	public QuartoHasher() {
+		QuickLinkedList<Piece> unused = new QuickLinkedList<Piece>();
+		for (int i = 0; i < 16; i++) {
+			unused.add(new Piece(i));
+		}
+		for (int i = 1; i < 16; i++) {
+			tierTables[i] = new Position(unused, new boolean[] { false, false,
+					false }, 0L, i);
+		}
+	}
+
+	public static void main(String[] args) {
+		QuartoHasher qh = new QuartoHasher();
 	}
 }
