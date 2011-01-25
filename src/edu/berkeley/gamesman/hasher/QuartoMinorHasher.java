@@ -20,7 +20,6 @@ public class QuartoMinorHasher {
 		Position(QuickLinkedList<Piece> unused, boolean[] fixedWall,
 				long offset, int remainingPieces) {
 			this.offset = offset;
-			fixedWall = fixedWall.clone();
 			if (remainingPieces == 0
 					|| (fixedWall[0] && fixedWall[1] && fixedWall[2])) {
 				inner = null;
@@ -33,14 +32,15 @@ public class QuartoMinorHasher {
 				while (pieceIter.hasNext()) {
 					Piece p = pieceIter.next();
 					if (isLowest(p, fixedWall)) {
+						boolean[] newFixedWall = fixedWall.clone();
 						for (int i = 0; i < 3; i++) {
 							if (p.get(i) < p.get(i + 1))
-								fixedWall[i] = true;
+								newFixedWall[i] = true;
 						}
 						int pNum = p.pieceNum;
 						pieceIter.remove();
-						inner[pNum] = new Position(unused, fixedWall, offset,
-								remainingPieces - 1);
+						inner[pNum] = new Position(unused, newFixedWall,
+								offset, remainingPieces - 1);
 						offset += inner[pNum].numHashes;
 						numHashes += inner[pNum].numHashes;
 						pieceIter.add(p);
@@ -173,7 +173,7 @@ public class QuartoMinorHasher {
 		}
 	}
 
-	private long numHashesForTier(int tier) {
+	public long numHashesForTier(int tier) {
 		return tierTables[tier].numHashes;
 	}
 
@@ -204,5 +204,14 @@ public class QuartoMinorHasher {
 			hash += num * pick(16 - i - 1, board.length - i - 1);
 		}
 		return hash;
+	}
+
+	public static void main(String[] args) {
+		QuartoMinorHasher qmh = new QuartoMinorHasher();
+		long[] sizes = new long[17];
+		for (int i = 0; i <= 16; i++) {
+			sizes[i] = qmh.numHashesForTier(i);
+		}
+		System.out.println(Arrays.toString(sizes));
 	}
 }
