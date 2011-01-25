@@ -76,15 +76,15 @@ public class QuartoHasher {
 		private void dropState(Piece p) {
 			for (int i = 0; i < 3; i++) {
 				if (!fixedWall[i]) {
-					if (p.get(i) < p.get(i + 1))
-						fixedWall[i] = true;
-					else if (p.get(i) > p.get(i + 1)) {
+					if (p.get(i) > p.get(i + 1)) {
 						makeSwitch(p, i, i + 1);
-						fixedWall[i] = true;
 						if (i > 0)
 							i -= 2;
 					}
 				}
+			}
+			for (int i = 0; i < 3; i++) {
+				fixedWall[i] |= p.get(i) < p.get(i + 1);
 			}
 		}
 
@@ -164,10 +164,10 @@ public class QuartoHasher {
 
 	public QuartoHasher() {
 		QuickLinkedList<Piece> unused = new QuickLinkedList<Piece>();
-		for (int i = 0; i < 16; i++) {
+		for (int i = 1; i < 16; i++) {
 			unused.add(new Piece(i));
 		}
-		for (int i = 1; i < 16; i++) {
+		for (int i = 0; i <= 16; i++) {
 			tierTables[i] = new Position(unused, new boolean[] { false, false,
 					false }, 0L, i);
 		}
@@ -175,5 +175,40 @@ public class QuartoHasher {
 
 	public static void main(String[] args) {
 		QuartoHasher qh = new QuartoHasher();
+		System.out.println(qh.hash(new int[] { 0, 1, 2, 3, 4 }));
+	}
+
+	//Approximate but buggy off-by-one everywhere
+	private long hash(int[] board) {
+		int[] nums = new int[16];
+		Piece[] myBoard = new Piece[board.length];
+		for (int i = 0; i < board.length; i++) {
+			myBoard[i] = new Piece(board[i] ^ board[0]);
+		}
+		Rotation rot = new Rotation();
+		Position p = tierTables[board.length - 1];
+		int i;
+		for (i = 1; i < board.length; i++) {
+			if (p == null)
+				break;
+			myBoard[i].applyRotation(rot);
+			rot.dropState(myBoard[i]);
+			if (p.inner == null)
+				break;
+			p = p.inner[myBoard[i].pieceNum];
+			nums[myBoard[i].pieceNum] = -1;
+		}
+		int c = 0;
+		for (int k = 0; k < 16; k++) {
+			if (nums[k] >= 0)
+				nums[k] = c++;
+		}
+		long hash = p.offset;
+		for (; i < board.length; i++) {
+			myBoard[i].applyRotation(rot);
+			hash += nums[myBoard[i].pieceNum]
+					* pick(16 - i, board.length - 1 - i);
+		}
+		return hash;
 	}
 }
