@@ -167,9 +167,9 @@ public class QuartoMinorHasher {
 		for (int i = 1; i < 16; i++) {
 			unused.add(new Piece(i));
 		}
-		for (int i = 0; i <= 16; i++) {
+		for (int i = 1; i <= 16; i++) {
 			tierTables[i] = new Position(unused, new boolean[] { false, false,
-					false }, 0L, i);
+					false }, 0L, i - 1);
 		}
 	}
 
@@ -183,7 +183,7 @@ public class QuartoMinorHasher {
 			myBoard[i] = new Piece(board[i] ^ board[0]);
 		}
 		Rotation rot = new Rotation();
-		Position p = tierTables[board.length - 1];
+		Position p = tierTables[board.length];
 		int i;
 		for (i = 1; i < board.length; i++) {
 			if (p.inner == null)
@@ -206,12 +206,55 @@ public class QuartoMinorHasher {
 		return hash;
 	}
 
+	public void unhash(long hash, int[] board) {
+		Position p = tierTables[board.length];
+		boolean[] used = new boolean[16];
+		board[0] = 0;
+		used[0] = true;
+		int i;
+		for (i = 1; i < board.length; i++) {
+			if (p.inner == null)
+				break;
+			Position nextP = null;
+			int nextK = -1;
+			for (int k = 0; k < 16; k++) {
+				if (p.inner[k] != null) {
+					if (p.inner[k].offset <= hash) {
+						nextP = p.inner[k];
+						nextK = k;
+					} else
+						break;
+				}
+			}
+			board[i] = nextK;
+			used[nextK] = true;
+			p = nextP;
+		}
+		hash -= p.offset;
+		for (; i < board.length; i++) {
+			long div = pick(16 - i - 1, board.length - i - 1);
+			int nextNum = (int) (hash / div);
+			hash = hash % div;
+			for (int k = 0; k <= nextNum; k++) {
+				if (used[k])
+					nextNum++;
+			}
+			board[i] = nextNum;
+			used[nextNum] = true;
+		}
+	}
+
 	public static void main(String[] args) {
 		QuartoMinorHasher qmh = new QuartoMinorHasher();
 		long[] sizes = new long[17];
-		for (int i = 0; i <= 16; i++) {
+		for (int i = 1; i <= 16; i++) {
 			sizes[i] = qmh.numHashesForTier(i);
 		}
 		System.out.println(Arrays.toString(sizes));
+		int[] b = new int[5];
+		for (long i = 0L; i < 1575; i++) {
+			qmh.unhash(i, b);
+			System.out.println(Arrays.toString(b));
+		}
 	}
 }
