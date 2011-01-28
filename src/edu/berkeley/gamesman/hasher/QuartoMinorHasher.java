@@ -330,4 +330,12 @@ public final class QuartoMinorHasher {
 			System.out.println(i + ": " + Arrays.toString(b));
 		}
 	}
+
+	public void nextHashInTier() {
+		unhash(hash + 1);
+	}
+
+	public void reset() {
+		setTier(numPieces);
+	}
 }

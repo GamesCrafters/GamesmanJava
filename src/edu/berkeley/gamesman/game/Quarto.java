@@ -6,6 +6,7 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.game.util.TierState;
+import edu.berkeley.gamesman.hasher.ChangedIterator;
 import edu.berkeley.gamesman.hasher.DartboardHasher2;
 import edu.berkeley.gamesman.hasher.QuartoMinorHasher;
 import edu.berkeley.gamesman.util.Pair;
@@ -13,6 +14,7 @@ import edu.berkeley.gamesman.util.Util;
 
 public class Quarto extends TierGame {
 	private final DartboardHasher2 majorHasher = new DartboardHasher2(' ', 'P');
+	private final ChangedIterator myChanged = new ChangedIterator(16);
 	private final QuartoMinorHasher minorHasher = new QuartoMinorHasher();
 	private int tier;
 	private final Piece[][] pieces;
@@ -214,14 +216,35 @@ public class Quarto extends TierGame {
 
 	@Override
 	public boolean hasNextHashInTier() {
-		// TODO Auto-generated method stub
-		return false;
+		return majorHasher.getHash() < majorHasher.numHashes() - 1
+				|| minorHasher.getHash() < minorHasher.numHashesForTier(tier) - 1;
 	}
 
 	@Override
 	public void nextHashInTier() {
-		// TODO Auto-generated method stub
-
+		if (minorHasher.getHash() < minorHasher.numHashesForTier(tier) - 1)
+			minorHasher.nextHashInTier();
+		else {
+			minorHasher.reset();
+			majorHasher.next(myChanged);
+			int count = 0;
+			int lastIndex = myChanged.hasNext() ? myChanged.next() : -1;
+			OUTER: for (int row = 0; row < 4; row++) {
+				for (int col = 0; col < 4; col++) {
+					int majorIndex = pieces[row][col].majorIndex;
+					while (majorIndex > lastIndex) {
+						if (myChanged.hasNext())
+							lastIndex = myChanged.next();
+						else
+							break OUTER;
+					}
+					if (majorHasher.get(majorIndex) == 'P')
+						pieces[row][col].minorIndex = count++;
+					else
+						pieces[row][col].minorIndex = -1;
+				}
+			}
+		}
 	}
 
 	@Override
