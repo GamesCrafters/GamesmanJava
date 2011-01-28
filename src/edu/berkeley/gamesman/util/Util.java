@@ -164,7 +164,7 @@ public final class Util {
 	 *            k
 	 * @return n choose k
 	 */
-	public static long nCr(int n, int k) {
+	public static synchronized long nCr(int n, int k) {
 		if (n < 0 || k < 0)
 			return _nCr(n, k);
 		if (n < nCr_arr.length && k < nCr_arr[0].length) {
