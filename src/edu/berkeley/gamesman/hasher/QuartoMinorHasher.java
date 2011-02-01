@@ -118,6 +118,7 @@ public final class QuartoMinorHasher {
 
 	private final class Piece {
 		int pieceNum;
+		long pieceHash;
 
 		public Piece(int i) {
 			pieceNum = i;
@@ -161,6 +162,59 @@ public final class QuartoMinorHasher {
 		}
 	}
 
+	private class Count {
+		int usedPieces = 0;
+		long possibilities;
+		int lastPiece;
+		final boolean[] used = new boolean[16];
+
+		public Count() {
+			reset();
+		}
+
+		public void reset() {
+			Arrays.fill(used, false);
+			usedPieces = 0;
+			possibilities = pick(16, numPieces);
+		}
+
+		public void addPiece(int n) {
+			possibilities /= (16 - usedPieces);
+			used[n] = true;
+			lastPiece = n;
+			usedPieces++;
+		}
+
+		public long addNext(long hash) {
+			possibilities /= 16 - usedPieces;
+			lastPiece = (int) (hash / possibilities);
+			long pieceHash = lastPiece * possibilities;
+			for (int i = 0; i <= lastPiece; i++) {
+				if (used[i])
+					lastPiece++;
+			}
+			used[lastPiece] = true;
+			usedPieces++;
+			return pieceHash;
+		}
+
+		public long lastHash() {
+			int pCount = lastPiece;
+			for (int i = 0; i < lastPiece; i++) {
+				if (used[i])
+					pCount--;
+			}
+			return pCount * possibilities;
+		}
+
+		public void removePiece(int n) {
+			usedPieces--;
+			lastPiece = -1;
+			used[n] = false;
+			possibilities *= (16 - usedPieces);
+		}
+	}
+
 	private static int set(int num, int i, int n) {
 		if (get(num, i) != n)
 			return num ^ (1 << i);
@@ -191,18 +245,17 @@ public final class QuartoMinorHasher {
 				}
 
 			});
-	private final Pool<boolean[]> usedPool = new Pool<boolean[]>(
-			new Factory<boolean[]>() {
-				@Override
-				public boolean[] newObject() {
-					return new boolean[16];
-				}
+	private final Pool<Count> countPool = new Pool<Count>(new Factory<Count>() {
+		@Override
+		public Count newObject() {
+			return new Count();
+		}
 
-				@Override
-				public void reset(boolean[] t) {
-					Arrays.fill(t, false);
-				}
-			});
+		@Override
+		public void reset(Count t) {
+			t.reset();
+		}
+	});
 	private int numPieces;
 
 	public QuartoMinorHasher() {
@@ -228,6 +281,7 @@ public final class QuartoMinorHasher {
 		syms = 1;
 		for (int i = 0; i < tier; i++) {
 			pieces[i].pieceNum = i;
+			pieces[i].pieceHash = 0L;
 			symPositions[i] = curPos;
 			if (curPos == null || curPos.inner == null)
 				curPos = null;
@@ -251,31 +305,36 @@ public final class QuartoMinorHasher {
 		for (int i = 0; i < numPieces; i++) {
 			pieces[i].pieceNum = board[i] ^ board[0];
 		}
+		Count count = countPool.get();
 		Rotation rot = rotPool.get();
 		Position p = tierTables[numPieces];
 		symPositions[0] = p;
+		count.addPiece(0);
 		int i;
 		for (i = 1; i < numPieces; i++) {
 			if (p.inner == null)
 				break;
 			pieces[i].applyRotation(rot);
 			rot.dropState(pieces[i]);
+			count.addPiece(pieces[i].pieceNum);
 			p = p.inner[pieces[i].pieceNum];
+			pieces[i].pieceHash = 0L;
 			symPositions[i] = p;
 			if (p == null)
 				throw new NullPointerException();
 		}
 		syms = i;
 		hash = p.offset;
+		pieces[i - 1].pieceHash = p.offset;
 		for (; i < numPieces; i++) {
 			symPositions[i] = null;
 			pieces[i].applyRotation(rot);
-			int num = pieces[i].pieceNum;
-			for (int k = 0; k < i; k++)
-				if (pieces[k].pieceNum < pieces[i].pieceNum)
-					num--;
-			hash += num * pick(16 - i - 1, numPieces - i - 1);
+			count.addPiece(pieces[i].pieceNum);
+			long pieceHash = count.lastHash();
+			pieces[i].pieceHash = pieceHash;
+			hash += pieceHash;
 		}
+		countPool.release(count);
 		rotPool.release(rot);
 		return hash;
 	}
@@ -289,8 +348,8 @@ public final class QuartoMinorHasher {
 		Position p = tierTables[numPieces];
 		this.hash = hash;
 		pieces[0].pieceNum = 0;
-		boolean[] used = usedPool.get();
-		used[0] = true;
+		Count count = countPool.get();
+		count.addPiece(0);
 		symPositions[0] = p;
 		int i;
 		for (i = 1; i < numPieces; i++) {
@@ -308,25 +367,23 @@ public final class QuartoMinorHasher {
 				}
 			}
 			pieces[i].pieceNum = nextK;
-			used[nextK] = true;
+			pieces[i].pieceHash = 0L;
+			count.addPiece(nextK);
 			p = nextP;
 			symPositions[i] = p;
 		}
 		syms = i;
+		pieces[i - 1].pieceHash = p.offset;
 		hash -= p.offset;
 		for (; i < numPieces; i++) {
 			symPositions[i] = null;
-			long div = pick(16 - i - 1, numPieces - i - 1);
-			int nextNum = (int) (hash / div);
-			hash = hash % div;
-			for (int k = 0; k <= nextNum; k++) {
-				if (used[k])
-					nextNum++;
-			}
-			pieces[i].pieceNum = nextNum;
-			used[nextNum] = true;
+			long pieceHash = count.addNext(hash);
+			int piece = count.lastPiece;
+			pieces[i].pieceNum = piece;
+			pieces[i].pieceHash = pieceHash;
+			hash -= pieceHash;
 		}
-		usedPool.release(used);
+		countPool.release(count);
 	}
 
 	public int get(int index) {
@@ -347,6 +404,9 @@ public final class QuartoMinorHasher {
 			for (int k = 0; k < 5; k++) {
 				b[k] = qmh.pieces[k].pieceNum;
 			}
+			long v = qmh.hash(b);
+			if (i != v)
+				throw new RuntimeException("Houston, we have a problem!");
 			System.out.println(i + ": " + Arrays.toString(b));
 		}
 	}
