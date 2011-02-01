@@ -174,6 +174,8 @@ public final class QuartoMinorHasher {
 
 	private final Position[] tierTables = new Position[17];
 	private final Piece[] pieces;
+	private final Position[] symPositions;
+	private int syms;
 	private long hash;
 	private final Pool<Rotation> rotPool = new Pool<Rotation>(
 			new Factory<Rotation>() {
@@ -213,6 +215,7 @@ public final class QuartoMinorHasher {
 					false }, 0L, i - 1);
 		}
 		pieces = new Piece[16];
+		symPositions = new Position[16];
 		for (int i = 0; i < 16; i++) {
 			pieces[i] = new Piece();
 		}
@@ -221,8 +224,17 @@ public final class QuartoMinorHasher {
 
 	public void setTier(int tier) {
 		numPieces = tier;
+		Position curPos = tierTables[tier];
+		syms = 1;
 		for (int i = 0; i < tier; i++) {
 			pieces[i].pieceNum = i;
+			symPositions[i] = curPos;
+			if (curPos == null || curPos.inner == null)
+				curPos = null;
+			else {
+				curPos = curPos.inner[i + 1];
+				syms = i + 2;
+			}
 		}
 		hash = 0L;
 	}
@@ -241,6 +253,7 @@ public final class QuartoMinorHasher {
 		}
 		Rotation rot = rotPool.get();
 		Position p = tierTables[numPieces];
+		symPositions[0] = p;
 		int i;
 		for (i = 1; i < numPieces; i++) {
 			if (p.inner == null)
@@ -248,11 +261,14 @@ public final class QuartoMinorHasher {
 			pieces[i].applyRotation(rot);
 			rot.dropState(pieces[i]);
 			p = p.inner[pieces[i].pieceNum];
+			symPositions[i] = p;
 			if (p == null)
 				throw new NullPointerException();
 		}
+		syms = i;
 		hash = p.offset;
 		for (; i < numPieces; i++) {
+			symPositions[i] = null;
 			pieces[i].applyRotation(rot);
 			int num = pieces[i].pieceNum;
 			for (int k = 0; k < i; k++)
@@ -275,6 +291,7 @@ public final class QuartoMinorHasher {
 		pieces[0].pieceNum = 0;
 		boolean[] used = usedPool.get();
 		used[0] = true;
+		symPositions[0] = p;
 		int i;
 		for (i = 1; i < numPieces; i++) {
 			if (p.inner == null)
@@ -293,9 +310,12 @@ public final class QuartoMinorHasher {
 			pieces[i].pieceNum = nextK;
 			used[nextK] = true;
 			p = nextP;
+			symPositions[i] = p;
 		}
+		syms = i;
 		hash -= p.offset;
 		for (; i < numPieces; i++) {
+			symPositions[i] = null;
 			long div = pick(16 - i - 1, numPieces - i - 1);
 			int nextNum = (int) (hash / div);
 			hash = hash % div;
