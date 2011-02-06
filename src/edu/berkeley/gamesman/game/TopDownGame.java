@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.State;
@@ -87,8 +86,8 @@ public final class TopDownGame<S extends State> extends TopDownMutaGame {
 	 * @param g
 	 *            The game to wrap
 	 */
-	public TopDownGame(Configuration conf, Game<S> g) {
-		super(conf);
+	public TopDownGame(Game<S> g) {
+		super(g.conf);
 		myGame = g;
 		stateList.push(statePool.get());
 		Collection<S> startingPositions = myGame.startingPositions();

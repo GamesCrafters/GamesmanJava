@@ -9,7 +9,7 @@ import java.util.concurrent.CyclicBarrier;
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
-import edu.berkeley.gamesman.game.Reversi;
+import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.util.*;
 
@@ -68,7 +68,7 @@ public class ReversiSolver extends Solver {
 			nano = firstNano;
 		} else
 			firstNano = 0;
-		Reversi game = (Reversi) conf.getGame();
+		TierGame game = (TierGame) conf.getGame();
 		long current = start;
 		long stepNum = current % STEP_SIZE;
 		TierState curState = game.hashToState(start);
@@ -175,7 +175,7 @@ public class ReversiSolver extends Solver {
 	public WorkUnit prepareSolve(Configuration inconf) {
 		String msf = inconf.getProperty("gamesman.minSolvedFile", null);
 		if (msf == null)
-			tier = ((Reversi) inconf.getGame()).numberOfTiers();
+			tier = ((TierGame) inconf.getGame()).numberOfTiers();
 		else {
 			minSolvedFile = new File(msf);
 			if (minSolvedFile.exists()) {
@@ -187,7 +187,7 @@ public class ReversiSolver extends Solver {
 					throw new Error("This should never happen", e);
 				}
 			} else {
-				tier = ((Reversi) inconf.getGame()).numberOfTiers();
+				tier = ((TierGame) inconf.getGame()).numberOfTiers();
 				try {
 					minSolvedFile.createNewFile();
 					FileWriter fw = new FileWriter(minSolvedFile);
@@ -233,7 +233,7 @@ public class ReversiSolver extends Solver {
 			} else {
 				if (barr != null)
 					needs2Reset = true;
-				Reversi game = (Reversi) conf.getGame();
+				TierGame game = (TierGame) conf.getGame();
 				long fullStart = game.hashOffsetForTier(tier);
 				long fullSize = game.numHashesForTier(tier);
 				splits = Math.max(minSplits, numSplits(tier, maxMem));
@@ -257,7 +257,7 @@ public class ReversiSolver extends Solver {
 
 	protected int numSplits(int tier, long maxMem) {
 		return numSplits(tier, maxMem,
-				((Reversi) conf.getGame()).numHashesForTier(tier));
+				((TierGame) conf.getGame()).numHashesForTier(tier));
 	}
 
 	protected int numSplits(int tier, long maxMem, long numHashes) {
@@ -396,7 +396,7 @@ public class ReversiSolver extends Solver {
 		}
 
 		ReversiSolverUpdater(long totalProgress) {
-			Reversi myGame = (Reversi) conf.getGame();
+			TierGame myGame = (TierGame) conf.getGame();
 			t = Task.beginTask("Tier solving \"" + myGame.describe() + "\"");
 			t.setTotal(totalProgress);
 		}
@@ -439,7 +439,7 @@ public class ReversiSolver extends Solver {
 	public void secondRun(Configuration conf, long start, long hashes,
 			ReversiSolverUpdater t, Database readDb, DatabaseHandle readDh,
 			Database writeDb, DatabaseHandle writeDh) {
-		Reversi game = (Reversi) conf.getGame();
+		TierGame game = (TierGame) conf.getGame();
 		long otherSide = game.numHashesForTier(tier) / 2;
 		Record r1 = game.newRecord(), r2 = game.newRecord();
 		for (long pos = start; pos < start + hashes; pos++) {

@@ -67,7 +67,7 @@ public class TopDownSolver extends Solver {
 		if (g instanceof TopDownMutaGame) {
 			game = (TopDownMutaGame) g;
 		} else {
-			game = wrapGame(conf, g);
+			game = wrapGame(g);
 		}
 		long hashSpace = game.numHashes();
 		Record defaultRecord = game.newRecord();
@@ -86,9 +86,8 @@ public class TopDownSolver extends Solver {
 		}
 	}
 
-	private <S extends State> TopDownMutaGame wrapGame(Configuration conf,
-			Game<S> g) {
-		return new TopDownGame<S>(conf, g);
+	private <S extends State> TopDownMutaGame wrapGame(Game<S> g) {
+		return new TopDownGame<S>(g);
 	}
 
 	private void solve(TopDownMutaGame game, Record value, int depth,

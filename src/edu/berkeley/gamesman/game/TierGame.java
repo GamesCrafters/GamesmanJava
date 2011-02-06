@@ -34,7 +34,7 @@ public abstract class TierGame extends Game<TierState> {
 	}
 
 	@Override
-	public void hashToState(long hash, TierState state) {
+	public final void hashToState(long hash, TierState state) {
 		int tier = hashToTier(hash);
 		myHasher.gameStateForTierAndOffset(tier,
 				hash - hashOffsetForTier(tier), state);
@@ -48,7 +48,7 @@ public abstract class TierGame extends Game<TierState> {
 	 *            A hash for a record in this game
 	 * @return The tier this hash is contained in
 	 */
-	public int hashToTier(long hash) {
+	public final int hashToTier(long hash) {
 		int tiers = numberOfTiers();
 		int guess = tiers / 2, low = 0, high = tiers;
 		while (high > low + 1) {
@@ -75,18 +75,18 @@ public abstract class TierGame extends Game<TierState> {
 	}
 
 	@Override
-	public long numHashes() {
+	public final long numHashes() {
 		return myHasher.numHashes();
 	}
 
 	@Override
-	public synchronized Value primitiveValue(TierState pos) {
+	public final synchronized Value primitiveValue(TierState pos) {
 		setState(pos);
 		return primitiveValue();
 	}
 
 	@Override
-	public synchronized Value strictPrimitiveValue(TierState pos) {
+	public final synchronized Value strictPrimitiveValue(TierState pos) {
 		setState(pos);
 		return strictPrimitiveValue();
 	}
@@ -105,14 +105,14 @@ public abstract class TierGame extends Game<TierState> {
 	public abstract Value primitiveValue();
 
 	@Override
-	public synchronized Collection<Pair<String, TierState>> validMoves(
+	public final synchronized Collection<Pair<String, TierState>> validMoves(
 			TierState pos) {
 		setState(pos);
 		return validMoves();
 	}
 
 	@Override
-	public synchronized int validMoves(TierState pos, TierState[] children) {
+	public final synchronized int validMoves(TierState pos, TierState[] children) {
 		setState(pos);
 		return validMoves(children);
 	}
@@ -163,7 +163,7 @@ public abstract class TierGame extends Game<TierState> {
 	public abstract void getState(TierState state);
 
 	@Override
-	public synchronized String displayState(TierState pos) {
+	public final synchronized String displayState(TierState pos) {
 		setState(pos);
 		return displayState();
 	}
@@ -183,7 +183,7 @@ public abstract class TierGame extends Game<TierState> {
 	public abstract String displayState();
 
 	@Override
-	public synchronized Collection<TierState> startingPositions() {
+	public final synchronized Collection<TierState> startingPositions() {
 		ArrayList<TierState> positions = new ArrayList<TierState>();
 		for (int i = 0; i < numStartingPositions(); i++) {
 			setStartingPosition(i);
@@ -218,7 +218,7 @@ public abstract class TierGame extends Game<TierState> {
 	public abstract void nextHashInTier();
 
 	@Override
-	public long stateToHash(TierState pos) {
+	public final long stateToHash(TierState pos) {
 		return myHasher.hashOffsetForTier(pos.tier) + pos.hash;
 	}
 
@@ -240,11 +240,11 @@ public abstract class TierGame extends Game<TierState> {
 	public abstract int validMoves(TierState[] moves);
 
 	@Override
-	public TierState newState() {
+	public final TierState newState() {
 		return new TierState();
 	}
 
-	public TierState newState(int tier, long hash) {
+	public final TierState newState(int tier, long hash) {
 		return new TierState(tier, hash);
 	}
 

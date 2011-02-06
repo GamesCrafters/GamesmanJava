@@ -74,14 +74,24 @@ public final class Configuration {
 	public Configuration(Properties props) throws ClassNotFoundException {
 		this.props = props;
 		String gamename = getProperty("gamesman.game");
+		String[] gamenames = gamename.split(":");
+		gamename = gamenames[gamenames.length - 1];
 		// Python classes end with ".py"
 		if (gamename.indexOf('.') == -1) {
 			gamename = "edu.berkeley.gamesman.game." + gamename;
 		}
-		setProperty("gamesman.game", gamename);
+		Game<?> g;
 		try {
 			g = Util.typedForName(gamename, Game.class)
 					.getConstructor(Configuration.class).newInstance(this);
+			for (int i = gamenames.length - 2; i >= 0; i--) {
+				gamename = gamenames[i];
+				if (gamename.indexOf('.') == -1) {
+					gamename = "edu.berkeley.gamesman.game." + gamename;
+				}
+				g = Util.typedForName(gamename, Game.class)
+						.getConstructor(Game.class).newInstance(g);
+			}
 		} catch (IllegalArgumentException e) {
 			throw new Error(e);
 		} catch (SecurityException e) {
@@ -95,6 +105,7 @@ public final class Configuration {
 		} catch (NoSuchMethodException e) {
 			throw new Error(e);
 		}
+		this.g = g;
 		String fields = getProperty("record.fields", "VALUE,REMOTENESS");
 		String[] splitFields = fields.split(",");
 		boolean hasValue = false, hasRemoteness = false, hasScore = false;
