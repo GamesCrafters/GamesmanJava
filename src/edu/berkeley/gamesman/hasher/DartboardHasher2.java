@@ -111,7 +111,9 @@ public class DartboardHasher2 extends DartboardHasher {
 
 		public void reset() {
 			pieces = 0;
-			Arrays.fill(digitCount, 0);
+			for (int i = 0; i < digitCount.length; i++) {
+				digitCount[i] = 0;
+			}
 			hashValue = 1L;
 			negDigit = false;
 		}
