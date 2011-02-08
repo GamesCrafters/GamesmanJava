@@ -72,6 +72,7 @@ public class DartboardHasher2 extends DartboardHasher {
 		private boolean negDigit = false;
 		private final int[] digitCount;
 		private long hashValue = 1L;
+		private long preTrade;
 
 		public Count(int numDigits) {
 			digitCount = new int[numDigits];
@@ -86,6 +87,32 @@ public class DartboardHasher2 extends DartboardHasher {
 				negDigit = false;
 			else
 				throw new Error("Multiple negatives not caught");
+		}
+
+		// This method only exists because profiling says it might help. It's
+		// not "safe" in any sense of the word.
+		public void hashlessIncr(int type) {
+			digitCount[type]++;
+			if (digitCount[type] > 0) {
+				pieces++;
+			} else if (digitCount[type] == 0)
+				negDigit = false;
+			else
+				throw new Error("Multiple negatives not caught");
+		}
+
+		// This method only exists because profiling says it might help. It's
+		// not "safe" in any sense of the word.
+		public void hashlessDecr(int type) {
+			if (digitCount[type] > 0) {
+				pieces--;
+			} else {
+				if (negDigit)
+					throw new Error(
+							"Cannot have more than one negative at a time");
+				negDigit = true;
+			}
+			digitCount[type]--;
 		}
 
 		public void decr(int type) {
@@ -124,8 +151,22 @@ public class DartboardHasher2 extends DartboardHasher {
 
 		public void trade(int i, int j) {
 			if (digitCount[i] > 0 && digitCount[j] >= 0) {
+				preTrade = hashValue;
 				digitCount[j]++;
 				hashValue = hashValue * digitCount[i] / digitCount[j];
+				digitCount[i]--;
+			} else {
+				incr(j);
+				decr(i);
+			}
+		}
+
+		// This method only exists because profiling says it might help. It's
+		// not "safe" in any sense of the word.
+		public void tradeBack(int i, int j) {
+			if (digitCount[i] > 0 && digitCount[j] >= 0) {
+				digitCount[j]++;
+				hashValue = preTrade;
 				digitCount[i]--;
 			} else {
 				incr(j);
@@ -281,7 +322,7 @@ public class DartboardHasher2 extends DartboardHasher {
 		boolean didChange = false;
 		for (piece = 0; piece < pieces.length; piece++) {
 			int digit = pieces[piece].digit;
-			count.incr(digit);
+			count.hashlessIncr(digit);
 			if (piece >= lowBit && digit < highest)
 				break;
 			else if (digit > highest)
@@ -293,8 +334,10 @@ public class DartboardHasher2 extends DartboardHasher {
 				digit++;
 			} while (count.get(digit) == 0);
 			pieces[piece].digit = digit;
-			count.decr(digit);
+			count.hashlessDecr(digit);
 			long removed = reset(count, changed);
+			// reset gives count the correct hash value. According to profiling
+			// if there's a place for an ugly hack like that, this is it!
 			count.incr(digit);
 			long pieceHash;
 			if (lowBit == 0) {
@@ -337,7 +380,7 @@ public class DartboardHasher2 extends DartboardHasher {
 					}
 					replacement.pieces[piece].setGroup(group);
 					replacement.pieces[piece].setDif(dif);
-					count.trade(replacement.newPiece, replacement.oldPiece);
+					count.tradeBack(replacement.newPiece, replacement.oldPiece);
 				} else if (group == -1) {
 					replacement.pieces[piece].setGroup(-1);
 				} else {
@@ -523,7 +566,7 @@ public class DartboardHasher2 extends DartboardHasher {
 						}
 						replacement.pieces[piece].setGroup(group);
 						replacement.pieces[piece].setDif(dif);
-						secondCount.trade(replacement.newPiece,
+						secondCount.tradeBack(replacement.newPiece,
 								replacement.oldPiece);
 					} else if (group == -1) {
 						replacement.pieces[piece].setGroup(-1);
@@ -534,6 +577,7 @@ public class DartboardHasher2 extends DartboardHasher {
 				piece++;
 			}
 		}
+		count.hashValue = secondCount.hashValue;
 		return oldHashes;
 	}
 
