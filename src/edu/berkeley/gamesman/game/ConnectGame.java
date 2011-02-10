@@ -1,6 +1,5 @@
 package edu.berkeley.gamesman.game;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -8,7 +7,7 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.database.Database;
-import edu.berkeley.gamesman.database.TierReadCache;
+import edu.berkeley.gamesman.database.RangeCache;
 import edu.berkeley.gamesman.game.util.DartboardCacher;
 import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.hasher.DartboardHasher;
@@ -22,7 +21,7 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author dnspies
  */
-public abstract class ConnectGame extends TierGame implements RearrangeGame {
+public abstract class ConnectGame extends TierGame {
 	private final DartboardHasher mmh;
 	private int tier;
 	private final long[] moveHashes;
@@ -58,31 +57,7 @@ public abstract class ConnectGame extends TierGame implements RearrangeGame {
 		} else {
 			throw new Error("Subclass not known to calculate board size");
 		}
-		String hasherType = conf.getProperty("gamesman.game.hasher",
-				DartboardHasher.class.getName());
-		if (!hasherType.contains(".")) {
-			hasherType = "edu.berkeley.gamesman.hasher." + hasherType;
-		}
-		try {
-			Class<? extends DartboardHasher> hasherClass = Class.forName(
-					hasherType).asSubclass(DartboardHasher.class);
-			mmh = hasherClass.getConstructor(Integer.TYPE, char[].class)
-					.newInstance(boardSize, new char[] { ' ', 'O', 'X' });
-		} catch (ClassNotFoundException e) {
-			throw new Error(e);
-		} catch (IllegalArgumentException e) {
-			throw new Error(e);
-		} catch (SecurityException e) {
-			throw new Error(e);
-		} catch (InstantiationException e) {
-			throw new Error(e);
-		} catch (IllegalAccessException e) {
-			throw new Error(e);
-		} catch (InvocationTargetException e) {
-			throw new Error(e.getCause());
-		} catch (NoSuchMethodException e) {
-			throw new Error(e);
-		}
+		mmh = new DartboardHasher(boardSize, ' ', 'O', 'X');
 		myCacher = new DartboardCacher(conf, mmh);
 		moveHashes = new long[boardSize];
 	}
@@ -203,14 +178,19 @@ public abstract class ConnectGame extends TierGame implements RearrangeGame {
 	}
 
 	@Override
-	public final int validMoves(TierState[] moves) {
+	public final int validMoves(TierState[] moves, int[] cachePlaces) {
 		char turn = tier % 2 == 0 ? 'X' : 'O';
-		int numChildren = mmh.getChildren(' ', turn, moveHashes);
+		int numChildren = mmh.getChildren(' ', turn, cachePlaces, moveHashes);
 		for (int i = 0; i < numChildren; i++) {
 			moves[i].tier = tier + 1;
 			moves[i].hash = moveHashes[i];
 		}
 		return numChildren;
+	}
+
+	@Override
+	public int validMoves(TierState[] children) {
+		return validMoves(children, null);
 	}
 
 	@Override
@@ -294,14 +274,14 @@ public abstract class ConnectGame extends TierGame implements RearrangeGame {
 	protected abstract boolean isWin(char c);
 
 	@Override
-	public final TierReadCache getCache(Database db, long numPositions,
+	public final RangeCache getCache(Database db, long numPositions,
 			long availableMem) {
 		return myCacher.getCache(db, numPositions, availableMem, tier,
 				hashOffsetForTier(tier + 1));
 	}
 
 	@Override
-	public final TierReadCache nextCache() {
+	public final RangeCache nextCache() {
 		return myCacher.nextCache();
 	}
 
@@ -314,10 +294,5 @@ public abstract class ConnectGame extends TierGame implements RearrangeGame {
 			throw new UnsupportedOperationException();
 		else
 			mmh.set(index, piece);
-	}
-
-	@Override
-	public boolean majorChanged() {
-		return mmh.majorChanged();
 	}
 }

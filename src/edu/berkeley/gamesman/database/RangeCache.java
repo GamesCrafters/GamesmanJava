@@ -1,11 +1,5 @@
 package edu.berkeley.gamesman.database;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.ListIterator;
-
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.util.qll.Factory;
 import edu.berkeley.gamesman.util.qll.Pool;
@@ -15,7 +9,7 @@ import edu.berkeley.gamesman.util.qll.Pool;
  * 
  * @author dnspies
  */
-public class RangeCache extends TierReadCache {
+public class RangeCache extends DatabaseWrapper {
 
 	private final Pool<MemoryDatabase> slotPool = new Pool<MemoryDatabase>(
 			new Factory<MemoryDatabase>() {
@@ -32,25 +26,32 @@ public class RangeCache extends TierReadCache {
 				}
 			});
 	private MemoryDatabase[] slots;
-	private long[] searchable;
 	private long numHashes;
 	private final int memPerChild;
+	private int tempChildNum = -1;
 
 	/**
-	 * @param db The underlying database
-	 * @param conf The configuration object
-	 * @param memPerChild The maximum amount of memory each range is expected to take up
+	 * @param db
+	 *            The underlying database
+	 * @param conf
+	 *            The configuration object
+	 * @param memPerChild
+	 *            The maximum amount of memory each range is expected to take up
 	 */
 	public RangeCache(Database db, Configuration conf, int memPerChild) {
-		super(db, conf);
+		super(db, null, conf, false, -1, 0);
 		this.memPerChild = memPerChild;
 	}
 
 	/**
-	 * @param db A database for memory calculations
-	 * @param firstRecords The start points of each range
-	 * @param lastRecords The end points of each range
-	 * @return The amount of memory required for a range cache with the provided ranges
+	 * @param db
+	 *            A database for memory calculations
+	 * @param firstRecords
+	 *            The start points of each range
+	 * @param lastRecords
+	 *            The end points of each range
+	 * @return The amount of memory required for a range cache with the provided
+	 *         ranges
 	 */
 	public static long memFor(Database db, long[] firstRecords,
 			long[] lastRecords) {
@@ -65,8 +66,10 @@ public class RangeCache extends TierReadCache {
 
 	@Override
 	public void close() {
-		for (MemoryDatabase slot : slots)
-			slot.close();
+		for (MemoryDatabase slot : slots) {
+			if (slot != null)
+				slot.close();
+		}
 	}
 
 	@Override
@@ -85,7 +88,10 @@ public class RangeCache extends TierReadCache {
 		DartCacheHandle(int recordGroupByteLength) {
 			super(recordGroupByteLength);
 			for (int i = 0; i < slots.length; i++) {
-				handles[i] = slots[i].getHandle();
+				if (slots[i] == null)
+					handles[i] = null;
+				else
+					handles[i] = slots[i].getHandle();
 			}
 		}
 
@@ -101,21 +107,45 @@ public class RangeCache extends TierReadCache {
 	@Override
 	protected void prepareRange(DatabaseHandle dh, long byteIndex,
 			int firstNum, long numBytes, int lastNum) {
+		int childNum = tempChildNum;
+		long firstRecord = toFirstRecord(byteIndex) + firstNum;
+		long lastRecord = toFirstRecord(byteIndex + numBytes - 1)
+				+ (lastNum == 0 ? recordsPerGroup : lastNum);
+		if (childNum >= 0) {
+			if (slots[childNum] == null) {
+				throw new Error(childNum + " wasn't cached but " + firstRecord
+						+ " - " + lastRecord + " is needed");
+			}
+			long firstSlotRecord = slots[childNum].firstRecord();
+			long lastSlotRecord = firstSlotRecord
+					+ slots[childNum].numRecords();
+			if (!(firstRecord >= firstSlotRecord && lastRecord <= lastSlotRecord))
+				throw new RuntimeException(childNum + " doesn't fit\n"
+						+ firstRecord + " - " + lastRecord + " in "
+						+ firstSlotRecord + " - " + lastSlotRecord);
+		} else {
+			for (int i = 0; i < slots.length; i++) {
+				if (slots[i] == null)
+					continue;
+				long firstSlotRecord = slots[i].firstRecord();
+				long lastSlotRecord = firstSlotRecord + slots[i].numRecords();
+				if (firstRecord >= firstSlotRecord
+						&& lastRecord <= lastSlotRecord) {
+					childNum = i;
+					break;
+				}
+			}
+		}
+		prepareRange(dh, byteIndex, firstNum, numBytes, lastNum, childNum);
+	}
+
+	protected void prepareRange(DatabaseHandle dh, long byteIndex,
+			int firstNum, long numBytes, int lastNum, int childNum) {
 		super.prepareRange(dh, byteIndex, firstNum, numBytes, lastNum);
 		DartCacheHandle dc = (DartCacheHandle) dh;
-		long firstRecord = toFirstRecord(byteIndex) + firstNum;
-		dc.whichDb = Arrays.binarySearch(searchable, firstRecord);
-		if (dc.whichDb < 0)
-			dc.whichDb = -dc.whichDb - 2;
-		else {
-			while (dc.whichDb < searchable.length
-					&& searchable[dc.whichDb] == firstRecord) {
-				dc.whichDb++;
-			}
-			dc.whichDb--;
-		}
-		slots[dc.whichDb].prepareRange(dc.handles[dc.whichDb], byteIndex,
-				firstNum, numBytes, lastNum);
+		dc.whichDb = childNum;
+		slots[childNum].prepareRange(dc.handles[childNum], byteIndex, firstNum,
+				numBytes, lastNum);
 	}
 
 	@Override
@@ -129,76 +159,87 @@ public class RangeCache extends TierReadCache {
 	@Override
 	public long getSize() {
 		long total = 0L;
-		for (MemoryDatabase slot : slots)
-			total += slot.getSize();
+		for (MemoryDatabase slot : slots) {
+			if (slot != null)
+				total += slot.getSize();
+		}
 		return total;
 	}
 
-	@Override
 	public long numHashes() {
 		return numHashes;
 	}
 
 	/**
-	 * @param firstRecords The start points of each range
-	 * @param lastRecords The end points of each range
-	 * @param numHashes The number of hashes being solved which require this cache
+	 * @param firstRecords
+	 *            The start points of each range
+	 * @param lastRecords
+	 *            The end points of each range
+	 * @param numHashes
+	 *            The number of hashes being solved which require this cache
 	 */
 	public void setRanges(long[] firstRecords, long[] lastRecords,
 			long numHashes) {
 		if (slots != null)
 			for (MemoryDatabase slot : slots) {
-				slotPool.release(slot);
+				if (slot != null)
+					slotPool.release(slot);
 			}
 		this.numHashes = numHashes;
-		LinkedList<long[]> ranges = new LinkedList<long[]>();
-		for (int i = 0; i < firstRecords.length; i++) {
-			if (firstRecords[i] < 0L || lastRecords[i] < 0L)
-				continue;
-			ranges.add(new long[] { firstRecords[i], lastRecords[i] });
-		}
-		Collections.sort(ranges, new Comparator<long[]>() {
-
-			@Override
-			public int compare(long[] o1, long[] o2) {
-				if (o1[0] > o2[0])
-					return 1;
-				else if (o1[0] < o2[0])
-					return -1;
-				else if (o1[1] > o2[1])
-					return 1;
-				else if (o1[1] < o2[1])
-					return -1;
-				else
-					return 0;
-			}
-
-		});
-		ListIterator<long[]> iter = ranges.listIterator();
-		long[] prev = null;
-		if (iter.hasNext())
-			prev = iter.next();
-		while (iter.hasNext()) {
-			long[] next = iter.next();
-			if (prev[1] >= next[1])
-				iter.remove();
-			else if (prev[0] == next[0]) {
-				iter.previous();
-				iter.previous();
-				iter.remove();
-				iter.next();
-				prev = next;
-			} else
-				prev = next;
-		}
-		slots = new MemoryDatabase[ranges.size()];
-		searchable = new long[ranges.size()];
-		iter = ranges.listIterator();
+		// Collections.sort(ranges, new Comparator<long[]>() {
+		//
+		// @Override
+		// public int compare(long[] o1, long[] o2) {
+		// if (o1[0] > o2[0])
+		// return 1;
+		// else if (o1[0] < o2[0])
+		// return -1;
+		// else if (o1[1] > o2[1])
+		// return 1;
+		// else if (o1[1] < o2[1])
+		// return -1;
+		// else
+		// return 0;
+		// }
+		//
+		// });
+		// ListIterator<long[]> iter = ranges.listIterator();
+		// long[] prev = null;
+		// if (iter.hasNext())
+		// prev = iter.next();
+		// while (iter.hasNext()) {
+		// long[] next = iter.next();
+		// if (prev[1] >= next[1])
+		// iter.remove();
+		// else if (prev[0] == next[0]) {
+		// iter.previous();
+		// iter.previous();
+		// iter.remove();
+		// iter.next();
+		// prev = next;
+		// } else
+		// prev = next;
+		// }
+		slots = new MemoryDatabase[firstRecords.length];
 		for (int i = 0; i < slots.length; i++) {
-			long[] next = iter.next();
-			slots[i] = slotPool.get();
-			slots[i].setRange(next[0], (int) (next[1] - next[0] + 1));
-			searchable[i] = next[0];
+			long firstRecord = firstRecords[i];
+			long lastRecord = lastRecords[i];
+			if (firstRecord < 0 || lastRecord < 0)
+				slots[i] = null;
+			else {
+				slots[i] = slotPool.get();
+				slots[i].setRange(firstRecord,
+						(int) (lastRecord - firstRecord + 1));
+			}
 		}
+	}
+
+	public long getRecord(DatabaseHandle dh, long recordIndex, int childNum) {
+		if (tempChildNum >= 0)
+			throw new RuntimeException("In the middle of reading");
+		tempChildNum = childNum;
+		long result = super.getRecord(dh, recordIndex);
+		tempChildNum = -1;
+		return result;
 	}
 }

@@ -3,7 +3,6 @@ package edu.berkeley.gamesman.solver;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.core.Record;
-import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.database.MemoryDatabase;
 import edu.berkeley.gamesman.game.Connect4;
@@ -48,9 +47,7 @@ public class C4CachedSolver extends TierSolver {
 	}
 
 	@Override
-	protected void solvePartialTier(Configuration conf, long start,
-			long hashes, Database readDb, DatabaseHandle readDh,
-			Database writeDb, DatabaseHandle writeDh) {
+	protected void solvePartialTier(Configuration conf, long firstHash, long numHashes) {
 		final long firstNano;
 		long nano = 0;
 		final boolean debugSolver = Util.debug(DebugFacility.SOLVER);
@@ -64,8 +61,8 @@ public class C4CachedSolver extends TierSolver {
 			firstNano = 0;
 		Connect4 game = (Connect4) conf.getGame();
 		maxPage = (int) ((maxMem / (2 * numThreads) - writeDb.requiredMem(
-				start, hashes)) / game.maxChildren());
-		long current = start;
+				firstHash, numHashes)) / game.maxChildren());
+		long current = firstHash;
 		long stepNum = current % STEP_SIZE;
 		Record record = game.newRecord();
 		Record bestRecord = game.newRecord();
@@ -79,17 +76,17 @@ public class C4CachedSolver extends TierSolver {
 		if (tier < game.numberOfTiers() - 1) {
 			readPages = new MemoryDatabase[game.maxChildren()];
 			readHandles = new DatabaseHandle[game.maxChildren()];
-			game.setState(game.hashToState(start + hashes - 1));
+			game.setState(game.hashToState(firstHash + numHashes - 1));
 			game.lastMoves(children);
 			lastChildren = new long[children.length];
 			for (int i = 0; i < children.length; i++)
 				lastChildren[i] = game.stateToHash(children[i]);
 		}
 		MemoryDatabase writePage = writePagePool.get();
-		writePage.setRange(start, (int) hashes);
+		writePage.setRange(firstHash, (int) numHashes);
 		DatabaseHandle writePageDh = writePage.getHandle();
 
-		TierState curState = game.hashToState(start);
+		TierState curState = game.hashToState(firstHash);
 		game.setState(curState);
 
 		long lastNano;
@@ -98,7 +95,7 @@ public class C4CachedSolver extends TierSolver {
 			nano = System.nanoTime();
 			times[0] = nano - lastNano;
 		}
-		for (long count = 0L; count < hashes; count++) {
+		for (long count = 0L; count < numHashes; count++) {
 			if (stepNum == STEP_SIZE) {
 				updater.calculated(STEP_SIZE);
 				stepNum = 0;
@@ -170,7 +167,7 @@ public class C4CachedSolver extends TierSolver {
 				nano = System.nanoTime();
 				times[4] += nano - lastNano;
 			}
-			if (count < hashes - 1) {
+			if (count < numHashes - 1) {
 				game.nextHashInTier();
 				curState.hash++;
 			}

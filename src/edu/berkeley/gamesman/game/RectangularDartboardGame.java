@@ -8,7 +8,7 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.database.Database;
-import edu.berkeley.gamesman.database.TierReadCache;
+import edu.berkeley.gamesman.database.RangeCache;
 import edu.berkeley.gamesman.game.util.DartboardCacher;
 import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.hasher.DartboardHasher;
@@ -30,31 +30,7 @@ public abstract class RectangularDartboardGame extends TierGame {
 		gameSize = gameWidth * gameHeight;
 		myChildren = new long[gameSize];
 		this.tieType = tieType;
-		String hasherType = conf.getProperty("gamesman.game.hasher",
-				DartboardHasher.class.getName());
-		if (!hasherType.contains(".")) {
-			hasherType = "edu.berkeley.gamesman.hasher." + hasherType;
-		}
-		try {
-			Class<? extends DartboardHasher> hasherClass = Class.forName(
-					hasherType).asSubclass(DartboardHasher.class);
-			myHasher = hasherClass.getConstructor(Integer.TYPE, char[].class)
-					.newInstance(gameSize, new char[] { ' ', 'O', 'X' });
-		} catch (ClassNotFoundException e) {
-			throw new Error(e);
-		} catch (IllegalArgumentException e) {
-			throw new Error(e);
-		} catch (SecurityException e) {
-			throw new Error(e);
-		} catch (InstantiationException e) {
-			throw new Error(e);
-		} catch (IllegalAccessException e) {
-			throw new Error(e);
-		} catch (InvocationTargetException e) {
-			throw new Error(e.getCause());
-		} catch (NoSuchMethodException e) {
-			throw new Error(e);
-		}
+		myHasher = new DartboardHasher(gameSize, ' ', 'O', 'X');
 		myCacher = new DartboardCacher(conf, myHasher);
 	}
 
@@ -183,14 +159,19 @@ public abstract class RectangularDartboardGame extends TierGame {
 	}
 
 	@Override
-	public int validMoves(TierState[] moves) {
+	public int validMoves(TierState[] moves, int[] cachePlaces) {
 		int numChildren = myHasher.getChildren(' ', tier % 2 == 0 ? 'X' : 'O',
-				myChildren);
+				cachePlaces, myChildren);
 		for (int i = 0; i < numChildren; i++) {
 			moves[i].tier = tier + 1;
 			moves[i].hash = myChildren[i];
 		}
 		return numChildren;
+	}
+
+	@Override
+	public int validMoves(TierState[] moves) {
+		return validMoves(moves, null);
 	}
 
 	@Override
@@ -295,14 +276,13 @@ public abstract class RectangularDartboardGame extends TierGame {
 	}
 
 	@Override
-	public TierReadCache getCache(Database db, long numPositions,
-			long availableMem) {
+	public RangeCache getCache(Database db, long numPositions, long availableMem) {
 		return myCacher.getCache(db, numPositions, availableMem, tier,
 				hashOffsetForTier(tier + 1));
 	}
 
 	@Override
-	public TierReadCache nextCache() {
+	public RangeCache nextCache() {
 		return myCacher.nextCache();
 	}
 

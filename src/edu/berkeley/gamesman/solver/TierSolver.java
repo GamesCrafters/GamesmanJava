@@ -7,7 +7,6 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
 import edu.berkeley.gamesman.core.*;
-import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.game.util.TierState;
@@ -52,121 +51,69 @@ public class TierSolver extends Solver {
 
 	private final int minSplitSize;
 
-	protected void solvePartialTier(Configuration conf, long start,
-			long hashes, Database readDb, DatabaseHandle readDh,
-			Database writeDb, DatabaseHandle writeDh) {
-		final long firstNano;
-		long nano = 0;
-		final boolean debugSolver = Util.debug(DebugFacility.SOLVER);
-		if (debugSolver) {
-			for (int i = 0; i < 7; i++) {
-				times[i] = 0;
-			}
-			firstNano = System.nanoTime();
-			nano = firstNano;
-		} else
-			firstNano = 0;
+	protected void solvePartialTier(Configuration conf, long firstHash,
+			long numHashes) {
 		TierGame game = (TierGame) conf.getGame();
-		long current = start;
-		long stepNum = current % STEP_SIZE;
-		TierState curState = game.hashToState(start);
-		game.setState(curState);
-		Record record = game.newRecord();
-		Record bestRecord = game.newRecord();
-		TierState[] children = new TierState[game.maxChildren()];
-		for (int i = 0; i < children.length; i++)
-			children[i] = game.newState();
-		long lastNano;
-		if (debugSolver) {
-			lastNano = nano;
-			nano = System.nanoTime();
-			times[0] = nano - lastNano;
-		}
-		for (long count = 0L; count < hashes; count++) {
+		game.setState(game.hashToState(firstHash));
+		long currentHash = firstHash;
+		Record currentRecord = game.newRecord();
+		Record[] childRecords = new Record[game.maxChildren()];
+		initialize(game, childRecords);
+		TierState[] children = game.newStateArray(game.maxChildren());
+		DatabaseHandle writeDh = writeDb.getHandle();
+		DatabaseHandle readDh = null;
+		if (readDb != null)
+			readDh = readDb.getHandle();
+		long stepNum = firstHash % STEP_SIZE;
+		for (long i = 0; i < numHashes; i++) {
 			if (stepNum == STEP_SIZE) {
 				updater.calculated(STEP_SIZE);
 				stepNum = 0;
 			}
-			Value pv = game.primitiveValue();
-			if (debugSolver) {
-				lastNano = nano;
-				nano = System.nanoTime();
-				times[1] += nano - lastNano;
+			Value v = game.primitiveValue();
+			if (v == Value.UNDECIDED) {
+				int numChildren = calculateAndFetchValues(game, children,
+						childRecords, readDh);
+				Record best = game.combine(childRecords, numChildren);
+				store(game, currentHash, best, writeDh);
+			} else {
+				storePrimitive(game, currentHash, v, currentRecord, writeDh);
 			}
-			if (pv == Value.UNDECIDED) {
-				int len = game.validMoves(children);
-				if (debugSolver) {
-					lastNano = nano;
-					nano = System.nanoTime();
-					times[2] += nano - lastNano;
-				}
-				bestRecord.value = Value.UNDECIDED;
-				for (int i = 0; i < len; i++) {
-					game.longToRecord(
-							children[i],
-							readDb.getRecord(readDh,
-									game.stateToHash(children[i])), record);
-					record.previousPosition();
-					if (bestRecord.value == Value.UNDECIDED
-							|| record.compareTo(bestRecord) > 0)
-						bestRecord.set(record);
-				}
-				if (debugSolver) {
-					lastNano = nano;
-					nano = System.nanoTime();
-					times[3] += nano - lastNano;
-				}
-				writeDb.putRecord(writeDh, current,
-						game.recordToLong(curState, bestRecord));
-			} else if (pv != Value.IMPOSSIBLE) {
-				if (debugSolver) {
-					lastNano = nano;
-					nano = System.nanoTime();
-					times[2] += nano - lastNano;
-					lastNano = nano;
-					nano = System.nanoTime();
-					times[3] += nano - lastNano;
-				}
-				record.remoteness = 0;
-				record.value = pv;
-				writeDb.putRecord(writeDh, current,
-						game.recordToLong(curState, record));
-			}
-			if (debugSolver) {
-				lastNano = nano;
-				nano = System.nanoTime();
-				times[4] += nano - lastNano;
-			}
-			if (count < hashes - 1) {
+			if (i < numHashes - 1)
 				game.nextHashInTier();
-				curState.hash++;
-			}
-			++current;
-			++stepNum;
-			if (debugSolver) {
-				lastNano = nano;
-				nano = System.nanoTime();
-				times[5] += nano - lastNano;
-				lastNano = nano;
-				nano = System.nanoTime();
-				times[6] += nano - lastNano;
-			}
+			currentHash++;
+			stepNum++;
 		}
-		if (debugSolver) {
-			long sumTimes = nano - firstNano - times[6] * 6;
-			Util.debug(DebugFacility.SOLVER, "Initializing: " + 1000 * times[0]
-					/ sumTimes / 10D);
-			Util.debug(DebugFacility.SOLVER, "Primitive Value: " + 1000
-					* (times[1] - times[6]) / sumTimes / 10D);
-			Util.debug(DebugFacility.SOLVER, "Calculating Chilren: " + 1000
-					* (times[2] - times[6]) / sumTimes / 10D);
-			Util.debug(DebugFacility.SOLVER, "Reading Children: " + 1000
-					* (times[3] - times[6]) / sumTimes / 10D);
-			Util.debug(DebugFacility.SOLVER, "Storing records: " + 1000
-					* (times[4] - times[6]) / sumTimes / 10D);
-			Util.debug(DebugFacility.SOLVER, "Stepping: " + 1000
-					* (times[5] - times[6]) / sumTimes / 10D);
+		writeDb.closeHandle(writeDh);
+	}
+
+	protected int calculateAndFetchValues(TierGame game, TierState[] children,
+			Record[] childRecords, DatabaseHandle readDh) {
+		int numChildren = game.validMoves(children);
+		for (int i = 0; i < numChildren; i++) {
+			long recordLong = readDb.getRecord(readDh,
+					game.stateToHash(children[i]));
+			game.longToRecord(children[i], recordLong, childRecords[i]);
+			childRecords[i].previousPosition();
 		}
+		return numChildren;
+	}
+
+	private void storePrimitive(TierGame game, long currentHash, Value v,
+			Record currentRecord, DatabaseHandle writeDh) {
+		currentRecord.value = v;
+		currentRecord.remoteness = 0;
+		store(game, currentHash, currentRecord, writeDh);
+	}
+
+	private void store(TierGame game, long currentHash, Record r,
+			DatabaseHandle writeDh) {
+		writeDb.putRecord(writeDh, currentHash, game.recordToLong(r));
+	}
+
+	private void initialize(TierGame game, Record[] childRecords) {
+		for (int i = 0; i < childRecords.length; i++)
+			childRecords[i] = game.newRecord();
 	}
 
 	@Override
@@ -328,15 +275,7 @@ public class TierSolver extends Solver {
 			Pair<Long, Long> slice;
 			while ((slice = nextSlice(conf)) != null) {
 				thisSlice = slice;
-				DatabaseHandle myWrite = writeDb.getHandle();
-				DatabaseHandle readHandle;
-				if (readDb == null)
-					readHandle = null;
-				else
-					readHandle = readDb.getHandle();
-				solvePartialTier(conf, slice.car, slice.cdr, readDb,
-						readHandle, writeDb, myWrite);
-				writeDb.closeHandle(myWrite);
+				solvePartialTier(conf, slice.car, slice.cdr);
 			}
 			if (barr != null)
 				try {

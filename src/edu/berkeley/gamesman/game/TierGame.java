@@ -4,9 +4,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.database.Database;
-import edu.berkeley.gamesman.database.TierReadCache;
+import edu.berkeley.gamesman.database.RangeCache;
 import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.hasher.TierHasher;
 import edu.berkeley.gamesman.util.Pair;
@@ -21,6 +22,7 @@ import edu.berkeley.gamesman.util.Pair;
  */
 public abstract class TierGame extends Game<TierState> {
 	private final TierHasher myHasher;
+	private TierState tempState = null;
 
 	/**
 	 * Default Constructor
@@ -248,17 +250,28 @@ public abstract class TierGame extends Game<TierState> {
 		return new TierState(tier, hash);
 	}
 
-	public TierReadCache getCache(Database db, long numPositions,
+	public RangeCache getCache(Database db, long numPositions,
 			long availableMem) {
 		throw new UnsupportedOperationException();
 	}
 
-	public TierReadCache nextCache() {
+	public RangeCache nextCache() {
 		throw new UnsupportedOperationException();
 	}
 
 	public Value strictPrimitiveValue() {
 		return primitiveValue();
+	}
+
+	public long recordToLong(Record r) {
+		if (tempState == null)
+			tempState = newState();
+		getState(tempState);
+		return recordToLong(tempState, r);
+	}
+
+	public int validMoves(TierState[] children, int[] cachePlaces) {
+		throw new UnsupportedOperationException();
 	}
 
 }

@@ -7,13 +7,13 @@ import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.hasher.ChangedIterator;
-import edu.berkeley.gamesman.hasher.DartboardHasher2;
+import edu.berkeley.gamesman.hasher.DartboardHasher;
 import edu.berkeley.gamesman.hasher.QuartoMinorHasher;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
 public class Quarto extends TierGame {
-	private final DartboardHasher2 majorHasher = new DartboardHasher2(' ', 'P');
+	private final DartboardHasher majorHasher = new DartboardHasher(' ', 'P');
 	private final ChangedIterator myChanged = new ChangedIterator(16);
 	private final QuartoMinorHasher minorHasher = new QuartoMinorHasher();
 	private int tier;

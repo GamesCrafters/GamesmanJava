@@ -5,23 +5,23 @@ package edu.berkeley.gamesman.core;
  * 
  * @author dnspies
  */
-public class Record implements Cloneable, Comparable<Record> {
+public final class Record implements Cloneable, Comparable<Record> {
 	private final Configuration conf;
 
 	/**
 	 * The value of this record
 	 */
-	public Value value;
+	public Value value = Value.UNDECIDED;
 
 	/**
 	 * The remoteness of this record
 	 */
-	public int remoteness;
+	public int remoteness = 0;
 
 	/**
 	 * The score of this record
 	 */
-	public int score;
+	public int score = 0;
 
 	/**
 	 * Creates an empty record that can be written to.
@@ -71,9 +71,9 @@ public class Record implements Cloneable, Comparable<Record> {
 	@Override
 	public String toString() {
 		String s;
-		if (conf.hasValue)
+		if (conf.hasValue) {
 			s = value.name();
-		else
+		} else
 			s = "Finish";
 		if (conf.hasRemoteness && (!conf.hasValue || value.hasRemoteness)) {
 			s += " in " + remoteness;
@@ -130,16 +130,10 @@ public class Record implements Cloneable, Comparable<Record> {
 					return -1;
 		return 0;
 	}
-	
+
 	/*
-	 * public boolean compareTo(Record other){
-	 * 	if (other.value == Value.IMPOSSIBLE){
-	 *		return true;
-	 *	}
-	 *	else{
-	 *		return isPreferableTo(other);
-	 *	}
-	 *}	
+	 * public boolean compareTo(Record other){ if (other.value ==
+	 * Value.IMPOSSIBLE){ return true; } else{ return isPreferableTo(other); }}
 	 */
-		
+
 }

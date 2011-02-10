@@ -373,12 +373,21 @@ public abstract class Game<S extends State> {
 	 *            An array of records
 	 * @return The record with the best possible outcome
 	 */
-	public Record combine(Record[] records) {
+	public Record combine(Record[] records, int numRecords) {
 		Record best = records[0];
-		for (int i = 1; i < records.length; i++) {
+		for (int i = 1; i < numRecords; i++) {
 			if (records[i].compareTo(best) > 0)
 				best = records[i];
 		}
 		return best;
+	}
+
+	/**
+	 * @param recordArray
+	 *            An array of records
+	 * @return The record with the best possible outcome
+	 */
+	public Record combine(Record[] records) {
+		return combine(records, records.length);
 	}
 }
