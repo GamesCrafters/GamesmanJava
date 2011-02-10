@@ -541,10 +541,42 @@ public final class DartboardHasher {
 	}
 
 	private void calculateReplacements() {
-		count.reset();
-		for (int piece = 0; piece < pieces.length; piece++) {
-			setReplacements(piece, count);
-			count.incr(pieces[piece].digit);
+		for (int replacement = 0; replacement < replacementSize; replacement++) {
+			Replacement rPair = replacements[replacement];
+			int group = -1;
+			count.reset();
+			count.trade(rPair.oldPiece, rPair.newPiece);
+			for (int piece = 0; piece < pieces.length; piece++) {
+				int pieceDigit = pieces[piece].digit;
+				if (pieceDigit == rPair.oldPiece)
+					group++;
+				count.incr(pieceDigit);
+				if (group >= 0) {
+					long dif = -pieces[piece].hash, moveDif = 0L;
+					for (int digit = 0; digit < pieceDigit
+							|| (pieceDigit == rPair.oldPiece && digit < rPair.newPiece); digit++) {
+						long arrangement = count.getDecr(digit);
+						if (digit < pieceDigit) {
+							dif += arrangement;
+							if (digit >= rPair.newPiece)
+								moveDif -= arrangement;
+						} else if (digit < rPair.newPiece)
+							moveDif += arrangement;
+						else
+							throw new Error("Why am I here?");
+					}
+					if (pieceDigit == rPair.oldPiece) {
+						rPair.groups[group].bottom = piece;
+						rPair.groups[group].moveDif = moveDif;
+						rPair.pieces[piece].setGroup(group - 1);
+					} else
+						rPair.pieces[piece].setGroup(group);
+					rPair.pieces[piece].setDif(dif);
+				} else if (group == -1)
+					rPair.pieces[piece].setGroup(-1);
+				else
+					throw new Error("Bad group " + group);
+			}
 		}
 	}
 
