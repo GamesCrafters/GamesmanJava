@@ -2,9 +2,7 @@ package edu.berkeley.gamesman.hasher;
 
 import java.util.Arrays;
 
-import edu.berkeley.gamesman.util.qll.Pool;
 import edu.berkeley.gamesman.util.qll.QuickLinkedList;
-import edu.berkeley.gamesman.util.qll.Factory;
 
 public final class QuartoMinorHasher {
 	private static long pick(int n, int k) {
@@ -113,6 +111,7 @@ public final class QuartoMinorHasher {
 			for (int i = 0; i < 4; i++) {
 				places[i] = i;
 			}
+			Arrays.fill(fixedWall, false);
 		}
 	}
 
@@ -162,17 +161,16 @@ public final class QuartoMinorHasher {
 		}
 	}
 
-	private class Count {
+	private static final class Count {
 		int usedPieces = 0;
 		long possibilities;
 		int lastPiece;
 		final boolean[] used = new boolean[16];
 
 		public Count() {
-			reset();
 		}
 
-		public void reset() {
+		public void reset(int numPieces) {
 			Arrays.fill(used, false);
 			usedPieces = 0;
 			possibilities = pick(16, numPieces);
@@ -228,34 +226,13 @@ public final class QuartoMinorHasher {
 
 	private final Position[] tierTables = new Position[17];
 	private final Piece[] pieces;
+	private final Piece[] child;
 	private final Position[] symPositions;
 	private int syms;
 	private long hash;
-	private final Pool<Rotation> rotPool = new Pool<Rotation>(
-			new Factory<Rotation>() {
-
-				@Override
-				public Rotation newObject() {
-					return new Rotation();
-				}
-
-				@Override
-				public void reset(Rotation t) {
-					t.reset();
-				}
-
-			});
-	private final Pool<Count> countPool = new Pool<Count>(new Factory<Count>() {
-		@Override
-		public Count newObject() {
-			return new Count();
-		}
-
-		@Override
-		public void reset(Count t) {
-			t.reset();
-		}
-	});
+	private final Count numType;
+	private final Count count;
+	private final Rotation rot;
 	private int numPieces;
 
 	public QuartoMinorHasher() {
@@ -268,19 +245,26 @@ public final class QuartoMinorHasher {
 					false }, 0L, i - 1);
 		}
 		pieces = new Piece[16];
+		child = new Piece[16];
 		symPositions = new Position[16];
 		for (int i = 0; i < 16; i++) {
 			pieces[i] = new Piece();
+			child[i] = new Piece();
 		}
 		numPieces = 0;
+		numType = new Count();
+		count = new Count();
+		rot = new Rotation();
 	}
 
 	public void setTier(int tier) {
 		numPieces = tier;
 		Position curPos = tierTables[tier];
 		syms = 1;
+		numType.reset(tier);
 		for (int i = 0; i < tier; i++) {
 			pieces[i].pieceNum = i;
+			numType.addPiece(i);
 			pieces[i].pieceHash = 0L;
 			symPositions[i] = curPos;
 			if (curPos == null || curPos.inner == null)
@@ -305,18 +289,18 @@ public final class QuartoMinorHasher {
 		for (int i = 0; i < numPieces; i++) {
 			pieces[i].pieceNum = board[i] ^ board[0];
 		}
-		Count count = countPool.get();
-		Rotation rot = rotPool.get();
+		numType.reset(numPieces);
+		rot.reset();
 		Position p = tierTables[numPieces];
 		symPositions[0] = p;
-		count.addPiece(0);
+		numType.addPiece(0);
 		int i;
 		for (i = 1; i < numPieces; i++) {
 			if (p.inner == null)
 				break;
 			pieces[i].applyRotation(rot);
 			rot.dropState(pieces[i]);
-			count.addPiece(pieces[i].pieceNum);
+			numType.addPiece(pieces[i].pieceNum);
 			p = p.inner[pieces[i].pieceNum];
 			pieces[i].pieceHash = 0L;
 			symPositions[i] = p;
@@ -329,13 +313,11 @@ public final class QuartoMinorHasher {
 		for (; i < numPieces; i++) {
 			symPositions[i] = null;
 			pieces[i].applyRotation(rot);
-			count.addPiece(pieces[i].pieceNum);
-			long pieceHash = count.lastHash();
+			numType.addPiece(pieces[i].pieceNum);
+			long pieceHash = numType.lastHash();
 			pieces[i].pieceHash = pieceHash;
 			hash += pieceHash;
 		}
-		countPool.release(count);
-		rotPool.release(rot);
 		return hash;
 	}
 
@@ -346,10 +328,10 @@ public final class QuartoMinorHasher {
 
 	public void unhash(long hash) {
 		Position p = tierTables[numPieces];
+		numType.reset(numPieces);
 		this.hash = hash;
 		pieces[0].pieceNum = 0;
-		Count count = countPool.get();
-		count.addPiece(0);
+		numType.addPiece(0);
 		symPositions[0] = p;
 		int i;
 		for (i = 1; i < numPieces; i++) {
@@ -368,7 +350,7 @@ public final class QuartoMinorHasher {
 			}
 			pieces[i].pieceNum = nextK;
 			pieces[i].pieceHash = 0L;
-			count.addPiece(nextK);
+			numType.addPiece(nextK);
 			p = nextP;
 			symPositions[i] = p;
 		}
@@ -377,17 +359,68 @@ public final class QuartoMinorHasher {
 		hash -= p.offset;
 		for (; i < numPieces; i++) {
 			symPositions[i] = null;
-			long pieceHash = count.addNext(hash);
-			int piece = count.lastPiece;
+			long pieceHash = numType.addNext(hash);
+			int piece = numType.lastPiece;
 			pieces[i].pieceNum = piece;
 			pieces[i].pieceHash = pieceHash;
 			hash -= pieceHash;
 		}
-		countPool.release(count);
 	}
 
 	public int get(int index) {
 		return pieces[index].pieceNum;
+	}
+
+	public void nextHashInTier() {
+		unhash(hash + 1);
+	}
+
+	public void reset() {
+		setTier(numPieces);
+	}
+
+	public int getChildren(long[] children) {
+		if (numPieces == 16)
+			return 0;
+		int childNum = 0;
+		for (int childPiece = 0; childPiece < 16; childPiece++) {
+			if (numType.used[childPiece])
+				continue;
+			for (int i = 0; i <= numPieces; i++) {
+				long childHash = -1L;
+				count.reset(numPieces + 1);
+				rot.reset();
+				Position place = tierTables[numPieces + 1];
+				for (int k = 0; k <= numPieces; k++) {
+					int pieceNum;
+					if (k < i)
+						pieceNum = pieces[k].pieceNum;
+					else if (k > i)
+						pieceNum = pieces[k - 1].pieceNum;
+					else
+						pieceNum = childPiece;
+					if (i == 0)
+						pieceNum ^= childPiece;
+					child[k].pieceNum = pieceNum;
+					child[k].applyRotation(rot);
+					rot.dropState(child[k]);
+					pieceNum = child[k].pieceNum;
+					count.addPiece(pieceNum);
+					if (place == null)
+						childHash += count.lastHash();
+					else if (place.inner == null) {
+						childHash = place.offset;
+						place = null;
+						childHash += count.lastHash();
+					} else if (k > 0)
+						place = place.inner[pieceNum];
+				}
+				if (childHash < 0)
+					childHash = place.offset;
+				children[childNum++] = childHash;
+			}
+		}
+		return childNum;
 	}
 
 	public static void main(String[] args) {
@@ -399,23 +432,25 @@ public final class QuartoMinorHasher {
 		}
 		System.out.println(Arrays.toString(sizes));
 		int[] b = new int[5];
+		int[] c = new int[6];
+		long[] children = new long[80];
 		for (long i = 0L; i < 1575; i++) {
 			qmh.unhash(i);
 			for (int k = 0; k < 5; k++) {
 				b[k] = qmh.pieces[k].pieceNum;
 			}
+			qmh.getChildren(children);
+			qmh.setTier(6);
+			qmh.unhash(children[31]);
+			for (int k = 0; k < 6; k++) {
+				c[k] = qmh.pieces[k].pieceNum;
+			}
+			System.out.println(children[31] + ": " + Arrays.toString(c));
+			qmh.setTier(5);
 			long v = qmh.hash(b);
 			if (i != v)
 				throw new RuntimeException("Houston, we have a problem!");
 			System.out.println(i + ": " + Arrays.toString(b));
 		}
-	}
-
-	public void nextHashInTier() {
-		unhash(hash + 1);
-	}
-
-	public void reset() {
-		setTier(numPieces);
 	}
 }
