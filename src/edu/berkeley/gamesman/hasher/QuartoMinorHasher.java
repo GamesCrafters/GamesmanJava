@@ -433,19 +433,21 @@ public final class QuartoMinorHasher {
 		System.out.println(Arrays.toString(sizes));
 		int[] b = new int[5];
 		int[] c = new int[6];
-		long[] children = new long[80];
+		long[] children = new long[66];
 		for (long i = 0L; i < 1575; i++) {
 			qmh.unhash(i);
 			for (int k = 0; k < 5; k++) {
 				b[k] = qmh.pieces[k].pieceNum;
 			}
-			qmh.getChildren(children);
+			int numChildren = qmh.getChildren(children);
+			if (numChildren != 66)
+				throw new Error("Wrong number of children");
 			qmh.setTier(6);
-			qmh.unhash(children[31]);
+			qmh.unhash(children[34]);
 			for (int k = 0; k < 6; k++) {
 				c[k] = qmh.pieces[k].pieceNum;
 			}
-			System.out.println(children[31] + ": " + Arrays.toString(c));
+			System.out.println(children[34] + ": " + Arrays.toString(c));
 			qmh.setTier(5);
 			long v = qmh.hash(b);
 			if (i != v)

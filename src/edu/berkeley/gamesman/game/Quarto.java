@@ -18,6 +18,9 @@ public class Quarto extends TierGame {
 	private final QuartoMinorHasher minorHasher = new QuartoMinorHasher();
 	private int tier;
 	private final Piece[][] pieces;
+	private final int[] places = new int[16];
+	private final long[] majorChildren = new long[16];
+	private final long[] minorChildren = new long[256];
 
 	private class Piece {
 		private final int majorIndex;
@@ -259,8 +262,31 @@ public class Quarto extends TierGame {
 
 	@Override
 	public int validMoves(TierState[] moves) {
-		// TODO Auto-generated method stub
-		return 0;
+		int numMajor = majorHasher.getChildren(' ', 'P', places, majorChildren);
+		int numMinor = minorHasher.getChildren(minorChildren);
+		if (numMajor != 16 - tier)
+			throw new Error("Incorrect number of children");
+		if (numMinor != (16 - tier) * (tier + 1))
+			throw new Error("Incorrect number of children");
+		long tierHashes = minorHasher.numHashesForTier(tier + 1);
+		int numMoves = 0;
+		for (int childPiece = 0; childPiece < numMajor; childPiece++) {
+			int minorPlace = 0;
+			int majorPlace = 0;
+			for (int i = 0; i < 16; i++) {
+				if (majorHasher.get(i) == ' ') {
+					long majorHash = majorChildren[majorPlace++];
+					long minorHash = minorChildren[minorPlace];
+					moves[numMoves].tier = tier + 1;
+					moves[numMoves].hash = majorHash * tierHashes + minorHash;
+					numMoves++;
+				} else
+					minorPlace++;
+			}
+		}
+		if (numMoves != (16 - tier) * (16 - tier))
+			throw new Error("Incorrect number of children");
+		return numMoves;
 	}
 
 	@Override
