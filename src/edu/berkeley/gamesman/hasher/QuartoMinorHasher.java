@@ -455,4 +455,8 @@ public final class QuartoMinorHasher {
 			System.out.println(i + ": " + Arrays.toString(b));
 		}
 	}
+
+	public boolean used(int i) {
+		return numType.used[i];
+	}
 }

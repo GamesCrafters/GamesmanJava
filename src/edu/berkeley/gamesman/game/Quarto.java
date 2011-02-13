@@ -13,7 +13,8 @@ import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
 public class Quarto extends TierGame {
-	private final DartboardHasher majorHasher = new DartboardHasher(' ', 'P');
+	private final DartboardHasher majorHasher = new DartboardHasher(16, ' ',
+			'P');
 	private final ChangedIterator myChanged = new ChangedIterator(16);
 	private final QuartoMinorHasher minorHasher = new QuartoMinorHasher();
 	private int tier;
@@ -51,9 +52,8 @@ public class Quarto extends TierGame {
 		public String toBinaryString() {
 			StringBuilder sb = new StringBuilder(4);
 			int val = get();
-			for (int i = 0; i < 4; i++) {
-				sb.append(val & 1);
-				val >>= 1;
+			for (int i = 3; i >= 0; i--) {
+				sb.append((val >>> i) & 1);
 			}
 			return sb.toString();
 		}
@@ -61,6 +61,7 @@ public class Quarto extends TierGame {
 
 	public Quarto(Configuration conf) {
 		super(conf);
+		majorHasher.setNums(16, 0);
 		majorHasher.setReplacements(' ', 'P');
 		pieces = new Piece[4][4];
 		int i = 0;
@@ -73,7 +74,7 @@ public class Quarto extends TierGame {
 
 	@Override
 	public void setState(TierState pos) {
-		setTier(tier);
+		setTier(pos.tier);
 		long tierHashes = minorHasher.numHashesForTier(tier);
 		long majorHash = pos.hash / tierHashes;
 		long minorHash = pos.hash % tierHashes;
@@ -201,7 +202,7 @@ public class Quarto extends TierGame {
 				if (col < 3)
 					sb.append(" ");
 				else
-					sb.append("\n");
+					sb.append("\n\n");
 			}
 		}
 		return sb.toString();
@@ -270,8 +271,8 @@ public class Quarto extends TierGame {
 			throw new Error("Incorrect number of children");
 		long tierHashes = minorHasher.numHashesForTier(tier + 1);
 		int numMoves = 0;
+		int minorPlace = 0;
 		for (int childPiece = 0; childPiece < numMajor; childPiece++) {
-			int minorPlace = 0;
 			int majorPlace = 0;
 			for (int i = 0; i < 16; i++) {
 				if (majorHasher.get(i) == ' ') {
@@ -283,6 +284,7 @@ public class Quarto extends TierGame {
 				} else
 					minorPlace++;
 			}
+			minorPlace++;
 		}
 		if (numMoves != (16 - tier) * (16 - tier))
 			throw new Error("Incorrect number of children");
@@ -316,6 +318,14 @@ public class Quarto extends TierGame {
 			return 17L;
 		else
 			return fromRecord.remoteness;
+	}
+
+	public boolean used(int i) {
+		return minorHasher.used(i);
+	}
+
+	public boolean usedPlace(int i) {
+		return majorHasher.get(i) == 'P';
 	}
 
 }
