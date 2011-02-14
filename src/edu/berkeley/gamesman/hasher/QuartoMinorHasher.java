@@ -117,7 +117,7 @@ public final class QuartoMinorHasher {
 
 	private final class Piece {
 		int pieceNum;
-		long pieceHash;
+//		long pieceHash;
 
 		public Piece(int i) {
 			pieceNum = i;
@@ -135,13 +135,13 @@ public final class QuartoMinorHasher {
 			pieceNum = newNum;
 		}
 
-		public void reverseRotation(Rotation r) {
-			int newNum = 0;
-			for (int i = 0; i < 4; i++) {
-				newNum = QuartoMinorHasher.set(newNum, r.places[i], get(i));
-			}
-			pieceNum = newNum;
-		}
+//		public void reverseRotation(Rotation r) {
+//			int newNum = 0;
+//			for (int i = 0; i < 4; i++) {
+//				newNum = QuartoMinorHasher.set(newNum, r.places[i], get(i));
+//			}
+//			pieceNum = newNum;
+//		}
 
 		private int get(int i) {
 			return QuartoMinorHasher.get(pieceNum, i);
@@ -205,12 +205,12 @@ public final class QuartoMinorHasher {
 			return pCount * possibilities;
 		}
 
-		public void removePiece(int n) {
-			usedPieces--;
-			lastPiece = -1;
-			used[n] = false;
-			possibilities *= (16 - usedPieces);
-		}
+//		public void removePiece(int n) {
+//			usedPieces--;
+//			lastPiece = -1;
+//			used[n] = false;
+//			possibilities *= (16 - usedPieces);
+//		}
 	}
 
 	private static int set(int num, int i, int n) {
@@ -227,8 +227,8 @@ public final class QuartoMinorHasher {
 	private final Position[] tierTables = new Position[17];
 	private final Piece[] pieces;
 	private final Piece[] child;
-	private final Position[] symPositions;
-	private int syms;
+//	private final Position[] symPositions;
+//	private int syms;
 	private long hash;
 	private final Count numType;
 	private final Count count;
@@ -246,7 +246,7 @@ public final class QuartoMinorHasher {
 		}
 		pieces = new Piece[16];
 		child = new Piece[16];
-		symPositions = new Position[16];
+//		symPositions = new Position[16];
 		for (int i = 0; i < 16; i++) {
 			pieces[i] = new Piece();
 			child[i] = new Piece();
@@ -259,20 +259,20 @@ public final class QuartoMinorHasher {
 
 	public void setTier(int tier) {
 		numPieces = tier;
-		Position curPos = tierTables[tier];
-		syms = 1;
+//		Position curPos = tierTables[tier];
+//		syms = 1;
 		numType.reset(tier);
 		for (int i = 0; i < tier; i++) {
 			pieces[i].pieceNum = i;
 			numType.addPiece(i);
-			pieces[i].pieceHash = 0L;
-			symPositions[i] = curPos;
-			if (curPos == null || curPos.inner == null)
-				curPos = null;
-			else {
-				curPos = curPos.inner[i + 1];
-				syms = i + 2;
-			}
+//			pieces[i].pieceHash = 0L;
+//			symPositions[i] = curPos;
+//			if (curPos == null || curPos.inner == null)
+//				curPos = null;
+//			else {
+//				curPos = curPos.inner[i + 1];
+//				syms = i + 2;
+//			}
 		}
 		hash = 0L;
 	}
@@ -292,7 +292,7 @@ public final class QuartoMinorHasher {
 		numType.reset(numPieces);
 		rot.reset();
 		Position p = tierTables[numPieces];
-		symPositions[0] = p;
+//		symPositions[0] = p;
 		numType.addPiece(0);
 		int i;
 		for (i = 1; i < numPieces; i++) {
@@ -302,20 +302,20 @@ public final class QuartoMinorHasher {
 			rot.dropState(pieces[i]);
 			numType.addPiece(pieces[i].pieceNum);
 			p = p.inner[pieces[i].pieceNum];
-			pieces[i].pieceHash = 0L;
-			symPositions[i] = p;
+//			pieces[i].pieceHash = 0L;
+//			symPositions[i] = p;
 			if (p == null)
 				throw new NullPointerException();
 		}
-		syms = i;
+//		syms = i;
 		hash = p.offset;
-		pieces[i - 1].pieceHash = p.offset;
+//		pieces[i - 1].pieceHash = p.offset;
 		for (; i < numPieces; i++) {
-			symPositions[i] = null;
+//			symPositions[i] = null;
 			pieces[i].applyRotation(rot);
 			numType.addPiece(pieces[i].pieceNum);
 			long pieceHash = numType.lastHash();
-			pieces[i].pieceHash = pieceHash;
+//			pieces[i].pieceHash = pieceHash;
 			hash += pieceHash;
 		}
 		return hash;
@@ -332,7 +332,7 @@ public final class QuartoMinorHasher {
 		this.hash = hash;
 		pieces[0].pieceNum = 0;
 		numType.addPiece(0);
-		symPositions[0] = p;
+//		symPositions[0] = p;
 		int i;
 		for (i = 1; i < numPieces; i++) {
 			if (p.inner == null)
@@ -349,20 +349,20 @@ public final class QuartoMinorHasher {
 				}
 			}
 			pieces[i].pieceNum = nextK;
-			pieces[i].pieceHash = 0L;
+//			pieces[i].pieceHash = 0L;
 			numType.addPiece(nextK);
 			p = nextP;
-			symPositions[i] = p;
+//			symPositions[i] = p;
 		}
-		syms = i;
-		pieces[i - 1].pieceHash = p.offset;
+//		syms = i;
+//		pieces[i - 1].pieceHash = p.offset;
 		hash -= p.offset;
 		for (; i < numPieces; i++) {
-			symPositions[i] = null;
+//			symPositions[i] = null;
 			long pieceHash = numType.addNext(hash);
 			int piece = numType.lastPiece;
 			pieces[i].pieceNum = piece;
-			pieces[i].pieceHash = pieceHash;
+//			pieces[i].pieceHash = pieceHash;
 			hash -= pieceHash;
 		}
 	}
