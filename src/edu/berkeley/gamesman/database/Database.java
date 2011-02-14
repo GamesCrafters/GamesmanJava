@@ -9,6 +9,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
@@ -1740,10 +1741,16 @@ public abstract class Database {
 					Class<? extends DatabaseWrapper> wrapperClass = Class
 							.forName(dbClasses[i]).asSubclass(
 									DatabaseWrapper.class);
+					long lieNumRecords = numRecords;
+					if (dbClasses[i] == TierCutDatabase.class.getName()) {
+						lieNumRecords = TierCutDatabase.getNumRecords(
+								firstRecord, numRecords,
+								(TierGame) conf.getGame());
+					}
 					conf.db = wrapperClass.getConstructor(Database.class,
 							String.class, Configuration.class, Boolean.TYPE,
 							Long.TYPE, Long.TYPE).newInstance(conf.db, uri,
-							conf, solve, firstRecord, numRecords);
+							conf, solve, firstRecord, lieNumRecords);
 				}
 			} catch (InstantiationException e) {
 				e.printStackTrace();

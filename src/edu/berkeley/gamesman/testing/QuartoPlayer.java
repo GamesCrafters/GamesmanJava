@@ -47,5 +47,6 @@ public class QuartoPlayer {
 			game.setState(moves[startPoint + place]);
 			tier++;
 		}
+		System.out.println(game.displayState());
 	}
 }
