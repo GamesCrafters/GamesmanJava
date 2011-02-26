@@ -370,6 +370,7 @@ public final class QuartoMinorHasher {
 			// pieces[i].pieceHash = pieceHash;
 			hash -= pieceHash;
 		}
+		assert hash == 0L;
 	}
 
 	public int get(int index) {
@@ -509,5 +510,13 @@ public final class QuartoMinorHasher {
 			}
 		}
 		return new long[] { startHash, neededMem };
+	}
+
+	public int[] getBoard() {
+		int[] newBoard = new int[numPieces];
+		for (int i = 0; i < numPieces; i++) {
+			newBoard[i] = pieces[i].pieceNum;
+		}
+		return newBoard;
 	}
 }

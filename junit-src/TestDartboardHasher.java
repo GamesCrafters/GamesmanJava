@@ -23,7 +23,6 @@ public class TestDartboardHasher {
 			dh2.unhash(hash);
 			Assert.assertEquals(dh.toString(), dh2.toString());
 			Assert.assertEquals(hash, dh2.getHash());
-			dh2.next();
 		} while (dh.next());
 		Assert.assertEquals(1259L, lastHash);
 	}
