@@ -12,8 +12,12 @@ public class RangeFile implements Writable {
 	public FileStatus myFile;
 
 	public RangeFile() {
-		myRange = new Range();
-		myFile = new FileStatus();
+		this(new Range(), new FileStatus());
+	}
+
+	public RangeFile(Range key, FileStatus file) {
+		myRange = key;
+		myFile = file;
 	}
 
 	@Override

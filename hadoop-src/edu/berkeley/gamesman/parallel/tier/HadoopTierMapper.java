@@ -4,7 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Random;
 
 import edu.berkeley.gamesman.core.WorkUnit;
@@ -31,14 +32,9 @@ import edu.berkeley.gamesman.core.Configuration;
 public class HadoopTierMapper extends
 		Mapper<Range, IntWritable, IntWritable, RangeFile> implements
 		TaskFactory {
-	private final RangeFile mapValue = new RangeFile();
-	private final IntWritable tier = new IntWritable();
+	private int tier;
 	private TierSolver solver;
 	private TierGame game;
-	private Database writeDb;
-	private SplitFileSystemDatabase readDb;
-	private boolean doZip;
-	private String writeURI;
 	private String readUri;
 	private Context currentContext;
 	private final Random r = new Random();
@@ -57,10 +53,10 @@ public class HadoopTierMapper extends
 					.get("gamesman.configuration"));
 			game = (TierGame) this.conf.getGame();
 			fs = FileSystem.get(conf);
-			tier.set(conf.getInt("tier", -1));
-			if (tier.get() == -1)
+			tier = conf.getInt("tier", -1);
+			if (tier == -1)
 				throw new Error("No tier specified");
-			if (tier.get() < game.numberOfTiers() - 1) {
+			if (tier < game.numberOfTiers() - 1) {
 				readUri = conf.get("gamesman.hadoop.lastTierDb");
 			}
 			String solverName = this.conf.getProperty("gamesman.solver");
@@ -83,7 +79,6 @@ public class HadoopTierMapper extends
 			} catch (NoSuchMethodException e) {
 				throw new Error(e);
 			}
-			doZip = conf.getBoolean("gamesman.remote.zipped", false);
 		} catch (ClassNotFoundException e) {
 			throw new Error(e);
 		} catch (IOException e) {
@@ -114,9 +109,10 @@ public class HadoopTierMapper extends
 		if (numHashes == 0)
 			return;
 		else if (numHashes < 0)
-			throw new RuntimeException("Negative number of hashes");
+			throw new Error("Negative number of hashes");
 		DatabaseHeader head = new DatabaseHeader(conf, firstHash, numHashes);
-		int prevTier = tier.get() + 1;
+		int prevTier = tier + 1;
+		SplitFileSystemDatabase readDb;
 		if (prevTier < game.numberOfTiers()) {
 			readDb = new SplitFileSystemDatabase(fs, readUri, firstHash,
 					numHashes);
@@ -127,16 +123,12 @@ public class HadoopTierMapper extends
 
 		// setting write database file name, path etc and initializing it*******
 		String foldUri = conf.getProperty("gamesman.hadoop.dbfolder");
-		doZip = conf.getBoolean("gamesman.hadoop.zipped", false);
-		writeURI = foldUri + File.separator + "s" + tier.get() + "_"
-				+ firstHash + ".db";
-		String zipURI = null;
-		if (doZip) {
-			zipURI = writeURI;
-			writeURI = writeURI + ".uz";
-		}
-		writeDb = Database.openDatabase(writeURI + "_local", conf, true, head);
-		File localFile = new File(writeURI + "_local");
+		String uri = foldUri + File.separator + "s" + tier + "_" + firstHash
+				+ ".db";
+		String zippedURI = uri + "_local";
+		String unzippedURI = zippedURI + ".uz_local";
+		Database writeDb = Database.openDatabase(unzippedURI, conf, true, head);
+		File localFile = new File(unzippedURI);
 		File localParent = localFile.getParentFile();
 		localParent.setWritable(true, false);
 		localParent.setExecutable(true, false);
@@ -146,18 +138,15 @@ public class HadoopTierMapper extends
 		solver.setWriteDb(writeDb);
 		// ***********************************************************************
 
-		int tier = this.tier.get();
 		int threads = conf.getInteger("gamesman.threads", 1);
-		List<WorkUnit> list = null;
+		Collection<WorkUnit> list;
 		WorkUnit wu = solver.prepareSolve(conf, tier, firstHash, numHashes);
 		if (threads > 1)
 			list = wu.divide(threads);
 		else {
-			list = new ArrayList<WorkUnit>(1);
-			list.add(wu);
+			list = Collections.singleton(wu);
 		}
 		ArrayList<Thread> myThreads = new ArrayList<Thread>(list.size());
-
 		ThreadGroup solverGroup = new ThreadGroup("Solver Group: "
 				+ game.describe());
 		for (WorkUnit w : list) {
@@ -175,81 +164,70 @@ public class HadoopTierMapper extends
 		if (readDb != null) {
 			readDb.close();
 		}
-		if (doZip) {
-			long maxMem = conf.getLong("gamesman.memory", Integer.MAX_VALUE);
-			Database readFrom = writeDb;
-			GZippedFileDatabase writeTo;
-			try {
-				writeTo = new GZippedFileDatabase(zipURI + "_local", conf,
-						readFrom, maxMem);
-				File localZipFile = new File(zipURI + "_local");
-				localZipFile.setWritable(true, false);
-				localZipFile.setReadable(true, false);
-			} catch (IOException e) {
-				throw new Error(e);
-			}
-			Thread[] threadList = new Thread[threads];
-			for (int i = 0; i < threads; i++) {
-				threadList[i] = new Thread(writeTo);
-				threadList[i].start();
-			}
-			for (int i = 0; i < threads; i++) {
-				while (threadList[i].isAlive())
-					try {
-						threadList[i].join();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
+		long maxMem = conf.getLong("gamesman.memory", Integer.MAX_VALUE);
+		Database readFrom = writeDb;
+		GZippedFileDatabase writeTo;
+		try {
+			writeTo = new GZippedFileDatabase(zippedURI, conf, readFrom, maxMem);
+			File localZipFile = new File(zippedURI);
+			localZipFile.setWritable(true, false);
+			localZipFile.setReadable(true, false);
+		} catch (IOException e) {
+			throw new Error(e);
+		}
+		Thread[] threadList = new Thread[threads];
+		for (int i = 0; i < threads; i++) {
+			threadList[i] = new Thread(writeTo);
+			threadList[i].start();
+		}
+		for (int i = 0; i < threads; i++) {
+			while (threadList[i].isAlive())
+				try {
+					threadList[i].join();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 
-			}
-			writeTo.close();
-			writeDb.close();
-			new File(writeURI + "_local").delete();
-		} else
-			writeDb.close();
+		}
+		writeTo.close();
+		writeDb.close();
+		new File(unzippedURI).delete();
 		Path p;
 		final Path pLocal;
-		if (zipURI == null) {
-			pLocal = new Path(writeURI + "_local");
-			p = new Path(writeURI);
-			fs.copyFromLocalFile(pLocal, p);
-			new File(writeURI + "_local").delete();
-		} else {
-			pLocal = new Path(zipURI + "_local");
-			final Path tempPath = new Path(zipURI + r.nextLong());
-			p = new Path(zipURI);
-			if (!fs.exists(p)) {
-				Thread t = new Thread() {
-					@Override
-					public void run() {
-						try {
-							fs.copyFromLocalFile(pLocal, tempPath);
-							failure = null;
-						} catch (IOException e) {
-							failure = e;
-						}
-					}
-				};
-				t.start();
-				context.progress();
-				while (t.isAlive()) {
+
+		pLocal = new Path(zippedURI);
+		final Path tempPath = new Path(uri + r.nextLong());
+		p = new Path(uri);
+		if (!fs.exists(p)) {
+			Thread t = new Thread() {
+				@Override
+				public void run() {
 					try {
-						t.join(60000L);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
+						fs.copyFromLocalFile(pLocal, tempPath);
+						failure = null;
+					} catch (IOException e) {
+						failure = e;
 					}
-					context.progress();
 				}
-				if (failure != null)
-					throw new Error(failure);
-				fs.rename(tempPath, p);
+			};
+			t.start();
+			context.progress();
+			while (t.isAlive()) {
+				try {
+					t.join(60000L);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				context.progress();
 			}
-			new File(zipURI + "_local").delete();
+			if (failure != null)
+				throw new Error(failure);
+			fs.rename(tempPath, p);
 		}
+		new File(zippedURI).delete();
 		FileStatus finalFile = fs.getFileStatus(p);
 		try {
-			mapValue.set(key, finalFile);
-			context.write(this.tier, mapValue);
+			context.write(new IntWritable(tier), new RangeFile(key, finalFile));
 		} catch (InterruptedException e) {
 			throw new Error(e);
 		}
