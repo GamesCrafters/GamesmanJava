@@ -584,10 +584,7 @@ public final class YGame extends ConnectGame
      */
     public Vector<Node> clockwiser(final int triangleIn, final int indexIn) 
     {
-        assert ((this.nodesOnSameTriangle.size() == 3) || (this.nodesOnSameTriangle.size() == 2) || (this.nodesOnSameTriangle
-                .size() == 0));
         assert ((this.nodesOnInnerTriangle.size() >= 0) && (this.nodesOnInnerTriangle.size() <= 3));
-        assert ((this.nodesOnOuterTriangle.size() >= 0) && (this.nodesOnOuterTriangle.size() <= 3));
 
         boolean isAfterCorner = this.isCornerIndex(triangleIn, Util.nonNegativeModulo(indexIn - 1,
                 this.nodesInThisTriangle[triangleIn]));
