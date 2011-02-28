@@ -519,4 +519,35 @@ public final class QuartoMinorHasher {
 		}
 		return newBoard;
 	}
+
+	public Rotation dropState(int[] board) {
+		long childHash = -1L;
+		Count count = new Count(board.length);
+		Rotation rot = new Rotation();
+		Piece[] pieces = new Piece[board.length];
+		for (int i = 0; i < pieces.length; i++) {
+			pieces[i] = new Piece();
+		}
+		Position place = tierTables[board.length];
+		for (int k = 0; k < board.length; k++) {
+			int pieceNum = pieces[k].pieceNum;
+			pieceNum ^= board[0];
+			pieces[k].pieceNum = pieceNum;
+			pieces[k].applyRotation(rot);
+			rot.dropState(pieces[k]);
+			pieceNum = pieces[k].pieceNum;
+			count.addPiece(pieceNum);
+			if (place == null)
+				childHash += count.lastHash();
+			else if (place.inner == null) {
+				childHash = place.offset;
+				place = null;
+				childHash += count.lastHash();
+			} else if (k > 0)
+				place = place.inner[pieceNum];
+		}
+		if (childHash < 0)
+			childHash = place.offset;
+		return rot;
+	}
 }

@@ -48,6 +48,43 @@ public class TestQuarto {
 	}
 
 	@Test
+	public void testChildren() {
+		QuartoMinorHasher qmh = new QuartoMinorHasher();
+		QuartoMinorHasher qmh2 = new QuartoMinorHasher();
+		qmh.setTier(7);
+		qmh2.setTier(8);
+		long[] children = new long[77];
+		Assert.assertEquals(151410L, qmh.numHashesForTier(7));
+		for (long hash = 0L; hash < 151410L; hash++) {
+			arbitraryReset(qmh);
+			int[] board = qmh.getBoard();
+			qmh.getChildren(children);
+			int[] board2 = new int[board.length + 1];
+			int childNum = 0;
+			for (int place = 0; place <= board.length; place++) {
+				for (int piece = 0; piece < 16; piece++) {
+					if (qmh.used(piece))
+						continue;
+					long child = children[childNum++];
+					for (int i = 0; i < board2.length; i++) {
+						if (i < place) {
+							board2[i] = board[i];
+						} else if (i > place) {
+							board2[i] = board[i - 1];
+						} else
+							board2[i] = piece;
+					}
+					qmh2.dropState(board2);
+					qmh2.unhash(child);
+					Assert.assertTrue(Arrays.equals(board2, qmh2.getBoard()));
+				}
+			}
+			if (hash < 151409L)
+				qmh.nextHashInTier();
+		}
+	}
+
+	@Test
 	public void testCacher() {
 		long[][][] caches = new long[8][17][];
 		QuartoMinorHasher qmh = new QuartoMinorHasher();
@@ -59,7 +96,6 @@ public class TestQuarto {
 				if (!Arrays.equals(oldCache, cache)) {
 					Assert.assertTrue(oldCache == null
 							|| oldCache[1] == qmh.getHash());
-					System.out.println(qmh.getHash());
 					caches[place][16] = cache;
 				}
 				if (cache == null) {
