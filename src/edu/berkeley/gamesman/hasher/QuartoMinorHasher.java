@@ -12,7 +12,7 @@ public final class QuartoMinorHasher {
 			return n * pick(n - 1, k - 1);
 	}
 
-	private final class Position {
+	private static final class Position {
 		private final Position[] inner;
 		private final long offset;
 		private final long numHashes;
@@ -59,7 +59,7 @@ public final class QuartoMinorHasher {
 		}
 	}
 
-	private final class Rotation implements Cloneable {
+	private static final class Rotation implements Cloneable {
 		private final int places[];
 		private final boolean[] fixedWall;
 
@@ -115,7 +115,7 @@ public final class QuartoMinorHasher {
 		}
 	}
 
-	private final class Piece {
+	private static final class Piece {
 		int pieceNum;
 
 		// long pieceHash;
@@ -154,11 +154,7 @@ public final class QuartoMinorHasher {
 
 		@Override
 		public String toString() {
-			StringBuilder sb = new StringBuilder(4);
-			for (int i = 3; i >= 0; i--) {
-				sb.append(get(i));
-			}
-			return sb.toString();
+			return Integer.toString(pieceNum);
 		}
 	}
 
@@ -520,34 +516,26 @@ public final class QuartoMinorHasher {
 		return newBoard;
 	}
 
-	public Rotation dropState(int[] board) {
-		long childHash = -1L;
-		Count count = new Count(board.length);
+	public void dropState(int[] board) {
 		Rotation rot = new Rotation();
 		Piece[] pieces = new Piece[board.length];
 		for (int i = 0; i < pieces.length; i++) {
 			pieces[i] = new Piece();
 		}
-		Position place = tierTables[board.length];
 		for (int k = 0; k < board.length; k++) {
-			int pieceNum = pieces[k].pieceNum;
+			int pieceNum = board[k];
 			pieceNum ^= board[0];
 			pieces[k].pieceNum = pieceNum;
 			pieces[k].applyRotation(rot);
 			rot.dropState(pieces[k]);
 			pieceNum = pieces[k].pieceNum;
-			count.addPiece(pieceNum);
-			if (place == null)
-				childHash += count.lastHash();
-			else if (place.inner == null) {
-				childHash = place.offset;
-				place = null;
-				childHash += count.lastHash();
-			} else if (k > 0)
-				place = place.inner[pieceNum];
 		}
-		if (childHash < 0)
-			childHash = place.offset;
-		return rot;
+		for (int i = 0; i < pieces.length; i++) {
+			board[i] = pieces[i].pieceNum;
+		}
+	}
+
+	public String toString() {
+		return Arrays.toString(Arrays.copyOf(pieces, numPieces));
 	}
 }
