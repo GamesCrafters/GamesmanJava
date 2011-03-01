@@ -7,7 +7,7 @@ import org.junit.Test;
 import edu.berkeley.gamesman.hasher.QuartoMinorHasher;
 
 public class TestQuarto {
-	private static final long MEM = 512L;
+	private static final long MEM = 65536L;
 
 	@Test
 	public void testStepper() {
@@ -89,24 +89,23 @@ public class TestQuarto {
 	@Test
 	public void testCacher() {
 		QuartoMinorHasher qmh = new QuartoMinorHasher();
-		int tier = 5;
+		int tier = 6;
+		long availableMem = MEM / ((16 - tier) * 16 + 1);
 		qmh.setTier(tier);
 		long[] children = new long[(tier + 1) * (16 - tier)];
 		long[][][] cache = new long[tier + 1][16][2];
-		long[][] fullCache = new long[tier + 1][];
+		long[] fullCache = new long[2];
 		long numHashes = qmh.numHashesForTier(tier);
 		for (long hash = 0L; hash < numHashes; hash++) {
 			arbitraryReset(qmh, tier);
 			for (int place = 0; place <= tier; place++) {
-				long[] oldCache = fullCache[place];
-				long[] newCache = qmh.getCache(place, MEM);
-				fullCache[place] = newCache;
+				long[] oldCache = fullCache;
+				long[] newCache = qmh.getCache(place, availableMem);
 				if (newCache == null) {
 					for (int piece = 0; piece < 16; piece++) {
 						if (qmh.used(piece))
 							continue;
-						newCache = qmh
-								.getCache(place, piece, MEM / (16 - tier));
+						newCache = qmh.getCache(place, piece, availableMem);
 						long[] oldInnerCache = cache[place][piece];
 						if (!Arrays.equals(oldInnerCache, newCache)) {
 							if (oldInnerCache == null) {
@@ -124,34 +123,24 @@ public class TestQuarto {
 							Assert.assertTrue(newCache[0] + newCache[1] <= oldCache[0]
 									|| newCache[0] >= oldCache[0] + oldCache[1]);
 						}
+						fullCache = newCache;
 					}
+					break;
 				}
 			}
-			int[] board = qmh.getBoard();
 			int numChildren = qmh.getChildren(children);
 			Assert.assertEquals(numChildren, children.length);
-			int[] board2 = new int[board.length + 1];
 			int childNum = 0;
 			for (int piece = 0; piece < 16; piece++) {
 				if (qmh.used(piece))
 					continue;
-				for (int place = 0; place <= board.length; place++) {
+				for (int place = 0; place <= tier; place++) {
 					long child = children[childNum++];
-					for (int i = 0; i < board2.length; i++) {
-						if (i < place) {
-							board2[i] = board[i];
-						} else if (i > place) {
-							board2[i] = board[i - 1];
-						} else
-							board2[i] = piece;
-					}
-					long[] childCache;
-					if (fullCache[place] == null)
-						childCache = cache[place][piece];
-					else
-						childCache = fullCache[place];
-					long ind = child - childCache[0];
-					Assert.assertTrue(ind >= 0 && ind < childCache[1]);
+					long[] childCache = cache[place][piece];
+					long childInd = child - childCache[0];
+					long ind = child - fullCache[0];
+					Assert.assertTrue(childInd >= 0 && childInd < childCache[1]
+							|| ind >= 0 && ind < fullCache[1]);
 				}
 			}
 			if (hash < numHashes - 1L)
