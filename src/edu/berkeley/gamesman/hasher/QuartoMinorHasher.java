@@ -469,14 +469,15 @@ public final class QuartoMinorHasher {
 	}
 
 	public long[] getCache(int place, int piece, long availableMem) {
-		Count count = new Count(numPieces);
-		Position pos = tierTables[numPieces];
+		Count count = new Count(numPieces + 1);
+		Position pos = tierTables[numPieces + 1];
 		Rotation rot = new Rotation();
 		long neededMem = pos.numHashes;
 		long startHash = 0L;
 		Piece[] newPieces = new Piece[numPieces + 1];
 		int piece0 = place == 0 ? piece : 0;
 		newPieces[0] = new Piece(0);
+		count.addPiece(0);
 		for (int i = 1; neededMem > availableMem; i++) {
 			int p;
 			if (i < place)
