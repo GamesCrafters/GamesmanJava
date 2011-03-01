@@ -24,6 +24,7 @@ public class Quarto extends TierGame {
 	private final int[] places = new int[16];
 	private final long[] majorChildren = new long[16];
 	private final long[] minorChildren = new long[256];
+	private QuartoCache myCache;
 
 	private class Piece {
 		private final int majorIndex;
@@ -331,13 +332,33 @@ public class Quarto extends TierGame {
 	}
 
 	@Override
-	public QuartoCache getCache(Database db, long numPositions, long availableMem) {
-		throw new UnsupportedOperationException();
+	public QuartoCache getCache(Database db, long numPositions,
+			long availableMem) {
+		long childMem = availableMem / 257;
+		int place = -1;
+		long[] largeCache = null;
+		while (largeCache == null) {
+			place++;
+			largeCache = minorHasher.getCache(place, childMem);
+		}
+		if (myCache == null) {
+			myCache = new QuartoCache(db, conf);
+		} else
+			assert myCache.checkDB(db);
+		myCache.setNumHashes(numPositions);
+		for (int piece = 0; piece < 16; piece++) {
+			if (used(piece))
+				continue;
+			for (int i = 0; i < place; i++) {
+			}
+		}
+		// TODO Finish method
+		return null;
 	}
 
 	@Override
-	public QuartoCache nextCache() {
+	public int validMoves(TierState[] children, int[] cachePlaces) {
+		// TODO Finish method
 		throw new UnsupportedOperationException();
 	}
-
 }

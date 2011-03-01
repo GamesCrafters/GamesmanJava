@@ -4,14 +4,11 @@ import edu.berkeley.gamesman.core.Configuration;
 
 public final class QuartoCache extends TierCache {
 	private long numHashes = 0L;
-	private final MemoryDatabase[] smallRanges;
-	private final MemoryDatabase[] largeRanges;
+	private Database innerDb;
 
-	public QuartoCache(Database db, Configuration conf, int maxSmallRanges,
-			int maxLargeRanges, long totalMem) {
+	public QuartoCache(Database db, Configuration conf) {
 		super(db, conf);
-		smallRanges = new MemoryDatabase[maxSmallRanges];
-		largeRanges = new MemoryDatabase[maxLargeRanges];
+		innerDb = db;
 	}
 
 	public void setNumHashes(long numHashes) {
@@ -40,5 +37,9 @@ public final class QuartoCache extends TierCache {
 	public long getSize() {
 		// TODO Auto-generated method stub
 		return 0;
+	}
+
+	public boolean checkDB(Database db) {
+		return innerDb == db;
 	}
 }
