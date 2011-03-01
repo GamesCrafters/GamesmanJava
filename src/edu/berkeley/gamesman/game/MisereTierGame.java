@@ -5,7 +5,7 @@ import java.util.Collection;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.database.Database;
-import edu.berkeley.gamesman.database.RangeCache;
+import edu.berkeley.gamesman.database.TierCache;
 import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.util.Pair;
 
@@ -123,18 +123,22 @@ public final class MisereTierGame extends TierGame {
 	}
 
 	@Override
-	public RangeCache getCache(Database db, long numPositions,
-			long availableMem) {
+	public TierCache getCache(Database db, long numPositions, long availableMem) {
 		return myGame.getCache(db, numPositions, availableMem);
 	}
 
 	@Override
-	public RangeCache nextCache() {
+	public TierCache nextCache() {
 		return myGame.nextCache();
 	}
 
 	@Override
 	public Value strictPrimitiveValue() {
 		return myGame.strictPrimitiveValue();
+	}
+
+	@Override
+	public int validMoves(TierState[] children, int[] cachePlaces) {
+		return myGame.validMoves(children, cachePlaces);
 	}
 }

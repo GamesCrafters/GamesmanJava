@@ -7,7 +7,7 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.database.Database;
-import edu.berkeley.gamesman.database.RangeCache;
+import edu.berkeley.gamesman.database.TierCache;
 import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.hasher.TierHasher;
 import edu.berkeley.gamesman.util.Pair;
@@ -250,12 +250,11 @@ public abstract class TierGame extends Game<TierState> {
 		return new TierState(tier, hash);
 	}
 
-	public RangeCache getCache(Database db, long numPositions,
-			long availableMem) {
+	public TierCache getCache(Database db, long numPositions, long availableMem) {
 		throw new UnsupportedOperationException();
 	}
 
-	public RangeCache nextCache() {
+	public TierCache nextCache() {
 		throw new UnsupportedOperationException();
 	}
 
@@ -263,7 +262,7 @@ public abstract class TierGame extends Game<TierState> {
 		return primitiveValue();
 	}
 
-	public long recordToLong(Record r) {
+	public final long recordToLong(Record r) {
 		if (tempState == null)
 			tempState = newState();
 		getState(tempState);

@@ -9,7 +9,7 @@ import edu.berkeley.gamesman.util.qll.Pool;
  * 
  * @author dnspies
  */
-public class RangeCache extends DatabaseWrapper {
+public class RangeCache extends TierCache {
 
 	private final Pool<MemoryDatabase> slotPool = new Pool<MemoryDatabase>(
 			new Factory<MemoryDatabase>() {
@@ -39,7 +39,7 @@ public class RangeCache extends DatabaseWrapper {
 	 *            The maximum amount of memory each range is expected to take up
 	 */
 	public RangeCache(Database db, Configuration conf, int memPerChild) {
-		super(db, null, conf, false, -1, 0);
+		super(db, conf);
 		this.memPerChild = memPerChild;
 	}
 
@@ -70,12 +70,6 @@ public class RangeCache extends DatabaseWrapper {
 			if (slot != null)
 				slot.close();
 		}
-	}
-
-	@Override
-	protected void putBytes(DatabaseHandle dh, long loc, byte[] arr, int off,
-			int len) {
-		throw new Error("Cache is read only");
 	}
 
 	@Override
@@ -166,6 +160,7 @@ public class RangeCache extends DatabaseWrapper {
 		return total;
 	}
 
+	@Override
 	public long numHashes() {
 		return numHashes;
 	}
@@ -234,6 +229,7 @@ public class RangeCache extends DatabaseWrapper {
 		}
 	}
 
+	@Override
 	public long getRecord(DatabaseHandle dh, long recordIndex, int childNum) {
 		if (tempChildNum >= 0)
 			throw new RuntimeException("In the middle of reading");

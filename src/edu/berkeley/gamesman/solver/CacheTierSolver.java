@@ -4,7 +4,7 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.database.MemoryDatabase;
-import edu.berkeley.gamesman.database.RangeCache;
+import edu.berkeley.gamesman.database.TierCache;
 import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.game.util.TierState;
 
@@ -39,7 +39,7 @@ public class CacheTierSolver extends TierSolver {
 				- writeDb.requiredMem(firstHash, numHashes);
 		if (useMem < 0)
 			throw new Error("Not enough memory to build cache");
-		RangeCache readCache = null;
+		TierCache readCache = null;
 		if (readDb != null)
 			readCache = game.getCache(readDb, numHashes, useMem);
 		MemoryDatabase writeCache = new MemoryDatabase(writeDb, null, conf,
@@ -72,7 +72,7 @@ public class CacheTierSolver extends TierSolver {
 	@Override
 	protected int calculateAndFetchValues(TierGame game, TierState[] children,
 			Record[] childRecords, DatabaseHandle readDh) {
-		RangeCache readCache = (RangeCache) readDb;
+		TierCache readCache = (TierCache) readDb;
 		int numChildren = game.validMoves(children, cachePlaces);
 		for (int i = 0; i < numChildren; i++) {
 			long recordLong = readCache.getRecord(readDh,
