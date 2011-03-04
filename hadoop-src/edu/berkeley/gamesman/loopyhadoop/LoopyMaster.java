@@ -4,7 +4,9 @@ import java.io.IOException;
 
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
 import edu.berkeley.gamesman.core.Configuration;
@@ -15,6 +17,7 @@ public class LoopyMaster implements Runnable
 	private final org.apache.hadoop.conf.Configuration hadoopConf;
 	private final Configuration gamesmanConf;
 	private final FileSystem fs;
+	private Path dbMapPath;
 
 	public static void main(String[] args) throws IOException
 	{
@@ -60,6 +63,23 @@ public class LoopyMaster implements Runnable
 		j.setMapperClass(LoopyDatabaseCreationMapper.class);
 		j.setReducerClass(LoopyDatabaseCreationReducer.class);
 		j.setInputFormatClass(Input.class);
+		j.setOutputFormatClass(SequenceFileOutputFormat.class);
+
+		Path sequenceFileDir =
+				new Path("Loopy_Hadoop_Solve_"
+						+ gamesmanConf.getGame().getClass().getSimpleName());
+		SequenceFileOutputFormat.setOutputPath(j, sequenceFileDir);
+		
+		FileStatus[] files = fs.listStatus(sequenceFileDir);
+		if (files.length != 1)
+		{
+			throw new Error(
+					"message that doesn't make any sense until you're looking at the code");
+		}
+		
+		dbMapPath = files[0].getPath();
+		
+		hadoopConf.set("db.map.path", dbMapPath.toString());
 	}
 
 	private FileStatus markLegalPositions()

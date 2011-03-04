@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.parallel.tier;
+package edu.berkeley.gamesman.parallel;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -6,6 +6,8 @@ import java.io.IOException;
 
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.io.Writable;
+
+import edu.berkeley.gamesman.parallel.tier.Range;
 
 public class RangeFile implements Writable {
 	public Range myRange;

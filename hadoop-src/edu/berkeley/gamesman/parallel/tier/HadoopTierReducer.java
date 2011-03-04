@@ -7,6 +7,8 @@ import java.util.Iterator;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.database.GZippedFileSystemDatabase;
 import edu.berkeley.gamesman.database.SplitDatabase;
+import edu.berkeley.gamesman.parallel.RangeFile;
+
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Reducer;

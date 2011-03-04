@@ -15,6 +15,7 @@ import edu.berkeley.gamesman.database.GZippedFileDatabase;
 import edu.berkeley.gamesman.database.SplitFileSystemDatabase;
 import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.master.LocalMasterTextTask;
+import edu.berkeley.gamesman.parallel.RangeFile;
 import edu.berkeley.gamesman.solver.Solver;
 import edu.berkeley.gamesman.solver.TierSolver;
 import edu.berkeley.gamesman.util.Task;
