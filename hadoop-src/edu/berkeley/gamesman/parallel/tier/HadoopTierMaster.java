@@ -68,7 +68,7 @@ public class HadoopTierMaster implements Runnable {
 		job.setOutputValueClass(FileStatus.class);
 		job.setMapperClass(HadoopTierMapper.class);
 		job.setReducerClass(HadoopTierReducer.class);
-		job.setInputFormatClass(Input.class);
+		job.setInputFormatClass(TierInput.class);
 		FileOutputFormat.setOutputPath(job, outputDirectory);
 		boolean success = false;
 		do {

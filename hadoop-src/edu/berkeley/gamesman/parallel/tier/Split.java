@@ -13,7 +13,7 @@ import java.io.IOException;
  */
 public class Split extends InputSplit implements Writable {
 	private final static String[] hosts = new String[0];
-	final Range r = new Range();
+	public final Range r = new Range();
 
 	public Split() {
 	}
