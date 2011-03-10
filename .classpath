@@ -9,5 +9,6 @@
 	<classpathentry kind="lib" path="lib/slf4j-api-1.5.8.jar"/>
 	<classpathentry kind="lib" path="lib/slf4j-nop-1.5.8.jar"/>
 	<classpathentry kind="lib" path="lib/xercesImpl.jar"/>
+	<classpathentry kind="lib" path="lib/avro-1.4.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

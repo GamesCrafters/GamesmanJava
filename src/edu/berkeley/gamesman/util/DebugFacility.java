@@ -67,7 +67,11 @@ public enum DebugFacility {
 	/**
 	 * Debug facility for the JSON interface
 	 */
-	JSON(null, "edu.berkeley.gamesman.JSONInterface");
+	JSON(null, "edu.berkeley.gamesman.JSONInterface"),
+	/**
+	 * Debug facility for the Avro interface
+	 */
+	AVRO(null, "edu.berkeley.gamesman.AvroInterface");
 	
 	private final String[] enabledClasses;
 	private final String enabledPackage;
