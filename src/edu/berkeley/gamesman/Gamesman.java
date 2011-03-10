@@ -10,7 +10,8 @@ import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
 /**
- * An entry main for all of gamesman-java. The main class to use when solving on a single machine
+ * An entry main for all of gamesman-java. The main class to use when solving on
+ * a single machine
  * 
  * @author Jeremy Fleischman
  * 
@@ -18,18 +19,10 @@ import edu.berkeley.gamesman.util.Util;
 public class Gamesman {
 	private static final HashMap<String, String> APPLICATION_MAP = new HashMap<String, String>();
 	static {
-		APPLICATION_MAP.put("gamesmanmain",
-				"edu.berkeley.gamesman.GamesmanMain");
-		APPLICATION_MAP.put("jythoninterface",
-				"edu.berkeley.gamesman.JythonInterface");
-		APPLICATION_MAP.put("gamesmanshell",
-				"edu.berkeley.gamesman.GamesmanShell");
-		APPLICATION_MAP.put("jsoninterface",
-				"edu.berkeley.gamesman.JSONInterface");
-		APPLICATION_MAP.put("avrointerface",
-				"edu.berkeley.gamesman.AvroInterface");
-		APPLICATION_MAP.put("databasedump",
-				"edu.berkeley.gamesman.tool.DatabaseDump");
+		APPLICATION_MAP.put("gamesmanmain", GamesmanMain.class.getName());
+		APPLICATION_MAP.put("jythoninterface", JythonInterface.class.getName());
+		APPLICATION_MAP.put("jsoninterface", JSONInterface.class.getName());
+		APPLICATION_MAP.put("avrointerface", AvroInterface.class.getName());
 	}
 
 	/**
@@ -73,8 +66,8 @@ public class Gamesman {
 			ClassLoader cl = ClassLoader.getSystemClassLoader();
 			cl.setDefaultAssertionStatus(false);
 			for (DebugFacility f : DebugFacility.values()) {
-				if (parseBoolean(props.getProperty("gamesman.debug."
-						+ f.toString(), "false"))) {
+				if (parseBoolean(props.getProperty(
+						"gamesman.debug." + f.toString(), "false"))) {
 					debugOpts.add(f);
 					f.setupClassloader(cl);
 				}
