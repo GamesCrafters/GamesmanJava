@@ -93,6 +93,9 @@ public class AvroInterface extends GamesmanApplication {
 			os.flush();
 			os.close();
 
+			// Want to always print this out.
+			System.out.println("Server ready on port " + port + "!");
+
 			server.join();
 		} catch (IOException e) {
 			throw new RuntimeException(e);
@@ -101,9 +104,6 @@ public class AvroInterface extends GamesmanApplication {
 		} catch (InterruptedException e) {
 			throw new RuntimeException(e);
 		}
-
-		// Want to always print this out.
-		System.out.println("Server ready on port " + port + "!");
 	}
 
 	/*

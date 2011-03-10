@@ -10,5 +10,8 @@
 	<classpathentry kind="lib" path="lib/slf4j-nop-1.5.8.jar"/>
 	<classpathentry kind="lib" path="lib/xercesImpl.jar"/>
 	<classpathentry kind="lib" path="lib/avro-1.4.1.jar"/>
+	<classpathentry kind="lib" path="lib/jackson.jar"/>
+	<classpathentry kind="lib" path="lib/jetty.jar"/>
+	<classpathentry kind="lib" path="lib/servlet.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

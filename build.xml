@@ -15,6 +15,10 @@
         <pathelement location="lib/jline-0.9.94.jar"/>
         <pathelement location="lib/jython.jar"/>
         <pathelement location="lib/org-json.jar"/>
+        <pathelement location="lib/jetty.jar"/>
+        <pathelement location="lib/servlet.jar"/>
+        <pathelement location="lib/jackson.jar"/>
+        <pathelement location="lib/avro-1.4.1.jar"/>
         <pathelement location="${env.HADOOP_HOME}/hadoop-0.20.1-core.jar"/>
         <pathelement location="lib/libthrift.jar"/>
         <pathelement location="lib/slf4j-api-1.5.8.jar"/>

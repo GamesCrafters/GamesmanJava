@@ -42,4 +42,5 @@ json.unsolved.onetwoten = jobs/OTT.job
 json.fields.onetwoten =
 
 gamesman.debug.JSON = false
+gamesman.debug.AVRO = true
 

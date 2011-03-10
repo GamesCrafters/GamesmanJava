@@ -26,6 +26,8 @@ public class Gamesman {
 				"edu.berkeley.gamesman.GamesmanShell");
 		APPLICATION_MAP.put("jsoninterface",
 				"edu.berkeley.gamesman.JSONInterface");
+		APPLICATION_MAP.put("avrointerface",
+				"edu.berkeley.gamesman.AvroInterface");
 		APPLICATION_MAP.put("databasedump",
 				"edu.berkeley.gamesman.tool.DatabaseDump");
 	}
