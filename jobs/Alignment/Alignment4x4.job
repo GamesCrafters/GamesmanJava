@@ -1,0 +1,10 @@
+gamesman.game = Alignment
+gamesman.game.width = 4
+gamesman.game.height = 4
+gamesman.game.pieces = 5
+gamesman.game.variant = 3
+gamesman.solver = TopDownSolver
+record.fields = VALUE,REMOTENESS
+gamesman.db.uri = Alignment44.db
+gamesman.database = MemoryDatabase:GZippedFileDatabase
+gamesman.debug.SOLVER = true

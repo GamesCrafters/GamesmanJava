@@ -1,0 +1,8 @@
+gamesman.game = Connect4
+gamesman.game.width = 3
+gamesman.game.height = 10
+gamesman.game.pieces = 3
+gamesman.solver = CacheTierSolver
+gamesman.database = FileDatabase
+gamesman.db.uri = /tmp/database310.db
+gamesman.threads = 16

@@ -1,0 +1,9 @@
+gamesman.game = Alignment
+gamesman.game.width = 3
+gamesman.game.height = 3
+gamesman.game.pieces = 5
+gamesman.game.variant = 1
+gamesman.solver = TopDownSolver
+gamesman.db.uri = Alignment33.db
+gamesman.database = MemoryDatabase:GZippedFileDatabase
+gamesman.debug.SOLVER = true

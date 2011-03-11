@@ -1,0 +1,15 @@
+gamesman.game = YGame
+gamesman.game.centerRows = 2
+gamesman.game.outerRows = 3
+gamesman.solver = CacheTierSolver
+gamesman.database = HDFSSplitDatabase
+gamesman.db.uri = /scratch/ygame.db
+gamesman.hadoop.tierDb = /scratch/y/y
+gamesman.hadoop.dbfolder = /scratch/y
+gamesman.memory = 2g
+gamesman.threads = 4
+gamesman.splits = 48
+gamesman.minimum.split.size = 65536
+gamesman.parallel.multiple = 20
+gamesman.parallel.numMachines = 18
+gamesman.parallel.minimum.split = 1048576

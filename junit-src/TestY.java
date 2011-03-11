@@ -26,15 +26,15 @@ public class TestY {
 
     @Before
     public void setUp() throws ClassNotFoundException{
-        this.conf24 = new Configuration("jobs/YGame24.job");
+        this.conf24 = new Configuration("jobs/Y/YGame24.job");
         this.ygame24 = (YGame)this.conf24.getGame();     
         this.ygame24.fillBoardWithPlayer('X');
 
-        this.conf36 = new Configuration("jobs/YGame36.job");
+        this.conf36 = new Configuration("jobs/Y/YGame36.job");
         this.ygame36 = (YGame)this.conf36.getGame();     
         this.ygame36.fillBoardWithPlayer('X');
 
-        this.conf48 = new Configuration("jobs/YGame48.job");
+        this.conf48 = new Configuration("jobs/Y/YGame48.job");
         this.ygame48 = (YGame)this.conf48.getGame();     
         this.ygame48.fillBoardWithPlayer('X');
     }

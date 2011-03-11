@@ -1,7 +1,5 @@
 gamesman.game = Connections
 gamesman.game.side = 3
 gamesman.solver = TierSolver
-gamesman.database = MemoryDatabase:FileDatabase
+gamesman.database = MemoryDatabase:GZippedFileDatabase
 gamesman.db.uri = connections.db
-gamesman.debug.THREADING = true
-record.fields = VALUE,REMOTENESS

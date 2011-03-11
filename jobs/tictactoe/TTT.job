@@ -1,0 +1,6 @@
+gamesman.game = TicTacToe
+gamesman.game.width = 3
+gamesman.game.height = 3
+gamesman.solver = TierSolver
+gamesman.database = MemoryDatabase:GZippedFileDatabase
+gamesman.db.uri = ttt.db

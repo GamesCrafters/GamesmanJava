@@ -4,4 +4,3 @@ gamesman.game.height = 4
 gamesman.solver = ReversiSolver
 gamesman.database = MemoryDatabase:GZippedFileDatabase
 gamesman.db.uri = Reversi44.db
-gamesman.debug.THREADING = true

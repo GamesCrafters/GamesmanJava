@@ -1,0 +1,8 @@
+gamesman.game = QuickCross
+gamesman.game.width = 4
+gamesman.game.height = 4
+gamesman.game.pieces = 4
+gamesman.game.variant = 1
+gamesman.solver = LoopySolver
+gamesman.db.uri = QuickCross.db
+gamesman.database = MemoryDatabase:GZippedFileDatabase
