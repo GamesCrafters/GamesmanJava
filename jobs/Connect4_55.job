@@ -1,0 +1,11 @@
+gamesman.game = Connect4
+gamesman.game.width = 5
+gamesman.game.height = 5
+gamesman.game.pieces = 4
+gamesman.solver = TierSolver
+gamesman.database = MemoryDatabase:FileDatabase
+gamesman.db.uri = /tmp/database55.db
+record.fields = VALUE,REMOTENESS
+gamesman.debug.THREADING = true
+gamesman.threads = 10
+gamesman.memory = 2000000000

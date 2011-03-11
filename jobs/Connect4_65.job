@@ -1,0 +1,12 @@
+gamesman.game = Connect4
+gamesman.game.width = 6
+gamesman.game.height = 5
+gamesman.game.pieces = 4
+gamesman.solver = C4CachedSolver
+gamesman.database = FileDatabase
+gamesman.db.uri = /tmp/database65.db
+record.fields = VALUE,REMOTENESS
+gamesman.debug.THREADING = true
+gamesman.threads = 10
+gamesman.memory = 2000000000
+gamesman.split = 25

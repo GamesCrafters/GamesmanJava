@@ -1,0 +1,8 @@
+gamesman.game = PythonPuzzle.py
+gamesman.game.size = 5
+gamesman.solver = BreadthFirstSolver
+gamesman.hasher = NullHasher
+gamesman.db.uri = lightsout.db
+gamesman.database = MemoryDatabase:FileDatabase
+record.fields = VALUE,REMOTENESS
+pythonpuzzle = LO

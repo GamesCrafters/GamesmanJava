@@ -1,0 +1,8 @@
+gamesman.command = launchDirectoryFiler
+gamesman.game = NullGame
+gamesman.hasher = NullHasher
+gamesman.solver = TopDownSolver
+
+rootDirectory = /tmp/directory
+secret = game
+gamesman.debug.FILER = 1
