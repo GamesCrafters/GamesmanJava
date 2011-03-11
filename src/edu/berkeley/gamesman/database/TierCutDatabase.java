@@ -1,8 +1,11 @@
 package edu.berkeley.gamesman.database;
 
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
@@ -57,7 +60,7 @@ public class TierCutDatabase extends Database {
 		long hash = recordIndex;
 		TierState pos = new TierState();
 		pos = myTierGame.hashToState(hash);
-		ArrayList<Pair<String, TierState>> moves = (ArrayList) myTierGame
+		ArrayList<Pair<String, TierState>> moves = (ArrayList<Pair<String, TierState>>) myTierGame
 				.validMoves(pos);
 		boolean hasTie = false;
 		boolean hasWin = false;
@@ -180,5 +183,43 @@ public class TierCutDatabase extends Database {
 		// TODO Auto-generated method stub
 		return 0;
 	}
+	/*
+	public static void main(String[] args) throws ClassNotFoundException {
+		String jobFile = args[0];
+		Configuration conf = new Configuration(jobFile);
+		String dbListFile = args[1];
+		String dbUri = args[2];
+		final long firstRecordIndex, numRecords;
+		//ADD ARGUEMENT TO SPECIFY NUMTIERSCUT?
+		if (args.length > 3) {
+			firstRecordIndex = Integer.parseInt(args[3]);
+			//EDIT NUMRECORDS TO BE ACCURATE
+			numRecords = Integer.parseInt(args[4]);
+		} else {
+			firstRecordIndex = 0L;
+			//EDIT NUMRECORDS TO BE ACCURATE
+			numRecords = conf.getGame().numHashes();
+		}
+		// TAKE OUT ANYTHING WE DON'T WANT
+		Scanner dbScanner = new Scanner(new File(dbListFile));
+		DataOutputStream dos = new DataOutputStream(new FileOutputStream(dbUri));
+		dos.writeLong(firstRecordIndex);
+		dos.writeLong(numRecords);
+		conf.store(dos);
+		long currentRecord = firstRecordIndex;
+		while (dbScanner.hasNext()) {
+			dos.writeUTF(dbScanner.next());
+			dos.writeUTF(dbScanner.next());
+			dos.writeLong(currentRecord);
+			long nextNum = dbScanner.nextLong();
+			dos.writeLong(nextNum);
+			currentRecord += nextNum;
+		}
+		if (currentRecord != firstRecordIndex + numRecords)
+			throw new Error("Database is incomplete");
+		dos.close();
+		
 
+	}
+*/
 }
