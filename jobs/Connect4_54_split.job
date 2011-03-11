@@ -1,9 +1,0 @@
-gamesman.game = Connect4
-gamesman.game.width = 5
-gamesman.game.height = 4
-gamesman.game.pieces = 4
-gamesman.solver = TierSolver
-gamesman.database = SplitDatabase
-gamesman.db.uri = database54_split.db
-record.fields = VALUE,REMOTENESS
-gamesman.debug.THREADING = true

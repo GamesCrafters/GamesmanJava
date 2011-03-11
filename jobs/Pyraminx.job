@@ -1,6 +1,0 @@
-gamesman.game = Pyraminx
-gamesman.solver = BreadthFirstSolver
-gamesman.db.uri = pyraminx.db
-gamesman.database = MemoryDatabase:FileDatabase
-gamesman.debug.SOLVER = true
-record.fields = VALUE,REMOTENESS

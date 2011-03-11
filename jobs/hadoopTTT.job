@@ -1,9 +1,0 @@
-gamesman.game = TicTacToe
-gamesman.solver = TierSolver
-gamesman.database = MemoryDatabase:FileDatabase
-gamesman.hadoop.tierDb = ttt
-gamesman.hadoop.zipped = true
-gamesman.hadoop.dbfolder = ttt_fold
-gamesman.debug.THREADING = true
-gamesman.db.uri = hadoopTTT.db
-gamesman.parallel.multiple = 5
