@@ -29,6 +29,7 @@ public abstract class Solver {
 				inner.run();
 			} catch (Error e) {
 				failed = e;
+				mainThread.interrupt();
 			}
 		}
 
@@ -43,6 +44,7 @@ public abstract class Solver {
 	protected Database db;
 	protected Configuration conf;
 	protected volatile Error failed;
+	private Thread mainThread;
 
 	/**
 	 * Set the Database to use for this solver
@@ -72,6 +74,7 @@ public abstract class Solver {
 	public final void solve() {
 		System.out.println("Beginning solve for " + conf.getGame().describe()
 				+ " using " + getClass().getSimpleName());
+		mainThread = Thread.currentThread();
 		long startTime = System.currentTimeMillis();
 		ExecutorService solverService = Executors.newFixedThreadPool(nThreads);
 		Runnable nextJob = null;

@@ -55,16 +55,17 @@ public final class GamesmanMain extends GamesmanApplication {
 			String uri = conf.getProperty("gamesman.db.uri", null);
 			Database db;
 			try {
-				db = Database.openDatabase(uri, conf, false, true);
+				db = Database.openDatabase(uri, conf, true, true);
 			} catch (IOException e) {
 				throw new Error(e);
 			}
 			Solver solve = makeSolver(db);
-			solve.solve();
 			try {
+				solve.solve();
 				db.close();
-			} catch (IOException e) {
-				throw new Error(e);
+			} catch (Throwable e) {
+				e.printStackTrace();
+				System.exit(-1);
 			}
 		}
 

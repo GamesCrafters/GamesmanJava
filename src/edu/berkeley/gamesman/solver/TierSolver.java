@@ -195,8 +195,12 @@ public class TierSolver extends Solver {
 				try {
 					tasksFinished.await();
 				} catch (InterruptedException e) {
-					interrupted = true;
-					e.printStackTrace();
+					if (failed != null)
+						return null;
+					else {
+						interrupted = true;
+						e.printStackTrace();
+					}
 				}
 			} while (interrupted);
 			decrTier();
