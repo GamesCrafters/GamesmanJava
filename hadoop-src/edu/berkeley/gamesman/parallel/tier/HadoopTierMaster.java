@@ -23,6 +23,7 @@ public class HadoopTierMaster implements Runnable {
 	private final TierGame game;
 	private final FileSystem fs;
 	private final Path outputDirectory = new Path("temp_output");
+	private final String dbUri;
 	private Job job;
 
 	public HadoopTierMaster(GenericOptionsParser gop, String confFile)
@@ -32,6 +33,7 @@ public class HadoopTierMaster implements Runnable {
 		fs = FileSystem.get(hadoopConf);
 		game = (TierGame) gamesmanConf.getGame();
 		hadoopConf.set("gamesman.configuration", gamesmanConf.serialize());
+		dbUri = gamesmanConf.getProperty("gamesman.hadoop.tierDb");
 	}
 
 	@Override
@@ -44,10 +46,10 @@ public class HadoopTierMaster implements Runnable {
 			}
 			String uri = gamesmanConf.getProperty("gamesman.db.uri");
 			SplitDBMaker outputDB = new SplitDBMaker(uri, gamesmanConf);
-			String dbUri = gamesmanConf.getProperty("gamesman.hadoop.tierDb");
 			for (int tier = 0; tier < game.numberOfTiers(); tier++) {
-				outputDB.addDb(HDFSSplitDatabase.class.getName(), dbUri + "_"
-						+ tier + ".db", game.hashOffsetForTier(tier),
+				String tierUri = dbUri + "_" + tier + ".db";
+				outputDB.addDb(HDFSSplitDatabase.class.getName(), tierUri,
+						game.hashOffsetForTier(tier),
 						game.numHashesForTier(tier));
 			}
 			outputDB.close();
@@ -57,30 +59,36 @@ public class HadoopTierMaster implements Runnable {
 	}
 
 	private void solve(int tier) throws IOException {
+		String tierUri = dbUri + "_" + tier + ".db";
 		hadoopConf.setInt("tier", tier);
-		job = new Job(hadoopConf, "hadoop tier solver");
-		job.setJarByClass(HadoopTierMapper.class);
-		job.setMapOutputValueClass(RangeFile.class);
-		job.setOutputKeyClass(IntWritable.class);
-		job.setOutputValueClass(FileStatus.class);
-		job.setMapperClass(HadoopTierMapper.class);
-		job.setReducerClass(HadoopTierReducer.class);
-		job.setInputFormatClass(TierInput.class);
-		FileOutputFormat.setOutputPath(job, outputDirectory);
-		boolean success = false;
+		boolean doneAlready = fs.exists(new Path(tierUri));
+		if (!doneAlready) {
+			job = new Job(hadoopConf, "hadoop tier solver");
+			job.setJarByClass(HadoopTierMapper.class);
+			job.setMapOutputValueClass(RangeFile.class);
+			job.setOutputKeyClass(IntWritable.class);
+			job.setOutputValueClass(FileStatus.class);
+			job.setMapperClass(HadoopTierMapper.class);
+			job.setReducerClass(HadoopTierReducer.class);
+			job.setInputFormatClass(TierInput.class);
+			FileOutputFormat.setOutputPath(job, outputDirectory);
+		}
+		boolean success = doneAlready;
 		do {
-			try {
-				success = job.waitForCompletion(true);
-				if (!success)
-					throw new Error("Tier " + tier + " failed");
-				fs.delete(outputDirectory, true);
-				System.out
-						.println("On tier " + tier + ", success = " + success);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-				continue;
-			} catch (ClassNotFoundException e) {
-				throw new Error(e);
+			if (!doneAlready) {
+				try {
+					success = job.waitForCompletion(true);
+					if (!success)
+						throw new Error("Tier " + tier + " failed");
+					fs.delete(outputDirectory, true);
+					System.out.println("On tier " + tier + ", success = "
+							+ success);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					continue;
+				} catch (ClassNotFoundException e) {
+					throw new Error(e);
+				}
 			}
 			String dbUri = gamesmanConf.getProperty("gamesman.hadoop.tierDb");
 			dbUri = dbUri + "_" + tier + ".db";
