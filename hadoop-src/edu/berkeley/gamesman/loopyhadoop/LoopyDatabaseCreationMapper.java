@@ -35,7 +35,7 @@ public class LoopyDatabaseCreationMapper extends
 		try {
 			org.apache.hadoop.conf.Configuration hadoopConf = context
 					.getConfiguration();
-			conf = Configuration.deserialize(hadoopConf.get("gamesman.conf"));
+			conf = Configuration.deserialize(hadoopConf.get("gamesman.configuration"));
 			game = conf.getGame();
 			dbFolder = new Path(conf.getProperty("gamesman.hadoop.dbfolder"));
 			fs = FileSystem.get(hadoopConf);
@@ -47,11 +47,11 @@ public class LoopyDatabaseCreationMapper extends
 	}
 
 	@Override
-	public void map(Range rangeToMap, IntWritable fileLabel, Context context) {
+	public void map(Range rangeToMap, IntWritable ignore, Context context) {
 		try {
 			long rangeStart = rangeToMap.firstRecord;
 			long numRecords = rangeToMap.numRecords;
-			String outputName = "range" + fileLabel.get();
+			String outputName = "range" + rangeStart + "to" + (rangeStart + numRecords - 1);
 			FileDatabase db = new FileDatabase(outputName, conf, rangeStart,
 					numRecords, false, true);
 			// create local db to be filled in

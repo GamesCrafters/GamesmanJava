@@ -71,7 +71,6 @@ public class Input extends InputFormat<Range, IntWritable>
 	public List<InputSplit> getSplits(JobContext job) throws IOException
 	{
 		Configuration conf = job.getConfiguration();
-		int tier = conf.getInt("tier", -1);
 		edu.berkeley.gamesman.core.Configuration gc;
 		try
 		{
@@ -81,8 +80,7 @@ public class Input extends InputFormat<Range, IntWritable>
 		{
 			throw new Error(e);
 		}
-		if (tier < 0)
-			throw new Error("No tier specified");
+
 		Game<?> game = gc.getGame();
 		final long firstHash = 0L;
 		final long numHashes = game.numHashes();

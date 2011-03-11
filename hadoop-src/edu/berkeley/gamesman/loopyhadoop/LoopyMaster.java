@@ -5,12 +5,14 @@ import java.io.IOException;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.parallel.Input;
+import edu.berkeley.gamesman.parallel.RangeFile;
 
 public class LoopyMaster implements Runnable
 {
@@ -37,7 +39,7 @@ public class LoopyMaster implements Runnable
 			throw new Error(e);
 		}
 		hadoopConf = gop.getConfiguration();
-		hadoopConf.set("gamesman.conf", gamesmanConf.serialize());
+		hadoopConf.set("gamesman.configuration", gamesmanConf.serialize());
 		fs = FileSystem.get(hadoopConf);
 	}
 
@@ -61,6 +63,8 @@ public class LoopyMaster implements Runnable
 		Job j = new Job(hadoopConf, "Initial database creation");
 		j.setJarByClass(LoopyDatabaseCreationMapper.class);
 		j.setMapperClass(LoopyDatabaseCreationMapper.class);
+		j.setMapOutputKeyClass(IntWritable.class);
+		j.setMapOutputValueClass(RangeFile.class);
 		j.setReducerClass(LoopyDatabaseCreationReducer.class);
 		j.setInputFormatClass(Input.class);
 		j.setOutputFormatClass(SequenceFileOutputFormat.class);
@@ -70,11 +74,23 @@ public class LoopyMaster implements Runnable
 						+ gamesmanConf.getGame().getClass().getSimpleName());
 		SequenceFileOutputFormat.setOutputPath(j, sequenceFileDir);
 		
+		try
+		{
+			j.waitForCompletion(true);
+		} catch (InterruptedException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClassNotFoundException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		FileStatus[] files = fs.listStatus(sequenceFileDir);
 		if (files.length != 1)
 		{
-			throw new Error(
-					"message that doesn't make any sense until you're looking at the code");
+			throw new Error("bad files.length: " + files.length);
 		}
 		
 		dbMapPath = files[0].getPath();
