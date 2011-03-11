@@ -159,8 +159,8 @@ public class TierSolver extends Solver {
 
 	private void addFinished(long hashes) {
 		recordsFinished += hashes;
-		assert Util.debug(DebugFacility.SOLVER, (wholeGame ? "Tier "
-				+ currentTier + " " : "")
+		Util.debug(DebugFacility.SOLVER, (wholeGame ? "Tier " + currentTier
+				+ " " : "")
 				+ recordsFinished * 10000 / numHashes / 100F + "% complete");
 	}
 

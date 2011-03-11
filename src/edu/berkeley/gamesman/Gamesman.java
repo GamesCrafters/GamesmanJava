@@ -64,7 +64,6 @@ public class Gamesman {
 			EnumSet<DebugFacility> debugOpts = EnumSet
 					.noneOf(DebugFacility.class);
 			ClassLoader cl = ClassLoader.getSystemClassLoader();
-			cl.setDefaultAssertionStatus(false);
 			for (DebugFacility f : DebugFacility.values()) {
 				if (parseBoolean(props.getProperty(
 						"gamesman.debug." + f.toString(), "false"))) {
@@ -77,12 +76,6 @@ public class Gamesman {
 				DebugFacility.CORE.setupClassloader(cl);
 				Util.enableDebuging(debugOpts);
 			}
-			/*
-			 * try { conf = new Configuration(props); } catch
-			 * (ClassNotFoundException e) {
-			 * Util.fatalError("Configuration contains unknown game or hasher ",
-			 * e); }
-			 */
 		}
 
 		Class<? extends GamesmanApplication> cls;

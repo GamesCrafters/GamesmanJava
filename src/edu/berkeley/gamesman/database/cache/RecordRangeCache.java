@@ -101,8 +101,8 @@ public class RecordRangeCache {
 
 	public void readRecordsFromDatabase(Database db, DatabaseHandle dh,
 			long recordIndex, int numRecords) throws IOException {
-		assert Util.debug(DebugFacility.CACHE, "Reading records " + recordIndex
-				+ "-" + (recordIndex + numRecords - 1) + " from database");
+		Util.debug(DebugFacility.CACHE, "Reading records " + recordIndex + "-"
+				+ (recordIndex + numRecords - 1) + " from database");
 		readBytesFromDatabase(db, dh, myLogic.getByteIndex(recordIndex),
 				(int) myLogic.getNumBytes(numRecords));
 	}
