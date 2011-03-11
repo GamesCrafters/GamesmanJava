@@ -8,3 +8,4 @@ gamesman.db.uri = /scratch/database66.db
 gamesman.threads = 16
 gamesman.memory = 6g
 gamesman.splits = 300
+gamesman.debug.SOLVER = true

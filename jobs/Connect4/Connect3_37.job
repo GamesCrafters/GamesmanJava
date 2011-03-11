@@ -6,3 +6,4 @@ gamesman.solver = TierSolver
 gamesman.database = MemoryDatabase:GZippedFileDatabase
 gamesman.db.uri = /tmp/database37.db
 gamesman.threads = 16
+gamesman.debug.SOLVER = true

@@ -3,3 +3,4 @@ gamesman.game.side = 3
 gamesman.solver = TierSolver
 gamesman.database = MemoryDatabase:GZippedFileDatabase
 gamesman.db.uri = connections.db
+gamesman.debug.SOLVER = true

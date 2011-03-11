@@ -7,3 +7,4 @@ gamesman.db.uri = /scratch/ttt.db
 gamesman.hadoop.tierDb = /scratch/ttt/tier
 gamesman.hadoop.dbfolder = /scratch/ttt
 gamesman.parallel.minimum.split = 1048576
+gamesman.debug.SOLVER = true

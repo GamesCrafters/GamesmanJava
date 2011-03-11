@@ -2,4 +2,4 @@ gamesman.game = OneTwoTenTier
 gamesman.solver = TierSolver
 gamesman.database = MemoryDatabase:GZippedFileDatabase
 gamesman.db.uri = ott.db
-gamesman.debug.THREADING = true
+gamesman.debug.SOLVER = true

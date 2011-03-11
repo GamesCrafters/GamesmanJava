@@ -7,3 +7,4 @@ gamesman.db.uri = /tmp/ygame41.db
 gamesman.threads = 16
 gamesman.memory = 2g
 gamesman.splits = 48
+gamesman.debug.SOLVER = true
