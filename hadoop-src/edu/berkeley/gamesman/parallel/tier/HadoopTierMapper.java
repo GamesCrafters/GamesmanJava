@@ -13,6 +13,7 @@ import edu.berkeley.gamesman.database.HDFSInfo;
 import edu.berkeley.gamesman.database.HDFSSplitDatabase;
 import edu.berkeley.gamesman.database.ReadWriteDatabase;
 import edu.berkeley.gamesman.game.TierGame;
+import edu.berkeley.gamesman.parallel.Range;
 import edu.berkeley.gamesman.parallel.RangeFile;
 import edu.berkeley.gamesman.solver.Solver;
 import edu.berkeley.gamesman.solver.TierSolver;

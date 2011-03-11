@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.parallel.tier;
+package edu.berkeley.gamesman.parallel;
 
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.InputSplit;

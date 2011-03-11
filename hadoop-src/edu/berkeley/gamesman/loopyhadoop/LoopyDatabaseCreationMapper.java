@@ -15,8 +15,8 @@ import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.database.FileDatabase;
 import edu.berkeley.gamesman.game.Game;
+import edu.berkeley.gamesman.parallel.Range;
 import edu.berkeley.gamesman.parallel.RangeFile;
-import edu.berkeley.gamesman.parallel.tier.Range;
 
 /**
  * 

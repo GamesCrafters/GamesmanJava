@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.parallel.tier;
+package edu.berkeley.gamesman.parallel;
 
 import java.io.DataInput;
 import java.io.DataOutput;

@@ -7,7 +7,6 @@ import java.io.IOException;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.io.Writable;
 
-import edu.berkeley.gamesman.parallel.tier.Range;
 
 public class RangeFile implements Writable {
 	public Range myRange;

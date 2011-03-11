@@ -6,8 +6,8 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Reducer;
 
+import edu.berkeley.gamesman.parallel.Range;
 import edu.berkeley.gamesman.parallel.RangeFile;
-import edu.berkeley.gamesman.parallel.tier.Range;
 
 public class LoopyDatabaseCreationReducer extends
 		Reducer<IntWritable, RangeFile, Range, FileStatus>

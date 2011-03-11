@@ -13,8 +13,6 @@ import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 import edu.berkeley.gamesman.game.Game;
-import edu.berkeley.gamesman.parallel.tier.Range;
-import edu.berkeley.gamesman.parallel.tier.Split;
 
 public class Input extends InputFormat<Range, IntWritable>
 {
