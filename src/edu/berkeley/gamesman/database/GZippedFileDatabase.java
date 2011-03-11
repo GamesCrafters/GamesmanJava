@@ -3,12 +3,15 @@ package edu.berkeley.gamesman.database;
 import java.io.IOException;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Progressable;
 import edu.berkeley.gamesman.util.RandomAccessFileDataInputStream;
 import edu.berkeley.gamesman.util.RandomAccessFileDataOutputStream;
+import edu.berkeley.gamesman.util.Util;
 
 public class GZippedFileDatabase extends GZippedDatabase {
 	private static final int INTERMEDIATE_BYTES = 65536;
+	private static final long STEP_SIZE = 100000000;
 
 	public GZippedFileDatabase(String uri, Configuration conf,
 			long firstRecordIndex, long numRecords, boolean reading,
@@ -36,6 +39,10 @@ public class GZippedFileDatabase extends GZippedDatabase {
 		readFrom.prepareReadRange(dh, firstByteIndex, numBytes);
 		gzfd.prepareWriteRange(writeHandle, firstByteIndex, numBytes);
 		long bytesRead = 0;
+		long lastDiv = 0L;
+		System.out.println("Zipping " + readFrom.getClass().getSimpleName()
+				+ " to " + uri);
+		long startTime = System.currentTimeMillis();
 		while (bytesRead < numBytes) {
 			int nextRead = readFrom.readBytes(dh, intermediate, 0,
 					INTERMEDIATE_BYTES);
@@ -43,7 +50,15 @@ public class GZippedFileDatabase extends GZippedDatabase {
 			bytesRead += nextRead;
 			if (nextRead > 0 && progress != null)
 				progress.progress();
+			long nextDiv = bytesRead / STEP_SIZE;
+			if (nextDiv > lastDiv) {
+				lastDiv = nextDiv;
+				assert Util.debug(DebugFacility.DATABASE, "Zipping "
+						+ bytesRead * 10000 / numBytes / 100F + " % complete");
+			}
 		}
+		System.out.println("Zipped in "
+				+ Util.millisToETA(System.currentTimeMillis() - startTime));
 		gzfd.close();
 	}
 

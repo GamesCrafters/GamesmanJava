@@ -8,6 +8,7 @@ import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.game.util.TierState;
+import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Progressable;
 import edu.berkeley.gamesman.util.Util;
 import edu.berkeley.gamesman.util.qll.Pool;
@@ -66,6 +67,7 @@ public class TierSolver extends Solver {
 						synchronized (progress) {
 							progress.progress();
 						}
+					addFinished(modCount);
 					modCount = 0;
 				}
 				myGame.getState(currentState);
@@ -83,6 +85,7 @@ public class TierSolver extends Solver {
 				hash++;
 				modCount++;
 			}
+			addFinished(modCount);
 			if (progress != null)
 				synchronized (progress) {
 					progress.progress();
@@ -139,6 +142,7 @@ public class TierSolver extends Solver {
 	private long numHashes;
 	private final boolean wholeGame;
 	private final Progressable progress;
+	private volatile long recordsFinished;
 
 	public TierSolver(Configuration conf, Database db) {
 		super(conf, db);
@@ -149,6 +153,13 @@ public class TierSolver extends Solver {
 				conf.getInteger("gamesman.threads", 1));
 		wholeGame = true;
 		progress = null;
+	}
+
+	private void addFinished(long hashes) {
+		recordsFinished += hashes;
+		assert Util.debug(DebugFacility.SOLVER, (wholeGame ? "Tier "
+				+ currentTier + " " : "")
+				+ recordsFinished * 10000 / numHashes / 100F + "% complete");
 	}
 
 	public TierSolver(Configuration conf, Database db, int tier,
@@ -206,6 +217,7 @@ public class TierSolver extends Solver {
 		currentSplit = 0;
 		firstHash = myGame.hashOffsetForTier(currentTier);
 		numHashes = myGame.numHashesForTier(currentTier);
+		recordsFinished = 0L;
 		splits = Util.getSplits(firstHash, numHashes, preferredSplits,
 				minSplitSize);
 		tasksFinished = new CountDownLatch(splits.length - 1);

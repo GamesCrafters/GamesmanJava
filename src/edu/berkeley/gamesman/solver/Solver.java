@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.database.Database;
+import edu.berkeley.gamesman.util.Util;
 
 /**
  * A Solver is responsible for solving a Game and storing the result to a
@@ -39,6 +40,9 @@ public abstract class Solver {
 	public abstract Runnable nextAvailableJob();
 
 	public final void solve() {
+		System.out.println("Beginning solve for " + conf.getGame().describe()
+				+ " using " + getClass().getSimpleName());
+		long startTime = System.currentTimeMillis();
 		ExecutorService solverService = Executors.newFixedThreadPool(nThreads);
 		Runnable nextJob = nextAvailableJob();
 		while (nextJob != null) {
@@ -53,5 +57,7 @@ public abstract class Solver {
 				e.printStackTrace();
 			}
 		}
+		System.out.println("Solve completed in "
+				+ Util.millisToETA(System.currentTimeMillis() - startTime));
 	}
 }

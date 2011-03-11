@@ -58,8 +58,8 @@ public abstract class Database implements Flushable, Closeable {
 		return myLogic.getNumBytes(numRecords);
 	}
 
-	public final void prepareReadRange(DatabaseHandle dh,
-			long firstByteIndex, long numBytes) throws IOException {
+	public final void prepareReadRange(DatabaseHandle dh, long firstByteIndex,
+			long numBytes) throws IOException {
 		assert reading;
 		assert dh.remainingBytes == 0;
 		dh.location = dh.firstByteIndex = firstByteIndex;
@@ -75,8 +75,8 @@ public abstract class Database implements Flushable, Closeable {
 			long firstByteIndex, long numBytes) throws IOException {
 	}
 
-	public final void prepareWriteRange(DatabaseHandle dh,
-			long firstByteIndex, long numBytes) throws IOException {
+	public final void prepareWriteRange(DatabaseHandle dh, long firstByteIndex,
+			long numBytes) throws IOException {
 		assert writing;
 		assert dh.remainingBytes == 0;
 		dh.location = dh.firstByteIndex = firstByteIndex;
@@ -287,10 +287,14 @@ public abstract class Database implements Flushable, Closeable {
 			Configuration conf, long firstRecordIndex, long numRecords,
 			boolean reading, boolean writing) throws IOException {
 		String[] classes = dbClassString.split(":");
-		for (int i = 0; i < classes.length; i++) {
+		for (int i = 0; i < classes.length - 1; i++) {
 			if (!classes[i].contains("."))
-				classes[i] = "edu.berkeley.gamesman.database." + classes[i];
+				classes[i] = "edu.berkeley.gamesman.database.wrapper."
+						+ classes[i];
 		}
+		if (!classes[classes.length - 1].contains("."))
+			classes[classes.length - 1] = "edu.berkeley.gamesman.database."
+					+ classes[classes.length - 1];
 		Database result;
 		try {
 			Class<? extends Database> underlying = Class.forName(
