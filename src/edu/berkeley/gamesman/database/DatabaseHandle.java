@@ -10,8 +10,10 @@ package edu.berkeley.gamesman.database;
 public class DatabaseHandle {
 	public static final int KEEP_GOING = -1;
 	public static final int UNPREPARED = -2;
-	protected long location, remainingBytes;
-	protected long firstByteIndex, numBytes = UNPREPARED;
+	public long location;
+	protected long remainingBytes;
+	protected long firstByteIndex;
+	public long numBytes = UNPREPARED;
 	protected final byte[] currentRecord;
 	protected final boolean reading;
 

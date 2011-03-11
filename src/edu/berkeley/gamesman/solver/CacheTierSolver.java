@@ -5,8 +5,8 @@ import java.io.IOException;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.database.Database;
-import edu.berkeley.gamesman.database.RecordRangeCache;
-import edu.berkeley.gamesman.database.TierCache;
+import edu.berkeley.gamesman.database.cache.RecordRangeCache;
+import edu.berkeley.gamesman.database.cache.TierCache;
 import edu.berkeley.gamesman.util.Progressable;
 
 public class CacheTierSolver extends TierSolver {
@@ -85,11 +85,6 @@ public class CacheTierSolver extends TierSolver {
 		}
 
 		private void writeBack() {
-			System.out.println("Writing records "
-					+ writeCache.getFirstRecordIndex()
-					+ "-"
-					+ (writeCache.getFirstRecordIndex()
-							+ writeCache.getNumRecords() - 1));
 			try {
 				writeCache.writeRecordsToDatabase(db, myWriteHandle,
 						writeCache.getFirstRecordIndex(),

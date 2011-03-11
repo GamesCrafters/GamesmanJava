@@ -5,6 +5,8 @@ import java.io.IOException;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 
+import edu.berkeley.gamesman.database.util.GZippedDatabaseInputStream;
+
 public class GZippedFileSystemDatabaseInputStream extends
 		GZippedDatabaseInputStream {
 	private final FSDataInputStream in;

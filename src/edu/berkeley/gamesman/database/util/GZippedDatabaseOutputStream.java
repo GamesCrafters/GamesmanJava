@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.database;
+package edu.berkeley.gamesman.database.util;
 
 import java.io.DataOutput;
 import java.io.IOException;

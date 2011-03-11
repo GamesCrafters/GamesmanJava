@@ -1,7 +1,14 @@
-package edu.berkeley.gamesman.database;
+package edu.berkeley.gamesman.database.cache;
 
 import java.io.EOFException;
 import java.io.IOException;
+
+import edu.berkeley.gamesman.database.Database;
+import edu.berkeley.gamesman.database.DatabaseHandle;
+import edu.berkeley.gamesman.database.UnpreparedHandleException;
+import edu.berkeley.gamesman.database.util.DatabaseLogic;
+import edu.berkeley.gamesman.util.DebugFacility;
+import edu.berkeley.gamesman.util.Util;
 
 public class RecordRangeCache {
 	private byte[] recordBytes = new byte[0];
@@ -54,13 +61,13 @@ public class RecordRangeCache {
 		}
 	}
 
-	protected int readBytes(long location, byte[] array, int off, int len) {
+	public int readBytes(long location, byte[] array, int off, int len) {
 		System.arraycopy(recordBytes, (int) (location - firstByteIndex), array,
 				off, len);
 		return len;
 	}
 
-	protected int writeBytes(long location, byte[] array, int off, int len) {
+	public int writeBytes(long location, byte[] array, int off, int len) {
 		System.arraycopy(array, off, recordBytes,
 				(int) (location - firstByteIndex), len);
 		return len;
@@ -70,7 +77,7 @@ public class RecordRangeCache {
 		return readRecordFromByteIndex(myLogic.getByteIndex(recordIndex));
 	}
 
-	protected long readRecordFromByteIndex(long byteIndex) {
+	public long readRecordFromByteIndex(long byteIndex) {
 		return myLogic.getRecord(recordBytes,
 				(int) (byteIndex - firstByteIndex));
 	}
@@ -79,7 +86,7 @@ public class RecordRangeCache {
 		writeRecordFromByteIndex(myLogic.getByteIndex(recordIndex), record);
 	}
 
-	protected void writeRecordFromByteIndex(long byteIndex, long record) {
+	public void writeRecordFromByteIndex(long byteIndex, long record) {
 		myLogic.fillBytes(record, recordBytes,
 				(int) (byteIndex - firstByteIndex));
 	}
@@ -92,11 +99,19 @@ public class RecordRangeCache {
 		return numRecords;
 	}
 
-	protected void readFromDatabase(Database db, DatabaseHandle dh,
+	public void readRecordsFromDatabase(Database db, DatabaseHandle dh,
+			long recordIndex, int numRecords) throws IOException {
+		assert Util.debug(DebugFacility.CACHE, "Reading records " + recordIndex
+				+ "-" + (recordIndex + numRecords - 1) + " from database");
+		readBytesFromDatabase(db, dh, myLogic.getByteIndex(recordIndex),
+				(int) myLogic.getNumBytes(numRecords));
+	}
+
+	public void readBytesFromDatabase(Database db, DatabaseHandle dh,
 			long byteIndex, int numBytes) throws IOException {
 		db.prepareReadRange(dh, byteIndex, numBytes);
 		try {
-			readSequentialFromDatabase(db, dh, byteIndex, numBytes);
+			readSequentialBytesFromDatabase(db, dh, byteIndex, numBytes);
 		} catch (UnpreparedHandleException e) {
 			throw new Error(e);
 		} catch (EOFException e) {
@@ -104,23 +119,25 @@ public class RecordRangeCache {
 		}
 	}
 
-	protected void readSequentialFromDatabase(Database db, DatabaseHandle dh,
-			long byteIndex, int numBytes) throws IOException {
+	protected void readSequentialBytesFromDatabase(Database db,
+			DatabaseHandle dh, long byteIndex, int numBytes) throws IOException {
 		db.readFullBytes(dh, recordBytes, (int) (byteIndex - firstByteIndex),
 				numBytes);
 	}
 
 	public void writeRecordsToDatabase(Database db, DatabaseHandle dh,
 			long recordIndex, int numRecords) throws IOException {
+		assert Util.debug(DebugFacility.CACHE, "Writing records " + recordIndex
+				+ "-" + (recordIndex + numRecords - 1) + " to database");
 		writeBytesToDatabase(db, dh, myLogic.getByteIndex(recordIndex),
 				(int) myLogic.getNumBytes(numRecords));
 	}
 
-	protected void writeBytesToDatabase(Database db, DatabaseHandle dh,
+	public void writeBytesToDatabase(Database db, DatabaseHandle dh,
 			long byteIndex, int numBytes) throws IOException {
 		db.prepareWriteRange(dh, byteIndex, numBytes);
 		try {
-			writeSequentialToDatabase(db, dh, byteIndex, numBytes);
+			writeSequentialBytesToDatabase(db, dh, byteIndex, numBytes);
 		} catch (UnpreparedHandleException e) {
 			throw new Error(e);
 		} catch (EOFException e) {
@@ -128,17 +145,17 @@ public class RecordRangeCache {
 		}
 	}
 
-	protected void writeSequentialToDatabase(Database db, DatabaseHandle dh,
-			long byteIndex, int numBytes) throws IOException {
+	protected void writeSequentialBytesToDatabase(Database db,
+			DatabaseHandle dh, long byteIndex, int numBytes) throws IOException {
 		db.writeFullBytes(dh, recordBytes, (int) (byteIndex - firstByteIndex),
 				numBytes);
 	}
 
-	protected long getFirstByteIndex() {
+	public long getFirstByteIndex() {
 		return firstByteIndex;
 	}
 
-	protected int getNumBytes() {
+	public int getNumBytes() {
 		return numBytes;
 	}
 

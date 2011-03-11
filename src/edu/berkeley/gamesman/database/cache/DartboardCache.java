@@ -1,8 +1,10 @@
-package edu.berkeley.gamesman.database;
+package edu.berkeley.gamesman.database.cache;
 
 import java.io.IOException;
 
 import edu.berkeley.gamesman.core.Record;
+import edu.berkeley.gamesman.database.Database;
+import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.hasher.DartboardHasher;
@@ -60,18 +62,14 @@ public class DartboardCache extends TierCache {
 			hasher.unhash(currentPosition.hash + addHash - 1);
 			lastChild = hasher.previousChild(old, replace, place);
 			addHash /= 2;
-		} while (db.myLogic.getNumBytes(lastChild - child.hash) > memPerChild);
+		} while (db.getNumBytes(lastChild - child.hash) > memPerChild);
 		hasher.unhash(currentPosition.hash);
 		long tierOffset = game.hashOffsetForTier(child.tier);
 		long endChildHash = tierOffset + lastChild + 1;
 		int numRecords = (int) (endChildHash - childHash);
 		ranges[place].setRange(childHash, numRecords);
-		long byteIndex = db.myLogic.getByteIndex(childHash);
-		int numBytes = (int) db.myLogic.getNumBytes(numRecords);
-		System.out.println("Reading records for place " + place + ": "
-				+ byteIndex + "-" + (byteIndex + numBytes - 1));
 		try {
-			ranges[place].readFromDatabase(db, dh, byteIndex, numBytes);
+			ranges[place].readRecordsFromDatabase(db, dh, childHash, numRecords);
 		} catch (IOException e) {
 			throw new Error(e);
 		}

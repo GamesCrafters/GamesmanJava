@@ -1,8 +1,9 @@
-package edu.berkeley.gamesman.database;
+package edu.berkeley.gamesman.database.wrapper;
 
 import java.io.IOException;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.database.Database;
 
 /**
  * A database which wraps another database

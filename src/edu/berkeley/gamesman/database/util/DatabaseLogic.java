@@ -1,8 +1,8 @@
-package edu.berkeley.gamesman.database;
+package edu.berkeley.gamesman.database.util;
 
 public final class DatabaseLogic {
 	private final int shamt;
-	final int recordBytes;
+	public final int recordBytes;
 
 	public DatabaseLogic(long recordStates) {
 		int shamt = -1;
@@ -14,11 +14,11 @@ public final class DatabaseLogic {
 		recordBytes = 1 << shamt;
 	}
 
-	long getByteIndex(long recordIndex) {
+	public long getByteIndex(long recordIndex) {
 		return getNumBytes(recordIndex);
 	}
 
-	long getRecord(byte[] bytes, int off) {
+	public long getRecord(byte[] bytes, int off) {
 		long record = 0L;
 		off += recordBytes - 1;
 		for (int i = recordBytes - 1; i >= 0; i--) {
@@ -28,14 +28,14 @@ public final class DatabaseLogic {
 		return record;
 	}
 
-	void fillBytes(long record, byte[] bytes, int off) {
+	public void fillBytes(long record, byte[] bytes, int off) {
 		for (int i = 0; i < recordBytes; i++) {
 			bytes[off++] = (byte) record;
 			record >>= 8;
 		}
 	}
 
-	long getNumBytes(long numRecords) {
+	public long getNumBytes(long numRecords) {
 		return numRecords << shamt;
 	}
 

@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 
-import edu.berkeley.gamesman.database.GZippedDatabaseOutputStream;
+import edu.berkeley.gamesman.database.util.GZippedDatabaseOutputStream;
 
 public class RandomAccessFileDataOutputStream extends
 		GZippedDatabaseOutputStream implements DataOutput {

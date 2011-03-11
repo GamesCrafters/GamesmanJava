@@ -1,9 +1,13 @@
-package edu.berkeley.gamesman.database;
+package edu.berkeley.gamesman.database.wrapper;
 
 import java.io.EOFException;
 import java.io.IOException;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.database.Database;
+import edu.berkeley.gamesman.database.DatabaseHandle;
+import edu.berkeley.gamesman.database.UnpreparedHandleException;
+import edu.berkeley.gamesman.database.cache.RecordRangeCache;
 
 public class MemoryDatabase extends DatabaseWrapper {
 	private final RecordRangeCache recordCache;
@@ -20,7 +24,7 @@ public class MemoryDatabase extends DatabaseWrapper {
 		recordCache.setRange(firstRecord, (int) numRecords);
 		if (!writing) {
 			DatabaseHandle dbHandle = db.getHandle(true);
-			recordCache.readFromDatabase(db, dbHandle,
+			recordCache.readBytesFromDatabase(db, dbHandle,
 					myLogic.getByteIndex(firstRecord), (int) numBytes);
 		}
 		this.writing = writing;

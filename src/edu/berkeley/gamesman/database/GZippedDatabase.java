@@ -3,6 +3,8 @@ package edu.berkeley.gamesman.database;
 import java.io.IOException;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.database.util.GZippedDatabaseInputStream;
+import edu.berkeley.gamesman.database.util.GZippedDatabaseOutputStream;
 import edu.berkeley.gamesman.util.Util;
 import edu.berkeley.gamesman.util.ZipChunkInputStream;
 import edu.berkeley.gamesman.util.ZipChunkOutputStream;

@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.*;
-import edu.berkeley.gamesman.database.C4Cache;
 import edu.berkeley.gamesman.database.Database;
+import edu.berkeley.gamesman.database.cache.C4Cache;
 import edu.berkeley.gamesman.game.util.BitSetBoard;
 import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.game.util.PieceRearranger;

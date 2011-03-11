@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.database.util.DatabaseLogic;
+import edu.berkeley.gamesman.database.wrapper.DatabaseWrapper;
 import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.util.Util;
 
@@ -56,7 +58,7 @@ public abstract class Database implements Flushable, Closeable {
 		return myLogic.getNumBytes(numRecords);
 	}
 
-	protected final void prepareReadRange(DatabaseHandle dh,
+	public final void prepareReadRange(DatabaseHandle dh,
 			long firstByteIndex, long numBytes) throws IOException {
 		assert reading;
 		assert dh.remainingBytes == 0;
@@ -73,7 +75,7 @@ public abstract class Database implements Flushable, Closeable {
 			long firstByteIndex, long numBytes) throws IOException {
 	}
 
-	protected final void prepareWriteRange(DatabaseHandle dh,
+	public final void prepareWriteRange(DatabaseHandle dh,
 			long firstByteIndex, long numBytes) throws IOException {
 		assert writing;
 		assert dh.remainingBytes == 0;
@@ -163,7 +165,7 @@ public abstract class Database implements Flushable, Closeable {
 		readFullBytes(dh, recordArray, off, len);
 	}
 
-	protected final void readFullBytes(DatabaseHandle dh, byte[] byteArray,
+	public final void readFullBytes(DatabaseHandle dh, byte[] byteArray,
 			int off, int len) throws IOException {
 		while (len > 0) {
 			int read = readBytes(dh, byteArray, off, len);
@@ -191,7 +193,7 @@ public abstract class Database implements Flushable, Closeable {
 		writeFullBytes(dh, recordArray, off, len);
 	}
 
-	protected final void writeFullBytes(DatabaseHandle dh, byte[] byteArray,
+	public final void writeFullBytes(DatabaseHandle dh, byte[] byteArray,
 			int off, int len) throws IOException {
 		while (len > 0) {
 			int written = writeBytes(dh, byteArray, off, len);
@@ -335,5 +337,9 @@ public abstract class Database implements Flushable, Closeable {
 		int confLength = in.readInt();
 		Util.skipFully(in, confLength);
 		return 20 + confLength;
+	}
+
+	public long getNumBytes(long numRecords) {
+		return myLogic.getNumBytes(numRecords);
 	}
 }

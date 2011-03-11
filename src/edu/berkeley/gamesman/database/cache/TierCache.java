@@ -1,6 +1,7 @@
-package edu.berkeley.gamesman.database;
+package edu.berkeley.gamesman.database.cache;
 
 import edu.berkeley.gamesman.core.Record;
+import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.game.util.TierState;
 
 public abstract class TierCache {

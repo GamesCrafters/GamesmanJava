@@ -81,6 +81,7 @@ public class TierSolver extends Solver {
 				if (trial < numRecords - 1)
 					myGame.nextHashInTier();
 				hash++;
+				modCount++;
 			}
 			if (progress != null)
 				synchronized (progress) {
