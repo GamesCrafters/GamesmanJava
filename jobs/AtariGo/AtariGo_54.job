@@ -1,0 +1,9 @@
+gamesman.game = AtariGo
+gamesman.game.width = 5
+gamesman.game.height = 4
+gamesman.solver = CacheTierSolver
+gamesman.database = FileDatabase
+gamesman.db.uri = /scratch/atari54.db
+gamesman.threads = 16
+gamesman.memory = 6g
+gamesman.splits = 300

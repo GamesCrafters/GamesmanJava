@@ -1,0 +1,6 @@
+gamesman.game = AtariGo
+gamesman.game.width = 3
+gamesman.game.height = 3
+gamesman.solver = TierSolver
+gamesman.database = MemoryDatabase:GZippedFileDatabase
+gamesman.db.uri = atari33.db

@@ -1,0 +1,6 @@
+gamesman.game = YGame
+gamesman.game.centerRows = 3
+gamesman.game.outerRows = 1
+gamesman.solver = TierSolver
+gamesman.database = MemoryDatabase:GZippedFileDatabase
+gamesman.db.uri = ygame31.db
