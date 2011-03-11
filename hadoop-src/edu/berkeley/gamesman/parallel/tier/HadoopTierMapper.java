@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.parallel.tier;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.EnumSet;
 import java.util.Random;
 
 import edu.berkeley.gamesman.database.Database;
@@ -15,6 +16,7 @@ import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.parallel.RangeFile;
 import edu.berkeley.gamesman.solver.Solver;
 import edu.berkeley.gamesman.solver.TierSolver;
+import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Progressable;
 import edu.berkeley.gamesman.util.Util;
 
@@ -47,6 +49,18 @@ public class HadoopTierMapper extends
 					.getConfiguration();
 			this.conf = Configuration.deserialize(conf
 					.get("gamesman.configuration"));
+			EnumSet<DebugFacility> debugOpts = EnumSet
+					.noneOf(DebugFacility.class);
+			for (DebugFacility f : DebugFacility.values()) {
+				if (this.conf.getBoolean("gamesman.debug." + f.toString(),
+						false)) {
+					debugOpts.add(f);
+				}
+			}
+			if (!debugOpts.isEmpty()) {
+				debugOpts.add(DebugFacility.CORE);
+				Util.enableDebuging(debugOpts);
+			}
 			game = (TierGame) this.conf.getGame();
 			fs = FileSystem.get(conf);
 			tier = conf.getInt("tier", -1);
