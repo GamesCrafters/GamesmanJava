@@ -57,9 +57,13 @@ public abstract class Solver {
 	}
 
 	private final Runnable getNextJob() {
-		if (failed == null)
-			return new RunWrapper(nextAvailableJob());
-		else
+		if (failed == null) {
+			Runnable nextJob = nextAvailableJob();
+			if (nextJob == null)
+				return null;
+			else
+				return new RunWrapper(nextJob);
+		} else
 			return null;
 	}
 
