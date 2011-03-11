@@ -12,9 +12,27 @@ import edu.berkeley.gamesman.util.Util;
  * A Solver is responsible for solving a Game and storing the result to a
  * Database
  * 
- * @author Steven Schlansker
+ * @author David Spies
  */
 public abstract class Solver {
+
+	private class RunWrapper implements Runnable {
+		private final Runnable inner;
+
+		private RunWrapper(Runnable inner) {
+			this.inner = inner;
+		}
+
+		@Override
+		public void run() {
+			try {
+				inner.run();
+			} catch (Error e) {
+				failed = e;
+			}
+		}
+
+	}
 
 	/**
 	 * The number of positions to go through between each update/reset
@@ -24,6 +42,7 @@ public abstract class Solver {
 
 	protected Database db;
 	protected Configuration conf;
+	protected volatile Error failed;
 
 	/**
 	 * Set the Database to use for this solver
@@ -37,6 +56,13 @@ public abstract class Solver {
 		nThreads = conf.getInteger("gamesman.threads", 1);
 	}
 
+	private final Runnable getNextJob() {
+		if (failed == null)
+			return new RunWrapper(nextAvailableJob());
+		else
+			return null;
+	}
+
 	public abstract Runnable nextAvailableJob();
 
 	public final void solve() {
@@ -44,15 +70,22 @@ public abstract class Solver {
 				+ " using " + getClass().getSimpleName());
 		long startTime = System.currentTimeMillis();
 		ExecutorService solverService = Executors.newFixedThreadPool(nThreads);
-		Runnable nextJob = nextAvailableJob();
-		while (nextJob != null) {
-			solverService.execute(nextJob);
-			nextJob = nextAvailableJob();
+		Runnable nextJob = null;
+		while (true) {
+			nextJob = getNextJob();
+			if (failed != null || nextJob == null)
+				break;
+			else
+				solverService.execute(nextJob);
 		}
 		solverService.shutdown();
+		if (failed != null) {
+			System.out.println("Solve failed");
+			throw failed;
+		}
 		while (!solverService.isTerminated()) {
 			try {
-				solverService.awaitTermination(1, TimeUnit.MINUTES);
+				solverService.awaitTermination(20, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

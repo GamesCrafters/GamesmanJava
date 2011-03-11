@@ -76,8 +76,13 @@ public class TopDownSolver extends Solver {
 
 		private void solve(TopDownMutaGame game, Record value, int depth,
 				DatabaseHandle readDh, DatabaseHandle writeDh) {
-			if (depth < 3 && debugSolver)
-				System.out.println(game.displayState());
+			if (depth < 3 && debugSolver) {
+				if (Util.debug(DebugFacility.SOLVER)) {
+					System.out.println(game.displayState());
+				}
+				if (failed != null)
+					return;
+			}
 			long hash = game.getHash();
 			try {
 				game.longToRecord(db.readRecord(readDh, hash), value);

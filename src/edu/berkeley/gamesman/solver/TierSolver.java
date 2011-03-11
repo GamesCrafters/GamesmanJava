@@ -63,6 +63,8 @@ public class TierSolver extends Solver {
 			int modCount = 0;
 			for (long trial = 0; trial < numRecords; trial++) {
 				if (modCount == Solver.STEP_SIZE) {
+					if (failed != null)
+						break;
 					if (progress != null)
 						synchronized (progress) {
 							progress.progress();
@@ -182,6 +184,8 @@ public class TierSolver extends Solver {
 
 	@Override
 	public Runnable nextAvailableJob() {
+		if (failed != null)
+			return null;
 		if (currentSplit >= splits.length - 1) {
 			if (currentTier == 0 || !wholeGame)
 				return null;
