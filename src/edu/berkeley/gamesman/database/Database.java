@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.database.util.DatabaseLogic;
 import edu.berkeley.gamesman.database.wrapper.DatabaseWrapper;
 import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.util.Util;

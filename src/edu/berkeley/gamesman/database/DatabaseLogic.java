@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.database.util;
+package edu.berkeley.gamesman.database;
 
 public final class DatabaseLogic {
 	private final int shamt;

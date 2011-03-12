@@ -5,8 +5,8 @@ import java.io.IOException;
 
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
+import edu.berkeley.gamesman.database.DatabaseLogic;
 import edu.berkeley.gamesman.database.UnpreparedHandleException;
-import edu.berkeley.gamesman.database.util.DatabaseLogic;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Util;
 
