@@ -2,10 +2,12 @@ package edu.berkeley.gamesman.parallel.tier;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 import java.lang.reflect.InvocationTargetException;
-import java.util.EnumSet;
+import java.util.Properties;
 import java.util.Random;
 
+import edu.berkeley.gamesman.DebugSetup;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.FileDatabase;
 import edu.berkeley.gamesman.database.GZippedFileDatabase;
@@ -17,7 +19,6 @@ import edu.berkeley.gamesman.parallel.Range;
 import edu.berkeley.gamesman.parallel.RangeFile;
 import edu.berkeley.gamesman.solver.Solver;
 import edu.berkeley.gamesman.solver.TierSolver;
-import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Progressable;
 import edu.berkeley.gamesman.util.Util;
 
@@ -48,20 +49,10 @@ public class HadoopTierMapper extends
 		try {
 			org.apache.hadoop.conf.Configuration conf = context
 					.getConfiguration();
-			this.conf = Configuration.deserialize(conf
-					.get("gamesman.configuration"));
-			EnumSet<DebugFacility> debugOpts = EnumSet
-					.noneOf(DebugFacility.class);
-			for (DebugFacility f : DebugFacility.values()) {
-				if (this.conf.getBoolean("gamesman.debug." + f.toString(),
-						false)) {
-					debugOpts.add(f);
-				}
-			}
-			if (!debugOpts.isEmpty()) {
-				debugOpts.add(DebugFacility.CORE);
-				Util.enableDebuging(debugOpts);
-			}
+			Properties props = new Properties();
+			props.load(new StringReader(conf.get("gamesman.configuration")));
+			DebugSetup.setup(props);
+			this.conf = new Configuration(props);
 			game = (TierGame) this.conf.getGame();
 			fs = FileSystem.get(conf);
 			tier = conf.getInt("tier", -1);

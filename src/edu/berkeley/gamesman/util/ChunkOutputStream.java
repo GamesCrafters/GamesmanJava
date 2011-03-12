@@ -41,7 +41,8 @@ public class ChunkOutputStream extends FilterOutputStream {
 
 	@Override
 	public void close() throws IOException {
-		nextChunk();
+		if (baos.size() > 0)
+			nextChunk();
 		super.close();
 	}
 
@@ -55,5 +56,13 @@ public class ChunkOutputStream extends FilterOutputStream {
 
 	public void finish() throws IOException {
 		nextChunk();
+	}
+
+	public void clearChunk() {
+		baos.reset();
+	}
+
+	public void clearChunkAndClose() throws IOException {
+		super.close();
 	}
 }

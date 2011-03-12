@@ -8,7 +8,7 @@ public class GZippedFileSystemDatabase extends GZippedDatabase {
 	public GZippedFileSystemDatabase(String uri, Configuration conf,
 			long firstRecordIndex, long numRecords, boolean reading,
 			boolean writing) throws IOException {
-		super(new GZippedFileSystemDatabaseInputStream(uri), null, uri, conf,
+		super(new GZippedFileSystemDatabaseInputStream(uri), null, conf,
 				firstRecordIndex, numRecords, reading, writing);
 	}
 }

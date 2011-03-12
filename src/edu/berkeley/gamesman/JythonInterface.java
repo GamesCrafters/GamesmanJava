@@ -3,7 +3,6 @@ package edu.berkeley.gamesman;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.EnumSet;
 import java.util.Properties;
 
 import org.python.core.PyObject;
@@ -11,9 +10,7 @@ import org.python.util.InteractiveConsole;
 import org.python.util.JLineConsole;
 import org.python.util.ReadlineConsole;
 
-import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.JythonUtil;
-import edu.berkeley.gamesman.util.Util;
 
 /**
  * @author Jeremy Fleischman
@@ -82,15 +79,6 @@ public final class JythonInterface extends GamesmanApplication {
 		default:
 			throw new Error("Need to pick a console");
 		}
-
-		EnumSet<DebugFacility> debugOpts = EnumSet.noneOf(DebugFacility.class);
-		ClassLoader cl = ClassLoader.getSystemClassLoader();
-		cl.setDefaultAssertionStatus(false);
-		debugOpts.add(DebugFacility.SOLVER);
-		DebugFacility.SOLVER.setupClassloader(cl);
-		debugOpts.add(DebugFacility.CORE);
-		DebugFacility.CORE.setupClassloader(cl);
-		Util.enableDebuging(debugOpts);
 
 		// this will let us put .py files in the junk directory, and things will
 		// just work =)

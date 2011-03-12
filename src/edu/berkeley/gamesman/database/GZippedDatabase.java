@@ -1,13 +1,21 @@
 package edu.berkeley.gamesman.database;
 
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.database.util.GZippedDatabaseInputStream;
 import edu.berkeley.gamesman.database.util.GZippedDatabaseOutputStream;
+import edu.berkeley.gamesman.util.DebugFacility;
+import edu.berkeley.gamesman.util.Progressable;
 import edu.berkeley.gamesman.util.Util;
 import edu.berkeley.gamesman.util.ZipChunkInputStream;
 import edu.berkeley.gamesman.util.ZipChunkOutputStream;
+import edu.berkeley.gamesman.util.qll.Factory;
+import edu.berkeley.gamesman.util.qll.Pool;
 
 public abstract class GZippedDatabase extends Database {
 	private long currentByteIndex;
@@ -26,7 +34,7 @@ public abstract class GZippedDatabase extends Database {
 	private long filePos;
 
 	public GZippedDatabase(GZippedDatabaseInputStream reader,
-			GZippedDatabaseOutputStream writer, String uri, Configuration conf,
+			GZippedDatabaseOutputStream writer, Configuration conf,
 			long firstRecordIndex, long numRecords, boolean reading,
 			boolean writing) throws IOException {
 		super(conf, firstRecordIndex, numRecords, reading, writing);
@@ -110,4 +118,182 @@ public abstract class GZippedDatabase extends Database {
 		} else
 			reader.close();
 	}
+
+	public static void zip(Configuration conf, Database readFrom,
+			GZippedDatabase writeTo) throws IOException {
+		zip(conf, readFrom, writeTo, null);
+	}
+
+	public static void zip(Configuration conf, final Database readFrom,
+			final GZippedDatabase writeTo, Progressable progress)
+			throws IOException {
+		Zipper zip = new Zipper(conf, readFrom, writeTo, progress);
+		zip.run();
+	}
+
+	private static class Zipper {
+		private final Pool<ZipChunkOutputStream> chunkerPool = new Pool<ZipChunkOutputStream>(
+				new Factory<ZipChunkOutputStream>() {
+					@Override
+					public ZipChunkOutputStream newObject() {
+						try {
+							return new ZipChunkOutputStream(writeTo.writer);
+						} catch (IOException e) {
+							throw new Error(e);
+						}
+					}
+
+					@Override
+					public void reset(ZipChunkOutputStream t) {
+						try {
+							t.clearChunk();
+						} catch (IOException e) {
+							throw new Error(e);
+						}
+					}
+				});
+		private final Pool<byte[]> bytePool = new Pool<byte[]>(
+				new Factory<byte[]>() {
+
+					@Override
+					public byte[] newObject() {
+						return new byte[entrySize];
+					}
+
+					@Override
+					public void reset(byte[] t) {
+					}
+
+				});
+
+		private class ZipRunner implements Runnable {
+			private final int j;
+
+			private ZipRunner(int j) {
+				this.j = j;
+			}
+
+			@Override
+			public void run() {
+				DatabaseHandle readDh = readFrom.getHandle(true);
+				long thisByte = j * entrySize;
+				int len;
+				if (j == writeTo.numEntries - 1) {
+					len = (int) (numBytes - thisByte);
+				} else {
+					len = entrySize;
+				}
+				long byteIndex = firstByteIndex + thisByte;
+				memoryChunks.acquireUninterruptibly(2);
+				/*
+				 * If I were to instead acquire the permits separately (acquire,
+				 * read, acquire, write), then I could have deadlock if all
+				 * threads use up the permits reading and no one is able to
+				 * write
+				 */
+				byte[] entryBytes = bytePool.get();
+				ZipChunkOutputStream chunker = chunkerPool.get();
+				try {
+					readFrom.readFullBytes(readDh, byteIndex, entryBytes, 0,
+							len);
+					chunker.write(entryBytes, 0, len);
+				} catch (IOException e) {
+					throw new Error(e);
+				}
+				bytesZipped += len;
+				if (bytesZipped / STEP_SIZE > lastProgressPoint) {
+					zipProgress();
+				}
+				streams[j] = chunker;
+				threadsFinished[j].countDown();
+				bytePool.release(entryBytes);
+				memoryChunks.release();
+			}
+		}
+
+		private static final int STEP_SIZE = 100000000;
+		private final int entrySize;
+		private volatile long bytesZipped = 0L;
+		private final long firstByteIndex, numBytes;
+		private final Semaphore memoryChunks;
+		private final int nThreads;
+		private final CountDownLatch[] threadsFinished;
+		private final ZipChunkOutputStream[] streams;
+		private final Database readFrom;
+		private final GZippedDatabase writeTo;
+		private final Progressable progress;
+		private volatile long lastProgressPoint = 0;
+
+		public Zipper(Configuration conf, final Database readFrom,
+				final GZippedDatabase writeTo, Progressable progress) {
+			if (writeTo.entrySize > Integer.MAX_VALUE)
+				throw new Error("Entry size is too large to fit in int");
+			entrySize = (int) writeTo.entrySize;
+			firstByteIndex = readFrom.firstByteIndex();
+			numBytes = readFrom.numBytes();
+			nThreads = conf.getInteger("gamesman.threads", 1);
+			long availableMem = conf.getNumBytes("gamesman.memory", 1L << 25);
+			int permits = (int) Math.min(Integer.MAX_VALUE,
+					Math.max(2, availableMem / entrySize));
+			memoryChunks = new Semaphore(permits);
+			// No deadlock because newFixedThreadPool is a queue
+			threadsFinished = new CountDownLatch[writeTo.numEntries];
+			streams = new ZipChunkOutputStream[writeTo.numEntries];
+			this.readFrom = readFrom;
+			this.writeTo = writeTo;
+			this.progress = progress;
+		}
+
+		private void zipProgress() {
+			if (progress != null) {
+				synchronized (this) {
+					progress.progress();
+				}
+			}
+			lastProgressPoint = bytesZipped / STEP_SIZE;
+			Util.debug(DebugFacility.DATABASE, bytesZipped * 10000 / numBytes
+					/ 100F + "% finished zipping");
+		}
+
+		private void writeProgress(long bytesWritten) {
+			if (progress != null) {
+				synchronized (this) {
+					progress.progress();
+				}
+			}
+			Util.debug(DebugFacility.DATABASE, bytesWritten * 10000 / numBytes
+					/ 100F + "% finished writing zipped bytes");
+		}
+
+		public void run() throws IOException {
+			System.out.println("Started zipping");
+			long startTime = System.currentTimeMillis();
+			ExecutorService zipperService = Executors
+					.newFixedThreadPool(nThreads);
+			for (int i = 0; i < writeTo.numEntries; i++) {
+				threadsFinished[i] = new CountDownLatch(1);
+				zipperService.submit(new ZipRunner(i));
+			}
+			zipperService.shutdown();
+			long bytesWritten = 0L;
+			long lastStep = 0;
+			for (int i = 0; i < writeTo.numEntries; i++) {
+				writeTo.entryTable[i] = writeTo.writer.getFilePointer();
+				Util.awaitUninterruptibly(threadsFinished[i]);
+				streams[i].nextChunk();
+				chunkerPool.release(streams[i]);
+				memoryChunks.release();
+				if (i < writeTo.numEntries - 1) {
+					bytesWritten += entrySize;
+					if (bytesWritten / STEP_SIZE > lastStep) {
+						writeProgress(bytesWritten);
+						lastStep = bytesWritten / STEP_SIZE;
+					}
+				}
+			}
+			System.out.println("Zipped in "
+					+ Util.millisToETA(System.currentTimeMillis() - startTime));
+		}
+	}
+
 }

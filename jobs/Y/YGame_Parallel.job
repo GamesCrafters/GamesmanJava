@@ -14,3 +14,4 @@ gamesman.parallel.multiple = 20
 gamesman.parallel.numMachines = 18
 gamesman.parallel.minimum.split = 1048576
 gamesman.debug.SOLVER = true
+gamesman.debug.DATABASE = true

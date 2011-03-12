@@ -10,6 +10,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Iterator;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * Various utility functions accessible from any class
@@ -585,5 +586,18 @@ public final class Util {
 			splits[i] = start + i * num / numSplits;
 		}
 		return splits;
+	}
+
+	public static void awaitUninterruptibly(CountDownLatch cdl) {
+		boolean interrupted;
+		do {
+			interrupted = false;
+			try {
+				cdl.await();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+				interrupted = true;
+			}
+		} while (interrupted);
 	}
 }

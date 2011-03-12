@@ -189,23 +189,33 @@ public class TierSolver extends Solver {
 		if (currentSplit >= splits.length - 1) {
 			if (currentTier == 0 || !wholeGame)
 				return null;
-			boolean interrupted;
-			do {
-				interrupted = false;
-				try {
-					tasksFinished.await();
-				} catch (InterruptedException e) {
-					if (failed != null)
-						return null;
-					else {
-						interrupted = true;
-						e.printStackTrace();
-					}
-				}
-			} while (interrupted);
+			if (!awaitOrFailUninterruptibly())
+				return null;
 			decrTier();
 		}
 		return nextJob();
+	}
+
+	/*
+	 * Returns true if await returned without being interrupted (false if failed
+	 * is non-null)
+	 */
+	protected boolean awaitOrFailUninterruptibly() {
+		boolean interrupted;
+		do {
+			interrupted = false;
+			try {
+				tasksFinished.await();
+			} catch (InterruptedException e) {
+				if (failed != null)
+					return false;
+				else {
+					interrupted = true;
+					e.printStackTrace();
+				}
+			}
+		} while (interrupted);
+		return true;
 	}
 
 	protected Runnable nextJob() {
@@ -230,5 +240,4 @@ public class TierSolver extends Solver {
 				minSplitSize);
 		tasksFinished = new CountDownLatch(splits.length - 1);
 	}
-
 }

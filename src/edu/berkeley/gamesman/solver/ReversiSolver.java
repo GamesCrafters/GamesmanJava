@@ -78,16 +78,8 @@ public class ReversiSolver extends TierSolver {
 		if (currentSplit >= splits.length - 1) {
 			if (fixJob && currentTier == 0)
 				return null;
-			boolean interrupted;
-			do {
-				interrupted = false;
-				try {
-					tasksFinished.await();
-				} catch (InterruptedException e) {
-					interrupted = true;
-					e.printStackTrace();
-				}
-			} while (interrupted);
+			if (!awaitOrFailUninterruptibly())
+				return null;
 			if (fixJob) {
 				fixJob = false;
 				decrTier();
@@ -121,5 +113,4 @@ public class ReversiSolver extends TierSolver {
 				halfTier, preferredSplits, minSplitSize);
 		tasksFinished = new CountDownLatch(splits.length - 1);
 	}
-
 }

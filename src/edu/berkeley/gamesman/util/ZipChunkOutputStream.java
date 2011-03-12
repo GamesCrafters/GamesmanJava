@@ -8,6 +8,7 @@ import java.util.zip.GZIPOutputStream;
 public class ZipChunkOutputStream extends FilterOutputStream {
 	private final ChunkOutputStream cos;
 	private GZIPOutputStream gzos;
+	private boolean bytesWritten;
 
 	public ZipChunkOutputStream(OutputStream out) throws IOException {
 		super(new ChunkOutputStream(out));
@@ -17,14 +18,17 @@ public class ZipChunkOutputStream extends FilterOutputStream {
 
 	public void write(int b) throws IOException {
 		gzos.write(b);
+		bytesWritten = true;
 	}
 
 	public void write(byte b[]) throws IOException {
 		gzos.write(b);
+		bytesWritten = true;
 	}
 
 	public void write(byte b[], int off, int len) throws IOException {
 		gzos.write(b, off, len);
+		bytesWritten = true;
 	}
 
 	private int finishChunk() throws IOException {
@@ -40,15 +44,39 @@ public class ZipChunkOutputStream extends FilterOutputStream {
 
 	private void startChunk() throws IOException {
 		gzos = new GZIPOutputStream(cos);
+		bytesWritten = false;
 	}
 
 	public void close() throws IOException {
-		finishChunk();
-		super.close();
+		if (bytesWritten) {
+			finishChunk();
+			super.close();
+		} else {
+			clearChunkAndClose();
+		}
 	}
 
 	public void finish() throws IOException {
-		finishChunk();
-		cos.finish();
+		if (bytesWritten) {
+			finishChunk();
+			cos.finish();
+		} else {
+			clearChunkAndFinish();
+		}
+	}
+
+	public void clearChunkAndFinish() {
+		cos.clearChunk();
+	}
+
+	public void clearChunkAndClose() throws IOException {
+		cos.clearChunkAndClose();
+	}
+
+	public void clearChunk() throws IOException {
+		if (bytesWritten) {
+			cos.clearChunk();
+			startChunk();
+		}
 	}
 }

@@ -205,16 +205,7 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 			return new BreadthFirstInitializeTask();
 		}
 		if (currentSplit >= splits.length - 1 || !firstTaskFinished) {
-			boolean interrupted;
-			do {
-				interrupted = false;
-				try {
-					tasksFinished.await();
-				} catch (InterruptedException e) {
-					interrupted = true;
-					e.printStackTrace();
-				}
-			} while (interrupted);
+			Util.awaitUninterruptibly(tasksFinished);
 			if (positionsFound == 0)
 				return null;
 			if (firstTaskFinished || finitePrimitives)
