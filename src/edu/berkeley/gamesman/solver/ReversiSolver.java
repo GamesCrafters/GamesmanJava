@@ -109,7 +109,7 @@ public class ReversiSolver extends TierSolver {
 		currentSplit = 0;
 		halfTier = myGame.numHashesForTier(currentTier) / 2;
 		splits = Util.getSplits(myGame.hashOffsetForTier(currentTier),
-				halfTier, preferredSplits, minSplitSize);
+				halfTier, minSplitSize, minSplits, preferredSplitSize);
 		tasksFinished = new CountDownLatch(splits.length - 1);
 	}
 }

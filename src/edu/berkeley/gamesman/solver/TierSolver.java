@@ -125,7 +125,6 @@ public class TierSolver extends Solver {
 	protected CountDownLatch tasksFinished = new CountDownLatch(0);
 	protected long[] splits = new long[0];
 	protected int currentSplit;
-	protected final int preferredSplits;
 	final Pool<Configuration> confPool = new Pool<Configuration>(
 			new Factory<Configuration>() {
 
@@ -143,14 +142,18 @@ public class TierSolver extends Solver {
 	private final boolean wholeGame;
 	private final Progressable progress;
 	private volatile long recordsFinished;
+	protected final int minSplits;
+	protected final long preferredSplitSize;
 
 	public TierSolver(Configuration conf, Database db) {
 		super(conf, db);
 		myGame = (TierGame) conf.getGame();
 		currentTier = myGame.numberOfTiers();
-		minSplitSize = conf.getLong("gamesman.minimum.split.size", 4096);
-		preferredSplits = conf.getInteger("gamesman.splits",
+		minSplits = conf.getInteger("gamesman.minimum.splits",
 				conf.getInteger("gamesman.threads", 1));
+		minSplitSize = conf.getLong("gamesman.minimum.split.size", 4096);
+		preferredSplitSize = conf.getLong("gamesman.preferred.split.size",
+				1L << 23);
 		wholeGame = true;
 		progress = null;
 	}
@@ -167,14 +170,16 @@ public class TierSolver extends Solver {
 		super(conf, db);
 		myGame = (TierGame) conf.getGame();
 		currentTier = tier;
-		minSplitSize = conf.getLong("gamesman.minimum.split.size", 4096);
-		preferredSplits = conf.getInteger("gamesman.splits",
+		minSplits = conf.getInteger("gamesman.minimum.splits",
 				conf.getInteger("gamesman.threads", 1));
+		minSplitSize = conf.getLong("gamesman.minimum.split.size", 4096);
+		preferredSplitSize = conf.getLong("gamesman.preferred.split.size",
+				1L << 23);
 		this.firstHash = firstHash;
 		this.numHashes = numHashes;
 		wholeGame = false;
-		splits = Util.getSplits(firstHash, numHashes, preferredSplits,
-				minSplitSize);
+		splits = Util.getSplits(firstHash, numHashes, minSplitSize, minSplits,
+				preferredSplitSize);
 		currentSplit = 0;
 		tasksFinished = new CountDownLatch(splits.length - 1);
 		this.progress = progress;
@@ -209,8 +214,8 @@ public class TierSolver extends Solver {
 		firstHash = myGame.hashOffsetForTier(currentTier);
 		numHashes = myGame.numHashesForTier(currentTier);
 		recordsFinished = 0L;
-		splits = Util.getSplits(firstHash, numHashes, preferredSplits,
-				minSplitSize);
+		splits = Util.getSplits(firstHash, numHashes, minSplitSize, minSplits,
+				preferredSplitSize);
 		tasksFinished = new CountDownLatch(splits.length - 1);
 	}
 }

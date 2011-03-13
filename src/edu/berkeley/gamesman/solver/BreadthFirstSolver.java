@@ -144,12 +144,14 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 		@SuppressWarnings("unchecked")
 		public void run() {
 			Game<T> game = conf.getCheckedGame();
-			int preferredSplits = conf.getInteger("gamesman.splits",
+			int minSplits = conf.getInteger("gamesman.minimum.splits",
 					conf.getInteger("gamesman.threads", 1));
 			long minSplitSize = conf.getLong("gamesman.minimum.split.size",
 					4096);
-			splits = Util.getSplits(0L, game.numHashes(), preferredSplits,
-					minSplitSize);
+			long preferredSplitSize = conf.getLong(
+					"gamesman.preferred.split.size", 1L << 23);
+			splits = Util.getSplits(0L, game.numHashes(), minSplitSize,
+					minSplits, preferredSplitSize);
 			DatabaseHandle dh = db.getHandle(false);
 			Record r = game.newRecord();
 			r.value = Value.UNDECIDED;
