@@ -42,7 +42,7 @@ public class RecordRangeCache {
 		if (recordBytes.length < numBytes) {
 			if (!saveCurrent) {
 				recordBytes = null;
-				System.gc();
+				// System.gc();
 			}
 			byte[] newBytes;
 			try {
@@ -56,8 +56,8 @@ public class RecordRangeCache {
 			if (saveCurrent)
 				System.arraycopy(recordBytes, 0, newBytes, 0, this.numBytes);
 			recordBytes = newBytes;
-			if (saveCurrent)
-				System.gc();
+			// if (saveCurrent)
+			// System.gc();
 		}
 	}
 
