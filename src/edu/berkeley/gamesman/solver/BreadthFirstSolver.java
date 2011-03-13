@@ -147,9 +147,10 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 			int minSplits = conf.getInteger("gamesman.minimum.splits",
 					conf.getInteger("gamesman.threads", 1));
 			long minSplitSize = conf.getLong("gamesman.minimum.split.size",
-					4096);
+					DEFAULT_MIN_SPLIT_SIZE);
 			long preferredSplitSize = conf.getLong(
-					"gamesman.preferred.split.size", 1L << 23);
+					"gamesman.preferred.split.size",
+					DEFAULT_PREFERRED_SPLIT_SIZE);
 			splits = Util.getSplits(0L, game.numHashes(), minSplitSize,
 					minSplits, preferredSplitSize);
 			DatabaseHandle dh = db.getHandle(false);

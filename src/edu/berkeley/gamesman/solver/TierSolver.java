@@ -151,9 +151,9 @@ public class TierSolver extends Solver {
 		currentTier = myGame.numberOfTiers();
 		minSplits = conf.getInteger("gamesman.minimum.splits",
 				conf.getInteger("gamesman.threads", 1));
-		minSplitSize = conf.getLong("gamesman.minimum.split.size", 4096);
+		minSplitSize = conf.getLong("gamesman.minimum.split.size", DEFAULT_MIN_SPLIT_SIZE);
 		preferredSplitSize = conf.getLong("gamesman.preferred.split.size",
-				1L << 23);
+				DEFAULT_PREFERRED_SPLIT_SIZE);
 		wholeGame = true;
 		progress = null;
 	}
@@ -172,9 +172,9 @@ public class TierSolver extends Solver {
 		currentTier = tier;
 		minSplits = conf.getInteger("gamesman.minimum.splits",
 				conf.getInteger("gamesman.threads", 1));
-		minSplitSize = conf.getLong("gamesman.minimum.split.size", 4096);
+		minSplitSize = conf.getLong("gamesman.minimum.split.size", DEFAULT_MIN_SPLIT_SIZE);
 		preferredSplitSize = conf.getLong("gamesman.preferred.split.size",
-				1L << 23);
+				DEFAULT_PREFERRED_SPLIT_SIZE);
 		this.firstHash = firstHash;
 		this.numHashes = numHashes;
 		wholeGame = false;

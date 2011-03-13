@@ -39,6 +39,8 @@ public abstract class Solver {
 	 * The number of positions to go through between each update/reset
 	 */
 	public static final int STEP_SIZE = 10000000;
+	public static final long DEFAULT_MIN_SPLIT_SIZE = 1L << 12;
+	public static final long DEFAULT_PREFERRED_SPLIT_SIZE = 1L << 23;
 	protected final int nThreads;
 
 	protected Database db;
