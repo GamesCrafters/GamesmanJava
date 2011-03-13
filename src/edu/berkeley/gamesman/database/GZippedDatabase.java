@@ -55,13 +55,15 @@ public abstract class GZippedDatabase extends Database {
 			assert filePos == writer.getFilePointer();
 			currentEntry = 0;
 			entryTable[0] = filePos;
-			zcos = new ZipChunkOutputStream(writer);
+			zcos = new ZipChunkOutputStream(writer, (int) Math.min(
+					Integer.MAX_VALUE, entrySize));
 			currentByteIndex = firstByteIndex;
 		} else {
 			tableOffset = skipHeader(reader);
 			for (int i = 0; i < numEntries; i++)
 				entryTable[i] = reader.readLong();
-			zcis = new ZipChunkInputStream(reader);
+			zcis = new ZipChunkInputStream(reader, (int) Math.min(
+					Integer.MAX_VALUE, entrySize));
 			zcos = null;
 			currentByteIndex = -1L;
 		}
@@ -76,7 +78,8 @@ public abstract class GZippedDatabase extends Database {
 			int readEntry = (int) ((location - firstByteIndex) / entrySize);
 			long entryStartByteIndex = firstByteIndex + readEntry * entrySize;
 			reader.seek(entryTable[readEntry]);
-			zcis = new ZipChunkInputStream(reader);
+			zcis = new ZipChunkInputStream(reader, (int) Math.min(
+					Integer.MAX_VALUE, entrySize));
 			Util.skipFully(zcis, location - entryStartByteIndex);
 			currentByteIndex = location;
 		}
@@ -137,7 +140,8 @@ public abstract class GZippedDatabase extends Database {
 					@Override
 					public ZipChunkOutputStream newObject() {
 						try {
-							return new ZipChunkOutputStream(writeTo.writer);
+							return new ZipChunkOutputStream(writeTo.writer,
+									entrySize);
 						} catch (IOException e) {
 							throw new Error(e);
 						}
@@ -185,7 +189,7 @@ public abstract class GZippedDatabase extends Database {
 						len = entrySize;
 					}
 					long byteIndex = firstByteIndex + thisByte;
-					memoryChunks.acquireUninterruptibly(2);
+					memoryChunks.acquireUninterruptibly(3);
 					/*
 					 * If I were to instead acquire the permits separately
 					 * (acquire, read, acquire, write), then I could have
@@ -239,7 +243,7 @@ public abstract class GZippedDatabase extends Database {
 			nThreads = conf.getInteger("gamesman.threads", 1);
 			long availableMem = conf.getNumBytes("gamesman.memory", 1L << 25);
 			int permits = (int) Math.min(Integer.MAX_VALUE,
-					Math.max(2, availableMem / entrySize));
+					Math.max(3, availableMem / entrySize));
 			memoryChunks = new Semaphore(permits);
 			// No deadlock because newFixedThreadPool is a queue
 			threadsFinished = new CountDownLatch[writeTo.numEntries];
@@ -287,7 +291,7 @@ public abstract class GZippedDatabase extends Database {
 				Util.awaitUninterruptibly(threadsFinished[i]);
 				streams[i].nextChunk();
 				chunkerPool.release(streams[i]);
-				memoryChunks.release();
+				memoryChunks.release(2);
 				if (i < writeTo.numEntries - 1) {
 					bytesWritten += entrySize;
 					if (bytesWritten / STEP_SIZE > lastStep) {

@@ -7,11 +7,14 @@ import java.util.zip.GZIPOutputStream;
 
 public class ZipChunkOutputStream extends FilterOutputStream {
 	private final ChunkOutputStream cos;
+	private final int bufferSize;
 	private GZIPOutputStream gzos;
 	private boolean bytesWritten;
 
-	public ZipChunkOutputStream(OutputStream out) throws IOException {
+	public ZipChunkOutputStream(OutputStream out, int bufferSize)
+			throws IOException {
 		super(new ChunkOutputStream(out));
+		this.bufferSize = bufferSize;
 		cos = (ChunkOutputStream) this.out;
 		startChunk();
 	}
@@ -43,7 +46,7 @@ public class ZipChunkOutputStream extends FilterOutputStream {
 	}
 
 	private void startChunk() throws IOException {
-		gzos = new GZIPOutputStream(cos);
+		gzos = new GZIPOutputStream(cos, bufferSize);
 		bytesWritten = false;
 	}
 
