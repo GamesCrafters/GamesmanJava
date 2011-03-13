@@ -37,7 +37,7 @@ public class HadoopTierMapper extends
 	private TierGame game;
 	private String readUri;
 	private final Random r = new Random();
-	private IOException failure;
+	private Throwable failure = null;
 	private Database readDb;
 	private String unzippedURI, zippedURI;
 
@@ -146,14 +146,16 @@ public class HadoopTierMapper extends
 		final Path tempPath = new Path(uri + r.nextLong());
 		p = new Path(uri);
 		if (!fs.exists(p)) {
+			final Thread mt = Thread.currentThread();
 			Thread t = new Thread() {
 				@Override
 				public void run() {
 					try {
-						fs.copyFromLocalFile(pLocal, tempPath);
+						fs.moveFromLocalFile(pLocal, tempPath);
 						failure = null;
-					} catch (IOException e) {
+					} catch (Throwable e) {
 						failure = e;
+						mt.interrupt();
 					}
 				}
 			};
@@ -161,9 +163,12 @@ public class HadoopTierMapper extends
 			context.progress();
 			while (t.isAlive()) {
 				try {
-					t.join(60000L);
+					t.join(20000L);
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+					if (failure != null)
+						break;
+					else
+						e.printStackTrace();
 				}
 				context.progress();
 			}
@@ -171,7 +176,6 @@ public class HadoopTierMapper extends
 				throw new Error(failure);
 			fs.rename(tempPath, p);
 		}
-		new File(zippedURI).delete();
 		zippedURI = null;
 		FileStatus finalFile = fs.getFileStatus(p);
 		try {
