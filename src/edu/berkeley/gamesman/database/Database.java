@@ -278,6 +278,12 @@ public abstract class Database implements Flushable, Closeable {
 			long firstRecordIndex, long numRecords, boolean reading,
 			boolean writing) throws IOException {
 		String dbClass = conf.getProperty("gamesman.database");
+		if (writing) {
+			String solveWrappers = conf.getProperty(
+					"gamesman.database.writing.wrapper", "");
+			if (!solveWrappers.isEmpty())
+				dbClass = solveWrappers + ":" + dbClass;
+		}
 		return openDatabase(dbClass, uri, conf, firstRecordIndex, numRecords,
 				reading, writing);
 	}

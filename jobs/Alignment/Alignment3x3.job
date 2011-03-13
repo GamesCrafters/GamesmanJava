@@ -5,5 +5,6 @@ gamesman.game.pieces = 5
 gamesman.game.variant = 1
 gamesman.solver = TopDownSolver
 gamesman.db.uri = Alignment33.db
-gamesman.database = MemoryDatabase:GZippedFileDatabase
+gamesman.database = GZippedFileDatabase
+gamesman.database.writing.wrapper = MemoryDatabase
 gamesman.debug.SOLVER = true

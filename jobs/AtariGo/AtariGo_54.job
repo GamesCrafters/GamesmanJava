@@ -7,3 +7,5 @@ gamesman.db.uri = /scratch/atari54.db
 gamesman.threads = 16
 gamesman.memory = 6g
 gamesman.splits = 300
+gamesman.debug.SOLVER = true
+gamesman.debug.DATABASE = true

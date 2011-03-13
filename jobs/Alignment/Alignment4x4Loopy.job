@@ -6,5 +6,6 @@ gamesman.game.variant = 0
 gamesman.solver = LoopySolver
 record.fields = VALUE,REMOTENESS
 gamesman.db.uri = Alignment44Loopy.db
-gamesman.database = MemoryDatabase:GZippedFileDatabase
+gamesman.database = GZippedFileDatabase
+gamesman.database.writing.wrapper = MemoryDatabase
 gamesman.debug.SOLVER = true

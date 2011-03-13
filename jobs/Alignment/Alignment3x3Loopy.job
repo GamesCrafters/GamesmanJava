@@ -5,5 +5,6 @@ gamesman.game.pieces = 3
 gamesman.game.variant = 1
 gamesman.solver = LoopySolver
 gamesman.db.uri = Alignment33Loopy.db
-gamesman.database = MemoryDatabase:GZippedFileDatabase
+gamesman.database = GZippedFileDatabase
+gamesman.database.writing.wrapper = MemoryDatabase
 gamesman.debug.SOLVER = true

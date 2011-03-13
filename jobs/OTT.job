@@ -1,5 +1,6 @@
 gamesman.game = OneTwoTenTier
 gamesman.solver = TierSolver
-gamesman.database = MemoryDatabase:GZippedFileDatabase
+gamesman.database = GZippedFileDatabase
+gamesman.database.writing.wrapper = MemoryDatabase
 gamesman.db.uri = ott.db
 gamesman.debug.SOLVER = true
