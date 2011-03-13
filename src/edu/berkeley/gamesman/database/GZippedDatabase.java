@@ -175,39 +175,44 @@ public abstract class GZippedDatabase extends Database {
 
 			@Override
 			public void run() {
-				DatabaseHandle readDh = readFrom.getHandle(true);
-				long thisByte = j * entrySize;
-				int len;
-				if (j == writeTo.numEntries - 1) {
-					len = (int) (numBytes - thisByte);
-				} else {
-					len = entrySize;
-				}
-				long byteIndex = firstByteIndex + thisByte;
-				memoryChunks.acquireUninterruptibly(2);
-				/*
-				 * If I were to instead acquire the permits separately (acquire,
-				 * read, acquire, write), then I could have deadlock if all
-				 * threads use up the permits reading and no one is able to
-				 * write
-				 */
-				byte[] entryBytes = bytePool.get();
-				ZipChunkOutputStream chunker = chunkerPool.get();
 				try {
-					readFrom.readFullBytes(readDh, byteIndex, entryBytes, 0,
-							len);
-					chunker.write(entryBytes, 0, len);
-				} catch (IOException e) {
-					throw new Error(e);
+					DatabaseHandle readDh = readFrom.getHandle(true);
+					long thisByte = j * (long) entrySize;
+					int len;
+					if (j == writeTo.numEntries - 1) {
+						len = (int) (numBytes - thisByte);
+					} else {
+						len = entrySize;
+					}
+					long byteIndex = firstByteIndex + thisByte;
+					memoryChunks.acquireUninterruptibly(2);
+					/*
+					 * If I were to instead acquire the permits separately
+					 * (acquire, read, acquire, write), then I could have
+					 * deadlock if all threads use up the permits reading and no
+					 * one is able to write
+					 */
+					byte[] entryBytes = bytePool.get();
+					ZipChunkOutputStream chunker = chunkerPool.get();
+					try {
+						readFrom.readFullBytes(readDh, byteIndex, entryBytes,
+								0, len);
+						chunker.write(entryBytes, 0, len);
+					} catch (IOException e) {
+						throw new Error(e);
+					}
+					bytesZipped += len;
+					if (bytesZipped / STEP_SIZE > lastProgressPoint) {
+						zipProgress();
+					}
+					streams[j] = chunker;
+					threadsFinished[j].countDown();
+					bytePool.release(entryBytes);
+					memoryChunks.release();
+				} catch (Throwable t) {
+					t.printStackTrace();
+					System.exit(-1);
 				}
-				bytesZipped += len;
-				if (bytesZipped / STEP_SIZE > lastProgressPoint) {
-					zipProgress();
-				}
-				streams[j] = chunker;
-				threadsFinished[j].countDown();
-				bytePool.release(entryBytes);
-				memoryChunks.release();
 			}
 		}
 

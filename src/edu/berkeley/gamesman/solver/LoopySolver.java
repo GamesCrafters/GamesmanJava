@@ -92,8 +92,6 @@ public class LoopySolver extends Solver {
 			}
 			// assert Util.debug(DebugFacility.SOLVER, value);
 			Record bestValue;
-			if (depth < 3 && failed != null)
-				return;
 			assert Util.debug(DebugFacility.SOLVER, "\n" + game.displayState());
 			assert Util.debug(DebugFacility.SOLVER, "" + value.value);
 			if (value.value == Value.IMPOSSIBLE) { // position not seen before

@@ -80,8 +80,6 @@ public class TopDownSolver extends Solver {
 				if (Util.debug(DebugFacility.SOLVER)) {
 					System.out.println(game.displayState());
 				}
-				if (failed != null)
-					return;
 			}
 			long hash = game.getHash();
 			try {

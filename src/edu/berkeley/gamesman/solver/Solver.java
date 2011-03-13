@@ -27,9 +27,9 @@ public abstract class Solver {
 		public void run() {
 			try {
 				inner.run();
-			} catch (Error e) {
-				failed = e;
-				mainThread.interrupt();
+			} catch (Throwable t) {
+				t.printStackTrace();
+				System.exit(-1);
 			}
 		}
 
@@ -43,8 +43,6 @@ public abstract class Solver {
 
 	protected Database db;
 	protected Configuration conf;
-	protected volatile Error failed;
-	private Thread mainThread;
 
 	/**
 	 * Set the Database to use for this solver
@@ -59,14 +57,11 @@ public abstract class Solver {
 	}
 
 	private final Runnable getNextJob() {
-		if (failed == null) {
-			Runnable nextJob = nextAvailableJob();
-			if (nextJob == null)
-				return null;
-			else
-				return new RunWrapper(nextJob);
-		} else
+		Runnable nextJob = nextAvailableJob();
+		if (nextJob == null)
 			return null;
+		else
+			return new RunWrapper(nextJob);
 	}
 
 	public abstract Runnable nextAvailableJob();
@@ -74,22 +69,17 @@ public abstract class Solver {
 	public final void solve() {
 		System.out.println("Beginning solve for " + conf.getGame().describe()
 				+ " using " + getClass().getSimpleName());
-		mainThread = Thread.currentThread();
 		long startTime = System.currentTimeMillis();
 		ExecutorService solverService = Executors.newFixedThreadPool(nThreads);
 		Runnable nextJob = null;
 		while (true) {
 			nextJob = getNextJob();
-			if (failed != null || nextJob == null)
+			if (nextJob == null)
 				break;
 			else
 				solverService.execute(nextJob);
 		}
 		solverService.shutdown();
-		if (failed != null) {
-			System.out.println("Solve failed");
-			throw failed;
-		}
 		while (!solverService.isTerminated()) {
 			try {
 				solverService.awaitTermination(20, TimeUnit.SECONDS);

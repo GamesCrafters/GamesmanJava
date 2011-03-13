@@ -63,8 +63,6 @@ public class TierSolver extends Solver {
 			int modCount = 0;
 			for (long trial = 0; trial < numRecords; trial++) {
 				if (modCount == Solver.STEP_SIZE) {
-					if (failed != null)
-						break;
 					if (progress != null)
 						synchronized (progress) {
 							progress.progress();
@@ -184,38 +182,13 @@ public class TierSolver extends Solver {
 
 	@Override
 	public Runnable nextAvailableJob() {
-		if (failed != null)
-			return null;
 		if (currentSplit >= splits.length - 1) {
 			if (currentTier == 0 || !wholeGame)
 				return null;
-			if (!awaitOrFailUninterruptibly())
-				return null;
+			Util.awaitUninterruptibly(tasksFinished);
 			decrTier();
 		}
 		return nextJob();
-	}
-
-	/*
-	 * Returns true if await returned without being interrupted (false if failed
-	 * is non-null)
-	 */
-	protected boolean awaitOrFailUninterruptibly() {
-		boolean interrupted;
-		do {
-			interrupted = false;
-			try {
-				tasksFinished.await();
-			} catch (InterruptedException e) {
-				if (failed != null)
-					return false;
-				else {
-					interrupted = true;
-					e.printStackTrace();
-				}
-			}
-		} while (interrupted);
-		return true;
 	}
 
 	protected Runnable nextJob() {

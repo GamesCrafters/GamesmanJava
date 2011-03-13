@@ -78,8 +78,7 @@ public class ReversiSolver extends TierSolver {
 		if (currentSplit >= splits.length - 1) {
 			if (fixJob && currentTier == 0)
 				return null;
-			if (!awaitOrFailUninterruptibly())
-				return null;
+			Util.awaitUninterruptibly(tasksFinished);
 			if (fixJob) {
 				fixJob = false;
 				decrTier();
