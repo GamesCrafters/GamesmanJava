@@ -1,6 +1,10 @@
 package edu.berkeley.gamesman.database;
 
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Scanner;
 import java.util.ArrayList;
 
 import edu.berkeley.gamesman.core.Configuration;
@@ -13,7 +17,7 @@ import edu.berkeley.gamesman.util.Pair;
 public class TierCutDatabase extends Database {
 
 	
-	TierGame myTierGame;
+	static TierGame myTierGame;
 	private static boolean deleteLastRow;
 	private static int numTiersCut;
 
@@ -128,18 +132,20 @@ public class TierCutDatabase extends Database {
 	public static long getNumRecords(long firstRecord, long numRecords,
 			TierGame game) {
 		int numOfTiers = game.numberOfTiers();
-		long lastTierHashes = game.numHashesForTier(numOfTiers - 1);
+		//long lastTierHashes = game.numHashesForTier(numOfTiers - 1);
 		// TODO Auto-generated method stub
-		if (deleteLastRow) {
-			return numRecords + lastTierHashes;
-		} else {
-			return numRecords;
+		int amountChange = 0;
+		for (int i = 0; i < numOfTiers; i++ ) {
+			if (!shouldBeInDatabase(i)) {
+				amountChange += game.numHashesForTier(i);
+			}
 		}
+		return numRecords + amountChange; 
 	}
 
-	private boolean shouldBeInDatabase(int tier) {
+	private static boolean shouldBeInDatabase(int tier) {
 		// Unsure if this is right, only for last row
-		if (tier == myTierGame.numberOfTiers()) {
+		if (tier == myTierGame.numberOfTiers() - 1) {
 			return false;
 		} else {
 			boolean inDB = false;
@@ -158,7 +164,28 @@ public class TierCutDatabase extends Database {
 		}
 
 	}
+	/*
+	private static boolean shouldBeInDatabase(int tier, TierGame game) {
+		if (tier == game.numberOfTiers() - 1) {
+			return false;
+		} else {
+			boolean inDB = false;
+			int remainTiers = 0;
+			for (int i = 1; i <= tier; i++) {
+				if (remainTiers == 0) {
+					inDB = true;
+					remainTiers = numTiersCut;
+				} else {
+					remainTiers--;
+					inDB = false;
+				}
 
+			}
+			return inDB;
+		}
+
+	}
+*/
 	private boolean inLastRow(long curByte) {
 		return deleteLastRow
 				&& curByte < (myTierGame.numHashes() - myTierGame
@@ -179,24 +206,37 @@ public class TierCutDatabase extends Database {
 		// TODO Auto-generated method stub
 		return 0;
 	}
-	/*
-	public static void main(String[] args) throws ClassNotFoundException {
+	
+	public static void main(String[] args) throws ClassNotFoundException, IOException {
 		String jobFile = args[0];
 		Configuration conf = new Configuration(jobFile);
 		String dbListFile = args[1];
 		String dbUri = args[2];
 		final long firstRecordIndex, numRecords;
+		long tempNumRecords;
 		//ADD ARGUEMENT TO SPECIFY NUMTIERSCUT?
 		if (args.length > 3) {
 			firstRecordIndex = Integer.parseInt(args[3]);
 			//EDIT NUMRECORDS TO BE ACCURATE
-			numRecords = Integer.parseInt(args[4]);
+			tempNumRecords = Integer.parseInt(args[4]);
 		} else {
 			firstRecordIndex = 0L;
 			//EDIT NUMRECORDS TO BE ACCURATE
-			numRecords = conf.getGame().numHashes();
+			
+			tempNumRecords = conf.getGame().numHashes();
+			
 		}
-		// TAKE OUT ANYTHING WE DON'T WANT
+		int numOfTiers = ((TierGame)conf.getGame()).numberOfTiers();
+		//long lastTierHashes = game.numHashesForTier(numOfTiers - 1);
+		// TODO Auto-generated method stub
+		int amountChange = 0;
+		for (int i = 0; i < numOfTiers; i++ ) {
+			if (!shouldBeInDatabase(i)) {
+				amountChange += ((TierGame)conf.getGame()).numHashesForTier(i);
+			}
+		}
+		numRecords = tempNumRecords - amountChange;
+		
 		Scanner dbScanner = new Scanner(new File(dbListFile));
 		DataOutputStream dos = new DataOutputStream(new FileOutputStream(dbUri));
 		dos.writeLong(firstRecordIndex);
@@ -204,11 +244,24 @@ public class TierCutDatabase extends Database {
 		conf.store(dos);
 		long currentRecord = firstRecordIndex;
 		while (dbScanner.hasNext()) {
-			dos.writeUTF(dbScanner.next());
-			dos.writeUTF(dbScanner.next());
-			dos.writeLong(currentRecord);
-			long nextNum = dbScanner.nextLong();
-			dos.writeLong(nextNum);
+			TierState curPos = new TierState();
+			curPos = myTierGame.hashToState(currentRecord);
+			myTierGame.setState(curPos);
+			int tier = myTierGame.getTier();
+			long nextNum = 0;
+			if (shouldBeInDatabase(tier)) {
+				dos.writeUTF(dbScanner.next());
+				dos.writeUTF(dbScanner.next());
+				dos.writeLong(currentRecord);
+				nextNum = dbScanner.nextLong();
+				dos.writeLong(nextNum);
+			} else {
+				dbScanner.next();
+				dbScanner.next();
+				nextNum = dbScanner.nextLong();
+			}
+			
+			if(shouldBeInDatabase(tier)) 
 			currentRecord += nextNum;
 		}
 		if (currentRecord != firstRecordIndex + numRecords)
@@ -217,5 +270,5 @@ public class TierCutDatabase extends Database {
 		
 
 	}
-*/
+
 }
