@@ -164,7 +164,7 @@ public class TierCutDatabase extends Database {
 		}
 
 	}
-	/*
+	
 	private static boolean shouldBeInDatabase(int tier, TierGame game) {
 		if (tier == game.numberOfTiers() - 1) {
 			return false;
@@ -185,7 +185,7 @@ public class TierCutDatabase extends Database {
 		}
 
 	}
-*/
+
 	private boolean inLastRow(long curByte) {
 		return deleteLastRow
 				&& curByte < (myTierGame.numHashes() - myTierGame
@@ -231,7 +231,7 @@ public class TierCutDatabase extends Database {
 		// TODO Auto-generated method stub
 		int amountChange = 0;
 		for (int i = 0; i < numOfTiers; i++ ) {
-			if (!shouldBeInDatabase(i)) {
+			if (!shouldBeInDatabase(i, ((TierGame)conf.getGame()))) {
 				amountChange += ((TierGame)conf.getGame()).numHashesForTier(i);
 			}
 		}
