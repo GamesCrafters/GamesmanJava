@@ -106,7 +106,8 @@ public class Input extends InputFormat<Range, IntWritable> {
 		ArrayList<InputSplit> splitList = new ArrayList<InputSplit>(
 				splits.length - 1);
 		for (int i = 0; i < splits.length - 1; i++) {
-			splitList.add(new Split(new Range(splits[i], splits[i + 1])));
+			splitList.add(new Split(new Range(splits[i], splits[i + 1]
+					- splits[i])));
 		}
 		return splitList;
 	}

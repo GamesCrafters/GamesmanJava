@@ -580,8 +580,8 @@ public final class Util {
 	public static long[] getSplits(long start, long num, long minSplitSize,
 			int minSplits, long preferredSplitSize) {
 		minSplits = Math.max(minSplits, 1);
-		int maxSplits = (int) Math.max(
-				Math.min(Integer.MAX_VALUE, num / minSplitSize), 1);
+		int maxSplits = Math.max(
+				(int) Math.min(Integer.MAX_VALUE, num / minSplitSize), 1);
 		int numSplits = (int) Math.min(Integer.MAX_VALUE, num
 				/ preferredSplitSize);
 		if (numSplits < minSplits)

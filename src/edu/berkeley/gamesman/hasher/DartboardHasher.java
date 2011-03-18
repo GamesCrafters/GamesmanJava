@@ -505,6 +505,8 @@ public final class DartboardHasher {
 	 *            The hash to set this to
 	 */
 	public void unhash(long hash) {
+		if (hash >= numHashes())
+			throw new Error("hash = " + hash + ", maxHash=" + (numHashes() - 1));
 		this.hash = hash;
 		int digit;
 		count.setCount(numType);
