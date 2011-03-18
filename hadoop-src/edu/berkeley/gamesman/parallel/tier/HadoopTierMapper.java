@@ -100,7 +100,7 @@ public class HadoopTierMapper extends
 				+ ".db";
 		unzippedURI = uri + ".uz_local";
 		Database writeDb = new FileDatabase(unzippedURI, conf, firstHash,
-				numHashes, false, true);
+				numHashes, true, true);
 		Database solverDb = new ReadWriteDatabase(readDb, writeDb, conf);
 		Progressable progress = new Progressable() {
 			@Override
