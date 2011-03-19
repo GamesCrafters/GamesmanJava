@@ -17,58 +17,58 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Reducer;
 
 public class LoopyPrimitivePassReducer<S extends State> extends
-	Reducer<RangeFile, LongWritable, LongWritable, IntWritable> {
-    private FileSystem fs;
-    private Configuration conf;
-    private Game<S> game;
-    private DataInput dataIn;
-    private DataOutput dataOut;
+		Reducer<RangeFile, LongWritable, LongWritable, IntWritable> {
+	private FileSystem fs;
+	private Configuration conf;
+	private Game<S> game;
+	private DataInput dataIn;
+	private DataOutput dataOut;
 
-    @Override
-    public void setup(Context context) {
-	try {
-	    org.apache.hadoop.conf.Configuration hadoopConf = context
-		    .getConfiguration();
-	    conf = Configuration.deserialize(hadoopConf
-		    .get("gamesman.configuration"));
-	    fs = FileSystem.get(hadoopConf);
-	    game = conf.getCheckedGame();
-	} catch (IOException e) {
-	    throw new Error(e);
-	} catch (ClassNotFoundException e) {
-	    throw new Error(e);
-	}
-    }
-
-    @Override
-    public void reduce(RangeFile rangeFile, Iterable<LongWritable> hashes,
-	    Context context) {
-	try {
-	    for (LongWritable hash : hashes) {
-		rangeFile.readFields(dataIn);
-		boolean visited = false;// TODO: assign this correctly
-
-		if (!visited) {
-		    Value primitiveValue = game.primitiveValue(game
-			    .hashToState(hash.get()));
-		    switch (primitiveValue) {
-		    case UNDECIDED:
-			// value is not primitive
-			// TODO: handle undecided
-			break;
-		    case WIN:
-		    case LOSE:
-		    case TIE:
-			// do the same for all these cases, all primitive
-			// TODO: handle primitive
-			break;
-		    default:
-			throw new Error("WTF did primitive value return?");
-		    }
+	@Override
+	public void setup(Context context) {
+		try {
+			org.apache.hadoop.conf.Configuration hadoopConf = context
+					.getConfiguration();
+			conf = Configuration.deserialize(hadoopConf
+					.get("gamesman.configuration"));
+			fs = FileSystem.get(hadoopConf);
+			game = conf.getCheckedGame();
+		} catch (IOException e) {
+			throw new Error(e);
+		} catch (ClassNotFoundException e) {
+			throw new Error(e);
 		}
-	    }
-	} catch (IOException e) {
-	    throw new Error(e);
 	}
-    }
+
+	@Override
+	public void reduce(RangeFile rangeFile, Iterable<LongWritable> hashes,
+			Context context) {
+		try {
+			for (LongWritable hash : hashes) {
+				rangeFile.readFields(dataIn);
+				boolean visited = false;// TODO: assign this correctly
+
+				if (!visited) {
+					Value primitiveValue = game.primitiveValue(game
+							.hashToState(hash.get()));
+					switch (primitiveValue) {
+					case UNDECIDED:
+						// value is not primitive
+						// TODO: handle undecided
+						break;
+					case WIN:
+					case LOSE:
+					case TIE:
+						// do the same for all these cases, all primitive
+						// TODO: handle primitive
+						break;
+					default:
+						throw new Error("WTF did primitive value return?");
+					}
+				}
+			}
+		} catch (IOException e) {
+			throw new Error(e);
+		}
+	}
 }
