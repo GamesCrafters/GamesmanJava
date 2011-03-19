@@ -18,19 +18,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-/**
- * Created by IntelliJ IDEA.
- * User: dxu
- * Date: 3/13/11
- * Time: 10:12 AM
- * To change this template use File | Settings | File Templates.
- */
 public class LoopyPrimitivePassMapper<S extends State> extends Mapper<LongWritable, IntWritable, RangeFile, LongWritable> {
     private FileSystem fs;
     private Configuration conf;
     private Game<S> game;
-    private final Random random = new Random();
-    private Path dbFolder;
     private S[] childStates;
     private S position;
     private RangeFile[] rangeFiles;
@@ -45,7 +36,6 @@ public class LoopyPrimitivePassMapper<S extends State> extends Mapper<LongWritab
             game = conf.getCheckedGame();
             childStates = game.newStateArray(game.maxChildren());
             position = game.newState();
-            dbFolder = new Path(conf.getProperty("gamesman.hadoop.dbfolder"));
             fs = FileSystem.get(hadoopConf);
             longWritable = new LongWritable();
 
