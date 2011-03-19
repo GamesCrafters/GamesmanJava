@@ -60,40 +60,38 @@ public class HadoopTierMaster implements Runnable {
 
 	private void solve(int tier) throws IOException {
 		String tierUri = dbUri + "_" + tier + ".db";
-		hadoopConf.setInt("tier", tier);
 		boolean doneAlready = fs.exists(new Path(tierUri));
-		if (!doneAlready) {
-			job = new Job(hadoopConf, "hadoop tier solver");
-			job.setJarByClass(HadoopTierMapper.class);
-			job.setMapOutputValueClass(RangeFile.class);
-			job.setOutputKeyClass(IntWritable.class);
-			job.setOutputValueClass(FileStatus.class);
-			job.setMapperClass(HadoopTierMapper.class);
-			job.setReducerClass(HadoopTierReducer.class);
-			job.setInputFormatClass(TierInput.class);
-			FileOutputFormat.setOutputPath(job, outputDirectory);
-		}
-		boolean success = doneAlready;
+		if (doneAlready)
+			return;
+		hadoopConf.setInt("tier", tier);
+		job = new Job(hadoopConf, "hadoop tier solver");
+		job.setJarByClass(HadoopTierMapper.class);
+		job.setMapOutputValueClass(RangeFile.class);
+		job.setOutputKeyClass(IntWritable.class);
+		job.setOutputValueClass(FileStatus.class);
+		job.setMapperClass(HadoopTierMapper.class);
+		job.setReducerClass(HadoopTierReducer.class);
+		job.setInputFormatClass(TierInput.class);
+		FileOutputFormat.setOutputPath(job, outputDirectory);
+		boolean interrupted;
 		do {
-			if (!doneAlready) {
-				try {
-					success = job.waitForCompletion(true);
-					if (!success)
-						throw new Error("Tier " + tier + " failed");
-					fs.delete(outputDirectory, true);
-					System.out.println("On tier " + tier + ", success = "
-							+ success);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-					continue;
-				} catch (ClassNotFoundException e) {
-					throw new Error(e);
-				}
+			interrupted = false;
+			try {
+				boolean successful = job.waitForCompletion(true);
+				if (!successful)
+					throw new Error("Tier " + tier + " failed");
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+				interrupted = true;
+			} catch (ClassNotFoundException e) {
+				throw new Error(e);
 			}
-			String dbUri = gamesmanConf.getProperty("gamesman.hadoop.tierDb");
-			dbUri = dbUri + "_" + tier + ".db";
-			hadoopConf.set("gamesman.hadoop.lastTierDb", dbUri);
-		} while (!success);
+		} while (interrupted);
+		System.out.println("Tier " + tier + " successful");
+		fs.delete(outputDirectory, true);
+		String dbUri = gamesmanConf.getProperty("gamesman.hadoop.tierDb");
+		dbUri = dbUri + "_" + tier + ".db";
+		hadoopConf.set("gamesman.hadoop.lastTierDb", dbUri);
 	}
 
 	public static void main(String[] args) throws IOException,
