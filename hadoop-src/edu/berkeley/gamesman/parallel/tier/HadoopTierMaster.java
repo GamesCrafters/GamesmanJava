@@ -61,8 +61,10 @@ public class HadoopTierMaster implements Runnable {
 	private void solve(int tier) throws IOException {
 		String tierUri = dbUri + "_" + tier + ".db";
 		boolean doneAlready = fs.exists(new Path(tierUri));
-		if (doneAlready)
+		if (doneAlready) {
+			setLastTierUri(tier);
 			return;
+		}
 		hadoopConf.setInt("tier", tier);
 		job = new Job(hadoopConf, "hadoop tier solver");
 		job.setJarByClass(HadoopTierMapper.class);
@@ -89,9 +91,13 @@ public class HadoopTierMaster implements Runnable {
 		} while (interrupted);
 		System.out.println("Tier " + tier + " successful");
 		fs.delete(outputDirectory, true);
-		String dbUri = gamesmanConf.getProperty("gamesman.hadoop.tierDb");
-		dbUri = dbUri + "_" + tier + ".db";
-		hadoopConf.set("gamesman.hadoop.lastTierDb", dbUri);
+		setLastTierUri(tier);
+	}
+
+	private void setLastTierUri(int tier) {
+		hadoopConf.set("gamesman.hadoop.lastTierDb",
+				gamesmanConf.getProperty("gamesman.hadoop.tierDb") + "_" + tier
+						+ ".db");
 	}
 
 	public static void main(String[] args) throws IOException,
