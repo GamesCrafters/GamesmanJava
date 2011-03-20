@@ -128,10 +128,10 @@ public class LoopyMaster<S extends State> implements Runnable {
 		Path sequenceFileOutputDir = getPath("Loopy_Hadoop_Solve_Output_Stage2_"
 				+ gamesmanConf.getGame().getClass().getSimpleName());
 		fs.mkdirs(sequenceFileInputDir);
-		// Path sequenceFileInputFile = new Path(sequenceFileInputDir,
-		// "StartingPositions");
+		Path sequenceFileInputFile = new Path(sequenceFileInputDir,
+				"StartingPositions");
 		SequenceFile.Writer writer = new SequenceFile.Writer(fs, hadoopConf,
-				sequenceFileInputDir, LongWritable.class, IntWritable.class);
+				sequenceFileInputFile, LongWritable.class, IntWritable.class);
 		Collection<S> startingPositions = game.startingPositions();
 		for (S state : startingPositions) {
 			writer.append(new LongWritable(game.stateToHash(state)),
@@ -139,8 +139,9 @@ public class LoopyMaster<S extends State> implements Runnable {
 		}
 		writer.close();
 
+		int n = 1;
 		while (fs.listStatus(sequenceFileInputDir).length > 0) {
-			Job j = new Job(hadoopConf, "Initial database creation");
+			Job j = new Job(hadoopConf, "Find legal positions pass: " + (n++));
 			j.setJarByClass(LoopyPrimitivePassMapper.class);
 			j.setMapperClass(LoopyPrimitivePassMapper.class);
 			j.setMapOutputKeyClass(RangeFile.class);

@@ -47,10 +47,12 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 			Context context) {
 		Path path = rangeFile.myFile.getPath();
 		try {
-			fs.copyToLocalFile(path, path);
 			LocalFileSystem lfs = new LocalFileSystem();
 			String stringPath = lfs.pathToFile(path).getPath();
-			FileDatabase database = new FileDatabase(stringPath);
+			String localStringPath = stringPath + "_local";
+			Path localPath = new Path(localStringPath);
+			fs.copyToLocalFile(path, localPath);
+			FileDatabase database = new FileDatabase(localStringPath);
 			DatabaseHandle readHandle = database.getHandle(true);
 			DatabaseHandle writeHandle = database.getHandle(false);
 			Record record = game.newRecord();
@@ -106,7 +108,7 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 				Path tempPath = new Path(stringPath + "_" + rand.nextLong());
 				// use a random long to prevent collisions in the expensive copy
 				// step
-				fs.moveFromLocalFile(path, tempPath);
+				fs.moveFromLocalFile(localPath, tempPath);
 				// copy the written database to hdfs
 				fs.rename(tempPath, path);
 				// rename to complete process

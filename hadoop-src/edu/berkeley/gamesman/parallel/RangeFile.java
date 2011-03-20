@@ -5,10 +5,9 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 
-
-public class RangeFile implements Writable {
+public class RangeFile implements WritableComparable<RangeFile> {
 	public Range myRange;
 	public FileStatus myFile;
 
@@ -36,5 +35,10 @@ public class RangeFile implements Writable {
 	public void set(Range range, FileStatus file) {
 		myRange = range;
 		myFile = file;
+	}
+
+	@Override
+	public int compareTo(RangeFile o) {
+		return myRange.compareTo(o.myRange);
 	}
 }

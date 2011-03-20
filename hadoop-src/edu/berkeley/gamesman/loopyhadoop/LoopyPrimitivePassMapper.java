@@ -51,7 +51,7 @@ public class LoopyPrimitivePassMapper<S extends State> extends
 					break;
 				ranges.add(new RangeFile(r, fileStatus));
 			}
-			rangeFiles = (RangeFile[]) ranges.toArray();
+			rangeFiles = ranges.toArray(new RangeFile[ranges.size()]);
 		} catch (IOException e) {
 			throw new Error(e);
 		} catch (ClassNotFoundException e) {
