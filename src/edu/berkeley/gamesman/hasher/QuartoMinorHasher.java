@@ -294,7 +294,8 @@ public final class QuartoMinorHasher {
 		rot.reset();
 		Position p = tierTables[numPieces];
 		// symPositions[0] = p;
-		numType.addPiece(0);
+		if (numPieces > 0)
+			numType.addPiece(0);
 		int i;
 		for (i = 1; i < numPieces; i++) {
 			if (p.inner == null)
@@ -332,7 +333,8 @@ public final class QuartoMinorHasher {
 		numType.reset(numPieces);
 		this.hash = hash;
 		pieces[0].pieceNum = 0;
-		numType.addPiece(0);
+		if (numPieces > 0)
+			numType.addPiece(0);
 		// symPositions[0] = p;
 		int i;
 		for (i = 1; i < numPieces; i++) {

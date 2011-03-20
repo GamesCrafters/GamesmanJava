@@ -1,5 +1,6 @@
 package edu.berkeley.gamesman.game;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.Configuration;
@@ -126,8 +127,26 @@ public class Quarto extends TierGame {
 
 	@Override
 	public Collection<Pair<String, TierState>> validMoves() {
-		// TODO Auto-generated method stub
-		return null;
+		TierState[] moves = newStateArray(maxChildren());
+		int numChildren = validMoves(moves);
+		int child = 0;
+		ArrayList<Pair<String, TierState>> movePairs = new ArrayList<Pair<String, TierState>>(
+				numChildren);
+		for (int childPiece = 0; childPiece < 16; childPiece++) {
+			if (minorHasher.used(childPiece))
+				continue;
+			for (int row = 0; row < 4; row++) {
+				for (int col = 0; col < 4; col++) {
+					if (!pieces[row][col].hasPiece()) {
+						movePairs.add(new Pair<String, TierState>(Character
+								.toString((char) ('A' + childPiece))
+								+ Character.toString((char) ('a' + col))
+								+ Integer.toString(row + 1), moves[child++]));
+					}
+				}
+			}
+		}
+		return movePairs;
 	}
 
 	@Override

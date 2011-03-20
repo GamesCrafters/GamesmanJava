@@ -10,6 +10,7 @@ import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
+import edu.berkeley.gamesman.database.DummyDatabase;
 import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.util.Pair;
 
@@ -23,13 +24,19 @@ import edu.berkeley.gamesman.util.Pair;
 public final class Play {
 	public static void main(String[] args) throws IOException,
 			ClassNotFoundException {
-		Database db = Database.openDatabase(args[0]); // Opens a solved database
-														// file
-		Configuration conf = db.conf; // Fetch the configuration
-										// information from that
-										// database
-		Game<? extends State> g = conf.getGame(); // Get the game object for the
-													// current game
+		Configuration conf;
+		Database db;
+		if (args[0].endsWith(".job")) {
+			conf = new Configuration(args[0]);
+			db = new DummyDatabase(conf, true, false);
+		} else {
+			db = Database.openDatabase(args[0]);
+			// Opens a solved database file
+			conf = db.conf;
+			// Fetch the configuration information from that database
+		}
+		Game<? extends State> g = conf.getGame();
+		// Get the game object for the current game
 		playGame(g, db);
 	}
 
