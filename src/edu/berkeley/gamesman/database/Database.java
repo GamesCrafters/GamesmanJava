@@ -247,36 +247,65 @@ public abstract class Database implements Flushable, Closeable {
 		return 16 + conf.store(out);
 	}
 
+	protected static class DatabaseArgs {
+		final String dbClassString, uri;
+		final Configuration conf;
+		final long firstRecordIndex, numRecords;
+		final boolean reading, writing;
+
+		DatabaseArgs(String dbClassString, String uri, Configuration conf,
+				long firstRecordIndex, long numRecords, boolean reading,
+				boolean writing) {
+			this.dbClassString = dbClassString;
+			this.uri = uri;
+			this.conf = conf;
+			this.firstRecordIndex = firstRecordIndex;
+			this.numRecords = numRecords;
+			this.reading = reading;
+			this.writing = writing;
+		}
+	}
+
 	public static Database openDatabase(String uri) throws IOException,
+			ClassNotFoundException {
+		return openDatabase(getArgs(uri));
+	}
+
+	public static DatabaseArgs getArgs(String uri) throws IOException,
 			ClassNotFoundException {
 		DataInputStream in = new DataInputStream(new FileInputStream(uri));
 		long firstRecordIndex = in.readLong();
 		long numRecords = in.readLong();
 		Configuration conf = Configuration.load(in);
 		in.close();
-		return openDatabase(uri, conf, firstRecordIndex, numRecords, true,
-				false);
+		return getArgs(uri, conf, firstRecordIndex, numRecords, true, false);
 	}
 
 	public static Database openDatabase(String uri, Configuration conf,
 			boolean reading, boolean writing) throws IOException {
-		Game<?> g = conf.getGame();
-		return openDatabase(uri, conf, 0, g.numHashes(), reading, writing);
+		return openDatabase(getArgs(uri, conf, reading, writing));
 	}
 
-	public static void openDatabase(String uri, long firstRecordIndex,
+	public static DatabaseArgs getArgs(String uri, Configuration conf,
+			boolean reading, boolean writing) {
+		Game<?> g = conf.getGame();
+		return getArgs(uri, conf, 0, g.numHashes(), reading, writing);
+	}
+
+	public static DatabaseArgs getArgs(String uri, long firstRecordIndex,
 			long numRecords, boolean reading, boolean writing)
 			throws IOException, ClassNotFoundException {
 		DataInputStream in = new DataInputStream(new FileInputStream(uri));
 		Util.skipFully((DataInput) in, 16);
 		Configuration conf = Configuration.load(in);
 		in.close();
-		openDatabase(uri, conf, firstRecordIndex, numRecords, reading, writing);
+		return getArgs(uri, conf, firstRecordIndex, numRecords, reading,
+				writing);
 	}
 
-	public static Database openDatabase(String uri, Configuration conf,
+	public static DatabaseArgs getArgs(String uri, Configuration conf,
 			long firstRecordIndex, long numRecords, boolean reading,
-			boolean writing) throws IOException {
+			boolean writing) {
 		String dbClass = conf.getProperty("gamesman.database");
 		if (writing) {
 			String solveWrappers = conf.getProperty(
@@ -284,14 +313,19 @@ public abstract class Database implements Flushable, Closeable {
 			if (!solveWrappers.isEmpty())
 				dbClass = solveWrappers + ":" + dbClass;
 		}
-		return openDatabase(dbClass, uri, conf, firstRecordIndex, numRecords,
-				reading, writing);
+		return new DatabaseArgs(dbClass, uri, conf, firstRecordIndex,
+				numRecords, reading, writing);
 	}
 
-	public static Database openDatabase(String dbClassString, String uri,
+	public static Database openDatabase(String dbClass, String uri,
 			Configuration conf, long firstRecordIndex, long numRecords,
 			boolean reading, boolean writing) throws IOException {
-		String[] classes = dbClassString.split(":");
+		return openDatabase(new DatabaseArgs(dbClass, uri, conf,
+				firstRecordIndex, numRecords, reading, writing));
+	}
+
+	public static Database openDatabase(DatabaseArgs args) throws IOException {
+		String[] classes = args.dbClassString.split(":");
 		for (int i = 0; i < classes.length - 1; i++) {
 			if (!classes[i].contains("."))
 				classes[i] = "edu.berkeley.gamesman.database.wrapper."
@@ -306,15 +340,17 @@ public abstract class Database implements Flushable, Closeable {
 					classes[classes.length - 1]).asSubclass(Database.class);
 			result = underlying.getConstructor(String.class,
 					Configuration.class, Long.TYPE, Long.TYPE, Boolean.TYPE,
-					Boolean.TYPE).newInstance(uri, conf, firstRecordIndex,
-					numRecords, reading, writing);
+					Boolean.TYPE).newInstance(args.uri, args.conf,
+					args.firstRecordIndex, args.numRecords, args.reading,
+					args.writing);
 			for (int i = classes.length - 2; i >= 0; i--) {
 				Class<? extends DatabaseWrapper> next = Class.forName(
 						classes[i]).asSubclass(DatabaseWrapper.class);
 				result = next.getConstructor(Database.class,
 						Configuration.class, Long.TYPE, Long.TYPE,
-						Boolean.TYPE, Boolean.TYPE).newInstance(result, conf,
-						firstRecordIndex, numRecords, reading, writing);
+						Boolean.TYPE, Boolean.TYPE).newInstance(result,
+						args.conf, args.firstRecordIndex, args.numRecords,
+						args.reading, args.writing);
 			}
 		} catch (ClassNotFoundException e) {
 			throw new Error(e);

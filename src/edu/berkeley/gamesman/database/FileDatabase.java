@@ -29,6 +29,26 @@ public final class FileDatabase extends Database {
 	}
 
 	/**
+	 * Special constructor which opens for both reading and writing, but does
+	 * not wipe whatever was in the file previously.
+	 * 
+	 * @param uri
+	 * @throws ClassNotFoundException
+	 * @throws IOException
+	 */
+	public FileDatabase(String uri) throws IOException, ClassNotFoundException {
+		this(getArgs(uri));
+	}
+
+	private FileDatabase(DatabaseArgs args) throws IOException {
+		super(args.conf, args.firstRecordIndex, args.numRecords, true, true);
+		myFile = new File(args.uri);
+		myRaf = new RandomAccessFile(myFile, "rw");
+		headerLen = skipHeader(myRaf);
+		firstByteIndex = myLogic.getByteIndex(firstRecordIndex);
+	}
+
+	/**
 	 * The file contained in this FileDatabase
 	 */
 	private final File myFile;
