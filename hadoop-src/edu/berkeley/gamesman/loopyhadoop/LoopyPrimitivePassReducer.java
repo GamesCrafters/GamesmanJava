@@ -30,7 +30,7 @@ import java.util.Random;
  */
 public class LoopyPrimitivePassReducer<S extends State> extends
         Reducer<RangeFile, LongWritable, LongWritable, IntWritable> {
-
+    private org.apache.hadoop.conf.Configuration hadoopConf;
     private FileSystem fs;
     private Configuration conf;
     private Game<S> game;
@@ -50,7 +50,7 @@ public class LoopyPrimitivePassReducer<S extends State> extends
             fs = FileSystem.get(hadoopConf);
             returnKey = new LongWritable();
             returnVal = new IntWritable();
-
+            hadoopConf = context.getConfiguration();
             //Donno if this is necessary
             returnVal.set(0);
         } catch (IOException e) {
@@ -62,14 +62,20 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 
     @Override
     public void reduce(RangeFile file, Iterable<LongWritable> hashes, Context context) {
-        FileStatus myFileStatus = file.myFile;
-        for (LongWritable lw : hashes) {
-            Long hash = lw.get();
-            Record hashVal = null;
-            Value v;
-            //TODO: Read HashVal from the database
+        try {
+            FileStatus myFileStatus = file.myFile;
+            Range r = file.myRange;
+            Path primitiveDir = LoopyMaster.getPath("Primitives", conf);
+            String primitiveFileName = "range" + r.firstRecord + "to" + r.numRecords;
+            Path primitiveFilePath = new Path(primitiveDir, primitiveFileName);
+            SequenceFile.Writer w = new SequenceFile.Writer(fs, hadoopConf, primitiveFilePath, LongWritable.class, IntWritable.class);
+            for (LongWritable lw : hashes) {
+                Long hash = lw.get();
+                Record hashVal = null;
+                Value v;
+                //TODO: Read HashVal from the database
 
-            try {
+
                 if (hashVal.value != Value.IMPOSSIBLE) {
                     //It was visited Already
                     continue;
@@ -78,25 +84,28 @@ public class LoopyPrimitivePassReducer<S extends State> extends
                 //Check Primitive
                 S state = game.hashToState(hash);
                 v = game.primitiveValue(state);
+                returnKey.set(hash);
+                returnVal.set(v.value);
                 //TODO: Mark the Value in the DB
 
 
-                //It is Primitive
                 if (v != Value.UNDECIDED) {
+                    //It is Primitive
                     //TODO: Write to the PrimitiveValues SeqFile
-                //Not Primitive
-                } else {
+                    w.append(returnKey, returnVal);
 
-                    returnKey.set(hash);
+                } else {
+                    //Not Primitive
                     context.write(returnKey, returnVal);
                 }
-            } catch (InterruptedException e) {
-                throw new Error(e);
-            } catch (IOException e) {
-                throw new Error(e);
             }
+            w.close();
+        } catch (InterruptedException e) {
+            throw new Error(e);
+        } catch (IOException e) {
+            throw new Error(e);
         }
     }
 
 
-    }
+}
