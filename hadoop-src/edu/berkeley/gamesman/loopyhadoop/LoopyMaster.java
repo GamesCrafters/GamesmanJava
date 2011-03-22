@@ -1,8 +1,6 @@
 package edu.berkeley.gamesman.loopyhadoop;
 
 import java.io.IOException;
-import java.util.Collection;
-
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.game.Game;
 import org.apache.hadoop.fs.FileStatus;
@@ -71,7 +69,7 @@ public class LoopyMaster<S extends State> implements Runnable {
 		j.setOutputFormatClass(SequenceFileOutputFormat.class);
 		j.setOutputKeyClass(Range.class);
 		j.setOutputValueClass(FileStatus.class);
-		String pathString = "Loopy_Hadoop_Solve_"
+		String pathString = "Loopy_Hadoop_Solve_DB_Directory_"
 				+ gamesmanConf.getGame().getClass().getSimpleName();
 		Path sequenceFileDir = getPath(pathString);
 
@@ -131,18 +129,17 @@ public class LoopyMaster<S extends State> implements Runnable {
 				+ gamesmanConf.getGame().getClass().getSimpleName());
 		fs.mkdirs(primitiveOutputDir);
 		fs.mkdirs(sequenceFileInputDir);
-		
+
 		hadoopConf.set("primitive.output", primitiveOutputDir.toString());
-		
+
 		Path sequenceFileInputFile = new Path(sequenceFileInputDir,
-				"StartingPositions");
+				"Starting_Positions_Flag");
+		
 		SequenceFile.Writer writer = new SequenceFile.Writer(fs, hadoopConf,
 				sequenceFileInputFile, LongWritable.class, IntWritable.class);
-		Collection<S> startingPositions = game.startingPositions();
-		for (S state : startingPositions) {
-			writer.append(new LongWritable(game.stateToHash(state)),
-					new IntWritable(0));
-		}
+		
+		writer.append(new LongWritable(-1), new IntWritable(0));
+		
 		writer.close();
 
 		int n = 1;
@@ -175,25 +172,27 @@ public class LoopyMaster<S extends State> implements Runnable {
 			fs.rename(sequenceFileOutputDir, sequenceFileInputDir);
 		}
 
+		fs.delete(sequenceFileInputDir, true);
+		// we're not feeding it anymore, so kill the dir
 	}
 
 	private boolean directoryHasKVPairs(Path sequenceFileDir) {
-		try {			
+		try {
 			FileStatus[] files = fs.listStatus(sequenceFileDir);
 			LongWritable key = new LongWritable();
 			IntWritable value = new IntWritable();
-			
-			for(FileStatus file : files)
-			{
-				SequenceFile.Reader reader = new SequenceFile.Reader(fs, file.getPath(), hadoopConf);
-				//everything in the input directory should be a sequence file
-				
-				if(reader.next(key, value))
-				{//if the file has any kv pairs, we return true
+
+			for (FileStatus file : files) {
+				SequenceFile.Reader reader = new SequenceFile.Reader(fs, file
+						.getPath(), hadoopConf);
+				// everything in the input directory should be a sequence file
+
+				if (reader.next(key, value)) {// if the file has any kv pairs,
+					// we return true
 					return true;
 				}
 			}
-			
+
 			return false;
 		} catch (IOException e) {
 			throw new Error(e);

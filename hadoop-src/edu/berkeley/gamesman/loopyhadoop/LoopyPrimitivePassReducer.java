@@ -1,6 +1,5 @@
 package edu.berkeley.gamesman.loopyhadoop;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Random;
 
@@ -52,13 +51,18 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 		Path path = rangeFile.myFile.getPath();
 		try {
 			LocalFileSystem lfs = new LocalFileSystem();
+			
 			String stringPath = lfs.pathToFile(path).getPath();
 			String localStringPath = stringPath + "_local";
+			
 			Path localPath = new Path(localStringPath);
 			fs.copyToLocalFile(path, localPath);
+			
 			FileDatabase database = new FileDatabase(localStringPath);
+			
 			DatabaseHandle readHandle = database.getHandle(true);
 			DatabaseHandle writeHandle = database.getHandle(false);
+			
 			Record record = game.newRecord();
 			S gameState = game.newState();
 

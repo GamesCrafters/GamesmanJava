@@ -15,6 +15,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class LoopyPrimitivePassMapper<S extends State> extends
@@ -26,6 +27,7 @@ public class LoopyPrimitivePassMapper<S extends State> extends
 	private S position;
 	private RangeFile[] rangeFiles;
 	private LongWritable longWritable;
+	private long hashesPerFile;
 
 	@Override
 	public void setup(Context context) {
@@ -53,6 +55,8 @@ public class LoopyPrimitivePassMapper<S extends State> extends
 			reader.close();
 
 			rangeFiles = ranges.toArray(new RangeFile[ranges.size()]);
+
+			hashesPerFile = game.numHashes() / ranges.size();
 		} catch (IOException e) {
 			throw new Error(e);
 		} catch (ClassNotFoundException e) {
@@ -64,22 +68,36 @@ public class LoopyPrimitivePassMapper<S extends State> extends
 	public void map(LongWritable positionToMap, IntWritable ignore,
 			Context context) {
 		long pos = positionToMap.get();
-		game.hashToState(pos, position);
-		long HashesPerFile = game.numHashes() / rangeFiles.length;
 
-		int numChildren = game.validMoves(position, childStates);
-		for (int i = 0; i < numChildren; i++) {
-			long childHash = game.stateToHash(childStates[i]);
-			RangeFile childFile = rangeFiles[(int) (childHash / HashesPerFile)];
-			longWritable.set(childHash);
+		if (pos != -1) {
+			game.hashToState(pos, position);
+			int numChildren = game.validMoves(position, childStates);
 			
-			try {
-				context.write(childFile, longWritable);
-			} catch (IOException e) {
-				throw new Error(e);
-			} catch (InterruptedException e) {
-				throw new Error(e);
+			for (int i = 0; i < numChildren; i++) {
+				long childHash = game.stateToHash(childStates[i]);
+				outputToReducer(context, childHash);
 			}
+		} else {
+			Collection<S> startingPositions = game.startingPositions();
+
+			for (S startPosition : startingPositions) {
+				long positionHash = game.stateToHash(startPosition);
+				outputToReducer(context, positionHash);
+			}
+		}
+	}
+
+	private void outputToReducer(Context context, long positionHash)
+			throws Error {
+		RangeFile childFile = rangeFiles[(int) (positionHash / hashesPerFile)];
+		longWritable.set(positionHash);
+
+		try {
+			context.write(childFile, longWritable);
+		} catch (IOException e) {
+			throw new Error(e);
+		} catch (InterruptedException e) {
+			throw new Error(e);
 		}
 	}
 
