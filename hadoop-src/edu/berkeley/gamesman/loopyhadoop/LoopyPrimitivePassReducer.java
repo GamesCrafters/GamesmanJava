@@ -1,5 +1,6 @@
 package edu.berkeley.gamesman.loopyhadoop;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Random;
 
@@ -111,10 +112,13 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 			database.close();
 
 			if (changesMade) {
+				String localTempPathString = localStringPath + "_temp";
+				new File(localStringPath)
+						.renameTo(new File(localTempPathString));
 				Path tempPath = new Path(stringPath + "_" + rand.nextLong());
 				// use a random long to prevent collisions in the expensive copy
 				// step
-				fs.moveFromLocalFile(localPath, tempPath);
+				fs.moveFromLocalFile(new Path(localTempPathString), tempPath);
 				// copy the written database to hdfs
 				fs.rename(tempPath, path);
 				// rename to complete process
