@@ -6,6 +6,9 @@ import java.util.Collection;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Value;
+import edu.berkeley.gamesman.database.Database;
+import edu.berkeley.gamesman.database.cache.QuartoCache;
+import edu.berkeley.gamesman.database.cache.TierCache;
 import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.hasher.ChangedIterator;
 import edu.berkeley.gamesman.hasher.DartboardHasher;
@@ -345,5 +348,15 @@ public class Quarto extends TierGame {
 
 	public boolean usedPlace(int i) {
 		return majorHasher.get(i) == 'P';
+	}
+
+	public TierCache getCache(Database db, long availableMem) {
+		return new QuartoCache(this, db, availableMem);
+	}
+
+	public int validMoves(TierState[] children, int[] cachePlaces) {
+		throw new UnsupportedOperationException();
+		// TODO Write method
+
 	}
 }
