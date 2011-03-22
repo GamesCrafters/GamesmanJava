@@ -112,13 +112,12 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 			database.close();
 
 			if (changesMade) {
-				String localTempPathString = localStringPath + "_temp";
-				new File(localStringPath)
-						.renameTo(new File(localTempPathString));
 				Path tempPath = new Path(stringPath + "_" + rand.nextLong());
 				// use a random long to prevent collisions in the expensive copy
 				// step
-				fs.moveFromLocalFile(new Path(localTempPathString), tempPath);
+				lfs.pathToFile(lfs.getChecksumFile(localPath)).delete();
+				
+				fs.moveFromLocalFile(localPath, tempPath);
 				// copy the written database to hdfs
 				fs.rename(tempPath, path);
 				// rename to complete process
