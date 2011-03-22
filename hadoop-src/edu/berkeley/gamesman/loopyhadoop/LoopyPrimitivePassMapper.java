@@ -16,7 +16,6 @@ import org.apache.hadoop.mapreduce.Mapper;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 public class LoopyPrimitivePassMapper<S extends State> extends
 		Mapper<LongWritable, IntWritable, RangeFile, LongWritable> {
@@ -51,6 +50,8 @@ public class LoopyPrimitivePassMapper<S extends State> extends
 					break;
 				ranges.add(new RangeFile(r, fileStatus));
 			}
+			reader.close();
+
 			rangeFiles = ranges.toArray(new RangeFile[ranges.size()]);
 		} catch (IOException e) {
 			throw new Error(e);
@@ -64,12 +65,14 @@ public class LoopyPrimitivePassMapper<S extends State> extends
 			Context context) {
 		long pos = positionToMap.get();
 		game.hashToState(pos, position);
-		int numChildren = game.validMoves(position, childStates);
 		long HashesPerFile = game.numHashes() / rangeFiles.length;
+
+		int numChildren = game.validMoves(position, childStates);
 		for (int i = 0; i < numChildren; i++) {
 			long childHash = game.stateToHash(childStates[i]);
 			RangeFile childFile = rangeFiles[(int) (childHash / HashesPerFile)];
 			longWritable.set(childHash);
+			
 			try {
 				context.write(childFile, longWritable);
 			} catch (IOException e) {

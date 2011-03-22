@@ -127,7 +127,13 @@ public class LoopyMaster<S extends State> implements Runnable {
 				+ gamesmanConf.getGame().getClass().getSimpleName());
 		Path sequenceFileOutputDir = getPath("Loopy_Hadoop_Solve_Output_Stage2_"
 				+ gamesmanConf.getGame().getClass().getSimpleName());
+		Path primitiveOutputDir = getPath("Loopy_Hadoop_Primitives_"
+				+ gamesmanConf.getGame().getClass().getSimpleName());
+		fs.mkdirs(primitiveOutputDir);
 		fs.mkdirs(sequenceFileInputDir);
+		
+		hadoopConf.set("primitive.output", primitiveOutputDir.toString());
+		
 		Path sequenceFileInputFile = new Path(sequenceFileInputDir,
 				"StartingPositions");
 		SequenceFile.Writer writer = new SequenceFile.Writer(fs, hadoopConf,
@@ -140,7 +146,7 @@ public class LoopyMaster<S extends State> implements Runnable {
 		writer.close();
 
 		int n = 1;
-		while (fs.listStatus(sequenceFileInputDir).length > 0) {
+		while (directoryHasKVPairs(sequenceFileInputDir)) {
 			Job j = new Job(hadoopConf, "Find legal positions pass: " + (n++));
 			j.setJarByClass(LoopyPrimitivePassMapper.class);
 			j.setMapperClass(LoopyPrimitivePassMapper.class);
@@ -167,9 +173,31 @@ public class LoopyMaster<S extends State> implements Runnable {
 
 			fs.delete(sequenceFileInputDir, true);
 			fs.rename(sequenceFileOutputDir, sequenceFileInputDir);
-
 		}
 
+	}
+
+	private boolean directoryHasKVPairs(Path sequenceFileDir) {
+		try {			
+			FileStatus[] files = fs.listStatus(sequenceFileDir);
+			LongWritable key = new LongWritable();
+			IntWritable value = new IntWritable();
+			
+			for(FileStatus file : files)
+			{
+				SequenceFile.Reader reader = new SequenceFile.Reader(fs, file.getPath(), hadoopConf);
+				//everything in the input directory should be a sequence file
+				
+				if(reader.next(key, value))
+				{//if the file has any kv pairs, we return true
+					return true;
+				}
+			}
+			
+			return false;
+		} catch (IOException e) {
+			throw new Error(e);
+		}
 	}
 
 	private void solve() {

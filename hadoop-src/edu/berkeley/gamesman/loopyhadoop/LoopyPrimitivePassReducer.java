@@ -16,6 +16,7 @@ import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Reducer;
 
 public class LoopyPrimitivePassReducer<S extends State> extends
@@ -25,6 +26,7 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 	private Game<S> game;
 	private final Random rand = new Random();
 	private IntWritable zero = new IntWritable(0);
+	private Path primitivePath;
 
 	@Override
 	public void setup(Context context) {
@@ -35,6 +37,7 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 					.get("gamesman.configuration"));
 			fs = FileSystem.get(hadoopConf);
 			game = conf.getCheckedGame();
+			primitivePath = new Path(hadoopConf.get("primitive.output"));
 		} catch (IOException e) {
 			throw new Error(e);
 		} catch (ClassNotFoundException e) {
@@ -58,6 +61,16 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 			Record record = game.newRecord();
 			S gameState = game.newState();
 
+			Path primitiveFile = new Path(primitivePath, "range"
+					+ rangeFile.myRange.firstRecord
+					+ "to"
+					+ (rangeFile.myRange.firstRecord
+							+ rangeFile.myRange.numRecords - 1));
+			SequenceFile.Writer primitiveFileWriter = SequenceFile
+					.createWriter(fs, context.getConfiguration(),
+							primitiveFile, LongWritable.class,
+							LongWritable.class);
+
 			/*
 			 * all hashes are going to be in the same file so this goes outside
 			 * the loop
@@ -73,27 +86,19 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 				boolean visited = record.value != Value.IMPOSSIBLE;
 
 				if (!visited) {
-					Value primitiveValue = game.primitiveValue(game
-							.hashToState(longHash));
-					switch (primitiveValue) {
-					case UNDECIDED:
+					Value primitiveValue = game.primitiveValue(gameState);
+					if (primitiveValue == Value.UNDECIDED) {
 						// value is not primitive
 						record.value = Value.DRAW;
-						break;
-					case WIN:
-					case LOSE:
-					case TIE:
-						// do the same for all these cases, all primitive
-						// TODO: append to a primitive file for this range
+					} else // primitive
+					{
+						primitiveFileWriter.append(hash, new LongWritable(
+								recordHash));
 						record.value = primitiveValue;
 						record.remoteness = 0;
 						// we have to deal with this during the solve for
 						// non-primitives?
-						break;
-					default:
-						throw new Error("WTF did primitive value return?");
 					}
-
 					recordHash = game.recordToLong(gameState, record);
 					database.writeRecord(writeHandle, longHash, recordHash);
 					// write this record to the database
@@ -102,6 +107,7 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 				}
 			}
 
+			primitiveFileWriter.close();
 			database.close();
 
 			if (changesMade) {
