@@ -62,14 +62,15 @@ public class DartboardCache extends TierCache {
 			hasher.unhash(currentPosition.hash + addHash - 1);
 			lastChild = hasher.previousChild(old, replace, place);
 			addHash /= 2;
-		} while (db.getNumBytes(lastChild - child.hash) > memPerChild);
+		} while (db.getNumBytes(lastChild - child.hash + 1) > memPerChild);
 		hasher.unhash(currentPosition.hash);
 		long tierOffset = game.hashOffsetForTier(child.tier);
 		long endChildHash = tierOffset + lastChild + 1;
 		int numRecords = (int) (endChildHash - childHash);
 		ranges[place].setRange(childHash, numRecords);
 		try {
-			ranges[place].readRecordsFromDatabase(db, dh, childHash, numRecords);
+			ranges[place]
+					.readRecordsFromDatabase(db, dh, childHash, numRecords);
 		} catch (IOException e) {
 			throw new Error(e);
 		}

@@ -22,14 +22,19 @@ public class Quarto extends TierGame {
 	private final ChangedIterator myChanged = new ChangedIterator(16);
 	private final QuartoMinorHasher minorHasher = new QuartoMinorHasher();
 	private int tier;
-	private final Piece[][] pieces;
+	public final Piece[][] pieces;
+	public final Piece[] placeList;
 	private final int[] places = new int[16];
 	private final long[] majorChildren = new long[16];
 	private final long[] minorChildren = new long[256];
 
-	private class Piece {
-		private final int majorIndex;
+	public class Piece {
+		public final int majorIndex;
 		private int minorIndex;
+
+		public int getMinorIndex() {
+			return minorIndex;
+		}
 
 		private Piece(int index) {
 			majorIndex = index;
@@ -68,10 +73,13 @@ public class Quarto extends TierGame {
 		majorHasher.setNums(16, 0);
 		majorHasher.setReplacements(' ', 'P');
 		pieces = new Piece[4][4];
+		placeList = new Piece[16];
 		int i = 0;
 		for (int row = 0; row < 4; row++) {
 			for (int col = 0; col < 4; col++) {
-				pieces[row][col] = new Piece(i++);
+				placeList[i] = new Piece(i);
+				pieces[row][col] = placeList[i];
+				i++;
 			}
 		}
 	}
@@ -351,7 +359,7 @@ public class Quarto extends TierGame {
 	}
 
 	public TierCache getCache(Database db, long availableMem) {
-		return new QuartoCache(this, db, availableMem);
+		return new QuartoCache(this, majorHasher, minorHasher, db, availableMem);
 	}
 
 	public int validMoves(TierState[] children, int[] cachePlaces) {

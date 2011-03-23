@@ -282,6 +282,10 @@ public final class QuartoMinorHasher {
 		return tierTables[tier].numHashes;
 	}
 
+	public long numHashesForTier() {
+		return numHashesForTier(numPieces);
+	}
+
 	public long getHash() {
 		return hash;
 	}
@@ -470,17 +474,17 @@ public final class QuartoMinorHasher {
 		return getCache(place, -1, availableMem);
 	}
 
-	public long[] getCache(int place, int piece, long availableMem) {
+	public long[] getCache(int place, int piece, long availableRecordSpace) {
 		Count count = new Count(numPieces + 1);
 		Position pos = tierTables[numPieces + 1];
 		Rotation rot = new Rotation();
-		long neededMem = pos.numHashes;
+		long neededRecordSpace = pos.numHashes;
 		long startHash = 0L;
 		Piece[] newPieces = new Piece[numPieces + 1];
 		int piece0 = place == 0 ? piece : 0;
 		newPieces[0] = new Piece(0);
 		count.addPiece(0);
-		for (int i = 1; neededMem > availableMem; i++) {
+		for (int i = 1; neededRecordSpace > availableRecordSpace; i++) {
 			int p;
 			if (i < place)
 				p = pieces[i].pieceNum;
@@ -501,14 +505,14 @@ public final class QuartoMinorHasher {
 				} else {
 					pos = pos.inner[p];
 					startHash = pos.offset;
-					neededMem = pos.numHashes;
+					neededRecordSpace = pos.numHashes;
 				}
 			if (pos == null) {
 				startHash += count.lastHash();
-				neededMem = count.possibilities;
+				neededRecordSpace = count.possibilities;
 			}
 		}
-		return new long[] { startHash, neededMem };
+		return new long[] { startHash, neededRecordSpace };
 	}
 
 	public int[] getBoard() {

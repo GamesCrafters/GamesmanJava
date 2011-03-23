@@ -76,6 +76,10 @@ public abstract class TierGame extends Game<TierState> {
 		return myHasher.hashOffsetForTier(tier);
 	}
 
+	public final long hashOffsetForTier() {
+		return myHasher.hashOffsetForTier(getTier());
+	}
+
 	@Override
 	public final long numHashes() {
 		return myHasher.numHashes();
