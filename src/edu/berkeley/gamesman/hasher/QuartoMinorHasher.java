@@ -475,6 +475,10 @@ public final class QuartoMinorHasher {
 	}
 
 	public long[] getCache(int place, int piece, long availableRecordSpace) {
+		assert place >= 0;
+		assert place <= numPieces;
+		assert piece >= 0 || piece == -1;
+		assert piece < 16;
 		Count count = new Count(numPieces + 1);
 		Position pos = tierTables[numPieces + 1];
 		Rotation rot = new Rotation();
@@ -504,6 +508,7 @@ public final class QuartoMinorHasher {
 					pos = null;
 				} else {
 					pos = pos.inner[p];
+					assert pos != null;
 					startHash = pos.offset;
 					neededRecordSpace = pos.numHashes;
 				}

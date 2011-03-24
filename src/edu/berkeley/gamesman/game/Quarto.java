@@ -54,7 +54,7 @@ public class Quarto extends TierGame {
 				return minorHasher.get(minorIndex) ^ 15;
 		}
 
-		private boolean hasPiece() {
+		public boolean hasPiece() {
 			return majorHasher.get(majorIndex) == 'P';
 		}
 

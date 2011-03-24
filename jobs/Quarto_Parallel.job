@@ -1,0 +1,14 @@
+gamesman.game = Quarto
+gamesman.solver = CacheTierSolver
+gamesman.database = HDFSSplitDatabase
+gamesman.db.uri = /scratch/quarto.db
+gamesman.hadoop.tierDb = /scratch/quarto/quarto
+gamesman.hadoop.dbfolder = /scratch/quarto
+gamesman.memory = 1g
+gamesman.threads = 4
+gamesman.minimum.splits = 48
+gamesman.minimum.split.size = 65536
+gamesman.preferred.split.size = 67108864
+gamesman.parallel.numMachines = 18
+gamesman.debug.SOLVER = true
+gamesman.debug.DATABASE = true

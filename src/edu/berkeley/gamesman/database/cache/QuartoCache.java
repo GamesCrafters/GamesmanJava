@@ -80,7 +80,7 @@ public class QuartoCache extends TierCache {
 	private boolean setCacheThrough(int place, long availableMemory) {
 		int availableIntMemory = (int) Math.min(availableMemory,
 				Integer.MAX_VALUE);
-		int minorIndex = game.placeList[place].getMinorIndex();
+		int minorIndex = getMinorInsertionPlace(place);
 		long[] range = minorHasher.getCache(minorIndex,
 				db.myLogic.getNumRecords(availableIntMemory));
 		if (range == null)
@@ -90,6 +90,17 @@ public class QuartoCache extends TierCache {
 					(int) range[1], availableIntMemory);
 			return true;
 		}
+	}
+
+	private int getMinorInsertionPlace(int place) {
+		int nextFilled = place;
+		while (nextFilled < 16 && !game.placeList[nextFilled].hasPiece()) {
+			nextFilled++;
+		}
+		if (nextFilled >= 16)
+			return game.getTier();
+		else
+			return game.placeList[nextFilled].getMinorIndex();
 	}
 
 	private void setCacheMinorRange(RecordRangeCache cache, int place,
@@ -115,7 +126,7 @@ public class QuartoCache extends TierCache {
 	private boolean setCacheThrough(int place, int piece, long availableMemory) {
 		int availableIntMemory = (int) Math.min(availableMemory,
 				Integer.MAX_VALUE);
-		int minorIndex = game.placeList[place].getMinorIndex();
+		int minorIndex = getMinorInsertionPlace(place);
 		long[] range = minorHasher.getCache(minorIndex, piece,
 				db.myLogic.getNumRecords(availableIntMemory));
 		if (range == null)
