@@ -39,13 +39,26 @@ public abstract class SplitDatabase extends Database {
 		}
 	}
 
+	private final DatabaseDescriptor[] dd;
 	private final Database[] containedDbs;
+	private final int[] using;
 	private final long[] rangeByteIndexStarts;
+	private final boolean instantClose;
 
 	public SplitDatabase(DataInputStream dis, String uri, Configuration conf,
 			long firstRecordIndex, long numRecords, boolean reading,
 			boolean writing) throws IOException, ClassNotFoundException {
+		this(dis, uri, conf, firstRecordIndex, numRecords, reading, writing,
+				false);
+	}
+
+	public SplitDatabase(DataInputStream dis, String uri, Configuration conf,
+			long firstRecordIndex, long numRecords, boolean reading,
+			boolean writing, boolean instantClose) throws IOException,
+			ClassNotFoundException {
 		super(conf, firstRecordIndex, numRecords, reading, writing);
+		this.instantClose = instantClose;
+		assert !(instantClose && writing);
 		skipHeader(dis);
 		LinkedList<DatabaseDescriptor> dbList = new LinkedList<DatabaseDescriptor>();
 		long lastRecordIndex = firstRecordIndex + numRecords;
@@ -71,10 +84,16 @@ public abstract class SplitDatabase extends Database {
 		}
 		dis.close();
 		containedDbs = new Database[dbList.size()];
+		dd = dbList.toArray(new DatabaseDescriptor[dbList.size()]);
+		if (instantClose)
+			using = new int[dbList.size()];
+		else
+			using = null;
 		rangeByteIndexStarts = new long[dbList.size() + 1];
 		int i = 0;
 		for (DatabaseDescriptor db : dbList) {
-			containedDbs[i] = newDatabase(db);
+			if (!instantClose)
+				addDb(i, db);
 			rangeByteIndexStarts[i] = myLogic.getByteIndex(db.firstRecordIndex);
 			i++;
 		}
@@ -112,6 +131,13 @@ public abstract class SplitDatabase extends Database {
 		int lastDb = findDb(endByteIndex - 1);
 		SplitHandle sh = (SplitHandle) dh;
 		for (int dbNum = firstDb; dbNum <= lastDb; dbNum++) {
+			if (instantClose) {
+				try {
+					incrementDb(dbNum);
+				} catch (ClassNotFoundException e) {
+					throw new Error(e);
+				}
+			}
 			DatabaseHandle dh2 = getInnerHandle(sh, dbNum);
 			long innerFirst = dbNum == firstDb ? firstByteIndex
 					: rangeByteIndexStarts[dbNum];
@@ -120,6 +146,27 @@ public abstract class SplitDatabase extends Database {
 			containedDbs[dbNum].prepareReadRange(dh2, innerFirst, innerNum);
 		}
 		sh.currentDb = firstDb;
+	}
+
+	private synchronized void incrementDb(int dbNum) throws IOException,
+			ClassNotFoundException {
+		if (containedDbs[dbNum] == null) {
+			addDb(dbNum, dd[dbNum]);
+		}
+		using[dbNum]++;
+	}
+
+	private synchronized void decrementDb(int dbNum) throws IOException {
+		using[dbNum]--;
+		if (using[dbNum] == 0) {
+			containedDbs[dbNum].close();
+			containedDbs[dbNum] = null;
+		}
+	}
+
+	private synchronized void addDb(int dbNum, DatabaseDescriptor dd)
+			throws IOException, ClassNotFoundException {
+		containedDbs[dbNum] = newDatabase(dd);
 	}
 
 	private DatabaseHandle getInnerHandle(SplitHandle sh, int dbNum) {
@@ -167,8 +214,22 @@ public abstract class SplitDatabase extends Database {
 			nextStop = rangeByteIndexStarts[sh.currentDb + 1];
 		}
 		int toRead = (int) Math.min(maxLen, nextStop - sh.location);
-		return containedDbs[sh.currentDb].readBytes(
+		int bytesRead = containedDbs[sh.currentDb].readBytes(
 				sh.innerHandles[sh.currentDb], array, off, toRead);
+		if (instantClose && dh.remainingBytes == bytesRead) {
+			closeDbs(sh);
+		}
+		return bytesRead;
+	}
+
+	private void closeDbs(SplitHandle dh) throws IOException {
+		long endByteIndex = dh.firstByteIndex + dh.numBytes;
+		int firstDb = findDb(dh.firstByteIndex);
+		int lastDb = findDb(endByteIndex - 1);
+		for (int dbNum = firstDb; dbNum <= lastDb; dbNum++) {
+			decrementDb(dbNum);
+			dh.innerHandles[dbNum] = null;
+		}
 	}
 
 	@Override
@@ -188,7 +249,10 @@ public abstract class SplitDatabase extends Database {
 	@Override
 	public void close() throws IOException {
 		for (Database db : containedDbs) {
-			db.close();
+			if (instantClose)
+				assert db == null;
+			else
+				db.close();
 		}
 	}
 

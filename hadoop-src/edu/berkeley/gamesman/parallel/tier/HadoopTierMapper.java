@@ -63,7 +63,7 @@ public class HadoopTierMapper extends
 				HDFSInfo.initialize(conf);
 				readDb = new HDFSSplitDatabase(readUri, this.conf,
 						game.hashOffsetForTier(tier + 1),
-						game.numHashesForTier(tier + 1), true, false);
+						game.numHashesForTier(tier + 1), true, false, true);
 			} else {
 				readDb = null;
 			}
