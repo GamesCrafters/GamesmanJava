@@ -40,15 +40,21 @@ public class QuartoCache extends TierCache {
 			boolean childFetched = fetchChild(children[child], values[child],
 					piece, place, childHash);
 			if (!childFetched) {
-				if (!(setCacheThroughAll(place, cacheMemory) || setCacheThrough(
-						place, cacheMemory))) {
-					setCacheThrough(place, piece, cacheMemory);
-				}
+				setCache(place, piece);
 				childFetched = fetchChild(children[child], values[child],
 						piece, place, childHash);
 				assert childFetched;
 			}
 		}
+	}
+
+	private void setCache(int place, int piece) {
+		boolean success;
+		success = setCacheThroughAll(place, cacheMemory);
+		if (!success)
+			success = setCacheThrough(place, cacheMemory);
+		if (!success)
+			setCacheThrough(place, piece, cacheMemory);
 	}
 
 	private boolean fetchChild(TierState childState, Record toStore, int piece,

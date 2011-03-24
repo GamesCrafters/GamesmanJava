@@ -293,32 +293,7 @@ public class Quarto extends TierGame {
 
 	@Override
 	public int validMoves(TierState[] moves) {
-		int numMajor = majorHasher.getChildren(' ', 'P', places, majorChildren);
-		int numMinor = minorHasher.getChildren(minorChildren);
-		if (numMajor != 16 - tier)
-			throw new Error("Incorrect number of children");
-		if (numMinor != (16 - tier) * (tier + 1))
-			throw new Error("Incorrect number of children");
-		long tierHashes = minorHasher.numHashesForTier(tier + 1);
-		int numMoves = 0;
-		int minorPlace = 0;
-		for (int childPiece = 0; childPiece < numMajor; childPiece++) {
-			int majorPlace = 0;
-			for (int i = 0; i < 16; i++) {
-				if (majorHasher.get(i) == ' ') {
-					long majorHash = majorChildren[majorPlace++];
-					long minorHash = minorChildren[minorPlace];
-					moves[numMoves].tier = tier + 1;
-					moves[numMoves].hash = majorHash * tierHashes + minorHash;
-					numMoves++;
-				} else
-					minorPlace++;
-			}
-			minorPlace++;
-		}
-		if (numMoves != (16 - tier) * (16 - tier))
-			throw new Error("Incorrect number of children");
-		return numMoves;
+		return validMoves(moves, null);
 	}
 
 	@Override
@@ -363,8 +338,39 @@ public class Quarto extends TierGame {
 	}
 
 	public int validMoves(TierState[] children, int[] cachePlaces) {
-		throw new UnsupportedOperationException();
-		// TODO Write method
-
+		int numMajor = majorHasher.getChildren(' ', 'P', places, majorChildren);
+		int numMinor = minorHasher.getChildren(minorChildren);
+		assert numMajor == 16 - tier;
+		assert numMinor == (16 - tier) * (tier + 1);
+		long tierHashes = minorHasher.numHashesForTier(tier + 1);
+		int numMoves = 0;
+		int minorPlace = 0;
+		int cachePlace = 0;
+		int thisPiece = 0;
+		for (int childPiece = 0; childPiece < numMajor; childPiece++) {
+			while (minorHasher.used(thisPiece)) {
+				thisPiece++;
+				cachePlace += 16;
+			}
+			int majorPlace = 0;
+			for (int i = 0; i < 16; i++) {
+				if (majorHasher.get(i) == ' ') {
+					long majorHash = majorChildren[majorPlace++];
+					long minorHash = minorChildren[minorPlace];
+					children[numMoves].tier = tier + 1;
+					children[numMoves].hash = majorHash * tierHashes
+							+ minorHash;
+					if (cachePlaces != null)
+						cachePlaces[numMoves] = cachePlace;
+					numMoves++;
+				} else
+					minorPlace++;
+				cachePlace++;
+			}
+			minorPlace++;
+			thisPiece++;
+		}
+		assert numMoves == (16 - tier) * (16 - tier);
+		return numMoves;
 	}
 }
