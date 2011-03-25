@@ -187,6 +187,8 @@ public class HadoopTierMapper extends
 
 	protected void cleanup(Context context) throws IOException,
 			InterruptedException {
+		if (readDb != null)
+			readDb.close();
 		if (unzippedURI != null)
 			new File(unzippedURI).delete();
 		if (zippedURI != null)
