@@ -39,7 +39,7 @@ public class GZippedFileDatabase extends GZippedDatabase {
 			Progressable progress) throws IOException {
 		final GZippedDatabase gzfd = new GZippedFileDatabase(uri, conf,
 				readFrom.firstRecordIndex, readFrom.numRecords, false, true);
-		zip(conf, readFrom, gzfd, progress);
+		GZippedDatabase.zip(conf, readFrom, gzfd, progress);
 		gzfd.close();
 	}
 }
