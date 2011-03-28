@@ -5,26 +5,21 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Verifies the game tree by randomly executing moves. 
+ * Verifies the game tree by randomly executing moves.
  * 
  * @author adegtiar
  * @author rchengyue
  */
 public class RandomGameVerifier extends GameVerifier {
 
-	/**
-	 * The number of <tt>GameState</tt> to verify.
-	 */
-	private final int totalStateCount = 10000;
-
-	public RandomGameVerifier(GameState gameState,
-			String database, File out) {
-		super(gameState, database, out);
+	public RandomGameVerifier(GameState gameState, String database, File out,
+			int stateTotalCount) {
+		super(gameState, database, out, stateTotalCount);
 	}
 
 	@Override
 	public boolean hasNext() {
-		if (this.stateCount == totalStateCount)
+		if (this.stateCount == this.totalStateCount)
 			return false;
 		return true;
 	}
@@ -36,7 +31,7 @@ public class RandomGameVerifier extends GameVerifier {
 			currentGameState = this.getInitialGameState();
 			return currentGameState;
 		}
-		
+
 		GameState toReturn = currentGameState;
 		if (this.currentGameState.isPrimitive()) {
 			currentGameState = this.getInitialGameState();
@@ -47,5 +42,14 @@ public class RandomGameVerifier extends GameVerifier {
 		}
 		this.stateCount++;
 		return toReturn;
+	}
+
+	@Override
+	public void printStatusBar() {
+		progressBar.updateNumElements(stateCount);
+		progressBar.printStatus();
+		if (stateCount == totalStateCount) {
+			progressBar.finish();
+		}
 	}
 }

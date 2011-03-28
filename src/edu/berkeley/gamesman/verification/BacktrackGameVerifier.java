@@ -32,8 +32,9 @@ public class BacktrackGameVerifier extends GameVerifier {
 	 */
 	private boolean mChecked;
 
-	public BacktrackGameVerifier(GameState gameState, String database, File out) {
-		super(gameState, database, out);
+	public BacktrackGameVerifier(GameState gameState, String database,
+			File out, int stateTotalCount) {
+		super(gameState, database, out, stateTotalCount);
 		previousMoves = new Stack<List<Move>>();
 	}
 
@@ -48,9 +49,10 @@ public class BacktrackGameVerifier extends GameVerifier {
 			mHasNext = true;
 		} else {
 			List<Move> availableMoves = currentGameState.generateMoves();
-	
+
 			if (!availableMoves.isEmpty()) {
-				// We can continue down the tree. Add the child moves and do one.
+				// We can continue down the tree. Add the child moves and do
+				// one.
 				previousMoves.add(availableMoves);
 				currentGameState.doMove(availableMoves.get(0));
 				mHasNext = true;
@@ -59,10 +61,10 @@ public class BacktrackGameVerifier extends GameVerifier {
 				while (!previousMoves.isEmpty()) {
 					// Backtrack until we can move to a new state.
 					availableMoves = previousMoves.peek();
-	
+
 					// Undo previous move
 					currentGameState.undoMove(availableMoves.remove(0));
-	
+
 					// Find another move to do...
 					if (!availableMoves.isEmpty()) {
 						// Found one. Do it and leave it on top
@@ -76,7 +78,7 @@ public class BacktrackGameVerifier extends GameVerifier {
 				}
 			}
 		}
-		
+
 		mChecked = true;
 		return mHasNext;
 	}
@@ -89,6 +91,12 @@ public class BacktrackGameVerifier extends GameVerifier {
 		mChecked = false;
 
 		return currentGameState;
+	}
+
+	@Override
+	public void printStatusBar() {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

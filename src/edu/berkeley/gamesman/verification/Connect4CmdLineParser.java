@@ -32,6 +32,9 @@ public class Connect4CmdLineParser {
 	@Option(name = "-v", usage = "type of verifier")
 	private String verifier;
 
+	@Option(name = "-s", usage = "number of states to verify")
+	private int stateCount;
+
 	// receives other command line parameters than options
 	@Argument
 	private List<String> arguments = new ArrayList<String>();
@@ -46,25 +49,22 @@ public class Connect4CmdLineParser {
 			verifier = new RandomGameVerifier(new Connect4GameState(
 					cmdLineParser.width, cmdLineParser.height,
 					cmdLineParser.inARow), cmdLineParser.database,
-					cmdLineParser.out);
+					cmdLineParser.out, cmdLineParser.stateCount);
 			break;
 		case BACKTRACK:
 			verifier = new BacktrackGameVerifier(new Connect4GameState(
 					cmdLineParser.width, cmdLineParser.height,
 					cmdLineParser.inARow), cmdLineParser.database,
-					cmdLineParser.out);
+					cmdLineParser.out, cmdLineParser.stateCount);
 			break;
 		default:
 			throw new IllegalArgumentException("Invalid verifier name: "
 					+ cmdLineParser.verifier);
 		}
 
-		ProgressBar progressBar = new ProgressBar(10000);
-		
 		while (verifier.hasNext()) {
 			try {
-				progressBar.updateNumElements(verifier.getStateCount());
-				progressBar.printStatus();
+				verifier.printStatusBar();
 				verifier.next();
 				if (!verifier.verifyGameState()) {
 					System.out.println("Incorrect Value: "
@@ -72,10 +72,11 @@ public class Connect4CmdLineParser {
 							+ " Current Game State: "
 							+ verifier.getCurrentState());
 				} else {
-/*					System.out.println("Correct Value: "
-							+ verifier.getCurrentValue()
-							+ " Current Game State: "
-							+ verifier.getCurrentState());*/
+					/*
+					 * System.out.println("Correct Value: " +
+					 * verifier.getCurrentValue() + " Current Game State: " +
+					 * verifier.getCurrentState());
+					 */
 				}
 			} catch (IOException e) {
 				System.err.println(e.getMessage());
@@ -84,7 +85,7 @@ public class Connect4CmdLineParser {
 			}
 		}
 		
-		progressBar.finish();
+		verifier.printStatusBar();
 	}
 
 	private boolean doMain(String[] args) {
@@ -120,7 +121,7 @@ public class Connect4CmdLineParser {
 		}
 
 		// this will redirect the output to the specified output
-//		System.out.println(out);
+		// System.out.println(out);
 		return true;
 	}
 

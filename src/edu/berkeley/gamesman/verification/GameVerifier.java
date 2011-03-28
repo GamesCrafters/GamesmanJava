@@ -27,9 +27,15 @@ public abstract class GameVerifier implements Iterator<GameState> {
 	protected Database db;
 	protected TierGame mGame;
 	protected DatabaseHandle dbHandle;
+	protected ProgressBar progressBar;
+	
+	/**
+	 * The number of <tt>GameState</tt> to verify.
+	 */
+	protected final int totalStateCount;
 	protected int stateCount;
 	
-	protected GameVerifier(GameState initialGameState, String database, File out) {
+	protected GameVerifier(GameState initialGameState, String database, File out, int stateTotalCount) {
 		this.initialGameState = initialGameState;
 		try {
 			db = Database.openDatabase(database);
@@ -42,6 +48,8 @@ public abstract class GameVerifier implements Iterator<GameState> {
 		Configuration conf = db.conf;
 
 		mGame = (TierGame) conf.getGame();
+		this.totalStateCount = stateTotalCount;
+		progressBar = new ProgressBar(stateTotalCount);
 	}
 
 	public GameState getInitialGameState() {
@@ -157,7 +165,8 @@ public abstract class GameVerifier implements Iterator<GameState> {
 		return getValueOfState(currentGameState.getBoardString());
 	}
 	
-	public int getStateCount() {
-		return stateCount;
-	}
+	/**
+	 * Prints the current progress.
+	 */
+	public abstract void printStatusBar();
 }
