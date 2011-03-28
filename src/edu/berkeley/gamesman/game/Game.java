@@ -83,6 +83,7 @@ public abstract class Game<S extends State> {
 	/**
 	 * Applies move to pos
 	 * 
+	 * @deprecated
 	 * @param pos
 	 *            The State on which to apply move
 	 * @param move
