@@ -27,7 +27,7 @@ public class TierCutDatabase extends Database {
 				reading, writing);
 		myTierGame = (TierGame) conf.getGame();
 		deleteLastRow = true;
-		numTiersCut = 1;
+		numTiersCut = 2;
 	}
 
 
@@ -134,13 +134,30 @@ public class TierCutDatabase extends Database {
 		int numOfTiers = game.numberOfTiers();
 		//long lastTierHashes = game.numHashesForTier(numOfTiers - 1);
 		// TODO Auto-generated method stub
-		int amountChange = 0;
+		long amountChange = 0;
 		for (int i = 0; i < numOfTiers; i++ ) {
 			if (!shouldBeInDatabase(i)) {
 				amountChange += game.numHashesForTier(i);
 			}
 		}
 		return numRecords + amountChange; 
+	}
+	
+	public static long getFakeNumRecords(long firstRecord, long numRecords,
+			TierGame game) {
+		int numOfTiers = game.numberOfTiers();
+		//long lastTierHashes = game.numHashesForTier(numOfTiers - 1);
+		// TODO Auto-generated method stub
+		long amountChange = 0;
+		for (int i = 0; i < numOfTiers; i++ ) {
+			if (!shouldBeInDatabase(i)) {
+				//System.out.println("On tier" + i + "and removing" + game.numHashesForTier(i) );
+				amountChange += game.numHashesForTier(i);
+			}
+		}
+		//System.out.println("num records " + numRecords);
+		//System.out.println("amount change " + amountChange);
+		return numRecords - amountChange; 
 	}
 
 	private static boolean shouldBeInDatabase(int tier) {
@@ -229,7 +246,7 @@ public class TierCutDatabase extends Database {
 		int numOfTiers = ((TierGame)conf.getGame()).numberOfTiers();
 		//long lastTierHashes = game.numHashesForTier(numOfTiers - 1);
 		// TODO Auto-generated method stub
-		int amountChange = 0;
+		long amountChange = 0;
 		for (int i = 0; i < numOfTiers; i++ ) {
 			if (!shouldBeInDatabase(i, ((TierGame)conf.getGame()))) {
 				amountChange += ((TierGame)conf.getGame()).numHashesForTier(i);
