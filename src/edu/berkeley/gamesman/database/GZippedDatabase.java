@@ -189,7 +189,10 @@ public abstract class GZippedDatabase extends Database {
 						len = entrySize;
 					}
 					long byteIndex = firstByteIndex + thisByte;
+					if (j > 0)
+						Util.awaitUninterruptibly(memoryAcquired[j - 1]);
 					memoryChunks.acquireUninterruptibly(3);
+					memoryAcquired[j].countDown();
 					/*
 					 * If I were to instead acquire the permits separately
 					 * (acquire, read, acquire, write), then I could have
@@ -227,6 +230,7 @@ public abstract class GZippedDatabase extends Database {
 		private final Semaphore memoryChunks;
 		private final int nThreads;
 		private final CountDownLatch[] threadsFinished;
+		private final CountDownLatch[] memoryAcquired;
 		private final ZipChunkOutputStream[] streams;
 		private final Database readFrom;
 		private final GZippedDatabase writeTo;
@@ -246,6 +250,7 @@ public abstract class GZippedDatabase extends Database {
 					Math.max(3, availableMem / entrySize));
 			memoryChunks = new Semaphore(permits);
 			// No deadlock because newFixedThreadPool is a queue
+			memoryAcquired = new CountDownLatch[writeTo.numEntries];
 			threadsFinished = new CountDownLatch[writeTo.numEntries];
 			streams = new ZipChunkOutputStream[writeTo.numEntries];
 			this.readFrom = readFrom;
@@ -280,6 +285,7 @@ public abstract class GZippedDatabase extends Database {
 			ExecutorService zipperService = Executors
 					.newFixedThreadPool(nThreads);
 			for (int i = 0; i < writeTo.numEntries; i++) {
+				memoryAcquired[i] = new CountDownLatch(1);
 				threadsFinished[i] = new CountDownLatch(1);
 				zipperService.submit(new ZipRunner(i));
 			}
