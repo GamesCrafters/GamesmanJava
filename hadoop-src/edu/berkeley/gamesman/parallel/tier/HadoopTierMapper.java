@@ -77,6 +77,20 @@ public class HadoopTierMapper extends
 	@Override
 	public void map(Range key, IntWritable value, final Context context)
 			throws IOException {
+		long firstHash = key.firstRecord;
+		long numHashes = key.numRecords;
+		if (numHashes == 0)
+			return;
+		else if (numHashes < 0)
+			throw new Error("Negative number of hashes");
+		String foldUri = conf.getProperty("gamesman.hadoop.dbfolder");
+		String uri = foldUri + File.separator + "s" + tier + "_" + firstHash
+				+ ".db";
+		Path p = new Path(uri);
+		if (fs.exists(p)) {
+			writeRange(key, context, p);
+			return;
+		}
 		String solverName = this.conf.getProperty("gamesman.solver");
 		Class<? extends TierSolver> solverc;
 		try {
@@ -86,18 +100,9 @@ public class HadoopTierMapper extends
 		} catch (ClassNotFoundException e1) {
 			throw new Error(e1);
 		}
-		long firstHash = key.firstRecord;
-		long numHashes = key.numRecords;
-		if (numHashes == 0)
-			return;
-		else if (numHashes < 0)
-			throw new Error("Negative number of hashes");
 
 		// setting write database file name, path etc and initializing it*******
-		String foldUri = conf.getProperty("gamesman.hadoop.dbfolder");
 		new File(foldUri).mkdirs();
-		String uri = foldUri + File.separator + "s" + tier + "_" + firstHash
-				+ ".db";
 		unzippedURI = uri + ".uz_local";
 		Database writeDb = new FileDatabase(unzippedURI, conf, firstHash,
 				numHashes, true, true);
@@ -140,11 +145,9 @@ public class HadoopTierMapper extends
 		writeDb.close();
 		new File(unzippedURI).delete();
 		unzippedURI = null;
-		Path p;
 		final Path pLocal;
 		pLocal = new Path(zippedURI);
 		final Path tempPath = new Path(uri + r.nextLong());
-		p = new Path(uri);
 		if (!fs.exists(p)) {
 			final Thread mt = Thread.currentThread();
 			Thread t = new Thread() {
@@ -177,6 +180,11 @@ public class HadoopTierMapper extends
 			fs.rename(tempPath, p);
 		}
 		zippedURI = null;
+		writeRange(key, context, p);
+	}
+
+	private void writeRange(Range key, final Context context, Path p)
+			throws IOException, Error {
 		FileStatus finalFile = fs.getFileStatus(p);
 		try {
 			context.write(new IntWritable(tier), new RangeFile(key, finalFile));
