@@ -3,19 +3,31 @@ package edu.berkeley.gamesman.util;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.zip.GZIPOutputStream;
+import edu.berkeley.gamesman.util.GZIPOutputStream;
+import edu.berkeley.gamesman.util.qll.Factory;
+import edu.berkeley.gamesman.util.qll.Pool;
 
 public class ZipChunkOutputStream extends FilterOutputStream {
 	private final ChunkOutputStream cos;
-	private final int bufferSize;
+	private final Pool<byte[]> bytePool;
 	private GZIPOutputStream gzos;
 	private boolean bytesWritten;
 
-	public ZipChunkOutputStream(OutputStream out, int bufferSize)
+	public ZipChunkOutputStream(OutputStream out, final int bufferSize)
 			throws IOException {
 		super(new ChunkOutputStream(out));
-		this.bufferSize = bufferSize;
 		cos = (ChunkOutputStream) this.out;
+		bytePool = new Pool<byte[]>(new Factory<byte[]>() {
+
+			@Override
+			public byte[] newObject() {
+				return new byte[bufferSize];
+			}
+
+			@Override
+			public void reset(byte[] t) {
+			}
+		});
 		startChunk();
 	}
 
@@ -46,7 +58,7 @@ public class ZipChunkOutputStream extends FilterOutputStream {
 	}
 
 	private void startChunk() throws IOException {
-		gzos = new GZIPOutputStream(cos, bufferSize);
+		gzos = new GZIPOutputStream(cos, bytePool);
 		bytesWritten = false;
 	}
 
