@@ -137,20 +137,6 @@ public abstract class GZippedDatabase extends Database {
 	private static class Zipper {
 		private final Pool<ZipChunkOutputStream> chunkerPool = new Pool<ZipChunkOutputStream>(
 				new Factory<ZipChunkOutputStream>() {
-					private Pool<byte[]> bytePool = new Pool<byte[]>(
-							new Factory<byte[]>() {
-
-								@Override
-								public byte[] newObject() {
-									return new byte[entrySize];
-								}
-
-								@Override
-								public void reset(byte[] t) {
-								}
-
-							});
-
 					@Override
 					public ZipChunkOutputStream newObject() {
 						try {
@@ -194,15 +180,6 @@ public abstract class GZippedDatabase extends Database {
 			@Override
 			public void run() {
 				try {
-					DatabaseHandle readDh = readFrom.getHandle(true);
-					long thisByte = j * (long) entrySize;
-					int len;
-					if (j == writeTo.numEntries - 1) {
-						len = (int) (numBytes - thisByte);
-					} else {
-						len = entrySize;
-					}
-					long byteIndex = firstByteIndex + thisByte;
 					if (j > 0)
 						Util.awaitUninterruptibly(memoryAcquired[j - 1]);
 					memoryChunks.acquireUninterruptibly(3);
@@ -213,6 +190,15 @@ public abstract class GZippedDatabase extends Database {
 					 * deadlock if all threads use up the permits reading and no
 					 * one is able to write
 					 */
+					DatabaseHandle readDh = readFrom.getHandle(true);
+					long thisByte = j * (long) entrySize;
+					int len;
+					if (j == writeTo.numEntries - 1) {
+						len = (int) (numBytes - thisByte);
+					} else {
+						len = entrySize;
+					}
+					long byteIndex = firstByteIndex + thisByte;
 					byte[] entryBytes = bytePool.get();
 					ZipChunkOutputStream chunker = chunkerPool.get();
 					try {
