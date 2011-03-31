@@ -15,9 +15,7 @@ public class ZipChunkOutputStream extends FilterOutputStream {
 
 	public ZipChunkOutputStream(OutputStream out, final int bufferSize)
 			throws IOException {
-		super(new ChunkOutputStream(out));
-		cos = (ChunkOutputStream) this.out;
-		bytePool = new Pool<byte[]>(new Factory<byte[]>() {
+		this(out, new Pool<byte[]>(new Factory<byte[]>() {
 
 			@Override
 			public byte[] newObject() {
@@ -27,7 +25,14 @@ public class ZipChunkOutputStream extends FilterOutputStream {
 			@Override
 			public void reset(byte[] t) {
 			}
-		});
+		}));
+	}
+
+	public ZipChunkOutputStream(OutputStream out, Pool<byte[]> bytePool)
+			throws IOException {
+		super(new ChunkOutputStream(out));
+		cos = (ChunkOutputStream) this.out;
+		this.bytePool = bytePool;
 		startChunk();
 	}
 

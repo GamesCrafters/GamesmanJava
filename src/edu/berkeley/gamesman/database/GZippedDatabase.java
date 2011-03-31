@@ -137,11 +137,25 @@ public abstract class GZippedDatabase extends Database {
 	private static class Zipper {
 		private final Pool<ZipChunkOutputStream> chunkerPool = new Pool<ZipChunkOutputStream>(
 				new Factory<ZipChunkOutputStream>() {
+					private Pool<byte[]> bytePool = new Pool<byte[]>(
+							new Factory<byte[]>() {
+
+								@Override
+								public byte[] newObject() {
+									return new byte[entrySize];
+								}
+
+								@Override
+								public void reset(byte[] t) {
+								}
+
+							});
+
 					@Override
 					public ZipChunkOutputStream newObject() {
 						try {
 							return new ZipChunkOutputStream(writeTo.writer,
-									entrySize);
+									bytePool);
 						} catch (IOException e) {
 							throw new Error(e);
 						}
