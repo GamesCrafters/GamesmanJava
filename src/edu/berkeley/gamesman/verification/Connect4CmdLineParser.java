@@ -17,7 +17,7 @@ public class Connect4CmdLineParser {
 	private String database;
 
 	@Option(name = "-o", usage = "log output to this file")
-	private File out;
+	private String outputFileName;
 
 	@Option(name = "-v", usage = "type of verifier")
 	private String verifier;
@@ -27,6 +27,7 @@ public class Connect4CmdLineParser {
 
 	// receives other command line parameters than options
 	@Argument
+	
 	private List<String> arguments = new ArrayList<String>();
 
 	public static void main(String args[]) {
@@ -37,12 +38,12 @@ public class Connect4CmdLineParser {
 		switch (GameVerifierType.fromString(cmdLineParser.verifier)) {
 		case RANDOM:
 			verifier = new RandomGameVerifier(Connect4GameState.class,
-					cmdLineParser.database, cmdLineParser.out,
+					cmdLineParser.database, cmdLineParser.outputFileName,
 					cmdLineParser.stateCount);
 			break;
 		case BACKTRACK:
 			verifier = new BacktrackGameVerifier(Connect4GameState.class,
-					cmdLineParser.database, cmdLineParser.out,
+					cmdLineParser.database, cmdLineParser.outputFileName,
 					cmdLineParser.stateCount);
 			break;
 		default:
@@ -55,10 +56,11 @@ public class Connect4CmdLineParser {
 				verifier.printStatusBar();
 				verifier.next();
 				if (!verifier.verifyGameState()) {
-					System.out.println("Incorrect Value: "
+					verifier.writeIncorrectStateToFile();
+					/*System.out.println("Incorrect Value: "
 							+ verifier.getCurrentValue()
 							+ " Current Game State: "
-							+ verifier.getCurrentState());
+							+ verifier.getCurrentState());*/
 				} else {
 					/*
 					 * System.out.println("Correct Value: " +
@@ -74,6 +76,9 @@ public class Connect4CmdLineParser {
 		}
 
 		verifier.printStatusBar();
+		verifier.printIncorrectStateSummary();
+		verifier.writeIncorrectStatesSummaryToFile();
+		verifier.closeOutputFile();
 	}
 
 	private boolean doMain(String[] args) {

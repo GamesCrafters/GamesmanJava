@@ -33,8 +33,8 @@ public class BacktrackGameVerifier extends GameVerifier {
 	private boolean mChecked;
 
 	public BacktrackGameVerifier(Class<? extends GameState> stateClass,
-			String database, File out, int stateTotalCount) {
-		super(stateClass, database, out, stateTotalCount);
+			String database, String outputFileName, int stateTotalCount) {
+		super(stateClass, database, outputFileName, stateTotalCount);
 		previousMoves = new Stack<List<Move>>();
 	}
 
@@ -93,11 +93,4 @@ public class BacktrackGameVerifier extends GameVerifier {
 		stateCount++;
 		return currentGameState;
 	}
-
-	@Override
-	public void printStatusBar() {
-		if (stateCount % 10000 == 0 || !mHasNext)
-			System.out.println("Verified " + stateCount + " states");
-	}
-
 }

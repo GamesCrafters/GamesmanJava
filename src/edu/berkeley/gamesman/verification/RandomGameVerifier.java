@@ -13,8 +13,8 @@ import java.util.Random;
 public class RandomGameVerifier extends GameVerifier {
 
 	public RandomGameVerifier(Class<? extends GameState> stateClass,
-			String database, File out, int stateTotalCount) {
-		super(stateClass, database, out, stateTotalCount);
+			String database, String outputFileName, int stateTotalCount) {
+		super(stateClass, database, outputFileName, stateTotalCount);
 	}
 
 	@Override
@@ -42,14 +42,5 @@ public class RandomGameVerifier extends GameVerifier {
 		}
 		this.stateCount++;
 		return toReturn;
-	}
-
-	@Override
-	public void printStatusBar() {
-		progressBar.updateNumElements(stateCount);
-		progressBar.printStatus();
-		if (stateCount == totalStateCount) {
-			progressBar.finish();
-		}
 	}
 }

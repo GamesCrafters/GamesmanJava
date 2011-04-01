@@ -1,7 +1,9 @@
 package edu.berkeley.gamesman.verification;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 
@@ -24,6 +26,8 @@ import edu.berkeley.gamesman.game.util.TierState;
 public abstract class GameVerifier implements Iterator<GameState> {
 
 	protected Class<? extends GameState> stateClass;
+	private RandomAccessFile outFile;
+	private long incorrectStatesCount;
 	protected GameState currentGameState;
 	protected Database db;
 	protected Configuration conf;
@@ -38,7 +42,7 @@ public abstract class GameVerifier implements Iterator<GameState> {
 	protected int stateCount;
 
 	protected GameVerifier(Class<? extends GameState> stateClass,
-			String database, File out, int stateTotalCount) {
+			String database, String outputFileName, int stateTotalCount) {
 		this.stateClass = stateClass;
 		try {
 			db = Database.openDatabase(database);
@@ -50,14 +54,27 @@ public abstract class GameVerifier implements Iterator<GameState> {
 		dbHandle = db.getHandle(true);
 		conf = db.conf;
 
-		mGame = (TierGame) conf.getGame();
+		try {
+			this.outFile = new RandomAccessFile(new File(outputFileName), "rw");
+		} catch (FileNotFoundException e) {
+			System.err.println(e.getMessage());
+			System.err.println("Cannot find file: " + outFile.toString());
+			System.exit(1);
+		}
+
+//		this.incorrectStates = new HashSet<GameState>();
+		this.mGame = (TierGame) conf.getGame();
 		this.totalStateCount = stateTotalCount;
-		progressBar = new ProgressBar(stateTotalCount);
+		this.progressBar = new ProgressBar(stateTotalCount);
+
+		// Write header to outFile to save room for update
+		writeIncorrectStatesSummaryToFile();
 	}
 
 	public GameState getInitialGameState() {
 		try {
-			return stateClass.getConstructor(Configuration.class).newInstance(conf);
+			return stateClass.getConstructor(Configuration.class).newInstance(
+					conf);
 		} catch (IllegalArgumentException e) {
 			throw new Error(e);
 		} catch (SecurityException e) {
@@ -90,16 +107,12 @@ public abstract class GameVerifier implements Iterator<GameState> {
 		else
 			calculatedValue = calculateValueOfCurrentState();
 
-		/*
-		 * if (dbValue != calculatedValue) {
-		 * System.out.println("Calculated Value: " + calculatedValue);
-		 * System.out.println("DB Value: " + dbValue); }
-		 */
+		if (dbValue != calculatedValue) {
+//			incorrectStates.add(currentGameState);
+			incorrectStatesCount++;
+		}
 
-		// if (currentGameState.isPrimitive() && dbValue != calculatedValue)
-		// System.out.println("derp");
 		return dbValue == calculatedValue;
-
 	}
 
 	/**
@@ -188,8 +201,74 @@ public abstract class GameVerifier implements Iterator<GameState> {
 		return getValueOfState(currentGameState.getBoardString());
 	}
 
-	/**
-	 * Prints the current progress.
+	/*
+	 * PRINTING AND WRITING METHODS
 	 */
-	public abstract void printStatusBar();
+
+	public void printStatusBar() {
+		if (stateCount % 10000 == 0 || hasNext())
+			System.out.println("Verified " + stateCount + " states");
+	}
+
+	/**
+	 * Prints the incorrect states summary (width, height, and number of
+	 * incorrect states) to standard out.
+	 */
+	public void printIncorrectStateSummary() {
+		System.out.println("Width: "
+				+ conf.getInteger("gamesman.game.width", 7) + " Height: "
+				+ conf.getInteger("gamesman.game.height", 6));
+		System.out.println("Incorrect States: " + incorrectStatesCount);
+	}
+
+	/**
+	 * Writes the value of the current incorrect GameState and the String
+	 * representation of the current incorrect GameState to the output file.
+	 */
+	public void writeIncorrectStateToFile() {
+		// Write current GameState to outFile
+		try {
+			outFile.write(("Incorrect Value: "
+					+ getValueOfState(currentGameState.getBoardString())
+							.toString() + " Current Game State: "
+					+ currentGameState.toString() + '\n').getBytes());
+		} catch (IOException e) {
+			System.err.println(e.getMessage());
+			System.err.println("Cannot write to file: " + outFile.toString());
+			System.exit(1);
+		}
+	}
+
+	/**
+	 * Write the incorrect states summary (width, height, and number of
+	 * incorrect states) to the output file.
+	 */
+	public void writeIncorrectStatesSummaryToFile() {
+		try {
+			outFile.seek(0);
+			outFile.write(("Width: "
+					+ +conf.getInteger("gamesman.game.width", 7) + " Height: " + conf
+					.getInteger("gamesman.game.height", 6)).getBytes());
+			outFile.write(("Incorrect States: " + incorrectStatesCount + '\n')
+					.getBytes());
+		} catch (IOException e) {
+			System.err.println(e.getMessage());
+			System.err.println("Cannot write to file: " + outFile.toString());
+			System.exit(1);
+		}
+	}
+
+	/**
+	 * Closes the output file.
+	 */
+	public void closeOutputFile() {
+		try {
+			outFile.close();
+		} catch (IOException e) {
+			System.err.println(e.getMessage());
+			System.err.println("Cannot close file: " + outFile.toString());
+			System.exit(1);
+		}
+	}
+
 }
