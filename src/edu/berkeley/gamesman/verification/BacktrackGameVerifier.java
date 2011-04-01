@@ -32,9 +32,9 @@ public class BacktrackGameVerifier extends GameVerifier {
 	 */
 	private boolean mChecked;
 
-	public BacktrackGameVerifier(GameState gameState, String database,
-			File out, int stateTotalCount) {
-		super(gameState, database, out, stateTotalCount);
+	public BacktrackGameVerifier(Class<? extends GameState> stateClass,
+			String database, File out, int stateTotalCount) {
+		super(stateClass, database, out, stateTotalCount);
 		previousMoves = new Stack<List<Move>>();
 	}
 
@@ -90,13 +90,14 @@ public class BacktrackGameVerifier extends GameVerifier {
 					"Called next() without called hasNext()");
 		mChecked = false;
 
+		stateCount++;
 		return currentGameState;
 	}
 
 	@Override
 	public void printStatusBar() {
-		// TODO Auto-generated method stub
-		
+		if (stateCount % 10000 == 0 || !mHasNext)
+			System.out.println("Verified " + stateCount + " states");
 	}
 
 }

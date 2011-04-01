@@ -2,6 +2,7 @@ package edu.berkeley.gamesman.verification;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 
 import edu.berkeley.gamesman.core.Configuration;
@@ -22,21 +23,23 @@ import edu.berkeley.gamesman.game.util.TierState;
  */
 public abstract class GameVerifier implements Iterator<GameState> {
 
-	private final GameState initialGameState;
+	protected Class<? extends GameState> stateClass;
 	protected GameState currentGameState;
 	protected Database db;
+	protected Configuration conf;
 	protected TierGame mGame;
 	protected DatabaseHandle dbHandle;
 	protected ProgressBar progressBar;
-	
+
 	/**
 	 * The number of <tt>GameState</tt> to verify.
 	 */
 	protected final int totalStateCount;
 	protected int stateCount;
-	
-	protected GameVerifier(GameState initialGameState, String database, File out, int stateTotalCount) {
-		this.initialGameState = initialGameState;
+
+	protected GameVerifier(Class<? extends GameState> stateClass,
+			String database, File out, int stateTotalCount) {
+		this.stateClass = stateClass;
 		try {
 			db = Database.openDatabase(database);
 		} catch (IOException e1) {
@@ -45,7 +48,7 @@ public abstract class GameVerifier implements Iterator<GameState> {
 			throw new RuntimeException(e1);
 		}
 		dbHandle = db.getHandle(true);
-		Configuration conf = db.conf;
+		conf = db.conf;
 
 		mGame = (TierGame) conf.getGame();
 		this.totalStateCount = stateTotalCount;
@@ -53,7 +56,21 @@ public abstract class GameVerifier implements Iterator<GameState> {
 	}
 
 	public GameState getInitialGameState() {
-		return initialGameState.clone();
+		try {
+			return stateClass.getConstructor(Configuration.class).newInstance(conf);
+		} catch (IllegalArgumentException e) {
+			throw new Error(e);
+		} catch (SecurityException e) {
+			throw new Error(e);
+		} catch (InstantiationException e) {
+			throw new Error(e);
+		} catch (IllegalAccessException e) {
+			throw new Error(e);
+		} catch (InvocationTargetException e) {
+			throw new Error(e.getCause());
+		} catch (NoSuchMethodException e) {
+			throw new Error(e);
+		}
 	}
 
 	/**
@@ -72,14 +89,15 @@ public abstract class GameVerifier implements Iterator<GameState> {
 			calculatedValue = currentGameState.getValue();
 		else
 			calculatedValue = calculateValueOfCurrentState();
-		
-/*		if (dbValue != calculatedValue) {
-			System.out.println("Calculated Value: " + calculatedValue);
-			System.out.println("DB Value: " + dbValue);
-		}*/
 
-//		if (currentGameState.isPrimitive() && dbValue != calculatedValue)
-//			System.out.println("derp");
+		/*
+		 * if (dbValue != calculatedValue) {
+		 * System.out.println("Calculated Value: " + calculatedValue);
+		 * System.out.println("DB Value: " + dbValue); }
+		 */
+
+		// if (currentGameState.isPrimitive() && dbValue != calculatedValue)
+		// System.out.println("derp");
 		return dbValue == calculatedValue;
 
 	}
@@ -94,7 +112,7 @@ public abstract class GameVerifier implements Iterator<GameState> {
 		assert (!currentGameState.isPrimitive());
 
 		Iterator<String> childrenStringIterator = currentGameState
-		.generateChildren();
+				.generateChildren();
 
 		Value bestValueSoFar = Value.LOSE;
 
@@ -105,17 +123,22 @@ public abstract class GameVerifier implements Iterator<GameState> {
 
 			switch (childValue) {
 			case TIE:
-		/*		System.out.println("TIE CHILD!");
-				System.out.println(childString);*/
+				/*
+				 * System.out.println("TIE CHILD!");
+				 * System.out.println(childString);
+				 */
 				bestValueSoFar = Value.TIE;
 				break;
 			case LOSE:
-				/*System.out.println("LOSE CHILD!");
-				System.out.println(childString);*/
+				/*
+				 * System.out.println("LOSE CHILD!");
+				 * System.out.println(childString);
+				 */
 				return Value.WIN;
-			/*case WIN:
-				System.out.println("WIN CHILD!");
-				System.out.println(childString);*/
+				/*
+				 * case WIN: System.out.println("WIN CHILD!");
+				 * System.out.println(childString);
+				 */
 			}
 		}
 
@@ -154,7 +177,7 @@ public abstract class GameVerifier implements Iterator<GameState> {
 	@Override
 	public void remove() {
 		throw new UnsupportedOperationException(
-		"GameVerifier does not support remove");
+				"GameVerifier does not support remove");
 	}
 
 	public GameState getCurrentState() {
@@ -164,7 +187,7 @@ public abstract class GameVerifier implements Iterator<GameState> {
 	public Value getCurrentValue() {
 		return getValueOfState(currentGameState.getBoardString());
 	}
-	
+
 	/**
 	 * Prints the current progress.
 	 */

@@ -13,16 +13,6 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 public class Connect4CmdLineParser {
-
-	@Option(name = "-w", usage = "width of game")
-	private int width;
-
-	@Option(name = "-h", usage = "height of game")
-	private int height;
-
-	@Option(name = "-n", usage = "number in a row to win")
-	private int inARow;
-
 	@Option(name = "-d", usage = "database file")
 	private String database;
 
@@ -46,16 +36,14 @@ public class Connect4CmdLineParser {
 		GameVerifier verifier;
 		switch (GameVerifierType.fromString(cmdLineParser.verifier)) {
 		case RANDOM:
-			verifier = new RandomGameVerifier(new Connect4GameState(
-					cmdLineParser.width, cmdLineParser.height,
-					cmdLineParser.inARow), cmdLineParser.database,
-					cmdLineParser.out, cmdLineParser.stateCount);
+			verifier = new RandomGameVerifier(Connect4GameState.class,
+					cmdLineParser.database, cmdLineParser.out,
+					cmdLineParser.stateCount);
 			break;
 		case BACKTRACK:
-			verifier = new BacktrackGameVerifier(new Connect4GameState(
-					cmdLineParser.width, cmdLineParser.height,
-					cmdLineParser.inARow), cmdLineParser.database,
-					cmdLineParser.out, cmdLineParser.stateCount);
+			verifier = new BacktrackGameVerifier(Connect4GameState.class,
+					cmdLineParser.database, cmdLineParser.out,
+					cmdLineParser.stateCount);
 			break;
 		default:
 			throw new IllegalArgumentException("Invalid verifier name: "
@@ -84,7 +72,7 @@ public class Connect4CmdLineParser {
 				System.exit(1);
 			}
 		}
-		
+
 		verifier.printStatusBar();
 	}
 

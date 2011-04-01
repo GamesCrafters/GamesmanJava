@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Value;
 
 /**
@@ -36,6 +37,12 @@ public class Connect4GameState extends GameState {
 	 */
 	private int[] nextRowPositions;
 
+	public Connect4GameState(Configuration conf) {
+		this(conf.getInteger("gamesman.game.width", 7), conf.getInteger(
+				"gamesman.game.height", 6), conf.getInteger(
+				"gamesman.game.pieces", 4));
+	}
+
 	/**
 	 * Constructs a <tt>Connect4GameState</tt> at its initial position with the
 	 * given width and height.
@@ -47,7 +54,7 @@ public class Connect4GameState extends GameState {
 	 * @param primitivePieceCount
 	 *            the number of pieces in a row needed to win.
 	 */
-	public Connect4GameState(int width, int height, int primitivePieceCount) {
+	private Connect4GameState(int width, int height, int primitivePieceCount) {
 		this.width = width;
 		this.height = height;
 		this.inARow = primitivePieceCount;
@@ -65,11 +72,11 @@ public class Connect4GameState extends GameState {
 	public Iterator<String> generateChildren() {
 		Set<String> childrenPositions = new HashSet<String>();
 		List<Move> moves = generateMoves();
-		
+
 		if (isPrimitive && moves.size() > 0) {
 			throw new IllegalStateException("GameState is primitive with moves");
 		}
-		
+
 		for (Move move : moves) {
 			Connect4Move connect4Move = (Connect4Move) move;
 			int columnIndex = connect4Move.ordinal();

@@ -12,9 +12,9 @@ import java.util.Random;
  */
 public class RandomGameVerifier extends GameVerifier {
 
-	public RandomGameVerifier(GameState gameState, String database, File out,
-			int stateTotalCount) {
-		super(gameState, database, out, stateTotalCount);
+	public RandomGameVerifier(Class<? extends GameState> stateClass,
+			String database, File out, int stateTotalCount) {
+		super(stateClass, database, out, stateTotalCount);
 	}
 
 	@Override
