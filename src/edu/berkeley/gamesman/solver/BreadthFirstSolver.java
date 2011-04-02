@@ -202,13 +202,13 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 			});
 
 	@Override
-	public Runnable nextAvailableJob() {
+	public Runnable nextAvailableJob() throws InterruptedException{
 		if (!firstTaskReturned) {
 			firstTaskReturned = true;
 			return new BreadthFirstInitializeTask();
 		}
 		if (currentSplit >= splits.length - 1 || !firstTaskFinished) {
-			Util.awaitUninterruptibly(tasksFinished);
+			tasksFinished.await();
 			if (positionsFound == 0)
 				return null;
 			if (firstTaskFinished || finitePrimitives)

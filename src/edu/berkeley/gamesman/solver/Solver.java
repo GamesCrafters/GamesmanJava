@@ -28,8 +28,10 @@ public abstract class Solver {
 			try {
 				inner.run();
 			} catch (Throwable t) {
-				t.printStackTrace();
-				System.exit(-1);
+				if (failed == null) {
+					failed = t;
+					mainThread.interrupt();
+				}
 			}
 		}
 
@@ -42,9 +44,12 @@ public abstract class Solver {
 	public static final long DEFAULT_MIN_SPLIT_SIZE = 1L << 12;
 	public static final long DEFAULT_PREFERRED_SPLIT_SIZE = 1L << 23;
 	protected final int nThreads;
+	private volatile Throwable failed = null;
+	private Thread mainThread;
 
 	protected Database db;
 	protected Configuration conf;
+	private ExecutorService solverService;
 
 	/**
 	 * Set the Database to use for this solver
@@ -58,7 +63,7 @@ public abstract class Solver {
 		nThreads = conf.getInteger("gamesman.threads", 1);
 	}
 
-	private final Runnable getNextJob() {
+	private final Runnable getNextJob() throws InterruptedException {
 		Runnable nextJob = nextAvailableJob();
 		if (nextJob == null)
 			return null;
@@ -66,16 +71,36 @@ public abstract class Solver {
 			return new RunWrapper(nextJob);
 	}
 
-	public abstract Runnable nextAvailableJob();
+	/**
+	 * Returns the next job which must be executed before completing the solve.
+	 * This method may block while waiting for other jobs to finish.
+	 * 
+	 * @return The next job necessary to solve this game or null if all jobs
+	 *         have been returned already
+	 * @throws InterruptedException
+	 *             If the thread is interrupted while waiting.
+	 */
+	public abstract Runnable nextAvailableJob() throws InterruptedException;
 
+	/**
+	 * Starts solving the game using a FixedThreadPool
+	 */
 	public final void solve() {
 		System.out.println("Beginning solve for " + conf.getGame().describe()
 				+ " using " + getClass().getSimpleName());
 		long startTime = System.currentTimeMillis();
-		ExecutorService solverService = Executors.newFixedThreadPool(nThreads);
+		mainThread = Thread.currentThread();
+		solverService = Executors.newFixedThreadPool(nThreads);
 		Runnable nextJob = null;
 		while (true) {
-			nextJob = getNextJob();
+			try {
+				nextJob = getNextJob();
+			} catch (InterruptedException e) {
+				if (failed == null)
+					failed = e;
+			}
+			if (failed != null)
+				error();
 			if (nextJob == null)
 				break;
 			else
@@ -86,10 +111,18 @@ public abstract class Solver {
 			try {
 				solverService.awaitTermination(20, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				if (failed == null)
+					failed = e;
 			}
+			if (failed != null)
+				error();
 		}
 		System.out.println("Solve completed in "
 				+ Util.millisToETA(System.currentTimeMillis() - startTime));
+	}
+
+	private void error() throws Error {
+		solverService.shutdownNow();
+		throw new Error(failed);
 	}
 }

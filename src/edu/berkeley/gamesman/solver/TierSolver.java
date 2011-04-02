@@ -15,6 +15,11 @@ import edu.berkeley.gamesman.util.qll.Pool;
 import edu.berkeley.gamesman.util.qll.Factory;
 
 /**
+ * A tier solver solves a TierGame by taking advantage of its tier structure. It
+ * solves each tier in sequence starting from the highest-indexed tier and
+ * working backwards to the beginning of the game. This solver is particularly
+ * useful because of how easily it can be parallelized.
+ * 
  * @author DNSpies
  */
 public class TierSolver extends Solver {
@@ -212,11 +217,11 @@ public class TierSolver extends Solver {
 	}
 
 	@Override
-	public Runnable nextAvailableJob() {
+	public Runnable nextAvailableJob() throws InterruptedException {
 		if (currentSplit >= splits.length - 1) {
 			if (currentTier == 0 || !wholeGame)
 				return null;
-			Util.awaitUninterruptibly(tasksFinished);
+			tasksFinished.await();
 			decrTier();
 		}
 		return nextJob();

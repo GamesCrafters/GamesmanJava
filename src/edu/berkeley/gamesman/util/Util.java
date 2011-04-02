@@ -594,17 +594,4 @@ public final class Util {
 		}
 		return splits;
 	}
-
-	public static void awaitUninterruptibly(CountDownLatch cdl) {
-		boolean interrupted;
-		do {
-			interrupted = false;
-			try {
-				cdl.await();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-				interrupted = true;
-			}
-		} while (interrupted);
-	}
 }

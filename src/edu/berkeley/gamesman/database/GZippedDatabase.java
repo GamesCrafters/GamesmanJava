@@ -17,6 +17,13 @@ import edu.berkeley.gamesman.util.ZipChunkOutputStream;
 import edu.berkeley.gamesman.util.qll.Factory;
 import edu.berkeley.gamesman.util.qll.Pool;
 
+/**
+ * A GZippedDatabase contains bytes GZipped in chunks. Subclasses need only
+ * instantiate the reader and writer arguments to the constructor. These should
+ * not already be GZipped, the GZippedDatabase will wrap them appropriately.
+ * 
+ * @author dnspies
+ */
 public abstract class GZippedDatabase extends Database {
 	private long currentByteIndex;
 	private long remaining;
@@ -181,8 +188,8 @@ public abstract class GZippedDatabase extends Database {
 			public void run() {
 				try {
 					if (j > 0)
-						Util.awaitUninterruptibly(memoryAcquired[j - 1]);
-					memoryChunks.acquireUninterruptibly(3);
+						memoryAcquired[j - 1].await();
+					memoryChunks.acquire(3);
 					memoryAcquired[j].countDown();
 					/*
 					 * If I were to instead acquire the permits separately
@@ -217,8 +224,10 @@ public abstract class GZippedDatabase extends Database {
 					bytePool.release(entryBytes);
 					memoryChunks.release();
 				} catch (Throwable t) {
-					t.printStackTrace();
-					System.exit(-1);
+					if (failed == null) {
+						failed = t;
+						mainThread.interrupt();
+					}
 				}
 			}
 		}
@@ -236,6 +245,8 @@ public abstract class GZippedDatabase extends Database {
 		private final GZippedDatabase writeTo;
 		private final Progressable progress;
 		private volatile long lastProgressPoint = 0;
+		private volatile Throwable failed = null;
+		private Thread mainThread;
 
 		public Zipper(Configuration conf, final Database readFrom,
 				final GZippedDatabase writeTo, Progressable progress) {
@@ -282,19 +293,29 @@ public abstract class GZippedDatabase extends Database {
 		public void run() throws IOException {
 			System.out.println("Started zipping");
 			long startTime = System.currentTimeMillis();
+			mainThread = Thread.currentThread();
 			ExecutorService zipperService = Executors
 					.newFixedThreadPool(nThreads);
 			for (int i = 0; i < writeTo.numEntries; i++) {
 				memoryAcquired[i] = new CountDownLatch(1);
 				threadsFinished[i] = new CountDownLatch(1);
 				zipperService.submit(new ZipRunner(i));
+				if (failed != null)
+					throw new Error(failed);
 			}
 			zipperService.shutdown();
 			long bytesWritten = 0L;
 			long lastStep = 0;
 			for (int i = 0; i < writeTo.numEntries; i++) {
 				writeTo.entryTable[i] = writeTo.writer.getFilePointer();
-				Util.awaitUninterruptibly(threadsFinished[i]);
+				try {
+					threadsFinished[i].await();
+				} catch (InterruptedException e) {
+					if (failed == null)
+						failed = e;
+				}
+				if (failed != null)
+					throw new Error(failed);
 				streams[i].nextChunk();
 				chunkerPool.release(streams[i]);
 				memoryChunks.release(2);
@@ -306,6 +327,8 @@ public abstract class GZippedDatabase extends Database {
 					}
 				}
 			}
+			if (failed != null)
+				throw new Error(failed);
 			System.out.println("Zipped in "
 					+ Util.millisToETA(System.currentTimeMillis() - startTime));
 		}

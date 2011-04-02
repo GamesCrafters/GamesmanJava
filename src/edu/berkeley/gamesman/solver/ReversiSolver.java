@@ -74,11 +74,11 @@ public class ReversiSolver extends TierSolver {
 	private long halfTier;
 
 	@Override
-	public Runnable nextAvailableJob() {
+	public Runnable nextAvailableJob() throws InterruptedException {
 		if (currentSplit >= splits.length - 1) {
 			if (fixJob && currentTier == 0)
 				return null;
-			Util.awaitUninterruptibly(tasksFinished);
+			tasksFinished.await();
 			if (fixJob) {
 				fixJob = false;
 				decrTier();
