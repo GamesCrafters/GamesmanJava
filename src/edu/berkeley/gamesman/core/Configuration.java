@@ -161,7 +161,7 @@ public final class Configuration {
 		return s;
 	}
 
-	protected String getPropertyOrNull(String key) {
+	private String getPropertyOrNull(String key) {
 		return props.getProperty(key);
 	}
 
@@ -377,8 +377,10 @@ public final class Configuration {
 	/**
 	 * Skips over the configuration at the beginning of a database
 	 * 
-	 * @param is
-	 *            Generally the FileInputStream for the database file
+	 * @param in
+	 *            Generally, a DataInputStream wrapping the FileInputStream for
+	 *            the database file
+	 * @return The number of bytes skipped
 	 * @throws IOException
 	 *             If an IOException occurs
 	 */
@@ -391,12 +393,9 @@ public final class Configuration {
 	/**
 	 * Stores this configuration in the output stream
 	 * 
-	 * @param os
-	 *            An OutputStream to store to
-	 * @param dbType
-	 *            The class of the database (Use db.getClass().getName())
-	 * @param uri
-	 *            The location of the database
+	 * @param out
+	 *            An DataOutput to store to
+	 * @return The number of bytes written to the DataOutput
 	 * @throws IOException
 	 *             If an IOException occurs while writing
 	 */
@@ -410,8 +409,8 @@ public final class Configuration {
 	}
 
 	/**
-	 * @param is
-	 *            An input stream to load from
+	 * @param in
+	 *            An DataInput to load the Configuration from
 	 * @return A configuration object loaded from the input stream
 	 * @throws IOException
 	 *             If an IOException occurs while reading
@@ -426,16 +425,37 @@ public final class Configuration {
 		return new Configuration(props);
 	}
 
-	public static Configuration deserialize(String s) throws IOException,
-			ClassNotFoundException {
+	/**
+	 * Loads the Configuration from a serialized string
+	 * 
+	 * @param s
+	 *            The string
+	 * @return The loaded configuration
+	 * @throws ClassNotFoundException
+	 *             If the configuration contains a class name which is not in
+	 *             Gamesman Java
+	 */
+	public static Configuration deserialize(String s)
+			throws ClassNotFoundException {
 		Properties props = new Properties();
-		props.load(new StringReader(s));
+		try {
+			props.load(new StringReader(s));
+		} catch (IOException e) {
+			throw new Error(e);
+		}
 		return new Configuration(props);
 	}
 
-	public String serialize() throws IOException {
+	/**
+	 * @return This configuration object serialized as a string
+	 */
+	public String serialize() {
 		StringWriter writer = new StringWriter();
-		props.store(writer, "");
+		try {
+			props.store(writer, "");
+		} catch (IOException e) {
+			throw new Error(e);
+		}
 		return writer.toString();
 	}
 
@@ -446,6 +466,17 @@ public final class Configuration {
 		return confBytes;
 	}
 
+	/**
+	 * Parses a property as a number of bytes. The string is a number possibly
+	 * followed by a letter to indicate the scale (ie "5k" = 5*2^10, "13g" =
+	 * 13*2^30, "284" = 284)
+	 * 
+	 * @param key
+	 *            The property name
+	 * @param defaultValue
+	 *            The default to return if the key is not present
+	 * @return The retrieved number of bytes as a long
+	 */
 	public long getNumBytes(String key, long defaultValue) {
 		String value = getPropertyOrNull(key);
 		if (value == null)

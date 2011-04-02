@@ -20,18 +20,58 @@ import edu.berkeley.gamesman.util.Util;
  */
 public abstract class Database implements Flushable, Closeable {
 
+	/**
+	 * The configuration object corresponding to this database (may have been
+	 * loaded from the database file or used to create the database object)
+	 */
 	public final Configuration conf;
 
+	/**
+	 * Whether or not reading is enabled for this database
+	 */
 	public final boolean reading;
 
+	/**
+	 * Whether or not writing is enabled for this database. In some cases, a
+	 * database can only be either reading or writing, but not both. Then
+	 * writing = true takes precedence over reading = true
+	 */
 	public final boolean writing;
 
+	/**
+	 * The database logic used to convert between record indices and byte
+	 * indices
+	 */
 	public final DatabaseLogic myLogic;
 
+	/**
+	 * The index of the first record contained in this database
+	 */
 	public final long firstRecordIndex;
 
+	/**
+	 * The total number of records contained in this database
+	 */
 	public final long numRecords;
 
+	/**
+	 * Note: If both writing and reading are enabled, it is still generally
+	 * assumed that you will be ignoring and/or overwriting any database file
+	 * which may have previously been stored in its place. To read from an
+	 * existing file, the database must be initialized as read only (or else the
+	 * child class must have a specialized constructor)
+	 * 
+	 * @param conf
+	 *            The configuration object corresponding to this database
+	 * @param firstRecordIndex
+	 *            The index of the first record contained in this database
+	 * @param numRecords
+	 *            The total number of records contained in this database
+	 * @param reading
+	 *            Whether or not reading is enabled for this database
+	 * @param writing
+	 *            Whether or not writing is enabled for this database.
+	 */
 	public Database(Configuration conf, long firstRecordIndex, long numRecords,
 			boolean reading, boolean writing) {
 		this.conf = conf;
@@ -44,19 +84,52 @@ public abstract class Database implements Flushable, Closeable {
 		this.numRecords = numRecords;
 	}
 
+	/**
+	 * DatabaseHandles are necessary to perform all major database operations. A
+	 * DatabaseHandle contains information which must be duplicated for each
+	 * thread intending to access the database (so don't share handles across
+	 * threads!)
+	 * 
+	 * @param reading
+	 *            true = This handle is for reading, false = This handle is for
+	 *            writing
+	 * @return A handle to be used to access this database
+	 */
 	public DatabaseHandle getHandle(boolean reading) {
 		assert reading ? this.reading : this.writing;
 		return new DatabaseHandle(myLogic.recordBytes, reading);
 	}
 
+	/**
+	 * @return The index of the first byte contained in this database as a
+	 *         function of the index of the first record
+	 */
 	protected final long firstByteIndex() {
 		return myLogic.getByteIndex(firstRecordIndex);
 	}
 
+	/**
+	 * @return The number of bytes contained in this database as a function of
+	 *         the number of records
+	 */
 	protected final long numBytes() {
 		return myLogic.getNumBytes(numRecords);
 	}
 
+	/**
+	 * Prepares a database handle for reading a particular range of bytes. You
+	 * should make sure to read the entire range as system resources may be left
+	 * open if you stop in the middle or fail to finish.
+	 * 
+	 * @param dh
+	 *            The handle which will be used for reading
+	 * @param firstByteIndex
+	 *            The index of the first byte to be read
+	 * @param numBytes
+	 *            The number of bytes to be read
+	 * @throws IOException
+	 *             If an IOException occurs during preparation
+	 */
 	public final void prepareReadRange(DatabaseHandle dh, long firstByteIndex,
 			long numBytes) throws IOException {
 		assert reading;
@@ -70,10 +143,40 @@ public abstract class Database implements Flushable, Closeable {
 		lowerPrepareReadRange(dh, firstByteIndex, numBytes);
 	}
 
+	/**
+	 * Subclasses may override this method to add additional instructions when
+	 * preparing to read a range of records. This method should not be called
+	 * directly. Call prepareReadRange instead.
+	 * 
+	 * @see #prepareReadRange
+	 * 
+	 * @param dh
+	 *            The handle which will be used for reading
+	 * @param firstByteIndex
+	 *            The index of the first byte to be read
+	 * @param numBytes
+	 *            The number off bytes to be read
+	 * @throws IOException
+	 *             If an IOException occurs during preparation
+	 */
 	protected void lowerPrepareReadRange(DatabaseHandle dh,
 			long firstByteIndex, long numBytes) throws IOException {
 	}
 
+	/**
+	 * Prepares a database handle for writing a particular range of bytes. You
+	 * should make sure to write the entire range as system resources may be left
+	 * open (or bytes may be left in a buffer) if you stop in the middle or fail to finish.
+	 * 
+	 * @param dh
+	 *            The handle which will be used for writing
+	 * @param firstByteIndex
+	 *            The index of the first byte to be written
+	 * @param numBytes
+	 *            The number of bytes to be written
+	 * @throws IOException
+	 *             If an IOException occurs during preparation
+	 */
 	public final void prepareWriteRange(DatabaseHandle dh, long firstByteIndex,
 			long numBytes) throws IOException {
 		assert writing;
@@ -87,6 +190,22 @@ public abstract class Database implements Flushable, Closeable {
 		lowerPrepareWriteRange(dh, firstByteIndex, numBytes);
 	}
 
+	/**
+	 * Subclasses may override this method to add additional instructions when
+	 * preparing to write a range of records. This method should not be called
+	 * directly. Call prepareWriteRange instead.
+	 * 
+	 * @see #prepareWriteRange
+	 * 
+	 * @param dh
+	 *            The handle which will be used for writing
+	 * @param firstByteIndex
+	 *            The index of the first byte to be written
+	 * @param numBytes
+	 *            The number of bytes to be written
+	 * @throws IOException
+	 *             If an IOException occurs during preparation
+	 */
 	protected void lowerPrepareWriteRange(DatabaseHandle dh,
 			long firstByteIndex, long numBytes) throws IOException {
 	}

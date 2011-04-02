@@ -34,9 +34,9 @@ public class JSONInterface extends GamesmanApplication {
 	public JSONInterface() {
 	}
 
-	Properties serverConf;
+	private Properties serverConf;
 
-	Map<String, Pair<Configuration, Database>> loadedConfigurations = new HashMap<String, Pair<Configuration, Database>>();
+	private Map<String, Pair<Configuration, Database>> loadedConfigurations = new HashMap<String, Pair<Configuration, Database>>();
 
 	@Override
 	public int run(Properties props) {
@@ -111,7 +111,7 @@ public class JSONInterface extends GamesmanApplication {
 	 * db; ji.reallyRun(port); }
 	 */
 
-	static String sanitise(String val) {
+	private static String sanitise(String val) {
 		val = val.replace('.', '-');
 		val = val.replace('\\', '-');
 		val = val.replace('/', '-');
@@ -122,8 +122,8 @@ public class JSONInterface extends GamesmanApplication {
 		}
 	}
 
-	Pair<Configuration, Database> newLoadDatabase(Map<String, String> params,
-			String game) {
+	private Pair<Configuration, Database> newLoadDatabase(
+			Map<String, String> params, String game) {
 		/*
 		 * String game = params.get("game"); if (game == null) { return null; }
 		 */
@@ -156,7 +156,7 @@ public class JSONInterface extends GamesmanApplication {
 		return cPair;
 	}
 
-	synchronized Pair<Configuration, Database> addDatabase(
+	private synchronized Pair<Configuration, Database> addDatabase(
 			Map<String, String> params, String game, String filename) {
 		String dbPath = serverConf.getProperty("json.databasedirectory", "");
 		if (dbPath != null && dbPath.length() > 0) {

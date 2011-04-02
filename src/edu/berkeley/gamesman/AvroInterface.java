@@ -33,9 +33,9 @@ public class AvroInterface extends GamesmanApplication {
 	public AvroInterface() {
 	}
 
-	Properties serverConf;
+	private Properties serverConf;
 
-	Map<String, Pair<Configuration, Database>> loadedConfigurations = new HashMap<String, Pair<Configuration, Database>>();
+	private Map<String, Pair<Configuration, Database>> loadedConfigurations = new HashMap<String, Pair<Configuration, Database>>();
 
 	private URI apiServer;
 
@@ -131,7 +131,7 @@ public class AvroInterface extends GamesmanApplication {
 	 * db; ji.reallyRun(port); }
 	 */
 
-	static String sanitise(CharSequence orig) {
+	private static String sanitise(CharSequence orig) {
 		String val = orig.toString();
 		val = val.replace('.', '-');
 		val = val.replace('\\', '-');
@@ -143,7 +143,7 @@ public class AvroInterface extends GamesmanApplication {
 		}
 	}
 
-	Pair<Configuration, Database> newLoadDatabase(
+	private Pair<Configuration, Database> newLoadDatabase(
 			Map<CharSequence, CharSequence> params, CharSequence game) {
 		/*
 		 * String game = params.get("game"); if (game == null) { return null; }
@@ -174,7 +174,7 @@ public class AvroInterface extends GamesmanApplication {
 		return cPair;
 	}
 
-	synchronized Pair<Configuration, Database> addDatabase(
+	private synchronized Pair<Configuration, Database> addDatabase(
 			Map<CharSequence, CharSequence> params, CharSequence game,
 			String filename) {
 		String dbPath = serverConf.getProperty("json.databasedirectory", "");

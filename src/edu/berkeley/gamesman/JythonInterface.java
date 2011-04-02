@@ -36,8 +36,8 @@ public final class JythonInterface extends GamesmanApplication {
 		while (console == null) {
 			System.out.println("Available consoles:");
 			for (int i = 0; i < Consoles.values().length; i++)
-				System.out.printf("\t%d. %s\n", i, Consoles.values()[i]
-						.toString());
+				System.out.printf("\t%d. %s\n", i,
+						Consoles.values()[i].toString());
 			System.out.print("What console would you like to use? ");
 			BufferedReader br = new BufferedReader(new InputStreamReader(
 					System.in));
@@ -93,9 +93,8 @@ public final class JythonInterface extends GamesmanApplication {
 	 * 
 	 * @param args
 	 *            program args
-	 * @throws Throwable
 	 */
-	public static void main(String[] args) throws Throwable {
+	public static void main(String[] args) {
 		String[] newArgs = new String[args.length + 1];
 		newArgs[0] = "JythonInterface";
 		System.arraycopy(args, 0, newArgs, 1, args.length);
