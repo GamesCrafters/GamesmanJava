@@ -16,13 +16,29 @@ import edu.berkeley.gamesman.hasher.QuartoMinorHasher;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
 
+/**
+ * Quarto: There are 16 unique pieces with 4 binary features. Players alternate
+ * playing a piece and picking up a piece which the opponent must play next. A
+ * player wins when they complete a set of four pieces in a row which share any
+ * one feature. The game state is only distinguishable up to logical symmetries
+ * (ie (0110 1101) = (0000 1011) = (0000 0111))
+ * 
+ * @author dnspies
+ */
 public class Quarto extends TierGame {
 	private final DartboardHasher majorHasher = new DartboardHasher(16, ' ',
 			'P');
 	private final ChangedIterator myChanged = new ChangedIterator(16);
 	private final QuartoMinorHasher minorHasher = new QuartoMinorHasher();
 	private int tier;
+	/**
+	 * The 4x4 board of pieces.
+	 */
 	public final Piece[][] pieces;
+	/**
+	 * A 1-dimensional array containing the same pieces as pieces, but in
+	 * row-major order
+	 */
 	public final Piece[] placeList;
 	private final int[] places = new int[16];
 	private final long[] majorChildren = new long[16];
