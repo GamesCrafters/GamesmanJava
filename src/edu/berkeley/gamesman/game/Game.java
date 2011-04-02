@@ -378,13 +378,20 @@ public abstract class Game<S extends State> {
 	}
 
 	/**
-	 * @param recordArray
-	 *            An array of records
+	 * Finds the "best" record in a set and returns it.
+	 * 
+	 * @param records
+	 *            An array of record objects
+	 * @param firstRecord
+	 *            The first element of the array to consider
+	 * @param numRecords
+	 *            The total number of records to consider
 	 * @return The record with the best possible outcome
 	 */
-	public Record combine(Record[] records, int numRecords) {
-		Record best = records[0];
-		for (int i = 1; i < numRecords; i++) {
+	public Record combine(Record[] records, int firstRecord, int numRecords) {
+		Record best = records[firstRecord];
+		int lastRecord = firstRecord + numRecords;
+		for (int i = firstRecord + 1; i < lastRecord; i++) {
 			if (records[i].compareTo(best) > 0)
 				best = records[i];
 		}
@@ -392,12 +399,15 @@ public abstract class Game<S extends State> {
 	}
 
 	/**
-	 * @param recordArray
+	 * Equivalent to combine(records, 0, records.length)
+	 * 
+	 * @param records
 	 *            An array of records
 	 * @return The record with the best possible outcome
+	 * @see #combine(Record[], int, int)
 	 */
 	public Record combine(Record[] records) {
-		return combine(records, records.length);
+		return combine(records, 0, records.length);
 	}
 
 	public boolean hasValue() {

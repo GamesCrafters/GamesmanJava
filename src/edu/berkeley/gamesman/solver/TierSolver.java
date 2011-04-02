@@ -92,6 +92,14 @@ public class TierSolver extends Solver {
 				}
 		}
 
+		/**
+		 * Calculates the children of the current state and fetches them from
+		 * the database. It then flips, combines them and sets the passed record
+		 * to the "best" of the children.
+		 * 
+		 * @param currentValue
+		 *            The record to store the result in
+		 */
 		protected void evaluateAndFetchChildren(Record currentValue) {
 			int numChildren = myGame.validMoves(childStates);
 			for (int i = 0; i < numChildren; i++) {
@@ -100,12 +108,28 @@ public class TierSolver extends Solver {
 							myGame.stateToHash(childStates[i]));
 					myGame.longToRecord(childStates[i], recordLong,
 							childRecords[i]);
-					childRecords[i].previousPosition();
 				} catch (IOException e) {
 					throw new Error(e);
 				}
 			}
-			currentValue.set(myGame.combine(childRecords, numChildren));
+			currentValue.set(combineChildren(numChildren));
+		}
+
+		/**
+		 * Takes the list of children from childRecords and the number of
+		 * children and flips and combines them to generate the corresponding
+		 * record for the current position. Note that this method flips the
+		 * children as well as choosing one
+		 * 
+		 * @param numChildren
+		 *            The number of children to consider (starting from index 0)
+		 * @return The best record (after flipping)
+		 */
+		protected Record combineChildren(int numChildren) {
+			for (int i = 0; i < numChildren; i++) {
+				childRecords[i].previousPosition();
+			}
+			return myGame.combine(childRecords, 0, numChildren);
 		}
 
 		protected void store(long recordIndex, Record currentValue) {
@@ -151,7 +175,8 @@ public class TierSolver extends Solver {
 		currentTier = myGame.numberOfTiers();
 		minSplits = conf.getInteger("gamesman.minimum.splits",
 				conf.getInteger("gamesman.threads", 1));
-		minSplitSize = conf.getLong("gamesman.minimum.split.size", DEFAULT_MIN_SPLIT_SIZE);
+		minSplitSize = conf.getLong("gamesman.minimum.split.size",
+				DEFAULT_MIN_SPLIT_SIZE);
 		preferredSplitSize = conf.getLong("gamesman.preferred.split.size",
 				DEFAULT_PREFERRED_SPLIT_SIZE);
 		wholeGame = true;
@@ -172,7 +197,8 @@ public class TierSolver extends Solver {
 		currentTier = tier;
 		minSplits = conf.getInteger("gamesman.minimum.splits",
 				conf.getInteger("gamesman.threads", 1));
-		minSplitSize = conf.getLong("gamesman.minimum.split.size", DEFAULT_MIN_SPLIT_SIZE);
+		minSplitSize = conf.getLong("gamesman.minimum.split.size",
+				DEFAULT_MIN_SPLIT_SIZE);
 		preferredSplitSize = conf.getLong("gamesman.preferred.split.size",
 				DEFAULT_PREFERRED_SPLIT_SIZE);
 		this.firstHash = firstHash;
