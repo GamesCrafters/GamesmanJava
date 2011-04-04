@@ -23,6 +23,11 @@ import edu.berkeley.gamesman.util.qll.Factory;
  * @author DNSpies
  */
 public class TierSolver extends Solver {
+	/**
+	 * A TierSolveTask solves a single portion of a tier of a game.
+	 * 
+	 * @author dnspies
+	 */
 	protected class TierSolveTask implements Runnable {
 		protected final long firstRecordIndex, numRecords;
 		protected final DatabaseHandle myReadHandle, myWriteHandle;
@@ -63,17 +68,21 @@ public class TierSolver extends Solver {
 			}
 		}
 
+		/**
+		 * Solves the prepared portion of the game. This method contains the
+		 * "main" for loop for a tier solve. Anything calling this method need
+		 * not be particularly efficient. Anything this method calls must be as
+		 * efficient as possible.
+		 */
 		public void solvePartialTier() {
 			long hash = firstRecordIndex;
-			int modCount = 0;
+			int lastCount = (int) (firstRecordIndex % Solver.STEP_SIZE);
+			int modCount = lastCount;
 			for (long trial = 0; trial < numRecords; trial++) {
 				if (modCount == Solver.STEP_SIZE) {
-					if (progress != null)
-						synchronized (progress) {
-							progress.progress();
-						}
-					addFinished(modCount);
+					addFinished(modCount - lastCount);
 					modCount = 0;
+					lastCount = 0;
 				}
 				myGame.getState(currentState);
 				Value v = myGame.primitiveValue();
@@ -90,11 +99,7 @@ public class TierSolver extends Solver {
 				hash++;
 				modCount++;
 			}
-			addFinished(modCount);
-			if (progress != null)
-				synchronized (progress) {
-					progress.progress();
-				}
+			addFinished(modCount - lastCount);
 		}
 
 		/**
@@ -193,6 +198,10 @@ public class TierSolver extends Solver {
 		Util.debug(DebugFacility.SOLVER, (wholeGame ? "Tier " + currentTier
 				+ " " : "")
 				+ recordsFinished * 10000 / numHashes / 100F + "% complete");
+		if (progress != null)
+			synchronized (progress) {
+				progress.progress();
+			}
 	}
 
 	public TierSolver(Configuration conf, Database db, int tier,
