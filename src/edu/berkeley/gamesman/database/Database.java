@@ -165,8 +165,9 @@ public abstract class Database implements Flushable, Closeable {
 
 	/**
 	 * Prepares a database handle for writing a particular range of bytes. You
-	 * should make sure to write the entire range as system resources may be left
-	 * open (or bytes may be left in a buffer) if you stop in the middle or fail to finish.
+	 * should make sure to write the entire range as system resources may be
+	 * left open (or bytes may be left in a buffer) if you stop in the middle or
+	 * fail to finish.
 	 * 
 	 * @param dh
 	 *            The handle which will be used for writing
@@ -210,6 +211,25 @@ public abstract class Database implements Flushable, Closeable {
 			long firstByteIndex, long numBytes) throws IOException {
 	}
 
+	/**
+	 * Reads a range of bytes from the database into the array. prepareReadRange
+	 * must have been called on the handle first so it knows where to start
+	 * reading from.
+	 * 
+	 * @param dh
+	 *            The handle to use for reading
+	 * @param array
+	 *            The array to read into
+	 * @param off
+	 *            The offset into the array to start at
+	 * @param maxLen
+	 *            The maximum number of bytes to read (fewer bytes may be read
+	 *            if the end of the prepared range is reached or for other
+	 *            reasons)
+	 * @return The number of bytes actually read
+	 * @throws IOException
+	 *             If an IOException occurs while reading
+	 */
 	protected final int readBytes(DatabaseHandle dh, byte[] array, int off,
 			int maxLen) throws IOException {
 		int actualNum;
@@ -230,11 +250,53 @@ public abstract class Database implements Flushable, Closeable {
 		return read;
 	}
 
+	/**
+	 * Subclasses may override this method to specify how to read an already
+	 * prepared range of bytes. If so, the other readBytes which takes in a
+	 * location can just be implemented to throw an
+	 * UnsupportedOperationException
+	 * 
+	 * @see #readBytes(DatabaseHandle, long, byte[], int, int)
+	 * 
+	 * @param dh
+	 *            The handle to use for reading
+	 * @param array
+	 *            The array to read into
+	 * @param off
+	 *            The offset into the array to start at
+	 * @param len
+	 *            The maximum number of bytes to read (fewer bytes may be read
+	 *            if the end of the prepared range is reached or for other
+	 *            reasons)
+	 * @return The number of bytes actually read
+	 * @throws IOException
+	 *             If an IOException occurs while reading
+	 */
 	protected int lowerReadBytes(DatabaseHandle dh, byte[] array, int off,
 			int len) throws IOException {
 		return readBytes(dh, dh.location, array, off, len);
 	}
 
+	/**
+	 * This method reads a range of bytes from the database into an array. This
+	 * range need not necessarily have been prepared already (although the
+	 * default implementation of lowerReadBytes calls this method, so it may
+	 * have)
+	 * 
+	 * @param dh
+	 *            The handle to use for reading
+	 * @param location
+	 *            The location in the database to start reading from
+	 * @param array
+	 *            The array to read to
+	 * @param off
+	 *            The index into the array to start at
+	 * @param len
+	 *            The maximum number of bytes to read (fewer bytes may be read)
+	 * @return The number of bytes actually read
+	 * @throws IOException
+	 *             If an IOException occurs while reading
+	 */
 	protected abstract int readBytes(DatabaseHandle dh, long location,
 			byte[] array, int off, int len) throws IOException;
 
