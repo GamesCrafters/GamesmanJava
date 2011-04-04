@@ -16,6 +16,11 @@ import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.solver.Solver;
 import edu.berkeley.gamesman.util.Util;
 
+/**
+ * An input format which deals with ranges of positions for a game
+ * 
+ * @author dnspies
+ */
 public class Input extends InputFormat<Range, IntWritable> {
 	public class Reader extends RecordReader<Range, IntWritable> {
 		private final IntWritable ZERO = new IntWritable(0);
@@ -79,8 +84,17 @@ public class Input extends InputFormat<Range, IntWritable> {
 		return getSplits(conf, firstHash, numHashes);
 	}
 
+	/**
+	 * @param conf
+	 *            The configuration object
+	 * @param firstHash
+	 *            The first hash of the range to be solved
+	 * @param numHashes
+	 *            The number of hashes to be solved
+	 * @return A list of disjointed splits which cover the range of hashes
+	 */
 	public List<InputSplit> getSplits(Configuration conf, long firstHash,
-			long numHashes) throws IOException {
+			long numHashes) {
 		edu.berkeley.gamesman.core.Configuration gamesmanConf;
 		try {
 			gamesmanConf = edu.berkeley.gamesman.core.Configuration
