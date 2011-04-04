@@ -52,39 +52,79 @@ public class LoopyDatabaseCreationMapper extends
 		try {
 			long rangeStart = rangeToMap.firstRecord;
 			long numRecords = rangeToMap.numRecords;
+			
 			String outputName = "range" + rangeStart + "to"
 					+ (rangeStart + numRecords - 1);
+			
 			FileDatabase db = new FileDatabase(outputName, conf, rangeStart,
 					numRecords, false, true);
 			// create local db to be filled in
-
+			
 			Record impossible = game.newRecord();
 			impossible.value = Value.IMPOSSIBLE;
 			DatabaseHandle dh = db.getHandle(false);
 			db.fill(dh, game.recordToLong(null, impossible));
 			db.close();
 			// fill in all records to have value impossible(unreachable)
-
+			
 			Path localFile = new Path(outputName);
+			
 			Path tempHDFSName = new Path(dbFolder, outputName + "_"
 					+ random.nextLong());
 			fs.copyFromLocalFile(localFile, tempHDFSName);
 			// create a temp file on hdfs with the records using a
 			// random in the filename to avoid collision
-
+			
 			Path hdfsName = new Path(dbFolder, outputName);
 			fs.rename(tempHDFSName, hdfsName);// rename hdfs file
-
+			
 			File dbFile = new File(outputName);
 			dbFile.delete();// delete local shit
-
+			
 			context.write(new IntWritable(0),
 					new RangeFile(rangeToMap, fs.getFileStatus(hdfsName)));// output
-
 		} catch (IOException e) {
 			throw new Error(e);
 		} catch (InterruptedException ie) {
 			throw new Error(ie);
 		}
+	}
+
+	private String createDBFiles(Range rangeToMap, Context context)
+			throws IOException, InterruptedException {
+		long rangeStart = rangeToMap.firstRecord;
+		long numRecords = rangeToMap.numRecords;
+		
+		String outputName = "range" + rangeStart + "to"
+				+ (rangeStart + numRecords - 1);
+		
+		FileDatabase db = new FileDatabase(outputName, conf, rangeStart,
+				numRecords, false, true);
+		// create local db to be filled in
+
+		Record impossible = game.newRecord();
+		impossible.value = Value.IMPOSSIBLE;
+		DatabaseHandle dh = db.getHandle(false);
+		db.fill(dh, game.recordToLong(null, impossible));
+		db.close();
+		// fill in all records to have value impossible(unreachable)
+
+		Path localFile = new Path(outputName);
+		
+		Path tempHDFSName = new Path(dbFolder, outputName + "_"
+				+ random.nextLong());
+		fs.copyFromLocalFile(localFile, tempHDFSName);
+		// create a temp file on hdfs with the records using a
+		// random in the filename to avoid collision
+
+		Path hdfsName = new Path(dbFolder, outputName);
+		fs.rename(tempHDFSName, hdfsName);// rename hdfs file
+
+		File dbFile = new File(outputName);
+		dbFile.delete();// delete local shit
+
+		context.write(new IntWritable(0),
+				new RangeFile(rangeToMap, fs.getFileStatus(hdfsName)));// output
+		return outputName;
 	}
 }
