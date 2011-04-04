@@ -45,7 +45,7 @@ public class C4Cache extends TierCache {
 		long childHash = game.stateToHash(child);
 		if (ranges[place].containsRecord(childHash))
 			return childHash;
-		long addHash = Math.min(db.myLogic.getNumRecords(memPerChild) * 2,
+		long addHash = Math.min(db.recordsForBytes(memPerChild) * 2,
 				game.numHashesForTier(currentPosition.tier)
 						- currentPosition.hash);
 		long lastChild;

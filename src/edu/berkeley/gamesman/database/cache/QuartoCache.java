@@ -82,7 +82,7 @@ public class QuartoCache extends TierCache {
 				Integer.MAX_VALUE);
 		int minorIndex = getMinorInsertionPlace(place);
 		long[] range = minorHasher.getCache(minorIndex,
-				db.myLogic.getNumRecords(availableIntMemory));
+				db.recordsForBytes(availableIntMemory));
 		if (range == null)
 			return false;
 		else {
@@ -128,7 +128,7 @@ public class QuartoCache extends TierCache {
 				Integer.MAX_VALUE);
 		int minorIndex = getMinorInsertionPlace(place);
 		long[] range = minorHasher.getCache(minorIndex, piece,
-				db.myLogic.getNumRecords(availableIntMemory));
+				db.recordsForBytes(availableIntMemory));
 		if (range == null)
 			return false;
 		else {
@@ -142,8 +142,7 @@ public class QuartoCache extends TierCache {
 		int availableIntMemory = (int) Math.min(availableMemory,
 				Integer.MAX_VALUE);
 		long currentMajorChild = majorHasher.nextChild(' ', 'P', place);
-		int availableMajor = (int) (db.myLogic
-				.getNumRecords(availableIntMemory) / minorHasher
+		int availableMajor = (int) (db.recordsForBytes(availableIntMemory) / minorHasher
 				.numHashesForTier());
 		if (availableMajor == 0)
 			return false;

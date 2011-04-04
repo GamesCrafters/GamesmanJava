@@ -565,7 +565,21 @@ public abstract class Database implements Flushable, Closeable {
 		return 20 + confLength;
 	}
 
+	/**
+	 * @param numRecords
+	 *            The number of records which need to be stored
+	 * @return The number of bytes required to store numRecords records
+	 */
 	public long getNumBytes(long numRecords) {
 		return myLogic.getNumBytes(numRecords);
+	}
+
+	/**
+	 * @param numBytes
+	 *            The number of bytes available
+	 * @return The number of records which can be stored in numBytes bytes
+	 */
+	public long recordsForBytes(long numBytes) {
+		return myLogic.getNumRecords(numBytes);
 	}
 }

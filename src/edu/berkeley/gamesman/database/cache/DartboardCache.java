@@ -55,7 +55,7 @@ public class DartboardCache extends TierCache {
 		long childHash = game.stateToHash(child);
 		if (ranges[place].containsRecord(childHash))
 			return childHash;
-		long addHash = Math.min(db.myLogic.getNumRecords(memPerChild) * 2,
+		long addHash = Math.min(db.recordsForBytes(memPerChild) * 2,
 				hasher.numHashes() - currentPosition.hash);
 		long lastChild;
 		do {

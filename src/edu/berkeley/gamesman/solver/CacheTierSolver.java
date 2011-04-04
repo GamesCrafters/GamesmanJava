@@ -35,7 +35,7 @@ public class CacheTierSolver extends TierSolver {
 		memPerThread = conf.getNumBytes("gamesman.memory", 1L << 25) / nThreads;
 		readMem = memPerThread / 2;
 		writeMem = memPerThread / 2;
-		writeRecords = db.myLogic.getNumRecords(memPerThread / 2);
+		writeRecords = db.recordsForBytes(memPerThread / 2);
 	}
 
 	/**
@@ -62,7 +62,7 @@ public class CacheTierSolver extends TierSolver {
 		memPerThread = conf.getNumBytes("gamesman.memory", 1L << 25) / nThreads;
 		readMem = memPerThread / 2;
 		writeMem = memPerThread / 2;
-		writeRecords = db.myLogic.getNumRecords(memPerThread / 2);
+		writeRecords = db.recordsForBytes(memPerThread / 2);
 	}
 
 	/**
