@@ -42,8 +42,8 @@ public class Rubik extends TwistyPuzzle<CubeState> {
 	public String describe() {
 		return String.format(
 				"%dx%dx%d cuboid (legal faces: %s, legal dirs: %s)", WIDTH,
-				HEIGHT, DEPTH, Arrays.toString(VALID_FACES), Arrays
-						.toString(VALID_DIRS));
+				HEIGHT, DEPTH, Arrays.toString(VALID_FACES),
+				Arrays.toString(VALID_DIRS));
 	}
 
 	@Override
@@ -360,6 +360,7 @@ class CubeState implements State {
 		return cube_string;
 	}
 
+	@Override
 	public void set(State s) {
 		if (s instanceof CubeState) {
 			CubeState cs = (CubeState) s;
@@ -371,8 +372,13 @@ class CubeState implements State {
 			throw new Error("Type mismatch");
 	}
 
-	public boolean equals(CubeState other) {
-		return Arrays.equals(pieces, other.pieces)
-				&& Arrays.equals(orientations, other.orientations);
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof CubeState) {
+			CubeState other = (CubeState) o;
+			return Arrays.equals(pieces, other.pieces)
+					&& Arrays.equals(orientations, other.orientations);
+		} else
+			return false;
 	}
 }

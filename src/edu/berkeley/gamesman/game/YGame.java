@@ -119,14 +119,15 @@ public final class YGame extends ConnectGame
                     + this.triangle + ", Index:" + this.index);
         }
 
-        /**
-         * @param theNode
-         * @return
-         */
-        public boolean equals(final Node theNode) 
-        {
-            return ((this.triangle == theNode.getTriangle()) && (this.index == theNode.getIndex()));
-        }
+		@Override
+		public boolean equals(Object other) {
+			if (other instanceof Node) {
+				Node theNode = (Node) other;
+				return ((this.triangle == theNode.getTriangle()) && (this.index == theNode
+						.getIndex()));
+			} else
+				return false;
+		}
 
         public char getChar(){
         	return get(totalIndex);

@@ -271,6 +271,7 @@ class PyraminxState implements State {
 			return false;
 	}
 
+	@Override
 	public void set(State s) {
 		if (s instanceof PyraminxState) {
 			PyraminxState p = (PyraminxState) s;
