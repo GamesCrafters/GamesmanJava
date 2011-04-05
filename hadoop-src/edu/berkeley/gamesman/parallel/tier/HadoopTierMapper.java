@@ -76,111 +76,130 @@ public class HadoopTierMapper extends
 
 	@Override
 	public void map(Range key, IntWritable value, final Context context)
-			throws IOException {
-		long firstHash = key.firstRecord;
-		long numHashes = key.numRecords;
-		if (numHashes == 0)
-			return;
-		else if (numHashes < 0)
-			throw new Error("Negative number of hashes");
-		String foldUri = conf.getProperty("gamesman.hadoop.dbfolder");
-		String uri = foldUri + File.separator + "s" + tier + "_" + firstHash
-				+ ".db";
-		Path p = new Path(uri);
-		if (fs.exists(p)) {
-			writeRange(key, context, p);
-			return;
-		}
-		String solverName = this.conf.getProperty("gamesman.solver");
-		Class<? extends TierSolver> solverc;
+			throws IOException, InterruptedException {
 		try {
-			solverc = Util.typedForName(
-					"edu.berkeley.gamesman.solver." + solverName, Solver.class)
-					.asSubclass(TierSolver.class);
-		} catch (ClassNotFoundException e1) {
-			throw new Error(e1);
-		}
-
-		// setting write database file name, path etc and initializing it*******
-		new File(foldUri).mkdirs();
-		unzippedURI = uri + ".uz_local";
-		Database writeDb = new FileDatabase(unzippedURI, conf, firstHash,
-				numHashes, true, true);
-		Database solverDb = new ReadWriteDatabase(readDb, writeDb, conf);
-		Progressable progress = new Progressable() {
-			@Override
-			public void progress() {
-				context.progress();
+			long firstHash = key.firstRecord;
+			long numHashes = key.numRecords;
+			if (numHashes == 0)
+				return;
+			else if (numHashes < 0)
+				throw new Error("Negative number of hashes");
+			String foldUri = conf.getProperty("gamesman.hadoop.dbfolder");
+			String uri = foldUri + File.separator + "s" + tier + "_"
+					+ firstHash + ".db";
+			Path p = new Path(uri);
+			if (fs.exists(p)) {
+				writeRange(key, context, p);
+				return;
 			}
-		};
-		try {
-			solver = solverc.getConstructor(Configuration.class,
-					Database.class, Integer.TYPE, Long.TYPE, Long.TYPE,
-					Progressable.class).newInstance(this.conf, solverDb, tier,
-					firstHash, numHashes, progress);
-		} catch (IllegalArgumentException e) {
-			throw new Error(e);
-		} catch (SecurityException e) {
-			throw new Error(e);
-		} catch (InstantiationException e) {
-			throw new Error(e);
-		} catch (IllegalAccessException e) {
-			throw new Error(e);
-		} catch (InvocationTargetException e) {
-			throw new Error(e.getCause());
-		} catch (NoSuchMethodException e) {
-			throw new Error(e);
-		}
-		File localFile = new File(unzippedURI);
-		File localParent = localFile.getParentFile();
-		localParent.setWritable(true, false);
-		localParent.setExecutable(true, false);
-		localParent.setReadable(true, false);
-		localFile.setWritable(true, false);
-		localFile.setReadable(true, false);
-		solver.solve();
-		Database readFrom = writeDb;
-		zippedURI = uri + "_local";
-		GZippedFileDatabase.zip(zippedURI, conf, readFrom, progress);
-		writeDb.close();
-		new File(unzippedURI).delete();
-		unzippedURI = null;
-		final Path pLocal;
-		pLocal = new Path(zippedURI);
-		final Path tempPath = new Path(uri + r.nextLong());
-		if (!fs.exists(p)) {
-			final Thread mt = Thread.currentThread();
-			Thread t = new Thread() {
+			String solverName = this.conf.getProperty("gamesman.solver");
+			Class<? extends TierSolver> solverc;
+			try {
+				solverc = Util.typedForName(
+						"edu.berkeley.gamesman.solver." + solverName,
+						Solver.class).asSubclass(TierSolver.class);
+			} catch (ClassNotFoundException e1) {
+				throw new Error(e1);
+			}
+
+			// setting write database file name, path etc and initializing it
+			new File(foldUri).mkdirs();
+			unzippedURI = uri + ".uz_local";
+			Database writeDb = new FileDatabase(unzippedURI, conf, firstHash,
+					numHashes, true, true);
+			Database solverDb = new ReadWriteDatabase(readDb, writeDb, conf);
+			Progressable progress = new Progressable() {
 				@Override
-				public void run() {
-					try {
-						fs.moveFromLocalFile(pLocal, tempPath);
-						failure = null;
-					} catch (Throwable e) {
-						failure = e;
-						mt.interrupt();
-					}
+				public void progress() {
+					context.progress();
 				}
 			};
-			t.start();
-			context.progress();
-			while (t.isAlive()) {
-				try {
-					t.join(20000L);
-				} catch (InterruptedException e) {
-					if (failure != null)
-						break;
-					else
-						e.printStackTrace();
-				}
-				context.progress();
+			try {
+				solver = solverc.getConstructor(Configuration.class,
+						Database.class, Integer.TYPE, Long.TYPE, Long.TYPE,
+						Progressable.class).newInstance(this.conf, solverDb,
+						tier, firstHash, numHashes, progress);
+			} catch (IllegalArgumentException e) {
+				throw new Error(e);
+			} catch (SecurityException e) {
+				throw new Error(e);
+			} catch (InstantiationException e) {
+				throw new Error(e);
+			} catch (IllegalAccessException e) {
+				throw new Error(e);
+			} catch (InvocationTargetException e) {
+				throw new Error(e.getCause());
+			} catch (NoSuchMethodException e) {
+				throw new Error(e);
 			}
-			if (failure != null)
-				throw new Error(failure);
-			fs.rename(tempPath, p);
+			File localFile = new File(unzippedURI);
+			File localParent = localFile.getParentFile();
+			localParent.setWritable(true, false);
+			localParent.setExecutable(true, false);
+			localParent.setReadable(true, false);
+			localFile.setWritable(true, false);
+			localFile.setReadable(true, false);
+			solver.solve();
+			Database readFrom = writeDb;
+			zippedURI = uri + "_local";
+			GZippedFileDatabase.zip(zippedURI, conf, readFrom, progress);
+			writeDb.close();
+			new File(unzippedURI).delete();
+			unzippedURI = null;
+			final Path pLocal;
+			pLocal = new Path(zippedURI);
+			final Path tempPath = new Path(uri + r.nextLong());
+			if (!fs.exists(p)) {
+				final Thread mt = Thread.currentThread();
+				Thread t = new Thread() {
+					@Override
+					public void run() {
+						try {
+							fs.moveFromLocalFile(pLocal, tempPath);
+							failure = null;
+						} catch (Throwable e) {
+							failure = e;
+							mt.interrupt();
+						}
+					}
+				};
+				t.start();
+				context.progress();
+				while (t.isAlive()) {
+					try {
+						t.join(20000L);
+					} catch (InterruptedException e) {
+						if (failure != null)
+							break;
+						else
+							e.printStackTrace();
+					}
+					context.progress();
+				}
+				if (failure != null) {
+					if (failure instanceof Error)
+						throw (Error) failure;
+					else if (failure instanceof RuntimeException)
+						throw (RuntimeException) failure;
+					else if (failure instanceof IOException)
+						throw (IOException) failure;
+					else
+						throw new Error(failure);
+				}
+				fs.rename(tempPath, p);
+			}
+			zippedURI = null;
+			writeRange(key, context, p);
+		} catch (Error e) {
+			cleanup(null);
+			throw e;
+		} catch (RuntimeException e) {
+			cleanup(null);
+			throw e;
+		} catch (IOException e) {
+			cleanup(null);
+			throw e;
 		}
-		zippedURI = null;
-		writeRange(key, context, p);
 	}
 
 	private void writeRange(Range key, final Context context, Path p)
@@ -195,11 +214,17 @@ public class HadoopTierMapper extends
 
 	protected void cleanup(Context context) throws IOException,
 			InterruptedException {
-		if (readDb != null)
+		if (readDb != null) {
 			readDb.close();
-		if (unzippedURI != null)
+			readDb = null;
+		}
+		if (unzippedURI != null) {
 			new File(unzippedURI).delete();
-		if (zippedURI != null)
+			unzippedURI = null;
+		}
+		if (zippedURI != null) {
 			new File(zippedURI).delete();
+			zippedURI = null;
+		}
 	}
 }

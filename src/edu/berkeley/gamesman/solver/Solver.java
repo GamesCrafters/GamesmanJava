@@ -121,8 +121,13 @@ public abstract class Solver {
 				+ Util.millisToETA(System.currentTimeMillis() - startTime));
 	}
 
-	private void error() throws Error {
+	private void error() {
 		solverService.shutdownNow();
-		throw new Error(failed);
+		if (failed instanceof Error) {
+			throw (Error) failed;
+		} else if (failed instanceof RuntimeException) {
+			throw (RuntimeException) failed;
+		} else
+			throw new Error(failed);
 	}
 }

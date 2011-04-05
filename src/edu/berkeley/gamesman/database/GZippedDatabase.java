@@ -300,8 +300,9 @@ public abstract class GZippedDatabase extends Database {
 				memoryAcquired[i] = new CountDownLatch(1);
 				threadsFinished[i] = new CountDownLatch(1);
 				zipperService.submit(new ZipRunner(i));
-				if (failed != null)
-					throw new Error(failed);
+				if (failed != null) {
+					throwError(failed);
+				}
 			}
 			zipperService.shutdown();
 			long bytesWritten = 0L;
@@ -315,7 +316,7 @@ public abstract class GZippedDatabase extends Database {
 						failed = e;
 				}
 				if (failed != null)
-					throw new Error(failed);
+					throwError(failed);
 				streams[i].nextChunk();
 				chunkerPool.release(streams[i]);
 				memoryChunks.release(2);
@@ -328,9 +329,20 @@ public abstract class GZippedDatabase extends Database {
 				}
 			}
 			if (failed != null)
-				throw new Error(failed);
+				throwError(failed);
 			System.out.println("Zipped in "
 					+ Util.millisToETA(System.currentTimeMillis() - startTime));
+		}
+
+		private void throwError(Throwable failed) throws IOException {
+			if (failed instanceof Error) {
+				throw (Error) failed;
+			} else if (failed instanceof RuntimeException) {
+				throw (RuntimeException) failed;
+			} else if (failed instanceof IOException) {
+				throw (IOException) failed;
+			} else
+				throw new Error(failed);
 		}
 	}
 
