@@ -420,8 +420,12 @@ public class JSONInterface extends GamesmanApplication {
 				}
 			}
 			String boardString = g.synchronizedStateToString(state);
-			if (!g.synchronizedStringToState(boardString).equals(state)){
-				throw new Error("States do not match: "+boardString);
+			if (!g.synchronizedStringToState(boardString).equals(state)) {
+				throw new Error("States do not match: "
+						+ boardString
+						+ " and "
+						+ g.synchronizedStateToString(g
+								.synchronizedStringToState(boardString)));
 			}
 			request.setBoard(boardString);
 			return request;
