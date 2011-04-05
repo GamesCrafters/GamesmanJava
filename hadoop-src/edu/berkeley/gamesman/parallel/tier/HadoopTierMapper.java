@@ -30,6 +30,16 @@ import org.apache.hadoop.mapreduce.Mapper;
 
 import edu.berkeley.gamesman.core.Configuration;
 
+/**
+ * The mapper class for tier solves. Creates a database which merges the hadoop
+ * SplitFileSystemDatabase for reading with a FileDatabase for writing. Then
+ * solves the assigned portion. Then GZips to a GZippedFileDatabase. Uploads the
+ * database to HDFS with a random long appended (to avoid conflicts in case the
+ * same mapper is running in two places) and then renames to the correct file
+ * name.  Finally outputs zero as the key and the corresponding FileStatus as the value.
+ * 
+ * @author dnspies
+ */
 public class HadoopTierMapper extends
 		Mapper<Range, IntWritable, IntWritable, RangeFile> {
 	private int tier;
@@ -41,8 +51,8 @@ public class HadoopTierMapper extends
 	private Database readDb;
 	private String unzippedURI, zippedURI;
 
-	Configuration conf;
-	FileSystem fs;
+	private Configuration conf;
+	private FileSystem fs;
 
 	@Override
 	public void setup(Context context) {
@@ -191,14 +201,17 @@ public class HadoopTierMapper extends
 			zippedURI = null;
 			writeRange(key, context, p);
 		} catch (Error e) {
-			cleanup(null);
+			cleanup();
 			throw e;
 		} catch (RuntimeException e) {
-			cleanup(null);
+			cleanup();
 			throw e;
 		} catch (IOException e) {
-			cleanup(null);
+			cleanup();
 			throw e;
+		} catch (Throwable t) {
+			cleanup();
+			throw new Error(t);
 		}
 	}
 
@@ -212,8 +225,13 @@ public class HadoopTierMapper extends
 		}
 	}
 
+	@Override
 	protected void cleanup(Context context) throws IOException,
 			InterruptedException {
+		cleanup();
+	}
+
+	private void cleanup() throws IOException, InterruptedException {
 		if (readDb != null) {
 			readDb.close();
 			readDb = null;
