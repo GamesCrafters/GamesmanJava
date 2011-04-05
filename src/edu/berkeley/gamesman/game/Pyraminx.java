@@ -151,9 +151,6 @@ public class Pyraminx extends TwistyPuzzle<PyraminxState> {
 	public int validMoves(PyraminxState pos, PyraminxState[] moves) {
 		int countMoves = 0;
 		for (int axis : EDGE_INDICES.keySet()) {
-			// TODO: Bad! Instantiates a very expensive iterator. (You'll be
-			// shocked if you run under debugger and see just how much effort
-			// that one line requires)
 			for (int dir = 1; dir <= 2; dir++) {
 				if (moves[countMoves] == null)
 					moves[countMoves] = new PyraminxState(edgeCount,
@@ -259,14 +256,19 @@ class PyraminxState implements State {
 	}
 
 	public PyraminxState clone() {
-		return new PyraminxState(edgePermutation.clone(), edgeOrientation
-				.clone(), centerOrientation.clone());
+		return new PyraminxState(edgePermutation.clone(),
+				edgeOrientation.clone(), centerOrientation.clone());
 	}
 
-	public boolean equals(PyraminxState other) {
-		return Arrays.equals(centerOrientation, other.centerOrientation)
-				&& Arrays.equals(edgeOrientation, other.edgeOrientation)
-				&& Arrays.equals(edgePermutation, other.edgePermutation);
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof PyraminxState) {
+			PyraminxState other = (PyraminxState) o;
+			return Arrays.equals(centerOrientation, other.centerOrientation)
+					&& Arrays.equals(edgeOrientation, other.edgeOrientation)
+					&& Arrays.equals(edgePermutation, other.edgePermutation);
+		} else
+			return false;
 	}
 
 	public void set(State s) {
