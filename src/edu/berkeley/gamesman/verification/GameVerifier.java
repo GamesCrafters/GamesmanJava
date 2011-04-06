@@ -62,7 +62,7 @@ public abstract class GameVerifier implements Iterator<GameState> {
 			System.exit(1);
 		}
 
-//		this.incorrectStates = new HashSet<GameState>();
+		// this.incorrectStates = new HashSet<GameState>();
 		this.mGame = (TierGame) conf.getGame();
 		this.totalStateCount = stateTotalCount;
 		this.progressBar = new ProgressBar(stateTotalCount);
@@ -99,16 +99,18 @@ public abstract class GameVerifier implements Iterator<GameState> {
 	 *             if cannot query the state from the database.
 	 */
 	protected boolean verifyGameState() throws IOException {
-
-		Value dbValue = getValueOfState(currentGameState.getBoardString());
+		Record dbRecord = getRecordForState(currentGameState.getBoardString());
+		Value dbValue = dbRecord.value;
 		Value calculatedValue;
-		if (currentGameState.isPrimitive())
+		if (currentGameState.isPrimitive()) {
 			calculatedValue = currentGameState.getValue();
-		else
+			if (dbRecord.remoteness != 0)
+				return false;
+		} else
 			calculatedValue = calculateValueOfCurrentState();
 
 		if (dbValue != calculatedValue) {
-//			incorrectStates.add(currentGameState);
+			// incorrectStates.add(currentGameState);
 			incorrectStatesCount++;
 		}
 
@@ -132,7 +134,7 @@ public abstract class GameVerifier implements Iterator<GameState> {
 		while (childrenStringIterator.hasNext()) {
 			String childString = childrenStringIterator.next();
 
-			Value childValue = getValueOfState(childString);
+			Value childValue = getRecordForState(childString).value;
 
 			switch (childValue) {
 			case TIE:
@@ -159,13 +161,13 @@ public abstract class GameVerifier implements Iterator<GameState> {
 	}
 
 	/**
-	 * Gets the value of a state String.
+	 * Gets the Record corresponding of a state String.
 	 * 
 	 * @param stateString
 	 *            the String representation of a state.
-	 * @return the value of the state represented by the String.
+	 * @return the record of the state represented by the String.
 	 */
-	public Value getValueOfState(String stateString) {
+	public Record getRecordForState(String stateString) {
 		TierState tierState = mGame.stringToState(stateString);
 
 		// index into the db
@@ -184,7 +186,7 @@ public abstract class GameVerifier implements Iterator<GameState> {
 		// interprets the long as a record
 		mGame.longToRecord(tierState, recordValue, stateRecord);
 
-		return stateRecord.value;
+		return stateRecord;
 	}
 
 	@Override
@@ -197,8 +199,8 @@ public abstract class GameVerifier implements Iterator<GameState> {
 		return currentGameState;
 	}
 
-	public Value getCurrentValue() {
-		return getValueOfState(currentGameState.getBoardString());
+	public Record getCurrentRecord() {
+		return getRecordForState(currentGameState.getBoardString());
 	}
 
 	/*
@@ -229,7 +231,7 @@ public abstract class GameVerifier implements Iterator<GameState> {
 		// Write current GameState to outFile
 		try {
 			outFile.write(("Incorrect Value: "
-					+ getValueOfState(currentGameState.getBoardString())
+					+ getRecordForState(currentGameState.getBoardString()).value
 							.toString() + " Current Game State: "
 					+ currentGameState.toString() + '\n').getBytes());
 		} catch (IOException e) {
