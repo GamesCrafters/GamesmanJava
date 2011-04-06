@@ -13,13 +13,18 @@ import java.util.Random;
 public class RandomGameVerifier extends GameVerifier {
 
 	public RandomGameVerifier(Class<? extends GameState> stateClass,
-			String database, String outputFileName, int stateTotalCount) {
-		super(stateClass, database, outputFileName, stateTotalCount);
+			String database, String outputFileName, int totalStateCount,
+			int totalTimeCount) {
+		super(stateClass, database, outputFileName, totalStateCount,
+				totalTimeCount);
 	}
 
 	@Override
 	public boolean hasNext() {
-		if (this.stateCount == this.totalStateCount)
+		if (progressBarType == ProgressBarType.STATE
+				&& this.stateCount == this.totalStateCount
+				|| progressBarType == ProgressBarType.TIME
+				&& System.currentTimeMillis() / 1000 - initialTime >= totalTimeCount)
 			return false;
 		return true;
 	}

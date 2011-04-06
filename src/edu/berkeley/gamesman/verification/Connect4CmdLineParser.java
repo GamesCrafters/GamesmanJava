@@ -23,8 +23,11 @@ public class Connect4CmdLineParser {
 	private String verifier;
 
 	@Option(name = "-s", usage = "number of states to verify")
-	private int stateCount;
+	private int totalStates;
 
+	@Option(name = "-t", usage = "time allowed to verify")
+	private int totalTime;
+	
 	// receives other command line parameters than options
 	@Argument
 	
@@ -39,12 +42,12 @@ public class Connect4CmdLineParser {
 		case RANDOM:
 			verifier = new RandomGameVerifier(Connect4GameState.class,
 					cmdLineParser.database, cmdLineParser.outputFileName,
-					cmdLineParser.stateCount);
+					cmdLineParser.totalStates, cmdLineParser.totalTime);
 			break;
 		case BACKTRACK:
 			verifier = new BacktrackGameVerifier(Connect4GameState.class,
 					cmdLineParser.database, cmdLineParser.outputFileName,
-					cmdLineParser.stateCount);
+					cmdLineParser.totalStates, cmdLineParser.totalTime);
 			break;
 		default:
 			throw new IllegalArgumentException("Invalid verifier name: "

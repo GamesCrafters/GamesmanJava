@@ -39,23 +39,34 @@ public abstract class GameVerifier implements Iterator<GameState> {
 	 * The number of <tt>GameState</tt> to verify.
 	 */
 	protected final int totalStateCount;
+	protected final int totalTimeCount;
 	protected int stateCount;
+	protected long initialTime;
+	protected long previousTime;
+	protected ProgressBarType progressBarType;
 
 	protected GameVerifier(Class<? extends GameState> stateClass,
-			String database, String outputFileName, int stateTotalCount) {
+			String database, String outputFileName, int totalStateCount,
+			int totalTimeCount) {
 		this.stateClass = stateClass;
 		try {
-			db = Database.openDatabase(database);
+			this.db = Database.openDatabase(database);
 		} catch (IOException e1) {
 			throw new RuntimeException(e1);
 		} catch (ClassNotFoundException e1) {
 			throw new RuntimeException(e1);
 		}
-		dbHandle = db.getHandle(true);
-		conf = db.conf;
+		this.dbHandle = db.getHandle(true);
+		this.conf = db.conf;
 
+		if (outputFileName == null)
+			outputFileName = database.substring(0, database.lastIndexOf('.'))
+					+ "_out.txt";
+		
+		File outputFile = new File(outputFileName);
+		outputFile.delete();
 		try {
-			this.outFile = new RandomAccessFile(new File(outputFileName), "rw");
+			this.outFile = new RandomAccessFile(outputFile, "rw");
 		} catch (FileNotFoundException e) {
 			System.err.println(e.getMessage());
 			System.err.println("Cannot find file: " + outFile.toString());
@@ -64,9 +75,19 @@ public abstract class GameVerifier implements Iterator<GameState> {
 
 		// this.incorrectStates = new HashSet<GameState>();
 		this.mGame = (TierGame) conf.getGame();
-		this.totalStateCount = stateTotalCount;
-		this.progressBar = new ProgressBar(stateTotalCount);
+		this.totalStateCount = totalStateCount;
+		this.totalTimeCount = totalTimeCount;
+		this.initialTime = System.currentTimeMillis() / 1000;
+		
+		progressBarType = (this.totalTimeCount == 0) ? ProgressBarType.STATE
+				: ProgressBarType.TIME;
 
+		if (progressBarType == ProgressBarType.STATE){
+			this.progressBar = new ProgressBar(totalStateCount);
+		} else {
+			this.progressBar = new ProgressBar(totalTimeCount);
+		}
+		
 		// Write header to outFile to save room for update
 		writeIncorrectStatesSummaryToFile();
 	}
@@ -207,9 +228,23 @@ public abstract class GameVerifier implements Iterator<GameState> {
 	 * PRINTING AND WRITING METHODS
 	 */
 
+	/**
+	 * Prints the status bar.
+	 */
 	public void printStatusBar() {
-		if (stateCount % 10000 == 0 || hasNext())
-			System.out.println("Verified " + stateCount + " states");
+		if (progressBarType == ProgressBarType.STATE){
+			progressBar.updateNumElements(stateCount);
+			if (stateCount % 10000 == 0 || stateCount == totalStateCount) {
+				progressBar.printStatus();
+			}
+		} else {
+			long currentTime = System.currentTimeMillis()/1000 - initialTime;
+			progressBar.updateNumElements((int) currentTime);
+			if (currentTime - previousTime > 1 || currentTime >= totalTimeCount) {
+				previousTime = currentTime;
+				progressBar.printStatus();
+			}
+		}
 	}
 
 	/**
@@ -249,8 +284,9 @@ public abstract class GameVerifier implements Iterator<GameState> {
 		try {
 			outFile.seek(0);
 			outFile.write(("Width: "
-					+ +conf.getInteger("gamesman.game.width", 7) + " Height: " + conf
-					.getInteger("gamesman.game.height", 6)).getBytes());
+					+ +conf.getInteger("gamesman.game.width", 7) + " Height: "
+					+ conf.getInteger("gamesman.game.height", 6) + "\n")
+					.getBytes());
 			outFile.write(("Incorrect States: " + incorrectStatesCount + '\n')
 					.getBytes());
 		} catch (IOException e) {
