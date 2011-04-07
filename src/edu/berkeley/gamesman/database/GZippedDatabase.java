@@ -1,6 +1,7 @@
 package edu.berkeley.gamesman.database;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -37,6 +38,7 @@ public abstract class GZippedDatabase extends Database {
 	private final long[] entryTable;
 	private final GZippedDatabaseInputStream reader;
 	private final GZippedDatabaseOutputStream writer;
+	private final Pool<byte[]> bytePool;
 	private int currentEntry;
 	private long filePos;
 
@@ -65,12 +67,25 @@ public abstract class GZippedDatabase extends Database {
 			zcos = new ZipChunkOutputStream(writer, (int) Math.min(
 					Integer.MAX_VALUE, entrySize));
 			currentByteIndex = firstByteIndex;
+			bytePool = null;
 		} else {
 			tableOffset = skipHeader(reader);
 			for (int i = 0; i < numEntries; i++)
 				entryTable[i] = reader.readLong();
-			zcis = new ZipChunkInputStream(reader, (int) Math.min(
-					Integer.MAX_VALUE, entrySize));
+			final int bufferSize = (int) Math.min(Integer.MAX_VALUE, entrySize);
+			bytePool = new Pool<byte[]>(new Factory<byte[]>() {
+
+				@Override
+				public byte[] newObject() {
+					return new byte[bufferSize];
+				}
+
+				@Override
+				public void reset(byte[] t) {
+					Arrays.fill(t, (byte) 0);
+				}
+			});
+			zcis = new ZipChunkInputStream(reader, bytePool);
 			zcos = null;
 			currentByteIndex = -1L;
 		}
@@ -85,8 +100,9 @@ public abstract class GZippedDatabase extends Database {
 			int readEntry = (int) ((location - firstByteIndex) / entrySize);
 			long entryStartByteIndex = firstByteIndex + readEntry * entrySize;
 			reader.seek(entryTable[readEntry]);
-			zcis = new ZipChunkInputStream(reader, (int) Math.min(
-					Integer.MAX_VALUE, entrySize));
+			if (zcis != null)
+				zcis.finish();
+			zcis = new ZipChunkInputStream(reader, bytePool);
 			Util.skipFully(zcis, location - entryStartByteIndex);
 			currentByteIndex = location;
 		}
@@ -125,8 +141,11 @@ public abstract class GZippedDatabase extends Database {
 				writer.writeLong(entryTable[i]);
 			}
 			writer.close();
-		} else
+		} else {
+			if (zcis != null)
+				zcis.close();
 			reader.close();
+		}
 	}
 
 	/**

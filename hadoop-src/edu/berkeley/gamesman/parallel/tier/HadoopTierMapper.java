@@ -49,7 +49,7 @@ public class HadoopTierMapper extends
 	private String readUri;
 	private final Random r = new Random();
 	private Throwable failure = null;
-	private Database readDb;
+	private HDFSSplitDatabase readDb;
 	private String unzippedURI, zippedURI;
 
 	private Configuration conf;
@@ -202,16 +202,16 @@ public class HadoopTierMapper extends
 			zippedURI = null;
 			writeRange(key, context, p);
 		} catch (Error e) {
-			cleanup();
+			cleanup(true);
 			throw e;
 		} catch (RuntimeException e) {
-			cleanup();
+			cleanup(true);
 			throw e;
 		} catch (IOException e) {
-			cleanup();
+			cleanup(true);
 			throw e;
 		} catch (Throwable t) {
-			cleanup();
+			cleanup(true);
 			throw new Error(t);
 		}
 	}
@@ -229,11 +229,12 @@ public class HadoopTierMapper extends
 	@Override
 	protected void cleanup(Context context) throws IOException,
 			InterruptedException {
-		cleanup();
+		cleanup(false);
 	}
 
-	private void cleanup() throws IOException, InterruptedException {
-		if (readDb != null) {
+	private void cleanup(boolean errored) throws IOException,
+			InterruptedException {
+		if (readDb != null && !errored) {
 			readDb.close();
 			readDb = null;
 		}

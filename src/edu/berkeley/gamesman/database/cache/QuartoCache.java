@@ -1,7 +1,10 @@
 package edu.berkeley.gamesman.database.cache;
 
+import java.io.IOException;
+
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.database.Database;
+import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.Quarto;
 import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.hasher.DartboardHasher;
@@ -14,6 +17,7 @@ public class QuartoCache extends TierCache {
 	private final QuartoMinorHasher minorHasher;
 	private final Quarto game;
 	private final long cacheMemory;
+	private final DatabaseHandle dh;
 
 	public QuartoCache(Quarto game, DartboardHasher majorHasher,
 			QuartoMinorHasher minorHasher, Database db, long availableMemory) {
@@ -28,6 +32,7 @@ public class QuartoCache extends TierCache {
 			lowerCache[place] = upperCaches[place][0];
 		}
 		cacheMemory = availableMemory / 256;
+		dh = db.getHandle(true);
 	}
 
 	@Override
@@ -106,11 +111,16 @@ public class QuartoCache extends TierCache {
 	private void setCacheMinorRange(RecordRangeCache cache, int place,
 			long minorRecordIndex, int numRecords, int ensureBytes) {
 		cache.ensureByteCapacity(ensureBytes, false);
-		cache.setRange(
-				game.hashOffsetForTier(game.getTier() + 1)
-						+ majorHasher.nextChild(' ', 'P', place)
-						* minorHasher.numHashesForTier(game.getTier() + 1)
-						+ minorRecordIndex, numRecords);
+		long firstRecordIndex = game.hashOffsetForTier(game.getTier() + 1)
+				+ majorHasher.nextChild(' ', 'P', place)
+				* minorHasher.numHashesForTier(game.getTier() + 1)
+				+ minorRecordIndex;
+		cache.setRange(firstRecordIndex, numRecords);
+		try {
+			cache.readRecordsFromDatabase(db, dh, firstRecordIndex, numRecords);
+		} catch (IOException e) {
+			throw new Error(e);
+		}
 	}
 
 	private void setCacheMajorRange(RecordRangeCache cache, int place,
@@ -118,9 +128,15 @@ public class QuartoCache extends TierCache {
 		cache.ensureByteCapacity(ensureBytes, false);
 		long nextTierNumHashes = minorHasher
 				.numHashesForTier(game.getTier() + 1);
-		cache.setRange(game.hashOffsetForTier(game.getTier() + 1)
-				+ majorRecordIndex * nextTierNumHashes,
-				(int) (numMajorPlaces * nextTierNumHashes));
+		long firstRecordIndex = game.hashOffsetForTier(game.getTier() + 1)
+				+ majorRecordIndex * nextTierNumHashes;
+		int numRecords = (int) (numMajorPlaces * nextTierNumHashes);
+		cache.setRange(firstRecordIndex, numRecords);
+		try {
+			cache.readRecordsFromDatabase(db, dh, firstRecordIndex, numRecords);
+		} catch (IOException e) {
+			throw new Error(e);
+		}
 	}
 
 	private boolean setCacheThrough(int place, int piece, long availableMemory) {
