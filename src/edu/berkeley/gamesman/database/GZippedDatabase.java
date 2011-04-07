@@ -129,15 +129,49 @@ public abstract class GZippedDatabase extends Database {
 			reader.close();
 	}
 
+	/**
+	 * @param conf
+	 *            The configuration object
+	 * @param readFrom
+	 *            The database to read bytes from
+	 * @param writeTo
+	 *            The new GZippedDatabase to write bytes to
+	 * @param synchronizedRead
+	 *            If reading blocks should be done synchronized (should be true
+	 *            unless the database supports multi-threaded simultaneous
+	 *            reading (otherwise this will cause it to jump back and forth
+	 *            and slow the zipping process))
+	 * @throws IOException
+	 *             If an IOException occurs while zipping
+	 */
 	public static void zip(Configuration conf, Database readFrom,
-			GZippedDatabase writeTo) throws IOException {
-		zip(conf, readFrom, writeTo, null);
+			GZippedDatabase writeTo, boolean synchronizedRead)
+			throws IOException {
+		zip(conf, readFrom, writeTo, null, synchronizedRead);
 	}
 
+	/**
+	 * @param conf
+	 *            The configuration object
+	 * @param readFrom
+	 *            The database to read bytes from
+	 * @param writeTo
+	 *            The new GZippedDatabase to write bytes to
+	 * @param progress
+	 *            A Progressable for the zip to report progress
+	 * @param synchronizedRead
+	 *            If reading blocks should be done synchronized (should be true
+	 *            unless the database supports multi-threaded simultaneous
+	 *            reading (otherwise this will cause it to jump back and forth
+	 *            and slow the zipping process))
+	 * @throws IOException
+	 *             If an IOException occurs while zipping
+	 */
 	public static void zip(Configuration conf, final Database readFrom,
-			final GZippedDatabase writeTo, Progressable progress)
-			throws IOException {
-		Zipper zip = new Zipper(conf, readFrom, writeTo, progress);
+			final GZippedDatabase writeTo, Progressable progress,
+			boolean synchronizedRead) throws IOException {
+		Zipper zip = new Zipper(conf, readFrom, writeTo, progress,
+				synchronizedRead);
 		zip.run();
 	}
 
@@ -148,7 +182,7 @@ public abstract class GZippedDatabase extends Database {
 					public ZipChunkOutputStream newObject() {
 						try {
 							return new ZipChunkOutputStream(writeTo.writer,
-									bytePool);
+									bytePool, false);
 						} catch (IOException e) {
 							throw new Error(e);
 						}
@@ -156,11 +190,6 @@ public abstract class GZippedDatabase extends Database {
 
 					@Override
 					public void reset(ZipChunkOutputStream t) {
-						try {
-							t.clearChunk();
-						} catch (IOException e) {
-							throw new Error(e);
-						}
 					}
 				});
 		private final Pool<byte[]> bytePool = new Pool<byte[]>(
@@ -173,6 +202,19 @@ public abstract class GZippedDatabase extends Database {
 
 					@Override
 					public void reset(byte[] t) {
+					}
+
+				});
+		private final Pool<DatabaseHandle> handlePool = new Pool<DatabaseHandle>(
+				new Factory<DatabaseHandle>() {
+
+					@Override
+					public DatabaseHandle newObject() {
+						return readFrom.getHandle(true);
+					}
+
+					@Override
+					public void reset(DatabaseHandle t) {
 					}
 
 				});
@@ -197,7 +239,6 @@ public abstract class GZippedDatabase extends Database {
 					 * deadlock if all threads use up the permits reading and no
 					 * one is able to write
 					 */
-					DatabaseHandle readDh = readFrom.getHandle(true);
 					long thisByte = j * (long) entrySize;
 					int len;
 					if (j == writeTo.numEntries - 1) {
@@ -207,11 +248,17 @@ public abstract class GZippedDatabase extends Database {
 					}
 					long byteIndex = firstByteIndex + thisByte;
 					byte[] entryBytes = bytePool.get();
-					ZipChunkOutputStream chunker = chunkerPool.get();
 					try {
-						readFrom.readFullBytes(readDh, byteIndex, entryBytes,
-								0, len);
+						if (synchronizedRead) {
+							synchronizedReadBytes(len, byteIndex, entryBytes);
+						} else {
+							readBytes(len, byteIndex, entryBytes);
+						}
+						ZipChunkOutputStream chunker = chunkerPool.get();
+						chunker.startChunk();
 						chunker.write(entryBytes, 0, len);
+						chunker.finishChunk();
+						streams[j] = chunker;
 					} catch (IOException e) {
 						throw new Error(e);
 					}
@@ -219,7 +266,6 @@ public abstract class GZippedDatabase extends Database {
 					if (bytesZipped / STEP_SIZE > lastProgressPoint) {
 						zipProgress();
 					}
-					streams[j] = chunker;
 					threadsFinished[j].countDown();
 					bytePool.release(entryBytes);
 					memoryChunks.release();
@@ -244,12 +290,14 @@ public abstract class GZippedDatabase extends Database {
 		private final Database readFrom;
 		private final GZippedDatabase writeTo;
 		private final Progressable progress;
+		private final boolean synchronizedRead;
 		private volatile long lastProgressPoint = 0;
 		private volatile Throwable failed = null;
 		private Thread mainThread;
 
 		public Zipper(Configuration conf, final Database readFrom,
-				final GZippedDatabase writeTo, Progressable progress) {
+				final GZippedDatabase writeTo, Progressable progress,
+				boolean synchronizedRead) {
 			if (writeTo.entrySize > Integer.MAX_VALUE)
 				throw new Error("Entry size is too large to fit in int");
 			entrySize = (int) writeTo.entrySize;
@@ -267,6 +315,7 @@ public abstract class GZippedDatabase extends Database {
 			this.readFrom = readFrom;
 			this.writeTo = writeTo;
 			this.progress = progress;
+			this.synchronizedRead = synchronizedRead;
 		}
 
 		private void zipProgress() {
@@ -317,7 +366,7 @@ public abstract class GZippedDatabase extends Database {
 				}
 				if (failed != null)
 					throwError(failed);
-				streams[i].nextChunk();
+				streams[i].finishAndWriteChunk();
 				chunkerPool.release(streams[i]);
 				memoryChunks.release(2);
 				if (i < writeTo.numEntries - 1) {
@@ -332,6 +381,18 @@ public abstract class GZippedDatabase extends Database {
 				throwError(failed);
 			System.out.println("Zipped in "
 					+ Util.millisToETA(System.currentTimeMillis() - startTime));
+		}
+
+		private void readBytes(int len, long byteIndex, byte[] entryBytes)
+				throws IOException {
+			DatabaseHandle readDh = handlePool.get();
+			readFrom.readFullBytes(readDh, byteIndex, entryBytes, 0, len);
+			handlePool.release(readDh);
+		}
+
+		private synchronized void synchronizedReadBytes(int len,
+				long byteIndex, byte[] entryBytes) throws IOException {
+			readBytes(len, byteIndex, entryBytes);
 		}
 
 		private void throwError(Throwable failed) throws IOException {

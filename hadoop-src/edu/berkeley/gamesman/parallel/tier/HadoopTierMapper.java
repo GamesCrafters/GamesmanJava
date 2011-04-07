@@ -36,7 +36,8 @@ import edu.berkeley.gamesman.core.Configuration;
  * solves the assigned portion. Then GZips to a GZippedFileDatabase. Uploads the
  * database to HDFS with a random long appended (to avoid conflicts in case the
  * same mapper is running in two places) and then renames to the correct file
- * name.  Finally outputs zero as the key and the corresponding FileStatus as the value.
+ * name. Finally outputs zero as the key and the corresponding FileStatus as the
+ * value.
  * 
  * @author dnspies
  */
@@ -152,7 +153,7 @@ public class HadoopTierMapper extends
 			solver.solve();
 			Database readFrom = writeDb;
 			zippedURI = uri + "_local";
-			GZippedFileDatabase.zip(zippedURI, conf, readFrom, progress);
+			GZippedFileDatabase.zip(zippedURI, conf, readFrom, progress, true);
 			writeDb.close();
 			new File(unzippedURI).delete();
 			unzippedURI = null;
