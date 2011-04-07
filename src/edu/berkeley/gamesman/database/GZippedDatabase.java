@@ -319,12 +319,12 @@ public abstract class GZippedDatabase extends Database {
 		}
 
 		private void zipProgress() {
+			lastProgressPoint = bytesZipped / STEP_SIZE;
 			if (progress != null) {
 				synchronized (this) {
 					progress.progress();
 				}
 			}
-			lastProgressPoint = bytesZipped / STEP_SIZE;
 			Util.debug(DebugFacility.DATABASE, bytesZipped * 10000 / numBytes
 					/ 100F + "% finished zipping");
 		}
@@ -372,8 +372,8 @@ public abstract class GZippedDatabase extends Database {
 				if (i < writeTo.numEntries - 1) {
 					bytesWritten += entrySize;
 					if (bytesWritten / STEP_SIZE > lastStep) {
-						writeProgress(bytesWritten);
 						lastStep = bytesWritten / STEP_SIZE;
+						writeProgress(bytesWritten);
 					}
 				}
 			}
