@@ -24,6 +24,13 @@ public class ChunkOutputStream extends FilterOutputStream {
 			baos = new ByteArrayOutputStream(chunkBufferByteSize);
 	}
 
+	/**
+	 * Resets this object as if it had just been created
+	 */
+	public void renew() {
+		baos.reset();
+	}
+
 	@Override
 	public void write(int b) {
 		baos.write(b);

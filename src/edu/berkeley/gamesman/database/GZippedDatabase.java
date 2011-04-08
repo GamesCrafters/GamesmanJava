@@ -1,7 +1,6 @@
 package edu.berkeley.gamesman.database;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -34,14 +33,32 @@ public abstract class GZippedDatabase extends Database {
 	private final long numBytes;
 	private final int tableOffset;
 	private final ZipChunkOutputStream zcos;
-	private ZipChunkInputStream zcis;
+	private final ZipChunkInputStream zcis;
 	private final long[] entryTable;
 	private final GZippedDatabaseInputStream reader;
 	private final GZippedDatabaseOutputStream writer;
-	private final Pool<byte[]> bytePool;
 	private int currentEntry;
 	private long filePos;
 
+	/**
+	 * @param reader
+	 *            A stream to read from (if reading)
+	 * @param writer
+	 *            A stream to write to (if writing)
+	 * @param conf
+	 *            The configuration object
+	 * @param firstRecordIndex
+	 *            The index of the first record contained in this database
+	 * @param numRecords
+	 *            The number of records contained in this database
+	 * @param reading
+	 *            whether reading from this database (will be ignored if writing
+	 *            is true)
+	 * @param writing
+	 *            whether writing to this database
+	 * @throws IOException
+	 *             If an IOException occurs while instantiating the database
+	 */
 	public GZippedDatabase(GZippedDatabaseInputStream reader,
 			GZippedDatabaseOutputStream writer, Configuration conf,
 			long firstRecordIndex, long numRecords, boolean reading,
@@ -67,25 +84,13 @@ public abstract class GZippedDatabase extends Database {
 			zcos = new ZipChunkOutputStream(writer, (int) Math.min(
 					Integer.MAX_VALUE, entrySize));
 			currentByteIndex = firstByteIndex;
-			bytePool = null;
+			zcis = null;
 		} else {
 			tableOffset = skipHeader(reader);
 			for (int i = 0; i < numEntries; i++)
 				entryTable[i] = reader.readLong();
 			final int bufferSize = (int) Math.min(Integer.MAX_VALUE, entrySize);
-			bytePool = new Pool<byte[]>(new Factory<byte[]>() {
-
-				@Override
-				public byte[] newObject() {
-					return new byte[bufferSize];
-				}
-
-				@Override
-				public void reset(byte[] t) {
-					Arrays.fill(t, (byte) 0);
-				}
-			});
-			zcis = new ZipChunkInputStream(reader, bytePool);
+			zcis = new ZipChunkInputStream(reader, bufferSize);
 			zcos = null;
 			currentByteIndex = -1L;
 		}
@@ -100,9 +105,7 @@ public abstract class GZippedDatabase extends Database {
 			int readEntry = (int) ((location - firstByteIndex) / entrySize);
 			long entryStartByteIndex = firstByteIndex + readEntry * entrySize;
 			reader.seek(entryTable[readEntry]);
-			if (zcis != null)
-				zcis.finish();
-			zcis = new ZipChunkInputStream(reader, bytePool);
+			zcis.renew();
 			Util.skipFully(zcis, location - entryStartByteIndex);
 			currentByteIndex = location;
 		}
@@ -201,7 +204,7 @@ public abstract class GZippedDatabase extends Database {
 					public ZipChunkOutputStream newObject() {
 						try {
 							return new ZipChunkOutputStream(writeTo.writer,
-									bytePool, false);
+									entrySize, false);
 						} catch (IOException e) {
 							throw new Error(e);
 						}
@@ -209,6 +212,11 @@ public abstract class GZippedDatabase extends Database {
 
 					@Override
 					public void reset(ZipChunkOutputStream t) {
+						try {
+							t.renew(false);
+						} catch (IOException e) {
+							throw new Error(e);
+						}
 					}
 				});
 		private final Pool<byte[]> bytePool = new Pool<byte[]>(

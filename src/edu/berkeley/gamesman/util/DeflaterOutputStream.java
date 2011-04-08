@@ -12,8 +12,6 @@ import java.io.OutputStream;
 import java.io.IOException;
 import java.util.zip.Deflater;
 
-import edu.berkeley.gamesman.util.qll.Pool;
-
 /**
  * This class implements an output stream filter for compressing data in the
  * "deflate" compression format. It is also used as the basis for other types of
@@ -53,22 +51,40 @@ public class DeflaterOutputStream extends FilterOutputStream {
 	 * @exception IllegalArgumentException
 	 *                if size is <= 0
 	 */
-	public DeflaterOutputStream(OutputStream out, Deflater def,
-			Pool<byte[]> bytePool) {
+	public DeflaterOutputStream(OutputStream out, Deflater def, int size) {
 		super(out);
-		buf = bytePool.get();
 		if (out == null || def == null) {
 			throw new NullPointerException();
-		} else if (buf.length == 0) {
+		} else if (size <= 0) {
 			throw new IllegalArgumentException("buffer size <= 0");
 		}
 		this.def = def;
-		myPool = bytePool;
+		buf = new byte[size];
 	}
 
-	protected final Pool<byte[]> myPool;
+	/**
+	 * Resets this object as if it had just been created
+	 * 
+	 * @throws IOException
+	 *             If an IOException occurs
+	 */
+	public void renew() throws IOException {
+		closed = false;
+		def.reset();
+	}
 
-	boolean usesDefaultDeflater = false;
+	/**
+	 * Creates a new output stream with the specified compressor and a default
+	 * buffer size.
+	 * 
+	 * @param out
+	 *            the output stream
+	 * @param def
+	 *            the compressor ("deflater")
+	 */
+	public DeflaterOutputStream(OutputStream out, Deflater def) {
+		this(out, def, 512);
+	}
 
 	/**
 	 * Creates a new output stream with a default compressor and buffer size.
@@ -76,9 +92,8 @@ public class DeflaterOutputStream extends FilterOutputStream {
 	 * @param out
 	 *            the output stream
 	 */
-	public DeflaterOutputStream(OutputStream out, Pool<byte[]> bytePool) {
-		this(out, new Deflater(), bytePool);
-		usesDefaultDeflater = true;
+	public DeflaterOutputStream(OutputStream out) {
+		this(out, new Deflater());
 	}
 
 	/**
@@ -145,7 +160,6 @@ public class DeflaterOutputStream extends FilterOutputStream {
 			while (!def.finished()) {
 				deflate();
 			}
-			myPool.release(buf);
 		}
 	}
 
@@ -159,8 +173,6 @@ public class DeflaterOutputStream extends FilterOutputStream {
 	public void close() throws IOException {
 		if (!closed) {
 			finish();
-			if (usesDefaultDeflater)
-				def.end();
 			out.close();
 			closed = true;
 		}

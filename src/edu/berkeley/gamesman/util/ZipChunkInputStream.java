@@ -4,8 +4,6 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import edu.berkeley.gamesman.util.qll.Pool;
-
 /**
  * Reads from a stream which contains zipped chunks (packed by a
  * ZipChunkOutputStream)
@@ -17,7 +15,7 @@ import edu.berkeley.gamesman.util.qll.Pool;
 public final class ZipChunkInputStream extends FilterInputStream {
 	private final ChunkInputStream cis;
 	private final UncloseableInputStream unclose;
-	private final Pool<byte[]> bytePool;
+	private final GZIPInputStream gzin;
 	private boolean closed = false;
 
 	/**
@@ -28,24 +26,22 @@ public final class ZipChunkInputStream extends FilterInputStream {
 	 * @throws IOException
 	 *             If an IOException occurs while creating the stream
 	 */
-	public ZipChunkInputStream(InputStream in, Pool<byte[]> bytePool)
+	public ZipChunkInputStream(InputStream in, int bufferSize)
 			throws IOException {
 		super(in);
 		cis = new ChunkInputStream(in);
 		unclose = new UncloseableInputStream(cis);
-		this.bytePool = bytePool;
-		this.in = new GZIPInputStream(unclose, bytePool);
+		this.in = gzin = new GZIPInputStream(unclose, bufferSize);
 	}
 
 	@Override
 	public int read(byte[] arr, int off, int len) throws IOException {
-		if(closed)
+		if (closed)
 			throw new IOException("Stream closed");
 		int bytesRead = in.read(arr, off, len);
 		if (bytesRead < 0) {
-			in.close();
 			cis.nextChunk();
-			in = new GZIPInputStream(unclose, bytePool);
+			gzin.renew();
 			bytesRead = in.read(arr, off, len);
 		}
 		return bytesRead;
@@ -53,13 +49,12 @@ public final class ZipChunkInputStream extends FilterInputStream {
 
 	@Override
 	public int read() throws IOException {
-		if(closed)
+		if (closed)
 			throw new IOException("Stream closed");
 		int byteRead = in.read();
 		if (byteRead < 0) {
-			in.close();
 			cis.nextChunk();
-			in = new GZIPInputStream(unclose, bytePool);
+			gzin.renew();
 			byteRead = in.read();
 		}
 		return byteRead;
@@ -67,13 +62,12 @@ public final class ZipChunkInputStream extends FilterInputStream {
 
 	@Override
 	public long skip(long n) throws IOException {
-		if(closed)
+		if (closed)
 			throw new IOException("Stream closed");
 		long bytesSkipped = in.skip(n);
 		if (bytesSkipped < 0) {
-			in.close();
 			cis.nextChunk();
-			in = new GZIPInputStream(unclose, bytePool);
+			gzin.renew();
 			bytesSkipped = in.skip(n);
 		}
 		return bytesSkipped;
@@ -85,8 +79,26 @@ public final class ZipChunkInputStream extends FilterInputStream {
 		cis.close();
 	}
 
+	/**
+	 * Finish reading from the underlying stream, but don't close it
+	 * 
+	 * @throws IOException
+	 *             If an IOException occurs
+	 */
 	public void finish() throws IOException {
 		in.close();
 		closed = true;
+	}
+
+	/**
+	 * Reset this object as if it had just been created
+	 * 
+	 * @throws IOException
+	 *             If an IOException occurs
+	 */
+	public void renew() throws IOException {
+		closed = false;
+		cis.renew();
+		gzin.renew();
 	}
 }

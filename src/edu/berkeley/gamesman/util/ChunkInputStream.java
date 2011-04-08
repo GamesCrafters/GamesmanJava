@@ -54,4 +54,14 @@ public final class ChunkInputStream extends FilterInputStream {
 		remain--;
 		return byteRead;
 	}
+
+	/**
+	 * Resets this object as if it had just been created
+	 * 
+	 * @throws IOException
+	 *             If an IOException occurs while reseting
+	 */
+	public void renew() throws IOException {
+		nextChunk();
+	}
 }

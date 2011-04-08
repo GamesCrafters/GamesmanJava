@@ -16,9 +16,6 @@ import java.util.zip.CRC32;
 import java.util.zip.CheckedInputStream;
 import java.util.zip.Inflater;
 
-import edu.berkeley.gamesman.util.qll.Factory;
-import edu.berkeley.gamesman.util.qll.Pool;
-
 /**
  * This class implements a stream filter for reading compressed data in the GZIP
  * file format.
@@ -29,19 +26,6 @@ import edu.berkeley.gamesman.util.qll.Pool;
  * 
  */
 public class GZIPInputStream extends InflaterInputStream {
-	protected static final Pool<byte[]> tmpBufPool = new Pool<byte[]>(
-			new Factory<byte[]>() {
-
-				@Override
-				public byte[] newObject() {
-					return new byte[128];
-				}
-
-				@Override
-				public void reset(byte[] t) {
-				}
-			});
-
 	/**
 	 * CRC-32 for uncompressed data.
 	 */
@@ -68,18 +52,37 @@ public class GZIPInputStream extends InflaterInputStream {
 	 * 
 	 * @param in
 	 *            the input stream
-	 * @param bytePool
-	 *            the pool to use for retrieving the input buffer
+	 * @param size
+	 *            the input buffer size
 	 * @exception IOException
 	 *                if an I/O error has occurred
 	 * @exception IllegalArgumentException
 	 *                if size is <= 0
 	 */
-	public GZIPInputStream(InputStream in, Pool<byte[]> bytePool)
-			throws IOException {
-		super(in, new Inflater(true), bytePool);
-		usesDefaultInflater = true;
+	public GZIPInputStream(InputStream in, int size) throws IOException {
+		super(in, new Inflater(true), size);
 		readHeader(in);
+	}
+
+	@Override
+	public void renew() throws IOException {
+		super.renew();
+		crc.reset();
+		closed = false;
+		eos = false;
+		readHeader(in);
+	}
+
+	/**
+	 * Creates a new input stream with a default buffer size.
+	 * 
+	 * @param in
+	 *            the input stream
+	 * @exception IOException
+	 *                if an I/O error has occurred
+	 */
+	public GZIPInputStream(InputStream in) throws IOException {
+		this(in, 512);
 	}
 
 	/**
@@ -124,14 +127,6 @@ public class GZIPInputStream extends InflaterInputStream {
 		return n;
 	}
 
-	protected void clearResources() {
-		super.clearResources();
-		if (tmpbuf != null) {
-			tmpBufPool.release(tmpbuf);
-			tmpbuf = null;
-		}
-	}
-
 	/**
 	 * Closes this input stream and releases any system resources associated
 	 * with the stream.
@@ -143,7 +138,6 @@ public class GZIPInputStream extends InflaterInputStream {
 		if (!closed) {
 			super.close();
 			eos = true;
-			clearResources();
 			closed = true;
 		}
 	}
@@ -156,8 +150,7 @@ public class GZIPInputStream extends InflaterInputStream {
 	/*
 	 * File header flags.
 	 */
-	@SuppressWarnings("unused")
-	private final static int FTEXT = 1; // Extra text
+	// private final static int FTEXT = 1; // Extra text
 	private final static int FHCRC = 2; // Header CRC
 	private final static int FEXTRA = 4; // Extra field
 	private final static int FNAME = 8; // File name
@@ -225,8 +218,6 @@ public class GZIPInputStream extends InflaterInputStream {
 		InputStream in = this.in;
 		int n = inf.getRemaining();
 		if (n > 0) {
-			if (buf == null)
-				throw new NullPointerException();
 			in = new SequenceInputStream(new ByteArrayInputStream(buf, len - n,
 					n), in);
 		}
@@ -249,11 +240,8 @@ public class GZIPInputStream extends InflaterInputStream {
 			}
 
 			inf.reset();
-			if (n > m) {
-				if (buf == null)
-					throw new NullPointerException();
+			if (n > m)
 				inf.setInput(buf, len - n + m, n - m);
-			}
 			return false;
 		}
 
@@ -292,7 +280,7 @@ public class GZIPInputStream extends InflaterInputStream {
 		return b;
 	}
 
-	private byte[] tmpbuf = tmpBufPool.get();
+	private byte[] tmpbuf = new byte[128];
 
 	/*
 	 * Skips bytes of input data blocking until all bytes are skipped. Does not

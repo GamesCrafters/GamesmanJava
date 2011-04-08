@@ -15,9 +15,6 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 import java.util.zip.ZipException;
 
-import edu.berkeley.gamesman.util.qll.Factory;
-import edu.berkeley.gamesman.util.qll.Pool;
-
 /**
  * This class implements a stream filter for uncompressing data in the "deflate"
  * compression format. It is also used as the basis for other decompression
@@ -28,19 +25,6 @@ import edu.berkeley.gamesman.util.qll.Pool;
  * @author David Connelly
  */
 public class InflaterInputStream extends FilterInputStream {
-	private static final Pool<byte[]> skipPool = new Pool<byte[]>(
-			new Factory<byte[]>() {
-
-				@Override
-				public byte[] newObject() {
-					return new byte[512];
-				}
-
-				@Override
-				public void reset(byte[] t) {
-				}
-			});
-
 	/**
 	 * Decompressor for this stream.
 	 */
@@ -60,8 +44,6 @@ public class InflaterInputStream extends FilterInputStream {
 	// this flag is set to true after EOF has reached
 	private boolean reachEOF = false;
 
-	private final Pool<byte[]> bytePool;
-
 	/**
 	 * Check to make sure that this stream has not been closed
 	 */
@@ -79,40 +61,55 @@ public class InflaterInputStream extends FilterInputStream {
 	 *            the input stream
 	 * @param inf
 	 *            the decompressor ("inflater")
-	 * @param bytePool
-	 *            the pool from which to retrieve the input buffer
+	 * @param size
+	 *            the input buffer size
 	 * @exception IllegalArgumentException
 	 *                if size is <= 0
 	 */
-	public InflaterInputStream(InputStream in, Inflater inf,
-			Pool<byte[]> bytePool) {
+	public InflaterInputStream(InputStream in, Inflater inf, int size) {
 		super(in);
 		if (in == null || inf == null) {
 			throw new NullPointerException();
+		} else if (size <= 0) {
+			throw new IllegalArgumentException("buffer size <= 0");
 		}
 		this.inf = inf;
-		buf = bytePool.get();
-		if (buf.length <= 0)
-			throw new IllegalArgumentException("buffer size <= 0");
-		this.bytePool = bytePool;
+		buf = new byte[size];
 	}
 
 	/**
-	 * Whether this stream uses the default inflater
+	 * Resets this object as if it had just been created
+	 * 
+	 * @throws IOException
+	 *             If an IOException occurs
 	 */
-	boolean usesDefaultInflater = false;
+	public void renew() throws IOException {
+		closed = false;
+		reachEOF = false;
+		inf.reset();
+	}
+
+	/**
+	 * Creates a new input stream with the specified decompressor and a default
+	 * buffer size.
+	 * 
+	 * @param in
+	 *            the input stream
+	 * @param inf
+	 *            the decompressor ("inflater")
+	 */
+	public InflaterInputStream(InputStream in, Inflater inf) {
+		this(in, inf, 512);
+	}
 
 	/**
 	 * Creates a new input stream with a default decompressor and buffer size.
 	 * 
 	 * @param in
 	 *            the input stream
-	 * @param bytePool
-	 *            The pool from which to retrieve the input buffer
 	 */
-	public InflaterInputStream(InputStream in, Pool<byte[]> bytePool) {
-		this(in, new Inflater(), bytePool);
-		usesDefaultInflater = true;
+	public InflaterInputStream(InputStream in) {
+		this(in, new Inflater());
 	}
 
 	private byte[] singleByteBuf = new byte[1];
@@ -181,17 +178,6 @@ public class InflaterInputStream extends FilterInputStream {
 		}
 	}
 
-	protected void clearResources() {
-		if (buf != null) {
-			bytePool.release(buf);
-			buf = null;
-		}
-		if (b != null) {
-			skipPool.release(b);
-			b = null;
-		}
-	}
-
 	/**
 	 * Returns 0 after EOF has been reached, otherwise always return 1.
 	 * <p>
@@ -212,7 +198,7 @@ public class InflaterInputStream extends FilterInputStream {
 		}
 	}
 
-	protected byte[] b = skipPool.get();
+	private byte[] b = new byte[512];
 
 	/**
 	 * Skips specified number of bytes of uncompressed data.
@@ -256,11 +242,8 @@ public class InflaterInputStream extends FilterInputStream {
 	 */
 	public void close() throws IOException {
 		if (!closed) {
-			if (usesDefaultInflater)
-				inf.end();
 			in.close();
 			closed = true;
-			clearResources();
 		}
 	}
 
@@ -272,14 +255,10 @@ public class InflaterInputStream extends FilterInputStream {
 	 */
 	protected void fill() throws IOException {
 		ensureOpen();
-		if (buf == null)
-			throw new NullPointerException();
 		len = in.read(buf, 0, buf.length);
 		if (len == -1) {
 			throw new EOFException("Unexpected end of ZLIB input stream");
 		}
-		if (buf == null)
-			throw new NullPointerException();
 		inf.setInput(buf, 0, len);
 	}
 

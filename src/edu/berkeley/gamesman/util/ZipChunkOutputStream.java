@@ -4,8 +4,6 @@ import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import edu.berkeley.gamesman.util.GZIPOutputStream;
-import edu.berkeley.gamesman.util.qll.Factory;
-import edu.berkeley.gamesman.util.qll.Pool;
 
 /**
  * A stream which zips into chunks prefaced by their size and then writes out to
@@ -16,59 +14,65 @@ import edu.berkeley.gamesman.util.qll.Pool;
  */
 public class ZipChunkOutputStream extends FilterOutputStream {
 	private final ChunkOutputStream cos;
-	private final Pool<byte[]> bytePool;
-	private GZIPOutputStream gzos;
+	private final GZIPOutputStream gzos;
 	private boolean bytesWritten;
 	private boolean onChunk = false;
 
+	/**
+	 * @param out
+	 *            The underlying stream to write chunks to
+	 * @param bufferSize
+	 *            The size of the GZIP buffer to use
+	 * @throws IOException
+	 *             If an IO Error occurs while instantiating
+	 */
 	public ZipChunkOutputStream(OutputStream out, final int bufferSize)
 			throws IOException {
-		this(out, new Pool<byte[]>(new Factory<byte[]>() {
-
-			@Override
-			public byte[] newObject() {
-				return new byte[bufferSize];
-			}
-
-			@Override
-			public void reset(byte[] t) {
-			}
-		}));
+		this(out, bufferSize, true);
 	}
 
 	/**
 	 * @param out
 	 *            An underlying stream to write zipped chunks to
-	 * @param bytePool
-	 *            A pool for obtaining byte arrays for GZIP to use as temporary
-	 *            storage
+	 * @param bufferSize
+	 *            The size of the GZIP buffer to use
 	 * @param initialize
 	 *            Whether to initialize the first chunk in the constructor (if
 	 *            not, you must call startChunk() before you can begin writing)
 	 * @throws IOException
 	 *             If an IOException occurs while opening the stream
 	 */
-	public ZipChunkOutputStream(OutputStream out, Pool<byte[]> bytePool,
+	public ZipChunkOutputStream(OutputStream out, int bufferSize,
 			boolean initialize) throws IOException {
 		super(new ChunkOutputStream(out));
 		cos = (ChunkOutputStream) this.out;
-		this.bytePool = bytePool;
-		if (initialize)
-			startChunk();
+		gzos = new GZIPOutputStream(cos, bufferSize);
+		if (initialize) {
+			onChunk = true;
+		} else {
+			cos.clearChunk();
+		}
 	}
 
 	/**
-	 * @param out
-	 *            An underlying stream to write zipped chunks to
-	 * @param pool
-	 *            A pool for obtaining byte arrays for GZIP to use as temporary
-	 *            storage
+	 * Resets this object as if it had just been instantiated
+	 * 
+	 * @param initialize
+	 *            Whether to initialize the first chunk (if not, you must call
+	 *            startChunk() before you can begin writing)
 	 * @throws IOException
 	 *             If an IOException occurs while opening the stream
 	 */
-	public ZipChunkOutputStream(OutputStream out, Pool<byte[]> pool)
-			throws IOException {
-		this(out, pool, true);
+	public void renew(boolean initialize) throws IOException {
+		bytesWritten = false;
+		onChunk = false;
+		cos.renew();
+		gzos.renew();
+		if (initialize) {
+			onChunk = true;
+		} else {
+			cos.clearChunk();
+		}
 	}
 
 	public void write(int b) throws IOException {
@@ -136,7 +140,7 @@ public class ZipChunkOutputStream extends FilterOutputStream {
 		if (onChunk)
 			throw new IOException(
 					"Already writing a chunk! Use finishAndWriteChunk() first");
-		gzos = new GZIPOutputStream(cos, bytePool);
+		gzos.renew();
 		bytesWritten = false;
 		onChunk = true;
 	}
@@ -147,7 +151,6 @@ public class ZipChunkOutputStream extends FilterOutputStream {
 			if (onChunk)
 				finishAndWriteChunk();
 			super.close();
-			gzos = null;
 		} else {
 			clearChunkAndClose();
 		}
@@ -177,7 +180,6 @@ public class ZipChunkOutputStream extends FilterOutputStream {
 	 */
 	public void clearChunkAndFinish() {
 		cos.clearChunk();
-		gzos = null;
 	}
 
 	/**
@@ -189,7 +191,6 @@ public class ZipChunkOutputStream extends FilterOutputStream {
 	 */
 	public void clearChunkAndClose() throws IOException {
 		cos.clearChunkAndClose();
-		gzos = null;
 	}
 
 	/**

@@ -19,6 +19,9 @@ import edu.berkeley.gamesman.util.Pair;
  */
 public abstract class Game<S extends State> {
 
+	/**
+	 * The configuration object associated with this game
+	 */
 	protected final Configuration conf;
 
 	/**
@@ -83,7 +86,7 @@ public abstract class Game<S extends State> {
 	/**
 	 * Applies move to pos
 	 * 
-	 * @deprecated
+	 * @deprecated Use validMoves instead
 	 * @param pos
 	 *            The State on which to apply move
 	 * @param move
@@ -152,7 +155,8 @@ public abstract class Game<S extends State> {
 	 * also must verify that the king is in check or else it's a stalemate).
 	 * 
 	 * @param pos
-	 * @return
+	 *            The primitive State
+	 * @return the primitive value of the state
 	 */
 	public Value strictPrimitiveValue(S pos) {
 		return primitiveValue(pos);
@@ -369,6 +373,13 @@ public abstract class Game<S extends State> {
 		return new Record(conf);
 	}
 
+	/**
+	 * A new array of record objects
+	 * 
+	 * @param len
+	 *            The length of the array
+	 * @return A length of instantiated records with length len
+	 */
 	public final Record[] newRecordArray(int len) {
 		Record[] arr = new Record[len];
 		for (int i = 0; i < len; i++) {

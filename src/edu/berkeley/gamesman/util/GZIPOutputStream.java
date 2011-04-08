@@ -12,8 +12,6 @@ import java.io.IOException;
 import java.util.zip.CRC32;
 import java.util.zip.Deflater;
 
-import edu.berkeley.gamesman.util.qll.Pool;
-
 /**
  * This class implements a stream filter for writing compressed data in the GZIP
  * file format.
@@ -50,12 +48,30 @@ public class GZIPOutputStream extends DeflaterOutputStream {
 	 * @exception IllegalArgumentException
 	 *                if size is <= 0
 	 */
-	public GZIPOutputStream(OutputStream out, Pool<byte[]> bytePool)
-			throws IOException {
-		super(out, new Deflater(Deflater.DEFAULT_COMPRESSION, true), bytePool);
-		usesDefaultDeflater = true;
+	public GZIPOutputStream(OutputStream out, int size) throws IOException {
+		super(out, new Deflater(Deflater.DEFAULT_COMPRESSION, true), size);
 		writeHeader();
 		crc.reset();
+	}
+
+	@Override
+	public void renew() throws IOException {
+		super.renew();
+		crc.reset();
+		writeHeader();
+		crc.reset();
+	}
+
+	/**
+	 * Creates a new output stream with a default buffer size.
+	 * 
+	 * @param out
+	 *            the output stream
+	 * @exception IOException
+	 *                If an I/O error has occurred.
+	 */
+	public GZIPOutputStream(OutputStream out) throws IOException {
+		this(out, 512);
 	}
 
 	/**
@@ -105,7 +121,6 @@ public class GZIPOutputStream extends DeflaterOutputStream {
 			byte[] trailer = new byte[TRAILER_SIZE];
 			writeTrailer(trailer, 0);
 			out.write(trailer);
-			myPool.release(buf);
 		}
 	}
 
