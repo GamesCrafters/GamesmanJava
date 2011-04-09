@@ -6,7 +6,6 @@
               as the first entry and export the buildfile again. -->
 <project basedir="." default="build" name="GamesmanJava">
     <property environment="env"/>
-    <property name="junit.output.dir" value="junit"/>
     <property name="debuglevel" value="source,lines,vars"/>
     <property name="target" value="1.6"/>
     <property name="source" value="1.6"/>
@@ -60,91 +59,5 @@
     <target description="compile project with Eclipse compiler" name="build-eclipse-compiler">
         <property name="build.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter"/>
         <antcall target="build"/>
-    </target>
-    <target name="GZippedFileDatabase">
-        <java classname="edu.berkeley.gamesman.database.GZippedFileDatabase" failonerror="true" fork="yes">
-            <arg line="database54.db database54.db.gz"/>
-            <classpath refid="GamesmanJava.classpath"/>
-        </java>
-    </target>
-    <target name="TestQuarto">
-        <mkdir dir="${junit.output.dir}"/>
-        <junit fork="yes" printsummary="withOutAndErr">
-            <formatter type="xml"/>
-            <test name="TestQuarto" todir="${junit.output.dir}"/>
-            <jvmarg line="-ea"/>
-            <classpath refid="GamesmanJava.classpath"/>
-        </junit>
-    </target>
-    <target name="HadoopTierMaster">
-        <java classname="edu.berkeley.gamesman.parallel.tier.HadoopTierMaster" failonerror="true" fork="yes">
-            <jvmarg line="-ea"/>
-            <arg line="jobs/tictactoe/hadoopTierTTT.job"/>
-            <classpath refid="GamesmanJava.classpath"/>
-        </java>
-    </target>
-    <target name="TestDartboardHasher">
-        <mkdir dir="${junit.output.dir}"/>
-        <junit fork="yes" printsummary="withOutAndErr">
-            <formatter type="xml"/>
-            <test name="TestDartboardHasher" todir="${junit.output.dir}"/>
-            <classpath refid="GamesmanJava.classpath"/>
-        </junit>
-    </target>
-    <target name="QuartoPlayer">
-        <java classname="edu.berkeley.gamesman.testing.QuartoPlayer" failonerror="true" fork="yes">
-            <classpath refid="GamesmanJava.classpath"/>
-        </java>
-    </target>
-    <target name="Gamesman">
-        <java classname="edu.berkeley.gamesman.Gamesman" failonerror="true" fork="yes">
-            <jvmarg line="-ea"/>
-            <arg line="jobs/Connect4/Connect4_54.job"/>
-            <classpath refid="GamesmanJava.classpath"/>
-        </java>
-    </target>
-    <target name="Play">
-        <java classname="edu.berkeley.gamesman.Play" failonerror="true" fork="yes">
-            <arg line="database54.db.gz"/>
-            <classpath refid="GamesmanJava.classpath"/>
-        </java>
-    </target>
-    <target name="QuartoMinorHasher">
-        <java classname="edu.berkeley.gamesman.hasher.QuartoMinorHasher" failonerror="true" fork="yes">
-            <classpath refid="GamesmanJava.classpath"/>
-        </java>
-    </target>
-    <target name="LoopyMaster">
-        <java classname="edu.berkeley.gamesman.loopyhadoop.LoopyMaster" failonerror="true" fork="yes">
-            <arg line="jobs/tictactoe/hadoopLoopyTTT.job"/>
-            <classpath refid="GamesmanJava.classpath"/>
-        </java>
-    </target>
-    <target name="TestY">
-        <mkdir dir="${junit.output.dir}"/>
-        <junit fork="yes" printsummary="withOutAndErr">
-            <formatter type="xml"/>
-            <test name="TestY" todir="${junit.output.dir}"/>
-            <classpath refid="GamesmanJava.classpath"/>
-        </junit>
-    </target>
-    <target name="PlayC4">
-        <java classname="edu.berkeley.gamesman.testing.C4Container" failonerror="true" fork="yes">
-            <arg line="database54.db.gz"/>
-            <classpath refid="GamesmanJava.classpath"/>
-        </java>
-    </target>
-    <target name="DartboardHasher">
-        <java classname="edu.berkeley.gamesman.hasher.DartboardHasher" failonerror="true" fork="yes">
-            <classpath refid="GamesmanJava.classpath"/>
-        </java>
-    </target>
-    <target name="junitreport">
-        <junitreport todir="${junit.output.dir}">
-            <fileset dir="${junit.output.dir}">
-                <include name="TEST-*.xml"/>
-            </fileset>
-            <report format="frames" todir="${junit.output.dir}"/>
-        </junitreport>
     </target>
 </project>
