@@ -1,5 +1,6 @@
 package edu.berkeley.gamesman.database;
 
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.Collection;
 
@@ -16,15 +17,19 @@ public final class TierCutDatabase extends Database {
 	private final int numTiersCut;
 	private SplitLocalDatabase inner;
 
+	
 	public TierCutDatabase(Configuration conf, long firstRecordIndex,
-			long numRecords, boolean reading, boolean writing) {
+			long numRecords, boolean reading, boolean writing) throws IOException {
 		super(conf, firstRecordIndex, numRecords, reading, writing);
 		myTierGame = (TierGame) conf.getGame();
 		deleteLastRow = true;
 		numTiersCut = conf.getInteger("gamesman.database.tiers.cut", 2);
 		String dbClass = SplitLocalDatabase.class.getName();
-		// inner = Database.openDatabase(dbClass, uri, conf,
-		// firstRecordIndex, numRecords, reading, writing);
+		String uri = conf.getProperty("gamesman.db.uri");
+		DataInputStream dis;
+		inner = (SplitLocalDatabase) Database.openDatabase(dbClass, uri, conf,
+		  firstRecordIndex, numRecords, reading, writing);
+		
 	}
 
 	@Override
