@@ -133,4 +133,28 @@ public final class TierCutDatabase extends Database {
 		inner.lowerPrepareReadRange(((TierCutDatabaseHandle) dh).innerHandle,
 				firstByteIndex, numBytes);
 	}
+	
+	@Override
+	protected void lowerPrepareWriteRange(DatabaseHandle dh,
+			long firstByteIndex, long numBytes) throws IOException {
+		inner.lowerPrepareWriteRange(((TierCutDatabaseHandle) dh).innerHandle, firstByteIndex, numBytes);
+
+	}
+	
+	@Override
+	protected int lowerReadBytes(DatabaseHandle dh, byte[] array, int off,
+			int maxLen) throws IOException {
+		return inner.lowerReadBytes(((TierCutDatabaseHandle) dh).innerHandle, array, off, maxLen);
+	}
+	
+	@Override
+	protected int lowerWriteBytes(DatabaseHandle dh, byte[] array, int off,
+			int maxLen) throws IOException {
+		return inner.lowerWriteBytes(((TierCutDatabaseHandle) dh).innerHandle, array, off, maxLen);
+	}
+	
+	@Override
+	public void close() throws IOException {
+		inner.close();
+	}
 }
