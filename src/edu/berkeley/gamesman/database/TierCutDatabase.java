@@ -37,7 +37,8 @@ public final class TierCutDatabase extends Database {
 			throws IOException {
 		int tier = myTierGame.hashToTier(recordIndex);
 		if (shouldBeInDatabase(tier)) {
-			return super.readRecord(dh, recordIndex);
+			//return super.readRecord(dh, recordIndex);
+			return inner.readRecord(dh, recordIndex);
 		} else {
 			if (inLastRow(recordIndex)) {
 				TierState pos = myTierGame.hashToState(recordIndex);
@@ -79,7 +80,8 @@ public final class TierCutDatabase extends Database {
 			throws IOException {
 		int tier = myTierGame.hashToTier(recordIndex);
 		if (shouldBeInDatabase(tier)) {
-			super.writeRecord(dh, recordIndex, r);
+			//super.writeRecord(dh, recordIndex, r);
+			inner.writeRecord(dh, recordIndex, r);
 		}
 	}
 
