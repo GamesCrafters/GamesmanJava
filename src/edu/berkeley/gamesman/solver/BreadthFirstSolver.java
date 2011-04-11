@@ -55,7 +55,7 @@ public class BreadthFirstSolver<T extends State> extends Solver {
 			Record rightNow = game.newRecord();
 			long positionsFound = 0;
 			try {
-				db.seek(readHandle, firstRecordIndex);
+				db.prepareReadRecordRange(readHandle, firstRecordIndex, numRecords);
 			} catch (IOException e1) {
 				throw new Error(e1);
 			}

@@ -38,8 +38,10 @@ public class ReversiSolver extends TierSolver {
 		@Override
 		public void run() {
 			try {
-				db.seek(readHandle1, firstRecordIndex);
-				db.seek(readHandle2, firstRecordIndex + halfTier);
+				db.prepareReadRecordRange(readHandle1, firstRecordIndex,
+						numRecords);
+				db.prepareReadRecordRange(readHandle2, firstRecordIndex
+						+ halfTier, numRecords);
 				myGame.setState(myGame.hashToState(firstRecordIndex));
 				Record record1 = myGame.newRecord(), record2 = myGame
 						.newRecord();

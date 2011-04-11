@@ -136,10 +136,7 @@ public abstract class Database implements Flushable, Closeable {
 		assert dh.remainingBytes == 0;
 		dh.location = dh.firstByteIndex = firstByteIndex;
 		dh.numBytes = numBytes;
-		if (numBytes == DatabaseHandle.KEEP_GOING)
-			dh.remainingBytes = 0;
-		else
-			dh.remainingBytes = numBytes;
+		dh.remainingBytes = numBytes;
 		lowerPrepareReadRange(dh, firstByteIndex, numBytes);
 	}
 
@@ -233,11 +230,9 @@ public abstract class Database implements Flushable, Closeable {
 	protected final int readBytes(DatabaseHandle dh, byte[] array, int off,
 			int maxLen) throws IOException {
 		int actualNum;
-		if (dh.numBytes == DatabaseHandle.UNPREPARED) {
+		if (dh.numBytes < 0) {
 			throw new UnpreparedHandleException(dh);
-		} else if (dh.numBytes == DatabaseHandle.KEEP_GOING)
-			actualNum = maxLen;
-		else if (dh.numBytes == 0)
+		} else if (dh.numBytes == 0)
 			return -1;
 		else
 			actualNum = (int) Math.min(dh.remainingBytes, maxLen);
@@ -303,10 +298,8 @@ public abstract class Database implements Flushable, Closeable {
 	protected final int writeBytes(DatabaseHandle dh, byte[] array, int off,
 			int maxLen) throws IOException {
 		int actualNum;
-		if (dh.numBytes == DatabaseHandle.UNPREPARED)
+		if (dh.numBytes < 0)
 			throw new UnpreparedHandleException(dh);
-		else if (dh.numBytes == DatabaseHandle.KEEP_GOING)
-			actualNum = maxLen;
 		else if (dh.numBytes == 0)
 			return -1;
 		else
@@ -384,16 +377,16 @@ public abstract class Database implements Flushable, Closeable {
 		}
 	}
 
-	public final void seek(DatabaseHandle dh, long recordIndex)
-			throws IOException {
-		assert dh.remainingBytes == 0;
-		dh.location = myLogic.getByteIndex(recordIndex);
-		dh.numBytes = -1;
-		lowerSeek(dh, recordIndex);
+	public final void prepareReadRecordRange(DatabaseHandle dh,
+			long recordIndex, long numRecords) throws IOException {
+		prepareReadRange(dh, myLogic.getByteIndex(recordIndex),
+				myLogic.getNumBytes(numRecords));
 	}
 
-	public void lowerSeek(DatabaseHandle dh, long recordIndex)
-			throws IOException {
+	public final void prepareWriteRecordRange(DatabaseHandle dh,
+			long recordIndex, long numRecords) throws IOException {
+		prepareWriteRange(dh, myLogic.getByteIndex(recordIndex),
+				myLogic.getNumBytes(numRecords));
 	}
 
 	public long readNextRecord(DatabaseHandle dh) throws IOException {
@@ -408,7 +401,7 @@ public abstract class Database implements Flushable, Closeable {
 	}
 
 	public void fill(DatabaseHandle dh, long record) throws IOException {
-		seek(dh, firstRecordIndex);
+		prepareWriteRecordRange(dh, firstRecordIndex, numRecords);
 		for (int i = 0; i < numRecords; i++) {
 			writeNextRecord(dh, record);
 		}

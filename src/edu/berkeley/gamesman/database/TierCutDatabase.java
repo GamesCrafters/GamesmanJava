@@ -17,9 +17,9 @@ public final class TierCutDatabase extends Database {
 	private final int numTiersCut;
 	private SplitLocalDatabase inner;
 
-	
 	public TierCutDatabase(Configuration conf, long firstRecordIndex,
-			long numRecords, boolean reading, boolean writing) throws IOException {
+			long numRecords, boolean reading, boolean writing)
+			throws IOException {
 		super(conf, firstRecordIndex, numRecords, reading, writing);
 		myTierGame = (TierGame) conf.getGame();
 		deleteLastRow = true;
@@ -28,8 +28,7 @@ public final class TierCutDatabase extends Database {
 		String uri = conf.getProperty("gamesman.db.uri");
 		DataInputStream dis;
 		inner = (SplitLocalDatabase) Database.openDatabase(dbClass, uri, conf,
-		  firstRecordIndex, numRecords, reading, writing);
-		
+				firstRecordIndex, numRecords, reading, writing);
 	}
 
 	@Override
@@ -112,5 +111,26 @@ public final class TierCutDatabase extends Database {
 	protected int writeBytes(DatabaseHandle dh, long location, byte[] array,
 			int off, int len) throws IOException {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public DatabaseHandle getHandle(boolean reading) {
+		return new TierCutDatabaseHandle(myLogic.recordBytes, reading);
+	}
+
+	private class TierCutDatabaseHandle extends DatabaseHandle {
+		private final DatabaseHandle innerHandle;
+
+		public TierCutDatabaseHandle(int numBytes, boolean reading) {
+			super(numBytes, reading);
+			innerHandle = inner.getHandle(reading);
+		}
+	}
+
+	@Override
+	protected void lowerPrepareReadRange(DatabaseHandle dh,
+			long firstByteIndex, long numBytes) throws IOException {
+		inner.lowerPrepareReadRange(((TierCutDatabaseHandle) dh).innerHandle,
+				firstByteIndex, numBytes);
 	}
 }

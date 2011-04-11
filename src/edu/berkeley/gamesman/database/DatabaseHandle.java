@@ -8,12 +8,10 @@ package edu.berkeley.gamesman.database;
  * @author dnspies
  */
 public class DatabaseHandle {
-	public static final int KEEP_GOING = -1;
-	public static final int UNPREPARED = -2;
 	public long location;
 	protected long remainingBytes;
 	protected long firstByteIndex;
-	public long numBytes = UNPREPARED;
+	public long numBytes = -1;
 	protected final byte[] currentRecord;
 	protected final boolean reading;
 

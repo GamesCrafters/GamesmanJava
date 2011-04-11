@@ -20,6 +20,7 @@ public class ReadWriteDatabase extends Database {
 		this(readDb, writeDb, conf, 0L, conf.getGame().numHashes());
 	}
 
+	@Override
 	public DatabaseHandle getHandle(boolean reading) {
 		if (reading) {
 			if (readDb == null)
@@ -34,73 +35,78 @@ public class ReadWriteDatabase extends Database {
 		}
 	}
 
+	@Override
 	protected void lowerPrepareReadRange(DatabaseHandle dh,
 			long firstByteIndex, long numBytes) throws IOException {
 		readDb.lowerPrepareReadRange(dh, firstByteIndex, numBytes);
 	}
 
+	@Override
 	protected void lowerPrepareWriteRange(DatabaseHandle dh,
 			long firstByteIndex, long numBytes) throws IOException {
 		writeDb.lowerPrepareWriteRange(dh, firstByteIndex, numBytes);
 	}
 
+	@Override
 	protected int lowerReadBytes(DatabaseHandle dh, byte[] array, int off,
 			int len) throws IOException {
 		return readDb.lowerReadBytes(dh, array, off, len);
 	}
 
+	@Override
 	protected int readBytes(DatabaseHandle dh, long location, byte[] array,
 			int off, int len) throws IOException {
 		return readDb.readBytes(dh, location, array, off, len);
 	}
 
+	@Override
 	protected int lowerWriteBytes(DatabaseHandle dh, byte[] array, int off,
 			int len) throws IOException {
 		return writeDb.lowerWriteBytes(dh, array, off, len);
 	}
 
+	@Override
 	protected int writeBytes(DatabaseHandle dh, long location, byte[] array,
 			int off, int len) throws IOException {
 		return writeDb.writeBytes(dh, location, array, off, len);
 	}
 
+	@Override
 	public long readRecord(DatabaseHandle dh, long recordIndex)
 			throws IOException {
 		return readDb.readRecord(dh, recordIndex);
 	}
 
+	@Override
 	protected long readRecordFromByteIndex(DatabaseHandle dh, long byteIndex)
 			throws IOException {
 		return readDb.readRecordFromByteIndex(dh, byteIndex);
 	}
 
+	@Override
 	public void writeRecord(DatabaseHandle dh, long recordIndex, long record)
 			throws IOException {
 		writeDb.writeRecord(dh, recordIndex, record);
 	}
 
+	@Override
 	protected void writeRecordFromByteIndex(DatabaseHandle dh, long byteIndex,
 			long record) throws IOException {
 		writeDb.writeRecordFromByteIndex(dh, byteIndex, record);
 	}
 
-	public void lowerSeek(DatabaseHandle dh, long recordIndex)
-			throws IOException {
-		if (dh.reading)
-			readDb.lowerSeek(dh, recordIndex);
-		else
-			writeDb.lowerSeek(dh, recordIndex);
-	}
-
+	@Override
 	public long readNextRecord(DatabaseHandle dh) throws IOException {
 		return readDb.readNextRecord(dh);
 	}
 
+	@Override
 	public void writeNextRecord(DatabaseHandle dh, long record)
 			throws IOException {
 		writeDb.fill(dh, record);
 	}
 
+	@Override
 	public void fill(DatabaseHandle dh, long record) throws IOException {
 		writeDb.fill(dh, record);
 	}

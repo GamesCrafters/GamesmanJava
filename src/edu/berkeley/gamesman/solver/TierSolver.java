@@ -62,7 +62,8 @@ public class TierSolver extends Solver {
 			childStates = myGame.newStateArray(myGame.maxChildren());
 			childRecords = myGame.newRecordArray(myGame.maxChildren());
 			try {
-				db.seek(myWriteHandle, firstRecordIndex);
+				db.prepareWriteRecordRange(myWriteHandle, firstRecordIndex,
+						numRecords);
 			} catch (IOException e) {
 				throw new Error(e);
 			}

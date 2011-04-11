@@ -14,7 +14,8 @@ public class MemoryDatabase extends DatabaseWrapper {
 	private final boolean writing;
 
 	public MemoryDatabase(Database db, Configuration config, long firstRecord,
-			long numRecords, boolean reading, boolean writing) throws IOException {
+			long numRecords, boolean reading, boolean writing)
+			throws IOException {
 		super(db, config, firstRecord, numRecords, reading, writing);
 		recordCache = new RecordRangeCache(myLogic);
 		long numBytes = myLogic.getNumBytes(numRecords);
@@ -45,10 +46,9 @@ public class MemoryDatabase extends DatabaseWrapper {
 	@Override
 	public long readNextRecord(DatabaseHandle dh) throws EOFException,
 			UnpreparedHandleException {
-		if (dh.numBytes == DatabaseHandle.UNPREPARED)
+		if (dh.numBytes < 0)
 			throw new UnpreparedHandleException(dh);
-		else if (dh.numBytes == DatabaseHandle.KEEP_GOING
-				|| dh.numBytes >= myLogic.recordBytes) {
+		else if (dh.numBytes >= myLogic.recordBytes) {
 			long record = readRecordFromByteIndex(dh, dh.location);
 			dh.location += myLogic.recordBytes;
 			return record;
@@ -65,10 +65,9 @@ public class MemoryDatabase extends DatabaseWrapper {
 	@Override
 	public void writeNextRecord(DatabaseHandle dh, long record)
 			throws EOFException, UnpreparedHandleException {
-		if (dh.numBytes == DatabaseHandle.UNPREPARED)
+		if (dh.numBytes < 0)
 			throw new UnpreparedHandleException(dh);
-		else if (dh.numBytes == DatabaseHandle.KEEP_GOING
-				|| dh.numBytes >= myLogic.recordBytes) {
+		else if (dh.numBytes >= myLogic.recordBytes) {
 			writeRecordFromByteIndex(dh, dh.location, record);
 			dh.location += myLogic.recordBytes;
 		} else {

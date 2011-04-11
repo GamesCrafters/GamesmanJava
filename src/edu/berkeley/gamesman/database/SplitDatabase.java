@@ -72,8 +72,6 @@ public abstract class SplitDatabase extends Database {
 			} catch (EOFException e) {
 				break;
 			}
-			assert lastDescriptor == null
-					|| nextDescriptor.firstRecordIndex == lastLastRecordIndex;
 			long nextLastRecordIndex = nextDescriptor.firstRecordIndex
 					+ nextDescriptor.numRecords;
 			if (nextDescriptor.firstRecordIndex < lastRecordIndex
