@@ -14,7 +14,7 @@ import edu.berkeley.gamesman.util.Pair;
 /**
  * QuickCross by Peter, Raji, Sharmishtha
  */
-public final class QuickCross extends Game<QuickCrossState> implements LoopyGame<QuickCrossState> {
+public final class QuickCross extends Game<QuickCrossState> implements Undoable<QuickCrossState> {
 	private final int width;
 	private final int height;
 	private final int boardSize;

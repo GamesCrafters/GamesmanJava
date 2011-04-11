@@ -16,7 +16,7 @@ import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 //public class LoopyGameWrapper extends LoopyMutaGame {
 public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame {
 	private final Game<S> myGame;
-	private final LoopyGame<S> myGameLoopy;
+	private final Undoable<S> myGameLoopy;
 	private final Pool<QuickLinkedList<S>> stateSetPool = new Pool<QuickLinkedList<S>>(
 			new Factory<QuickLinkedList<S>>() {
 
@@ -53,11 +53,11 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame {
 	@SuppressWarnings("unchecked")
 	public LoopyGameWrapper(Configuration conf, Game<S> g) {
 		super(conf);
-		if (!(g instanceof LoopyGame<?>)) {
-			throw new Error("Can only wrap Loopy games");
+		if (!(g instanceof Undoable<?>)) {
+			throw new Error("Can only wrap games which implement Undoable");
 		}
 		myGame = g;
-		myGameLoopy = (LoopyGame<S>) g;
+		myGameLoopy = (Undoable<S>) g;
 		moveLists = new QuickLinkedList<QuickLinkedList<S>>();
 		parentLists = new QuickLinkedList<QuickLinkedList<S>>();
 		stateList = new QuickLinkedList<S>();

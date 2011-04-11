@@ -5,7 +5,7 @@ import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.game.util.TierState;
 
-public class TicTacToeLoopy extends TicTacToe implements LoopyGame<TierState> {
+public class TicTacToeLoopy extends TicTacToe implements Undoable<TierState> {
 
 	public TicTacToeLoopy(Configuration conf) {
 		super(conf);

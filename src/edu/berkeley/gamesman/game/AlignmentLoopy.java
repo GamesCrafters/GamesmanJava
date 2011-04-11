@@ -10,7 +10,7 @@ import edu.berkeley.gamesman.game.AlignmentState;
  * 
  */
 
-public class AlignmentLoopy extends Alignment implements LoopyGame<AlignmentState> {
+public class AlignmentLoopy extends Alignment implements Undoable<AlignmentState> {
 
 	
 	public AlignmentLoopy(Configuration conf) {
