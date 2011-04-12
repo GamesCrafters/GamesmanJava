@@ -11,20 +11,25 @@ public class TestQuarto {
 
 	@Test
 	public void testStepper() {
+		testStepper(5);
+		testStepper(6);
+	}
+
+	public void testStepper(int tier) {
 		QuartoMinorHasher qmh = new QuartoMinorHasher();
 		QuartoMinorHasher qmh2 = new QuartoMinorHasher();
-		qmh.setTier(7);
-		qmh2.setTier(7);
-		Assert.assertEquals(151410L, qmh.numHashesForTier(7));
-		for (long hash = 0L; hash < 151410L; hash++) {
-			arbitraryReset(qmh, 7);
+		qmh.setTier(tier);
+		qmh2.setTier(tier);
+		long numHashes = qmh.numHashesForTier(tier);
+		for (long hash = 0L; hash < numHashes; hash++) {
+			arbitraryReset(qmh, tier);
 			Assert.assertEquals(hash, qmh.getHash());
 			qmh2.unhash(hash);
 			int[] board = qmh.getBoard();
 			Assert.assertTrue(Arrays.equals(board, qmh2.getBoard()));
 			qmh2.reset();
 			Assert.assertEquals(hash, qmh2.hash(board));
-			if (hash < 151409L)
+			if (hash < numHashes - 1)
 				qmh.nextHashInTier();
 		}
 	}
@@ -89,7 +94,7 @@ public class TestQuarto {
 	@Test
 	public void testCacher() {
 		QuartoMinorHasher qmh = new QuartoMinorHasher();
-		int tier = 6;
+		int tier = 5;
 		long availableMem = MEM / ((16 - tier) * 16 + 1);
 		qmh.setTier(tier);
 		long[] children = new long[(tier + 1) * (16 - tier)];
