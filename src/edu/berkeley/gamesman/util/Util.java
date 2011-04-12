@@ -2,7 +2,6 @@ package edu.berkeley.gamesman.util;
 
 import java.io.DataInput;
 import java.io.EOFException;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Array;
@@ -10,7 +9,6 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Iterator;
-import java.util.concurrent.CountDownLatch;
 
 /**
  * Various utility functions accessible from any class
@@ -220,20 +218,6 @@ public final class Util {
 			accum = accum * (n - k + i) / i;
 
 		return (long) (accum + 0.5); // avoid rounding error
-	}
-
-	/**
-	 * Find a child of a directory Checks for potentially unsafe entries such as
-	 * ..
-	 * 
-	 * @param dir
-	 *            The directory
-	 * @param childname
-	 *            Name of the child
-	 * @return the File referring to that child
-	 */
-	public static File getChild(File dir, final String childname) {
-		return new File(dir, childname); // TODO: sanity check childname
 	}
 
 	/**
@@ -593,5 +577,28 @@ public final class Util {
 			splits[i] = start + i * num / numSplits;
 		}
 		return splits;
+	}
+
+	/**
+	 * Parses an array of ints. This method can be thought of as the inverse of
+	 * Arrays.toString(int[])
+	 * 
+	 * @see Arrays#toString(int[])
+	 * 
+	 * @param intArray
+	 *            The array as a string (ie "[1, 2, 3]")
+	 * @return The array as an array (ie new int[]{1, 2, 3})
+	 */
+	public static int[] parseIntArray(String intArray) {
+		intArray = intArray.trim();
+		assert intArray.charAt(0) == '['
+				&& intArray.charAt(intArray.length() - 1) == ']';
+		intArray = intArray.substring(1, intArray.length() - 1);
+		String[] ints = intArray.split(",");
+		int[] intVals = new int[ints.length];
+		for (int i = 0; i < ints.length; i++) {
+			intVals[i] = Integer.parseInt(ints[i].trim());
+		}
+		return intVals;
 	}
 }
