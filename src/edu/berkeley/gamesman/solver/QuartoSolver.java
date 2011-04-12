@@ -48,7 +48,7 @@ public class QuartoSolver extends CacheTierSolver {
 	 * @author dnspies
 	 */
 	public class QuartoSolveTask extends CacheTierSolveTask {
-		private final Record[] underChildren;
+		private Record[] underChildren;
 
 		/**
 		 * @param firstRecordIndex
@@ -59,6 +59,11 @@ public class QuartoSolver extends CacheTierSolver {
 		 */
 		public QuartoSolveTask(long firstRecordIndex, long numRecords) {
 			super(firstRecordIndex, numRecords);
+		}
+
+		@Override
+		public void prepareSolve() {
+			super.prepareSolve();
 			underChildren = myGame.newRecordArray(16);
 		}
 
