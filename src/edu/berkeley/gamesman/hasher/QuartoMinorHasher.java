@@ -115,10 +115,9 @@ public final class QuartoMinorHasher {
 		}
 	}
 
-	private static final class Piece {
+	private final class Piece {
 		int pieceNum;
-
-		// long pieceHash;
+		Position myPos;
 
 		public Piece(int i) {
 			pieceNum = i;
@@ -135,14 +134,6 @@ public final class QuartoMinorHasher {
 			}
 			pieceNum = newNum;
 		}
-
-		// public void reverseRotation(Rotation r) {
-		// int newNum = 0;
-		// for (int i = 0; i < 4; i++) {
-		// newNum = QuartoMinorHasher.set(newNum, r.places[i], get(i));
-		// }
-		// pieceNum = newNum;
-		// }
 
 		private int get(int i) {
 			return QuartoMinorHasher.get(pieceNum, i);
@@ -228,8 +219,6 @@ public final class QuartoMinorHasher {
 	private final Position[] tierTables = new Position[17];
 	private final Piece[] pieces;
 	private final Piece[] child;
-	// private final Position[] symPositions;
-	// private int syms;
 	private long hash;
 	private final Count numType;
 	private final Count count;
@@ -247,7 +236,6 @@ public final class QuartoMinorHasher {
 		}
 		pieces = new Piece[16];
 		child = new Piece[16];
-		// symPositions = new Position[16];
 		for (int i = 0; i < 16; i++) {
 			pieces[i] = new Piece();
 			child[i] = new Piece();
@@ -260,20 +248,20 @@ public final class QuartoMinorHasher {
 
 	public void setTier(int tier) {
 		numPieces = tier;
-		// Position curPos = tierTables[tier];
-		// syms = 1;
 		numType.reset(tier);
+		Position p = tierTables[tier];
 		for (int i = 0; i < tier; i++) {
 			pieces[i].pieceNum = i;
+			pieces[i].myPos = p;
+			if (p != null) {
+				if (p.inner == null)
+					p = null;
+				else {
+					p = p.inner[i];
+					assert p != null;
+				}
+			}
 			numType.addPiece(i);
-			// pieces[i].pieceHash = 0L;
-			// symPositions[i] = curPos;
-			// if (curPos == null || curPos.inner == null)
-			// curPos = null;
-			// else {
-			// curPos = curPos.inner[i + 1];
-			// syms = i + 2;
-			// }
 		}
 		hash = 0L;
 	}
@@ -297,9 +285,10 @@ public final class QuartoMinorHasher {
 		numType.reset(numPieces);
 		rot.reset();
 		Position p = tierTables[numPieces];
-		// symPositions[0] = p;
-		if (numPieces > 0)
+		if (numPieces > 0) {
 			numType.addPiece(0);
+			pieces[0].myPos = p;
+		}
 		int i;
 		for (i = 1; i < numPieces; i++) {
 			if (p.inner == null)
@@ -308,20 +297,16 @@ public final class QuartoMinorHasher {
 			rot.dropState(pieces[i]);
 			numType.addPiece(pieces[i].pieceNum);
 			p = p.inner[pieces[i].pieceNum];
-			// pieces[i].pieceHash = 0L;
-			// symPositions[i] = p;
+			pieces[i].myPos = p;
 			if (p == null)
 				throw new NullPointerException();
 		}
-		// syms = i;
 		hash = p.offset;
-		// pieces[i - 1].pieceHash = p.offset;
 		for (; i < numPieces; i++) {
-			// symPositions[i] = null;
 			pieces[i].applyRotation(rot);
+			pieces[i].myPos = null;
 			numType.addPiece(pieces[i].pieceNum);
 			long pieceHash = numType.lastHash();
-			// pieces[i].pieceHash = pieceHash;
 			hash += pieceHash;
 		}
 		return hash;
@@ -336,10 +321,11 @@ public final class QuartoMinorHasher {
 		Position p = tierTables[numPieces];
 		numType.reset(numPieces);
 		this.hash = hash;
-		pieces[0].pieceNum = 0;
-		if (numPieces > 0)
+		if (numPieces > 0) {
+			pieces[0].pieceNum = 0;
 			numType.addPiece(0);
-		// symPositions[0] = p;
+			pieces[0].myPos = p;
+		}
 		int i;
 		for (i = 1; i < numPieces; i++) {
 			if (p.inner == null)
@@ -355,21 +341,18 @@ public final class QuartoMinorHasher {
 						break;
 				}
 			}
+			assert nextP != null;
 			pieces[i].pieceNum = nextK;
-			// pieces[i].pieceHash = 0L;
 			numType.addPiece(nextK);
 			p = nextP;
-			// symPositions[i] = p;
+			pieces[i].myPos = p;
 		}
-		// syms = i;
-		// pieces[i - 1].pieceHash = p.offset;
 		hash -= p.offset;
 		for (; i < numPieces; i++) {
-			// symPositions[i] = null;
 			long pieceHash = numType.addNext(hash);
 			int piece = numType.lastPiece;
 			pieces[i].pieceNum = piece;
-			// pieces[i].pieceHash = pieceHash;
+			pieces[i].myPos = null;
 			hash -= pieceHash;
 		}
 		assert hash == 0L;
@@ -380,7 +363,37 @@ public final class QuartoMinorHasher {
 	}
 
 	public void nextHashInTier() {
-		unhash(hash + 1);
+		hashlessIncrement(numPieces - 1);
+		hash++;
+	}
+
+	private void hashlessIncrement(int i) {
+		int current = pieces[i].pieceNum;
+		if (current >= 0)
+			numType.used[current] = false;
+		current++;
+		while (current < 16
+				&& (numType.used[current] || notBase(pieces[i - 1].myPos,
+						current))) {
+			current++;
+		}
+		if (current == 16) {
+			hashlessIncrement(i - 1);
+			pieces[i].pieceNum = -1;
+			hashlessIncrement(i);
+		} else {
+			pieces[i].pieceNum = current;
+			pieces[i].myPos = getPos(pieces[i - 1].myPos, current);
+			numType.used[current] = true;
+		}
+	}
+
+	private Position getPos(Position pos, int current) {
+		return pos == null || pos.inner == null ? null : pos.inner[current];
+	}
+
+	private boolean notBase(Position pos, int current) {
+		return pos != null && pos.inner != null && pos.inner[current] == null;
 	}
 
 	public void reset() {
@@ -468,8 +481,10 @@ public final class QuartoMinorHasher {
 		return numType.used[i];
 	}
 
-	// Returns null if there isn't enough memory to cache all possible positions
-	// up to place
+	/*
+	 * Returns null if there isn't enough memory to cache all possible positions
+	 * up to place
+	 */
 	public long[] getCache(int place, long availableMem) {
 		return getCache(place, -1, availableMem);
 	}
