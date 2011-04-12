@@ -63,7 +63,7 @@ public class DummyDatabase extends Database {
 	@Override
 	protected int readBytes(DatabaseHandle dh, long location, byte[] array,
 			int off, int len) {
-		return len;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -75,15 +75,15 @@ public class DummyDatabase extends Database {
 	@Override
 	public synchronized long readNextRecord(DatabaseHandle dh)
 			throws IOException {
-		readFullBytes(dh, dh.currentRecord, 0, myLogic.recordBytes);
+		incrementRecord(dh);
 		return nextRecord();
 	}
 
 	@Override
 	protected long readRecordFromByteIndex(DatabaseHandle dh, long byteIndex)
 			throws IOException {
-		readFullBytes(dh, byteIndex, dh.currentRecord, 0, myLogic.recordBytes);
-		return nextRecord();
+		prepareReadRange(dh, byteIndex, myLogic.recordBytes);
+		return readNextRecord(dh);
 	}
 
 	private long nextRecord() {

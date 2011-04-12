@@ -9,7 +9,7 @@ package edu.berkeley.gamesman.database;
  */
 public class DatabaseHandle {
 	public long location;
-	protected long remainingBytes;
+	public long remainingBytes;
 	protected long firstByteIndex;
 	public long numBytes = -1;
 	protected final byte[] currentRecord;

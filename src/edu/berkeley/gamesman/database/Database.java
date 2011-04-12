@@ -9,6 +9,7 @@ import java.io.FileInputStream;
 import java.io.Flushable;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ConcurrentModificationException;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.database.wrapper.DatabaseWrapper;
@@ -18,7 +19,7 @@ import edu.berkeley.gamesman.util.Util;
 /**
  * @author dnspies
  */
-public abstract class Database implements Flushable, Closeable {
+public abstract class Database implements Closeable {
 
 	/**
 	 * The configuration object corresponding to this database (may have been
@@ -130,7 +131,7 @@ public abstract class Database implements Flushable, Closeable {
 	 * @throws IOException
 	 *             If an IOException occurs during preparation
 	 */
-	public final void prepareReadRange(DatabaseHandle dh, long firstByteIndex,
+	public void prepareReadRange(DatabaseHandle dh, long firstByteIndex,
 			long numBytes) throws IOException {
 		assert reading;
 		assert dh.remainingBytes == 0;
@@ -175,7 +176,7 @@ public abstract class Database implements Flushable, Closeable {
 	 * @throws IOException
 	 *             If an IOException occurs during preparation
 	 */
-	public final void prepareWriteRange(DatabaseHandle dh, long firstByteIndex,
+	public void prepareWriteRange(DatabaseHandle dh, long firstByteIndex,
 			long numBytes) throws IOException {
 		assert writing;
 		assert dh.remainingBytes == 0;
@@ -227,8 +228,8 @@ public abstract class Database implements Flushable, Closeable {
 	 * @throws IOException
 	 *             If an IOException occurs while reading
 	 */
-	protected final int readBytes(DatabaseHandle dh, byte[] array, int off,
-			int maxLen) throws IOException {
+	protected int readBytes(DatabaseHandle dh, byte[] array, int off, int maxLen)
+			throws IOException {
 		int actualNum;
 		if (dh.numBytes < 0) {
 			throw new UnpreparedHandleException(dh);
@@ -295,7 +296,7 @@ public abstract class Database implements Flushable, Closeable {
 	protected abstract int readBytes(DatabaseHandle dh, long location,
 			byte[] array, int off, int len) throws IOException;
 
-	protected final int writeBytes(DatabaseHandle dh, byte[] array, int off,
+	protected int writeBytes(DatabaseHandle dh, byte[] array, int off,
 			int maxLen) throws IOException {
 		int actualNum;
 		if (dh.numBytes < 0)
@@ -377,14 +378,14 @@ public abstract class Database implements Flushable, Closeable {
 		}
 	}
 
-	public final void prepareReadRecordRange(DatabaseHandle dh,
-			long recordIndex, long numRecords) throws IOException {
+	public void prepareReadRecordRange(DatabaseHandle dh, long recordIndex,
+			long numRecords) throws IOException {
 		prepareReadRange(dh, myLogic.getByteIndex(recordIndex),
 				myLogic.getNumBytes(numRecords));
 	}
 
-	public final void prepareWriteRecordRange(DatabaseHandle dh,
-			long recordIndex, long numRecords) throws IOException {
+	public void prepareWriteRecordRange(DatabaseHandle dh, long recordIndex,
+			long numRecords) throws IOException {
 		prepareWriteRange(dh, myLogic.getByteIndex(recordIndex),
 				myLogic.getNumBytes(numRecords));
 	}
@@ -400,15 +401,11 @@ public abstract class Database implements Flushable, Closeable {
 		writeFullBytes(dh, dh.currentRecord, 0, myLogic.recordBytes);
 	}
 
-	public void fill(DatabaseHandle dh, long record) throws IOException {
+	public final void fill(DatabaseHandle dh, long record) throws IOException {
 		prepareWriteRecordRange(dh, firstRecordIndex, numRecords);
 		for (int i = 0; i < numRecords; i++) {
 			writeNextRecord(dh, record);
 		}
-	}
-
-	@Override
-	public void flush() throws IOException {
 	}
 
 	@Override
@@ -563,7 +560,7 @@ public abstract class Database implements Flushable, Closeable {
 	 *            The number of records which need to be stored
 	 * @return The number of bytes required to store numRecords records
 	 */
-	public long getNumBytes(long numRecords) {
+	public final long getNumBytes(long numRecords) {
 		return myLogic.getNumBytes(numRecords);
 	}
 
@@ -572,7 +569,12 @@ public abstract class Database implements Flushable, Closeable {
 	 *            The number of bytes available
 	 * @return The number of records which can be stored in numBytes bytes
 	 */
-	public long recordsForBytes(long numBytes) {
+	public final long recordsForBytes(long numBytes) {
 		return myLogic.getNumRecords(numBytes);
+	}
+
+	public final void incrementRecord(DatabaseHandle dh) {
+		dh.location += myLogic.recordBytes;
+		dh.remainingBytes -= myLogic.recordBytes;
 	}
 }

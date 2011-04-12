@@ -50,7 +50,7 @@ public class MemoryDatabase extends DatabaseWrapper {
 			throw new UnpreparedHandleException(dh);
 		else if (dh.numBytes >= myLogic.recordBytes) {
 			long record = readRecordFromByteIndex(dh, dh.location);
-			dh.location += myLogic.recordBytes;
+			incrementRecord(dh);
 			return record;
 		} else {
 			throw new EOFException();
@@ -69,7 +69,7 @@ public class MemoryDatabase extends DatabaseWrapper {
 			throw new UnpreparedHandleException(dh);
 		else if (dh.numBytes >= myLogic.recordBytes) {
 			writeRecordFromByteIndex(dh, dh.location, record);
-			dh.location += myLogic.recordBytes;
+			incrementRecord(dh);
 		} else {
 			throw new EOFException();
 		}

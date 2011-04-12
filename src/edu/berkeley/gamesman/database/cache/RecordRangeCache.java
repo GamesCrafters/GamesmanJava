@@ -111,7 +111,7 @@ public class RecordRangeCache {
 			long byteIndex, int numBytes) throws IOException {
 		db.prepareReadRange(dh, byteIndex, numBytes);
 		try {
-			readSequentialBytesFromDatabase(db, dh, byteIndex, numBytes);
+			readNextBytesFromDatabase(db, dh, byteIndex, numBytes);
 		} catch (UnpreparedHandleException e) {
 			throw new Error(e);
 		} catch (EOFException e) {
@@ -119,10 +119,16 @@ public class RecordRangeCache {
 		}
 	}
 
-	protected void readSequentialBytesFromDatabase(Database db,
-			DatabaseHandle dh, long byteIndex, int numBytes) throws IOException {
+	protected void readNextBytesFromDatabase(Database db, DatabaseHandle dh,
+			long byteIndex, int numBytes) throws IOException {
 		db.readFullBytes(dh, recordBytes, (int) (byteIndex - firstByteIndex),
 				numBytes);
+	}
+
+	public void readNextRecordsFromDatabase(Database db, DatabaseHandle dh,
+			long recordIndex, int numRecords) throws IOException {
+		readNextBytesFromDatabase(db, dh, myLogic.getByteIndex(recordIndex),
+				(int) myLogic.getNumBytes(numRecords));
 	}
 
 	public void writeRecordsToDatabase(Database db, DatabaseHandle dh,
@@ -137,7 +143,7 @@ public class RecordRangeCache {
 			long byteIndex, int numBytes) throws IOException {
 		db.prepareWriteRange(dh, byteIndex, numBytes);
 		try {
-			writeSequentialBytesToDatabase(db, dh, byteIndex, numBytes);
+			writeNextBytesToDatabase(db, dh, byteIndex, numBytes);
 		} catch (UnpreparedHandleException e) {
 			throw new Error(e);
 		} catch (EOFException e) {
@@ -145,8 +151,8 @@ public class RecordRangeCache {
 		}
 	}
 
-	protected void writeSequentialBytesToDatabase(Database db,
-			DatabaseHandle dh, long byteIndex, int numBytes) throws IOException {
+	protected void writeNextBytesToDatabase(Database db, DatabaseHandle dh,
+			long byteIndex, int numBytes) throws IOException {
 		db.writeFullBytes(dh, recordBytes, (int) (byteIndex - firstByteIndex),
 				numBytes);
 	}
@@ -162,5 +168,11 @@ public class RecordRangeCache {
 	public boolean containsRecord(long hash) {
 		long place = hash - firstRecordIndex;
 		return place >= 0 && place < numRecords;
+	}
+
+	public void writeNextRecordsToDatabase(Database db, DatabaseHandle dh,
+			long recordIndex, int numRecords) throws IOException {
+		writeNextBytesToDatabase(db, dh, myLogic.getByteIndex(recordIndex),
+				(int) myLogic.getNumBytes(numRecords));
 	}
 }

@@ -96,6 +96,18 @@ public class ReadWriteDatabase extends Database {
 	}
 
 	@Override
+	public void prepareReadRecordRange(DatabaseHandle dh, long recordIndex,
+			long numRecords) throws IOException {
+		readDb.prepareReadRecordRange(dh, recordIndex, numRecords);
+	}
+
+	@Override
+	public void prepareWriteRecordRange(DatabaseHandle dh, long recordIndex,
+			long numRecords) throws IOException {
+		writeDb.prepareWriteRecordRange(dh, recordIndex, numRecords);
+	}
+
+	@Override
 	public long readNextRecord(DatabaseHandle dh) throws IOException {
 		return readDb.readNextRecord(dh);
 	}
@@ -107,18 +119,32 @@ public class ReadWriteDatabase extends Database {
 	}
 
 	@Override
-	public void fill(DatabaseHandle dh, long record) throws IOException {
-		writeDb.fill(dh, record);
-	}
-
-	@Override
-	public void flush() throws IOException {
-		writeDb.flush();
-	}
-
-	@Override
 	public void close() throws IOException {
 		readDb.close();
 		writeDb.close();
+	}
+
+	@Override
+	protected int writeBytes(DatabaseHandle dh, byte[] array, int off,
+			int maxLen) throws IOException {
+		return writeDb.writeBytes(dh, array, off, maxLen);
+	}
+
+	@Override
+	protected int readBytes(DatabaseHandle dh, byte[] array, int off, int maxLen)
+			throws IOException {
+		return readDb.readBytes(dh, array, off, maxLen);
+	}
+
+	@Override
+	public void prepareWriteRange(DatabaseHandle dh, long firstByteIndex,
+			long numBytes) throws IOException {
+		writeDb.prepareWriteRange(dh, firstByteIndex, numBytes);
+	}
+
+	@Override
+	public void prepareReadRange(DatabaseHandle dh, long firstByteIndex,
+			long numBytes) throws IOException {
+		readDb.prepareReadRange(dh, firstByteIndex, numBytes);
 	}
 }

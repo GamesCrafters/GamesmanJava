@@ -130,7 +130,7 @@ public class CacheTierSolver extends TierSolver {
 
 		private void writeBack() {
 			try {
-				writeCache.writeRecordsToDatabase(db, myWriteHandle,
+				writeCache.writeNextRecordsToDatabase(db, myWriteHandle,
 						writeCache.getFirstRecordIndex(),
 						writeCache.getNumRecords());
 			} catch (IOException e) {
