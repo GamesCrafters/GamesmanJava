@@ -82,6 +82,7 @@ public class LoopySolverMapper<S extends State> extends
 			Context context) {
         S pos = game.hashToState(positionToMap.get());
         game.longToRecord(pos, record.get(), rec);
+        rec.previousPosition();
         ((Undoable)game).possibleParents(pos, parentStates);
 
 
