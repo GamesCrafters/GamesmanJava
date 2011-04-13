@@ -18,6 +18,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * @author Eric
+ *
+ * @param <S> the gamestate for the game we're solving
+ */
 public class LoopyPrimitivePassMapper<S extends State> extends
 		Mapper<LongWritable, IntWritable, RangeFile, LongWritable> {
 	private FileSystem fs;
