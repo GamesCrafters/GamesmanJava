@@ -105,7 +105,7 @@ public class LoopySolverReducer<S extends State> extends
 				game.hashToState(statePair.state, gameState);
 				long currentLongRecord = database.readRecord(readHandle,
 						statePair.state);
-				game.longToRecord(gameState, statePair.recordValue,
+				game.longToRecord(gameState, statePair.record,
 						candidateRecord);
 				game.longToRecord(gameState, currentLongRecord, currentRecord);
 
@@ -114,9 +114,9 @@ public class LoopySolverReducer<S extends State> extends
 					if (currentRecord.compareTo(candidateRecord) < 0) {
 						// we found a better one!
 						database.writeRecord(writeHandle, statePair.state,
-								statePair.recordValue);
+								statePair.record);
 						context.write(new LongWritable(statePair.state),
-								new LongWritable(statePair.recordValue));
+								new LongWritable(statePair.record));
 						// output this to context
 						changesMadeDB = true;
 					} else if (currentRecord.value == Value.DRAW
@@ -128,9 +128,9 @@ public class LoopySolverReducer<S extends State> extends
 						if (range[n] == 0) {
 							// this position is now a lose
 							database.writeRecord(writeHandle, statePair.state,
-									statePair.recordValue);
+									statePair.record);
 							context.write(new LongWritable(statePair.state),
-									new LongWritable(statePair.recordValue));
+									new LongWritable(statePair.record));
 							// output this to context
 							changesMadeDB = true;
 						} else {
