@@ -23,6 +23,11 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Reducer;
 
+/**
+ * @author Eric
+ *
+ * @param <S> the game to performt he primitive pass reduce for
+ */
 public class LoopyPrimitivePassReducer<S extends State> extends
 		Reducer<RangeFile, LongWritable, LongWritable, IntWritable> {
 	private FileSystem fs;
@@ -79,7 +84,7 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 
 			Path rangeFileDBPath = rangeFile.myFile.getPath();
 
-			LocalFileSystem lfs = new LocalFileSystem();
+			LocalFileSystem lfs = FileSystem.getLocal(context.getConfiguration());
 
 			String stringPath = lfs.pathToFile(rangeFileDBPath).getPath()
 					+ "_numChildren";
@@ -145,7 +150,11 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 			// lfs.pathToFile(lfs.getChecksumFile(localPath)).delete();
 
 			fs.moveFromLocalFile(localPath, tempPath);
-			// copy the written array file to hdfs
+			// copy the written array file to hdfs	
+			
+			if(fs.exists(hdfsPath))
+				fs.delete(hdfsPath, true);
+			
 			fs.rename(tempPath, hdfsPath);
 			// rename to complete process
 
