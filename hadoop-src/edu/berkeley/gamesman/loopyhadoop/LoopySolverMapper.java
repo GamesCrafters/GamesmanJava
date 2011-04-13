@@ -80,8 +80,8 @@ public class LoopySolverMapper<S extends State> extends
     @Override
 	public void map(LongWritable positionToMap, LongWritable record,
 			Context context) {
-        State pos = game.hashToState(positionToMap.get());
-        //game.longToRecord(pos, record.get(), rec);
+        S pos = game.hashToState(positionToMap.get());
+        game.longToRecord(pos, record.get(), rec);
         ((Undoable)game).possibleParents(pos, parentStates);
 
 
