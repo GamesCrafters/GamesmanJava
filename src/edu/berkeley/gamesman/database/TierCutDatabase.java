@@ -4,15 +4,15 @@ import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collection;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.game.util.TierState;
-import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
+import edu.berkeley.gamesman.util.qll.Factory;
+import edu.berkeley.gamesman.util.qll.Pool;
 
 public final class TierCutDatabase extends Database {
 
@@ -20,6 +20,45 @@ public final class TierCutDatabase extends Database {
 	private final TierGame myTierGame;
 	private final boolean[] inDatabase;
 	private final Database inner;
+	private final Pool<Record> recordPool = new Pool<Record>(
+			new Factory<Record>() {
+
+				@Override
+				public Record newObject() {
+					return myTierGame.newRecord();
+				}
+
+				@Override
+				public void reset(Record t) {
+				}
+
+			});
+	private final Pool<TierState> statePool = new Pool<TierState>(
+			new Factory<TierState>() {
+
+				@Override
+				public TierState newObject() {
+					return myTierGame.newState();
+				}
+
+				@Override
+				public void reset(TierState t) {
+				}
+
+			});
+	private final Pool<TierState[]> childStatePool = new Pool<TierState[]>(
+			new Factory<TierState[]>() {
+
+				@Override
+				public TierState[] newObject() {
+					return myTierGame.newStateArray(myTierGame.maxChildren());
+				}
+
+				@Override
+				public void reset(TierState[] t) {
+				}
+
+			});
 
 	public TierCutDatabase(String uri, Configuration conf,
 			long firstRecordIndex, long numRecords, boolean reading,
@@ -76,38 +115,48 @@ public final class TierCutDatabase extends Database {
 			// return super.readRecord(dh, recordIndex);
 			return inner.readRecord(dh, recordIndex);
 		} else {
-			TierState pos = myTierGame.hashToState(recordIndex);
-			myTierGame.setState(pos);
-			Record myRecord = myTierGame.newRecord();
-			myRecord.value = myTierGame.primitiveValue();
-			if (myRecord.value != Value.UNDECIDED) {
+			TierState pos = statePool.get();
+			myTierGame.hashToState(recordIndex, pos);
+			Value value = myTierGame.primitiveValue(pos);
+			if (value != Value.UNDECIDED) {
+				Record myRecord = recordPool.get();
+				myRecord.value = value;
 				myRecord.remoteness = 0;
-				long val = myTierGame.recordToLong(myRecord);
+				long val = myTierGame.recordToLong(pos, myRecord);
+				recordPool.release(myRecord);
+				statePool.release(pos);
 				return val;
 			} else {
+				statePool.release(pos);
 				return missingTierSolve(dh, recordIndex);
 			}
-
 		}
 	}
 
 	private long missingTierSolve(DatabaseHandle dh, long recordIndex)
 			throws IOException {
 		long hash = recordIndex;
-		TierState pos = myTierGame.hashToState(hash);
-		Collection<Pair<String, TierState>> moves = myTierGame.validMoves(pos);
-		Record myRecord = null;
-		for (Pair<String, TierState> move : moves) {
-			TierState newState = move.cdr;
-			long newHash = myTierGame.stateToHash(newState);
-			Record curRecord = myTierGame.newRecord();
-			myTierGame.longToRecord(newState, readRecord(dh, newHash),
-					curRecord);
-			curRecord.previousPosition();
-			if (myRecord == null || curRecord.compareTo(myRecord) > 0)
-				myRecord = curRecord;
+		TierState pos = statePool.get();
+		myTierGame.hashToState(hash, pos);
+		TierState[] childStates = childStatePool.get();
+		int numChildren = myTierGame.validMoves(pos, childStates);
+		Record myRecord = recordPool.get(), moveRecord = recordPool.get();
+		myRecord.value = Value.UNDECIDED;
+		for (int i = 0; i < numChildren; i++) {
+			TierState childState = childStates[i];
+			long childHash = myTierGame.stateToHash(childState);
+			long recordLong = readRecord(dh, childHash);
+			myTierGame.longToRecord(childState, recordLong, moveRecord);
+			moveRecord.previousPosition();
+			if (myRecord.value == Value.UNDECIDED
+					|| moveRecord.compareTo(myRecord) > 0)
+				myRecord.set(moveRecord);
 		}
-		long val = myTierGame.recordToLong(myRecord);
+		long val = myTierGame.recordToLong(pos, myRecord);
+		recordPool.release(myRecord);
+		recordPool.release(moveRecord);
+		childStatePool.release(childStates);
+		statePool.release(pos);
 		return val;
 	}
 
