@@ -1,6 +1,7 @@
 package edu.berkeley.gamesman.loopyhadoop;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.game.Undoable;
@@ -36,6 +37,7 @@ public class LoopySolverMapper<S extends State> extends
     private RangeFile[] rangeFiles;
     private LongWritable longWritable;
     private long hashesPerFile;
+    private Record rec;
 
     @Override
     public void setup(Context context) {
@@ -49,6 +51,7 @@ public class LoopySolverMapper<S extends State> extends
             position = game.newState();
             fs = FileSystem.get(hadoopConf);
             longWritable = new LongWritable();
+            rec = new Record(conf);
 
             SequenceFile.Reader reader = new SequenceFile.Reader(fs, new Path(
                     hadoopConf.get("db.map.path")), hadoopConf);
@@ -77,6 +80,11 @@ public class LoopySolverMapper<S extends State> extends
     @Override
 	public void map(LongWritable positionToMap, LongWritable record,
 			Context context) {
+        State pos = game.hashToState(positionToMap.get());
+        //game.longToRecord(pos, record.get(), rec);
+        ((Undoable)game).possibleParents(pos, parentStates);
+
+
     }
 
 }
