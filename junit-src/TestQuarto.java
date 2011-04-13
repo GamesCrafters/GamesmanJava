@@ -11,6 +11,8 @@ public class TestQuarto {
 
 	@Test
 	public void testStepper() {
+		testStepper(0);
+		testStepper(1);
 		testStepper(5);
 		testStepper(6);
 	}
@@ -54,9 +56,14 @@ public class TestQuarto {
 
 	@Test
 	public void testChildren() {
+		testChildren(0);
+		testChildren(1);
+		testChildren(5);
+	}
+
+	public void testChildren(int tier) {
 		QuartoMinorHasher qmh = new QuartoMinorHasher();
 		QuartoMinorHasher qmh2 = new QuartoMinorHasher();
-		int tier = 5;
 		qmh.setTier(tier);
 		qmh2.setTier(tier + 1);
 		long[] children = new long[(tier + 1) * (16 - tier)];
@@ -93,8 +100,13 @@ public class TestQuarto {
 
 	@Test
 	public void testCacher() {
+		testCacher(0);
+		testCacher(1);
+		testCacher(5);
+	}
+
+	public void testCacher(int tier) {
 		QuartoMinorHasher qmh = new QuartoMinorHasher();
-		int tier = 5;
 		long availableMem = MEM / ((16 - tier) * 16 + 1);
 		qmh.setTier(tier);
 		long[] children = new long[(tier + 1) * (16 - tier)];
