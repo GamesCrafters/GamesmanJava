@@ -143,11 +143,22 @@ public class AvroInterface extends GamesmanApplication {
 		}
 	}
 
+	private static final String PLAYER_SEPARATOR = ":";
+
+	// get(string) doesn't properly find things with avro's map implementation.
+	// convert to standard HashMap.
+	Map<String, String> fromAvroParams(Map<CharSequence, CharSequence> avro) {
+		Map<String, String> ret = new HashMap<String, String>();
+		for (CharSequence key : avro.keySet()) {
+			ret.put(key.toString(), avro.get(key).toString());
+		}
+		return ret;
+	}
+
 	private Pair<Configuration, Database> newLoadDatabase(
-			Map<CharSequence, CharSequence> params, CharSequence game) {
-		/*
-		 * String game = params.get("game"); if (game == null) { return null; }
-		 */
+			Map<CharSequence, CharSequence> avroparams, CharSequence avrogame) {
+		Map<String, String> params = fromAvroParams(avroparams);
+		String game = avrogame.toString();
 
 		String filename = sanitise(game);
 		String[] allowedFields = serverConf.getProperty("json.fields." + game,
@@ -175,8 +186,8 @@ public class AvroInterface extends GamesmanApplication {
 	}
 
 	private synchronized Pair<Configuration, Database> addDatabase(
-			Map<CharSequence, CharSequence> params, CharSequence game,
-			String filename) {
+			Map<String, String> params,
+			String game, String filename) {
 		String dbPath = serverConf.getProperty("json.databasedirectory", "");
 		if (dbPath != null && dbPath.length() > 0) {
 			if (dbPath.charAt(dbPath.length() - 1) != '/') {
@@ -217,15 +228,22 @@ public class AvroInterface extends GamesmanApplication {
 				if (key.length() == 0) {
 					continue;
 				}
-				CharSequence val = params.get(key);
+				String val = params.get(key);
 				if (val == null) {
 					val = "";
 				}
-				props.setProperty("gamesman.game." + key, val.toString());
+				props.setProperty("gamesman.game." + key, val);
 			}
 			try {
 				return new Pair<Configuration, Database>(new Configuration(
 						props), null);
+			} catch (Error e) {
+				if (e.getCause() != null) {
+					e.getCause().printStackTrace();
+					return null;
+				} else {
+					throw e;
+				}
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
 				return null;
@@ -257,14 +275,15 @@ public class AvroInterface extends GamesmanApplication {
 		}
 
 		private <T extends State> PositionValue fillResponseFields(
-				Pair<Configuration, Database> cPair, T state, Fields fields) {
+				Pair<Configuration, Database> cPair, int player, T state, Fields fields) {
 			// FIXME: Use fields....
 			PositionValue request = new PositionValue();
 			Database db = cPair.cdr;
 			Configuration conf = cPair.car;
 			Game<T> g = conf.getCheckedGame();
 
-			request.position = g.synchronizedStateToString(state);
+			request.position = player + PLAYER_SEPARATOR +
+				g.synchronizedStateToString(state);
 
 			if (db != null) {
 				Record rec = g.newRecord();
@@ -343,6 +362,8 @@ public class AvroInterface extends GamesmanApplication {
 					gameName);
 			Configuration config = cPair.car;
 			Game<State> game = config.getCheckedGame();
+			System.out.println("getInitialPositionValue request for \""
+					+ gameName + "\": " + variant);
 
 			int count = 0;
 			State chosenState = null;
@@ -354,7 +375,7 @@ public class AvroInterface extends GamesmanApplication {
 			}
 
 			if (chosenState != null) {
-				return fillResponseFields(cPair, chosenState, fields);
+				return fillResponseFields(cPair, 0, chosenState, fields);
 			}
 			return null;
 		}
@@ -373,11 +394,21 @@ public class AvroInterface extends GamesmanApplication {
 				Configuration config = cPair.car;
 				Game<State> game = config.getCheckedGame();
 
-				for (CharSequence board : positions) {
+				for (CharSequence positionCS : positions) {
+					String position = positionCS.toString();
+					int playerSep = position.indexOf(PLAYER_SEPARATOR);
+					int player = 0;
+					String board;
+					if (playerSep != -1) {
+						player = Integer.parseInt(position.substring(0, playerSep));
+						board = position.substring(playerSep + 1);
+					} else {
+						board = position;
+					}
 					State state = game.synchronizedStringToState(board
 							.toString());
-					response.put(board,
-							fillResponseFields(cPair, state, fields));
+					response.put(position,
+							fillResponseFields(cPair, player, state, fields));
 				}
 			} catch (RuntimeException e) {
 				e.printStackTrace();
@@ -389,7 +420,7 @@ public class AvroInterface extends GamesmanApplication {
 		@Override
 		public Map<CharSequence, PositionValue> getNextPositionValues(
 				CharSequence gameName, Map<CharSequence, CharSequence> variant,
-				CharSequence position, Fields fields)
+				CharSequence positionCS, Fields fields)
 				throws AvroRemoteException {
 			Map<CharSequence, PositionValue> response = new TreeMap<CharSequence, PositionValue>();
 			System.out.println("getMoveValue request for \"" + gameName
@@ -403,12 +434,27 @@ public class AvroInterface extends GamesmanApplication {
 				final Map<CharSequence, PositionValue> syncMap = Collections
 						.synchronizedMap(response);
 
-				State state = game.synchronizedStringToState(position
-						.toString());
+				String position = positionCS.toString();
+				int playerSep = position.indexOf(PLAYER_SEPARATOR);
+				int playerFoo = 0;
+				String initBoard;
+				if (playerSep != -1) {
+					playerFoo = Integer.parseInt(position.substring(0, playerSep));
+					initBoard = position.substring(playerSep + 1);
+				} else {
+					initBoard = position;
+				}
+				final int player = playerFoo;
+				State state = game.synchronizedStringToState(initBoard);
 				Value pv = game.synchronizedStrictPrimitiveValue(state);
 				if (game.getPlayerCount() >= 1 && pv != Value.UNDECIDED) {
 					return response;
 				}
+				int numPlayersFoo = game.getPlayerCount();
+				if (numPlayersFoo == 0) {
+					numPlayersFoo = 1;
+				}
+				final int numPlayers = numPlayersFoo;
 
 				List<Thread> threads = new ArrayList<Thread>();
 				for (Pair<String, State> moveTemp : game
@@ -416,9 +462,10 @@ public class AvroInterface extends GamesmanApplication {
 					final Pair<String, State> move = moveTemp;
 					threads.add(new Thread() {
 						public void run() {
+							int nextPlayer = (player + 1) % numPlayers;
 							syncMap.put(
 									move.car,
-									fillResponseFields(cPair, move.cdr,
+									fillResponseFields(cPair, nextPlayer, move.cdr,
 											syncFields));
 						}
 					});
