@@ -17,7 +17,7 @@ import java.io.IOException;
 public class StateRecordPair implements WritableComparable<StateRecordPair>{
 
     public long state;
-    public long recordValue;
+    public long record;
 
     @Override
     public int compareTo(StateRecordPair o) {
@@ -30,20 +30,22 @@ public class StateRecordPair implements WritableComparable<StateRecordPair>{
         }
     }
 
+    public StateRecordPair() {}
+
     public StateRecordPair(long state, long record) {
         this.state = state;
-        this.recordValue = record;
+        this.record = record;
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
         out.writeLong(state);
-        out.writeLong(recordValue);
+        out.writeLong(record);
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
         state = in.readLong();
-        recordValue = in.readLong();
+        record = in.readLong();
     }
 }

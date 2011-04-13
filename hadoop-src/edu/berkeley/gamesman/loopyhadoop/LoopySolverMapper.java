@@ -33,6 +33,7 @@ public class LoopySolverMapper<S extends State> extends
 	private RangeFile[] rangeFiles;
 	private long hashesPerFile;
 	private Record rec;
+    private StateRecordPair srp;
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -46,6 +47,7 @@ public class LoopySolverMapper<S extends State> extends
 			parentStates = game.newStateArray(((Undoable<S>) game).maxParents());
 			fs = FileSystem.get(hadoopConf);
 			rec = new Record(conf);
+            srp = new StateRecordPair();
 
 			SequenceFile.Reader reader = new SequenceFile.Reader(fs, new Path(
 					hadoopConf.get("db.map.path")), hadoopConf);
@@ -93,8 +95,10 @@ public class LoopySolverMapper<S extends State> extends
 			for (int i = 0; i < numParents; i++) {
 				long parentHash = game.stateToHash(parentStates[i]);
 				RangeFile parentFile = rangeFiles[(int) (parentHash / hashesPerFile)];
-				context.write(parentFile, new StateRecordPair(parentHash, game
-						.recordToLong(parentStates[i], rec)));
+                srp.state = parentHash;
+                srp.record = game.recordToLong(parentStates[i], rec);
+
+				context.write(parentFile, srp);
 			}
 		} catch (IOException e) {
 			throw new Error(e);
