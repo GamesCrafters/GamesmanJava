@@ -142,6 +142,8 @@ public class LoopySolverReducer<S extends State> extends
 					}
 				}
 			}
+			
+			database.close();
 
 			if (changesMadeNumChildren) {
 				ArrayFile.Writer arrayWriter = new ArrayFile.Writer(context

@@ -99,9 +99,6 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 				for (int n = 0; n < range.length; n++) {
 					arrayReader.get(n, temp);
 					range[n] = temp.get();
-					if (n < 20) {
-						System.out.println(range[n]);
-					}
 					// get the num children from the file
 				}
 
@@ -110,9 +107,8 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 
 			String tempStringPath = stringPath + "_" + rand.nextLong();
 
-			ArrayFile.Writer arrayWriter = new ArrayFile.Writer(
-					context.getConfiguration(), fs, tempStringPath,
-					IntWritable.class);
+			ArrayFile.Writer arrayWriter = new ArrayFile.Writer(context
+					.getConfiguration(), fs, tempStringPath, IntWritable.class);
 
 			Iterator<Long> hashIter = sortedHashes.iterator();
 			long nextHash = hashIter.next();
