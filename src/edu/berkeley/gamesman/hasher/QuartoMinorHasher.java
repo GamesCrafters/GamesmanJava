@@ -115,10 +115,9 @@ public final class QuartoMinorHasher {
 		}
 	}
 
-	private class Piece {
+	private final class Piece {
 		int pieceNum;
 		Position myPos;
-		public long pieceHash;
 
 		public Piece(int i) {
 			pieceNum = i;
@@ -128,7 +127,7 @@ public final class QuartoMinorHasher {
 			this(0);
 		}
 
-		void applyRotation(Rotation r) {
+		private void applyRotation(Rotation r) {
 			int newNum = 0;
 			for (int i = 0; i < 4; i++) {
 				newNum = QuartoMinorHasher.set(newNum, i, get(r.places[i]));
@@ -206,64 +205,6 @@ public final class QuartoMinorHasher {
 		// }
 	}
 
-	private final class Child {
-		private long hashDif;
-		private long offsetDif;
-		private int numPieces;
-		private final Count numType = new Count();
-		private final ChildPiece[] pieces = new ChildPiece[16];
-		private final Rotation rot = new Rotation();
-
-		public Child(int pieceType, int insertionPoint) {
-			for (int i = 0; i < 16; i++) {
-				if (i < insertionPoint)
-					pieces[i] = new ChildPiece(QuartoMinorHasher.this.pieces[i]);
-				else if (i > insertionPoint)
-					pieces[i] = new ChildPiece(
-							QuartoMinorHasher.this.pieces[i - 1]);
-				else
-					pieces[i] = new ChildPiece(null);
-			}
-		}
-
-		private final class ChildPiece extends Piece {
-			private final Piece parentPiece;
-			private long hashDif;
-
-			public ChildPiece(Piece parentPiece) {
-				this.parentPiece = parentPiece;
-			}
-
-			public long innerHash() {
-				if (parentPiece == null)
-					return 0L;
-				else
-					return parentPiece.pieceHash;
-			}
-
-			public void setDif(long newDif) {
-				Child.this.hashDif -= hashDif;
-				Child.this.hashDif += newDif;
-				hashDif = newDif;
-			}
-
-			public void reset() {
-				hashDif = 0L;
-			}
-		}
-
-		public void setOffsetDif(long newDif) {
-			hashDif -= offsetDif;
-			hashDif += newDif;
-			offsetDif = newDif;
-		}
-
-		public void reset() {
-			hashDif = 0L;
-			offsetDif = 0L;
-		}
-	}
-
 	private static int set(int num, int i, int n) {
 		if (get(num, i) != n)
 			return num ^ (1 << i);
@@ -276,13 +217,13 @@ public final class QuartoMinorHasher {
 	}
 
 	private final Position[] tierTables = new Position[17];
-	private final Piece[] pieces = new Piece[16];
-	private final Child[][] children = new Child[16][17];
+	private final Piece[] pieces;
+	private final Piece[] child;
 	private long hash;
-	private final Count numType = new Count();
-	private final Rotation rot = new Rotation();
+	private final Count numType;
+	private final Count count;
+	private final Rotation rot;
 	private int numPieces;
-	private long offset;
 
 	public QuartoMinorHasher() {
 		QuickLinkedList<Piece> unused = new QuickLinkedList<Piece>();
@@ -293,15 +234,16 @@ public final class QuartoMinorHasher {
 			tierTables[i] = new Position(unused, new boolean[] { false, false,
 					false }, 0L, i - 1);
 		}
+		pieces = new Piece[16];
+		child = new Piece[16];
 		for (int i = 0; i < 16; i++) {
 			pieces[i] = new Piece();
-		}
-		for (int i = 0; i < 16; i++) {
-			for (int k = 0; k <= 16; k++) {
-				children[i][k] = new Child(i, k);
-			}
+			child[i] = new Piece();
 		}
 		numPieces = 0;
+		numType = new Count();
+		count = new Count();
+		rot = new Rotation();
 	}
 
 	public void setTier(int tier) {
@@ -311,7 +253,6 @@ public final class QuartoMinorHasher {
 		for (int i = 0; i < tier; i++) {
 			pieces[i].pieceNum = i;
 			pieces[i].myPos = p;
-			pieces[i].pieceHash = 0L;
 			if (p != null) {
 				if (p.inner == null)
 					p = null;
@@ -322,9 +263,7 @@ public final class QuartoMinorHasher {
 			}
 			numType.addPiece(i);
 		}
-		offset = 0L;
 		hash = 0L;
-		generateChildren();
 	}
 
 	public long numHashesForTier(int tier) {
@@ -359,21 +298,17 @@ public final class QuartoMinorHasher {
 			numType.addPiece(pieces[i].pieceNum);
 			p = p.inner[pieces[i].pieceNum];
 			pieces[i].myPos = p;
-			pieces[i].pieceHash = 0L;
 			if (p == null)
 				throw new NullPointerException();
 		}
 		hash = p.offset;
-		offset = p.offset;
 		for (; i < numPieces; i++) {
 			pieces[i].applyRotation(rot);
 			pieces[i].myPos = null;
 			numType.addPiece(pieces[i].pieceNum);
 			long pieceHash = numType.lastHash();
-			pieces[i].pieceHash = pieceHash;
 			hash += pieceHash;
 		}
-		generateChildren();
 		return hash;
 	}
 
@@ -411,20 +346,16 @@ public final class QuartoMinorHasher {
 			numType.addPiece(nextK);
 			p = nextP;
 			pieces[i].myPos = p;
-			pieces[i].pieceHash = 0L;
 		}
-		offset = p.offset;
-		hash -= offset;
+		hash -= p.offset;
 		for (; i < numPieces; i++) {
 			long pieceHash = numType.addNext(hash);
 			int piece = numType.lastPiece;
 			pieces[i].pieceNum = piece;
 			pieces[i].myPos = null;
-			pieces[i].pieceHash = pieceHash;
 			hash -= pieceHash;
 		}
 		assert hash == 0L;
-		generateChildren();
 	}
 
 	public int get(int index) {
@@ -432,12 +363,11 @@ public final class QuartoMinorHasher {
 	}
 
 	public void nextHashInTier() {
-		hashlessIncrement(numPieces - 1, 1);
+		hashlessIncrement(numPieces - 1);
 		hash++;
-		generateChildren();
 	}
 
-	private void hashlessIncrement(int i, long addHash) {
+	private void hashlessIncrement(int i) {
 		int current = pieces[i].pieceNum;
 		if (current >= 0)
 			numType.used[current] = false;
@@ -448,19 +378,12 @@ public final class QuartoMinorHasher {
 			current++;
 		}
 		if (current == 16) {
-			hashlessIncrement(i - 1, addHash + pieces[i].pieceHash);
+			hashlessIncrement(i - 1);
 			pieces[i].pieceNum = -1;
-			pieces[i].pieceHash = 0L;
-			hashlessIncrement(i, 0L);
+			hashlessIncrement(i);
 		} else {
 			pieces[i].pieceNum = current;
 			pieces[i].myPos = getPos(pieces[i - 1].myPos, current);
-			if (pieces[i].myPos == null)
-				pieces[i].pieceHash += addHash;
-			else {
-				pieces[i].pieceHash = 0L;
-				offset = pieces[i].myPos.offset;
-			}
 			numType.used[current] = true;
 		}
 	}
@@ -485,65 +408,40 @@ public final class QuartoMinorHasher {
 			if (numType.used[childPiece])
 				continue;
 			for (int i = 0; i <= numPieces; i++) {
-				long childHash = hash + this.children[childPiece][i].hashDif;
-				children[childNum++] = childHash;
-			}
-		}
-		return childNum;
-	}
-
-	public void generateChildren() {
-		if (numPieces == 16)
-			return;
-		for (int childPiece = 0; childPiece < 16; childPiece++) {
-			if (numType.used[childPiece])
-				continue;
-			for (int i = 0; i <= numPieces; i++) {
-				Child child = children[childPiece][i];
-				Child.ChildPiece[] childPieces = child.pieces;
-				Count count = child.numType;
-				child.reset();
-				Rotation rot = child.rot;
+				long childHash = -1L;
 				count.reset(numPieces + 1);
 				rot.reset();
 				Position place = tierTables[numPieces + 1];
 				for (int k = 0; k <= numPieces; k++) {
 					int pieceNum;
-					if (k < i) {
+					if (k < i)
 						pieceNum = pieces[k].pieceNum;
-					} else if (k > i) {
+					else if (k > i)
 						pieceNum = pieces[k - 1].pieceNum;
-					} else {
+					else
 						pieceNum = childPiece;
-					}
 					if (i == 0)
 						pieceNum ^= childPiece;
-					childPieces[k].reset();
-					childPieces[k].pieceNum = pieceNum;
-					childPieces[k].applyRotation(rot);
-					rot.dropState(childPieces[k]);
-					pieceNum = childPieces[k].pieceNum;
+					child[k].pieceNum = pieceNum;
+					child[k].applyRotation(rot);
+					rot.dropState(child[k]);
+					pieceNum = child[k].pieceNum;
 					count.addPiece(pieceNum);
-					if (place == null) {
-						childPieces[k].setDif(count.lastHash()
-								- childPieces[k].innerHash());
-					} else if (place.inner == null) {
-						child.setOffsetDif(place.offset - offset);
+					if (place == null)
+						childHash += count.lastHash();
+					else if (place.inner == null) {
+						childHash = place.offset;
 						place = null;
-						childPieces[k].setDif(count.lastHash()
-								- childPieces[k].innerHash());
-					} else {
-						if (k > 0)
-							place = place.inner[pieceNum];
-						childPieces[k].setDif(-childPieces[k].innerHash());
-					}
-					childPieces[k].myPos = place;
+						childHash += count.lastHash();
+					} else if (k > 0)
+						place = place.inner[pieceNum];
 				}
-				if (place != null) {
-					child.setOffsetDif(place.offset - offset);
-				}
+				if (childHash < 0)
+					childHash = place.offset;
+				children[childNum++] = childHash;
 			}
 		}
+		return childNum;
 	}
 
 	public static void main(String[] args) {
