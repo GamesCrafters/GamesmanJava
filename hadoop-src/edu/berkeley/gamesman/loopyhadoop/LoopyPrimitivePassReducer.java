@@ -25,8 +25,9 @@ import org.apache.hadoop.mapreduce.Reducer;
 
 /**
  * @author Eric
- *
- * @param <S> the game to performt he primitive pass reduce for
+ * 
+ * @param <S>
+ *            the game to performt he primitive pass reduce for
  */
 public class LoopyPrimitivePassReducer<S extends State> extends
 		Reducer<RangeFile, LongWritable, LongWritable, IntWritable> {
@@ -84,23 +85,15 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 
 			Path rangeFileDBPath = rangeFile.myFile.getPath();
 
-			LocalFileSystem lfs = FileSystem.getLocal(context.getConfiguration());
-
-			String stringPath = lfs.pathToFile(rangeFileDBPath).getPath()
-					+ "_numChildren";
-			String localStringPath = stringPath + "_local";
+			String stringPath = rangeFileDBPath.toString() + "_numChildren";
 
 			int[] range = new int[(int) numRecords];
 
-			Path localPath = new Path(localStringPath);
+			Path numChildrenPath = new Path(stringPath);
 
-			Path hdfsPath = new Path(stringPath);
-
-			if (fs.exists(hdfsPath)) {
-				fs.copyToLocalFile(hdfsPath, localPath);
-
+			if (fs.exists(numChildrenPath)) {
 				ArrayFile.Reader arrayReader = new ArrayFile.Reader(fs,
-						localStringPath, context.getConfiguration());
+						stringPath, context.getConfiguration());
 
 				IntWritable temp = new IntWritable();
 				for (int n = 0; n < range.length; n++) {
@@ -113,13 +106,13 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 				}
 
 				arrayReader.close();
-
-				lfs.delete(localPath, true);
-				// get rid of the old file,we're making a new one
 			}
 
-			ArrayFile.Writer arrayWriter = new ArrayFile.Writer(context
-					.getConfiguration(), fs, localStringPath, IntWritable.class);
+			String tempStringPath = stringPath + "_" + rand.nextLong();
+
+			ArrayFile.Writer arrayWriter = new ArrayFile.Writer(
+					context.getConfiguration(), fs, tempStringPath,
+					IntWritable.class);
 
 			Iterator<Long> hashIter = sortedHashes.iterator();
 			long nextHash = hashIter.next();
@@ -143,19 +136,10 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 
 			arrayWriter.close();
 
-			Path tempPath = new Path(stringPath + "_" + rand.nextLong());
-			// use a random long to prevent collisions in the expensive copy
-			// step
+			if (fs.exists(numChildrenPath))
+				fs.delete(numChildrenPath, true);
 
-			// lfs.pathToFile(lfs.getChecksumFile(localPath)).delete();
-
-			fs.moveFromLocalFile(localPath, tempPath);
-			// copy the written array file to hdfs	
-			
-			if(fs.exists(hdfsPath))
-				fs.delete(hdfsPath, true);
-			
-			fs.rename(tempPath, hdfsPath);
+			fs.rename(new Path(tempStringPath), numChildrenPath);
 			// rename to complete process
 
 		} catch (IOException io) {
