@@ -89,8 +89,10 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 
 			Path localPath = new Path(localStringPath);
 
-			if (lfs.exists(localPath)) {
-				fs.copyToLocalFile(new Path(stringPath), localPath);
+			Path hdfsPath = new Path(stringPath);
+
+			if (fs.exists(hdfsPath)) {
+				fs.copyToLocalFile(hdfsPath, localPath);
 
 				ArrayFile.Reader arrayReader = new ArrayFile.Reader(fs,
 						localStringPath, context.getConfiguration());
@@ -99,12 +101,16 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 				for (int n = 0; n < range.length; n++) {
 					arrayReader.get(n, temp);
 					range[n] = temp.get();
+					if (n < 20) {
+						System.out.println(range[n]);
+					}
 					// get the num children from the file
 				}
 
 				arrayReader.close();
-				lfs.delete(localPath, true); // get rid of the old file, we're
-				// making a new one
+
+				lfs.delete(localPath, true);
+				// get rid of the old file,we're making a new one
 			}
 
 			ArrayFile.Writer arrayWriter = new ArrayFile.Writer(context
@@ -140,7 +146,7 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 
 			fs.moveFromLocalFile(localPath, tempPath);
 			// copy the written array file to hdfs
-			fs.rename(tempPath, new Path(stringPath));
+			fs.rename(tempPath, hdfsPath);
 			// rename to complete process
 
 		} catch (IOException io) {

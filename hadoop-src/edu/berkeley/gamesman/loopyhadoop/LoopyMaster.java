@@ -21,6 +21,11 @@ import edu.berkeley.gamesman.parallel.Input;
 import edu.berkeley.gamesman.parallel.Range;
 import edu.berkeley.gamesman.parallel.RangeFile;
 
+/**
+ * @author Eric
+ * Loopy master used to solve a loopy game
+ * @param <S> the loopy game to solve
+ */
 public class LoopyMaster<S extends State> implements Runnable {
 	private final org.apache.hadoop.conf.Configuration hadoopConf;
 	private final Configuration gamesmanConf;
@@ -28,12 +33,20 @@ public class LoopyMaster<S extends State> implements Runnable {
 	private Path dbMapPath;
 	private final Game<S> game;
 
+	/**
+	 * @param args - the first arg should be the job file to run
+	 * @throws IOException if things go horribly wrong
+	 */
 	public static void main(String[] args) throws IOException {
 		GenericOptionsParser gop = new GenericOptionsParser(args);
 		LoopyMaster loopyMaster = new LoopyMaster(gop);
 		loopyMaster.run();
 	}
 
+	/**
+	 * @param gop - options
+	 * @throws IOException if the world explodes
+	 */
 	public LoopyMaster(GenericOptionsParser gop) throws IOException {
 		String[] unparsedArgs = gop.getRemainingArgs();
 		try {
@@ -172,7 +185,7 @@ public class LoopyMaster<S extends State> implements Runnable {
 			fs.rename(sequenceFileOutputDir, sequenceFileInputDir);
 		}
 
-		fs.delete(sequenceFileInputDir, true);
+		fs.delete(sequenceFileInputDir, true);//TODO:  why doesn't this work?
 		// we're not feeding it anymore, so kill the dir
 	}
 
