@@ -1,6 +1,9 @@
 package edu.berkeley.gamesman.loopyhadoop;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import edu.berkeley.gamesman.core.State; //import edu.berkeley.gamesman.game.Game;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -16,6 +19,9 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.database.HDFSSplitDatabase;
+import edu.berkeley.gamesman.database.SplitDBMaker;
+import edu.berkeley.gamesman.database.SplitDatabase.DatabaseDescriptor;
 import edu.berkeley.gamesman.parallel.Input;
 import edu.berkeley.gamesman.parallel.Range;
 import edu.berkeley.gamesman.parallel.RangeFile;
@@ -260,6 +266,30 @@ public class LoopyMaster<S extends State> implements Runnable {
 		// we're not feeding it anymore, so kill the dir
 
 		// TODO: create a split database file
+		Path dbFolder = new Path(gamesmanConf
+				.getProperty("gamesman.hadoop.dbfolder"));
+		Path splitDBPath = new Path(dbFolder, "SplitDB");
+
+		SplitDBMaker dbMaker = new SplitDBMaker(splitDBPath.toUri().toString(),
+				gamesmanConf);
+
+		SequenceFile.Reader reader = new SequenceFile.Reader(fs, new Path(
+				hadoopConf.get("db.map.path")), hadoopConf);
+		// the reader for the db files
+
+		while (true) {
+			Range r = new Range();
+			FileStatus fileStatus = new FileStatus();
+			if (!reader.next(r, fileStatus))
+				break;
+
+			dbMaker.addDb(HDFSSplitDatabase.class.getName(), fileStatus
+					.getPath().toUri().toString(), r.firstRecord, r.numRecords);
+		}
+
+		reader.close();
+
+		dbMaker.close();
 	}
 
 	private boolean directoryHasLLKVPairs(Path sequenceFileDir) {
