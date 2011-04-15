@@ -44,6 +44,7 @@ public abstract class SplitDatabase extends Database {
 	private final int[] using;
 	private final long[] rangeByteIndexStarts;
 	private final boolean instantClose;
+	private boolean holding = false;
 
 	public SplitDatabase(DataInputStream dis, String uri, Configuration conf,
 			long firstRecordIndex, long numRecords, boolean reading,
@@ -156,7 +157,7 @@ public abstract class SplitDatabase extends Database {
 
 	private synchronized void decrementDb(int dbNum) throws IOException {
 		using[dbNum]--;
-		if (using[dbNum] == 0) {
+		if (using[dbNum] == 0 && !holding) {
 			containedDbs[dbNum].close();
 			containedDbs[dbNum] = null;
 		}
@@ -264,5 +265,20 @@ public abstract class SplitDatabase extends Database {
 	protected int writeBytes(DatabaseHandle dh, long location, byte[] array,
 			int off, int len) {
 		throw new UnsupportedOperationException();
+	}
+
+	public boolean setHolding(boolean holding) throws IOException {
+		if (holding == this.holding || !instantClose)
+			return false;
+		this.holding = holding;
+		if (!holding) {
+			for (int i = 0; i < containedDbs.length; i++) {
+				if (containedDbs[i] != null && using[i] == 0) {
+					containedDbs[i].close();
+					containedDbs[i] = null;
+				}
+			}
+		}
+		return true;
 	}
 }

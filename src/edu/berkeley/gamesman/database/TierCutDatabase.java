@@ -135,6 +135,9 @@ public final class TierCutDatabase extends Database {
 
 	private long missingTierSolve(DatabaseHandle dh, long recordIndex)
 			throws IOException {
+		boolean setHolding = false;
+		if (inner instanceof SplitDatabase)
+			setHolding = ((SplitDatabase) inner).setHolding(true);
 		long hash = recordIndex;
 		TierState pos = statePool.get();
 		myTierGame.hashToState(hash, pos);
@@ -157,6 +160,8 @@ public final class TierCutDatabase extends Database {
 		recordPool.release(moveRecord);
 		childStatePool.release(childStates);
 		statePool.release(pos);
+		if (setHolding)
+			((SplitDatabase) inner).setHolding(false);
 		return val;
 	}
 
