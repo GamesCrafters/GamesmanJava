@@ -2,7 +2,6 @@ gamesman.game = Connect4
 gamesman.game.width = 7
 gamesman.game.height = 6
 gamesman.solver = CacheTierSolver
-gamesman.database = HDFSSplitDatabase
 gamesman.db.uri = /scratch/connect4.db
 gamesman.hadoop.tierDb = /scratch/c4/c4
 gamesman.hadoop.dbfolder = /scratch/c4

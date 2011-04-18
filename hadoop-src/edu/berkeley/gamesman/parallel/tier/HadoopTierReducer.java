@@ -10,7 +10,6 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.database.GZippedFileSystemDatabase;
 import edu.berkeley.gamesman.database.SplitDBMaker;
 import edu.berkeley.gamesman.database.SplitDatabase;
-import edu.berkeley.gamesman.database.SplitDatabase.DatabaseDescriptor;
 import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.parallel.RangeFile;
 
@@ -18,10 +17,16 @@ import org.apache.hadoop.fs.*;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Reducer;
 
+/**
+ * Reducer for the hadoop tier solver. Should only be one. Takes all the files
+ * and creates an HDFSSplitDatabase which points to them
+ * 
+ * @author dnspies
+ */
 public class HadoopTierReducer extends
 		Reducer<IntWritable, RangeFile, IntWritable, FileStatus> {
-	Configuration conf;
-	FileSystem fs;
+	private Configuration conf;
+	private FileSystem fs;
 	private final IntWritable tier = new IntWritable();
 	private SplitDBMaker writeDb;
 	private String dbUri;
@@ -62,12 +67,12 @@ public class HadoopTierReducer extends
 			long firstRecord = temp.myRange.firstRecord;
 			long numRecords = temp.myRange.numRecords;
 			String uri = temp.myFile.getPath().toString();
-			descriptorList.add(new DatabaseDescriptor(
+			descriptorList.add(new SplitDatabase.DatabaseDescriptor(
 					GZippedFileSystemDatabase.class.getName(), uri,
 					firstRecord, numRecords));
 		}
 		Collections.sort(descriptorList);
-		for (DatabaseDescriptor dd : descriptorList) {
+		for (SplitDatabase.DatabaseDescriptor dd : descriptorList) {
 			writeDb.addDb(dd);
 		}
 		writeDb.close();

@@ -10,14 +10,52 @@ import java.util.Scanner;
 
 import edu.berkeley.gamesman.core.Configuration;
 
+/**
+ * A database on the local file system which subclasses SplitDatabase
+ * 
+ * @author dnspies
+ */
 public class SplitLocalDatabase extends SplitDatabase {
+	/**
+	 * @param uri
+	 *            The file containing the database headers for this split
+	 *            database
+	 * @param conf
+	 *            The configuration object
+	 * @param firstRecordIndex
+	 *            The index of the first record contained in this database
+	 * @param numRecords
+	 *            The number of records contained in this database
+	 * @param reading
+	 *            Whether to open the database for reading
+	 * @param writing
+	 *            Whether to open the database for writing
+	 * @throws IOException
+	 *             If an IOException occurs while reading the header
+	 * @throws ClassNotFoundException
+	 *             If a ClassNotFoundException occurs while reading the
+	 *             configuration for any underlying database
+	 */
 	public SplitLocalDatabase(String uri, Configuration conf,
 			long firstRecordIndex, long numRecords, boolean reading,
 			boolean writing) throws IOException, ClassNotFoundException {
-		super(new DataInputStream(new FileInputStream(uri)), uri, conf,
+		super(new DataInputStream(new FileInputStream(uri)), conf,
 				firstRecordIndex, numRecords, reading, writing);
 	}
 
+	/**
+	 * Creates a SplitLocalDatabase
+	 * 
+	 * @param args
+	 *            The job file to use for the configuration, followed by the
+	 *            file containing the list of databases followed by the uri of
+	 *            the new database and finally firstRecordIndex and numRecords
+	 *            (defaults to entire game)
+	 * @throws ClassNotFoundException
+	 *             If the job file contains a bad class name
+	 * @throws IOException
+	 *             If an IO Error occurs
+	 */
 	public static void main(String[] args) throws ClassNotFoundException,
 			IOException {
 		String jobFile = args[0];

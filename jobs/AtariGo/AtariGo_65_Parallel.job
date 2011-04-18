@@ -2,7 +2,6 @@ gamesman.game = AtariGo
 gamesman.game.width = 6
 gamesman.game.height = 5
 gamesman.solver = CacheTierSolver
-gamesman.database = HDFSSplitDatabase
 gamesman.db.uri = /scratch/atarigo_55.db
 gamesman.hadoop.tierDb = /scratch/atarigo/tier
 gamesman.hadoop.dbfolder = /scratch/atarigo

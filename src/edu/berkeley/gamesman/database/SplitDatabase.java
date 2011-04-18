@@ -8,9 +8,33 @@ import java.util.LinkedList;
 
 import edu.berkeley.gamesman.core.Configuration;
 
+/**
+ * A database which points to a collection of other databases. If instantClose
+ * is true, pointed databases will be lazily instantiated/opened and closed when
+ * not in use. This means it's fine if the pointed database doesn't exist so
+ * long as you don't try to read anything from it.
+ * 
+ * @author dnspies
+ */
 public abstract class SplitDatabase extends Database {
+	/**
+	 * Four features used to open an underlying database: class, uri,
+	 * firstRecordIndex, and numRecords
+	 * 
+	 * @author dnspies
+	 */
 	public static class DatabaseDescriptor implements
 			Comparable<DatabaseDescriptor> {
+		/**
+		 * @param dbClass
+		 *            The class of the database
+		 * @param uri
+		 *            The path where the database file is
+		 * @param firstRecordIndex
+		 *            The index of the first record contained in the database
+		 * @param numRecords
+		 *            The number of records in the database
+		 */
 		public DatabaseDescriptor(String dbClass, String uri,
 				long firstRecordIndex, long numRecords) {
 			this.dbClass = dbClass;
@@ -19,9 +43,21 @@ public abstract class SplitDatabase extends Database {
 			this.numRecords = numRecords;
 		}
 
+		/**
+		 * The class of the database
+		 */
 		public final String dbClass;
+		/**
+		 * The path where the database file is
+		 */
 		public final String uri;
+		/**
+		 * The index of the first record contained in the database
+		 */
 		public final long firstRecordIndex;
+		/**
+		 * The number of records in the database
+		 */
 		public final long numRecords;
 
 		@Override
@@ -46,14 +82,54 @@ public abstract class SplitDatabase extends Database {
 	private final boolean instantClose;
 	private boolean holding = false;
 
-	public SplitDatabase(DataInputStream dis, String uri, Configuration conf,
+	/**
+	 * @param dis
+	 *            An input stream to read in the descriptors
+	 * @param conf
+	 *            The configuration object
+	 * @param firstRecordIndex
+	 *            The index of the first record contained in this database
+	 * @param numRecords
+	 *            The number of records contained in this database
+	 * @param reading
+	 *            Whether to open the database for reading
+	 * @param writing
+	 *            Whether to open the database for writing
+	 * @throws IOException
+	 *             If an IOException occurs while reading the header
+	 * @throws ClassNotFoundException
+	 *             If a ClassNotFoundException occurs while reading the
+	 *             configuration for any underlying database
+	 */
+	public SplitDatabase(DataInputStream dis, Configuration conf,
 			long firstRecordIndex, long numRecords, boolean reading,
 			boolean writing) throws IOException, ClassNotFoundException {
-		this(dis, uri, conf, firstRecordIndex, numRecords, reading, writing,
-				false);
+		this(dis, conf, firstRecordIndex, numRecords, reading, writing, false);
 	}
 
-	public SplitDatabase(DataInputStream dis, String uri, Configuration conf,
+	/**
+	 * @param dis
+	 *            An input stream to read in the descriptors
+	 * @param conf
+	 *            The configuration object
+	 * @param firstRecordIndex
+	 *            The index of the first record contained in this database
+	 * @param numRecords
+	 *            The number of records contained in this database
+	 * @param reading
+	 *            Whether to open the database for reading
+	 * @param writing
+	 *            Whether to open the database for writing
+	 * @param instantClose
+	 *            If the underlying databases should be opened/instantiated
+	 *            lazily and closed when not needed
+	 * @throws IOException
+	 *             If an IOException occurs while reading the header
+	 * @throws ClassNotFoundException
+	 *             If a ClassNotFoundException occurs while reading the
+	 *             configuration for any underlying database
+	 */
+	public SplitDatabase(DataInputStream dis, Configuration conf,
 			long firstRecordIndex, long numRecords, boolean reading,
 			boolean writing, boolean instantClose) throws IOException,
 			ClassNotFoundException {
@@ -73,6 +149,8 @@ public abstract class SplitDatabase extends Database {
 			} catch (EOFException e) {
 				break;
 			}
+			assert lastDescriptor == null
+					|| nextDescriptor.firstRecordIndex == lastLastRecordIndex;
 			long nextLastRecordIndex = nextDescriptor.firstRecordIndex
 					+ nextDescriptor.numRecords;
 			if (nextDescriptor.firstRecordIndex < lastRecordIndex
@@ -166,6 +244,9 @@ public abstract class SplitDatabase extends Database {
 	private synchronized void addDb(int dbNum, DatabaseDescriptor dd)
 			throws IOException, ClassNotFoundException {
 		containedDbs[dbNum] = newDatabase(dd);
+		if (instantClose && containedDbs[dbNum] instanceof SplitDatabase) {
+			((SplitDatabase) containedDbs[dbNum]).setHolding(true);
+		}
 	}
 
 	private DatabaseHandle getInnerHandle(SplitHandle sh, int dbNum) {
@@ -247,6 +328,7 @@ public abstract class SplitDatabase extends Database {
 
 	@Override
 	public void close() throws IOException {
+		setHolding(false);
 		for (Database db : containedDbs) {
 			if (instantClose)
 				assert db == null;
@@ -267,6 +349,17 @@ public abstract class SplitDatabase extends Database {
 		throw new UnsupportedOperationException();
 	}
 
+	/**
+	 * When set to true, tells underlying databases to remain open whether or
+	 * not they're still in use. These databases will be closed when
+	 * setHolding(false) is called
+	 * 
+	 * @param holding
+	 *            true to hold databases open, false to close them
+	 * @return true if holding has changed from it's previous value
+	 * @throws IOException
+	 *             If an IOException occurs while closing databases
+	 */
 	public boolean setHolding(boolean holding) throws IOException {
 		if (holding == this.holding || !instantClose)
 			return false;

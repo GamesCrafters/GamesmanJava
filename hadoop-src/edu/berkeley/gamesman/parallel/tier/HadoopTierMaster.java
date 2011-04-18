@@ -9,6 +9,7 @@ import org.apache.hadoop.fs.Path;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.database.HDFSSplitDatabase;
 import edu.berkeley.gamesman.database.SplitDBMaker;
+import edu.berkeley.gamesman.database.SplitLocalDatabase;
 import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.parallel.RangeFile;
 
@@ -17,6 +18,11 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
+/**
+ * The master class for any parallel tier solve
+ * 
+ * @author dnspies
+ */
 public class HadoopTierMaster implements Runnable {
 	private final org.apache.hadoop.conf.Configuration hadoopConf;
 	private final Configuration gamesmanConf;
@@ -30,6 +36,8 @@ public class HadoopTierMaster implements Runnable {
 			throws IOException, ClassNotFoundException {
 		hadoopConf = gop.getConfiguration();
 		gamesmanConf = new Configuration(confFile);
+		gamesmanConf.setProperty("gamesman.database",
+				SplitLocalDatabase.class.getName());
 		fs = FileSystem.get(hadoopConf);
 		game = (TierGame) gamesmanConf.getGame();
 		hadoopConf.set("gamesman.configuration", gamesmanConf.serialize());
@@ -66,7 +74,8 @@ public class HadoopTierMaster implements Runnable {
 			return;
 		}
 		hadoopConf.setInt("tier", tier);
-		job = new Job(hadoopConf, "hadoop tier solver");
+		job = new Job(hadoopConf, game.getClass().getSimpleName()
+				+ " solver for tier " + tier);
 		job.setJarByClass(HadoopTierMapper.class);
 		job.setMapOutputValueClass(RangeFile.class);
 		job.setOutputKeyClass(IntWritable.class);

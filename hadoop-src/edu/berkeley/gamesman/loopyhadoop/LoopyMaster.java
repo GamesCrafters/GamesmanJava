@@ -1,10 +1,7 @@
 package edu.berkeley.gamesman.loopyhadoop;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
-import edu.berkeley.gamesman.core.State; //import edu.berkeley.gamesman.game.Game;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -21,17 +18,14 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.database.HDFSSplitDatabase;
 import edu.berkeley.gamesman.database.SplitDBMaker;
-import edu.berkeley.gamesman.database.SplitDatabase.DatabaseDescriptor;
 import edu.berkeley.gamesman.parallel.Input;
 import edu.berkeley.gamesman.parallel.Range;
 import edu.berkeley.gamesman.parallel.RangeFile;
 
 /**
  * @author Eric Loopy master used to solve a loopy game
- * @param <S>
- *            the loopy game to solve
  */
-public class LoopyMaster<S extends State> implements Runnable {
+public class LoopyMaster implements Runnable {
 	private final org.apache.hadoop.conf.Configuration hadoopConf;
 	private final Configuration gamesmanConf;
 	private final FileSystem fs;
@@ -45,7 +39,6 @@ public class LoopyMaster<S extends State> implements Runnable {
 	 * @throws IOException
 	 *             if things go horribly wrong
 	 */
-	@SuppressWarnings("unchecked")
 	public static void main(String[] args) throws IOException {
 		GenericOptionsParser gop = new GenericOptionsParser(args);
 		LoopyMaster loopyMaster = new LoopyMaster(gop);
