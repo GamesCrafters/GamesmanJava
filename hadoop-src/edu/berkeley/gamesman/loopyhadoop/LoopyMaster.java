@@ -8,6 +8,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
@@ -16,7 +17,7 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.database.HDFSSplitDatabase;
+import edu.berkeley.gamesman.database.GZippedFileDatabase;
 import edu.berkeley.gamesman.database.SplitDBMaker;
 import edu.berkeley.gamesman.parallel.Input;
 import edu.berkeley.gamesman.parallel.Range;
@@ -68,8 +69,11 @@ public class LoopyMaster implements Runnable {
 	public void run() {
 		try {
 			createDatabase();
+			System.out.println("\nStage 1 Complete\n");
 			markLegalPositions();
+			System.out.println("\nStage 2 Complete\n");
 			solve();
+			System.out.println("\nStage 3 Complete\n");
 		} catch (IOException e) {
 			throw new Error("Our program asploded :(.", e);
 		}
@@ -85,7 +89,7 @@ public class LoopyMaster implements Runnable {
 		j.setInputFormatClass(Input.class);
 		j.setOutputFormatClass(SequenceFileOutputFormat.class);
 		j.setOutputKeyClass(Range.class);
-		j.setOutputValueClass(FileStatus.class);
+		j.setOutputValueClass(Text.class);
 		String pathString = "Loopy_Hadoop_Solve_DB_Directory_"
 				+ gamesmanConf.getGame().getClass().getSimpleName();
 		Path sequenceFileDir = getPath(pathString);
@@ -114,11 +118,11 @@ public class LoopyMaster implements Runnable {
 		System.out.println("Key = " + r.getKeyClassName());
 		System.out.println("Value = " + r.getValueClassName());
 		Range range = new Range();
-		FileStatus fileStatus = new FileStatus();
-		while (r.next(range, fileStatus)) {
+		Text text = new Text();
+		while (r.next(range, text)) {
 			System.out.println(range.firstRecord + "-"
 					+ (range.firstRecord + range.numRecords - 1) + ": "
-					+ fileStatus.getPath().toString());
+					+ text.toString());
 		}
 
 		hadoopConf.set("db.map.path", dbMapPath.toString());
@@ -199,8 +203,8 @@ public class LoopyMaster implements Runnable {
 			IntWritable value = new IntWritable();
 
 			for (FileStatus file : files) {
-				SequenceFile.Reader reader = new SequenceFile.Reader(fs, file
-						.getPath(), hadoopConf);
+				SequenceFile.Reader reader = new SequenceFile.Reader(fs,
+						file.getPath(), hadoopConf);
 				// everything in the input directory should be a sequence file
 
 				if (reader.next(key, value)) {// if the file has any kv pairs,
@@ -258,13 +262,10 @@ public class LoopyMaster implements Runnable {
 		fs.delete(sequenceFileInputDir, true);// TODO: why doesn't this work?
 		// we're not feeding it anymore, so kill the dir
 
-		// TODO: create a split database file
-		Path dbFolder = new Path(gamesmanConf
-				.getProperty("gamesman.hadoop.dbfolder"));
-		Path splitDBPath = new Path(dbFolder, "SplitDB");
+		// create a split database file
+		String splitDbString = gamesmanConf.getProperty("gamesman.db.uri");
 
-		SplitDBMaker dbMaker = new SplitDBMaker(splitDBPath.toUri().toString(),
-				gamesmanConf);
+		SplitDBMaker dbMaker = new SplitDBMaker(splitDbString, gamesmanConf);
 
 		SequenceFile.Reader reader = new SequenceFile.Reader(fs, new Path(
 				hadoopConf.get("db.map.path")), hadoopConf);
@@ -272,12 +273,12 @@ public class LoopyMaster implements Runnable {
 
 		while (true) {
 			Range r = new Range();
-			FileStatus fileStatus = new FileStatus();
-			if (!reader.next(r, fileStatus))
+			Text text = new Text();
+			if (!reader.next(r, text))
 				break;
 
-			dbMaker.addDb(HDFSSplitDatabase.class.getName(), fileStatus
-					.getPath().toUri().toString(), r.firstRecord, r.numRecords);
+			dbMaker.addDb(GZippedFileDatabase.class.getName(),
+					text.toString(), r.firstRecord, r.numRecords);
 		}
 
 		reader.close();
@@ -292,8 +293,8 @@ public class LoopyMaster implements Runnable {
 			LongWritable value = new LongWritable();
 
 			for (FileStatus file : files) {
-				SequenceFile.Reader reader = new SequenceFile.Reader(fs, file
-						.getPath(), hadoopConf);
+				SequenceFile.Reader reader = new SequenceFile.Reader(fs,
+						file.getPath(), hadoopConf);
 				// everything in the input directory should be a sequence file
 
 				if (reader.next(key, value)) {// if the file has any kv pairs,

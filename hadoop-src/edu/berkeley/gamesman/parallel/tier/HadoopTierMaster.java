@@ -2,7 +2,6 @@ package edu.berkeley.gamesman.parallel.tier;
 
 import java.io.IOException;
 
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
@@ -14,6 +13,7 @@ import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.parallel.RangeFile;
 
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
@@ -79,7 +79,7 @@ public class HadoopTierMaster implements Runnable {
 		job.setJarByClass(HadoopTierMapper.class);
 		job.setMapOutputValueClass(RangeFile.class);
 		job.setOutputKeyClass(IntWritable.class);
-		job.setOutputValueClass(FileStatus.class);
+		job.setOutputValueClass(Text.class);
 		job.setMapperClass(HadoopTierMapper.class);
 		job.setReducerClass(HadoopTierReducer.class);
 		job.setInputFormatClass(TierInput.class);

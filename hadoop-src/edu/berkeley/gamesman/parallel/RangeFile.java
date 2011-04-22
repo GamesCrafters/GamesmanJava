@@ -4,18 +4,18 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparable;
 
 public class RangeFile implements WritableComparable<RangeFile> {
 	public Range myRange;
-	public FileStatus myFile;
+	public Text myFile;
 
 	public RangeFile() {
-		this(new Range(), new FileStatus());
+		this(new Range(), new Text());
 	}
 
-	public RangeFile(Range key, FileStatus file) {
+	public RangeFile(Range key, Text file) {
 		myRange = key;
 		myFile = file;
 	}
@@ -32,7 +32,7 @@ public class RangeFile implements WritableComparable<RangeFile> {
 		myFile.readFields(in);
 	}
 
-	public void set(Range range, FileStatus file) {
+	public void set(Range range, Text file) {
 		myRange = range;
 		myFile = file;
 	}

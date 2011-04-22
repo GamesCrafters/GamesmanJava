@@ -5,12 +5,12 @@ import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.parallel.Range;
 import edu.berkeley.gamesman.parallel.RangeFile;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
 import java.io.IOException;
@@ -20,8 +20,9 @@ import java.util.List;
 
 /**
  * @author Eric
- *
- * @param <S> the gamestate for the game we're solving
+ * 
+ * @param <S>
+ *            the gamestate for the game we're solving
  */
 public class LoopyPrimitivePassMapper<S extends State> extends
 		Mapper<LongWritable, IntWritable, RangeFile, LongWritable> {
@@ -52,10 +53,10 @@ public class LoopyPrimitivePassMapper<S extends State> extends
 			List<RangeFile> ranges = new ArrayList<RangeFile>();
 			while (true) {
 				Range r = new Range();
-				FileStatus fileStatus = new FileStatus();
-				if (!reader.next(r, fileStatus))
+				Text text = new Text();
+				if (!reader.next(r, text))
 					break;
-				ranges.add(new RangeFile(r, fileStatus));
+				ranges.add(new RangeFile(r, text));
 			}
 			reader.close();
 
@@ -77,7 +78,7 @@ public class LoopyPrimitivePassMapper<S extends State> extends
 		if (pos != -1) {
 			game.hashToState(pos, position);
 			int numChildren = game.validMoves(position, childStates);
-			
+
 			for (int i = 0; i < numChildren; i++) {
 				long childHash = game.stateToHash(childStates[i]);
 				outputToReducer(context, childHash);

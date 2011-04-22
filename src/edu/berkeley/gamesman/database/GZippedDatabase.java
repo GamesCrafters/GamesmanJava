@@ -7,8 +7,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.database.util.GZippedDatabaseInputStream;
-import edu.berkeley.gamesman.database.util.GZippedDatabaseOutputStream;
+import edu.berkeley.gamesman.database.util.SeekableInputStream;
+import edu.berkeley.gamesman.database.util.SeekableOutputStream;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Progressable;
 import edu.berkeley.gamesman.util.Util;
@@ -35,8 +35,8 @@ public abstract class GZippedDatabase extends Database {
 	private final ZipChunkOutputStream zcos;
 	private final ZipChunkInputStream zcis;
 	private final long[] entryTable;
-	private final GZippedDatabaseInputStream reader;
-	private final GZippedDatabaseOutputStream writer;
+	private final SeekableInputStream reader;
+	private final SeekableOutputStream writer;
 	private int currentEntry;
 	private long filePos;
 
@@ -59,8 +59,8 @@ public abstract class GZippedDatabase extends Database {
 	 * @throws IOException
 	 *             If an IOException occurs while instantiating the database
 	 */
-	public GZippedDatabase(GZippedDatabaseInputStream reader,
-			GZippedDatabaseOutputStream writer, Configuration conf,
+	public GZippedDatabase(SeekableInputStream reader,
+			SeekableOutputStream writer, Configuration conf,
 			long firstRecordIndex, long numRecords, boolean reading,
 			boolean writing) throws IOException {
 		super(conf, firstRecordIndex, numRecords, reading, writing);

@@ -15,6 +15,7 @@ import edu.berkeley.gamesman.parallel.RangeFile;
 
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
 /**
@@ -24,7 +25,7 @@ import org.apache.hadoop.mapreduce.Reducer;
  * @author dnspies
  */
 public class HadoopTierReducer extends
-		Reducer<IntWritable, RangeFile, IntWritable, FileStatus> {
+		Reducer<IntWritable, RangeFile, IntWritable, Text> {
 	private Configuration conf;
 	private FileSystem fs;
 	private final IntWritable tier = new IntWritable();
@@ -66,7 +67,7 @@ public class HadoopTierReducer extends
 			RangeFile temp = it.next();
 			long firstRecord = temp.myRange.firstRecord;
 			long numRecords = temp.myRange.numRecords;
-			String uri = temp.myFile.getPath().toString();
+			String uri = temp.myFile.toString();
 			descriptorList.add(new SplitDatabase.DatabaseDescriptor(
 					GZippedFileSystemDatabase.class.getName(), uri,
 					firstRecord, numRecords));

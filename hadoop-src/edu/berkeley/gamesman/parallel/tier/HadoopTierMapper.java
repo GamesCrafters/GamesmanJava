@@ -22,10 +22,10 @@ import edu.berkeley.gamesman.solver.TierSolver;
 import edu.berkeley.gamesman.util.Progressable;
 import edu.berkeley.gamesman.util.Util;
 
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
 import edu.berkeley.gamesman.core.Configuration;
@@ -96,11 +96,11 @@ public class HadoopTierMapper extends
 			else if (numHashes < 0)
 				throw new Error("Negative number of hashes");
 			String foldUri = conf.getProperty("gamesman.hadoop.dbfolder");
-			String uri = foldUri + File.separator + "s" + tier + "_"
+			final String uri = foldUri + File.separator + "s" + tier + "_"
 					+ firstHash + ".db";
-			Path p = new Path(uri);
+			final Path p = new Path(uri);
 			if (fs.exists(p)) {
-				writeRange(key, context, p);
+				writeRange(key, context, uri);
 				return;
 			}
 			String solverName = this.conf.getProperty("gamesman.solver");
@@ -200,7 +200,7 @@ public class HadoopTierMapper extends
 				fs.rename(tempPath, p);
 			}
 			zippedURI = null;
-			writeRange(key, context, p);
+			writeRange(key, context, uri);
 		} catch (Error e) {
 			cleanup(true);
 			throw e;
@@ -216,11 +216,11 @@ public class HadoopTierMapper extends
 		}
 	}
 
-	private void writeRange(Range key, final Context context, Path p)
+	private void writeRange(Range key, final Context context, String p)
 			throws IOException, Error {
-		FileStatus finalFile = fs.getFileStatus(p);
 		try {
-			context.write(new IntWritable(tier), new RangeFile(key, finalFile));
+			context.write(new IntWritable(tier),
+					new RangeFile(key, new Text(p)));
 		} catch (InterruptedException e) {
 			throw new Error(e);
 		}

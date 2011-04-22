@@ -1,90 +1,78 @@
 package edu.berkeley.gamesman.database;
 
-import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
 import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.database.util.SeekableInputStream;
+import edu.berkeley.gamesman.database.util.SeekableOutputStream;
+import edu.berkeley.gamesman.util.RandomAccessFileDataInputStream;
+import edu.berkeley.gamesman.util.RandomAccessFileDataOutputStream;
 
-/**
- * The most basic database. Simply writes the bytes out to a file
- * 
- * @author dnspies
- */
-public final class FileDatabase extends Database {
+public class FileDatabase extends SeekableDatabase {
+
+	private static class FDArgs {
+
+		public SeekableInputStream in;
+		public SeekableOutputStream out;
+		public String uri;
+		public Configuration conf;
+		public long firstRecordIndex;
+		public long numRecords;
+		public boolean reading;
+		public boolean writing;
+
+		public FDArgs(String uri, Configuration conf, long firstRecordIndex,
+				long numRecords, boolean reading, boolean writing)
+				throws FileNotFoundException {
+			this.uri = uri;
+			this.conf = conf;
+			this.firstRecordIndex = firstRecordIndex;
+			this.numRecords = numRecords;
+			this.reading = reading;
+			this.writing = writing;
+			RandomAccessFile raf;
+			if (writing)
+				raf = new RandomAccessFile(uri, "rw");
+			else
+				raf = new RandomAccessFile(uri, "r");
+			if (reading)
+				in = new RandomAccessFileDataInputStream(raf);
+			if (writing)
+				out = new RandomAccessFileDataOutputStream(raf);
+		}
+
+		public FDArgs(String uri) throws IOException, ClassNotFoundException {
+			this.uri = uri;
+			RandomAccessFile raf;
+			raf = new RandomAccessFile(uri, "rw");
+			in = new RandomAccessFileDataInputStream(raf);
+			firstRecordIndex = in.readLong();
+			numRecords = in.readLong();
+			conf = Configuration.load(in);
+			in.reset();
+			out = new RandomAccessFileDataOutputStream(raf);
+			reading = true;
+			writing = true;
+		}
+	}
 
 	public FileDatabase(String uri, Configuration conf, long firstRecordIndex,
 			long numRecords, boolean reading, boolean writing)
 			throws IOException {
-		super(conf, firstRecordIndex, numRecords, reading, writing);
-		myFile = new File(uri);
-		if (writing) {
-			myRaf = new RandomAccessFile(myFile, "rw");
-			headerLen = writeHeader(myRaf);
-		} else {
-			myRaf = new RandomAccessFile(myFile, "r");
-			headerLen = skipHeader(myRaf);
-		}
-		firstByteIndex = myLogic.getByteIndex(firstRecordIndex);
+		this(new FDArgs(uri, conf, firstRecordIndex, numRecords, reading,
+				writing), true);
 	}
 
-	/**
-	 * Special constructor which opens for both reading and writing, but does
-	 * not wipe whatever was in the file previously.
-	 * 
-	 * @param uri
-	 * @throws ClassNotFoundException
-	 * @throws IOException
-	 */
+	private FileDatabase(FDArgs fdArgs, boolean overwrite) throws IOException {
+		super(fdArgs.in, fdArgs.out, fdArgs.uri, fdArgs.conf,
+				fdArgs.firstRecordIndex, fdArgs.numRecords, fdArgs.reading,
+				fdArgs.writing, overwrite);
+	}
+
 	public FileDatabase(String uri) throws IOException, ClassNotFoundException {
-		this(getArgs(uri));
+		this(new FDArgs(uri), false);
 	}
 
-	private FileDatabase(DatabaseArgs args) throws IOException {
-		super(args.conf, args.firstRecordIndex, args.numRecords, true, true);
-		myFile = new File(args.uri);
-		myRaf = new RandomAccessFile(myFile, "rw");
-		headerLen = skipHeader(myRaf);
-		firstByteIndex = myLogic.getByteIndex(firstRecordIndex);
-	}
-
-	/**
-	 * The file contained in this FileDatabase
-	 */
-	private final File myFile;
-
-	private final RandomAccessFile myRaf;
-
-	private final long headerLen;
-
-	private final long firstByteIndex;
-
-	private long lastByteIndex = -1L;
-
-	@Override
-	protected synchronized int readBytes(DatabaseHandle dh, long location,
-			byte[] array, int off, int len) throws IOException {
-		if (lastByteIndex != location) {
-			myRaf.seek(location - firstByteIndex + headerLen);
-		}
-		int bytesRead = myRaf.read(array, off, len);
-		lastByteIndex = location + bytesRead;
-		return bytesRead;
-	}
-
-	@Override
-	protected synchronized int writeBytes(DatabaseHandle dh, long location,
-			byte[] array, int off, int len) throws IOException {
-		if (lastByteIndex != location) {
-			myRaf.seek(location - firstByteIndex + headerLen);
-		}
-		myRaf.write(array, off, len);
-		lastByteIndex = location + len;
-		return len;
-	}
-
-	@Override
-	public synchronized void close() throws IOException {
-		myRaf.close();
-	}
 }

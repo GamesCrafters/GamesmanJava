@@ -5,13 +5,13 @@ import java.io.IOException;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 
-import edu.berkeley.gamesman.database.util.GZippedDatabaseInputStream;
+import edu.berkeley.gamesman.database.util.SeekableInputStream;
 
-public class GZippedFileSystemDatabaseInputStream extends
-		GZippedDatabaseInputStream {
+public class SeekableFileSystemDatabaseInputStream extends
+		SeekableInputStream {
 	private final FSDataInputStream in;
 
-	public GZippedFileSystemDatabaseInputStream(String uri) throws IOException {
+	public SeekableFileSystemDatabaseInputStream(String uri) throws IOException {
 		in = HDFSInfo.getHDFS().open(new Path(uri));
 	}
 

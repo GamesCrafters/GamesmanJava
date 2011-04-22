@@ -6,15 +6,19 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 
-import edu.berkeley.gamesman.database.util.GZippedDatabaseInputStream;
+import edu.berkeley.gamesman.database.util.SeekableInputStream;
 
-public class RandomAccessFileDataInputStream extends GZippedDatabaseInputStream {
+public class RandomAccessFileDataInputStream extends SeekableInputStream {
 	private final RandomAccessFile raf;
 	private long marked = 0L;
 
 	public RandomAccessFileDataInputStream(String uri)
 			throws FileNotFoundException {
-		raf = new RandomAccessFile(uri, "r");
+		this(new RandomAccessFile(uri, "r"));
+	}
+
+	public RandomAccessFileDataInputStream(RandomAccessFile raf) {
+		this.raf = raf;
 	}
 
 	@Override

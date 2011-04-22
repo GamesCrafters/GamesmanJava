@@ -7,15 +7,19 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 
-import edu.berkeley.gamesman.database.util.GZippedDatabaseOutputStream;
+import edu.berkeley.gamesman.database.util.SeekableOutputStream;
 
-public class RandomAccessFileDataOutputStream extends
-		GZippedDatabaseOutputStream implements DataOutput {
+public class RandomAccessFileDataOutputStream extends SeekableOutputStream
+		implements DataOutput {
 	RandomAccessFile myRaf;
 
 	public RandomAccessFileDataOutputStream(String uri, String permissions)
 			throws FileNotFoundException {
-		myRaf = new RandomAccessFile(uri, permissions);
+		this(new RandomAccessFile(uri, permissions));
+	}
+
+	public RandomAccessFileDataOutputStream(RandomAccessFile raf) {
+		this.myRaf = raf;
 	}
 
 	@Override

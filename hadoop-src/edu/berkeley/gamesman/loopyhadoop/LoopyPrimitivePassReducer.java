@@ -11,7 +11,7 @@ import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.database.DatabaseHandle;
-import edu.berkeley.gamesman.database.FileDatabase;
+import edu.berkeley.gamesman.database.GZippedFileDatabase;
 import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.parallel.RangeFile;
 import org.apache.hadoop.fs.FileSystem;
@@ -83,7 +83,7 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 			long rangeStart = rangeFile.myRange.firstRecord;
 			long numRecords = rangeFile.myRange.numRecords;
 
-			Path rangeFileDBPath = rangeFile.myFile.getPath();
+			Path rangeFileDBPath = new Path(rangeFile.myFile.toString());
 
 			String stringPath = rangeFileDBPath.toString() + "_numChildren";
 
@@ -107,11 +107,13 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 
 			String tempStringPath = stringPath + "_" + rand.nextLong();
 
-			ArrayFile.Writer arrayWriter = new ArrayFile.Writer(context
-					.getConfiguration(), fs, tempStringPath, IntWritable.class);
+			ArrayFile.Writer arrayWriter = new ArrayFile.Writer(
+					context.getConfiguration(), fs, tempStringPath,
+					IntWritable.class);
 
 			Iterator<Long> hashIter = sortedHashes.iterator();
 			long nextHash = hashIter.next();
+
 			for (int n = 0; n < range.length; n++) {
 				IntWritable numChildren = new IntWritable();
 
@@ -120,7 +122,9 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 					game.hashToState(nextHash, position);
 					numChildren.set(game.validMoves(position, childStates));
 
-					if (hashIter.hasNext()) {
+					long prevHash = nextHash;
+					while (prevHash == nextHash && hashIter.hasNext()) {
+						// skip duplicates
 						nextHash = hashIter.next();
 					}
 				} else {
@@ -146,89 +150,159 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 	private void markDatabase(RangeFile rangeFile, Context context,
 			ArrayList<Long> sortedHashes) throws Error {
 		try {
-			Path path = rangeFile.myFile.getPath();
+			long rangeStart = rangeFile.myRange.firstRecord;
+			long numRecords = rangeFile.myRange.numRecords;
 
-			LocalFileSystem lfs = new LocalFileSystem();
+			Path path = new Path(rangeFile.myFile.toString());
+
+			LocalFileSystem lfs = FileSystem.getLocal(context
+					.getConfiguration());
 
 			String stringPath = lfs.pathToFile(path).getPath();
 			String localStringPath = stringPath + "_local";
+			String newLocalStringPath = localStringPath + "_new";
 
+			Path newLocalPath = new Path(newLocalStringPath);
 			Path localPath = new Path(localStringPath);
 			fs.copyToLocalFile(path, localPath);
 
-			FileDatabase database = new FileDatabase(localStringPath);
+			GZippedFileDatabase database = new GZippedFileDatabase(
+					localStringPath, conf, rangeStart, numRecords, true, false);
+			GZippedFileDatabase newDatabase = new GZippedFileDatabase(
+					newLocalStringPath, conf, rangeStart, numRecords, false,
+					true);
 
 			DatabaseHandle readHandle = database.getHandle(true);
-			DatabaseHandle writeHandle = database.getHandle(false);
+			database.prepareReadRange(readHandle, rangeStart, numRecords);
+
+			DatabaseHandle writeHandle = newDatabase.getHandle(false);
+			newDatabase.prepareWriteRange(writeHandle, rangeStart, numRecords);
 
 			Record record = game.newRecord();
 			S gameState = game.newState();
 
-			Path primitiveFile = new Path(primitivePath, "range"
+			String primitivePathString = "range"
 					+ rangeFile.myRange.firstRecord
 					+ "to"
 					+ (rangeFile.myRange.firstRecord
-							+ rangeFile.myRange.numRecords - 1));
+							+ rangeFile.myRange.numRecords - 1);
+
+			Path primitiveFileRead = new Path(primitivePath,
+					primitivePathString);
+			Path primitiveFileWrite = new Path(primitivePath,
+					primitivePathString + "_new");
+
 			SequenceFile.Writer primitiveFileWriter = SequenceFile
 					.createWriter(fs, context.getConfiguration(),
-							primitiveFile, LongWritable.class,
+							primitiveFileWrite, LongWritable.class,
 							LongWritable.class);
 
+			if (fs.exists(primitiveFileRead)) {
+				SequenceFile.Reader primitiveFileReader = new SequenceFile.Reader(
+						fs, primitiveFileRead, context.getConfiguration());
+
+				while (primitiveFileReader.next(hashLongWritable,
+						recordLongWritable)) {
+					primitiveFileWriter.append(hashLongWritable,
+							recordLongWritable);
+				}
+
+				primitiveFileReader.close();
+			}
+
+			// System.out.println("Primitive count: "
+			// + primitiveFileWriter.getLength());
 			/*
 			 * all hashes are going to be in the same file so this goes outside
 			 * the loop
 			 */
 			boolean changesMade = false;
-			for (Long hash : sortedHashes) {
-				game.hashToState(hash, gameState);
-				long recordHash = database.readRecord(readHandle, hash);
-				game.longToRecord(gameState, recordHash, record);
-				/* get the record associated with this hash */
 
-				boolean visited = record.value != Value.IMPOSSIBLE;
+			Iterator<Long> hashIter = sortedHashes.iterator();
+			long nextHash = hashIter.next();
 
-				if (!visited) {
-					hashLongWritable.set(hash);
+			for (long n = 0; n < numRecords; n++) {
+				long recordHash = database.readNextRecord(readHandle);
 
-					Value primitiveValue = game.primitiveValue(gameState);
-					if (primitiveValue == Value.UNDECIDED) {
-						// value is not primitive
-						record.value = Value.DRAW;
-					} else // primitive
-					{
-						recordLongWritable.set(recordHash);
-						primitiveFileWriter.append(hashLongWritable,
-								recordLongWritable);
-						record.value = primitiveValue;
-						record.remoteness = 0;
-						// we have to deal with this during the solve for
-						// non-primitives?
+				if (rangeStart + n == nextHash) {
+
+					game.hashToState(nextHash, gameState);
+
+					game.longToRecord(gameState, recordHash, record);
+					/* get the record associated with this hash */
+
+					boolean visited = record.value != Value.IMPOSSIBLE;
+
+					if (!visited) {
+						hashLongWritable.set(nextHash);
+
+						Value primitiveValue = game.primitiveValue(gameState);
+						if (primitiveValue == Value.UNDECIDED) {
+							// value is not primitive
+							record.value = Value.DRAW;
+
+							recordHash = game.recordToLong(gameState, record);
+
+							context.write(hashLongWritable, zero);
+							// only continue for non-primitives
+						} else // primitive
+						{
+							record.value = primitiveValue;
+							record.remoteness = 0;
+
+							recordHash = game.recordToLong(gameState, record);
+
+							recordLongWritable.set(recordHash);
+							primitiveFileWriter.append(hashLongWritable,
+									recordLongWritable);
+						}
+
+						newDatabase.writeNextRecord(writeHandle, recordHash);
+						// System.out.println("Wrote value: " +
+						// record.value.name());
+						// write this record to the database
+						changesMade = true;
+					} else {
+						newDatabase.writeNextRecord(writeHandle, recordHash);
 					}
-					recordHash = game.recordToLong(gameState, record);
-					database.writeRecord(writeHandle, hash, recordHash);
-					// write this record to the database
-					changesMade = true;
-					context.write(hashLongWritable, zero);
+
+					long prevHash = nextHash;
+					while (prevHash == nextHash && hashIter.hasNext()) {
+						// skip duplicates
+						nextHash = hashIter.next();
+					}
+				} else {
+					newDatabase.writeNextRecord(writeHandle, recordHash);
+					// writes to a gzipped database have to be sequential so
+					// copy in the gap
 				}
 			}
 
+			// System.out.println("Primitive count: "
+			// + primitiveFileWriter.getLength());
+
 			primitiveFileWriter.close();
+
+			fs.rename(primitiveFileWrite, primitiveFileRead);
+
 			database.close();
+			newDatabase.close();
 
 			if (changesMade) {
 				Path tempPath = new Path(stringPath + "_" + rand.nextLong());
 				// use a random long to prevent collisions in the expensive copy
 				// step
-				lfs.pathToFile(lfs.getChecksumFile(localPath)).delete();
+				lfs.delete(localPath, true);
 
-				fs.moveFromLocalFile(localPath, tempPath);
+				fs.moveFromLocalFile(newLocalPath, tempPath);
 				// copy the written database to hdfs
 				fs.rename(tempPath, path);
 				// rename to complete process
+			} else {
+				lfs.delete(localPath, true);
+				lfs.delete(newLocalPath, true);
 			}
 		} catch (IOException e) {
-			throw new Error(e);
-		} catch (ClassNotFoundException e) {
 			throw new Error(e);
 		} catch (InterruptedException e) {
 			e.printStackTrace();

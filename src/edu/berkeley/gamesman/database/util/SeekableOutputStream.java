@@ -4,7 +4,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public abstract class GZippedDatabaseOutputStream extends OutputStream
+public abstract class SeekableOutputStream extends OutputStream
 		implements DataOutput {
 
 	public abstract long getFilePointer() throws IOException;
