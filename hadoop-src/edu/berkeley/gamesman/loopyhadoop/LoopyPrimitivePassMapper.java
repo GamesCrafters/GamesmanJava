@@ -16,7 +16,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.Collections;
 
 /**
  * @author Eric
@@ -50,7 +50,7 @@ public class LoopyPrimitivePassMapper<S extends State> extends
 
 			SequenceFile.Reader reader = new SequenceFile.Reader(fs, new Path(
 					hadoopConf.get("db.map.path")), hadoopConf);
-			List<RangeFile> ranges = new ArrayList<RangeFile>();
+			ArrayList<RangeFile> ranges = new ArrayList<RangeFile>();
 			while (true) {
 				Range r = new Range();
 				Text text = new Text();
@@ -59,6 +59,8 @@ public class LoopyPrimitivePassMapper<S extends State> extends
 				ranges.add(new RangeFile(r, text));
 			}
 			reader.close();
+			
+			Collections.sort(ranges);
 
 			rangeFiles = ranges.toArray(new RangeFile[ranges.size()]);
 

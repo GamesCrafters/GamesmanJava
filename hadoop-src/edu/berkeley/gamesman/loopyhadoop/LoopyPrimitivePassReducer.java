@@ -107,9 +107,8 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 
 			String tempStringPath = stringPath + "_" + rand.nextLong();
 
-			ArrayFile.Writer arrayWriter = new ArrayFile.Writer(
-					context.getConfiguration(), fs, tempStringPath,
-					IntWritable.class);
+			ArrayFile.Writer arrayWriter = new ArrayFile.Writer(context
+					.getConfiguration(), fs, tempStringPath, IntWritable.class);
 
 			Iterator<Long> hashIter = sortedHashes.iterator();
 			long nextHash = hashIter.next();
@@ -152,7 +151,7 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 		try {
 			long rangeStart = rangeFile.myRange.firstRecord;
 			long numRecords = rangeFile.myRange.numRecords;
-
+			
 			Path path = new Path(rangeFile.myFile.toString());
 
 			LocalFileSystem lfs = FileSystem.getLocal(context
@@ -185,33 +184,17 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 					+ rangeFile.myRange.firstRecord
 					+ "to"
 					+ (rangeFile.myRange.firstRecord
-							+ rangeFile.myRange.numRecords - 1);
+							+ rangeFile.myRange.numRecords - 1)
+					+ context.getConfiguration().get("stage2_remoteness");
 
-			Path primitiveFileRead = new Path(primitivePath,
-					primitivePathString);
 			Path primitiveFileWrite = new Path(primitivePath,
-					primitivePathString + "_new");
+					primitivePathString);
 
 			SequenceFile.Writer primitiveFileWriter = SequenceFile
 					.createWriter(fs, context.getConfiguration(),
 							primitiveFileWrite, LongWritable.class,
 							LongWritable.class);
 
-			if (fs.exists(primitiveFileRead)) {
-				SequenceFile.Reader primitiveFileReader = new SequenceFile.Reader(
-						fs, primitiveFileRead, context.getConfiguration());
-
-				while (primitiveFileReader.next(hashLongWritable,
-						recordLongWritable)) {
-					primitiveFileWriter.append(hashLongWritable,
-							recordLongWritable);
-				}
-
-				primitiveFileReader.close();
-			}
-
-			// System.out.println("Primitive count: "
-			// + primitiveFileWriter.getLength());
 			/*
 			 * all hashes are going to be in the same file so this goes outside
 			 * the loop
@@ -282,8 +265,6 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 			// + primitiveFileWriter.getLength());
 
 			primitiveFileWriter.close();
-
-			fs.rename(primitiveFileWrite, primitiveFileRead);
 
 			database.close();
 			newDatabase.close();

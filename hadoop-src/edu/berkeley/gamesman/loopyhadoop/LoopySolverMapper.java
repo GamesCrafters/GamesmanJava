@@ -16,7 +16,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
 
 /**
  * Created by IntelliJ IDEA. User: dxu Date: 4/12/11 Time: 5:14 PM To change
@@ -54,7 +54,7 @@ public class LoopySolverMapper<S extends State> extends
 
 			SequenceFile.Reader reader = new SequenceFile.Reader(fs, new Path(
 					hadoopConf.get("db.map.path")), hadoopConf);
-			List<RangeFile> ranges = new ArrayList<RangeFile>();
+			ArrayList<RangeFile> ranges = new ArrayList<RangeFile>();
 			while (true) {
 				Range r = new Range();
 				Text text = new Text();
@@ -64,6 +64,8 @@ public class LoopySolverMapper<S extends State> extends
 			}
 			reader.close();
 
+			Collections.sort(ranges);
+			
 			rangeFiles = ranges.toArray(new RangeFile[ranges.size()]);
 
 			hashesPerFile = game.numHashes() / ranges.size();

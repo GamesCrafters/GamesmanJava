@@ -164,6 +164,8 @@ public class LoopyMaster implements Runnable {
 
 		int n = 1;
 		while (directoryHasILKVPairs(sequenceFileInputDir)) {
+			hadoopConf.set("stage2_remoteness", "_remoteness_" + n);
+
 			Job j = new Job(hadoopConf, "Find legal positions pass: " + (n++));
 			j.setJarByClass(LoopyPrimitivePassMapper.class);
 			j.setMapperClass(LoopyPrimitivePassMapper.class);
@@ -203,8 +205,8 @@ public class LoopyMaster implements Runnable {
 			IntWritable value = new IntWritable();
 
 			for (FileStatus file : files) {
-				SequenceFile.Reader reader = new SequenceFile.Reader(fs,
-						file.getPath(), hadoopConf);
+				SequenceFile.Reader reader = new SequenceFile.Reader(fs, file
+						.getPath(), hadoopConf);
 				// everything in the input directory should be a sequence file
 
 				if (reader.next(key, value)) {// if the file has any kv pairs,
@@ -277,8 +279,8 @@ public class LoopyMaster implements Runnable {
 			if (!reader.next(r, text))
 				break;
 
-			dbMaker.addDb(GZippedFileDatabase.class.getName(),
-					text.toString(), r.firstRecord, r.numRecords);
+			dbMaker.addDb(GZippedFileDatabase.class.getName(), text.toString(),
+					r.firstRecord, r.numRecords);
 		}
 
 		reader.close();
@@ -293,8 +295,8 @@ public class LoopyMaster implements Runnable {
 			LongWritable value = new LongWritable();
 
 			for (FileStatus file : files) {
-				SequenceFile.Reader reader = new SequenceFile.Reader(fs,
-						file.getPath(), hadoopConf);
+				SequenceFile.Reader reader = new SequenceFile.Reader(fs, file
+						.getPath(), hadoopConf);
 				// everything in the input directory should be a sequence file
 
 				if (reader.next(key, value)) {// if the file has any kv pairs,
