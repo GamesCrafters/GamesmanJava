@@ -21,6 +21,7 @@ import org.apache.hadoop.io.ArrayFile;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.mapreduce.Reducer;
 
 /**
@@ -108,7 +109,7 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 			String tempStringPath = stringPath + "_" + rand.nextLong();
 
 			ArrayFile.Writer arrayWriter = new ArrayFile.Writer(context
-					.getConfiguration(), fs, tempStringPath, IntWritable.class);
+					.getConfiguration(), fs, tempStringPath, IntWritable.class, CompressionType.BLOCK, null);
 
 			Iterator<Long> hashIter = sortedHashes.iterator();
 			long nextHash = hashIter.next();
