@@ -1,5 +1,5 @@
 gamesman.game = Quarto
-gamesman.solver = CacheTierSolver
+gamesman.solver = QuartoSolver
 gamesman.db.uri = /scratch/quarto.db
 gamesman.hadoop.tierDb = /scratch/quarto/quarto
 gamesman.hadoop.dbfolder = /scratch/quarto
