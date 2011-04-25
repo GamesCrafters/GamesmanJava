@@ -178,11 +178,13 @@ public class AvroInterface extends GamesmanApplication {
 		}
 		Pair<Configuration, Database> cPair = loadedConfigurations
 				.get(filename);
-		if (cPair == null) {
-			cPair = addDatabase(params, game, filename);
-			loadedConfigurations.put(filename, cPair);
+		synchronized (this) {
+			if (cPair == null) {
+				cPair = addDatabase(params, game, filename);
+				loadedConfigurations.put(filename, cPair);
+			}
 		}
-		return cPair;
+		return new Pair<Configuration, Database>(cPair.car.cloneAll(), cPair.cdr);
 	}
 
 	private synchronized Pair<Configuration, Database> addDatabase(

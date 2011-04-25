@@ -153,7 +153,7 @@ public class JSONInterface extends GamesmanApplication {
 				loadedConfigurations.put(filename, cPair);
 			}
 		}
-		return cPair;
+		return new Pair<Configuration, Database>(cPair.car.cloneAll(), cPair.cdr);
 	}
 
 	private synchronized Pair<Configuration, Database> addDatabase(
@@ -375,7 +375,10 @@ public class JSONInterface extends GamesmanApplication {
 		private <T extends State> GamestateResponse fillResponseFields(
 				Configuration conf, Database db, T state, boolean isChildState) {
 			GamestateResponse request = new GamestateResponse();
-			Game<T> g = conf.getCheckedGame();
+
+			// FIXME: Wasteful, but a Game can't be shared across threads
+			Configuration confCopy = conf.cloneAll();
+			Game<T> g = confCopy.getCheckedGame();
 			if (db != null) {
 				Record rec = g.newRecord();
 				DatabaseHandle handle = db.getHandle(true);
@@ -420,13 +423,6 @@ public class JSONInterface extends GamesmanApplication {
 				}
 			}
 			String boardString = g.synchronizedStateToString(state);
-			if (!g.synchronizedStringToState(boardString).equals(state)) {
-				throw new Error("States do not match: "
-						+ boardString
-						+ " and "
-						+ g.synchronizedStateToString(g
-								.synchronizedStringToState(boardString)));
-			}
 			request.setBoard(boardString);
 			return request;
 		}
