@@ -272,7 +272,7 @@ public class JSONInterface extends GamesmanApplication {
 			T state = game.synchronizedStringToState(board);
 
 			if (!game.synchronizedStateToString(state).equals(board))
-				throw new Error("Board does not match");
+				throw new Error("Board does not match: "+game.synchronizedStateToString(state)+"; "+board);
 
 			// Access to this list must be synchronized!
 			final List<GamestateResponse> responseArray = Collections
@@ -340,7 +340,7 @@ public class JSONInterface extends GamesmanApplication {
 			T state = game.synchronizedStringToState(board);
 
 			if (!game.synchronizedStateToString(state).equals(board))
-				throw new Error("Board does not match");
+				throw new Error("Board does not match: "+game.synchronizedStateToString(state)+"; "+board);
 
 			response = fillResponseFields(config, db, state, false);
 

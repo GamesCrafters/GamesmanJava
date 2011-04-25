@@ -217,6 +217,15 @@ public class Reversi extends TierGame {
 		else
 			throw new Error("Bad turn");
 		char[] woTurn = Arrays.copyOfRange(posArray, 1, posArray.length - 1);
+		numPieces[BLACK] = 0;
+		numPieces[WHITE] = 0;
+		for (int i = 0; i < woTurn.length; i++) {
+			if (woTurn[i] == 'X') {
+				numPieces[BLACK]++;
+			} else if (woTurn[i] == 'O') {
+				numPieces[WHITE]++;
+			}
+		}
 		dbh.setNumsAndHash(woTurn);
 		isChildrenValid = false;
 	}
