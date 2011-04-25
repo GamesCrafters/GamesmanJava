@@ -41,6 +41,7 @@ if len(readDB.header["fields"]) == 1:
         else:
             rawData[x/numBytesPer] = rawData[x] + 1
 elif len(readDB.header["fields"]) == 2:
+    print >>sys.stderr, readDB.header["fields"]
     remoteBits = readDB.header["fields"][0][1]
     assert readDB.header["fields"][0][0] == "remoteness"
     assert readDB.header["fields"][1][0] == "score"
@@ -51,23 +52,27 @@ elif len(readDB.header["fields"]) == 2:
         sy = int(time.time())
         if sy > s:
             s = sy
-            print >>sys.stderr, x/numBytesPer
+            print >>sys.stderr, "Time", x/numBytesPer
         instance = puzz.unhash(x/numBytesPer)
-
+        data = int(rawData[x])
+        for i in range(1, numBytesPer):
+            data = data * 256 + rawData[x + i]
+        #print >>sys.stderr, data
         # Hack for triangular peg solitaire's starting position
-        if hash(instance) == hash(puzz) and rawData[hash(puzz._generate_start())] != 0:
-            rawData[x] = rawData[hash(puzz._generate_start())]
+        #if hash(instance) == hash(puzz) and rawData[hash(puzz._generate_start())] != 0:
+        #    rawData[x] = rawData[hash(puzz._generate_start())]
 
-        if rawData[x] == 0xff or (rawData[x] == 0 and
+        if data == 0xff or (data == 0 and
                                   not (instance.is_a_solution() or instance.is_deadend())):
             #print >>sys.stderr, "ignore", instance.board
             rawData[x/numBytesPer] = 0
         else:
-            remote = int(rawData[x]) & ((1<<remoteBits)-1)
-            #score = int(rawData[x]) >> remoteBits
+            remote = int(data) & ((1<<remoteBits)-1)
+            #score = int(data) >> remoteBits
             score = sum(sum(r) for r in instance.board) - remote
-            #print >>sys.stderr, remote, score, instance.board
+            #print >>sys.stderr, remote, score, instance.board,
             newData = remote + score * maxRemoteness + 1
+            #print >>sys.stderr, newData
             #if score != 1:
             #    newData *= 2
             rawData[x/numBytesPer] = newData

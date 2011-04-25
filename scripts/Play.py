@@ -1,4 +1,5 @@
 from edu.berkeley.gamesman.core import Configuration
+from edu.berkeley.gamesman.database import Database
 from edu.berkeley.gamesman.core import Record
 from edu.berkeley.gamesman.util import Util
 from java.util import Properties
@@ -14,15 +15,16 @@ Then you can play with state by simply adding a move string to it
 class GameState:
     """Nice wrapper for games and puzzles"""
     
-    def __init__(self, game, state, db):
+    def __init__(self, game, state, db, conf):
         self.game = game
         self.state = state
         self.db = db
+        self.conf = conf
         
     def __str__(self):
         buf = str(self.hash())
         buf += "( " + self.game.stateToString(self.state) + " )"
-        buf += self.game.displayState(self.state)
+        buf += "\n" + self.game.displayState(self.state)
         if self.db is not None:
             rec = self.db.getRecord(self.game.stateToHash(self.state))
             buf += rec.toString()
@@ -33,12 +35,12 @@ class GameState:
         return self.game.stateToHash(self.state)
     
     def unhash(self, hash):
-        return GameState(self.game, self.game.hashToState(hash), self.db)
+        return GameState(self.game, self.game.hashToState(hash), self.db, self.conf)
     
     def moves(self):
         s = []
         for c in self.game.validMoves(self.state):
-            s += [(c.car,GameState(self.game, c.cdr, self.db))]
+            s += [(c.car,GameState(self.game, c.cdr, self.db, self.conf))]
         return s
     
     def printMoves(self):
@@ -70,7 +72,7 @@ class GameState:
         if nextState == None:
             print "Invalid move: " + move
             return self
-        gs = GameState(self.game, nextState, self.db)
+        gs = GameState(self.game, nextState, self.db, self.conf)
         #print gs
         return gs
 
@@ -87,19 +89,18 @@ def play(jobFile):
     
     response = raw_input("Would you like to load the database? (Y/n): ")
     if response.lower() != "n":
-        db = Util.typedInstantiate("edu.berkeley.gamesman.database." + conf.getProperty("gamesman.database"))
-        db.initialize(conf.getProperty("gamesman.db.uri"),None)
-        conf = db.getConfiguration()
+        db = Database.openDatabase(conf.getProperty("gamesman.db.uri"))
+        conf = db.conf
         game = conf.getGame()
         
     else:
         db = None
-        gameClass = Util.typedForName("edu.berkeley.gamesman.game." + conf.getProperty("gamesman.game"))
+        #gameClass = Util.typedForName("edu.berkeley.gamesman.game." + conf.getProperty("gamesman.game"))
         #java's newInstance() expects an array
-        game = gameClass.getConstructors()[0].newInstance([conf])
-    
+        #game = gameClass.getConstructors()[0].newInstance([conf])
+        game = conf.getGame()
 
-    gs = GameState(game, game.startingPositions()[0], db)
+    gs = GameState(game, game.startingPositions()[0], db, conf)
     
     global globalState
     globalState = gs

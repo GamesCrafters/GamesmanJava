@@ -1,7 +1,6 @@
 from edu.berkeley.gamesman.core import State,Value,Record,Configuration
 from edu.berkeley.gamesman.game import Game
-from edu.berkeley.gamesman.database import FileDatabase
-from edu.berkeley.gamesman.master import Master
+from edu.berkeley.gamesman.database import FileDatabase, Database
 from edu.berkeley.gamesman.solver import TopDownSolver, BreadthFirstSolver
 from edu.berkeley.gamesman.util import Util, Pair, DebugFacility
 from java.util import Properties,EnumSet
@@ -217,11 +216,11 @@ class Solver:
 		self.hasher = hasherclass(self.conf)
 		self.solverclass = solverclass
 		self.conf.initialize(self.gm, self.hasher)
-		self.master = None
+		self.db = None
 
 	def initializeDB(self):
-		self.master = Master()
-		self.master.initialize(self.conf,self.solverclass,BlockDatabase)
+		self.db = Database.openDatabase(self.dbfile)
+
 	def solve(self):
 		self.delete()
 		try:
@@ -242,9 +241,9 @@ class Solver:
 			print e
 
 	def getDatabase(self):
-		if not self.master:
+		if not self.db:
 			self.initializeDB()
-		return self.master.database
+		return self.db
 
 	def __getitem__(self, state):
 		if type(state) == str:
