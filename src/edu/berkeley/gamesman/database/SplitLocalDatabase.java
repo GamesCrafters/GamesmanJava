@@ -64,8 +64,8 @@ public class SplitLocalDatabase extends SplitDatabase {
 		String dbUri = args[2];
 		final long firstRecordIndex, numRecords;
 		if (args.length > 3) {
-			firstRecordIndex = Integer.parseInt(args[3]);
-			numRecords = Integer.parseInt(args[4]);
+			firstRecordIndex = Long.parseLong(args[3]);
+			numRecords = Long.parseLong(args[4]);
 		} else {
 			firstRecordIndex = 0L;
 			numRecords = conf.getGame().numHashes();
