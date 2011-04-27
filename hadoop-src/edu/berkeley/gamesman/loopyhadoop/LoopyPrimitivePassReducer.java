@@ -74,8 +74,11 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 
 		Collections.sort(sortedHashes);
 
+		// System.out.println("Starting num children");
 		writeNumChildren(rangeFile, sortedHashes, context);
+		// System.out.println("Starting marking database");
 		markDatabase(rangeFile, context, sortedHashes);
+		// System.out.println("finished reduce");
 	}
 
 	private void writeNumChildren(RangeFile rangeFile,
@@ -92,13 +95,16 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 
 			Path numChildrenPath = new Path(stringPath);
 
+			// System.out.println("Entering copy loop");
+
 			if (fs.exists(numChildrenPath)) {
 				ArrayFile.Reader arrayReader = new ArrayFile.Reader(fs,
 						stringPath, context.getConfiguration());
 
 				IntWritable temp = new IntWritable();
 				for (int n = 0; n < range.length; n++) {
-					arrayReader.get(n, temp);
+					// System.out.println("looping: " + n);
+					arrayReader.next(temp);
 					range[n] = temp.get();
 					// get the num children from the file
 				}
@@ -109,12 +115,15 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 			String tempStringPath = stringPath + "_" + rand.nextLong();
 
 			ArrayFile.Writer arrayWriter = new ArrayFile.Writer(context
-					.getConfiguration(), fs, tempStringPath, IntWritable.class, CompressionType.BLOCK, null);
+					.getConfiguration(), fs, tempStringPath, IntWritable.class,
+					CompressionType.BLOCK, null);
 
 			Iterator<Long> hashIter = sortedHashes.iterator();
 			long nextHash = hashIter.next();
 
+			// System.out.println("entering main num children loop");
 			for (int n = 0; n < range.length; n++) {
+				// System.out.println("looping2: " + n);
 				IntWritable numChildren = new IntWritable();
 
 				if (nextHash == rangeStart + n) {// we're writing to a hash that
@@ -152,7 +161,7 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 		try {
 			long rangeStart = rangeFile.myRange.firstRecord;
 			long numRecords = rangeFile.myRange.numRecords;
-			
+
 			Path path = new Path(rangeFile.myFile.toString());
 
 			LocalFileSystem lfs = FileSystem.getLocal(context

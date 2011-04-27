@@ -108,7 +108,7 @@ public class LoopySolverReducer<S extends State> extends
 
 			IntWritable temp = new IntWritable();
 			for (int n = 0; n < numChildrenRemaining.length; n++) {
-				numChildrenReader.get(n, temp);
+				numChildrenReader.next(temp);
 				numChildrenRemaining[n] = temp.get();
 			}
 
@@ -166,9 +166,9 @@ public class LoopySolverReducer<S extends State> extends
 			newDatabase.close();
 
 			if (changeTracker.changesMadeNumChildren) {
-				ArrayFile.Writer arrayWriter = new ArrayFile.Writer(
-						context.getConfiguration(), lfs,
-						localNumChildrenStringPath, IntWritable.class);
+				ArrayFile.Writer arrayWriter = new ArrayFile.Writer(context
+						.getConfiguration(), lfs, localNumChildrenStringPath,
+						IntWritable.class);
 
 				for (int n = 0; n < numChildrenRemaining.length; n++) {
 					IntWritable numChildren = new IntWritable(
