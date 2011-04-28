@@ -74,11 +74,8 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 
 		Collections.sort(sortedHashes);
 
-		// System.out.println("Starting num children");
 		writeNumChildren(rangeFile, sortedHashes, context);
-		// System.out.println("Starting marking database");
 		markDatabase(rangeFile, context, sortedHashes);
-		// System.out.println("finished reduce");
 	}
 
 	private void writeNumChildren(RangeFile rangeFile,
@@ -89,30 +86,19 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 
 			Path rangeFileDBPath = new Path(rangeFile.myFile.toString());
 
-			String stringPath = rangeFileDBPath.toString() + "_numChildren";
+			String numChildrenStringPath = rangeFileDBPath.toString()
+					+ "_numChildren";
 
-			int[] range = new int[(int) numRecords];
+			Path numChildrenPath = new Path(numChildrenStringPath);
 
-			Path numChildrenPath = new Path(stringPath);
-
-			// System.out.println("Entering copy loop");
-
+			ArrayFile.Reader arrayReader = null;
 			if (fs.exists(numChildrenPath)) {
-				ArrayFile.Reader arrayReader = new ArrayFile.Reader(fs,
-						stringPath, context.getConfiguration());
-
-				IntWritable temp = new IntWritable();
-				for (int n = 0; n < range.length; n++) {
-					// System.out.println("looping: " + n);
-					arrayReader.next(temp);
-					range[n] = temp.get();
-					// get the num children from the file
-				}
-
-				arrayReader.close();
+				arrayReader = new ArrayFile.Reader(fs, numChildrenStringPath,
+						context.getConfiguration());
 			}
 
-			String tempStringPath = stringPath + "_" + rand.nextLong();
+			String tempStringPath = numChildrenStringPath + "_"
+					+ rand.nextLong();
 
 			ArrayFile.Writer arrayWriter = new ArrayFile.Writer(context
 					.getConfiguration(), fs, tempStringPath, IntWritable.class,
@@ -121,11 +107,14 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 			Iterator<Long> hashIter = sortedHashes.iterator();
 			long nextHash = hashIter.next();
 
-			// System.out.println("entering main num children loop");
-			for (int n = 0; n < range.length; n++) {
-				// System.out.println("looping2: " + n);
-				IntWritable numChildren = new IntWritable();
+			for (long n = 0; n < numRecords; n++) {
+				IntWritable numChildren = new IntWritable(0);
 
+				if(arrayReader != null)
+				{
+					arrayReader.next(numChildren);
+				}
+				
 				if (nextHash == rangeStart + n) {// we're writing to a hash that
 					// we're filling in here
 					game.hashToState(nextHash, position);
@@ -136,13 +125,15 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 						// skip duplicates
 						nextHash = hashIter.next();
 					}
-				} else {
-					numChildren.set(range[n]);
 				}
 
 				arrayWriter.append(numChildren);
 			}
 
+			if(arrayReader != null)
+			{
+				arrayReader.close();
+			}
 			arrayWriter.close();
 
 			if (fs.exists(numChildrenPath))
@@ -251,9 +242,7 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 						}
 
 						newDatabase.writeNextRecord(writeHandle, recordHash);
-						// System.out.println("Wrote value: " +
-						// record.value.name());
-						// write this record to the database
+		
 						changesMade = true;
 					} else {
 						newDatabase.writeNextRecord(writeHandle, recordHash);
@@ -270,9 +259,6 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 					// copy in the gap
 				}
 			}
-
-			// System.out.println("Primitive count: "
-			// + primitiveFileWriter.getLength());
 
 			primitiveFileWriter.close();
 

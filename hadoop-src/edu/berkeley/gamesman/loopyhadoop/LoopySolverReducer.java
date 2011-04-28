@@ -12,6 +12,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.ArrayFile;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.mapreduce.Reducer;
 
 import edu.berkeley.gamesman.core.Value;
@@ -71,10 +72,6 @@ public class LoopySolverReducer<S extends State> extends
 						candidate.record));
 			}
 
-			// for (StateRecordPair candidate : sortedCandidates) {
-			// System.out.println("candidate state: " + candidate.state);
-			// }
-
 			Collections.sort(sortedCandidates);
 
 			LocalFileSystem lfs = FileSystem.getLocal(context
@@ -82,40 +79,30 @@ public class LoopySolverReducer<S extends State> extends
 
 			String dbStringPath = rangeToReduce.myFile.toString();
 			String numChildrenStringPath = dbStringPath + "_numChildren";
+			String numChildrenTempStringPath = numChildrenStringPath + "_"
+					+ rand.nextLong();
 
 			String localDBStringPath = dbStringPath + "_local";
 			String newLocalDBStringPath = dbStringPath + "_local_new";
-			String localNumChildrenStringPath = numChildrenStringPath
-					+ "_local";
 
 			Path localDBPath = new Path(localDBStringPath);
 			Path newLocalDBPath = new Path(newLocalDBStringPath);
-			Path localNumChildrenPath = new Path(localNumChildrenStringPath);
 
 			Path hdfsDBPath = new Path(rangeToReduce.myFile.toString());
 			Path hdfsNumChildrenPath = new Path(numChildrenStringPath);
+			Path hdfsNumChildrenTempPath = new Path(numChildrenTempStringPath);
 
 			fs.copyToLocalFile(hdfsDBPath, localDBPath);
-			fs.copyToLocalFile(hdfsNumChildrenPath, localNumChildrenPath);
 
-			ArrayFile.Reader numChildrenReader = new ArrayFile.Reader(lfs,
-					localNumChildrenStringPath, context.getConfiguration());
+			ArrayFile.Reader numChildrenReader = new ArrayFile.Reader(fs,
+					numChildrenStringPath, context.getConfiguration());
+
+			ArrayFile.Writer numChildrenWriter = new ArrayFile.Writer(context
+					.getConfiguration(), fs, numChildrenTempStringPath,
+					IntWritable.class, CompressionType.BLOCK, null);
 
 			long rangeStart = rangeToReduce.myRange.firstRecord;
 			long numRecords = rangeToReduce.myRange.numRecords;
-
-			int[] numChildrenRemaining = new int[(int) numRecords];
-
-			IntWritable temp = new IntWritable();
-			for (int n = 0; n < numChildrenRemaining.length; n++) {
-				numChildrenReader.next(temp);
-				numChildrenRemaining[n] = temp.get();
-			}
-
-			numChildrenReader.close();
-
-			lfs.delete(localNumChildrenPath, true); // no longer need the local
-			// copy, it's in memory
 
 			GZippedFileDatabase database = new GZippedFileDatabase(
 					localDBStringPath, conf, rangeStart, numRecords, true,
@@ -129,74 +116,54 @@ public class LoopySolverReducer<S extends State> extends
 
 			writeHandle = newDatabase.getHandle(false);
 			newDatabase.prepareWriteRange(writeHandle, rangeStart, numRecords);
-
-			ChangeTracker changeTracker = new ChangeTracker();
+			
+			// File stuff prepared, move on to interesting part
 
 			Iterator<StateRecordPair> pairIter = sortedCandidates.iterator();
 			statePair = pairIter.next();
 
-			// System.out.println("\nEntering main loop stage 3 reducer\n");
-			int numWritten = 0;
+			boolean changesMadeDB = false;
 			int hashCount = 0;
+
+			IntWritable numChildren = new IntWritable();
+
 			for (long i = 0; i < numRecords; i++) {
 				long currentLongRecord = database.readNextRecord(readHandle);
 
 				boolean written = false;
 
+				numChildrenReader.next(numChildren);
+
 				if (rangeStart + i == statePair.state) {
 					hashCount++;
 					written = decideNextRecord(context, rangeStart,
-							numChildrenRemaining, newDatabase, changeTracker,
-							pairIter, currentLongRecord);
+							numChildren, newDatabase, pairIter,
+							currentLongRecord);
 				}
 
-				if (!written) {
-					newDatabase.writeNextRecord(writeHandle, currentLongRecord);
-				} else
-					numWritten++;
-			}
+				numChildrenWriter.append(numChildren);
 
-			// System.out.println("Number of records visited: " + hashCount);
-			// System.out.println("Number of records written: " + numWritten);
-			// System.out.println("Number of records processed: "
-			// + sortedCandidates.size());
-			// System.out.println();
+				if (!written) {
+					// write the old record
+					newDatabase.writeNextRecord(writeHandle, currentLongRecord);
+				} else {
+					changesMadeDB = true;
+				}
+			}
+			
+			// Cleanup file stuff
 
 			database.close();
 			newDatabase.close();
 
-			if (changeTracker.changesMadeNumChildren) {
-				ArrayFile.Writer arrayWriter = new ArrayFile.Writer(context
-						.getConfiguration(), lfs, localNumChildrenStringPath,
-						IntWritable.class);
+			numChildrenReader.close();
+			numChildrenWriter.close();
 
-				for (int n = 0; n < numChildrenRemaining.length; n++) {
-					IntWritable numChildren = new IntWritable(
-							numChildrenRemaining[n]);
-					// put in the new value
+			fs.delete(hdfsNumChildrenPath, true);
+			fs.rename(hdfsNumChildrenTempPath, hdfsNumChildrenPath);
+			// get the numChildren file right
 
-					arrayWriter.append(numChildren);
-				}
-
-				arrayWriter.close();
-
-				// now save the new file on hdfs
-				Path tempPath = new Path(numChildrenStringPath + "_"
-						+ rand.nextLong());
-				// use a random long to prevent collisions in the expensive copy
-				// step
-
-				fs.moveFromLocalFile(localNumChildrenPath, tempPath);
-				// copy the written array file to hdfs
-
-				if (fs.exists(hdfsNumChildrenPath))
-					fs.delete(hdfsNumChildrenPath, true);
-
-				fs.rename(tempPath, hdfsNumChildrenPath);
-				// rename to complete process
-			}
-
-			if (changeTracker.changesMadeDB) {
+			if (changesMadeDB) {
 				Path tempPath = new Path(dbStringPath + "_" + rand.nextLong());
 				// use a random long to prevent collisions in the expensive copy
 				// step
@@ -222,9 +189,9 @@ public class LoopySolverReducer<S extends State> extends
 	}
 
 	private boolean decideNextRecord(Context context, long rangeStart,
-			int[] numChildren, GZippedFileDatabase newDatabase,
-			ChangeTracker changeTracker, Iterator<StateRecordPair> pairIter,
-			long currentLongRecord) throws IOException, InterruptedException {
+			IntWritable numChildren, GZippedFileDatabase newDatabase,
+			Iterator<StateRecordPair> pairIter, long currentLongRecord)
+			throws IOException, InterruptedException {
 		boolean write = false;
 
 		long curHash = statePair.state;
@@ -240,31 +207,17 @@ public class LoopySolverReducer<S extends State> extends
 			if (possible) {
 				if (currentRecord.compareTo(candidateRecord) < 0) {
 					// we found a better one!
-					// if (currentRecord.value != Value.DRAW) {
-					// System.out.println(candidateRecord.value.name()
-					// + " is better than "
-					// + currentRecord.value.name());
-					// }
 					currentRecord = candidateRecord.clone();
 					write = true;
-					changeTracker.changesMadeDB = true;
 				} else if (currentRecord.value == Value.DRAW
 						&& candidateRecord.value == Value.LOSE) {
 					// we need to decrement numChildren!
-					int n = (int) (statePair.state - rangeStart);
-					numChildren[n]--;
+					numChildren.set(numChildren.get() - 1);
 
-					if (numChildren[n] == 0) {
+					if (numChildren.get() == 0) {
 						currentRecord = candidateRecord.clone();
 						write = true;
 						// all children are losses, other case couldn't be hit
-						changeTracker.changesMadeDB = true;
-					} else {
-						// we don't need to record the range[n] == 0
-						// change to num children, we
-						// won't be considering the num children of this
-						// position again
-						changeTracker.changesMadeNumChildren = true;
 					}
 				}
 			}
@@ -275,8 +228,6 @@ public class LoopySolverReducer<S extends State> extends
 				break;
 			}
 		}
-
-		// System.out.println("more pairs? " + pairIter.hasNext());
 
 		if (write) {
 			long longRecord = game.recordToLong(gameState, currentRecord);

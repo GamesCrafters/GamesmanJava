@@ -1,6 +1,7 @@
 package edu.berkeley.gamesman.loopyhadoop;
 
 import java.io.IOException;
+import java.util.Date;
 
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -68,12 +69,16 @@ public class LoopyMaster implements Runnable {
 	@Override
 	public void run() {
 		try {
+			Date startTime = new Date();
 			createDatabase();
 			System.out.println("\nStage 1 Complete\n");
 			markLegalPositions();
 			System.out.println("\nStage 2 Complete\n");
 			solve();
 			System.out.println("\nStage 3 Complete\n");
+			Date endTime = new Date();
+			long diffMillis = endTime.getTime() - startTime.getTime();
+			System.out.println("Time to solve: " + (diffMillis/1000.0) + " seconds.");
 		} catch (IOException e) {
 			throw new Error("Our program asploded :(.", e);
 		}
@@ -125,19 +130,19 @@ public class LoopyMaster implements Runnable {
 					+ text.toString());
 		}
 
-		hadoopConf.set("db.map.path", dbMapPath.toString());
+		hadoopConf.set("db.map.path", dbMapPath.toString()); //TODO: don't use to string?
 	}
 
 	private Path getPath(String pathString) {
-		Path sequenceFileDir;
+		Path path;
 		String dir = gamesmanConf.getProperty("workingDirectory", "");
 
 		if (dir.isEmpty()) {
-			sequenceFileDir = new Path(pathString);
+			path = new Path(pathString);
 		} else {
-			sequenceFileDir = new Path(dir + "/" + pathString);
+			path = new Path(dir + "/" + pathString);
 		}
-		return sequenceFileDir;
+		return path;
 	}
 
 	private void markLegalPositions() throws IOException {
@@ -189,12 +194,12 @@ public class LoopyMaster implements Runnable {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-
+			
 			fs.delete(sequenceFileInputDir, true);
 			fs.rename(sequenceFileOutputDir, sequenceFileInputDir);
 		}
 
-		fs.delete(sequenceFileInputDir, true);// TODO: why doesn't this work?
+		fs.delete(new Path(sequenceFileInputDir.toUri().toString()), true);// TODO: is toString bad?
 		// we're not feeding it anymore, so kill the dir
 	}
 
@@ -269,21 +274,28 @@ public class LoopyMaster implements Runnable {
 
 		SplitDBMaker dbMaker = new SplitDBMaker(splitDbString, gamesmanConf);
 
-		SequenceFile.Reader reader = new SequenceFile.Reader(fs, new Path(
-				hadoopConf.get("db.map.path")), hadoopConf);
+		Path dbDirectoryPath = new Path(
+				hadoopConf.get("db.map.path"));
+		SequenceFile.Reader reader = new SequenceFile.Reader(fs,
+				dbDirectoryPath, hadoopConf);
 		// the reader for the db files
 
 		while (true) {
 			Range r = new Range();
-			Text text = new Text();
-			if (!reader.next(r, text))
+			Text dbFileName = new Text();
+			if (!reader.next(r, dbFileName))
 				break;
 
-			dbMaker.addDb(GZippedFileDatabase.class.getName(), text.toString(),
+			dbMaker.addDb(GZippedFileDatabase.class.getName(), dbFileName.toString(),
 					r.firstRecord, r.numRecords);
+			
+			Path numChildrenPath = new Path(dbFileName.toString() + "_numChildren");
+			fs.delete(numChildrenPath, true);
 		}
 
 		reader.close();
+		
+		fs.delete(dbDirectoryPath.getParent(), true);// we want to delete the folder containing the db directory
 
 		dbMaker.close();
 	}
