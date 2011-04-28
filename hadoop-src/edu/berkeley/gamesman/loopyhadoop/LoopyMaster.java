@@ -1,6 +1,8 @@
 package edu.berkeley.gamesman.loopyhadoop;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 
 import org.apache.hadoop.fs.FileStatus;
@@ -78,7 +80,8 @@ public class LoopyMaster implements Runnable {
 			System.out.println("\nStage 3 Complete\n");
 			Date endTime = new Date();
 			long diffMillis = endTime.getTime() - startTime.getTime();
-			System.out.println("Time to solve: " + (diffMillis/1000.0) + " seconds.");
+			System.out.println("Time to solve: " + (diffMillis / 1000.0)
+					+ " seconds.");
 		} catch (IOException e) {
 			throw new Error("Our program asploded :(.", e);
 		}
@@ -130,7 +133,8 @@ public class LoopyMaster implements Runnable {
 					+ text.toString());
 		}
 
-		hadoopConf.set("db.map.path", dbMapPath.toString()); //TODO: don't use to string?
+		hadoopConf.set("db.map.path", dbMapPath.toString()); // TODO: don't use
+		// to string?
 	}
 
 	private Path getPath(String pathString) {
@@ -194,12 +198,15 @@ public class LoopyMaster implements Runnable {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
+
 			fs.delete(sequenceFileInputDir, true);
 			fs.rename(sequenceFileOutputDir, sequenceFileInputDir);
 		}
 
-		fs.delete(new Path(sequenceFileInputDir.toUri().toString()), true);// TODO: is toString bad?
+		fs.delete(new Path(sequenceFileInputDir.toUri().toString()), true);// TODO:
+		// is
+		// toString
+		// bad?
 		// we're not feeding it anymore, so kill the dir
 	}
 
@@ -269,33 +276,42 @@ public class LoopyMaster implements Runnable {
 		fs.delete(sequenceFileInputDir, true);// TODO: why doesn't this work?
 		// we're not feeding it anymore, so kill the dir
 
-		// create a split database file
-		String splitDbString = gamesmanConf.getProperty("gamesman.db.uri");
-
-		SplitDBMaker dbMaker = new SplitDBMaker(splitDbString, gamesmanConf);
-
-		Path dbDirectoryPath = new Path(
-				hadoopConf.get("db.map.path"));
+		Path dbDirectoryPath = new Path(hadoopConf.get("db.map.path"));
 		SequenceFile.Reader reader = new SequenceFile.Reader(fs,
 				dbDirectoryPath, hadoopConf);
 		// the reader for the db files
 
+		ArrayList<RangeFile> ranges = new ArrayList<RangeFile>();
 		while (true) {
 			Range r = new Range();
 			Text dbFileName = new Text();
 			if (!reader.next(r, dbFileName))
 				break;
+			ranges.add(new RangeFile(r, dbFileName));
 
-			dbMaker.addDb(GZippedFileDatabase.class.getName(), dbFileName.toString(),
-					r.firstRecord, r.numRecords);
-			
-			Path numChildrenPath = new Path(dbFileName.toString() + "_numChildren");
+			Path numChildrenPath = new Path(dbFileName.toString()
+					+ "_numChildren");
 			fs.delete(numChildrenPath, true);
 		}
 
 		reader.close();
+
+		fs.delete(dbDirectoryPath.getParent(), true);// we want to delete the
+		// folder containing the
+		// db directory
+
+		// create a split database file
+		String splitDbString = gamesmanConf.getProperty("gamesman.db.uri");
+
+		SplitDBMaker dbMaker = new SplitDBMaker(splitDbString, gamesmanConf);
+
+		Collections.sort(ranges);
 		
-		fs.delete(dbDirectoryPath.getParent(), true);// we want to delete the folder containing the db directory
+		for (RangeFile rangeFile : ranges) {
+			dbMaker.addDb(GZippedFileDatabase.class.getName(), rangeFile.myFile
+					.toString(), rangeFile.myRange.firstRecord,
+					rangeFile.myRange.numRecords);
+		}
 
 		dbMaker.close();
 	}
