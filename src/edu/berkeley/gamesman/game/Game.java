@@ -312,6 +312,19 @@ public abstract class Game<S extends State> {
 	public abstract S newState();
 
 	/**
+	 * Convenience method which clones a state using its set method
+	 * 
+	 * @param orig
+	 *            The state to clone
+	 * @return The new state
+	 */
+	public final S newState(S orig) {
+		S s = newState();
+		s.set(orig);
+		return s;
+	}
+
+	/**
 	 * @param len
 	 *            The number of states
 	 * @return A new array with len states
@@ -421,14 +434,23 @@ public abstract class Game<S extends State> {
 		return combine(records, 0, records.length);
 	}
 
+	/**
+	 * @return Whether it makes sense to include value for this game
+	 */
 	public boolean hasValue() {
 		return true;
 	}
 
+	/**
+	 * @return Whether it makes sense to include remoteness for this game
+	 */
 	public boolean hasRemoteness() {
 		return true;
 	}
 
+	/**
+	 * @return Whether it makes sense to include score for this game
+	 */
 	public boolean hasScore() {
 		return false;
 	}
