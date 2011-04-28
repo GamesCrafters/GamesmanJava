@@ -223,9 +223,23 @@ public abstract class TierGame extends Game<TierState> {
 	 */
 	public abstract void nextHashInTier();
 
+	/**
+	 * Is equivalent to stateToHash where state.tier = tier and state.hash =
+	 * offset
+	 * 
+	 * @param tier
+	 *            The current tier
+	 * @param offset
+	 *            The offset into that tier
+	 * @return The total hash
+	 */
+	protected final long hashForTierAndOffset(int tier, long offset) {
+		return myHasher.hashOffsetForTier(tier) + offset;
+	}
+
 	@Override
 	public final long stateToHash(TierState pos) {
-		return myHasher.hashOffsetForTier(pos.tier) + pos.hash;
+		return hashForTierAndOffset(pos.tier, pos.hash);
 	}
 
 	/**

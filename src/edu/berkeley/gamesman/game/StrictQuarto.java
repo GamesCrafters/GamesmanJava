@@ -24,7 +24,7 @@ public class StrictQuarto extends Game<StrictQuarto.QuartoState> {
 	 * 
 	 * @author dnspies
 	 */
-	static class QuartoState implements State {
+	public static class QuartoState implements State {
 		private int tier = 0;
 		private final int[] pieces = new int[16];
 		private final boolean[] used = new boolean[16];
@@ -64,7 +64,16 @@ public class StrictQuarto extends Game<StrictQuarto.QuartoState> {
 			return sb.toString();
 		}
 
-		private boolean filled(int row, int col) {
+		/**
+		 * Whether the piece at row,col has been played
+		 * 
+		 * @param row
+		 *            The row
+		 * @param col
+		 *            The column
+		 * @return Is there a piece there
+		 */
+		boolean filled(int row, int col) {
 			return filled(pieceIndex(row, col));
 		}
 
@@ -140,6 +149,13 @@ public class StrictQuarto extends Game<StrictQuarto.QuartoState> {
 						.toString((char) ('A' + piece)));
 			}
 			return sb.toString();
+		}
+
+		/**
+		 * @return The internal int-array which tells the pieces
+		 */
+		public int[] getPieces() {
+			return pieces;
 		}
 	}
 

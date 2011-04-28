@@ -43,6 +43,7 @@ public class Quarto extends TierGame {
 	private final int[] places = new int[16];
 	private final long[] majorChildren = new long[16];
 	private final long[] minorChildren = new long[256];
+	private final char[] posArr = new char[16];
 
 	public class Piece {
 		public final int majorIndex;
@@ -388,5 +389,32 @@ public class Quarto extends TierGame {
 		}
 		assert numMoves == (16 - tier) * (16 - tier);
 		return numMoves;
+	}
+
+	/**
+	 * @param qs A StrictQuarto state
+	 * @return The with-symmetry hash
+	 */
+	public synchronized long getHash(StrictQuarto.QuartoState qs) {
+		int[] pieces = qs.getPieces();
+		int pieceCount = 0;
+		int i = 0;
+		for (int row = 0; row < 4; row++) {
+			for (int col = 0; col < 4; col++) {
+				if (qs.filled(row, col)) {
+					posArr[i] = 'P';
+					this.pieces[row][col].minorIndex = pieceCount;
+					pieceCount++;
+				} else {
+					posArr[i] = ' ';
+					this.pieces[row][col].minorIndex = -1;
+				}
+				i++;
+			}
+		}
+		setTierAndPosition(pieceCount, posArr, pieces);
+		long tierHashes = minorHasher.numHashesForTier(tier);
+		return hashForTierAndOffset(tier, majorHasher.getHash() * tierHashes
+				+ minorHasher.getHash());
 	}
 }
