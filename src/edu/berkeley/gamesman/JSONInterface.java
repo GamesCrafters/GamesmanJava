@@ -153,7 +153,7 @@ public class JSONInterface extends GamesmanApplication {
 				loadedConfigurations.put(filename, cPair);
 			}
 		}
-		return new Pair<Configuration, Database>(cPair.car.cloneAll(), cPair.cdr);
+		return new Pair<Configuration, Database>(cPair.car, cPair.cdr);
 	}
 
 	private synchronized Pair<Configuration, Database> addDatabase(
@@ -377,7 +377,7 @@ public class JSONInterface extends GamesmanApplication {
 			GamestateResponse request = new GamestateResponse();
 
 			// FIXME: Wasteful, but a Game can't be shared across threads
-			Configuration confCopy = conf.cloneAll();
+			Configuration confCopy = conf;
 			Game<T> g = confCopy.getCheckedGame();
 			if (db != null) {
 				Record rec = g.newRecord();

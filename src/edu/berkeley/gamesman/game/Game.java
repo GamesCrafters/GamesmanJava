@@ -454,4 +454,12 @@ public abstract class Game<S extends State> {
 	public boolean hasScore() {
 		return false;
 	}
+
+	/**
+	 * Synchronizes the call to startingPositions in case necessary
+	 * @return A collection of all possible starting positions
+	 */
+	public synchronized Collection<S> synchronizedStartingPositions() {
+		return startingPositions();
+	}
 }

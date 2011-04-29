@@ -147,7 +147,7 @@ public class AvroInterface extends GamesmanApplication {
 
 	// get(string) doesn't properly find things with avro's map implementation.
 	// convert to standard HashMap.
-	Map<String, String> fromAvroParams(Map<CharSequence, CharSequence> avro) {
+	private Map<String, String> fromAvroParams(Map<CharSequence, CharSequence> avro) {
 		Map<String, String> ret = new HashMap<String, String>();
 		for (CharSequence key : avro.keySet()) {
 			ret.put(key.toString(), avro.get(key).toString());
@@ -184,7 +184,7 @@ public class AvroInterface extends GamesmanApplication {
 				loadedConfigurations.put(filename, cPair);
 			}
 		}
-		return new Pair<Configuration, Database>(cPair.car.cloneAll(), cPair.cdr);
+		return new Pair<Configuration, Database>(cPair.car, cPair.cdr);
 	}
 
 	private synchronized Pair<Configuration, Database> addDatabase(
@@ -369,7 +369,7 @@ public class AvroInterface extends GamesmanApplication {
 
 			int count = 0;
 			State chosenState = null;
-			for (State state : game.startingPositions()) {
+			for (State state : game.synchronizedStartingPositions()) {
 				count++;
 				if (Math.random() <= 1.0 / count) {
 					chosenState = state;
