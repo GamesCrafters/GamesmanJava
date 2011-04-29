@@ -44,5 +44,8 @@ json.fields.atarigo = width,height
 json.unsolved.onetwoten = jobs/OTT.job
 json.fields.onetwoten =
 
+json.unsolved.quarto = jobs/quarto.job
+json.fields.quarto =
+
 gamesman.debug.JSON = false
 gamesman.debug.AVRO = true
