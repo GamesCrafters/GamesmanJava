@@ -27,11 +27,16 @@ public class Connect4CmdLineParser {
 
 	@Option(name = "-t", usage = "time allowed to verify")
 	private int totalTime;
-	
+
 	// receives other command line parameters than options
 	@Argument
-	
+
 	private List<String> arguments = new ArrayList<String>();
+
+	public Connect4CmdLineParser() {
+		this.totalStates = -1;
+		this.totalTime = -1;
+	}
 
 	public static void main(String args[]) {
 		Connect4CmdLineParser cmdLineParser = new Connect4CmdLineParser();
@@ -60,16 +65,14 @@ public class Connect4CmdLineParser {
 				verifier.next();
 				if (!verifier.verifyGameState()) {
 					verifier.writeIncorrectStateToFile();
-					/*System.out.println("Incorrect Value: "
+					System.out.println("Incorrect Value: "
 							+ verifier.getCurrentValue()
 							+ " Current Game State: "
-							+ verifier.getCurrentState());*/
+							+ verifier.getCurrentState());
 				} else {
-					/*
-					 * System.out.println("Correct Value: " +
-					 * verifier.getCurrentValue() + " Current Game State: " +
-					 * verifier.getCurrentState());
-					 */
+					/*System.out.println("Correct Value: " +
+							verifier.getCurrentValue() + " Current Game State: " +
+							verifier.getCurrentState());*/
 				}
 			} catch (IOException e) {
 				System.err.println(e.getMessage());

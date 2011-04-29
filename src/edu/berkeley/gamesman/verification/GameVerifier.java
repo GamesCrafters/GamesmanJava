@@ -61,8 +61,8 @@ public abstract class GameVerifier implements Iterator<GameState> {
 
 		if (outputFileName == null)
 			outputFileName = database.substring(0, database.lastIndexOf('.'))
-					+ "_out.txt";
-		
+			+ "_out.txt";
+
 		File outputFile = new File(outputFileName);
 		outputFile.delete();
 		try {
@@ -78,16 +78,19 @@ public abstract class GameVerifier implements Iterator<GameState> {
 		this.totalStateCount = totalStateCount;
 		this.totalTimeCount = totalTimeCount;
 		this.initialTime = System.currentTimeMillis() / 1000;
-		
-		progressBarType = (this.totalTimeCount == 0) ? ProgressBarType.STATE
-				: ProgressBarType.TIME;
 
-		if (progressBarType == ProgressBarType.STATE){
-			this.progressBar = new ProgressBar(totalStateCount);
-		} else {
-			this.progressBar = new ProgressBar(totalTimeCount);
+		if (this.totalTimeCount != -1) {
+			progressBarType = ProgressBarType.TIME;
+		} else if (this.totalStateCount != -1) {
+			progressBarType = ProgressBarType.STATE;
 		}
-		
+
+		if (progressBarType == ProgressBarType.TIME) {
+			this.progressBar = new ProgressBar(totalTimeCount);
+		} else if (progressBarType == ProgressBarType.STATE) {
+			this.progressBar = new ProgressBar(totalStateCount);
+		}
+
 		// Write header to outFile to save room for update
 		writeIncorrectStatesSummaryToFile();
 	}
@@ -148,7 +151,7 @@ public abstract class GameVerifier implements Iterator<GameState> {
 		assert (!currentGameState.isPrimitive());
 
 		Iterator<String> childrenStringIterator = currentGameState
-				.generateChildren();
+		.generateChildren();
 
 		Value bestValueSoFar = Value.LOSE;
 
@@ -156,6 +159,10 @@ public abstract class GameVerifier implements Iterator<GameState> {
 			String childString = childrenStringIterator.next();
 
 			Value childValue = getRecordForState(childString).value;
+
+			// WIN => all losing
+			// LOSE => at least one winning
+			// TIE => all tie or losing
 
 			switch (childValue) {
 			case TIE:
@@ -213,15 +220,20 @@ public abstract class GameVerifier implements Iterator<GameState> {
 	@Override
 	public void remove() {
 		throw new UnsupportedOperationException(
-				"GameVerifier does not support remove");
+		"GameVerifier does not support remove");
 	}
 
 	public GameState getCurrentState() {
 		return currentGameState;
 	}
+	
 
 	public Record getCurrentRecord() {
 		return getRecordForState(currentGameState.getBoardString());
+	}
+
+	public String getCurrentValue() {
+		return getCurrentRecord().value.toString();
 	}
 
 	/*
@@ -232,17 +244,25 @@ public abstract class GameVerifier implements Iterator<GameState> {
 	 * Prints the status bar.
 	 */
 	public void printStatusBar() {
-		if (progressBarType == ProgressBarType.STATE){
+		if (progressBarType == ProgressBarType.TIME) {
+			long currentTime = System.currentTimeMillis() / 1000 - initialTime;
+			progressBar.updateNumElements((int) currentTime);
+			if (currentTime - previousTime > 1 || currentTime >= totalTimeCount) {
+				previousTime = currentTime;
+				progressBar.printStatus();
+			}
+		} else if (progressBarType == ProgressBarType.STATE) {
 			progressBar.updateNumElements(stateCount);
 			if (stateCount % 300 == 0 || stateCount == totalStateCount) {
 				progressBar.printStatus();
 			}
 		} else {
-			long currentTime = System.currentTimeMillis()/1000 - initialTime;
-			progressBar.updateNumElements((int) currentTime);
-			if (currentTime - previousTime > 1 || currentTime >= totalTimeCount) {
-				previousTime = currentTime;
-				progressBar.printStatus();
+			// No argument for state or time specified.
+			if (stateCount % 500 == 0) {
+				System.out.print('\r');
+				System.out.print("States checked: " + stateCount
+						+ "\tSeconds passed: "
+						+ (System.currentTimeMillis() / 1000 - initialTime));
 			}
 		}
 	}
@@ -266,10 +286,12 @@ public abstract class GameVerifier implements Iterator<GameState> {
 	public void writeIncorrectStateToFile() {
 		// Write current GameState to outFile
 		try {
-			outFile.write(("Incorrect Value: "
-					+ getRecordForState(currentGameState.getBoardString()).value
-							.toString() + " Current Game State: "
-					+ currentGameState.toString() + '\n').getBytes());
+			outFile
+			.write(("Incorrect Value: "
+					+ getRecordForState(currentGameState
+							.getBoardString()).value.toString()
+							+ " Current Game State: "
+							+ currentGameState.toString() + '\n').getBytes());
 		} catch (IOException e) {
 			System.err.println(e.getMessage());
 			System.err.println("Cannot write to file: " + outFile.toString());
@@ -309,7 +331,7 @@ public abstract class GameVerifier implements Iterator<GameState> {
 			System.exit(1);
 		}
 	}
-	
+
 	public boolean hasNext() {
 		if (progressBarType == ProgressBarType.STATE
 				&& this.stateCount == this.totalStateCount
