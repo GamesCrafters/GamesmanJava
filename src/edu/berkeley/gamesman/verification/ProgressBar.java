@@ -22,6 +22,7 @@ public class ProgressBar {
 	}
 
 	public void printStatus() {
+		System.out.print('\r');
 		double complete;
 		if (nCurrentElements > nTotalElements) {
 			complete = .99;
@@ -44,7 +45,6 @@ public class ProgressBar {
 			System.out.print(formatter.format(secondsElapsed)
 					+ " seconds elapsed");
 		}
-		System.out.print('\r');
 	}
 
 	public void println(String s) {

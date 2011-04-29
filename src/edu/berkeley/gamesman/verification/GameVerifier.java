@@ -234,7 +234,7 @@ public abstract class GameVerifier implements Iterator<GameState> {
 	public void printStatusBar() {
 		if (progressBarType == ProgressBarType.STATE){
 			progressBar.updateNumElements(stateCount);
-			if (stateCount % 10000 == 0 || stateCount == totalStateCount) {
+			if (stateCount % 300 == 0 || stateCount == totalStateCount) {
 				progressBar.printStatus();
 			}
 		} else {
@@ -252,6 +252,7 @@ public abstract class GameVerifier implements Iterator<GameState> {
 	 * incorrect states) to standard out.
 	 */
 	public void printIncorrectStateSummary() {
+		System.out.println();
 		System.out.println("Width: "
 				+ conf.getInteger("gamesman.game.width", 7) + " Height: "
 				+ conf.getInteger("gamesman.game.height", 6));
@@ -307,6 +308,15 @@ public abstract class GameVerifier implements Iterator<GameState> {
 			System.err.println("Cannot close file: " + outFile.toString());
 			System.exit(1);
 		}
+	}
+	
+	public boolean hasNext() {
+		if (progressBarType == ProgressBarType.STATE
+				&& this.stateCount == this.totalStateCount
+				|| progressBarType == ProgressBarType.TIME
+				&& System.currentTimeMillis() / 1000 - initialTime >= totalTimeCount)
+			return false;
+		return true;
 	}
 
 }

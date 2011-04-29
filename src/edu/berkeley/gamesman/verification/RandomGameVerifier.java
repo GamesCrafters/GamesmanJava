@@ -21,12 +21,7 @@ public class RandomGameVerifier extends GameVerifier {
 
 	@Override
 	public boolean hasNext() {
-		if (progressBarType == ProgressBarType.STATE
-				&& this.stateCount == this.totalStateCount
-				|| progressBarType == ProgressBarType.TIME
-				&& System.currentTimeMillis() / 1000 - initialTime >= totalTimeCount)
-			return false;
-		return true;
+		return super.hasNext();
 	}
 
 	@Override

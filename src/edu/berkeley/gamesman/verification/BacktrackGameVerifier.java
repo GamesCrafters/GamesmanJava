@@ -47,7 +47,10 @@ public class BacktrackGameVerifier extends GameVerifier {
 		if (currentGameState == null) {
 			currentGameState = getInitialGameState();
 			mHasNext = true;
-		} else {
+		} else if (!super.hasNext()){
+			mHasNext = false;
+		}
+		else {
 			List<Move> availableMoves = currentGameState.generateMoves();
 
 			if (!availableMoves.isEmpty()) {
