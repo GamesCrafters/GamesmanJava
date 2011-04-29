@@ -255,15 +255,13 @@ public abstract class GameVerifier implements Iterator<GameState> {
 			if (currentTime - previousTime > 1 || currentTime >= totalTimeCount) {
 				previousTime = currentTime;
 				progressBar.printStatus();
+				printSkipCount();
 			}
 		} else if (progressBarType == ProgressBarType.STATE) {
 			progressBar.updateNumElements(stateCount);
 			if (stateCount % 300 == 0 || stateCount == totalStateCount) {
 				progressBar.printStatus();
-				if (Connect4CmdLineParser.debugging)
-					System.out.print(". Skipped: "
-							+ percentFormat.format((double) nSkipped
-									/ (stateCount + 1)) + " of states.");
+				printSkipCount();
 			}
 		} else {
 			// No argument for state or time specified.
@@ -274,6 +272,13 @@ public abstract class GameVerifier implements Iterator<GameState> {
 						+ (System.currentTimeMillis() / 1000 - initialTime));
 			}
 		}
+	}
+	
+	private void printSkipCount() {
+		if (Connect4CmdLineParser.debugging)
+			System.out.print(". Skipped: "
+					+ percentFormat.format((double) nSkipped
+							/ (stateCount + 1)) + " of states.");
 	}
 
 	/**
