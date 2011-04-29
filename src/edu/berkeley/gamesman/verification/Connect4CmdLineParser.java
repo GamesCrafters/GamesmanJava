@@ -2,7 +2,6 @@ package edu.berkeley.gamesman.verification;
 
 import static org.kohsuke.args4j.ExampleMode.ALL;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +26,15 @@ public class Connect4CmdLineParser {
 
 	@Option(name = "-t", usage = "time allowed to verify")
 	private int totalTime;
+	
+	@Option(name = "-debug", usage = "print debug text")
+	private static String debuggingS = "false";
+	
+	@Option(name = "-prob", usage = "verify probabilistically")
+	private static String probabilisticS = "true";
+	
+	static boolean debugging;
+	static boolean probabilistic;
 
 	// receives other command line parameters than options
 	@Argument
@@ -42,6 +50,10 @@ public class Connect4CmdLineParser {
 		Connect4CmdLineParser cmdLineParser = new Connect4CmdLineParser();
 		if (!cmdLineParser.doMain(args))
 			return;
+		
+		debugging = debuggingS.equalsIgnoreCase("true");
+		probabilistic = !probabilisticS.equalsIgnoreCase("false");
+		
 		GameVerifier verifier;
 		switch (GameVerifierType.fromString(cmdLineParser.verifier)) {
 		case RANDOM:

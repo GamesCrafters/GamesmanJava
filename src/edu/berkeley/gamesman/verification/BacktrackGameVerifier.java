@@ -1,6 +1,5 @@
 package edu.berkeley.gamesman.verification;
 
-import java.io.File;
 import java.util.List;
 import java.util.Stack;
 
@@ -33,8 +32,10 @@ public class BacktrackGameVerifier extends GameVerifier {
 	private boolean mChecked;
 
 	public BacktrackGameVerifier(Class<? extends GameState> stateClass,
-			String database, String outputFileName, int totalStateCount, int totalTimeCount) {
-		super(stateClass, database, outputFileName, totalStateCount, totalTimeCount);
+			String database, String outputFileName, int totalStateCount,
+			int totalTimeCount) {
+		super(stateClass, database, outputFileName, totalStateCount,
+				totalTimeCount);
 		previousMoves = new Stack<List<Move>>();
 	}
 
@@ -47,10 +48,9 @@ public class BacktrackGameVerifier extends GameVerifier {
 		if (currentGameState == null) {
 			currentGameState = getInitialGameState();
 			mHasNext = true;
-		} else if (!super.hasNext()){
+		} else if (!super.hasNext()) {
 			mHasNext = false;
-		}
-		else {
+		} else {
 			List<Move> availableMoves = currentGameState.generateMoves();
 
 			if (!availableMoves.isEmpty()) {
@@ -61,6 +61,7 @@ public class BacktrackGameVerifier extends GameVerifier {
 				mHasNext = true;
 			} else {
 				// We are at a leaf.
+				runCount++;
 				while (!previousMoves.isEmpty()) {
 					// Backtrack until we can move to a new state.
 					availableMoves = previousMoves.peek();
@@ -93,7 +94,6 @@ public class BacktrackGameVerifier extends GameVerifier {
 					"Called next() without called hasNext()");
 		mChecked = false;
 
-		stateCount++;
 		return currentGameState;
 	}
 }

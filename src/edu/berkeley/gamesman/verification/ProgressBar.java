@@ -36,6 +36,8 @@ public class ProgressBar {
 		}
 		if (complete < 1)
 			System.out.print('>');
+		else
+			System.out.print('=');
 		for (int i = 0; i < TOTAL_TOKENS_TO_PRINT - tokensToPrint; i++) {
 			System.out.print(' ');
 		}

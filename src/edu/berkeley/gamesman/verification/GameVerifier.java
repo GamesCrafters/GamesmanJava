@@ -5,6 +5,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.reflect.InvocationTargetException;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.Iterator;
 
 import edu.berkeley.gamesman.core.Configuration;
@@ -41,9 +43,13 @@ public abstract class GameVerifier implements Iterator<GameState> {
 	protected final int totalStateCount;
 	protected final int totalTimeCount;
 	protected int stateCount;
+	protected int runCount;
 	protected long initialTime;
 	protected long previousTime;
 	protected ProgressBarType progressBarType;
+
+	int nSkipped;
+	private static final NumberFormat percentFormat = new DecimalFormat("#0.0%");
 
 	protected GameVerifier(Class<? extends GameState> stateClass,
 			String database, String outputFileName, int totalStateCount,
@@ -61,7 +67,7 @@ public abstract class GameVerifier implements Iterator<GameState> {
 
 		if (outputFileName == null)
 			outputFileName = database.substring(0, database.lastIndexOf('.'))
-			+ "_out.txt";
+					+ "_out.txt";
 
 		File outputFile = new File(outputFileName);
 		outputFile.delete();
@@ -78,7 +84,6 @@ public abstract class GameVerifier implements Iterator<GameState> {
 		this.totalStateCount = totalStateCount;
 		this.totalTimeCount = totalTimeCount;
 		this.initialTime = System.currentTimeMillis() / 1000;
-
 		if (this.totalTimeCount != -1) {
 			progressBarType = ProgressBarType.TIME;
 		} else if (this.totalStateCount != -1) {
@@ -126,6 +131,7 @@ public abstract class GameVerifier implements Iterator<GameState> {
 		Record dbRecord = getRecordForState(currentGameState.getBoardString());
 		Value dbValue = dbRecord.value;
 		Value calculatedValue;
+		stateCount++;
 		if (currentGameState.isPrimitive()) {
 			calculatedValue = currentGameState.getValue();
 			if (dbRecord.remoteness != 0)
@@ -151,7 +157,7 @@ public abstract class GameVerifier implements Iterator<GameState> {
 		assert (!currentGameState.isPrimitive());
 
 		Iterator<String> childrenStringIterator = currentGameState
-		.generateChildren();
+				.generateChildren();
 
 		Value bestValueSoFar = Value.LOSE;
 
@@ -220,13 +226,12 @@ public abstract class GameVerifier implements Iterator<GameState> {
 	@Override
 	public void remove() {
 		throw new UnsupportedOperationException(
-		"GameVerifier does not support remove");
+				"GameVerifier does not support remove");
 	}
 
 	public GameState getCurrentState() {
 		return currentGameState;
 	}
-	
 
 	public Record getCurrentRecord() {
 		return getRecordForState(currentGameState.getBoardString());
@@ -255,6 +260,10 @@ public abstract class GameVerifier implements Iterator<GameState> {
 			progressBar.updateNumElements(stateCount);
 			if (stateCount % 300 == 0 || stateCount == totalStateCount) {
 				progressBar.printStatus();
+				if (Connect4CmdLineParser.debugging)
+					System.out.print(". Skipped: "
+							+ percentFormat.format((double) nSkipped
+									/ (stateCount + 1)) + " of states.");
 			}
 		} else {
 			// No argument for state or time specified.
@@ -286,12 +295,10 @@ public abstract class GameVerifier implements Iterator<GameState> {
 	public void writeIncorrectStateToFile() {
 		// Write current GameState to outFile
 		try {
-			outFile
-			.write(("Incorrect Value: "
-					+ getRecordForState(currentGameState
-							.getBoardString()).value.toString()
-							+ " Current Game State: "
-							+ currentGameState.toString() + '\n').getBytes());
+			outFile.write(("Incorrect Value: "
+					+ getRecordForState(currentGameState.getBoardString()).value
+							.toString() + " Current Game State: "
+					+ currentGameState.toString() + '\n').getBytes());
 		} catch (IOException e) {
 			System.err.println(e.getMessage());
 			System.err.println("Cannot write to file: " + outFile.toString());
@@ -334,7 +341,7 @@ public abstract class GameVerifier implements Iterator<GameState> {
 
 	public boolean hasNext() {
 		if (progressBarType == ProgressBarType.STATE
-				&& this.stateCount == this.totalStateCount
+				&& this.stateCount > this.totalStateCount
 				|| progressBarType == ProgressBarType.TIME
 				&& System.currentTimeMillis() / 1000 - initialTime >= totalTimeCount)
 			return false;
