@@ -290,7 +290,7 @@ public final class QuickCross extends Game<QuickCrossState> implements Undoable<
 
 	@Override
 	public long numHashes() {
-		return (long)Math.pow(3, boardSize) << 1;
+		return (long)Math.pow(3, boardSize);
 	}
 
 	@Override
