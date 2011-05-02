@@ -42,6 +42,9 @@ public class LoopySolverReducer<S extends State> extends
 	private DatabaseHandle readHandle;
 	private DatabaseHandle writeHandle;
 
+	private LongWritable positionOutput = new LongWritable();
+	private LongWritable recordOutput = new LongWritable();
+	
 	@Override
 	public void setup(Context context) {
 		try {
@@ -123,7 +126,6 @@ public class LoopySolverReducer<S extends State> extends
 			statePair = pairIter.next();
 
 			boolean changesMadeDB = false;
-			int hashCount = 0;
 
 			IntWritable numChildren = new IntWritable();
 
@@ -135,7 +137,6 @@ public class LoopySolverReducer<S extends State> extends
 				numChildrenReader.next(numChildren);
 
 				if (rangeStart + i == statePair.state) {
-					hashCount++;
 					written = decideNextRecord(context, rangeStart,
 							numChildren, newDatabase, pairIter,
 							currentLongRecord);
@@ -199,15 +200,21 @@ public class LoopySolverReducer<S extends State> extends
 		game.hashToState(curHash, gameState);
 		game.longToRecord(gameState, currentLongRecord, currentRecord);
 
+		boolean possible = currentRecord.value != Value.IMPOSSIBLE;
+		boolean primitive = game.primitiveValue(gameState) != Value.UNDECIDED;
+
 		while (curHash == statePair.state) {
 			game.longToRecord(gameState, statePair.record, candidateRecord);
 
-			boolean possible = currentRecord.value != Value.IMPOSSIBLE;
-
-			if (possible) {
+			if (possible && !primitive) {
+				if(currentRecord.value == Value.LOSE)
+				{
+					System.out.println("WTF");
+				}
+				
 				if (currentRecord.compareTo(candidateRecord) < 0) {
 					// we found a better one!
-					currentRecord = candidateRecord.clone();
+					currentRecord.set(candidateRecord);
 					write = true;
 				} else if (currentRecord.value == Value.DRAW
 						&& candidateRecord.value == Value.LOSE) {
@@ -215,7 +222,7 @@ public class LoopySolverReducer<S extends State> extends
 					numChildren.set(numChildren.get() - 1);
 
 					if (numChildren.get() == 0) {
-						currentRecord = candidateRecord.clone();
+						currentRecord.set(candidateRecord);
 						write = true;
 						// all children are losses, other case couldn't be hit
 					}
@@ -232,8 +239,9 @@ public class LoopySolverReducer<S extends State> extends
 		if (write) {
 			long longRecord = game.recordToLong(gameState, currentRecord);
 			newDatabase.writeNextRecord(writeHandle, longRecord);
-			context.write(new LongWritable(curHash), new LongWritable(
-					longRecord));
+			positionOutput.set(curHash);
+			recordOutput.set(longRecord);
+			context.write(positionOutput, recordOutput);
 
 			return true;
 		}

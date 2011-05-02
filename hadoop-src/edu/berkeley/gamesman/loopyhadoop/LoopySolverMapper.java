@@ -65,7 +65,7 @@ public class LoopySolverMapper<S extends State> extends
 			reader.close();
 
 			Collections.sort(ranges);
-			
+
 			rangeFiles = ranges.toArray(new RangeFile[ranges.size()]);
 
 			hashesPerFile = game.numHashes() / ranges.size();
@@ -87,14 +87,13 @@ public class LoopySolverMapper<S extends State> extends
 			game.longToRecord(pos, record.get(), rec);
 			// System.out.println("\nChild is: " + rec.value.name());
 			rec.previousPosition();
+			if (rec.remoteness == 0) {
+				System.out.println("WTF? REMOTENESS 0 BUG?");
+			}
 			// System.out.println("Parent is: " + rec.value.name());
 			int numParents = 0;
-			if (game instanceof Undoable<?>) {
-				numParents = ((Undoable<S>) game).possibleParents(pos,
-						parentStates);
-			} else {
-				throw new Error("Game is not undoable!");
-			}
+			numParents = ((Undoable<S>) game)
+					.possibleParents(pos, parentStates);
 
 			// System.out.println("num parents: " + numParents);
 			for (int i = 0; i < numParents; i++) {

@@ -78,9 +78,11 @@ public class LoopyMaster implements Runnable {
 			System.out.println("\nStage 2 Complete\n");
 			solve();
 			System.out.println("\nStage 3 Complete\n");
+			createFinalDB();
+			System.out.println("\nFinal database created");
 			Date endTime = new Date();
 			long diffMillis = endTime.getTime() - startTime.getTime();
-			System.out.println("Time to solve: " + (diffMillis / 1000.0)
+			System.out.println("\nTime to solve: " + (diffMillis / 1000.0)
 					+ " seconds.");
 		} catch (IOException e) {
 			throw new Error("Our program asploded :(.", e);
@@ -275,7 +277,9 @@ public class LoopyMaster implements Runnable {
 
 		fs.delete(sequenceFileInputDir, true);// TODO: why doesn't this work?
 		// we're not feeding it anymore, so kill the dir
+	}
 
+	private void createFinalDB() throws IOException {
 		Path dbDirectoryPath = new Path(hadoopConf.get("db.map.path"));
 		SequenceFile.Reader reader = new SequenceFile.Reader(fs,
 				dbDirectoryPath, hadoopConf);
@@ -288,7 +292,7 @@ public class LoopyMaster implements Runnable {
 			if (!reader.next(r, dbFileName))
 				break;
 			ranges.add(new RangeFile(r, dbFileName));
-
+			
 			Path numChildrenPath = new Path(dbFileName.toString()
 					+ "_numChildren");
 			fs.delete(numChildrenPath, true);
@@ -301,12 +305,12 @@ public class LoopyMaster implements Runnable {
 		// db directory
 
 		// create a split database file
-		String splitDbString = gamesmanConf.getProperty("gamesman.db.uri");
+		String splitDBString = gamesmanConf.getProperty("gamesman.db.uri");
 
-		SplitDBMaker dbMaker = new SplitDBMaker(splitDbString, gamesmanConf);
+		SplitDBMaker dbMaker = new SplitDBMaker(splitDBString, gamesmanConf);
 
 		Collections.sort(ranges);
-		
+
 		for (RangeFile rangeFile : ranges) {
 			dbMaker.addDb(GZippedFileDatabase.class.getName(), rangeFile.myFile
 					.toString(), rangeFile.myRange.firstRecord,
@@ -338,4 +342,64 @@ public class LoopyMaster implements Runnable {
 			throw new Error(e);
 		}
 	}
+
+//	private void generateVerificationFile(String splitDBString) {
+//		// ONLY FOR VERIFYING QUICK CROSS
+//		try {
+//			Game<State> game = gamesmanConf.getCheckedGame();
+//
+//			int start = 0;
+//			long end = game.numHashes();
+//			Database db = Database.openDatabase(splitDBString);
+//			DatabaseHandle readHandle = db.getHandle(true);
+//			db.prepareReadRange(readHandle, start, end);
+//
+//			State s = game.newState();
+//			Record r = game.newRecord();
+//
+//			FileOutputStream out = new FileOutputStream("qxHadoop.txt");
+//
+//			out.write("Quick Cross\n".getBytes());
+//			out.write("Position,Value,Remoteness\n".getBytes());
+//
+//			for (long pos = start; pos < end; pos++) {
+//				long record = db.readNextRecord(readHandle);
+//				game.hashToState(pos, s);
+//				game.longToRecord(s, record, r);
+//
+//				String value = null;
+//				int remoteness = 15;
+//				boolean write = true;
+//				
+//				switch (r.value) {
+//				case WIN:
+//					value = "W";
+//					remoteness = r.remoteness;
+//					break;
+//				case DRAW:
+//				case TIE:
+//					value = "T";
+//					break;
+//				case LOSE:
+//					value = "L";
+//					remoteness = r.remoteness;
+//					break;
+//				case IMPOSSIBLE:
+//					write  = false;
+//				}
+//
+//				if (write) {
+//					String output = pos + "," + value + "," + remoteness + "\n";
+//
+//					out.write(output.getBytes());
+//				}
+//			}
+//
+//			out.close();
+//		} catch (IOException e) {
+//			throw new Error(e);
+//		} catch (ClassNotFoundException e) {
+//			throw new Error(e);
+//		}
+//	}
 }

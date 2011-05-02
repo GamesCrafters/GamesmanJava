@@ -270,8 +270,8 @@ public final class QuickCross extends Game<QuickCrossState> implements Undoable<
 		long retHash = 0;
 		
 		int index = 0;
-		for(int x = 0; x < width; x++){
-			for(int y = 0; y < height; y++){
+		for(int y = 0; y < height; y++){
+			for(int x = 0; x < width; x++){
 				if (pos.getPiece(x,y) == ' '){
 					//no change
 				}

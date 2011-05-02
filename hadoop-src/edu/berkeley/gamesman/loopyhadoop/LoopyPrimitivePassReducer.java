@@ -107,9 +107,10 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 			Iterator<Long> hashIter = sortedHashes.iterator();
 			long nextHash = hashIter.next();
 
+			IntWritable numChildren = new IntWritable(0);
 			for (long n = 0; n < numRecords; n++) {
-				IntWritable numChildren = new IntWritable(0);
-
+				numChildren.set(0);
+				
 				if(arrayReader != null)
 				{
 					arrayReader.next(numChildren);
@@ -206,13 +207,12 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 			long nextHash = hashIter.next();
 
 			for (long n = 0; n < numRecords; n++) {
-				long recordHash = database.readNextRecord(readHandle);
-
+				long recordLong = database.readNextRecord(readHandle);				
 				if (rangeStart + n == nextHash) {
 
 					game.hashToState(nextHash, gameState);
 
-					game.longToRecord(gameState, recordHash, record);
+					game.longToRecord(gameState, recordLong, record);
 					/* get the record associated with this hash */
 
 					boolean visited = record.value != Value.IMPOSSIBLE;
@@ -225,27 +225,27 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 							// value is not primitive
 							record.value = Value.DRAW;
 
-							recordHash = game.recordToLong(gameState, record);
+							recordLong = game.recordToLong(gameState, record);
 
 							context.write(hashLongWritable, zero);
 							// only continue for non-primitives
 						} else // primitive
-						{
+						{							
 							record.value = primitiveValue;
 							record.remoteness = 0;
 
-							recordHash = game.recordToLong(gameState, record);
+							recordLong = game.recordToLong(gameState, record);
 
-							recordLongWritable.set(recordHash);
+							recordLongWritable.set(recordLong);
 							primitiveFileWriter.append(hashLongWritable,
 									recordLongWritable);
 						}
-
-						newDatabase.writeNextRecord(writeHandle, recordHash);
+						
+						newDatabase.writeNextRecord(writeHandle, recordLong);
 		
 						changesMade = true;
 					} else {
-						newDatabase.writeNextRecord(writeHandle, recordHash);
+						newDatabase.writeNextRecord(writeHandle, recordLong);
 					}
 
 					long prevHash = nextHash;
@@ -254,14 +254,14 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 						nextHash = hashIter.next();
 					}
 				} else {
-					newDatabase.writeNextRecord(writeHandle, recordHash);
+					newDatabase.writeNextRecord(writeHandle, recordLong);
 					// writes to a gzipped database have to be sequential so
 					// copy in the gap
 				}
 			}
 
 			primitiveFileWriter.close();
-
+			
 			database.close();
 			newDatabase.close();
 
