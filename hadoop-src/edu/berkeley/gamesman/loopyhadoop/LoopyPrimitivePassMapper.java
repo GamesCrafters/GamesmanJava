@@ -97,7 +97,7 @@ public class LoopyPrimitivePassMapper<S extends State> extends
 
 	private void outputToReducer(Context context, long positionHash)
 			throws Error {
-		RangeFile childFile = rangeFiles[(int) (positionHash / hashesPerFile)];
+		RangeFile childFile = rangeFiles[getChildFile(positionHash)];
 		longWritable.set(positionHash);
 
 		try {
@@ -107,6 +107,24 @@ public class LoopyPrimitivePassMapper<S extends State> extends
 		} catch (InterruptedException e) {
 			throw new Error(e);
 		}
+	}
+
+	private int getChildFile(long positionHash) {
+		int guess = Math.min((int) (positionHash / hashesPerFile), rangeFiles.length - 1);
+		//initial guess at the location
+		while(rangeFiles[guess].myRange.firstRecord > positionHash)
+		{
+			guess--;
+			//we guessed too high
+		}
+		
+		while(rangeFiles[guess].myRange.firstRecord + rangeFiles[guess].myRange.numRecords < positionHash)
+		{
+			guess++;
+			//guessed too low
+		}
+		
+		return guess;
 	}
 
 }

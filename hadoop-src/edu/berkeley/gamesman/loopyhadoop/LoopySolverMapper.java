@@ -85,20 +85,15 @@ public class LoopySolverMapper<S extends State> extends
 		try {
 			S pos = game.hashToState(positionToMap.get());
 			game.longToRecord(pos, record.get(), rec);
-			// System.out.println("\nChild is: " + rec.value.name());
 			rec.previousPosition();
-			if (rec.remoteness == 0) {
-				System.out.println("WTF? REMOTENESS 0 BUG?");
-			}
-			// System.out.println("Parent is: " + rec.value.name());
+			
 			int numParents = 0;
 			numParents = ((Undoable<S>) game)
 					.possibleParents(pos, parentStates);
 
-			// System.out.println("num parents: " + numParents);
 			for (int i = 0; i < numParents; i++) {
 				long parentHash = game.stateToHash(parentStates[i]);
-				RangeFile parentFile = rangeFiles[(int) (parentHash / hashesPerFile)];
+				RangeFile parentFile = rangeFiles[getChildFile(parentHash)];
 				srp.state = parentHash;
 				srp.record = game.recordToLong(parentStates[i], rec);
 
@@ -111,5 +106,22 @@ public class LoopySolverMapper<S extends State> extends
 			e.printStackTrace();
 		}
 	}
-
+	
+	private int getChildFile(long positionHash) {
+		int guess = Math.min((int) (positionHash / hashesPerFile), rangeFiles.length - 1);
+		//initial guess at the location
+		while(rangeFiles[guess].myRange.firstRecord > positionHash)
+		{
+			guess--;
+			//we guessed too high
+		}
+		
+		while(rangeFiles[guess].myRange.firstRecord + rangeFiles[guess].myRange.numRecords < positionHash)
+		{
+			guess++;
+			//guessed too low
+		}
+		
+		return guess;
+	}
 }

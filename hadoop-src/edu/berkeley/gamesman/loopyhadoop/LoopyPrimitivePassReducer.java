@@ -207,7 +207,8 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 			long nextHash = hashIter.next();
 
 			for (long n = 0; n < numRecords; n++) {
-				long recordLong = database.readNextRecord(readHandle);				
+				long recordLong = database.readNextRecord(readHandle);
+
 				if (rangeStart + n == nextHash) {
 
 					game.hashToState(nextHash, gameState);
