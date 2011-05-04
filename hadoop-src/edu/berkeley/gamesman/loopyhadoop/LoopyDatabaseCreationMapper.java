@@ -62,10 +62,10 @@ public class LoopyDatabaseCreationMapper extends
 			GZippedFileDatabase db = new GZippedFileDatabase(outputName, conf,
 					rangeStart, numRecords, false, true);
 			// create local db to be filled in
+			DatabaseHandle dh = db.getHandle(false);
 
 			Record impossible = game.newRecord();
 			impossible.value = Value.IMPOSSIBLE;
-			DatabaseHandle dh = db.getHandle(false);
 			db.fill(dh, game.recordToLong(null, impossible));
 			db.close();
 			// fill in all records to have value impossible(unreachable)

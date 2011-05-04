@@ -10,12 +10,9 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.core.Value;
-import edu.berkeley.gamesman.database.DatabaseHandle;
-import edu.berkeley.gamesman.database.GZippedFileDatabase;
 import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.parallel.RangeFile;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.ArrayFile;
 import org.apache.hadoop.io.IntWritable;
@@ -110,12 +107,11 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 			IntWritable numChildren = new IntWritable(0);
 			for (long n = 0; n < numRecords; n++) {
 				numChildren.set(0);
-				
-				if(arrayReader != null)
-				{
+
+				if (arrayReader != null) {
 					arrayReader.next(numChildren);
 				}
-				
+
 				if (nextHash == rangeStart + n) {// we're writing to a hash that
 					// we're filling in here
 					game.hashToState(nextHash, position);
@@ -131,8 +127,7 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 				arrayWriter.append(numChildren);
 			}
 
-			if(arrayReader != null)
-			{
+			if (arrayReader != null) {
 				arrayReader.close();
 			}
 			arrayWriter.close();
@@ -151,36 +146,15 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 	private void markDatabase(RangeFile rangeFile, Context context,
 			ArrayList<Long> sortedHashes) throws Error {
 		try {
-			long rangeStart = rangeFile.myRange.firstRecord;
-			long numRecords = rangeFile.myRange.numRecords;
-
-			Path path = new Path(rangeFile.myFile.toString());
-
-			LocalFileSystem lfs = FileSystem.getLocal(context
-					.getConfiguration());
-
-			String stringPath = lfs.pathToFile(path).getPath();
-			String localStringPath = stringPath + "_local";
-			String newLocalStringPath = localStringPath + "_new";
-
-			Path newLocalPath = new Path(newLocalStringPath);
-			Path localPath = new Path(localStringPath);
-			fs.copyToLocalFile(path, localPath);
-
-			GZippedFileDatabase database = new GZippedFileDatabase(
-					localStringPath, conf, rangeStart, numRecords, true, false);
-			GZippedFileDatabase newDatabase = new GZippedFileDatabase(
-					newLocalStringPath, conf, rangeStart, numRecords, false,
-					true);
-
-			DatabaseHandle readHandle = database.getHandle(true);
-			database.prepareReadRange(readHandle, rangeStart, numRecords);
-
-			DatabaseHandle writeHandle = newDatabase.getHandle(false);
-			newDatabase.prepareWriteRange(writeHandle, rangeStart, numRecords);
+			HadoopDBModifier dbModifier = new HadoopDBModifier(rangeFile,
+					FileSystem.getLocal(context.getConfiguration()),
+					fs, conf);
 
 			Record record = game.newRecord();
 			S gameState = game.newState();
+
+			long rangeStart = rangeFile.myRange.firstRecord;
+			long numRecords = rangeFile.myRange.numRecords;
 
 			String primitivePathString = "range"
 					+ rangeFile.myRange.firstRecord
@@ -201,13 +175,12 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 			 * all hashes are going to be in the same file so this goes outside
 			 * the loop
 			 */
-			boolean changesMade = false;
 
 			Iterator<Long> hashIter = sortedHashes.iterator();
 			long nextHash = hashIter.next();
 
 			for (long n = 0; n < numRecords; n++) {
-				long recordLong = database.readNextRecord(readHandle);
+				long recordLong = dbModifier.readNextRecord();
 
 				if (rangeStart + n == nextHash) {
 
@@ -231,7 +204,7 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 							context.write(hashLongWritable, zero);
 							// only continue for non-primitives
 						} else // primitive
-						{							
+						{
 							record.value = primitiveValue;
 							record.remoteness = 0;
 
@@ -241,12 +214,6 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 							primitiveFileWriter.append(hashLongWritable,
 									recordLongWritable);
 						}
-						
-						newDatabase.writeNextRecord(writeHandle, recordLong);
-		
-						changesMade = true;
-					} else {
-						newDatabase.writeNextRecord(writeHandle, recordLong);
 					}
 
 					long prevHash = nextHash;
@@ -254,32 +221,16 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 						// skip duplicates
 						nextHash = hashIter.next();
 					}
-				} else {
-					newDatabase.writeNextRecord(writeHandle, recordLong);
-					// writes to a gzipped database have to be sequential so
-					// copy in the gap
 				}
+
+				dbModifier.writeNextRecord(recordLong);
+				// writes to a gzipped database have to be sequential so
+				// copy in the gap
 			}
 
+			dbModifier.closeAndClean();
 			primitiveFileWriter.close();
-			
-			database.close();
-			newDatabase.close();
 
-			if (changesMade) {
-				Path tempPath = new Path(stringPath + "_" + rand.nextLong());
-				// use a random long to prevent collisions in the expensive copy
-				// step
-				lfs.delete(localPath, true);
-
-				fs.moveFromLocalFile(newLocalPath, tempPath);
-				// copy the written database to hdfs
-				fs.rename(tempPath, path);
-				// rename to complete process
-			} else {
-				lfs.delete(localPath, true);
-				lfs.delete(newLocalPath, true);
-			}
 		} catch (IOException e) {
 			throw new Error(e);
 		} catch (InterruptedException e) {

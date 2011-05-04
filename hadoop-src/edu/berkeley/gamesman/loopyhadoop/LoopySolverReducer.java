@@ -7,7 +7,6 @@ import java.util.Iterator;
 import java.util.Random;
 
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.ArrayFile;
 import org.apache.hadoop.io.IntWritable;
@@ -19,8 +18,6 @@ import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.State;
-import edu.berkeley.gamesman.database.DatabaseHandle;
-import edu.berkeley.gamesman.database.GZippedFileDatabase;
 import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.parallel.RangeFile;
 
@@ -39,12 +36,11 @@ public class LoopySolverReducer<S extends State> extends
 	private StateRecordPair statePair;
 	private Record candidateRecord;
 	private Record currentRecord;
-	private DatabaseHandle readHandle;
-	private DatabaseHandle writeHandle;
+	private HadoopDBModifier dbModifier;
 
 	private LongWritable positionOutput = new LongWritable();
 	private LongWritable recordOutput = new LongWritable();
-	
+
 	@Override
 	public void setup(Context context) {
 		try {
@@ -77,25 +73,12 @@ public class LoopySolverReducer<S extends State> extends
 
 			Collections.sort(sortedCandidates);
 
-			LocalFileSystem lfs = FileSystem.getLocal(context
-					.getConfiguration());// we need an lfs
-
-			String dbStringPath = rangeToReduce.myFile.toString();
-			String numChildrenStringPath = dbStringPath + "_numChildren";
+			String numChildrenStringPath = rangeToReduce.myFile.toString() + "_numChildren";
 			String numChildrenTempStringPath = numChildrenStringPath + "_"
 					+ rand.nextLong();
 
-			String localDBStringPath = dbStringPath + "_local";
-			String newLocalDBStringPath = dbStringPath + "_local_new";
-
-			Path localDBPath = new Path(localDBStringPath);
-			Path newLocalDBPath = new Path(newLocalDBStringPath);
-
-			Path hdfsDBPath = new Path(rangeToReduce.myFile.toString());
 			Path hdfsNumChildrenPath = new Path(numChildrenStringPath);
 			Path hdfsNumChildrenTempPath = new Path(numChildrenTempStringPath);
-
-			fs.copyToLocalFile(hdfsDBPath, localDBPath);
 
 			ArrayFile.Reader numChildrenReader = new ArrayFile.Reader(fs,
 					numChildrenStringPath, context.getConfiguration());
@@ -106,57 +89,37 @@ public class LoopySolverReducer<S extends State> extends
 
 			long rangeStart = rangeToReduce.myRange.firstRecord;
 			long numRecords = rangeToReduce.myRange.numRecords;
-
-			GZippedFileDatabase database = new GZippedFileDatabase(
-					localDBStringPath, conf, rangeStart, numRecords, true,
-					false);
-			GZippedFileDatabase newDatabase = new GZippedFileDatabase(
-					newLocalDBStringPath, conf, rangeStart, numRecords, false,
-					true);
-
-			readHandle = database.getHandle(true);
-			database.prepareReadRange(readHandle, rangeStart, numRecords);
-
-			writeHandle = newDatabase.getHandle(false);
-			newDatabase.prepareWriteRange(writeHandle, rangeStart, numRecords);
 			
+			dbModifier = new HadoopDBModifier(rangeToReduce, FileSystem.getLocal(context
+					.getConfiguration()), fs, conf);
+
 			// File stuff prepared, move on to interesting part
 
 			Iterator<StateRecordPair> pairIter = sortedCandidates.iterator();
 			statePair = pairIter.next();
 
-			boolean changesMadeDB = false;
-
 			IntWritable numChildren = new IntWritable();
 
 			for (long i = 0; i < numRecords; i++) {
-				long currentLongRecord = database.readNextRecord(readHandle);
+				long currentLongRecord = dbModifier.readNextRecord();
 
 				boolean written = false;
 
 				numChildrenReader.next(numChildren);
 
 				if (rangeStart + i == statePair.state) {
-					written = decideNextRecord(context, rangeStart,
-							numChildren, newDatabase, pairIter,
-							currentLongRecord);
+					written = decideNextRecord(context, numChildren, pairIter, currentLongRecord);
 				}
 
 				numChildrenWriter.append(numChildren);
 
 				if (!written) {
 					// write the old record
-					newDatabase.writeNextRecord(writeHandle, currentLongRecord);
-				} else {
-					changesMadeDB = true;
+					dbModifier.writeNextRecord(currentLongRecord);
 				}
 			}
-			
+
 			// Cleanup file stuff
-
-			database.close();
-			newDatabase.close();
-
 			numChildrenReader.close();
 			numChildrenWriter.close();
 
@@ -164,23 +127,7 @@ public class LoopySolverReducer<S extends State> extends
 			fs.rename(hdfsNumChildrenTempPath, hdfsNumChildrenPath);
 			// get the numChildren file right
 
-			if (changesMadeDB) {
-				Path tempPath = new Path(dbStringPath + "_" + rand.nextLong());
-				// use a random long to prevent collisions in the expensive copy
-				// step
-				lfs.pathToFile(lfs.getChecksumFile(localDBPath)).delete();
-
-				lfs.delete(localDBPath, true);
-
-				fs.moveFromLocalFile(newLocalDBPath, tempPath);
-				// copy the written database to hdfs
-				fs.rename(tempPath, hdfsDBPath);
-				// rename to complete process
-			} else {
-				lfs.delete(localDBPath, true);
-				lfs.delete(newLocalDBPath, true);
-			}
-
+			dbModifier.closeAndClean();
 		} catch (IOException e) {
 			throw new Error(e);
 		} catch (InterruptedException e) {
@@ -189,8 +136,7 @@ public class LoopySolverReducer<S extends State> extends
 
 	}
 
-	private boolean decideNextRecord(Context context, long rangeStart,
-			IntWritable numChildren, GZippedFileDatabase newDatabase,
+	private boolean decideNextRecord(Context context, IntWritable numChildren,
 			Iterator<StateRecordPair> pairIter, long currentLongRecord)
 			throws IOException, InterruptedException {
 		boolean write = false;
@@ -207,11 +153,6 @@ public class LoopySolverReducer<S extends State> extends
 			game.longToRecord(gameState, statePair.record, candidateRecord);
 
 			if (possible && !primitive) {
-				if(currentRecord.value == Value.LOSE)
-				{
-					System.out.println("WTF");
-				}
-				
 				if (currentRecord.compareTo(candidateRecord) < 0) {
 					// we found a better one!
 					currentRecord.set(candidateRecord);
@@ -238,7 +179,7 @@ public class LoopySolverReducer<S extends State> extends
 
 		if (write) {
 			long longRecord = game.recordToLong(gameState, currentRecord);
-			newDatabase.writeNextRecord(writeHandle, longRecord);
+			dbModifier.writeNextRecord(longRecord);
 			positionOutput.set(curHash);
 			recordOutput.set(longRecord);
 			context.write(positionOutput, recordOutput);

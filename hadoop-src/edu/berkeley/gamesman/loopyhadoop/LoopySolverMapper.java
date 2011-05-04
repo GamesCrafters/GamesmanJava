@@ -5,18 +5,12 @@ import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.game.Undoable;
-import edu.berkeley.gamesman.parallel.Range;
 import edu.berkeley.gamesman.parallel.RangeFile;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 
 /**
  * Created by IntelliJ IDEA. User: dxu Date: 4/12/11 Time: 5:14 PM To change
@@ -32,12 +26,10 @@ public class LoopySolverMapper<S extends State> extends
 	private Configuration conf;
 	private Game<S> game;
 	private S[] parentStates;
-	private RangeFile[] rangeFiles;
-	private long hashesPerFile;
+	private RangeFileManager<S> rangeFiles;
 	private Record rec;
 	private StateRecordPair srp;
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public void setup(Context context) {
 		try {
@@ -46,29 +38,15 @@ public class LoopySolverMapper<S extends State> extends
 			conf = Configuration.deserialize(hadoopConf
 					.get("gamesman.configuration"));
 			game = conf.getCheckedGame();
-			parentStates = game
-					.newStateArray(((Undoable<S>) game).maxParents());
+			if (game instanceof Undoable<?>) {
+				parentStates = game.newStateArray(((Undoable<?>) game)
+						.maxParents());
+			}
 			fs = FileSystem.get(hadoopConf);
 			rec = new Record(conf);
 			srp = new StateRecordPair();
 
-			SequenceFile.Reader reader = new SequenceFile.Reader(fs, new Path(
-					hadoopConf.get("db.map.path")), hadoopConf);
-			ArrayList<RangeFile> ranges = new ArrayList<RangeFile>();
-			while (true) {
-				Range r = new Range();
-				Text text = new Text();
-				if (!reader.next(r, text))
-					break;
-				ranges.add(new RangeFile(r, text));
-			}
-			reader.close();
-
-			Collections.sort(ranges);
-
-			rangeFiles = ranges.toArray(new RangeFile[ranges.size()]);
-
-			hashesPerFile = game.numHashes() / ranges.size();
+			rangeFiles = new RangeFileManager<S>(fs, hadoopConf, game);
 		} catch (IOException e) {
 			throw new Error(e);
 		} catch (ClassNotFoundException e) {
@@ -86,14 +64,15 @@ public class LoopySolverMapper<S extends State> extends
 			S pos = game.hashToState(positionToMap.get());
 			game.longToRecord(pos, record.get(), rec);
 			rec.previousPosition();
-			
+
 			int numParents = 0;
 			numParents = ((Undoable<S>) game)
 					.possibleParents(pos, parentStates);
 
 			for (int i = 0; i < numParents; i++) {
 				long parentHash = game.stateToHash(parentStates[i]);
-				RangeFile parentFile = rangeFiles[getChildFile(parentHash)];
+				RangeFile parentFile = rangeFiles.getFile(parentHash);
+
 				srp.state = parentHash;
 				srp.record = game.recordToLong(parentStates[i], rec);
 
@@ -105,23 +84,5 @@ public class LoopySolverMapper<S extends State> extends
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-	}
-	
-	private int getChildFile(long positionHash) {
-		int guess = Math.min((int) (positionHash / hashesPerFile), rangeFiles.length - 1);
-		//initial guess at the location
-		while(rangeFiles[guess].myRange.firstRecord > positionHash)
-		{
-			guess--;
-			//we guessed too high
-		}
-		
-		while(rangeFiles[guess].myRange.firstRecord + rangeFiles[guess].myRange.numRecords < positionHash)
-		{
-			guess++;
-			//guessed too low
-		}
-		
-		return guess;
 	}
 }

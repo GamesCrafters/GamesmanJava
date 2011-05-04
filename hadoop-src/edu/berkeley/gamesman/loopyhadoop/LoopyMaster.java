@@ -20,13 +20,8 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Record;
-import edu.berkeley.gamesman.core.State;
-import edu.berkeley.gamesman.database.Database;
-import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.database.GZippedFileDatabase;
 import edu.berkeley.gamesman.database.SplitDBMaker;
-import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.parallel.Input;
 import edu.berkeley.gamesman.parallel.Range;
 import edu.berkeley.gamesman.parallel.RangeFile;
