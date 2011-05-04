@@ -115,7 +115,6 @@ public class HadoopDBModifier {
 	 */
 	public void closeAndClean() throws IOException {
 		readDB.close();
-		lfs.pathToFile(lfs.getChecksumFile(localDBReadPath)).delete();
 		lfs.delete(localDBReadPath, true);
 
 		writeDB.close();

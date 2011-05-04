@@ -191,8 +191,7 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 				}
 
 				dbModifier.writeNextRecord(recordLong);
-				// writes to a gzipped database have to be sequential so
-				// copy in the gap
+				// sequential writes are required here
 			}
 
 			primitiveFileWriter.close();

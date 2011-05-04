@@ -35,8 +35,6 @@ public class LoopyMaster implements Runnable {
 	private final FileSystem fs;
 	private Path dbMapPath;
 
-	// private final Game<S> game;
-
 	/**
 	 * @param args
 	 *            - the first arg should be the job file to run
@@ -64,7 +62,6 @@ public class LoopyMaster implements Runnable {
 		}
 		hadoopConf = gop.getConfiguration();
 		hadoopConf.set("gamesman.configuration", gamesmanConf.serialize());
-		// game = gamesmanConf.getCheckedGame();
 		fs = FileSystem.get(hadoopConf);
 	}
 
@@ -85,7 +82,8 @@ public class LoopyMaster implements Runnable {
 			System.out.println("\nTime to solve: " + (diffMillis / 1000.0)
 					+ " seconds.");
 		} catch (IOException e) {
-			throw new Error("Our program asploded :(.", e);
+			throw new Error(
+					"Our program asploded (directory files already exist?).", e);
 		}
 	}
 
@@ -109,11 +107,9 @@ public class LoopyMaster implements Runnable {
 		try {
 			j.waitForCompletion(true);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new Error(e);
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new Error(e);
 		}
 
 		FileStatus[] files = fs.listStatus(sequenceFileDir);
@@ -135,8 +131,9 @@ public class LoopyMaster implements Runnable {
 					+ text.toString());
 		}
 
-		hadoopConf.set("db.map.path", dbMapPath.toString()); // TODO: don't use
-		// to string?
+		hadoopConf.set("db.map.path", dbMapPath.toString());
+		// toString() should be ok here since it's only used within hadoop and
+		// during the solve
 	}
 
 	private Path getPath(String pathString) {
@@ -194,21 +191,16 @@ public class LoopyMaster implements Runnable {
 			try {
 				j.waitForCompletion(true);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				throw new Error(e);
 			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				throw new Error(e);
 			}
 
 			fs.delete(sequenceFileInputDir, true);
 			fs.rename(sequenceFileOutputDir, sequenceFileInputDir);
 		}
 
-		fs.delete(new Path(sequenceFileInputDir.toUri().toString()), true);// TODO:
-		// is
-		// toString
-		// bad?
+		fs.delete(sequenceFileInputDir, true);
 		// we're not feeding it anymore, so kill the dir
 	}
 
@@ -264,18 +256,16 @@ public class LoopyMaster implements Runnable {
 			try {
 				j.waitForCompletion(true);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				throw new Error(e);
 			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				throw new Error(e);
 			}
 
 			fs.delete(sequenceFileInputDir, true);
 			fs.rename(sequenceFileOutputDir, sequenceFileInputDir);
 		}
 
-		fs.delete(sequenceFileInputDir, true);// TODO: why doesn't this work?
+		fs.delete(sequenceFileInputDir, true);
 		// we're not feeding it anymore, so kill the dir
 	}
 
@@ -292,7 +282,7 @@ public class LoopyMaster implements Runnable {
 			if (!reader.next(r, dbFileName))
 				break;
 			ranges.add(new RangeFile(r, dbFileName));
-			
+
 			Path numChildrenPath = new Path(dbFileName.toString()
 					+ "_numChildren");
 			fs.delete(numChildrenPath, true);
@@ -301,8 +291,7 @@ public class LoopyMaster implements Runnable {
 		reader.close();
 
 		fs.delete(dbDirectoryPath.getParent(), true);// we want to delete the
-		// folder containing the
-		// db directory
+		// folder containing the db directory
 
 		// create a split database file
 		String splitDBString = gamesmanConf.getProperty("gamesman.db.uri");
@@ -342,64 +331,4 @@ public class LoopyMaster implements Runnable {
 			throw new Error(e);
 		}
 	}
-
-//	private void generateVerificationFile(String splitDBString) {
-//		// ONLY FOR VERIFYING QUICK CROSS
-//		try {
-//			Game<State> game = gamesmanConf.getCheckedGame();
-//
-//			int start = 0;
-//			long end = game.numHashes();
-//			Database db = Database.openDatabase(splitDBString);
-//			DatabaseHandle readHandle = db.getHandle(true);
-//			db.prepareReadRange(readHandle, start, end);
-//
-//			State s = game.newState();
-//			Record r = game.newRecord();
-//
-//			FileOutputStream out = new FileOutputStream("qxHadoop.txt");
-//
-//			out.write("Quick Cross\n".getBytes());
-//			out.write("Position,Value,Remoteness\n".getBytes());
-//
-//			for (long pos = start; pos < end; pos++) {
-//				long record = db.readNextRecord(readHandle);
-//				game.hashToState(pos, s);
-//				game.longToRecord(s, record, r);
-//
-//				String value = null;
-//				int remoteness = 15;
-//				boolean write = true;
-//				
-//				switch (r.value) {
-//				case WIN:
-//					value = "W";
-//					remoteness = r.remoteness;
-//					break;
-//				case DRAW:
-//				case TIE:
-//					value = "T";
-//					break;
-//				case LOSE:
-//					value = "L";
-//					remoteness = r.remoteness;
-//					break;
-//				case IMPOSSIBLE:
-//					write  = false;
-//				}
-//
-//				if (write) {
-//					String output = pos + "," + value + "," + remoteness + "\n";
-//
-//					out.write(output.getBytes());
-//				}
-//			}
-//
-//			out.close();
-//		} catch (IOException e) {
-//			throw new Error(e);
-//		} catch (ClassNotFoundException e) {
-//			throw new Error(e);
-//		}
-//	}
 }
