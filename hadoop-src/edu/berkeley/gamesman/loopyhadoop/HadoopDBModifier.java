@@ -64,19 +64,19 @@ public class HadoopDBModifier {
 		localDBReadPath = new Path(localDBReadPathString);
 		localDBWritePath = new Path(localDBWritePathString);
 
-		fs.copyToLocalFile(hdfsDBPath, localDBReadPath);
-
 		long numRecords = rangeFile.myRange.numRecords;
 		long firstRecord = rangeFile.myRange.firstRecord;
+
+		fs.copyToLocalFile(hdfsDBPath, localDBReadPath);
 
 		readDB = new GZippedFileDatabase(localDBReadPathString, conf,
 				firstRecord, numRecords, true, false);
 
-		writeDB = new GZippedFileDatabase(localDBWritePathString, conf,
-				firstRecord, numRecords, false, true);
-
 		readHandle = readDB.getHandle(true);
 		readDB.prepareReadRange(readHandle, firstRecord, numRecords);
+
+		writeDB = new GZippedFileDatabase(localDBWritePathString, conf,
+				firstRecord, numRecords, false, true);
 
 		writeHandle = writeDB.getHandle(false);
 		writeDB.prepareWriteRange(writeHandle, firstRecord, numRecords);
@@ -115,23 +115,20 @@ public class HadoopDBModifier {
 	 */
 	public void closeAndClean() throws IOException {
 		readDB.close();
+		lfs.pathToFile(lfs.getChecksumFile(localDBReadPath)).delete();
+		lfs.delete(localDBReadPath, true);
+
 		writeDB.close();
 
 		if (changesObserved) {
 			Path tempPath = new Path(hdfsDBPathString + "_" + rand.nextLong());
 			// use a random long to prevent collisions in the expensive copy
 			// step
-
-			lfs.pathToFile(lfs.getChecksumFile(localDBReadPath)).delete();//TODO: needed still?
-
-			lfs.delete(localDBReadPath, true);
-
 			fs.moveFromLocalFile(localDBWritePath, tempPath);
 			// copy the written database to hdfs
 			fs.rename(tempPath, hdfsDBPath);
 			// rename so our file system has the same files it did before
 		} else {
-			lfs.delete(localDBReadPath, true);
 			lfs.delete(localDBWritePath, true);
 		}
 	}

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.Random;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
@@ -14,11 +13,9 @@ import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.parallel.RangeFile;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.ArrayFile;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.mapreduce.Reducer;
 
 /**
@@ -32,7 +29,6 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 	private FileSystem fs;
 	private Configuration conf;
 	private Game<S> game;
-	private final Random rand = new Random();
 	private IntWritable zero = new IntWritable(0);
 	private LongWritable hashLongWritable = new LongWritable(0);
 	private LongWritable recordLongWritable = new LongWritable(0);
@@ -81,25 +77,8 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 			long rangeStart = rangeFile.myRange.firstRecord;
 			long numRecords = rangeFile.myRange.numRecords;
 
-			Path rangeFileDBPath = new Path(rangeFile.myFile.toString());
-
-			String numChildrenStringPath = rangeFileDBPath.toString()
-					+ "_numChildren";
-
-			Path numChildrenPath = new Path(numChildrenStringPath);
-
-			ArrayFile.Reader arrayReader = null;
-			if (fs.exists(numChildrenPath)) {
-				arrayReader = new ArrayFile.Reader(fs, numChildrenStringPath,
-						context.getConfiguration());
-			}
-
-			String tempStringPath = numChildrenStringPath + "_"
-					+ rand.nextLong();
-
-			ArrayFile.Writer arrayWriter = new ArrayFile.Writer(context
-					.getConfiguration(), fs, tempStringPath, IntWritable.class,
-					CompressionType.BLOCK, null);
+			NumChildrenFileModifier ncModifier = new NumChildrenFileModifier(
+					rangeFile, fs, context.getConfiguration());
 
 			Iterator<Long> hashIter = sortedHashes.iterator();
 			long nextHash = hashIter.next();
@@ -108,9 +87,7 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 			for (long n = 0; n < numRecords; n++) {
 				numChildren.set(0);
 
-				if (arrayReader != null) {
-					arrayReader.next(numChildren);
-				}
+				ncModifier.readNextChildrenCount(numChildren);
 
 				if (nextHash == rangeStart + n) {// we're writing to a hash that
 					// we're filling in here
@@ -124,19 +101,10 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 					}
 				}
 
-				arrayWriter.append(numChildren);
+				ncModifier.writeNextChildrenCount(numChildren);
 			}
 
-			if (arrayReader != null) {
-				arrayReader.close();
-			}
-			arrayWriter.close();
-
-			if (fs.exists(numChildrenPath))
-				fs.delete(numChildrenPath, true);
-
-			fs.rename(new Path(tempStringPath), numChildrenPath);
-			// rename to complete process
+			ncModifier.closeAndClean();
 
 		} catch (IOException io) {
 			throw new Error(io);
@@ -147,8 +115,7 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 			ArrayList<Long> sortedHashes) throws Error {
 		try {
 			HadoopDBModifier dbModifier = new HadoopDBModifier(rangeFile,
-					FileSystem.getLocal(context.getConfiguration()),
-					fs, conf);
+					FileSystem.getLocal(context.getConfiguration()), fs, conf);
 
 			Record record = game.newRecord();
 			S gameState = game.newState();
@@ -228,8 +195,8 @@ public class LoopyPrimitivePassReducer<S extends State> extends
 				// copy in the gap
 			}
 
-			dbModifier.closeAndClean();
 			primitiveFileWriter.close();
+			dbModifier.closeAndClean();
 
 		} catch (IOException e) {
 			throw new Error(e);
