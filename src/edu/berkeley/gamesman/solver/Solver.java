@@ -40,12 +40,13 @@ public abstract class Solver {
 	/**
 	 * The number of positions to go through between each update/reset
 	 */
-	public static final int STEP_SIZE = 10000000;
+	private static final int DEFAULT_STEP_SIZE = 10000000;
 	public static final long DEFAULT_MIN_SPLIT_SIZE = 1L << 12;
 	public static final long DEFAULT_PREFERRED_SPLIT_SIZE = 1L << 23;
 	protected final int nThreads;
 	private volatile Throwable failed = null;
 	private Thread mainThread;
+	public final int stepSize;
 
 	protected Database db;
 	protected Configuration conf;
@@ -61,6 +62,8 @@ public abstract class Solver {
 		this.db = db;
 		this.conf = conf;
 		nThreads = conf.getInteger("gamesman.threads", 1);
+		stepSize = conf.getInteger("gamesman.solver.step.size",
+				DEFAULT_STEP_SIZE);
 	}
 
 	private final Runnable getNextJob() throws InterruptedException {

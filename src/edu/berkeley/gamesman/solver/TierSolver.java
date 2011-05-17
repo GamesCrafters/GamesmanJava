@@ -77,10 +77,10 @@ public class TierSolver extends Solver {
 		 */
 		public void solvePartialTier() {
 			long hash = firstRecordIndex;
-			int lastCount = (int) (firstRecordIndex % Solver.STEP_SIZE);
+			int lastCount = (int) (firstRecordIndex % stepSize);
 			int modCount = lastCount;
 			for (long trial = 0; trial < numRecords; trial++) {
-				if (modCount == Solver.STEP_SIZE) {
+				if (modCount == stepSize) {
 					addFinished(modCount - lastCount);
 					modCount = 0;
 					lastCount = 0;
