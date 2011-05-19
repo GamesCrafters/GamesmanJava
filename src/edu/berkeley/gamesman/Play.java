@@ -70,8 +70,9 @@ public final class Play {
 		// for that Database. This deals with many multi-threading issues
 		while (g.strictPrimitiveValue(position) == Value.UNDECIDED) {
 			System.out.println(g.displayState(position));
-			g.longToRecord(position,
-					db.readRecord(dh, g.stateToHash(position)), storeRecord);
+			long hash = g.stateToHash(position);
+			System.out.println(hash);
+			g.longToRecord(position, db.readRecord(dh, hash), storeRecord);
 			// This line hashes the current position, fetches the appropriate
 			// record from the database and unhashes it
 			System.out.println(storeRecord);

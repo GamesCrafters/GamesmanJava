@@ -6,10 +6,8 @@ import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.EOFException;
 import java.io.FileInputStream;
-import java.io.Flushable;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ConcurrentModificationException;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.database.wrapper.DatabaseWrapper;
@@ -493,6 +491,22 @@ public abstract class Database implements Closeable {
 			boolean reading, boolean writing) throws IOException {
 		return openDatabase(new DatabaseArgs(dbClass, uri, conf,
 				firstRecordIndex, numRecords, reading, writing));
+	}
+
+	public static Database openDatabase(String dbClass, String uri)
+			throws IOException, ClassNotFoundException {
+		return openDatabase(getArgs(dbClass, uri));
+	}
+
+	private static DatabaseArgs getArgs(String dbClass, String uri)
+			throws IOException, ClassNotFoundException {
+		DataInputStream in = new DataInputStream(new FileInputStream(uri));
+		long firstRecordIndex = in.readLong();
+		long numRecords = in.readLong();
+		Configuration conf = Configuration.load(in);
+		in.close();
+		return new DatabaseArgs(dbClass, uri, conf, firstRecordIndex,
+				numRecords, true, false);
 	}
 
 	public static Database openDatabase(DatabaseArgs args) throws IOException {
