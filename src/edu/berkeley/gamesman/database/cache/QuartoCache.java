@@ -166,6 +166,8 @@ public class QuartoCache extends TierCache {
 			int addMajor = availableMajor * 2;
 			long lastMajorChild;
 			long majorHash = majorHasher.getHash();
+			long remainingMajor = majorHasher.numHashes() - majorHash;
+			addMajor = (int) Math.min(addMajor, remainingMajor);
 			do {
 				majorHasher.unhash(majorHash + addMajor - 1);
 				lastMajorChild = majorHasher.previousChild(' ', 'P', place);
