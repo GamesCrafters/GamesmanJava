@@ -143,13 +143,13 @@ public class Quarto extends TierGame {
 				flippedV &= pieces[k][i].getFlip();
 			}
 			if ((unflippedH | flippedH | unflippedV | flippedV) > 0)
-				return Value.LOSE;
+				return Value.WIN;
 			unflippedDL &= pieces[i][3 - i].get();
 			flippedDL &= pieces[i][3 - i].getFlip();
 			unflippedDR &= pieces[i][i].get();
 			flippedDR &= pieces[i][i].getFlip();
 		}
-		return (unflippedDL | flippedDL | unflippedDR | flippedDR) > 0 ? Value.LOSE
+		return (unflippedDL | flippedDL | unflippedDR | flippedDR) > 0 ? Value.WIN
 				: (tier == 16 ? Value.TIE : Value.UNDECIDED);
 	}
 
@@ -329,7 +329,7 @@ public class Quarto extends TierGame {
 			toStore.value = Value.TIE;
 			toStore.remoteness = 16 - recordState.tier;
 		} else {
-			toStore.value = (record & 1) == 1 ? Value.WIN : Value.LOSE;
+			toStore.value = (record & 1) == 1 ? Value.LOSE : Value.WIN;
 			toStore.remoteness = (int) record;
 		}
 	}
@@ -392,7 +392,8 @@ public class Quarto extends TierGame {
 	}
 
 	/**
-	 * @param qs A StrictQuarto state
+	 * @param qs
+	 *            A StrictQuarto state
 	 * @return The with-symmetry hash
 	 */
 	public synchronized long getHash(StrictQuarto.QuartoState qs) {
