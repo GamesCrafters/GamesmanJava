@@ -10,35 +10,59 @@ import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.util.Pair;
 
-public class OneTwoTen extends Game<OTTState> {
+/**
+ * The game One Two Ten. Implemented as a demonstration on 9/11/11
+ * 
+ * @author dnspies
+ */
+public class OneTwoTen extends Game<OneTwoTenState> {
 
+	/**
+	 * Default constructor
+	 * 
+	 * @param conf
+	 *            The configuration object
+	 */
 	public OneTwoTen(Configuration conf) {
 		super(conf);
 	}
 
 	@Override
-	public Collection<OTTState> startingPositions() {
-		return Collections.singleton(newState(0));
+	public Collection<OneTwoTenState> startingPositions() {
+		OneTwoTenState s = new OneTwoTenState();
+		return Collections.singleton(s);
 	}
 
 	@Override
-	public Collection<Pair<String, OTTState>> validMoves(OTTState pos) {
-		ArrayList<Pair<String, OTTState>> states = new ArrayList<Pair<String, OTTState>>(
-				2);
-		states.add(new Pair<String, OTTState>("1", newState(pos.value + 1)));
-		if (pos.value < 9)
-			states.add(new Pair<String, OTTState>("2", newState(pos.value + 2)));
-		return states;
+	public Collection<Pair<String, OneTwoTenState>> validMoves(
+			OneTwoTenState pos) {
+		if (pos.numXs == 0)
+			return Collections.emptySet();
+		else {
+			ArrayList<Pair<String, OneTwoTenState>> moves = new ArrayList<Pair<String, OneTwoTenState>>(
+					2);
+			OneTwoTenState newState = newState();
+			newState.set(pos);
+			newState.makeMove(1);
+			moves.add(new Pair<String, OneTwoTenState>("1", newState));
+			if (pos.numXs >= 2) {
+				newState = newState();
+				newState.set(pos);
+				newState.makeMove(2);
+				moves.add(new Pair<String, OneTwoTenState>("2", newState));
+			}
+			return moves;
+		}
 	}
 
 	@Override
-	public int validMoves(OTTState pos, OTTState[] children) {
-		children[0].value = pos.value + 1;
-		if (pos.value < 9) {
-			children[1].value = pos.value + 2;
-			return 2;
-		} else
-			return 1;
+	public int validMoves(OneTwoTenState pos, OneTwoTenState[] children) {
+		Collection<Pair<String, OneTwoTenState>> moves = validMoves(pos);
+		int i = 0;
+		for (Pair<String, OneTwoTenState> move : moves) {
+			children[i++].set(move.cdr);
+		}
+		return i;
 	}
 
 	@Override
@@ -47,92 +71,161 @@ public class OneTwoTen extends Game<OTTState> {
 	}
 
 	@Override
-	public Value primitiveValue(OTTState pos) {
-		return pos.value == 10 ? Value.LOSE : Value.UNDECIDED;
+	public Value primitiveValue(OneTwoTenState pos) {
+		if (pos.numXs == 0) {
+			return Value.LOSE;
+		} else
+			return Value.UNDECIDED;
 	}
 
 	@Override
-	public long stateToHash(OTTState pos) {
-		return pos.value;
+	public long stateToHash(OneTwoTenState pos) {
+		return pos.numXs + (pos.turn ? 11 : 0);
 	}
 
 	@Override
-	public String stateToString(OTTState pos) {
-		return String.valueOf(pos.value);
+	public String stateToString(OneTwoTenState pos) {
+		return (pos.turn == OneTwoTenState.LEFT ? "L" : "R") + pos.numXs;
 	}
 
 	@Override
-	public String displayState(OTTState pos) {
-		return String.valueOf(pos.value);
+	public String displayState(OneTwoTenState pos) {
+		StringBuilder sb = new StringBuilder(10);
+		sb.append((pos.turn == OneTwoTenState.LEFT ? "L" : "R") + "\t");
+		for (int i = 0; i < pos.numXs; i++) {
+			sb.append('X');
+		}
+		return sb.toString();
 	}
 
 	@Override
-	public OTTState stringToState(String pos) {
-		return newState(Integer.parseInt(pos));
+	public OneTwoTenState stringToState(String pos) {
+		OneTwoTenState s = newState();
+		char firstChar = pos.charAt(0);
+		if (firstChar == 'L')
+			s.turn = OneTwoTenState.LEFT;
+		else if (firstChar == 'R')
+			s.turn = OneTwoTenState.RIGHT;
+		else
+			throw new Error("Bad state: " + pos);
+		s.numXs = Integer.parseInt(pos.substring(1));
+		if (s.numXs > 10 || s.numXs < 0)
+			throw new Error("Bad state: " + pos);
+		return s;
 	}
 
 	@Override
 	public String describe() {
-		return "1,2,...10";
+		return "One Two Ten";
 	}
 
 	@Override
 	public long numHashes() {
-		return 11;
+		return 22;
 	}
 
 	@Override
 	public long recordStates() {
-		return 12;
+		return 23;
 	}
 
 	@Override
-	public void hashToState(long hash, OTTState s) {
-		s.value = (int) hash;
-	}
-
-	@Override
-	public OTTState newState() {
-		return new OTTState();
-	}
-
-	private OTTState newState(int value) {
-		return new OTTState(value);
-	}
-
-	@Override
-	public void longToRecord(OTTState recordState, long record, Record toStore) {
-		if (record == 11)
-			toStore.value = Value.UNDECIDED;
-		else {
-			toStore.remoteness = (int) record;
-			toStore.value = record % 2 == 0 ? Value.LOSE : Value.WIN;
+	public void hashToState(long hash, OneTwoTenState s) {
+		if (hash < 11) {
+			s.turn = false;
+			if (hash < 0)
+				throw new Error("Hash out of bounds");
+			s.numXs = (int) hash;
+		} else {
+			s.turn = true;
+			if (hash >= 22)
+				throw new Error("Hash out of bounds");
+			s.numXs = (int) (hash - 11);
 		}
 	}
 
 	@Override
-	public long recordToLong(OTTState recordState, Record fromRecord) {
+	public OneTwoTenState newState() {
+		return new OneTwoTenState();
+	}
+
+	@Override
+	public void longToRecord(OneTwoTenState recordState, long record,
+			Record toStore) {
+		if (record < 0 || record > 11) {
+			throw new Error("Record hash out of bounds " + record);
+		}
+		if (record == 11)
+			toStore.value = Value.UNDECIDED;
+		else {
+			toStore.value = (record % 2 == 1) ? Value.WIN : Value.LOSE;
+			toStore.remoteness = (int) record;
+		}
+	}
+
+	@Override
+	public long recordToLong(OneTwoTenState recordState, Record fromRecord) {
 		if (fromRecord.value == Value.UNDECIDED)
 			return 11;
-		else
-			return fromRecord.remoteness;
+		else if (fromRecord.remoteness < 0 || fromRecord.remoteness > 10)
+			throw new Error("Remoteness out of bounds " + fromRecord);
+		else if (fromRecord.value != ((fromRecord.remoteness % 2 == 1) ? Value.WIN
+				: Value.LOSE))
+			throw new Error("Value does not match remoteness " + fromRecord);
+		return fromRecord.remoteness;
 	}
 
 }
 
-class OTTState implements State {
-	int value;
+/**
+ * A game state for One Two Ten
+ * 
+ * @author dnspies
+ */
+class OneTwoTenState implements State {
+	/**
+	 * Left player constant
+	 */
+	static final boolean LEFT = false;
+	/**
+	 * Right player constant
+	 */
+	static final boolean RIGHT = true;
+	/**
+	 * The player whose turn it is
+	 */
+	boolean turn;
+	/**
+	 * The number of Xs currently on the board
+	 */
+	int numXs;
 
-	public OTTState() {
-		this(0);
-	}
-
-	public OTTState(int value) {
-		this.value = value;
+	/**
+	 * Initializes to starting position
+	 */
+	public OneTwoTenState() {
+		turn = LEFT;
+		numXs = 10;
 	}
 
 	@Override
 	public void set(State s) {
-		value = ((OTTState) s).value;
+		OneTwoTenState other = (OneTwoTenState) s;
+		turn = other.turn;
+		numXs = other.numXs;
+	}
+
+	/**
+	 * Makes a move
+	 * 
+	 * @param n
+	 *            The amount to remove
+	 */
+	public void makeMove(int n) {
+		if (numXs > 0 && (n == 1 || (numXs >= 2 && n == 2))) {
+			numXs -= n;
+			turn = !turn;
+		} else
+			throw new Error("Can only remove one or two, not " + n);
 	}
 }
