@@ -126,7 +126,7 @@ public class OneTwoTen extends Game<OneTwoTenState> {
 
 	@Override
 	public long recordStates() {
-		return 23;
+		return 12;
 	}
 
 	@Override
