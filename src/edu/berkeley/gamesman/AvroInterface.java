@@ -3,6 +3,10 @@ package edu.berkeley.gamesman;
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.apache.avro.ipc.AvroRemoteException;
 import org.apache.avro.ipc.HttpServer;
@@ -147,7 +151,8 @@ public class AvroInterface extends GamesmanApplication {
 
 	// get(string) doesn't properly find things with avro's map implementation.
 	// convert to standard HashMap.
-	private Map<String, String> fromAvroParams(Map<CharSequence, CharSequence> avro) {
+	private Map<String, String> fromAvroParams(
+			Map<CharSequence, CharSequence> avro) {
 		Map<String, String> ret = new HashMap<String, String>();
 		for (CharSequence key : avro.keySet()) {
 			ret.put(key.toString(), avro.get(key).toString());
@@ -188,8 +193,7 @@ public class AvroInterface extends GamesmanApplication {
 	}
 
 	private synchronized Pair<Configuration, Database> addDatabase(
-			Map<String, String> params,
-			String game, String filename) {
+			Map<String, String> params, String game, String filename) {
 		String dbPath = serverConf.getProperty("json.databasedirectory", "");
 		if (dbPath != null && dbPath.length() > 0) {
 			if (dbPath.charAt(dbPath.length() - 1) != '/') {
@@ -258,6 +262,37 @@ public class AvroInterface extends GamesmanApplication {
 	}
 
 	private class GamestateProvider implements GamesmanProvider {
+		private ExecutorService tp = Executors.newCachedThreadPool();
+
+		private class FieldFiller<T extends State> implements Runnable {
+			private final int player, numPlayers;
+			private final Pair<Configuration, Database> cPair;
+			private final String move;
+			private final T state;
+			private final Fields syncFields;
+			private final Map<CharSequence, PositionValue> syncMap;
+
+			public FieldFiller(int player, int numPlayers,
+					Pair<Configuration, Database> cPair, String move, T state,
+					Fields syncFields, Map<CharSequence, PositionValue> syncMap) {
+				this.player = player;
+				this.numPlayers = numPlayers;
+				this.cPair = cPair;
+				this.move = move;
+				this.state = state;
+				this.syncFields = syncFields;
+				this.syncMap = syncMap;
+			}
+
+			@Override
+			public void run() {
+				int nextPlayer = (player + 1) % numPlayers;
+				syncMap.put(
+						move,
+						fillResponseFields(cPair, nextPlayer, state, syncFields));
+			}
+		};
+
 		private edu.berkeley.gamesman.avro.Value getAvroValue(Value val) {
 			switch (val) {
 			case WIN:
@@ -277,15 +312,16 @@ public class AvroInterface extends GamesmanApplication {
 		}
 
 		private <T extends State> PositionValue fillResponseFields(
-				Pair<Configuration, Database> cPair, int player, T state, Fields fields) {
+				Pair<Configuration, Database> cPair, int player, T state,
+				Fields fields) {
 			// FIXME: Use fields....
 			PositionValue request = new PositionValue();
 			Database db = cPair.cdr;
 			Configuration conf = cPair.car;
 			Game<T> g = conf.getCheckedGame();
 
-			request.position = player + PLAYER_SEPARATOR +
-				g.synchronizedStateToString(state);
+			request.position = player + PLAYER_SEPARATOR
+					+ g.synchronizedStateToString(state);
 
 			if (db != null) {
 				Record rec = g.newRecord();
@@ -402,7 +438,8 @@ public class AvroInterface extends GamesmanApplication {
 					int player = 0;
 					String board;
 					if (playerSep != -1) {
-						player = Integer.parseInt(position.substring(0, playerSep));
+						player = Integer.parseInt(position.substring(0,
+								playerSep));
 						board = position.substring(playerSep + 1);
 					} else {
 						board = position;
@@ -441,7 +478,8 @@ public class AvroInterface extends GamesmanApplication {
 				int playerFoo = 0;
 				String initBoard;
 				if (playerSep != -1) {
-					playerFoo = Integer.parseInt(position.substring(0, playerSep));
+					playerFoo = Integer.parseInt(position.substring(0,
+							playerSep));
 					initBoard = position.substring(playerSep + 1);
 				} else {
 					initBoard = position;
@@ -458,27 +496,22 @@ public class AvroInterface extends GamesmanApplication {
 				}
 				final int numPlayers = numPlayersFoo;
 
-				List<Thread> threads = new ArrayList<Thread>();
+				List<Future<?>> threads = new ArrayList<Future<?>>();
 				for (Pair<String, State> moveTemp : game
 						.synchronizedValidMoves(state)) {
 					final Pair<String, State> move = moveTemp;
-					threads.add(new Thread() {
-						public void run() {
-							int nextPlayer = (player + 1) % numPlayers;
-							syncMap.put(
-									move.car,
-									fillResponseFields(cPair, nextPlayer, move.cdr,
-											syncFields));
-						}
-					});
-					threads.get(threads.size() - 1).start();
+					threads.add(tp.submit(new FieldFiller<State>(player,
+							numPlayers, cPair, move.car, move.cdr, syncFields,
+							syncMap)));
 				}
-				for (Thread t : threads) {
-					while (t.isAlive()) {
+				for (Future<?> t : threads) {
+					while (!t.isDone()) {
 						try {
-							t.join();
+							t.get();
 						} catch (InterruptedException e) {
 							e.printStackTrace();
+						} catch (ExecutionException e) {
+							throw new RuntimeException(e);
 						}
 					}
 				}

@@ -3,6 +3,10 @@ package edu.berkeley.gamesman;
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import edu.berkeley.gamesman.core.*;
 import edu.berkeley.gamesman.database.Database;
@@ -218,6 +222,33 @@ public class JSONInterface extends GamesmanApplication {
 
 	private class GamestateRequestServer implements Iface {
 
+		private ExecutorService tp = Executors.newCachedThreadPool();
+
+		private class FieldFiller<T extends State> implements Runnable {
+			private final Configuration config;
+			private final Database db;
+			private final String move;
+			private final T state;
+			private final List<GamestateResponse> responseArray;
+
+			public FieldFiller(Configuration conf, Database db, String move,
+					T state, List<GamestateResponse> responseArray) {
+				config = conf;
+				this.db = db;
+				this.move = move;
+				this.state = state;
+				this.responseArray = responseArray;
+			}
+
+			@Override
+			public void run() {
+				GamestateResponse entry = new GamestateResponse();
+				entry = fillResponseFields(config, db, state, true);
+				entry.setMove(move);
+				responseArray.add(entry);
+			}
+		};
+
 		public GetNextMoveResponse getNextMoveValues(String game,
 				String configuration) throws TException {
 			GetNextMoveResponse response = new GetNextMoveResponse();
@@ -272,7 +303,8 @@ public class JSONInterface extends GamesmanApplication {
 			T state = game.synchronizedStringToState(board);
 
 			if (!game.synchronizedStateToString(state).equals(board))
-				throw new Error("Board does not match: "+game.synchronizedStateToString(state)+"; "+board);
+				throw new Error("Board does not match: "
+						+ game.synchronizedStateToString(state) + "; " + board);
 
 			// Access to this list must be synchronized!
 			final List<GamestateResponse> responseArray = Collections
@@ -283,29 +315,22 @@ public class JSONInterface extends GamesmanApplication {
 				Collection<Pair<String, T>> states = game
 						.synchronizedValidMoves(state);
 				Iterator<Pair<String, T>> iter = states.iterator();
-				Thread[] recordThreads = new Thread[states.size()];
+				Future<?>[] recordThreads = new Future<?>[states.size()];
 				for (int i = 0; i < recordThreads.length; i++) {
 					final Pair<String, T> next = iter.next();
-					recordThreads[i] = new Thread() {
-						@Override
-						public void run() {
-							GamestateResponse entry = new GamestateResponse();
-							entry = fillResponseFields(config, db, next.cdr,
-									true);
-							entry.setMove(next.car);
-							responseArray.add(entry);
-						}
-					};
-					recordThreads[i].start();
+					recordThreads[i] = tp.submit(new FieldFiller<T>(config, db,
+							next.car, next.cdr, responseArray));
 				}
 
 				// Wait for the worker threads to complete.
-				for (Thread t : recordThreads) {
-					while (t.isAlive()) {
+				for (Future<?> t : recordThreads) {
+					while (!t.isDone()) {
 						try {
-							t.join();
+							t.get();
 						} catch (InterruptedException e) {
 							e.printStackTrace();
+						} catch (ExecutionException e) {
+							throw new RuntimeException(e);
 						}
 					}
 				}
@@ -340,7 +365,8 @@ public class JSONInterface extends GamesmanApplication {
 			T state = game.synchronizedStringToState(board);
 
 			if (!game.synchronizedStateToString(state).equals(board))
-				throw new Error("Board does not match: "+game.synchronizedStateToString(state)+"; "+board);
+				throw new Error("Board does not match: "
+						+ game.synchronizedStateToString(state) + "; " + board);
 
 			response = fillResponseFields(config, db, state, false);
 
