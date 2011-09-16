@@ -1,18 +1,28 @@
 package edu.berkeley.gamesman.game;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 
+/**
+ * An implementation of OneTwoTen optimized for the top-down solver
+ * 
+ * @author dnspies
+ */
 public class OneTwoTenMutable extends TopDownMutaGame {
 	private int value;
 	private final QuickLinkedList<Integer> moveSequence = new QuickLinkedList<Integer>();
 
+	/**
+	 * The default constructor
+	 * 
+	 * @param conf The configuration object
+	 */
 	public OneTwoTenMutable(Configuration conf) {
 		super(conf);
 	}
@@ -73,9 +83,9 @@ public class OneTwoTenMutable extends TopDownMutaGame {
 	}
 
 	@Override
-	public Collection<String> moveNames() {
+	public List<String> moveNames() {
 		if (value == 9)
-			return Collections.singleton("1");
+			return Collections.singletonList("1");
 		else {
 			ArrayList<String> moves = new ArrayList<String>(2);
 			moves.add("1");

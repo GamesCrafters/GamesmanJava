@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.game;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import edu.berkeley.gamesman.core.Value;
@@ -171,8 +172,9 @@ public final class TopDownGame<S extends State> extends TopDownMutaGame {
 		statePool.release(stateList.pop());
 	}
 
+	// TODO: Find some way to ensure these are returned in the correct order
 	@Override
-	public Collection<String> moveNames() {
+	public List<String> moveNames() {
 		Collection<Pair<String, S>> validMoves = myGame.validMoves(stateList
 				.getFirst());
 		ArrayList<String> moveNames = new ArrayList<String>(validMoves.size());

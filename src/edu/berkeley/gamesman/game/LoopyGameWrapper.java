@@ -2,6 +2,7 @@ package edu.berkeley.gamesman.game;
 
 import java.util.Collection;
 import java.util.ArrayList;
+import java.util.List;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
@@ -13,7 +14,13 @@ import edu.berkeley.gamesman.util.qll.Factory;
 import edu.berkeley.gamesman.util.qll.Pool;
 import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 
-//public class LoopyGameWrapper extends LoopyMutaGame {
+/**
+ * A wrapper for local loopy games in order to make them appear as
+ * LoopyMutaGames
+ * 
+ * @param <S>
+ *            The boardstate type this game take
+ */
 public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame {
 	private final Game<S> myGame;
 	private final Undoable<S> myGameLoopy;
@@ -50,6 +57,12 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame {
 	private final S[] possibleParents;
 	private final S[] startingPositions;
 
+	/**
+	 * Wraps the passed game
+	 * 
+	 * @param conf The configuration object
+	 * @param g The game
+	 */
 	@SuppressWarnings("unchecked")
 	public LoopyGameWrapper(Configuration conf, Game<S> g) {
 		super(conf);
@@ -157,7 +170,7 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame {
 	}
 
 	@Override
-	public Collection<String> moveNames() {
+	public List<String> moveNames() {
 		Collection<Pair<String, S>> validMoves = myGame.validMoves(stateList
 				.getFirst());
 		ArrayList<String> moveNames = new ArrayList<String>(validMoves.size());

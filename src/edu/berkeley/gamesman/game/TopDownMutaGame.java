@@ -2,6 +2,7 @@ package edu.berkeley.gamesman.game;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
@@ -9,12 +10,19 @@ import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.util.Pair;
 
 /**
- * This is the super class for all top-down mutable games
+ * This is the super class for all games which contain their own state, but
+ * should be solved via the top-down solver
  * 
  * @author dnspies
  */
 public abstract class TopDownMutaGame extends Game<HashState> {
 
+	/**
+	 * The default constructor
+	 * 
+	 * @param conf
+	 *            The configuration object
+	 */
 	public TopDownMutaGame(Configuration conf) {
 		super(conf);
 	}
@@ -119,7 +127,7 @@ public abstract class TopDownMutaGame extends Game<HashState> {
 	}
 
 	private Collection<Pair<String, HashState>> validMoves() {
-		Collection<String> moveStrings = moveNames();
+		List<String> moveStrings = moveNames();
 		HashState[] states = new HashState[moveStrings.size()];
 		for (int i = 0; i < states.length; i++) {
 			states[i] = newState();
@@ -134,7 +142,11 @@ public abstract class TopDownMutaGame extends Game<HashState> {
 		return validMoves;
 	}
 
-	public abstract Collection<String> moveNames();
+	/**
+	 * @return A list of the names of the available moves, in the order they
+	 *         would be returned by validMoves
+	 */
+	public abstract List<String> moveNames();
 
 	@Override
 	public Collection<HashState> startingPositions() {
@@ -149,8 +161,17 @@ public abstract class TopDownMutaGame extends Game<HashState> {
 		return startingPositions;
 	}
 
+	/**
+	 * @return The number of starting positions for this game
+	 */
 	public abstract int numStartingPositions();
 
+	/**
+	 * Sets the internal state to the ith starting position
+	 * 
+	 * @param i
+	 *            The starting position to set to
+	 */
 	public abstract void setStartingPosition(int i);
 
 	@Override
@@ -184,6 +205,14 @@ public abstract class TopDownMutaGame extends Game<HashState> {
 		longToRecord(record, toStore);
 	}
 
+	/**
+	 * Unhashes a record using the current position as the game state
+	 * 
+	 * @param record
+	 *            The hash of the record
+	 * @param toStore
+	 *            The record to store the result in
+	 */
 	public abstract void longToRecord(long record, Record toStore);
 
 	@Override
@@ -192,8 +221,21 @@ public abstract class TopDownMutaGame extends Game<HashState> {
 		return recordToLong(fromRecord);
 	}
 
+	/**
+	 * Hashes a record using the current position as the game state.
+	 * 
+	 * @param fromRecord
+	 *            The record to hash
+	 * @return The hashed value
+	 */
 	public abstract long recordToLong(Record fromRecord);
 
+	/**
+	 * Returns the actual primitive value according to the rules for the current
+	 * state
+	 * 
+	 * @return The value of the current state
+	 */
 	public Value strictPrimitiveValue() {
 		return primitiveValue();
 	}
