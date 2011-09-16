@@ -294,6 +294,25 @@ public abstract class Database implements Closeable {
 	protected abstract int readBytes(DatabaseHandle dh, long location,
 			byte[] array, int off, int len) throws IOException;
 
+	/**
+	 * Writes a range of bytes from the array into the database.
+	 * prepareWriteRange must have been called on the handle first so it knows
+	 * where to start writing at.
+	 * 
+	 * @param dh
+	 *            The handle to use for writing
+	 * @param array
+	 *            The array to read from
+	 * @param off
+	 *            The offset into the array to start at
+	 * @param maxLen
+	 *            The maximum number of bytes to write (fewer bytes may be read
+	 *            if the end of the prepared range is reached or for other
+	 *            reasons)
+	 * @return The number of bytes actually written
+	 * @throws IOException
+	 *             If an IOException occurs while writing
+	 */
 	protected int writeBytes(DatabaseHandle dh, byte[] array, int off,
 			int maxLen) throws IOException {
 		int actualNum;
@@ -312,31 +331,126 @@ public abstract class Database implements Closeable {
 		return written;
 	}
 
+	/**
+	 * Subclasses may override this method to specify how to write an already
+	 * prepared range of bytes. If so, the other writeBytes which takes in a
+	 * location can just be implemented to throw an
+	 * UnsupportedOperationException
+	 * 
+	 * @see #writeBytes(DatabaseHandle, long, byte[], int, int)
+	 * 
+	 * @param dh
+	 *            The handle to use for writing
+	 * @param array
+	 *            The array to read from
+	 * @param off
+	 *            The offset into the array to start at
+	 * @param len
+	 *            The maximum number of bytes to write (fewer bytes may be
+	 *            written if the end of the prepared range is reached or for
+	 *            other reasons)
+	 * @return The number of bytes actually written
+	 * @throws IOException
+	 *             If an IOException occurs while writing
+	 */
 	protected int lowerWriteBytes(DatabaseHandle dh, byte[] array, int off,
 			int len) throws IOException {
 		return writeBytes(dh, dh.location, array, off, len);
 	}
 
+	/**
+	 * This method writes a range of bytes from an array into the database. This
+	 * range need not necessarily have been prepared already (although the
+	 * default implementation of lowerWriteBytes calls this method, so it may
+	 * have)
+	 * 
+	 * @param dh
+	 *            The handle to use for writing
+	 * @param location
+	 *            The location in the database to start writing to
+	 * @param array
+	 *            The array to read from
+	 * @param off
+	 *            The index into the array to start at
+	 * @param len
+	 *            The maximum number of bytes to write (fewer bytes may be
+	 *            written)
+	 * @return The number of bytes actually written
+	 * @throws IOException
+	 *             If an IOException occurs while reading
+	 */
 	protected abstract int writeBytes(DatabaseHandle dh, long location,
 			byte[] array, int off, int len) throws IOException;
 
+	/**
+	 * Reads a record at the given hash
+	 * 
+	 * @param dh
+	 *            The handle to use for reading
+	 * @param recordIndex
+	 *            The hash of the game state where the record should be read
+	 * @return The hash of the record read at that position
+	 * @throws IOException
+	 *             If an IOException occurs while reading
+	 */
 	public long readRecord(DatabaseHandle dh, long recordIndex)
 			throws IOException {
 		return readRecordFromByteIndex(dh, myLogic.getByteIndex(recordIndex));
 	}
 
+	/**
+	 * @param dh
+	 *            The handle to use for reading
+	 * @param byteIndex
+	 *            The byte-index into the file to begin reading at
+	 * @return The hash of the record read at that position
+	 * @throws IOException
+	 *             If an IOException occurs while reading
+	 */
 	protected long readRecordFromByteIndex(DatabaseHandle dh, long byteIndex)
 			throws IOException {
 		readFullBytes(dh, byteIndex, dh.currentRecord, 0, myLogic.recordBytes);
 		return myLogic.getRecord(dh.currentRecord, 0);
 	}
 
+	/**
+	 * Reads a complete range of bytes at a given position via continuous calls
+	 * to readBytes.
+	 * 
+	 * @param dh
+	 *            The handle to use for reading
+	 * @param byteIndex
+	 *            The byte-position in the database at which to begin reading
+	 * @param recordArray
+	 *            The array to read into
+	 * @param off
+	 *            The offset into the array to begin writing at
+	 * @param len
+	 *            The number of bytes to read
+	 * @throws IOException
+	 *             If an IOException occurs while reading
+	 */
 	protected final void readFullBytes(DatabaseHandle dh, long byteIndex,
 			byte[] recordArray, int off, int len) throws IOException {
 		prepareReadRange(dh, byteIndex, len);
 		readFullBytes(dh, recordArray, off, len);
 	}
 
+	/**
+	 * Reads a complete range of bytes at a given position via continuous calls
+	 * to readBytes. The location to start reading at is set via prepareRange.
+	 * 
+	 * @param dh
+	 *            The handle to use for reading
+	 * @param byteArray
+	 *            The array to read into
+	 * @param off
+	 *            The offset into the array to begin writing at
+	 * @param len
+	 *            The number of bytes to read
+	 * @throws IOException
+	 *             If an IOException occurs while reading
+	 */
 	public final void readFullBytes(DatabaseHandle dh, byte[] byteArray,
 			int off, int len) throws IOException {
 		while (len > 0) {

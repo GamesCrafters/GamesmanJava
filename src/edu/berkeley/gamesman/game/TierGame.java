@@ -76,6 +76,9 @@ public abstract class TierGame extends Game<TierState> {
 		return myHasher.hashOffsetForTier(tier);
 	}
 
+	/**
+	 * @return The first hash value for the current tier
+	 */
 	public final long hashOffsetForTier() {
 		return myHasher.hashOffsetForTier(getTier());
 	}
@@ -264,18 +267,51 @@ public abstract class TierGame extends Game<TierState> {
 		return new TierState();
 	}
 
+	/**
+	 * Creates a new state with the given tier and hash offset
+	 * 
+	 * @param tier
+	 *            The tier
+	 * @param hash
+	 *            The offset into the tier
+	 * @return The TierState
+	 */
 	public final TierState newState(int tier, long hash) {
 		return new TierState(tier, hash);
 	}
 
-	public TierCache getCache(Database db, long availableMem) {
+	/**
+	 * If over-ridden, creates a cache for a particular game and database given
+	 * a certain amount of memory
+	 * 
+	 * @param db
+	 *            The database to cache
+	 * @param availableMem
+	 *            The amount of memory available to use
+	 * @return The cache for the tier
+	 * @throws UnsupportedOperationException
+	 *             If not over-ridden
+	 */
+	public TierCache getCache(Database db, long availableMem)
+			throws UnsupportedOperationException {
 		throw new UnsupportedOperationException();
 	}
 
+	/**
+	 * @return A separate primitive value which may be used for playing rather
+	 *         than solving (if the two are not equivalent)
+	 */
 	public Value strictPrimitiveValue() {
 		return primitiveValue();
 	}
 
+	/**
+	 * Hashes a record using the current position as the game state.
+	 * 
+	 * @param r
+	 *            The record to hash
+	 * @return The hashed value
+	 */
 	public final long recordToLong(Record r) {
 		if (tempState == null)
 			tempState = newState();
@@ -283,6 +319,14 @@ public abstract class TierGame extends Game<TierState> {
 		return recordToLong(tempState, r);
 	}
 
+	/**
+	 * Unhashes a record using the current position as the game state
+	 * 
+	 * @param longVal
+	 *            The hash of the record
+	 * @param r
+	 *            The record to store the result in
+	 */
 	public final void longToRecord(long longVal, Record r) {
 		if (tempState == null)
 			tempState = newState();
@@ -290,6 +334,17 @@ public abstract class TierGame extends Game<TierState> {
 		longToRecord(tempState, longVal, r);
 	}
 
+	/**
+	 * An implementation of validMoves in which the game can tell the cache
+	 * where to find each child using the cachePlaces array
+	 * 
+	 * @param children
+	 *            The array to store the states of the children
+	 * @param cachePlaces
+	 *            The array to indicate the respective cache buckets of each
+	 *            child
+	 * @return The number of children of the current position
+	 */
 	public int validMoves(TierState[] children, int[] cachePlaces) {
 		throw new UnsupportedOperationException();
 	}
