@@ -1,5 +1,7 @@
 package edu.berkeley.gamesman.database;
 
+import java.io.DataOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Random;
 
@@ -88,5 +90,16 @@ public class DummyDatabase extends Database {
 
 	private long nextRecord() {
 		return (long) (randomer.nextDouble() * recordStates);
+	}
+
+	public static void main(String[] args) throws ClassNotFoundException,
+			IOException {
+		Configuration conf = new Configuration(args[0]);
+		Database d = Database.openDatabase(args[1], conf, false, true);
+		DataOutputStream fileOut = new DataOutputStream(new FileOutputStream(
+				args[1]));
+		d.writeHeader(fileOut);
+		fileOut.close();
+		d.close();
 	}
 }
