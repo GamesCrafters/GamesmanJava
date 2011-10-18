@@ -9,8 +9,6 @@ import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.game.TopDownGame;
 import edu.berkeley.gamesman.game.TopDownMutaGame;
 import edu.berkeley.gamesman.util.*;
-import edu.berkeley.gamesman.util.qll.Factory;
-import edu.berkeley.gamesman.util.qll.Pool;
 
 /**
  * A solver for top-down mutable games
@@ -18,7 +16,6 @@ import edu.berkeley.gamesman.util.qll.Pool;
  * @author dnspies
  */
 public class TopDownSolver extends Solver {
-	protected final Pool<Record> recordPool;
 	private boolean askedJob = false;
 	private final boolean debugSolver;
 
@@ -30,16 +27,7 @@ public class TopDownSolver extends Solver {
 	 */
 	public TopDownSolver(final Configuration conf, Database db) {
 		super(conf, db);
-		final Game<?> game = conf.getGame();
 		debugSolver = Util.debug(DebugFacility.SOLVER);
-		recordPool = new Pool<Record>(new Factory<Record>() {
-			public Record newObject() {
-				return game.newRecord();
-			}
-
-			public void reset(Record t) {
-			}
-		});
 	}
 
 	public class TopDownSolveTask implements Runnable {
@@ -92,7 +80,7 @@ public class TopDownSolver extends Solver {
 			Value pv = game.primitiveValue();
 			switch (pv) {
 			case UNDECIDED:
-				Record bestRecord = recordPool.get();
+				Record bestRecord = game.getPoolRecord();
 				bestRecord.value = Value.UNDECIDED;
 				int numChildren = game.makeMove();
 				for (int child = 0; child < numChildren; child++) {
@@ -106,7 +94,7 @@ public class TopDownSolver extends Solver {
 				if (numChildren > 0)
 					game.undoMove();
 				value.set(bestRecord);
-				recordPool.release(bestRecord);
+				game.release(bestRecord);
 				break;
 			case IMPOSSIBLE:
 				throw new Error(

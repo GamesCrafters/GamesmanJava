@@ -38,16 +38,6 @@ public final class TopDownGame<S extends State> extends TopDownMutaGame {
 
 			});
 	private final QuickLinkedList<S> stateList = new QuickLinkedList<S>();
-	private final Pool<S> statePool = new Pool<S>(new Factory<S>() {
-
-		public S newObject() {
-			return myGame.newState();
-		}
-
-		public void reset(S t) {
-		}
-
-	});
 	private final S[] startingPositions;
 
 	private class SIterator implements Iterator<S> {
@@ -90,7 +80,7 @@ public final class TopDownGame<S extends State> extends TopDownMutaGame {
 	public TopDownGame(Game<S> g) {
 		super(g.conf);
 		myGame = g;
-		stateList.push(statePool.get());
+		stateList.push(myGame.getPoolState());
 		Collection<S> startingPositions = myGame.startingPositions();
 		this.startingPositions = startingPositions.toArray(myGame
 				.newStateArray(startingPositions.size()));
@@ -122,7 +112,7 @@ public final class TopDownGame<S extends State> extends TopDownMutaGame {
 		moveLists.push(moves);
 		if (moves.hasNext()) {
 			S curState = moves.next();
-			S newState = statePool.get();
+			S newState = myGame.getPoolState();
 			newState.set(curState);
 			stateList.push(newState);
 			return moves.numPlaces;
@@ -145,21 +135,21 @@ public final class TopDownGame<S extends State> extends TopDownMutaGame {
 	@Override
 	public void setToHash(long hash) {
 		clearLists();
-		S state = statePool.get();
+		S state = myGame.getPoolState();
 		myGame.hashToState(hash, state);
 		stateList.push(state);
 	}
 
 	private void setToState(S pos) {
 		clearLists();
-		S state = statePool.get();
+		S state = myGame.getPoolState();
 		state.set(pos);
 		stateList.push(state);
 	}
 
 	private void clearLists() {
 		while (!stateList.isEmpty()) {
-			statePool.release(stateList.pop());
+			myGame.release(stateList.pop());
 		}
 		while (!moveLists.isEmpty()) {
 			moveArrayPool.release(moveLists.pop());
@@ -169,7 +159,7 @@ public final class TopDownGame<S extends State> extends TopDownMutaGame {
 	@Override
 	public void undoMove() {
 		moveArrayPool.release(moveLists.pop());
-		statePool.release(stateList.pop());
+		myGame.release(stateList.pop());
 	}
 
 	// TODO: Find some way to ensure these are returned in the correct order

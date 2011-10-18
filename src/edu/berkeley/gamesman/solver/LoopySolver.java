@@ -30,7 +30,6 @@ public class LoopySolver extends Solver {
 	private class LoopySolveTask implements Runnable {
 		private final DatabaseHandle readDh, writeDh;
 		private final LoopyMutaGame game;
-		private final Pool<Record> recordPool;
 
 		private LoopySolveTask() {
 			Game<?> g = conf.getGame();
@@ -39,17 +38,6 @@ public class LoopySolver extends Solver {
 			} else {
 				game = wrapGame(conf, g);
 			}
-			recordPool = new Pool<Record>(new Factory<Record>() {
-
-				public Record newObject() {
-					return game.newRecord();
-				}
-
-				public void reset(Record t) {
-					t.value = Value.UNDECIDED;
-				}
-
-			});
 			Record defaultRecord = game.newRecord();
 			defaultRecord.value = Value.IMPOSSIBLE;
 			readDh = db.getHandle(true);
@@ -128,7 +116,7 @@ public class LoopySolver extends Solver {
 					} catch (IOException e) {
 						throw new Error(e);
 					}
-					bestValue = recordPool.get();
+					bestValue = game.getPoolRecord();
 					boolean assigned = false;
 					int numChildren = game.makeMove();
 					for (int child = 0; child < numChildren; child++) {
@@ -152,7 +140,7 @@ public class LoopySolver extends Solver {
 					if (numChildren > 0)
 						game.undoMove();
 					value.set(bestValue);
-					recordPool.release(bestValue);
+					game.release(bestValue);
 					try {
 						db.writeRecord(writeDh, hash, game.recordToLong(value));
 					} catch (IOException e) {
@@ -185,7 +173,7 @@ public class LoopySolver extends Solver {
 		private void fix(Record value) {
 			assert Util.debug(DebugFacility.SOLVER, "GOING TO FIX NOW");
 			assert Util.debug(DebugFacility.SOLVER, "\n" + game.displayState());
-			Record dbValue = recordPool.get();
+			Record dbValue = game.getPoolRecord();
 			long hash = game.getHash();
 			try {
 				game.longToRecord(db.readRecord(readDh, hash), dbValue);
@@ -223,8 +211,8 @@ public class LoopySolver extends Solver {
 					// if value is draw, test for all children have returned
 					boolean unassigned = true;
 					int numChildren = game.makeMove();
-					Record bestValue = recordPool.get();
-					Record childValue = recordPool.get();
+					Record bestValue = game.getPoolRecord();
+					Record childValue = game.getPoolRecord();
 					int child;
 					for (child = 0; child < numChildren; child++) {
 						assert Util.debug(DebugFacility.SOLVER, "child "
@@ -262,7 +250,7 @@ public class LoopySolver extends Solver {
 					}
 					if (numChildren > 0)
 						game.undoMove();
-					recordPool.release(childValue);
+					game.release(childValue);
 					if (child == numChildren) {
 						try {
 							db.writeRecord(writeDh, hash,
@@ -285,10 +273,10 @@ public class LoopySolver extends Solver {
 						// this could cause a bug which would be a nightmare to
 						// find
 					}
-					recordPool.release(bestValue);
+					game.release(bestValue);
 				}
 			}
-			recordPool.release(dbValue);
+			game.release(dbValue);
 		}
 
 		@Override

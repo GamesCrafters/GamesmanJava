@@ -38,18 +38,6 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame {
 				}
 
 			});
-	private final Pool<S> statePool = new Pool<S>(new Factory<S>() {
-
-		@Override
-		public S newObject() {
-			return myGame.newState();
-		}
-
-		@Override
-		public void reset(S t) {
-		}
-
-	});
 	private final QuickLinkedList<QuickLinkedList<S>> moveLists;
 	private final QuickLinkedList<QuickLinkedList<S>> parentLists;
 	private final QuickLinkedList<S> stateList;
@@ -88,7 +76,7 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame {
 			return false;
 		S m = parentLists.getFirst().removeFirst();
 		stateList.getFirst().set(m);
-		statePool.release(m);
+		myGame.release(m);
 		return true;
 	}
 
@@ -96,7 +84,7 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame {
 	public void remakeMove() {
 		QuickLinkedList<S> parentList = parentLists.pop();
 		stateSetPool.release(parentList);
-		statePool.release(stateList.pop());
+		myGame.release(stateList.pop());
 	}
 
 	@Override
@@ -110,7 +98,7 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame {
 			return 0;
 		} else {
 			for (int i = 0; i < numParents; i++) {
-				S parent = statePool.get();
+				S parent = myGame.getPoolState();
 				parent.set(possibleParents[i]);
 				parents.add(parent);
 			}
@@ -126,7 +114,7 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame {
 			return false;
 		S m = moveLists.getFirst().removeFirst();
 		stateList.getFirst().set(m);
-		statePool.release(m);
+		myGame.release(m);
 		return true;
 	}
 
@@ -156,15 +144,15 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame {
 			return 0;
 		} else {
 			for (int i = 0; i < numMoves; i++) {
-				S move = statePool.get();
+				S move = myGame.getPoolState();
 				move.set(possibleMoves[i]);
 				moves.add(move);
 			}
-			S curState = statePool.get();
+			S curState = myGame.getPoolState();
 			S move = moves.removeFirst();
 			curState.set(move);
 			stateList.push(curState);
-			statePool.release(move);
+			myGame.release(move);
 			return numMoves;
 		}
 	}
@@ -214,23 +202,23 @@ public final class LoopyGameWrapper<S extends State> extends LoopyMutaGame {
 		stateList.clear();
 		moveLists.clear();
 		parentLists.clear();
-		S state = statePool.get();
+		S state = myGame.getPoolState();
 		state.set(pos);
 		stateList.push(state);
 	}
 
 	@Override
 	public void setToHash(long hash) {
-		S state = statePool.get();
+		S state = myGame.getPoolState();
 		myGame.hashToState(hash, state);
 		setToState(state);
-		statePool.release(state);
+		myGame.release(state);
 	}
 
 	@Override
 	public void undoMove() {
 		stateSetPool.release(moveLists.pop());
-		statePool.release(stateList.pop());
+		myGame.release(stateList.pop());
 	}
 
 	@Override

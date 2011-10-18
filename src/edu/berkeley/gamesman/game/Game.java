@@ -8,6 +8,8 @@ import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.util.Pair;
+import edu.berkeley.gamesman.util.qll.Factory;
+import edu.berkeley.gamesman.util.qll.Pool;
 
 /**
  * Public interface that all Games must implement to be solvable
@@ -23,6 +25,46 @@ public abstract class Game<S extends State> {
 	 * The configuration object associated with this game
 	 */
 	protected final Configuration conf;
+
+	private final Pool<S> statePool = new Pool<S>(new Factory<S>() {
+
+		@Override
+		public S newObject() {
+			return newState();
+		}
+
+		@Override
+		public void reset(S t) {
+		}
+
+	});
+
+	private final Pool<S[]> childStateArrayPool = new Pool<S[]>(
+			new Factory<S[]>() {
+
+				@Override
+				public S[] newObject() {
+					return newStateArray(maxChildren());
+				}
+
+				@Override
+				public void reset(S[] t) {
+				}
+			});
+
+	private final Pool<Record> recordPool = new Pool<Record>(
+			new Factory<Record>() {
+
+				@Override
+				public Record newObject() {
+					return newRecord();
+				}
+
+				@Override
+				public void reset(Record t) {
+				}
+
+			});
 
 	/**
 	 * @param conf
@@ -386,6 +428,30 @@ public abstract class Game<S extends State> {
 		return new Record(conf);
 	}
 
+	public final Record getPoolRecord() {
+		return recordPool.get();
+	}
+
+	public final void release(Record r) {
+		recordPool.release(r);
+	}
+
+	public final S getPoolState() {
+		return statePool.get();
+	}
+
+	public final void release(S state) {
+		statePool.release(state);
+	}
+
+	public final S[] getPoolChildStateArray() {
+		return childStateArrayPool.get();
+	}
+
+	public final void release(S[] childStateArray) {
+		childStateArrayPool.release(childStateArray);
+	}
+
 	/**
 	 * A new array of record objects
 	 * 
@@ -457,6 +523,7 @@ public abstract class Game<S extends State> {
 
 	/**
 	 * Synchronizes the call to startingPositions in case necessary
+	 * 
 	 * @return A collection of all possible starting positions
 	 */
 	public synchronized Collection<S> synchronizedStartingPositions() {

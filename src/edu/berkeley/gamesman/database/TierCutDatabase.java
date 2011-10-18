@@ -20,45 +20,6 @@ public final class TierCutDatabase extends Database {
 	private final TierGame myTierGame;
 	private final boolean[] inDatabase;
 	private final Database inner;
-	private final Pool<Record> recordPool = new Pool<Record>(
-			new Factory<Record>() {
-
-				@Override
-				public Record newObject() {
-					return myTierGame.newRecord();
-				}
-
-				@Override
-				public void reset(Record t) {
-				}
-
-			});
-	private final Pool<TierState> statePool = new Pool<TierState>(
-			new Factory<TierState>() {
-
-				@Override
-				public TierState newObject() {
-					return myTierGame.newState();
-				}
-
-				@Override
-				public void reset(TierState t) {
-				}
-
-			});
-	private final Pool<TierState[]> childStatePool = new Pool<TierState[]>(
-			new Factory<TierState[]>() {
-
-				@Override
-				public TierState[] newObject() {
-					return myTierGame.newStateArray(myTierGame.maxChildren());
-				}
-
-				@Override
-				public void reset(TierState[] t) {
-				}
-
-			});
 
 	public TierCutDatabase(String uri, Configuration conf,
 			long firstRecordIndex, long numRecords, boolean reading,
@@ -115,19 +76,19 @@ public final class TierCutDatabase extends Database {
 			// return super.readRecord(dh, recordIndex);
 			return inner.readRecord(dh, recordIndex);
 		} else {
-			TierState pos = statePool.get();
+			TierState pos = myTierGame.getPoolState();
 			myTierGame.hashToState(recordIndex, pos);
 			Value value = myTierGame.primitiveValue(pos);
 			if (value != Value.UNDECIDED) {
-				Record myRecord = recordPool.get();
+				Record myRecord = myTierGame.getPoolRecord();
 				myRecord.value = value;
 				myRecord.remoteness = 0;
 				long val = myTierGame.recordToLong(pos, myRecord);
-				recordPool.release(myRecord);
-				statePool.release(pos);
+				myTierGame.release(myRecord);
+				myTierGame.release(pos);
 				return val;
 			} else {
-				statePool.release(pos);
+				myTierGame.release(pos);
 				return missingTierSolve(dh, recordIndex);
 			}
 		}
@@ -139,11 +100,12 @@ public final class TierCutDatabase extends Database {
 		if (inner instanceof SplitDatabase)
 			setHolding = ((SplitDatabase) inner).setHolding(true);
 		long hash = recordIndex;
-		TierState pos = statePool.get();
+		TierState pos = myTierGame.getPoolState();
 		myTierGame.hashToState(hash, pos);
-		TierState[] childStates = childStatePool.get();
+		TierState[] childStates = myTierGame.getPoolChildStateArray();
 		int numChildren = myTierGame.validMoves(pos, childStates);
-		Record myRecord = recordPool.get(), moveRecord = recordPool.get();
+		Record myRecord = myTierGame.getPoolRecord(), moveRecord = myTierGame
+				.getPoolRecord();
 		myRecord.value = Value.UNDECIDED;
 		for (int i = 0; i < numChildren; i++) {
 			TierState childState = childStates[i];
@@ -156,10 +118,10 @@ public final class TierCutDatabase extends Database {
 				myRecord.set(moveRecord);
 		}
 		long val = myTierGame.recordToLong(pos, myRecord);
-		recordPool.release(myRecord);
-		recordPool.release(moveRecord);
-		childStatePool.release(childStates);
-		statePool.release(pos);
+		myTierGame.release(myRecord);
+		myTierGame.release(moveRecord);
+		myTierGame.release(childStates);
+		myTierGame.release(pos);
 		if (setHolding)
 			((SplitDatabase) inner).setHolding(false);
 		return val;
