@@ -1,6 +1,14 @@
 package edu.berkeley.gamesman.core;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.LineNumberReader;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Properties;
 import java.util.Set;
@@ -66,6 +74,7 @@ public final class Configuration {
 	 */
 	public Configuration(Properties props) throws ClassNotFoundException {
 		this.props = props;
+		Properties p = new Properties();
 		String gamename = getProperty("gamesman.game");
 		String[] gamenames = gamename.split(":");
 		gamename = gamenames[gamenames.length - 1];

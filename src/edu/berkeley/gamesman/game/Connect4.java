@@ -3,12 +3,14 @@ package edu.berkeley.gamesman.game;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import edu.berkeley.gamesman.core.*;
+import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.Record;
+import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.cache.C4Cache;
 import edu.berkeley.gamesman.game.util.BitSetBoard;
-import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.game.util.PieceRearranger;
+import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.util.ExpCoefs;
 import edu.berkeley.gamesman.util.Pair;
 

@@ -6,8 +6,8 @@ import java.util.Collection;
 import java.util.HashMap;
 
 import edu.berkeley.gamesman.core.Configuration;
-import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.core.State;
+import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.hasher.PermutationHash;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;

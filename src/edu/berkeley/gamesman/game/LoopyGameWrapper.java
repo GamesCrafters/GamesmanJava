@@ -1,14 +1,13 @@
 package edu.berkeley.gamesman.game;
 
-import java.util.Collection;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
-import edu.berkeley.gamesman.core.Value;
-
 import edu.berkeley.gamesman.core.State;
+import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.qll.Factory;
 import edu.berkeley.gamesman.util.qll.Pool;

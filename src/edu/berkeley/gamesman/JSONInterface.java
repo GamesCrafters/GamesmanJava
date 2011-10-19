@@ -1,23 +1,22 @@
 package edu.berkeley.gamesman;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-
-import edu.berkeley.gamesman.core.*;
-import edu.berkeley.gamesman.database.Database;
-import edu.berkeley.gamesman.database.DatabaseHandle;
-import edu.berkeley.gamesman.game.Game;
-import edu.berkeley.gamesman.util.DebugFacility;
-import edu.berkeley.gamesman.util.Pair;
-import edu.berkeley.gamesman.util.Util;
-
-import edu.berkeley.gamesman.thrift.*;
-import edu.berkeley.gamesman.thrift.GamestateRequestHandler.Iface;
 
 import org.apache.thrift.TException;
 import org.apache.thrift.server.TServer;
@@ -25,6 +24,22 @@ import org.apache.thrift.server.TThreadPoolServer;
 import org.apache.thrift.transport.TServerSocket;
 import org.apache.thrift.transport.TServerTransport;
 import org.apache.thrift.transport.TTransportException;
+
+import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.Record;
+import edu.berkeley.gamesman.core.State;
+import edu.berkeley.gamesman.core.Value;
+import edu.berkeley.gamesman.database.Database;
+import edu.berkeley.gamesman.database.DatabaseHandle;
+import edu.berkeley.gamesman.game.Game;
+import edu.berkeley.gamesman.thrift.GamestateRequestHandler;
+import edu.berkeley.gamesman.thrift.GamestateRequestHandler.Iface;
+import edu.berkeley.gamesman.thrift.GamestateResponse;
+import edu.berkeley.gamesman.thrift.GetMoveResponse;
+import edu.berkeley.gamesman.thrift.GetNextMoveResponse;
+import edu.berkeley.gamesman.util.DebugFacility;
+import edu.berkeley.gamesman.util.Pair;
+import edu.berkeley.gamesman.util.Util;
 
 /**
  * Basic JSON interface for web app usage

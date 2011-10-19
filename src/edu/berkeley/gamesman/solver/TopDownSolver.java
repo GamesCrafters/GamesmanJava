@@ -2,13 +2,17 @@ package edu.berkeley.gamesman.solver;
 
 import java.io.IOException;
 
-import edu.berkeley.gamesman.core.*;
+import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.Record;
+import edu.berkeley.gamesman.core.State;
+import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.game.TopDownGame;
 import edu.berkeley.gamesman.game.TopDownMutaGame;
-import edu.berkeley.gamesman.util.*;
+import edu.berkeley.gamesman.util.DebugFacility;
+import edu.berkeley.gamesman.util.Util;
 
 /**
  * A solver for top-down mutable games

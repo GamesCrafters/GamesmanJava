@@ -3,7 +3,6 @@ package edu.berkeley.gamesman.util;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import edu.berkeley.gamesman.util.GZIPOutputStream;
 
 /**
  * A stream which zips into chunks prefaced by their size and then writes out to

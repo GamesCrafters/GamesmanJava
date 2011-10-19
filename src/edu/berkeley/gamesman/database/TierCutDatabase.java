@@ -11,8 +11,6 @@ import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.util.Util;
-import edu.berkeley.gamesman.util.qll.Factory;
-import edu.berkeley.gamesman.util.qll.Pool;
 
 public final class TierCutDatabase extends Database {
 

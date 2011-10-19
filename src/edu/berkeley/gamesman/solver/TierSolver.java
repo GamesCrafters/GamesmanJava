@@ -3,7 +3,9 @@ package edu.berkeley.gamesman.solver;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
-import edu.berkeley.gamesman.core.*;
+import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.Record;
+import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.TierGame;
@@ -11,8 +13,8 @@ import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Progressable;
 import edu.berkeley.gamesman.util.Util;
-import edu.berkeley.gamesman.util.qll.Pool;
 import edu.berkeley.gamesman.util.qll.Factory;
+import edu.berkeley.gamesman.util.qll.Pool;
 
 /**
  * A tier solver solves a TierGame by taking advantage of its tier structure. It

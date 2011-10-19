@@ -3,7 +3,6 @@ package edu.berkeley.gamesman.game;
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Value;
-import edu.berkeley.gamesman.game.AlignmentState;
 
 /**
  * @author Kevin, Nancy

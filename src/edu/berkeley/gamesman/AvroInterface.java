@@ -1,8 +1,20 @@
 package edu.berkeley.gamesman;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLConnection;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -12,18 +24,20 @@ import org.apache.avro.ipc.AvroRemoteException;
 import org.apache.avro.ipc.HttpServer;
 import org.apache.avro.specific.SpecificResponder;
 
-import edu.berkeley.gamesman.core.*;
+import edu.berkeley.gamesman.avro.Fields;
+import edu.berkeley.gamesman.avro.GamesmanProvider;
+import edu.berkeley.gamesman.avro.PositionValue;
+import edu.berkeley.gamesman.avro.VariantSupport;
+import edu.berkeley.gamesman.core.Configuration;
+import edu.berkeley.gamesman.core.Record;
+import edu.berkeley.gamesman.core.State;
+import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.util.DebugFacility;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.Util;
-
-import edu.berkeley.gamesman.avro.Fields;
-import edu.berkeley.gamesman.avro.GamesmanProvider;
-import edu.berkeley.gamesman.avro.PositionValue;
-import edu.berkeley.gamesman.avro.VariantSupport;
 
 /**
  * Basic JSON interface for web app usage
