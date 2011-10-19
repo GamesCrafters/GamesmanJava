@@ -12,6 +12,10 @@ import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.util.Util;
 
+/**
+ * A {@link Database} wrapper for tier games that supports having a number of
+ * its tiers missing. Values in the missing tiers are solved for upon request.
+ */
 public final class TierCutDatabase extends Database {
 
 	private final String uri;
@@ -71,13 +75,14 @@ public final class TierCutDatabase extends Database {
 			throws IOException {
 		int tier = myTierGame.hashToTier(recordIndex);
 		if (shouldBeInDatabase(tier)) {
-			// return super.readRecord(dh, recordIndex);
 			return inner.readRecord(dh, recordIndex);
 		} else {
+			// Value not in DB, so solve for it.
 			TierState pos = myTierGame.getPoolState();
 			myTierGame.hashToState(recordIndex, pos);
 			Value value = myTierGame.primitiveValue(pos);
 			if (value != Value.UNDECIDED) {
+				// Primitive position, so just return it.
 				Record myRecord = myTierGame.getPoolRecord();
 				myRecord.value = value;
 				myRecord.remoteness = 0;
@@ -86,36 +91,53 @@ public final class TierCutDatabase extends Database {
 				myTierGame.release(pos);
 				return val;
 			} else {
+				// Perform a solve for the missing tiers.
 				myTierGame.release(pos);
 				return missingTierSolve(dh, recordIndex);
 			}
 		}
 	}
 
+	/**
+	 * Solves for the value of the state corresponding to the given index.
+	 * 
+	 * @param dh
+	 *            A handle to the database
+	 * @param recordIndex
+	 *            The hash of the game state where the record should be read
+	 * @return The solved hash of the record corresponding to the given index
+	 * @throws IOException
+	 */
 	private long missingTierSolve(DatabaseHandle dh, long recordIndex)
 			throws IOException {
+		// Keep the underlying database open.
 		boolean setHolding = false;
 		if (inner instanceof SplitDatabase)
 			setHolding = ((SplitDatabase) inner).setHolding(true);
-		long hash = recordIndex;
+		// Initialize a TierState from the index.
 		TierState pos = myTierGame.getPoolState();
-		myTierGame.hashToState(hash, pos);
+		myTierGame.hashToState(recordIndex, pos);
+		// Get the valid moves.
 		TierState[] childStates = myTierGame.getPoolChildStateArray();
 		int numChildren = myTierGame.validMoves(pos, childStates);
-		Record myRecord = myTierGame.getPoolRecord(), moveRecord = myTierGame
-				.getPoolRecord();
+		Record myRecord = myTierGame.getPoolRecord();
 		myRecord.value = Value.UNDECIDED;
-		for (int i = 0; i < numChildren; i++) {
-			TierState childState = childStates[i];
+		Record moveRecord = myTierGame.getPoolRecord();
+		// Loops through children and calculates the current state's value.
+		for (int childIndex = 0; childIndex < numChildren; childIndex++) {
+			TierState childState = childStates[childIndex];
 			long childHash = myTierGame.stateToHash(childState);
+			// Retrieve the record for child's state.
 			long recordLong = readRecord(dh, childHash);
 			myTierGame.longToRecord(childState, recordLong, moveRecord);
 			moveRecord.previousPosition();
+			// Set current record to be the best of current and child.
 			if (myRecord.value == Value.UNDECIDED
 					|| moveRecord.compareTo(myRecord) > 0)
 				myRecord.set(moveRecord);
 		}
 		long val = myTierGame.recordToLong(pos, myRecord);
+		// Clean up resources.
 		myTierGame.release(myRecord);
 		myTierGame.release(moveRecord);
 		myTierGame.release(childStates);
