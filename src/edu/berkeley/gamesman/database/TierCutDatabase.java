@@ -4,6 +4,11 @@ import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Stack;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
@@ -147,12 +152,159 @@ public final class TierCutDatabase extends Database {
 		return val;
 	}
 
+	/**
+	 * Solves for the value of the state corresponding to the given index. This
+	 * is an optimized mini-max solve that retrieves values from the next
+	 * available tier, sorts them, and generates the record value.
+	 * 
+	 * @param dh
+	 *            A handle to the database
+	 * @param recordIndex
+	 *            The hash of the game state where the record should be read
+	 * @return The solved hash of the record corresponding to the given index
+	 * @throws IOException
+	 */
+	private long optimizedMissingTierSolve(DatabaseHandle dh, long recordIndex)
+			throws IOException {
+		// Keep the underlying database open.
+		boolean setHolding = false;
+		if (inner instanceof SplitDatabase)
+			setHolding = ((SplitDatabase) inner).setHolding(true);
+		Map<Long, Long> nextTierRecords = getNextTierRecords(dh, recordIndex);
+		// Close the database if needed.
+		if (setHolding)
+			((SplitDatabase) inner).setHolding(false);
+		return getRecordValue(nextTierRecords, recordIndex);
+	}
+
+	/**
+	 * Retrieves for the record of the state corresponding to the given state
+	 * hash.
+	 * 
+	 * @param cachedDb
+	 *            a cached copy of the database (recordIndex, recordLong)
+	 *            containing the record. If it has cut tiers, a top-down solve
+	 *            will be performed to solve for the record
+	 * @param initialStateHash
+	 *            the state hash of the state to retrieve a record for
+	 * @return
+	 */
+	private long getRecordValue(Map<Long, Long> cachedDb, long initialStateHash) {
+		if (cachedDb.containsKey(initialStateHash)) {
+			return cachedDb.get(initialStateHash);
+		} else {
+			// Value not in DB, so solve for it.
+			TierState pos = myTierGame.getPoolState();
+			myTierGame.hashToState(initialStateHash, pos);
+			Value value = myTierGame.primitiveValue(pos);
+			if (value != Value.UNDECIDED) {
+				// Primitive position, so just return it.
+				Record myRecord = myTierGame.getPoolRecord();
+				myRecord.value = value;
+				myRecord.remoteness = 0;
+				long val = myTierGame.recordToLong(pos, myRecord);
+				myTierGame.release(myRecord);
+				myTierGame.release(pos);
+				return val;
+			} else {
+				// Get the valid moves.
+				TierState[] childStates = myTierGame.getPoolChildStateArray();
+				int numChildren = myTierGame.validMoves(pos, childStates);
+				// Perform a solve for the missing tiers.
+				Record myRecord = myTierGame.getPoolRecord();
+				myRecord.value = Value.UNDECIDED;
+				Record moveRecord = myTierGame.getPoolRecord();
+				for (int childIndex = 0; childIndex < numChildren; childIndex++) {
+					TierState childState = childStates[childIndex];
+					long childHash = myTierGame.stateToHash(childState);
+					// Retrieve the record for child's state.
+					long recordLong = getRecordValue(cachedDb, childHash);
+					myTierGame.longToRecord(childState, recordLong, moveRecord);
+					moveRecord.previousPosition();
+					// Set current record to be the best of current and child.
+					if (myRecord.value == Value.UNDECIDED
+							|| moveRecord.compareTo(myRecord) > 0)
+						myRecord.set(moveRecord);
+				}
+				long val = myTierGame.recordToLong(myRecord);
+				// Clean up resources.
+				myTierGame.release(myRecord);
+				myTierGame.release(moveRecord);
+				myTierGame.release(childStates);
+				myTierGame.release(pos);
+				return val;
+			}
+		}
+	}
+
+	/**
+	 * Retrieves a mapping of the TierState hashes on the next tier to
+	 * corresponding records.
+	 * 
+	 * @param dh
+	 *            A handle to the database
+	 * @param initialPos
+	 *            The original TierState to retrieve the next tier records from
+	 * @return The mapping between the next tier state hashes and their
+	 *         corresponding records
+	 * @throws IOException
+	 */
+	private Map<Long, Long> getNextTierRecords(DatabaseHandle dh,
+			long initialStateHash) throws IOException {
+		// Initialize pools.
+		TierState[] childStates = myTierGame.getPoolChildStateArray();
+		TierState curState = myTierGame.getPoolState();
+		// Initialize min-heap next tier states.
+		PriorityQueue<Long> nextTierStates = new PriorityQueue<Long>();
+
+		Stack<Long> stateQueue = new Stack<Long>();
+		stateQueue.add(initialStateHash);
+		while (!stateQueue.isEmpty()) {
+			long nextStateHash = stateQueue.pop();
+			int tier = myTierGame.hashToTier(nextStateHash);
+			if (shouldBeInDatabase(tier)) {
+				// Add to heap of last tier states.
+				nextTierStates.add(nextStateHash);
+			} else {
+				// Add the children to the queue.
+				myTierGame.hashToState(nextStateHash, curState);
+				int numChildren = myTierGame.validMoves(curState, childStates);
+				for (int childIndex = 0; childIndex < numChildren; childIndex++) {
+					stateQueue.push(myTierGame
+							.stateToHash(childStates[childIndex]));
+				}
+			}
+		}
+		myTierGame.release(childStates);
+		myTierGame.release(curState);
+		return getRecords(dh, nextTierStates);
+	}
+
+	/**
+	 * Retrieves all the records for the given TierState hashes.
+	 * 
+	 * @param dh
+	 *            A handle to the database
+	 * @param stateHashes
+	 *            The TierState hashes to retrieve the records from
+	 * @return A mapping of the given state hashes and the corresponding
+	 *         records.
+	 * @throws IOException
+	 */
+	private Map<Long, Long> getRecords(DatabaseHandle dh,
+			Collection<Long> stateHashes) throws IOException {
+		Map<Long, Long> nextTierRecords = new HashMap<Long, Long>();
+		for (Long stateHash : stateHashes) {
+			nextTierRecords.put(stateHash, inner.readRecord(dh, stateHash));
+		}
+		return nextTierRecords;
+	}
+
 	@Override
 	public void writeRecord(DatabaseHandle dh, long recordIndex, long r)
 			throws IOException {
 		int tier = myTierGame.hashToTier(recordIndex);
 		if (shouldBeInDatabase(tier)) {
-			// super.writeRecord(dh, recordIndex, r);
 			inner.writeRecord(dh, recordIndex, r);
 		}
 	}
