@@ -15,6 +15,7 @@ public final class DatabaseLogic {
 	}
 
 	public long getByteIndex(long recordIndex) {
+		assert recordIndex >= 0;
 		return getNumBytes(recordIndex);
 	}
 

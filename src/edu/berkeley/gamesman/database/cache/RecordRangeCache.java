@@ -74,10 +74,12 @@ public class RecordRangeCache {
 	}
 
 	public long readRecord(long recordIndex) {
+		assert recordIndex < firstRecordIndex + numRecords;
 		return readRecordFromByteIndex(myLogic.getByteIndex(recordIndex));
 	}
 
 	public long readRecordFromByteIndex(long byteIndex) {
+		assert ((byteIndex - firstByteIndex) & ~(long) Integer.MAX_VALUE) == 0;
 		return myLogic.getRecord(recordBytes,
 				(int) (byteIndex - firstByteIndex));
 	}

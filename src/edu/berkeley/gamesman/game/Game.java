@@ -526,7 +526,7 @@ public abstract class Game<S extends State> {
 	 * 
 	 * @return A collection of all possible starting positions
 	 */
-	public synchronized Collection<S> synchronizedStartingPositions() {
+	public final synchronized Collection<S> synchronizedStartingPositions() {
 		return startingPositions();
 	}
 }

@@ -226,4 +226,28 @@ public class BitSetBoard {
 		}
 		return str.toString();
 	}
+
+	public void setPiece(int row, int col, char c) {
+		removePiece(row, col);
+		if (c != ' ')
+			addPiece(row, col, c);
+	}
+
+	public char getPiece(int row, int col) {
+		if (usesLong) {
+			if ((xPlayerLong & (1L << getBit(row, col))) != 0)
+				return 'X';
+			else if ((oPlayerLong & (1L << getBit(row, col))) != 0)
+				return 'O';
+			else
+				return ' ';
+		} else {
+			if (xPlayer.testBit(getBit(row, col)))
+				return 'X';
+			else if (oPlayer.testBit(getBit(row, col)))
+				return 'O';
+			else
+				return ' ';
+		}
+	}
 }

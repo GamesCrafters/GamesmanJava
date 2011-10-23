@@ -601,4 +601,29 @@ public final class Util {
 		}
 		return intVals;
 	}
+
+	/**
+	 * Determines whether two array segments are equal
+	 * 
+	 * @param arr1
+	 *            The first array
+	 * @param off1
+	 *            The offset into the first array
+	 * @param arr2
+	 *            The second array
+	 * @param off2
+	 *            The offset into the second array
+	 * @param len
+	 *            The length of each array to compare
+	 * @return Whether arr1 and arr2 match from off1 to off1+len and off2 to
+	 *         off2+len
+	 */
+	public static boolean arraysEquals(int[] arr1, int off1, int[] arr2,
+			int off2, int len) {
+		for (int i = 0; i < len; i++) {
+			if (arr1[off1++] != arr2[off2++])
+				return false;
+		}
+		return true;
+	}
 }
