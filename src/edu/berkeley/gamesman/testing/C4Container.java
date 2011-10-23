@@ -23,6 +23,7 @@ import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.Connect4;
 import edu.berkeley.gamesman.game.Game;
+import edu.berkeley.gamesman.game.TierGame;
 
 /**
  * A testing class for playing against a perfect play database
@@ -116,7 +117,7 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 		Game<?> game = conf.getGame();
 		Record r = game.newRecord();
 		DatabaseHandle fdHandle = db.getHandle(true);
-		Connect4 g = (Connect4) game;
+		TierGame g = (TierGame) game;
 		g.longToRecord(g.hashToState(0), db.readRecord(fdHandle, 0), r);
 		System.out.println(r);
 		DisplayFour df = new DisplayFour(height, width);
