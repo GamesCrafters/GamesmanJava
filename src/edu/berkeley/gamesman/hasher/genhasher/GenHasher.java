@@ -6,7 +6,7 @@ import edu.berkeley.gamesman.hasher.cachehasher.CacheMove;
 
 /**
  * A very generalized hasher for sequences where it's possible to count the
- * remaining given a prefix
+ * number of ways of completing a given sequence subject to constraints
  * 
  * @author dnspies
  * @param <S>
@@ -16,11 +16,11 @@ public abstract class GenHasher<S extends GenState> {
 
 	private static boolean superAsserts = false;
 	/**
-	 * 
+	 * The length of the sequences
 	 */
 	public final int numElements;
 	/**
-	 * 
+	 * The number of possible digits for each element of the sequence
 	 */
 	public final int digitBase;
 
@@ -50,14 +50,22 @@ public abstract class GenHasher<S extends GenState> {
 
 	/**
 	 * @param numElements
+	 *            The length of the sequences
 	 * @param digitBase
-	 * @param initState
+	 *            The number of possible digits for each element of the sequence
 	 */
 	public GenHasher(int numElements, int digitBase) {
 		this.numElements = numElements;
 		this.digitBase = digitBase;
 	}
 
+	/**
+	 * Hashes a given state
+	 * 
+	 * @param state
+	 *            The state to be hashed
+	 * @return The hash of the state
+	 */
 	public final long hash(S state) {
 		assert validTest(state);
 		long hash = innerHash(state);
@@ -65,10 +73,24 @@ public abstract class GenHasher<S extends GenState> {
 		return hash;
 	}
 
+	/**
+	 * @param state
+	 *            If debugging is turned on, tests that the state is valid
+	 * @return Whether the state is valid
+	 */
 	protected final boolean validTest(S state) {
 		return !superAsserts || totalValid(state);
 	}
 
+	/**
+	 * Tests validity of the entire state (without making any assumtions).
+	 * Override this if valid() doesn't sufficiently check any state. It will
+	 * greatly simplify debugging
+	 * 
+	 * @param state
+	 *            The state to test
+	 * @return Whether the state is valid
+	 */
 	protected boolean totalValid(S state) {
 		return valid(state);
 	}
@@ -77,13 +99,26 @@ public abstract class GenHasher<S extends GenState> {
 		return !superAsserts || totalValidPref(state);
 	}
 
+	/**
+	 * Tests validity of state prefix without making assumptions. Override this
+	 * if validPref() doesn't sufficiently check any prefix. It will greatly
+	 * simplify debugging.
+	 * 
+	 * @param state
+	 *            The prefix to test
+	 * @return Whether the prefix is valid
+	 */
 	protected boolean totalValidPref(S state) {
 		return validPref(state);
 	}
 
 	/**
+	 * Compute the hash of the state. This method may be overridden for
+	 * efficiency purposes. It will be called by the hash method.
+	 * 
 	 * @param state
-	 * @return
+	 *            The state to hash
+	 * @return The hash of the state
 	 */
 	protected long innerHash(S state) {
 		S tempState = getPoolPref();
@@ -99,7 +134,9 @@ public abstract class GenHasher<S extends GenState> {
 
 	/**
 	 * @param state
-	 * @return
+	 *            Computes the hash contribution for the lowest digit in this
+	 *            prefix
+	 * @return The amount which this digit contributes to the hash
 	 */
 	protected long sigValue(S state) {
 		int val = state.leastSig();
@@ -114,14 +151,27 @@ public abstract class GenHasher<S extends GenState> {
 		return result;
 	}
 
+	/**
+	 * Unhashes a state and stores it in fillState
+	 * 
+	 * @param hash
+	 *            The hash of the state
+	 * @param fillState
+	 *            A state object to be filled
+	 */
 	public final void unhash(long hash, S fillState) {
 		innerUnhash(hash, fillState);
 		assert validTest(fillState);
 	}
 
 	/**
+	 * Unhashes a state and stores it in fillState. This method may be
+	 * overridden for efficiency purposes. It will be called by unhash.
+	 * 
 	 * @param hash
+	 *            The hash of the state
 	 * @param fillState
+	 *            A state object to be filled
 	 */
 	protected void innerUnhash(long hash, S fillState) {
 		fillState.clear();
@@ -134,9 +184,14 @@ public abstract class GenHasher<S extends GenState> {
 	}
 
 	/**
+	 * Determines the next digit for a given prefix and remaining hash to be
+	 * used
+	 * 
 	 * @param state
+	 *            The state to add the next digit to
 	 * @param hash
-	 * @return
+	 *            The remaining amount of hash to be used
+	 * @return The amount of hash which has been used
 	 */
 	protected long raiseLS(S state, long hash) {
 		long result = 0L;
@@ -151,18 +206,27 @@ public abstract class GenHasher<S extends GenState> {
 	}
 
 	/**
+	 * Takes a state with hash h and modifies it so it hashes to h+1
+	 * 
 	 * @param state
-	 * @return
+	 *            The state to modify
+	 * @return The index n of the smallest-index piece such that for all m>=n
+	 *         piece m was not changed.
 	 */
 	public final int step(S state) {
 		return step(state, 1);
 	}
 
 	/**
+	 * Takes a state with hash h and modifies it so it hashes to h+dir where dir
+	 * = +/- 1
+	 * 
 	 * @param state
+	 *            The state to modify
 	 * @param dir
-	 * @param changed
-	 * @return
+	 *            The direction to step
+	 * @return The index n of the smallest-index piece such that for all m>=n
+	 *         piece m was not changed.
 	 */
 	public final int step(S state, int dir) {
 		assert validTest(state);
@@ -172,9 +236,16 @@ public abstract class GenHasher<S extends GenState> {
 	}
 
 	/**
+	 * Takes a state with hash h and modifies it so it hashes to h+dir where dir
+	 * = +/- 1. You may override this method for efficiency purposes. It will be
+	 * called by step.
+	 * 
 	 * @param state
+	 *            The state to modify
 	 * @param dir
-	 * @return
+	 *            The direction to step
+	 * @return The index n of the smallest-index piece such that for all m>=n
+	 *         piece m was not changed.
 	 */
 	protected int innerStep(S state, int dir) {
 		return basicStep(state, dir);
@@ -206,12 +277,11 @@ public abstract class GenHasher<S extends GenState> {
 	}
 
 	/**
-	 * Returns whether the given state suffix is a suffix for any valid state
+	 * Returns whether the given state prefix is a prefix for any valid state
 	 * 
 	 * @param state
-	 *            The suffix
-	 * @param lastOnly
-	 * @return Whether there exists a state for which this suffix is valid
+	 *            The prefix
+	 * @return Whether there exists a state for which this prefix is valid
 	 */
 	protected boolean validPref(S state) {
 		return countCompletions(state) > 0;
@@ -247,6 +317,16 @@ public abstract class GenHasher<S extends GenState> {
 		assert validPrefTest(state);
 	}
 
+	/**
+	 * Resets the first element to the first valid digit. This should only be
+	 * called if trunc(state) followed by validPref(state) would return true
+	 * 
+	 * @param state
+	 *            The state to reset
+	 * @param startHigh
+	 *            Whether to start counting down from the top or (if false)
+	 *            counting up from the bottom
+	 */
 	protected final void resetValid(S state, boolean startHigh) {
 		state.resetLS(startHigh);
 		boolean inced = incToValid(state, startHigh ? -1 : 1);
@@ -254,6 +334,17 @@ public abstract class GenHasher<S extends GenState> {
 		assert validPrefTest(state);
 	}
 
+	/**
+	 * Increments the current digit until it reaches a position for which this
+	 * prefix is valid.
+	 * 
+	 * @param state
+	 *            The state to increment
+	 * @param dir
+	 *            The direction (-1 or 1)
+	 * @return true if it reaches a valid prefix. false if it exhausts all the
+	 *         remaining digits
+	 */
 	protected boolean incToValid(S state, int dir) {
 		while (!validPref(state)) {
 			boolean incred = state.incr(dir);
@@ -264,8 +355,14 @@ public abstract class GenHasher<S extends GenState> {
 	}
 
 	/**
+	 * Adds the lowest valid remaining digits on to make a valid complete
+	 * sequence
+	 * 
 	 * @param state
+	 *            The state to modify
 	 * @param startHigh
+	 *            Whether to add the highest possible digits or the lowest
+	 *            possible digits
 	 */
 	protected void validComplete(S state, boolean startHigh) {
 		while (!state.isComplete()) {
@@ -274,6 +371,14 @@ public abstract class GenHasher<S extends GenState> {
 		assert validTest(state);
 	}
 
+	/**
+	 * Counts the number of possible positions which have the given state prefix
+	 * (state.startAt indicates where the prefix starts).
+	 * 
+	 * @param state
+	 *            The prefix to count.
+	 * @return The number of ways of completing this prefix
+	 */
 	protected final long countCompletions(S state) {
 		if (state.validLS())
 			return innerCountCompletions(state);
@@ -282,12 +387,13 @@ public abstract class GenHasher<S extends GenState> {
 	}
 
 	/**
-	 * Counts the number of possible positions which have the given state suffix
-	 * (state.startAt indicates where the suffix starts).
+	 * Counts the number of ways of completing a given state-prefix. This method
+	 * is crucial to being able to hash. Note that if state is complete, then
+	 * this method should return 1 (for valid) or 0 (for invalid).
 	 * 
 	 * @param state
 	 *            A (possibly incomplete) state
-	 * @return The number of positions possible with the given state suffix
+	 * @return The number of positions possible with the given state prefix
 	 */
 	protected abstract long innerCountCompletions(S state);
 
@@ -304,6 +410,9 @@ public abstract class GenHasher<S extends GenState> {
 		return allPositions;
 	}
 
+	/**
+	 * @return A new complete valid instance of type S
+	 */
 	public final S newState() {
 		S res = innerNewState();
 		assert validTest(res);
@@ -312,6 +421,8 @@ public abstract class GenHasher<S extends GenState> {
 
 	/**
 	 * Must return a complete state
+	 * 
+	 * @return Returns a new state
 	 */
 	protected abstract S innerNewState();
 
