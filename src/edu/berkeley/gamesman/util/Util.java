@@ -561,6 +561,28 @@ public final class Util {
 		}
 	}
 
+	/**
+	 * Separates out a range into splits according to the following
+	 * specifications.<br />
+	 * 1. If num>minSplitSize, then all splits have size at least minSplitSize.<br />
+	 * 2. If num/minSplits>minSplitSize, then the number of splits is at least
+	 * minSplits.<br />
+	 * 3. If num/minSplits>preferredSplitSize, then separates out range into
+	 * chunks of approximately preferredSplitSize<br />
+	 * 
+	 * @param start
+	 *            First element in range
+	 * @param num
+	 *            Number of elements in range
+	 * @param minSplitSize
+	 *            The minimum split size (see above)
+	 * @param minSplits
+	 *            The minimum number of splits (see above)
+	 * @param preferredSplitSize
+	 *            The prefferred size of each split (see above)
+	 * @return An array of n+1 longs ordered at the starts of each of n splits
+	 *         (the last element is just start+num)
+	 */
 	public static long[] getSplits(long start, long num, long minSplitSize,
 			int minSplits, long preferredSplitSize) {
 		minSplits = Math.max(minSplits, 1);

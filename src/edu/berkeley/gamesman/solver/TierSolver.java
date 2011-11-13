@@ -207,6 +207,22 @@ public class TierSolver extends Solver {
 			}
 	}
 
+	/**
+	 * To be used for solving a small range and not the entire game
+	 * 
+	 * @param conf
+	 *            The configuration object
+	 * @param db
+	 *            The database
+	 * @param tier
+	 *            The tier I'm working in
+	 * @param firstHash
+	 *            The first hash of the range to solve
+	 * @param numHashes
+	 *            The number of positions to solve
+	 * @param progress
+	 *            An object to report progress to (or null if unnecessary)
+	 */
 	public TierSolver(Configuration conf, Database db, int tier,
 			long firstHash, long numHashes, Progressable progress) {
 		super(conf, db);
