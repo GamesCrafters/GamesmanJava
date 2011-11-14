@@ -66,6 +66,19 @@ public abstract class Game<S extends State> {
 
 			});
 
+	private final Pool<Record[]> recordArrayPool = new Pool<Record[]>(
+			new Factory<Record[]>() {
+
+				@Override
+				public Record[] newObject() {
+					return newRecordArray(maxChildren());
+				}
+
+				@Override
+				public void reset(Record[] t) {
+				}
+			});
+
 	/**
 	 * @param conf
 	 *            The configuration object
@@ -450,6 +463,14 @@ public abstract class Game<S extends State> {
 
 	public final void release(S[] childStateArray) {
 		childStateArrayPool.release(childStateArray);
+	}
+
+	public final Record[] getPoolRecordArray() {
+		return recordArrayPool.get();
+	}
+
+	public final void release(Record[] recordArray) {
+		recordArrayPool.release(recordArray);
 	}
 
 	/**

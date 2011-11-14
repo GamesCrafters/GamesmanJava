@@ -90,7 +90,8 @@ public class TierSolver extends Solver {
 				myGame.getState(currentState);
 				Value v = myGame.primitiveValue();
 				if (v == Value.UNDECIDED) {
-					evaluateAndFetchChildren(currentValue);
+					int numChildren = fetchChildren(currentValue);
+					currentValue.set(combineChildren(numChildren));
 					store(hash, currentValue);
 				} else {
 					currentValue.value = v;
@@ -107,13 +108,13 @@ public class TierSolver extends Solver {
 
 		/**
 		 * Calculates the children of the current state and fetches them from
-		 * the database. It then flips, combines them and sets the passed record
-		 * to the "best" of the children.
+		 * the database.
 		 * 
 		 * @param currentValue
 		 *            The record to store the result in
+		 * @return The number of children for this position
 		 */
-		protected void evaluateAndFetchChildren(Record currentValue) {
+		protected int fetchChildren(Record currentValue) {
 			int numChildren = myGame.validMoves(childStates);
 			for (int i = 0; i < numChildren; i++) {
 				try {
@@ -125,7 +126,7 @@ public class TierSolver extends Solver {
 					throw new Error(e);
 				}
 			}
-			currentValue.set(combineChildren(numChildren));
+			return numChildren;
 		}
 
 		/**

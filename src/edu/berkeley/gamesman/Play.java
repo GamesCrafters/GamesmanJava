@@ -99,6 +99,7 @@ public final class Play {
 		}
 		if (g.strictPrimitiveValue(position) != Value.UNDECIDED) {
 			System.out.println(g.displayState(position));
+			System.out.println(g.stateToHash(position));
 			System.out.println("Game over");
 		}
 	}

@@ -238,6 +238,11 @@ public final class CacheHasher<S extends GenState> {
 		mainHasher.set(state, seq);
 	}
 
+	public void set(int[] seq) {
+		set(myState, seq);
+		setPosition();
+	}
+
 	public long boundNextChild(int whichChild, int dir) {
 		return boundNextChild(moves[whichChild], dir);
 	}

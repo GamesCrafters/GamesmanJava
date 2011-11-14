@@ -1,8 +1,10 @@
 package edu.berkeley.gamesman.solver;
 
+import java.util.LinkedList;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Future;
 
 import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.database.Database;
@@ -28,13 +30,17 @@ public abstract class Solver {
 			try {
 				inner.run();
 			} catch (Throwable t) {
-				if (failed == null) {
-					failed = t;
-					mainThread.interrupt();
-				}
+				fail(t);
+				mainThread.interrupt();
 			}
 		}
 
+	}
+
+	private synchronized void fail(Throwable t) {
+		if (failed == null) {
+			failed = t;
+		}
 	}
 
 	/**
@@ -44,7 +50,7 @@ public abstract class Solver {
 	public static final long DEFAULT_MIN_SPLIT_SIZE = 1L << 12;
 	public static final long DEFAULT_PREFERRED_SPLIT_SIZE = 1L << 23;
 	protected final int nThreads;
-	private volatile Throwable failed = null;
+	private Throwable failed = null;
 	private Thread mainThread;
 	public final int stepSize;
 
@@ -95,42 +101,39 @@ public abstract class Solver {
 		mainThread = Thread.currentThread();
 		solverService = Executors.newFixedThreadPool(nThreads);
 		Runnable nextJob = null;
+		LinkedList<Future<?>> fQueue = new LinkedList<Future<?>>();
 		while (true) {
 			try {
 				nextJob = getNextJob();
 			} catch (InterruptedException e) {
-				if (failed == null)
-					failed = e;
+				fail(e);
 			}
 			if (failed != null)
 				error();
 			if (nextJob == null)
 				break;
 			else
-				solverService.execute(nextJob);
+				fQueue.add(solverService.submit(nextJob));
 		}
 		solverService.shutdown();
-		while (!solverService.isTerminated()) {
-			try {
-				solverService.awaitTermination(20, TimeUnit.SECONDS);
-			} catch (InterruptedException e) {
-				if (failed == null)
-					failed = e;
+		try {
+			while (!fQueue.isEmpty()) {
+				fQueue.remove().get();
 			}
-			if (failed != null)
-				error();
+		} catch (InterruptedException e) {
+			fail(e);
+		} catch (ExecutionException e) {
+			fail(e.getCause());
 		}
-		System.out.println("Solve completed in "
-				+ Util.millisToETA(System.currentTimeMillis() - startTime));
+		if (failed != null)
+			error();
+		else
+			System.out.println("Solve completed in "
+					+ Util.millisToETA(System.currentTimeMillis() - startTime));
 	}
 
 	private void error() {
 		solverService.shutdownNow();
-		if (failed instanceof Error) {
-			throw (Error) failed;
-		} else if (failed instanceof RuntimeException) {
-			throw (RuntimeException) failed;
-		} else
-			throw new Error(failed);
+		throw new Error(failed);
 	}
 }

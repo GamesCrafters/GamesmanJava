@@ -21,7 +21,6 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
-import edu.berkeley.gamesman.game.Connect4;
 import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.game.TierGame;
 
@@ -34,21 +33,14 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 		WindowListener {
 	private static final long serialVersionUID = -8073360248394686305L;
 
-	ConnectFour game;
+	private final ConnectFour game;
 
-	private Configuration conf;
+	private final JRadioButton xButton;
 
-	JRadioButton xButton;
+	private final JRadioButton oButton;
 
-	JRadioButton oButton;
-
-	/**
-	 * @param conf
-	 *            The configuration object
-	 */
-	public C4Container(Configuration conf) {
-		super();
-		this.conf = conf;
+	public C4Container(ConnectFour game, DisplayFour df) {
+		this.game = game;
 		setLayout(new BorderLayout());
 		JPanel jp = new JPanel();
 		jp.setLayout(new GridLayout(2, 3));
@@ -84,11 +76,7 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 		oButton.addActionListener(this);
 		jp.setFocusable(true);
 		jp.addKeyListener(this);
-	}
-
-	private void setGame(ConnectFour cf) {
-		add(cf.getDisplay(), BorderLayout.CENTER);
-		game = cf;
+		add(df);
 	}
 
 	/**
@@ -120,12 +108,11 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 		TierGame g = (TierGame) game;
 		g.longToRecord(g.hashToState(0), db.readRecord(fdHandle, 0), r);
 		System.out.println(r);
-		DisplayFour df = new DisplayFour(height, width);
-		ConnectFour cf = new ConnectFour(conf, db, df);
+		ConnectFour cf = new ConnectFour(conf, db);
+		DisplayFour df = new DisplayFour(cf);
 		JFrame jf = new JFrame();
 		Container c = jf.getContentPane();
-		C4Container c4c = new C4Container(conf);
-		c4c.setGame(cf);
+		C4Container c4c = new C4Container(cf, df);
 		c.add(c4c);
 		jf.addKeyListener(c4c);
 		jf.setFocusable(true);
@@ -137,9 +124,9 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 	}
 
 	public void actionPerformed(ActionEvent ae) {
-		game.compX = xButton.isSelected();
-		game.compO = oButton.isSelected();
+		game.setComp(xButton.isSelected(), oButton.isSelected());
 		game.startCompMove();
+		repaint();
 	}
 
 	public void keyPressed(KeyEvent arg0) {
@@ -150,13 +137,7 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 
 	public void keyTyped(KeyEvent ke) {
 		if (ke.getKeyChar() == 'r') {
-			for (int c = 0; c < game.gameWidth; c++) {
-				for (int r = 0; r < game.gameHeight; r++) {
-					game.getDisplay().slots[r][c].removeMouseListener(game);
-				}
-			}
-			setGame(new ConnectFour(conf, game.db, game.getDisplay(),
-					xButton.isSelected(), oButton.isSelected()));
+			game.reset();
 			repaint();
 		}
 	}
@@ -166,7 +147,7 @@ public class C4Container extends JPanel implements ActionListener, KeyListener,
 
 	public void windowClosed(WindowEvent e) {
 		try {
-			game.db.close();
+			game.closeDb();
 		} catch (IOException e1) {
 			throw new Error(e1);
 		}

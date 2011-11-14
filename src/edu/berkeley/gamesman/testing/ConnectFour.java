@@ -1,7 +1,5 @@
 package edu.berkeley.gamesman.testing;
 
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,7 +9,6 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
-import edu.berkeley.gamesman.game.Connect4;
 import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.util.Pair;
@@ -21,8 +18,8 @@ import edu.berkeley.gamesman.util.Pair;
  * 
  * @author dnspies
  */
-class ConnectFour implements MouseListener {
-	final char[][] board;
+class ConnectFour {
+	private final char[][] board;
 
 	private final TierGame game;
 
@@ -30,15 +27,13 @@ class ConnectFour implements MouseListener {
 
 	private char turn = 'X';
 
-	boolean compO;
+	private boolean compO;
 
-	boolean compX;
+	private boolean compX;
 
 	private boolean win = false;
 
-	private DisplayFour df;
-
-	Database db;
+	private Database db;
 
 	private static Random r = new Random();
 
@@ -51,11 +46,9 @@ class ConnectFour implements MouseListener {
 	/**
 	 * @param conf
 	 *            The configuration object
-	 * @param disfour
-	 *            The display board
 	 */
-	public ConnectFour(Configuration conf, Database db, DisplayFour disfour) {
-		this(conf, db, disfour, false, true);
+	public ConnectFour(Configuration conf, Database db) {
+		this(conf, db, false, true);
 	}
 
 	/**
@@ -68,8 +61,7 @@ class ConnectFour implements MouseListener {
 	 * @param cO
 	 *            Does the computer play as Black?
 	 */
-	public ConnectFour(Configuration conf, Database db, DisplayFour disfour,
-			boolean cX, boolean cO) {
+	public ConnectFour(Configuration conf, Database db, boolean cX, boolean cO) {
 		game = (TierGame) conf.getGame();
 		int c, r;
 		compX = cX;
@@ -78,23 +70,16 @@ class ConnectFour implements MouseListener {
 		gameWidth = Integer.parseInt(conf.getProperty("gamesman.game.width"));
 		board = new char[gameHeight][gameWidth];
 		this.db = db;
-		df = disfour;
-		for (c = 0; c < gameWidth; c++) {
-			for (r = 0; r < gameHeight; r++) {
-				df.slots[r][c].addMouseListener(this);
-			}
-		}
 		for (c = 0; c < gameWidth; c++) {
 			for (r = 0; r < gameHeight; r++) {
 				board[r][c] = ' ';
 			}
 			columnHeight[c] = 0;
 		}
-		df.setBoard(copy(board));
 		startCompMove();
 	}
 
-	boolean compTurn() {
+	private boolean compTurn() {
 		return (turn == 'O' && compO) || (turn == 'X' && compX);
 	}
 
@@ -107,44 +92,27 @@ class ConnectFour implements MouseListener {
 		else
 			turn = 'O';
 		columnHeight[move]++;
-		df.setBoard(copy(board));
-		df.paintBoard();
-		new Thread() {
-			public void run() {
-				if (nextRecord != null) {
-					System.out.println(nextRecord);
-					nextRecord = null;
-				} else {
-					TierState state = game.stringToState(arrToString(board));
-					Record r = game.newRecord();
-					DatabaseHandle fdHandle = db.getHandle(true);
-					try {
-						game.longToRecord(state, db.readRecord(fdHandle,
-								game.stateToHash(state)), r);
-					} catch (IOException e) {
-						throw new Error(e);
-					}
-					System.out.println(r);
-				}
-				if (!win())
-					new Thread() {
-						public void run() {
-							startCompMove();
-						}
-					}.start();
+		if (nextRecord != null) {
+			System.out.println(nextRecord);
+			nextRecord = null;
+		} else {
+			TierState state = game.stringToState(arrToString(board));
+			Record r = game.newRecord();
+			DatabaseHandle fdHandle = db.getHandle(true);
+			try {
+				game.longToRecord(state,
+						db.readRecord(fdHandle, game.stateToHash(state)), r);
+			} catch (IOException e) {
+				throw new Error(e);
 			}
-		}.start();
-
+			System.out.println(r);
+		}
+		if (!win())
+			startCompMove();
 	}
 
 	void startCompMove() {
 		if (compTurn() && !win()) {
-			if (compO && compX)
-				try {
-					Thread.sleep(500);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
 			game.setFromString(arrToString(board));
 			Collection<Pair<String, TierState>> moves = game.validMoves();
 			ArrayList<Pair<String, TierState>> listMoves = new ArrayList<Pair<String, TierState>>(
@@ -189,10 +157,6 @@ class ConnectFour implements MouseListener {
 		return s;
 	}
 
-	char getTurn() {
-		return turn;
-	}
-
 	private boolean win() {
 		int col, row, i;
 		boolean up, right, upright, downright;
@@ -220,7 +184,6 @@ class ConnectFour implements MouseListener {
 					else
 						System.out.println("Red wins");
 					win = true;
-					df.paintBoard();
 					return true;
 				}
 			}
@@ -232,41 +195,27 @@ class ConnectFour implements MouseListener {
 		return true;
 	}
 
-	private char[][] copy(char[][] b) {
-		int c, r;
-		char[][] rBoard = new char[b.length][];
-		for (r = 0; r < b.length; r++) {
-			rBoard[r] = new char[b[r].length];
-			for (c = 0; c < b[r].length; c++) {
-				rBoard[r][c] = b[r][c];
+	public void reset() {
+		for (int col = 0; col < gameWidth; col++) {
+			for (int row = 0; row < gameHeight; row++) {
+				board[row][col] = ' ';
 			}
+			columnHeight[col] = 0;
 		}
-		return rBoard;
+		win = false;
+		startCompMove();
 	}
 
-	public void mouseClicked(MouseEvent me) {
+	public char get(int row, int col) {
+		return board[row][col];
 	}
 
-	public void mousePressed(MouseEvent me) {
+	public void setComp(boolean compX, boolean compO) {
+		this.compX = compX;
+		this.compO = compO;
 	}
 
-	public void mouseReleased(MouseEvent me) {
-		Slot o = (Slot) me.getSource();
-		if (compTurn())
-			return;
-		makeMove(o.getCol());
-	}
-
-	public void mouseEntered(MouseEvent me) {
-	}
-
-	public void mouseExited(MouseEvent me) {
-	}
-
-	/**
-	 * @return The displayed board
-	 */
-	public DisplayFour getDisplay() {
-		return df;
+	public void closeDb() throws IOException {
+		db.close();
 	}
 }

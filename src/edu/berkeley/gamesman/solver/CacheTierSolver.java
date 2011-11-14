@@ -108,11 +108,11 @@ public class CacheTierSolver extends TierSolver {
 		}
 
 		@Override
-		protected void evaluateAndFetchChildren(Record currentValue) {
+		protected int fetchChildren(Record currentValue) {
 			int numChildren = myGame.validMoves(childStates, hints);
 			readCache.fetchChildren(currentState, numChildren, childStates,
 					hints, childRecords);
-			currentValue.set(combineChildren(numChildren));
+			return numChildren;
 		}
 
 		@Override
