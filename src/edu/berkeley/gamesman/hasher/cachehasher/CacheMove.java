@@ -89,4 +89,18 @@ public final class CacheMove {
 		}
 		return arrString.toString();
 	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof CacheMove) {
+			CacheMove otherMove = (CacheMove) obj;
+			return Arrays.deepEquals(changes, otherMove.changes);
+		} else
+			return false;
+	}
+
+	@Override
+	public int hashCode() {
+		return Arrays.deepHashCode(changes);
+	}
 }
