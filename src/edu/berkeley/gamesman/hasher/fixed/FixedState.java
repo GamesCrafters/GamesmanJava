@@ -8,7 +8,7 @@ public class FixedState extends CountingState {
 	private int inv;
 	private int invalidColCount;
 
-	public FixedState(FixedHasher myHasher) {
+	public FixedState(FixedHasher<?> myHasher) {
 		super(myHasher);
 		this.mults = myHasher;
 		if (numElements() > mults.numPieces(0))

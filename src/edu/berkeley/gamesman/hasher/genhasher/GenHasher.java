@@ -430,62 +430,164 @@ public abstract class GenHasher<S extends GenState> {
 		superAsserts = true;
 	}
 
+	/**
+	 * @return A state from the inner state pool. Use release to return it to
+	 *         the pool.
+	 */
 	public final S getPoolState() {
 		S state = statePool.get();
 		assert validTest(state);
 		return state;
 	}
 
+	/**
+	 * @return A state from the prefix pool. This one is not validated so it may
+	 *         be bad and doesn't need to be reset before being returned.
+	 */
 	protected final S getPoolPref() {
 		return interStatePool.get();
 	}
 
+	/**
+	 * Releases a state back to the pool. It should be valid and complete
+	 * 
+	 * @param poolState
+	 *            The state to release
+	 */
 	public final void release(S poolState) {
 		assert validTest(poolState);
 		assert poolState.hasHasher(this);
 		statePool.release(poolState);
 	}
 
+	/**
+	 * Releases a state back to the prefix pool. It does not need to be valid or
+	 * complete.
+	 * 
+	 * @param poolPref
+	 *            The state to release.
+	 */
 	protected final void releasePref(S poolPref) {
 		interStatePool.release(poolPref);
 	}
 
+	/**
+	 * @param state
+	 *            The state
+	 * @return The place where the prefix starts for this state
+	 */
 	protected final int getStart(GenState state) {
 		return state.getStart();
 	}
 
+	/**
+	 * This is equivalent to getStart(state)==0
+	 * 
+	 * @param state
+	 *            The state
+	 * @return Whether the state is complete.
+	 */
 	protected final boolean isComplete(S state) {
 		return state.isComplete();
 	}
 
+	/**
+	 * This is equivalent to get(getStart(state))
+	 * 
+	 * @param state
+	 *            The state
+	 * @return The value of the element at the start of this prefix
+	 */
 	protected final int leastSig(S state) {
 		return state.leastSig();
 	}
 
+	/**
+	 * Adds another element onto the prefix. (ie state.start--)
+	 * 
+	 * @param state
+	 *            The state to add to
+	 * @param startHigh
+	 *            Whether to make that element as high as possible (true) or as
+	 *            low as possible (false)
+	 */
 	protected final void addOn(S state, boolean startHigh) {
 		state.addOn(startHigh);
 	}
 
+	/**
+	 * Increments leastSig(state) by dir (dir==1 or -1) (This may be overridden
+	 * to increment to the next valid position)
+	 * 
+	 * @param state
+	 *            The state to increment
+	 * @param dir
+	 *            The direction to go (up or down)
+	 * @return Whether this digit is still in [0,digBase).
+	 */
 	protected final boolean incr(S state, int dir) {
 		return state.incr(dir);
 	}
 
+	/**
+	 * Removes an element from the prefix. (ie state.start++)
+	 * 
+	 * @param state
+	 *            The state
+	 */
 	protected final void trunc(S state) {
 		state.trunc();
 	}
 
+	/**
+	 * Removes all elements up to place from the prefix. <br />
+	 * <code>
+	 * while (getStart(state) &lt place) {<br />
+	 * &nbsp trunc(state);<br />
+	 * }<br />
+	 * </code>
+	 * 
+	 * @param state
+	 *            The state
+	 * @param place
+	 *            The place
+	 */
 	protected final void trunc(S state, int place) {
 		state.trunc(place);
 	}
 
+	/**
+	 * Adds ls onto the prefix (ie state[state.start--]=ls)
+	 * 
+	 * @param state
+	 *            The prefix to add to
+	 * @param ls
+	 *            The element to add
+	 */
 	protected final void addLS(S state, int ls) {
 		state.addLS(ls);
 	}
 
+	/**
+	 * Resets the prefix element at start to 0 or digBase-1 (may be overridden
+	 * to find first valid position)
+	 * 
+	 * @param state
+	 *            The state
+	 * @param startHigh
+	 *            Whether to go to digBase-1 (high=true) or 0 (low=false);
+	 */
 	protected final void resetLS(S state, boolean startHigh) {
 		state.resetLS(startHigh);
 	}
 
+	/**
+	 * Determines if this prefix is empty (ie getStart(state)==numElements)
+	 * 
+	 * @param state
+	 *            The state
+	 * @return If it's empty
+	 */
 	protected final boolean isEmpty(S state) {
 		return state.isEmpty();
 	}
@@ -494,22 +596,45 @@ public abstract class GenHasher<S extends GenState> {
 		return superAsserts;
 	}
 
+	/**
+	 * Takes a separate state (possibly from another hasher) and makes a move on
+	 * that state which it stores in childState
+	 * 
+	 * @param firstState
+	 *            The parent
+	 * @param move
+	 *            The move
+	 * @param childState
+	 *            The state in which to store the result
+	 */
 	public final void makeMove(GenState firstState, CacheMove move, S childState) {
 		childState.setOther(firstState);
-		// This is alright because set does not modify firstState or access any
-		// non-final methods which might modify firstState
+		// Theoretically someone could override matchSeq(s) in order to modify
+		// firstState. This would not be appropriately checked. There doesn't
+		// seem to be any way around that.
 		makeMove(childState, move);
 		assert validTest(childState);
 	}
 
 	/**
+	 * Steps steppingState until it reaches parentState+move. Returns the amount
+	 * by which the hash changes as a result.
+	 * 
 	 * @param steppingState
+	 *            The state to be modified
 	 * @param parentHasher
+	 *            The hasher for the parent state
 	 * @param parentState
+	 *            The parent state
 	 * @param move
+	 *            The move to search for
 	 * @param same
+	 *            The point at which all elements are known to be the same
+	 *            passed here (so nothing needs to be incremented)
 	 * @param dir
-	 * @return
+	 *            The direction in which to step
+	 * @return The amount by which the hash changed<br />
+	 *         TODO Check this is correct when dir==-1
 	 */
 	public final <T extends GenState> long stepTo(S steppingState,
 			GenHasher<T> parentHasher, T parentState, CacheMove move, int same,
@@ -539,11 +664,27 @@ public abstract class GenHasher<S extends GenState> {
 	}
 
 	/**
+	 * Puts a lower bound on the hash of the next child from move given a
+	 * starting parent state (or upper bound on hash of previous child if
+	 * dir==-1). In the general case the problem of finding it exactly appears
+	 * to be NP-complete (TODO Prove this) which is why this method only finds a
+	 * bound rather than finding it exactly although most specific instances
+	 * appear to have a polynomial-time shortcut. This method guarantees that if
+	 * you call it with dir == 1 for the start of a range and dir==-1 for the
+	 * end of a range, the produced range of children will be on the order of
+	 * the initial range.<br />
+	 * In particular if the start and end share a prefix which invalidates the
+	 * move, the returned range will have negative length
+	 * 
 	 * @param parentHasher
+	 *            The hasher for the parent state
 	 * @param parentState
+	 *            The parent state
 	 * @param move
+	 *            The move to search for
 	 * @param dir
-	 * @return
+	 *            The direction in which to search
+	 * @return The lower/upper bound for the child
 	 */
 	public final <T extends GenState> long getChildBound(
 			GenHasher<T> parentHasher, T parentState, CacheMove move, int dir) {
@@ -594,7 +735,7 @@ public abstract class GenHasher<S extends GenState> {
 		return result;
 	}
 
-	final void makeMove(GenState state, CacheMove move) {
+	private final void makeMove(GenState state, CacheMove move) {
 		for (int i = 0; i < move.numChanges; i++) {
 			if (state.get(move.getChangePlace(i)) == move.getChangeFrom(i))
 				state.set(move.getChangePlace(i), move.getChangeTo(i));
@@ -603,7 +744,7 @@ public abstract class GenHasher<S extends GenState> {
 		}
 	}
 
-	final void unmakeMove(GenState state, CacheMove move) {
+	private final void unmakeMove(GenState state, CacheMove move) {
 		for (int i = 0; i < move.numChanges; i++) {
 			if (state.get(move.getChangePlace(i)) == move.getChangeTo(i))
 				state.set(move.getChangePlace(i), move.getChangeFrom(i));
@@ -612,11 +753,26 @@ public abstract class GenHasher<S extends GenState> {
 		}
 	}
 
+	/**
+	 * Sets the state's internal ints to match seq
+	 * 
+	 * @param state
+	 *            The state to set
+	 * @param seq
+	 *            The sequence to match
+	 */
 	public final void set(S state, int[] seq) {
 		state.set(seq, 0);
 		assert validTest(state);
 	}
 
+	/**
+	 * Returns whether get(state,getStart(state)) is in [0,digBase)
+	 * 
+	 * @param state
+	 *            The state
+	 * @return Whether the LS is a valid digit
+	 */
 	protected final boolean validLS(S state) {
 		return state.validLS();
 	}

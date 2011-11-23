@@ -6,7 +6,7 @@ import edu.berkeley.gamesman.hasher.cachehasher.CacheMove;
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 
 public class GenNode {
-	public final GenHasher myHasher;
+	public final GenHasher<?> myHasher;
 	public final int numChildren;
 	private final GenEdge[] allChildren;
 	private int moveCount = 0;
@@ -14,7 +14,7 @@ public class GenNode {
 	int depth = -1;
 	int nodeNum = -1;
 
-	public GenNode(GenHasher hasher, int numMoves) {
+	public GenNode(GenHasher<?> hasher, int numMoves) {
 		myHasher = hasher;
 		numChildren = numMoves;
 		allChildren = new GenEdge[numMoves];

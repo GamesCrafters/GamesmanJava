@@ -226,7 +226,7 @@ public class GenState implements State {
 		return Arrays.toString(starSeq);
 	}
 
-	public final boolean hasHasher(GenHasher h) {
+	public final boolean hasHasher(GenHasher<?> h) {
 		return h == myHasher;
 	}
 }
