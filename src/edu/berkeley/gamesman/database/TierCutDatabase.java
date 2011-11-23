@@ -366,6 +366,14 @@ public final class TierCutDatabase extends Database {
 		inner.close();
 	}
 
+	/**
+	 * args[0] = Name of underlying database file
+	 * args[1] = Name of TierCutDatabase file to be created
+	 * args[n+2] = Nth tier to remain in database (list kept tiers, not cut tiers
+	 * @param args See above
+	 * @throws IOException If an IOException occurs while reading underlying database info
+	 * @throws ClassNotFoundException If the database type is not found
+	 */
 	public static void main(String[] args) throws IOException,
 			ClassNotFoundException {
 		Database inner = Database.openDatabase(args[0]);
