@@ -218,10 +218,10 @@ public class GenState implements State {
 	public final String toString() {
 		String[] starSeq = new String[sequence.length];
 		for (int i = 0; i < startPoint; i++) {
-			starSeq[i] = "*";
+			starSeq[sequence.length - 1 - i] = "*";
 		}
 		for (int i = startPoint; i < sequence.length; i++) {
-			starSeq[i] = Integer.toString(sequence[i]);
+			starSeq[sequence.length - 1 - i] = Integer.toString(sequence[i]);
 		}
 		return Arrays.toString(starSeq);
 	}

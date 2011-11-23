@@ -6,6 +6,7 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.database.TierCutDatabase;
 import edu.berkeley.gamesman.game.Connect4;
 
+@SuppressWarnings("javadoc")
 public class TierCutTester {
 
 	public static void main(String args[]) throws ClassNotFoundException {
@@ -57,6 +58,7 @@ public class TierCutTester {
 			}
 		}
 		System.out.println("5 Tiers cut inbetween each stored tier " + hashes);
+		@SuppressWarnings("unused")
 		TierCutDatabase tcDb;
 		try {
 			boolean reading = false;

@@ -10,6 +10,7 @@ import java.awt.event.MouseListener;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 
+@SuppressWarnings("javadoc")
 class DisplayFour extends JPanel {
 	private final static long serialVersionUID = 2;
 	private final int gameHeight;

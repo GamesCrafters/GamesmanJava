@@ -9,6 +9,7 @@ import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.game.Alignment;
 import edu.berkeley.gamesman.game.AlignmentState;
 
+@SuppressWarnings("javadoc")
 public class AlignmentTester {
 
 	/**

@@ -7,6 +7,7 @@ import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.game.Quarto;
 import edu.berkeley.gamesman.game.util.TierState;
 
+@SuppressWarnings("javadoc")
 public class QuartoPlayer {
 	public static void main(String[] args) throws ClassNotFoundException {
 		Configuration conf = new Configuration("jobs/quarto.job");

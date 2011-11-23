@@ -18,6 +18,7 @@ import edu.berkeley.gamesman.util.Pair;
  * 
  * @author dnspies
  */
+@SuppressWarnings("javadoc")
 class ConnectFour {
 	private final char[][] board;
 

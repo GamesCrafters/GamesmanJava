@@ -29,6 +29,7 @@ import edu.berkeley.gamesman.game.TierGame;
  * 
  * @author dnspies
  */
+@SuppressWarnings("javadoc")
 public class C4Container extends JPanel implements ActionListener, KeyListener,
 		WindowListener {
 	private static final long serialVersionUID = -8073360248394686305L;
