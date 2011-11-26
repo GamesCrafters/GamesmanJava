@@ -1,6 +1,7 @@
 package edu.berkeley.gamesman.database;
 
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -12,7 +13,9 @@ public class SplitDBMaker {
 
 	public SplitDBMaker(String uri, Configuration conf, long firstRecordIndex,
 			long numRecords) throws IOException {
-		out = new DataOutputStream(new FileOutputStream(uri));
+		File f = new File(uri);
+		f.getParentFile().mkdirs();
+		out = new DataOutputStream(new FileOutputStream(f));
 		out.writeLong(firstRecordIndex);
 		out.writeLong(numRecords);
 		conf.store(out);
