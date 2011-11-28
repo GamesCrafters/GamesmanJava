@@ -8,7 +8,7 @@ package edu.berkeley.gamesman.verification;
  * @author rchengyue
  */
 public enum Connect4Piece implements Piece {
-	X, O, BLANK;
+	BLANK, X, O;
 
 	public static Connect4Piece fromChar(char piece) {
 		switch (piece) {
@@ -22,6 +22,10 @@ public enum Connect4Piece implements Piece {
 			throw new IllegalArgumentException("Unsupported piece character: "
 					+ piece);
 		}
+	}
+	
+	public static Connect4Piece lastPiece() {
+		return values()[values().length - 1];
 	}
 
 	public char toChar() {

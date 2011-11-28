@@ -395,4 +395,8 @@ public class Connect4GameState extends GameState {
 	public Value getValue() {
 		return stateValue;
 	}
+	
+	void setPiece(int row, int col, Connect4Piece piece) {
+		positionBoard[col][row] = piece;
+	}
 }
