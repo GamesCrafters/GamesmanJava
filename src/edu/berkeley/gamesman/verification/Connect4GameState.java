@@ -71,6 +71,7 @@ public class Connect4GameState extends GameState {
 		this.nextRowPositions = new int[width];
 		this.invalidColumns = new HashSet<Integer>();
 		
+		/*
 		System.out.println("Width: " + width);
 		System.out.println("Height: " + height);
 		System.out.println("InARow: " + inARow);
@@ -88,6 +89,7 @@ public class Connect4GameState extends GameState {
 			System.out.print(i + " ");
 		}
 		System.out.println("]");
+		*/
 	}
 
 	private Connect4GameState(int width, int height, int primitivePieceCount,
@@ -160,7 +162,7 @@ public class Connect4GameState extends GameState {
 				height, inARow, totalPieces, positionBoard, player,
 				isPrimitive, nextRowPositions, invalidColumns);
 		
-		System.out.println("Width: " + width);
+		/*System.out.println("Width: " + width);
 		System.out.println("Height: " + height);
 		System.out.println("InARow: " + inARow);
 		System.out.println("Total Pieces: " + totalPieces);
@@ -177,6 +179,7 @@ public class Connect4GameState extends GameState {
 			System.out.print(i + " ");
 		}
 		System.out.println("]");
+		*/
 
 		return connect4GameState;
 	}
@@ -185,7 +188,9 @@ public class Connect4GameState extends GameState {
 		Set<String> childrenPositions = new HashSet<String>();
 		List<Move> moves = generateMoves(false);
 
-		System.out.println("Position: " + boardToString(positionBoard));
+		/*
+		 * System.out.println("Position: " + boardToString(positionBoard));
+		 */
 		
 		if (isPrimitive && moves.size() > 0) {
 			throw new IllegalStateException("GameState is primitive with moves");
