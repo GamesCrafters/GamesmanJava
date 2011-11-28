@@ -27,12 +27,13 @@ public class RandomGameVerifier extends GameVerifier {
 	 * @param outputFileName
 	 * @param totalStateCount
 	 * @param totalTimeCount
+	 * @param initialGameState
 	 */
 	public RandomGameVerifier(Class<? extends GameState> stateClass,
 			String database, String outputFileName, int totalStateCount,
-			int totalTimeCount) {
+			int totalTimeCount, String initialGameState) {
 		super(stateClass, database, outputFileName, totalStateCount,
-				totalTimeCount);
+				totalTimeCount, initialGameState);
 	}
 
 	@Override
@@ -58,7 +59,7 @@ public class RandomGameVerifier extends GameVerifier {
 			runCount++;
 			mCurrentDepth = 0;
 		} else {
-			List<Move> currentMoves = currentGameState.generateMoves();
+			List<Move> currentMoves = currentGameState.generateMoves(false);
 			currentGameState.doMove(currentMoves.get(new Random()
 					.nextInt(currentMoves.size())));
 			mCurrentDepth++;

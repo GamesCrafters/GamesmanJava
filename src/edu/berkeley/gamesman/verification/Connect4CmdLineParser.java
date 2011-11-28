@@ -15,30 +15,36 @@ public class Connect4CmdLineParser {
 	@Option(name = "-d", usage = "database file")
 	private String database;
 
+	@Option(name = "-i", usage = "initial game state to verify from")
+	private String initialGameState;
+
 	@Option(name = "-o", usage = "log output to this file")
 	private String outputFileName;
-
-	@Option(name = "-v", usage = "type of verifier")
-	private String verifier;
 
 	@Option(name = "-s", usage = "number of states to verify")
 	private int totalStates;
 
 	@Option(name = "-t", usage = "time allowed to verify")
 	private int totalTime;
-	
+
+	@Option(name = "-v", usage = "type of verifier")
+	private String verifier;
+
 	@Option(name = "-debug", usage = "print debug text")
 	private static String debuggingS = "false";
-	
+
 	@Option(name = "-prob", usage = "verify probabilistically")
 	private static String probabilisticS = "true";
-	
+
+	@Option(name = "-simple", usage = "simple output")
+	private static String simpleOutputS = "true";
+
 	static boolean debugging;
 	static boolean probabilistic;
+	static boolean simpleoutput;
 
 	// receives other command line parameters than options
 	@Argument
-
 	private List<String> arguments = new ArrayList<String>();
 
 	public Connect4CmdLineParser() {
@@ -48,23 +54,28 @@ public class Connect4CmdLineParser {
 
 	public static void main(String args[]) {
 		Connect4CmdLineParser cmdLineParser = new Connect4CmdLineParser();
+		ArrayList<String> errors = new ArrayList<String>();
+
 		if (!cmdLineParser.doMain(args))
 			return;
-		
+
 		debugging = debuggingS.equalsIgnoreCase("true");
 		probabilistic = !probabilisticS.equalsIgnoreCase("false");
-		
+		simpleoutput = simpleOutputS.equalsIgnoreCase("true");
+
 		GameVerifier verifier;
 		switch (GameVerifierType.fromString(cmdLineParser.verifier)) {
 		case RANDOM:
 			verifier = new RandomGameVerifier(Connect4GameState.class,
 					cmdLineParser.database, cmdLineParser.outputFileName,
-					cmdLineParser.totalStates, cmdLineParser.totalTime);
+					cmdLineParser.totalStates, cmdLineParser.totalTime,
+					cmdLineParser.initialGameState);
 			break;
 		case BACKTRACK:
 			verifier = new BacktrackGameVerifier(Connect4GameState.class,
 					cmdLineParser.database, cmdLineParser.outputFileName,
-					cmdLineParser.totalStates, cmdLineParser.totalTime);
+					cmdLineParser.totalStates, cmdLineParser.totalTime,
+					cmdLineParser.initialGameState);
 			break;
 		default:
 			throw new IllegalArgumentException("Invalid verifier name: "
@@ -73,18 +84,31 @@ public class Connect4CmdLineParser {
 
 		while (verifier.hasNext()) {
 			try {
-				verifier.printStatusBar();
+				if (!simpleoutput) {
+					verifier.printStatusBar();
+				}
 				verifier.next();
 				if (!verifier.verifyGameState()) {
 					verifier.writeIncorrectStateToFile();
-					System.out.println("Incorrect Value: "
-							+ verifier.getCurrentValue()
-							+ " Current Game State: "
-							+ verifier.getCurrentState());
+					if (simpleoutput) {
+						errors.add("Incorrect Value: "
+								+ verifier.getCurrentValue()
+								+ " Expected Value: "
+								+ verifier.calculateValueOfCurrentState()
+								+ " Current Game State: "
+								+ verifier.getCurrentState());
+					} else {
+						System.out.println("Incorrect Value: "
+								+ verifier.getCurrentValue()
+								+ " Current Game State: "
+								+ verifier.getCurrentState());
+					}
 				} else {
-					/*System.out.println("Correct Value: " +
-							verifier.getCurrentValue() + " Current Game State: " +
-							verifier.getCurrentState());*/
+					/*
+					 * System.out.println("Correct Value: " +
+					 * verifier.getCurrentValue() + " Current Game State: " +
+					 * verifier.getCurrentState());
+					 */
 				}
 			} catch (IOException e) {
 				System.err.println(e.getMessage());
@@ -93,10 +117,17 @@ public class Connect4CmdLineParser {
 			}
 		}
 
-		verifier.printStatusBar();
-		verifier.printIncorrectStateSummary();
-		verifier.writeIncorrectStatesSummaryToFile();
-		verifier.closeOutputFile();
+		if (simpleoutput) {
+			verifier.printIncorrectStateSimpleSummary();
+			for (String str : errors) {
+				System.out.println(str);
+			}
+		} else {
+			verifier.printStatusBar();
+			verifier.printIncorrectStateSummary();
+			verifier.writeIncorrectStatesSummaryToFile();
+			verifier.closeOutputFile();
+		}
 	}
 
 	private boolean doMain(String[] args) {

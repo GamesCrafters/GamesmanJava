@@ -16,9 +16,12 @@ public abstract class GameState implements Cloneable {
 	/**
 	 * Generates a list of valid moves originating from this <tt>GameState</tt>.
 	 * 
+	 * @param filterInvalidMoves
+	 *            true if want to filter out the states with invalid columns
+	 * 
 	 * @return a list of valid moves.
 	 */
-	public abstract List<Move> generateMoves();
+	public abstract List<Move> generateMoves(boolean filterInvalidMoves);
 
 	/**
 	 * Checks if the <tt>GameState</tt> is a primitive state (win, lose, or
@@ -35,6 +38,7 @@ public abstract class GameState implements Cloneable {
 	 */
 
 	public abstract Value getValue();
+
 	/**
 	 * Modifies the <tt>GameState</tt> by performing the given move on it.
 	 * 

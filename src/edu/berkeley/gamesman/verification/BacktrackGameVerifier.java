@@ -33,9 +33,9 @@ public class BacktrackGameVerifier extends GameVerifier {
 
 	public BacktrackGameVerifier(Class<? extends GameState> stateClass,
 			String database, String outputFileName, int totalStateCount,
-			int totalTimeCount) {
+			int totalTimeCount, String initialGameState) {
 		super(stateClass, database, outputFileName, totalStateCount,
-				totalTimeCount);
+				totalTimeCount, initialGameState);
 		previousMoves = new Stack<List<Move>>();
 	}
 
@@ -51,7 +51,7 @@ public class BacktrackGameVerifier extends GameVerifier {
 		} else if (!super.hasNext()) {
 			mHasNext = false;
 		} else {
-			List<Move> availableMoves = currentGameState.generateMoves();
+			List<Move> availableMoves = currentGameState.generateMoves(true);
 
 			if (!availableMoves.isEmpty()) {
 				// We can continue down the tree. Add the child moves and do

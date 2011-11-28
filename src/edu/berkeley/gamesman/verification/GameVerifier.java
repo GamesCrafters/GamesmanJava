@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Iterator;
@@ -36,6 +37,7 @@ public abstract class GameVerifier implements Iterator<GameState> {
 	protected TierGame mGame;
 	protected DatabaseHandle dbHandle;
 	protected ProgressBar progressBar;
+	protected GameState initialGameState;
 
 	/**
 	 * The number of <tt>GameState</tt> to verify.
@@ -53,7 +55,7 @@ public abstract class GameVerifier implements Iterator<GameState> {
 
 	protected GameVerifier(Class<? extends GameState> stateClass,
 			String database, String outputFileName, int totalStateCount,
-			int totalTimeCount) {
+			int totalTimeCount, String initialGameState) {
 		this.stateClass = stateClass;
 		try {
 			this.db = Database.openDatabase(database);
@@ -81,6 +83,35 @@ public abstract class GameVerifier implements Iterator<GameState> {
 
 		// this.incorrectStates = new HashSet<GameState>();
 		this.mGame = (TierGame) conf.getGame();
+
+		// getting the initial game state from string representation
+		Method method = null;
+		try {
+			method = stateClass.getMethod("fromString", String.class,
+					Configuration.class);
+		} catch (SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchMethodException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		Connect4GameState retVal = null;
+		try {
+			retVal = (Connect4GameState) method.invoke(stateClass.getClass(),
+					initialGameState, conf);
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		this.initialGameState = retVal;
+
 		this.totalStateCount = totalStateCount;
 		this.totalTimeCount = totalTimeCount;
 		this.initialTime = System.currentTimeMillis() / 1000;
@@ -102,19 +133,10 @@ public abstract class GameVerifier implements Iterator<GameState> {
 
 	public GameState getInitialGameState() {
 		try {
-			return stateClass.getConstructor(Configuration.class).newInstance(
-					conf);
+			return initialGameState;
 		} catch (IllegalArgumentException e) {
 			throw new Error(e);
 		} catch (SecurityException e) {
-			throw new Error(e);
-		} catch (InstantiationException e) {
-			throw new Error(e);
-		} catch (IllegalAccessException e) {
-			throw new Error(e);
-		} catch (InvocationTargetException e) {
-			throw new Error(e.getCause());
-		} catch (NoSuchMethodException e) {
 			throw new Error(e);
 		}
 	}
@@ -153,7 +175,7 @@ public abstract class GameVerifier implements Iterator<GameState> {
 	 * 
 	 * @return the value of the current state.
 	 */
-	private Value calculateValueOfCurrentState() {
+	public Value calculateValueOfCurrentState() {
 		assert (!currentGameState.isPrimitive());
 
 		Iterator<String> childrenStringIterator = currentGameState
@@ -273,12 +295,13 @@ public abstract class GameVerifier implements Iterator<GameState> {
 			}
 		}
 	}
-	
+
 	private void printSkipCount() {
 		if (Connect4CmdLineParser.debugging)
 			System.out.print(". Skipped: "
-					+ percentFormat.format((double) nSkipped
-							/ (stateCount + 1)) + " of states.");
+					+ percentFormat
+							.format((double) nSkipped / (stateCount + 1))
+					+ " of states.");
 	}
 
 	/**
@@ -291,6 +314,14 @@ public abstract class GameVerifier implements Iterator<GameState> {
 				+ conf.getInteger("gamesman.game.width", 7) + " Height: "
 				+ conf.getInteger("gamesman.game.height", 6));
 		System.out.println("Incorrect States: " + incorrectStatesCount);
+	}
+
+	/**
+	 * Prints the incorrect states simple summary (number of states verified,
+	 * all the errors) to standard out.
+	 */
+	public void printIncorrectStateSimpleSummary() {
+		System.out.println(stateCount);
 	}
 
 	/**

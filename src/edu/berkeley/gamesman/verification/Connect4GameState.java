@@ -1,5 +1,6 @@
 package edu.berkeley.gamesman.verification;
 
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -14,7 +15,7 @@ import edu.berkeley.gamesman.core.Value;
  * Represents a <tt>GameState</tt> for a Connect 4 game.
  * 
  * @author adegtiar
- * @author rchengyuep
+ * @author rchengyue
  */
 public class Connect4GameState extends GameState {
 
@@ -31,6 +32,7 @@ public class Connect4GameState extends GameState {
 	private boolean isPrimitive;
 	private Value stateValue;
 	private int moveCount;
+	private Set<Integer> invalidColumns;
 
 	/**
 	 * The next row index of the next free spot for each column (or == height)
@@ -67,12 +69,124 @@ public class Connect4GameState extends GameState {
 			Arrays.fill(positionBoard[i], Connect4Piece.BLANK);
 		}
 		this.nextRowPositions = new int[width];
+		this.invalidColumns = new HashSet<Integer>();
+		
+		System.out.println("Width: " + width);
+		System.out.println("Height: " + height);
+		System.out.println("InARow: " + inARow);
+		System.out.println("Total Pieces: " + totalPieces);
+		System.out.println("Position Board: " + boardToString(positionBoard));
+		System.out.println("Player: " + player);
+		System.out.println("isPrimitive: " + isPrimitive);
+		System.out.print("NextRowPositions: [ ");
+		for (Integer i : nextRowPositions) {
+			System.out.print(i + " ");
+		}
+		System.out.println("]");
+		System.out.print("InvalidColumns: [ ");
+		for (Integer i : invalidColumns) {			
+			System.out.print(i + " ");
+		}
+		System.out.println("]");
+	}
+
+	private Connect4GameState(int width, int height, int primitivePieceCount,
+			int totalPieces, Connect4Piece[][] positionBoard,
+			Connect4Player player, boolean isPrimitive, int[] nextRowPositions, Set<Integer> invalidColumns) {
+		this.width = width;
+		this.height = height;
+		this.inARow = primitivePieceCount;
+		this.totalPieces = totalPieces;
+		this.positionBoard = positionBoard;
+		this.player = player;
+		this.isPrimitive = isPrimitive;
+		this.nextRowPositions = nextRowPositions;
+		this.invalidColumns = invalidColumns;
+	}
+
+	/**
+	 * Transforms a given string into a Connect4GameState.
+	 * 
+	 * @param initialGameState
+	 *            the String that represents the Connect4GameState in which to
+	 *            start the verification.
+	 * @param conf
+	 *            the database configuration for the Connect4 game.
+	 * @return a Connect4GameState with the position set to the specified
+	 *         initialGameState.
+	 */
+	public static Connect4GameState fromString(String initialGameState,
+			Configuration conf) {
+		if (initialGameState == null) {
+			return new Connect4GameState(conf);
+		}
+		int width = conf.getInteger("gamesman.game.width", 7);
+		int height = conf.getInteger("gamesman.game.height", 6);
+		int inARow = conf.getInteger("gamesman.game.pieces", 4);
+		int totalPieces = width * height;
+		int diffPieces = 0;
+		int[] nextRowPositions = new int[width];
+		Arrays.fill(nextRowPositions, height);
+		Set<Integer> invalidColumns = new HashSet<Integer>();
+
+		Connect4Piece[][] positionBoard = new Connect4Piece[width][height];
+		int stringIndex = 0;
+		for (int row = 0; row < height; row++) {
+			for (int col = 0; col < width; col++) {
+				char piece = initialGameState.charAt(stringIndex);
+				// invalid column because bottom row is set to blank
+				if (row == 0 && piece == ' ') {
+					invalidColumns.add(col);
+				}
+				// check for next available row
+				if (nextRowPositions[col] == height && piece == ' ') {
+					nextRowPositions[col] = row;
+				}
+				if (piece == 'X') {
+					diffPieces += 1;
+				} else if (piece == 'O') {
+					diffPieces -= 1;
+				}
+				positionBoard[col][row] = Connect4Piece.fromChar(piece);
+				stringIndex++;
+			}
+		}
+		Connect4Player player = (diffPieces == 0) ? Connect4Player.X
+				: Connect4Player.O;
+		boolean isPrimitive = false;
+
+		
+		Connect4GameState connect4GameState = new Connect4GameState(width,
+				height, inARow, totalPieces, positionBoard, player,
+				isPrimitive, nextRowPositions, invalidColumns);
+		
+		System.out.println("Width: " + width);
+		System.out.println("Height: " + height);
+		System.out.println("InARow: " + inARow);
+		System.out.println("Total Pieces: " + totalPieces);
+		System.out.println("Position Board: " + connect4GameState.boardToString(positionBoard));
+		System.out.println("Player: " + player);
+		System.out.println("isPrimitive: " + isPrimitive);
+		System.out.print("NextRowPositions: [ ");
+		for (Integer i : nextRowPositions) {
+			System.out.print(i + " ");
+		}
+		System.out.println("]");
+		System.out.print("InvalidColumns: [ ");
+		for (Integer i : invalidColumns) {			
+			System.out.print(i + " ");
+		}
+		System.out.println("]");
+
+		return connect4GameState;
 	}
 
 	public Iterator<String> generateChildren() {
 		Set<String> childrenPositions = new HashSet<String>();
-		List<Move> moves = generateMoves();
+		List<Move> moves = generateMoves(false);
 
+		System.out.println("Position: " + boardToString(positionBoard));
+		
 		if (isPrimitive && moves.size() > 0) {
 			throw new IllegalStateException("GameState is primitive with moves");
 		}
@@ -89,11 +203,11 @@ public class Connect4GameState extends GameState {
 	}
 
 	@Override
-	public List<Move> generateMoves() {
+	public List<Move> generateMoves(boolean filterInvalidColumns) {
 		ArrayList<Move> validMoves = new ArrayList<Move>(width);
 		if (!isPrimitive) {
 			for (int column = 0; column < width; column++) {
-				if (nextRowPositions[column] != height)
+				if (nextRowPositions[column] != height && (!invalidColumns.contains(column) || !filterInvalidColumns))
 					validMoves.add(Connect4Move.values()[column]);
 			}
 		}
