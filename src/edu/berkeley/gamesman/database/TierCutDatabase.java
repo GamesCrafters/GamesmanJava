@@ -35,8 +35,8 @@ public final class TierCutDatabase extends Database {
 		this.uri = uri;
 		myTierGame = (TierGame) conf.getGame();
 		int numberOfTiers = myTierGame.numberOfTiers();
-		int[] preservedTiers = Util.parseIntArray(conf.getProperty(
-				"gamesman.database.stored.tiers", null));
+		String tiers = conf.getProperty("gamesman.database.stored.tiers", null);
+		int[] preservedTiers = tiers == null ? null : Util.parseIntArray(tiers);
 		if (preservedTiers == null)
 			preservedTiers = makeArray(
 					conf.getInteger("gamesman.database.tiers.cut", 2),
@@ -98,9 +98,124 @@ public final class TierCutDatabase extends Database {
 			} else {
 				// Perform a solve for the missing tiers.
 				myTierGame.release(pos);
-				return missingTierSolve(dh, recordIndex);
+				Record alpha = myTierGame.getPoolRecord();
+				Record beta = myTierGame.getPoolRecord();
+				alpha.value = Value.UNDECIDED;
+				beta.value = Value.UNDECIDED;
+				// long val = missingTierSolve(dh, recordIndex);
+				long val = alphaBetaMissingTierSolve(dh, recordIndex, alpha,
+						beta);
+				myTierGame.release(alpha);
+				myTierGame.release(beta);
+				return val;
 			}
 		}
+	}
+
+	/**
+	 * Reads a record at the given hash. Alpha-Beta pruning is supported.
+	 * 
+	 * @param dh
+	 *            The handle to use for reading
+	 * @param recordIndex
+	 *            The hash of the game state where the record should be read
+	 * @param alpha
+	 *            alpha record for alpha-beta pruning
+	 * @param beta
+	 *            beta record for alpha-beta pruning
+	 * @return The hash of the record read at that position
+	 * @throws IOException
+	 *             If an IOException occurs while reading
+	 */
+	public long alphaBetaReadRecord(DatabaseHandle dh, long recordIndex,
+			Record alpha, Record beta) throws IOException {
+		int tier = myTierGame.hashToTier(recordIndex);
+		if (shouldBeInDatabase(tier)) {
+			return inner.readRecord(dh, recordIndex);
+		} else {
+			// Value not in DB, so solve for it.
+			TierState pos = myTierGame.getPoolState();
+			myTierGame.hashToState(recordIndex, pos);
+			Value value = myTierGame.primitiveValue(pos);
+			if (value != Value.UNDECIDED) {
+				// Primitive position, so just return it.
+				Record myRecord = myTierGame.getPoolRecord();
+				myRecord.value = value;
+				myRecord.remoteness = 0;
+				long val = myTierGame.recordToLong(pos, myRecord);
+				myTierGame.release(myRecord);
+				myTierGame.release(pos);
+				return val;
+			} else {
+				// Perform a solve for the missing tiers.
+				myTierGame.release(pos);
+				return alphaBetaMissingTierSolve(dh, recordIndex, alpha, beta);
+			}
+		}
+	}
+
+	/**
+	 * Solves for the value of the state corresponding to the given index.
+	 * Alpha-Beta pruning is supported.
+	 * 
+	 * @param dh
+	 *            A handle to the database
+	 * @param recordIndex
+	 *            The hash of the game state where the record should be read
+	 * @param alpha
+	 *            alpha record for alpha-beta pruning
+	 * @param beta
+	 *            beta record for alpha-beta pruning
+	 * @return The solved hash of the record corresponding to the given index
+	 * @throws IOException
+	 */
+	private long alphaBetaMissingTierSolve(DatabaseHandle dh, long recordIndex,
+			Record alpha, Record beta) throws IOException {
+		// Keep the underlying database open.
+		boolean setHolding = false;
+		if (inner instanceof SplitDatabase)
+			setHolding = ((SplitDatabase) inner).setHolding(true);
+		// Initialize a TierState from the index.
+		TierState pos = myTierGame.getPoolState();
+		myTierGame.hashToState(recordIndex, pos);
+		// Get the valid moves.
+		TierState[] childStates = myTierGame.getPoolChildStateArray();
+		int numChildren = myTierGame.validMoves(pos, childStates);
+		Record moveRecord = myTierGame.getPoolRecord();
+		// Loops through children and calculates the current state's value.
+		for (int childIndex = 0; childIndex < numChildren; childIndex++) {
+			TierState childState = childStates[childIndex];
+			long childHash = myTierGame.stateToHash(childState);
+			// Retrieve the record for child's state.
+			Record nextAlpha = myTierGame.getPoolRecord();
+			nextAlpha.value = beta.value;
+			nextAlpha.remoteness = beta.remoteness;
+			nextAlpha.nextPosition();
+			Record nextBeta = myTierGame.getPoolRecord();
+			nextBeta.value = alpha.value;
+			nextBeta.remoteness = alpha.remoteness;
+			nextBeta.nextPosition();
+			long recordLong = alphaBetaReadRecord(dh, childHash, nextAlpha,
+					nextBeta);
+			myTierGame.release(nextAlpha);
+			myTierGame.release(nextBeta);
+			myTierGame.longToRecord(childState, recordLong, moveRecord);
+			moveRecord.previousPosition();
+			// Set current record to be the best of current and child.
+			if (alpha.value == Value.UNDECIDED
+					|| moveRecord.compareTo(alpha) > 0)
+				alpha.set(moveRecord);
+			if (alpha.compareTo(beta) >= 0 && beta.value != Value.UNDECIDED)
+				break;
+		}
+		long val = myTierGame.recordToLong(pos, alpha);
+		// Clean up resources.
+		myTierGame.release(moveRecord);
+		myTierGame.release(childStates);
+		myTierGame.release(pos);
+		if (setHolding)
+			((SplitDatabase) inner).setHolding(false);
+		return val;
 	}
 
 	/**
@@ -366,14 +481,6 @@ public final class TierCutDatabase extends Database {
 		inner.close();
 	}
 
-	/**
-	 * args[0] = Name of underlying database file
-	 * args[1] = Name of TierCutDatabase file to be created
-	 * args[n+2] = Nth tier to remain in database (list kept tiers, not cut tiers
-	 * @param args See above
-	 * @throws IOException If an IOException occurs while reading underlying database info
-	 * @throws ClassNotFoundException If the database type is not found
-	 */
 	public static void main(String[] args) throws IOException,
 			ClassNotFoundException {
 		Database inner = Database.openDatabase(args[0]);
