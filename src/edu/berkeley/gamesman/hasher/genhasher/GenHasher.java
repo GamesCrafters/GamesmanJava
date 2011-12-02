@@ -67,8 +67,21 @@ public abstract class GenHasher<S extends GenState> {
 	 * @return The hash of the state
 	 */
 	public final long hash(S state) {
+		return hash(state, numElements);
+	}
+
+	/**
+	 * Returns the hash of the pieces up to suffixStart
+	 * 
+	 * @param state
+	 *            The state to hash
+	 * @param suffixStart
+	 *            The place to stop hashing at (exclusive)
+	 * @return The hash of the pieces up to the start of the suffix
+	 */
+	final long hash(S state, int suffixStart) {
 		assert validTest(state);
-		long hash = innerHash(state);
+		long hash = innerHash(state, suffixStart);
 		assert validTest(state);
 		return hash;
 	}
@@ -118,13 +131,15 @@ public abstract class GenHasher<S extends GenState> {
 	 * 
 	 * @param state
 	 *            The state to hash
+	 * @param suffixStart
+	 *            The place to stop hashing at
 	 * @return The hash of the state
 	 */
-	protected long innerHash(S state) {
+	protected long innerHash(S state, int suffixStart) {
 		S tempState = getPoolPref();
 		tempState.set(state);
 		long total = 0L;
-		while (!tempState.isEmpty()) {
+		while (tempState.leastSig() < suffixStart) {
 			total += sigValue(tempState);
 			tempState.trunc();
 		}
