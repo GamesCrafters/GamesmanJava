@@ -13,11 +13,12 @@ import edu.berkeley.gamesman.game.TierGame;
 import edu.berkeley.gamesman.game.util.TierState;
 
 public class TierCutDatabaseTest {
-	public static SplitLocalDatabase tttDbUncut;
-	public static TierCutDatabase tttDbCut;
-	public static DatabaseHandle tttDbUncutHandle;
-	public static DatabaseHandle tttDbCutHandle;
-	public static TierGame game;
+	private static SplitLocalDatabase tttDbUncut;
+	private static TierCutDatabase tttDbCut;
+	private static DatabaseHandle tttDbUncutHandle;
+	private static DatabaseHandle tttDbCutHandle;
+	private static TierGame game;
+	private TierState state;
 
 	@BeforeClass
 	public static void initDatabases() throws IOException,
@@ -30,21 +31,35 @@ public class TierCutDatabaseTest {
 		tttDbCutHandle = tttDbCut.getHandle(true);
 		game = (TierGame) tttDbCut.conf.getGame();
 	}
-
+	
 	@Before
 	public void initState() {
-		game.setStartingPosition(0);
+		state = game.newState();
 	}
 
-	@Test
-	public void optimzedReadStartPos() throws IOException {
-		TierState pos = game.newState();
-		game.getState(pos);
-		long recordIndex = game.stateToHash(pos);
+	private void optimizedReadRecord(long recordIndex) throws IOException {
 		long optimizedRead = tttDbCut.optimizedMissingTierSolve(tttDbCutHandle,
 				recordIndex);
 		long normalRead = tttDbUncut.readRecord(tttDbUncutHandle, recordIndex);
 		Assert.assertEquals(normalRead, optimizedRead);
+	}
+
+	@Test
+	public void optimizedReadCutTier1() throws IOException {
+		optimizedReadRecord(game.stateToHash(state));
+	}
+
+	@Test
+	public void optimizedReadCutTier2() throws IOException {
+		state = game.validMoves(state).iterator().next().cdr;
+		state = game.validMoves(state).iterator().next().cdr;
+		optimizedReadRecord(game.stateToHash(state));
+	}
+
+	@Test
+	public void optimizedReadUncutTier() throws IOException {
+		state = game.validMoves(state).iterator().next().cdr;
+		optimizedReadRecord(game.stateToHash(state));
 	}
 
 	@AfterClass
