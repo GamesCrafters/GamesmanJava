@@ -7,12 +7,12 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Random;
 
-import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.core.Value;
 import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.game.TierGame;
+import edu.berkeley.gamesman.game.util.TierState;
 import edu.berkeley.gamesman.util.Pair;
 
 /**
@@ -83,7 +83,7 @@ public class TierGameDbAnalyzer {
 	 */
 	public void analyzeDb() throws IOException {
 		while (!isDoneAnalyzing()) {
-			benchmarkGame(db.conf.getGame());
+			benchmarkGame((TierGame) db.conf.getGame());
 		}
 	}
 
@@ -102,13 +102,10 @@ public class TierGameDbAnalyzer {
 	 * @throws IOException
 	 *             on an error reading from the database
 	 */
-	private <S extends State> void benchmarkGame(Game<S> game)
-			throws IOException {
-		int currentTier = 0;
-		S currentPosition = game.startingPositions().iterator().next();
-		while (game.strictPrimitiveValue(currentPosition) != Value.UNDECIDED) {
-			sampleTier(currentTier++, game, currentPosition);
-			currentPosition = randomChild(game, currentPosition);
+	private void benchmarkGame(TierGame game) throws IOException {
+		while (game.strictPrimitiveValue() != Value.UNDECIDED) {
+			samplePosition(game);
+			game.setState(randomChild(game));
 		}
 	}
 
@@ -116,15 +113,13 @@ public class TierGameDbAnalyzer {
 	 * Generates a random child state.
 	 * 
 	 * @param game
-	 *            the game corresponding to the given state
-	 * @param state
 	 *            the position to pick a child from
 	 * @return a randomly pick child of the given state
 	 */
-	private <S extends State> S randomChild(Game<S> game, S state) {
-		Collection<Pair<String, S>> children = game.validMoves(state);
+	private TierState randomChild(TierGame game) {
+		Collection<Pair<String, TierState>> children = game.validMoves();
 		int elementIndex = new Random().nextInt(children.size());
-		for (Pair<String, S> child : children) {
+		for (Pair<String, TierState> child : children) {
 			if (elementIndex == 0) {
 				return child.cdr;
 			}
@@ -135,20 +130,15 @@ public class TierGameDbAnalyzer {
 	/**
 	 * Reads a sample measurement from the the given position.
 	 * 
-	 * @param tier
-	 *            the tier
 	 * @param game
-	 *            the game corresponding to the position
-	 * @param position
 	 *            the current position
 	 * @throws IOException
 	 *             on an error reading from the database
 	 */
-	<S extends State> void sampleTier(int tier, Game<S> game, S position)
-			throws IOException {
-		Measurements measurements = tierMeasurements.get(tier);
+	void samplePosition(TierGame game) throws IOException {
+		Measurements measurements = tierMeasurements.get(game.getTier());
 		if (measurements != null && measurements.getNumSamples() < NUM_SAMPLES) {
-			long measurementSample = measureRead(game, position);
+			long measurementSample = measureRead(game);
 			measurements.add(measurementSample);
 		}
 	}
@@ -157,17 +147,16 @@ public class TierGameDbAnalyzer {
 	 * Reads the given position from the database and measures the time it took.
 	 * 
 	 * @param game
-	 *            the game corresponding to the position
-	 * @param position
 	 *            the position to read from the database
 	 * @return the time it took to read the record, in millis
 	 * @throws IOException
 	 *             on an error reading from the database
 	 */
-	<S extends State> long measureRead(Game<S> game, S position)
-			throws IOException {
+	long measureRead(TierGame game) throws IOException {
 		long startTime = System.currentTimeMillis();
-		long hash = game.stateToHash(position);
+		TierState currentState = game.newState();
+		game.getState(currentState);
+		long hash = game.stateToHash(currentState);
 		db.readRecord(dh, hash);
 		long endTime = System.currentTimeMillis();
 		return endTime - startTime;
