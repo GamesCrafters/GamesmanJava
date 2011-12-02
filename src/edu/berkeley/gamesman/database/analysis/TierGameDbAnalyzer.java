@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.core.Value;
@@ -14,7 +13,7 @@ import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.game.TierGame;
 
 /**
- * Performs a benchmark analysis of TierGames.
+ * Performs a benchmark analysis of TierGame databases.
  * 
  * @author adegtiar
  * @author rchengyue
@@ -31,10 +30,10 @@ public class TierGameDbAnalyzer {
 	 * 
 	 * @param db
 	 *            the database to benchmark
-	 * @param tiers
-	 *            the set of tiers to sample from
 	 * @param numSamples
 	 *            the number of samples per tier to take
+	 * @param tiers
+	 *            the set of tiers to sample from. If empty, samples all tiers
 	 * @throws IllegalArgumentException
 	 *             if the database is not for a TierGame
 	 * @throws IllegalArgumentException
@@ -44,9 +43,7 @@ public class TierGameDbAnalyzer {
 		this.NUM_SAMPLES = numSamples;
 		this.db = db;
 		this.dh = db.getHandle(true);
-		for (Integer tier : tiers) {
-			tierMeasurements.put(tier, new Measurements());
-		}
+		// Make sure the database is a TierGame database.
 		TierGame game;
 		try {
 			game = (TierGame) db.conf.getGame();
@@ -54,15 +51,29 @@ public class TierGameDbAnalyzer {
 			throw new IllegalArgumentException(
 					"only TierGame databases are supported");
 		}
-		int maxTier = Collections.max(Arrays.asList(tiers));
-		if (maxTier >= game.numberOfTiers()) {
+		// Make sure all tiers actually exist in the database.
+		int largestRequestedTier = Collections.max(Arrays.asList(tiers));
+		int numTiers = game.numberOfTiers();
+		if (largestRequestedTier >= numTiers) {
 			throw new IllegalArgumentException(String.format(
 					"Cannot reach tier %d. Only %d tiers in the database",
-					maxTier, game.numberOfTiers()));
+					largestRequestedTier, numTiers));
+		}
+		// Populate the measurements table with the tiers to measure.
+		if (tiers.length > 0) {
+			for (Integer tier : tiers) {
+				tierMeasurements.put(tier, new Measurements());
+			}
+		} else {
+			for (int tier = 0; tier < numTiers; tier++) {
+				tierMeasurements.put(tier, new Measurements());
+			}
 		}
 	}
 
 	/**
+	 * Analyze the database. After analysis, results can be retrieved using
+	 * {@link #getTierMeasurements}.
 	 * 
 	 * @throws IOException
 	 */
@@ -72,6 +83,10 @@ public class TierGameDbAnalyzer {
 		}
 	}
 
+	/**
+	 * 
+	 * @return
+	 */
 	public Map<Integer, Measurements> getTierMeasurements() {
 		return tierMeasurements;
 	}
