@@ -2,8 +2,10 @@ package edu.berkeley.gamesman.database.analysis;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Random;
 
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.core.Value;
@@ -11,6 +13,7 @@ import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.DatabaseHandle;
 import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.game.TierGame;
+import edu.berkeley.gamesman.util.Pair;
 
 /**
  * Performs a benchmark analysis of TierGame databases.
@@ -76,6 +79,7 @@ public class TierGameDbAnalyzer {
 	 * {@link #getTierMeasurements}.
 	 * 
 	 * @throws IOException
+	 *             on an error reading from the database
 	 */
 	public void analyzeDb() throws IOException {
 		while (!isDoneAnalyzing()) {
@@ -84,17 +88,19 @@ public class TierGameDbAnalyzer {
 	}
 
 	/**
-	 * 
-	 * @return
+	 * @return the results of the benchmark analysis.
 	 */
 	public Map<Integer, Measurements> getTierMeasurements() {
 		return tierMeasurements;
 	}
 
 	/**
+	 * Benchmarks one play-through of a game.
 	 * 
 	 * @param game
+	 *            the {@link Game} to play through
 	 * @throws IOException
+	 *             on an error reading from the database
 	 */
 	private <S extends State> void benchmarkGame(Game<S> game)
 			throws IOException {
@@ -106,16 +112,37 @@ public class TierGameDbAnalyzer {
 		}
 	}
 
+	/**
+	 * Generates a random child state.
+	 * 
+	 * @param game
+	 *            the game corresponding to the given state
+	 * @param state
+	 *            the position to pick a child from
+	 * @return a randomly pick child of the given state
+	 */
 	private <S extends State> S randomChild(Game<S> game, S state) {
+		Collection<Pair<String, S>> children = game.validMoves(state);
+		int elementIndex = new Random().nextInt(children.size());
+		for (Pair<String, S> child : children) {
+			if (elementIndex == 0) {
+				return child.cdr;
+			}
+		}
 		return null;
 	}
 
 	/**
+	 * Reads a sample measurement from the the given position.
 	 * 
 	 * @param tier
+	 *            the tier
 	 * @param game
+	 *            the game corresponding to the position
 	 * @param position
+	 *            the current position
 	 * @throws IOException
+	 *             on an error reading from the database
 	 */
 	<S extends State> void sampleTier(int tier, Game<S> game, S position)
 			throws IOException {
@@ -127,11 +154,15 @@ public class TierGameDbAnalyzer {
 	}
 
 	/**
+	 * Reads the given position from the database and measures the time it took.
 	 * 
 	 * @param game
+	 *            the game corresponding to the position
 	 * @param position
-	 * @return
+	 *            the position to read from the database
+	 * @return the time it took to read the record, in millis
 	 * @throws IOException
+	 *             on an error reading from the database
 	 */
 	<S extends State> long measureRead(Game<S> game, S position)
 			throws IOException {
@@ -142,6 +173,9 @@ public class TierGameDbAnalyzer {
 		return endTime - startTime;
 	}
 
+	/**
+	 * @return true if the analyzer has sufficient samples, otherwise false
+	 */
 	boolean isDoneAnalyzing() {
 		for (Measurements measurements : tierMeasurements.values()) {
 			if (measurements.getNumSamples() < NUM_SAMPLES) {
