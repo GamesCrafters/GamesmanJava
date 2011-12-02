@@ -99,8 +99,9 @@ public final class Play {
 						break;
 					}
 				}
-			} else
+			} else {
 				break;
+			}
 		}
 		if (g.strictPrimitiveValue(position) != Value.UNDECIDED) {
 			System.out.println(g.displayState(position));
