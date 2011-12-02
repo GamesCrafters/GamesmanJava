@@ -15,12 +15,17 @@ import edu.berkeley.gamesman.game.Game;
 import edu.berkeley.gamesman.util.Pair;
 
 /**
- * Outcomes = edu.berkeley.gamesman.core.Value displayBoard =
- * edu.berkeley.gamesman.game.Game.displayState getCurrentOutcome = {Hash
- * position, fetch record from database, unhash it}
- * getNumberOfMovesForCurrentOutcome = {Look at the size of the collection
- * returned by validMoves} getValidMoves =
- * edu.berkeley.gamesman.game.Game.validMoves {with only one argument}
+ * Outcomes: edu.berkeley.gamesman.core.Value
+ * <p>
+ * displayBoard: edu.berkeley.gamesman.game.Game.displayState
+ * <p>
+ * getCurrentOutcome: {Hash position, fetch record from database, unhash it}
+ * <p>
+ * getNumberOfMovesForCurrentOutcome: {Look at the size of the collection
+ * returned by validMoves}
+ * <p>
+ * getValidMoves = edu.berkeley.gamesman.game.Game.validMoves {with only one
+ * argument}
  */
 public final class Play {
 	/**
@@ -32,7 +37,7 @@ public final class Play {
 	 * @throws IOException
 	 *             If an IO exception occurs while reading the file
 	 * @throws ClassNotFoundException
-	 *             If the configuration contains a nonexistant class
+	 *             If the configuration contains a nonexistent class
 	 */
 	public static void main(String[] args) throws IOException,
 			ClassNotFoundException {
