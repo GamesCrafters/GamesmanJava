@@ -9,7 +9,10 @@ package edu.berkeley.gamesman.hasher.genhasher;
  *            The state type associated with this hasher
  */
 public class SymmetryWrapper<S extends GenState> {
-	private final GenHasher<S> myHasher;
+	/**
+	 * The underlying hasher
+	 */
+	public final GenHasher<S> myHasher;
 
 	/**
 	 * @param hasher
