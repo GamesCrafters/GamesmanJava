@@ -279,7 +279,7 @@ public final class TierCutDatabase extends Database {
 	 * @return The solved hash of the record corresponding to the given index
 	 * @throws IOException
 	 */
-	private long optimizedMissingTierSolve(DatabaseHandle dh, long recordIndex)
+	protected long optimizedMissingTierSolve(DatabaseHandle dh, long recordIndex)
 			throws IOException {
 		// Keep the underlying database open.
 		boolean setHolding = false;
