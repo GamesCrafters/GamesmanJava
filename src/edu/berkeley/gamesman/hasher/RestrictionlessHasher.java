@@ -1,9 +1,9 @@
 package edu.berkeley.gamesman.hasher;
 
 import edu.berkeley.gamesman.hasher.genhasher.GenState;
-import edu.berkeley.gamesman.hasher.invhasher.InvariantHasher;
+import edu.berkeley.gamesman.hasher.invhasher.OptimizingInvariantHasher;
 
-public class RestrictionlessHasher extends InvariantHasher<GenState> {
+public class RestrictionlessHasher extends OptimizingInvariantHasher<GenState> {
 
 	public RestrictionlessHasher(int numElements, int digitBase) {
 		super(numElements, digitBase);

@@ -5,14 +5,8 @@ import java.util.Arrays;
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.hasher.genhasher.GenState;
 
-/**
- * @author dnspies
- * 
- * @param <S>
- */
 public abstract class InvariantHasher<S extends GenState> extends GenHasher<S> {
 	private long[][] invariantCounts;
-	private long[][][] invariantVals;
 
 	/**
 	 * @param numElements
@@ -22,7 +16,6 @@ public abstract class InvariantHasher<S extends GenState> extends GenHasher<S> {
 	public InvariantHasher(int numElements, int digitBase) {
 		super(numElements, digitBase);
 		invariantCounts = new long[numElements + 1][];
-		invariantVals = new long[numElements][][];
 	}
 
 	@Override
@@ -58,42 +51,11 @@ public abstract class InvariantHasher<S extends GenState> extends GenHasher<S> {
 		return invariantCounts[start][inv];
 	}
 
-	@Override
-	protected long sigValue(S state) {
-		int place = getStart(state);
-		if (invariantVals[place] == null) {
-			int numInvs = numInvariants(place);
-			invariantVals[place] = new long[numInvs][digitBase];
-			for (long[] arr : invariantVals[place]) {
-				Arrays.fill(arr, -1);
-			}
-		}
-		int lastInv = lastInvariant(state);
-		assert lastInv >= 0;
-		int ls = leastSig(state);
-		if (invariantVals[place][lastInv][ls] == -1)
-			invariantVals[place][lastInv][ls] = super.sigValue(state);
-		return invariantVals[place][lastInv][ls];
-	}
-
 	/**
 	 * @param state
 	 * @return
 	 */
 	protected abstract int getInvariant(S state);
-
-	/**
-	 * @param state
-	 * @return
-	 */
-	protected int lastInvariant(S state) {
-		int ls = leastSig(state);
-		trunc(state);
-		int result = getInvariant(state);
-		assert result >= 0;
-		addLS(state, ls);
-		return result;
-	}
 
 	@Override
 	protected abstract boolean valid(S state);

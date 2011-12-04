@@ -1,13 +1,13 @@
 package edu.berkeley.gamesman.hasher.fixed;
 
-import edu.berkeley.gamesman.hasher.invhasher.InvariantHasher;
+import edu.berkeley.gamesman.hasher.invhasher.OptimizingInvariantHasher;
 
 /**
  * @author dnspies
  * 
  */
 public abstract class FixedHasher<S extends FixedState> extends
-		InvariantHasher<S> implements Restrainer {
+		OptimizingInvariantHasher<S> implements Restrainer {
 	private final int[] numPieces;
 	private final int[] multipliers;
 	protected final int numInvariants;
