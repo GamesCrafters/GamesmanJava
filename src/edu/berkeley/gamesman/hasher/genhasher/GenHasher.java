@@ -139,7 +139,7 @@ public abstract class GenHasher<S extends GenState> {
 		S tempState = getPoolPref();
 		tempState.set(state);
 		long total = 0L;
-		while (tempState.leastSig() < suffixStart) {
+		while (tempState.getStart() < suffixStart) {
 			total += sigValue(tempState);
 			tempState.trunc();
 		}
