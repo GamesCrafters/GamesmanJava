@@ -5,53 +5,58 @@ package edu.berkeley.gamesman.core;
  * 
  * @author dnspies
  */
-public enum Value implements Comparable<Value>{
+public enum Value implements Comparable<Value> {
+	NEGATIVE_INFINITY(false),
 	/**
 	 * The player who just moved can force a win
 	 */
-	LOSE(0, true),
+	LOSE(true),
 	/**
 	 * Neither player can force a win nor end the game
 	 */
-	DRAW(1, false),
+	DRAW(false),
 	/**
 	 * Neither player can force a win, but it is possible to end the game
 	 */
-	TIE(2, true),
+	TIE(true),
 	/**
 	 * A placeholder for solvers to use when they haven't yet calculated the
 	 * children of the position. Additionally, if a game is not completely
 	 * solved, this may be used to indicate that the value of the position is
 	 * unknown.
 	 */
-	UNDECIDED(3, false),
+	UNDECIDED(false),
 	/**
 	 * The player who's turn it is can force a win
 	 */
-	WIN(4, true),
+	WIN(true),
 	/**
 	 * This is not a legal position
 	 */
-	IMPOSSIBLE(5, false);
-
-	/**
-	 * The numeric value of this primitive value (same as ordinal())
-	 */
-	public final int value;
+	IMPOSSIBLE(false), POSITIVE_INFINITY(false);
 
 	/**
 	 * Does it make sense to include remoteness with this value?
 	 */
 	public final boolean hasRemoteness;
-
+	private Value opposite;
+	static {
+		NEGATIVE_INFINITY.opposite = POSITIVE_INFINITY;
+		LOSE.opposite = WIN;
+		DRAW.opposite = DRAW;
+		TIE.opposite = TIE;
+		UNDECIDED.opposite = UNDECIDED;
+		WIN.opposite = LOSE;
+		IMPOSSIBLE.opposite = IMPOSSIBLE;
+		POSITIVE_INFINITY.opposite = NEGATIVE_INFINITY;
+	}
 	/**
 	 * The same as PrimitiveValue.values(), but without needing to allocate new
 	 * space every time it's called
 	 */
-	public final static Value[] values = Value.values();
+	private final static Value[] values = Value.values();
 
-	private Value(int v, boolean hasRemoteness) {
-		value = v;
+	private Value(boolean hasRemoteness) {
 		this.hasRemoteness = hasRemoteness;
 	}
 
@@ -69,5 +74,13 @@ public enum Value implements Comparable<Value>{
 			return LOSE;
 		else
 			return this;
+	}
+
+	public static Value getValue(int vNum) {
+		return values[vNum];
+	}
+
+	public Value opposite() {
+		return opposite;
 	}
 }

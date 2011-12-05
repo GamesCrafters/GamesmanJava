@@ -551,7 +551,7 @@ public class Reversi extends TierGame {
 		while (true) {
 			System.out.println(reversiGame.displayState());
 			prim = reversiGame.primitiveValue();
-			if (prim.value != 3)
+			if (prim != Value.UNDECIDED)
 				break;
 			System.out.println(prim.toString());
 			TierState[] moves = reversiGame.newStateArray(16);
@@ -584,12 +584,12 @@ public class Reversi extends TierGame {
 			reversiGame.setState(moves[index]);
 		}
 		System.out.println("Game Over");
-		if (prim.value == 0)
+		if (prim == Value.LOSE)
 			System.out.println((reversiGame.turn == BLACK ? "White wins"
 					: "Black wins"));
-		else if (prim.value == 2)
+		else if (prim == Value.TIE)
 			System.out.println("Tie");
-		else if (prim.value == 4)
+		else if (prim == Value.LOSE)
 			System.out.println((reversiGame.turn == BLACK ? "Black wins"
 					: "White wins"));
 		else

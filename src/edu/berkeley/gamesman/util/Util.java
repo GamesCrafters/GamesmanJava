@@ -10,6 +10,8 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Iterator;
 
+import edu.berkeley.gamesman.util.qll.Factory;
+
 /**
  * Various utility functions accessible from any class
  * 
@@ -647,5 +649,28 @@ public final class Util {
 				return false;
 		}
 		return true;
+	}
+
+	/**
+	 * @param type
+	 * @return
+	 */
+	public static <T> Factory<T> makeFactory(final Class<? extends T> type) {
+		return new Factory<T>() {
+			@Override
+			public T newObject() {
+				try {
+					return type.newInstance();
+				} catch (InstantiationException e) {
+					throw new Error(e);
+				} catch (IllegalAccessException e) {
+					throw new Error(e);
+				}
+			}
+
+			@Override
+			public void reset(T t) {
+			}
+		};
 	}
 }
