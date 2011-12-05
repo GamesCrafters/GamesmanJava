@@ -10,7 +10,7 @@ public class SymmetryHasher<S extends GenState> {
 
 	public SymmetryHasher(GenHasher<S> hasher, int suffixStartsAt) {
 		myWrapper = new SymmetryWrapper<S>(hasher);
-		root = new SymNode<S>(myWrapper, hasher.numElements, suffixStartsAt,
+		root = new SymNode<S>(myWrapper, hasher.numElements - suffixStartsAt,
 				new int[hasher.numElements - suffixStartsAt], 0L);
 	}
 }

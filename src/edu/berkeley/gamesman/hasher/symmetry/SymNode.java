@@ -12,10 +12,10 @@ public class SymNode<S extends GenState> {
 
 	// TODO Add parameter which discriminates based on whether state is a
 	// rotation of a lower energy-state.
-	public SymNode(SymmetryWrapper<S> wrapper, int index, int suffixStartsAt,
-			int[] pieces, long offset) {
+	public SymNode(SymmetryWrapper<S> wrapper, int index, int[] pieces,
+			long offset) {
 		this.index = index;
-		if (index == suffixStartsAt) {
+		if (index == 0) {
 			this.pieces = new int[pieces.length];
 			System.arraycopy(pieces, 0, this.pieces, 0, pieces.length);
 			children = null;
@@ -26,8 +26,8 @@ public class SymNode<S extends GenState> {
 			long numPositions = 0;
 			for (int d = 0; d < wrapper.myHasher.digitBase; d++) {
 				pieces[index - 1] = d;
-				children[d] = new SymNode<S>(wrapper, index - 1,
-						suffixStartsAt, pieces, offset + numPositions);
+				children[d] = new SymNode<S>(wrapper, index - 1, pieces, offset
+						+ numPositions);
 				numPositions += children[d].numPositions;
 			}
 			this.numPositions = numPositions;
