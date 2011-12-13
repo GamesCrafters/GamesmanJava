@@ -244,7 +244,7 @@ public class Rubik extends TwistyPuzzle<CubeState> {
 	}
 }
 
-class CubeState implements State {
+class CubeState implements State<CubeState> {
 	private static final int[] SOLVED_PIECES = new int[] { 0, 1, 2, 3, 4, 5, 6,
 			7 };
 
@@ -361,15 +361,11 @@ class CubeState implements State {
 	}
 
 	@Override
-	public void set(State s) {
-		if (s instanceof CubeState) {
-			CubeState cs = (CubeState) s;
-			for (int i = 0; i < pieces.length; i++)
-				pieces[i] = cs.pieces[i];
-			for (int i = 0; i < orientations.length; i++)
-				orientations[i] = cs.orientations[i];
-		} else
-			throw new Error("Type mismatch");
+	public void set(CubeState cs) {
+		for (int i = 0; i < pieces.length; i++)
+			pieces[i] = cs.pieces[i];
+		for (int i = 0; i < orientations.length; i++)
+			orientations[i] = cs.orientations[i];
 	}
 
 	@Override

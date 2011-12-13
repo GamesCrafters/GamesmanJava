@@ -239,7 +239,7 @@ public class JSONInterface extends GamesmanApplication {
 
 		private ExecutorService tp = Executors.newCachedThreadPool();
 
-		private class FieldFiller<T extends State> implements Runnable {
+		private class FieldFiller<T extends State<T>> implements Runnable {
 			private final Configuration config;
 			private final Database db;
 			private final String move;
@@ -297,7 +297,7 @@ public class JSONInterface extends GamesmanApplication {
 			return response;
 		}
 
-		private <T extends State> List<GamestateResponse> getNextMoveValues_core(
+		private <T extends State<T>> List<GamestateResponse> getNextMoveValues_core(
 				String gamename, Map<String, String> params) throws TException {
 
 			String board = params.get("board");
@@ -353,7 +353,7 @@ public class JSONInterface extends GamesmanApplication {
 			return responseArray;
 		}
 
-		public <T extends State> GamestateResponse getMoveValue_core(
+		public <T extends State<T>> GamestateResponse getMoveValue_core(
 				String gamename, Map<String, String> params) throws TException {
 
 			GamestateResponse response;
@@ -413,7 +413,7 @@ public class JSONInterface extends GamesmanApplication {
 			return j;
 		}
 
-		private <T extends State> GamestateResponse fillResponseFields(
+		private <T extends State<T>> GamestateResponse fillResponseFields(
 				Configuration conf, Database db, T state, boolean isChildState) {
 			GamestateResponse request = new GamestateResponse();
 
@@ -434,7 +434,7 @@ public class JSONInterface extends GamesmanApplication {
 				if (conf.hasValue) {
 					Value pv = rec.value;
 					if (g.getPlayerCount() > 1 && isChildState)
-						pv = pv.flipValue();
+						pv = pv.opposite();
 					request.setValue(pv.name().toLowerCase());
 				}
 				if (conf.hasRemoteness) {

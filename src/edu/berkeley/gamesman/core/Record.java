@@ -51,7 +51,7 @@ public final class Record implements Cloneable, Comparable<Record> {
 	 */
 	public void previousPosition() {
 		if (conf.hasValue)
-			value = value.flipValue();
+			value = value.opposite();
 		if (conf.hasRemoteness)
 			++remoteness;
 	}
@@ -99,7 +99,7 @@ public final class Record implements Cloneable, Comparable<Record> {
 	 * subtracting one from the remoteness.
 	 */
 	public void nextPosition() {
-		value = value.flipValue();
+		value = value.opposite();
 		--remoteness;
 	}
 

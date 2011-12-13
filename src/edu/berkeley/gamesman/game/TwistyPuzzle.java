@@ -15,7 +15,7 @@ import edu.berkeley.gamesman.core.Value;
  * @param <S>
  *            The state for the puzzle
  */
-public abstract class TwistyPuzzle<S extends State> extends Game<S> implements
+public abstract class TwistyPuzzle<S extends State<S>> extends Game<S> implements
 		FinitePrimitives<S>, Undoable<S> {
 
 	public TwistyPuzzle(Configuration conf) {

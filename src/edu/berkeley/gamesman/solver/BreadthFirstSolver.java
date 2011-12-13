@@ -22,7 +22,7 @@ import edu.berkeley.gamesman.util.qll.Pool;
  * @param <T>
  *            The game state
  */
-public class BreadthFirstSolver<T extends State> extends Solver {
+public class BreadthFirstSolver<T extends State<T>> extends Solver {
 
 	public BreadthFirstSolver(Configuration conf, Database db) {
 		super(conf, db);

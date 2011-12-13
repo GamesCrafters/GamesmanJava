@@ -19,7 +19,7 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author dnspies
  */
-public class TopDownSolver extends Solver {
+public class TopDownSolver<S extends State<S>> extends Solver {
 	private boolean askedJob = false;
 	private final boolean debugSolver;
 
@@ -36,7 +36,7 @@ public class TopDownSolver extends Solver {
 
 	public class TopDownSolveTask implements Runnable {
 		public void run() {
-			Game<?> g = conf.getGame();
+			Game<S> g = conf.getCheckedGame();
 			TopDownMutaGame game;
 			if (g instanceof TopDownMutaGame) {
 				game = (TopDownMutaGame) g;
@@ -62,7 +62,7 @@ public class TopDownSolver extends Solver {
 			}
 		}
 
-		private <S extends State> TopDownMutaGame wrapGame(Game<S> g) {
+		private TopDownMutaGame wrapGame(Game<S> g) {
 			return new TopDownGame<S>(g);
 		}
 

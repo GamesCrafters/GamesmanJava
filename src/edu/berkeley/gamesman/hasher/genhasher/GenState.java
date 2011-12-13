@@ -9,7 +9,7 @@ import edu.berkeley.gamesman.util.Util;
  * @author dnspies
  * 
  */
-public class GenState implements State {
+public class GenState implements State<GenState> {
 	/**
 	 * 
 	 */
@@ -34,15 +34,8 @@ public class GenState implements State {
 		this.myHasher = myHasher;
 	}
 
-	@Override
-	public final void set(State s) {
-		set((GenState) s);
-	}
-
 	// Should not access any non-final methods which might modify s
-	/**
-	 * @param s
-	 */
+	@Override
 	public final void set(GenState s) {
 		assert s.myHasher == myHasher;
 		setOther(s);

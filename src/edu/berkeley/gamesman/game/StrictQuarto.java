@@ -24,14 +24,13 @@ public class StrictQuarto extends Game<StrictQuarto.QuartoState> {
 	 * 
 	 * @author dnspies
 	 */
-	public static class QuartoState implements State {
+	public static class QuartoState implements State<QuartoState> {
 		private int tier = 0;
 		private final int[] pieces = new int[16];
 		private final boolean[] used = new boolean[16];
 
 		@Override
-		public void set(State s) {
-			QuartoState qs = (QuartoState) s;
+		public void set(QuartoState qs) {
 			tier = qs.tier;
 			System.arraycopy(qs.pieces, 0, pieces, 0, 16);
 			System.arraycopy(qs.used, 0, used, 0, 16);

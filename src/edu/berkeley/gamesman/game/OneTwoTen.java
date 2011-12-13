@@ -182,7 +182,7 @@ public class OneTwoTen extends Game<OneTwoTenState> {
  * 
  * @author dnspies
  */
-class OneTwoTenState implements State {
+class OneTwoTenState implements State<OneTwoTenState> {
 	/**
 	 * Left player constant
 	 */
@@ -209,8 +209,7 @@ class OneTwoTenState implements State {
 	}
 
 	@Override
-	public void set(State s) {
-		OneTwoTenState other = (OneTwoTenState) s;
+	public void set(OneTwoTenState other) {
 		turn = other.turn;
 		numXs = other.numXs;
 	}

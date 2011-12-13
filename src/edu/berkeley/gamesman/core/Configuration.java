@@ -74,7 +74,6 @@ public final class Configuration {
 	 */
 	public Configuration(Properties props) throws ClassNotFoundException {
 		this.props = props;
-		Properties p = new Properties();
 		String gamename = getProperty("gamesman.game");
 		String[] gamenames = gamename.split(":");
 		gamename = gamenames[gamenames.length - 1];
@@ -148,7 +147,7 @@ public final class Configuration {
 	 * @return the Game this configuration plays
 	 */
 	@SuppressWarnings("unchecked")
-	public <T extends State> Game<T> getCheckedGame() {
+	public <T extends State<T>> Game<T> getCheckedGame() {
 		return (Game<T>) g;
 	}
 
@@ -379,7 +378,7 @@ public final class Configuration {
 	/**
 	 * @return The game for this configuration
 	 */
-	public Game<? extends State> getGame() {
+	public Game<?> getGame() {
 		return g;
 	}
 

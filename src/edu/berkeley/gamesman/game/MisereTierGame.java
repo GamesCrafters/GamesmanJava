@@ -26,7 +26,7 @@ public final class MisereTierGame extends TierGame {
 
 	@Override
 	public Value primitiveValue() {
-		return myGame.primitiveValue().flipValue();
+		return myGame.primitiveValue().opposite();
 	}
 
 	@Override
@@ -112,13 +112,13 @@ public final class MisereTierGame extends TierGame {
 	@Override
 	public void longToRecord(TierState recordState, long record, Record toStore) {
 		myGame.longToRecord(recordState, record, toStore);
-		toStore.value = toStore.value.flipValue();
+		toStore.value = toStore.value.opposite();
 	}
 
 	@Override
 	public long recordToLong(TierState recordState, Record fromRecord) {
 		tempRecord.set(fromRecord);
-		tempRecord.value = fromRecord.value.flipValue();
+		tempRecord.value = fromRecord.value.opposite();
 		return myGame.recordToLong(recordState, tempRecord);
 	}
 

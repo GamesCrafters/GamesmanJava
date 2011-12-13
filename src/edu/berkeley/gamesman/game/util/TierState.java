@@ -7,7 +7,7 @@ import edu.berkeley.gamesman.core.State;
  * 
  * @author DNSpies
  */
-public final class TierState implements State, Cloneable {
+public final class TierState implements State<TierState>, Cloneable {
 
 	/**
 	 * The tier
@@ -52,13 +52,10 @@ public final class TierState implements State, Cloneable {
 		return tier + "." + hash;
 	}
 
-	public void set(State s) {
-		if (s instanceof TierState) {
-			TierState is = (TierState) s;
-			tier = is.tier;
-			hash = is.hash;
-		} else
-			throw new Error("Type mismatch");
+	@Override
+	public void set(TierState is) {
+		tier = is.tier;
+		hash = is.hash;
 	}
 
 	@Override

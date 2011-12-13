@@ -3,7 +3,7 @@ package edu.berkeley.gamesman.game;
 import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.game.util.Bullet;
 
-public final class AlignmentState implements State {
+public final class AlignmentState implements State<AlignmentState> {
 	private final boolean[] guns = new boolean[] { false, false, false, false };
 	private boolean[] guns2 = new boolean[] { false, false, false, false }; //guns exist far away, guns2[n][s][e][w]
 	// private ArrayList<Bullet> myBullets = new ArrayList<Bullet>();
@@ -43,8 +43,8 @@ public final class AlignmentState implements State {
 		numPieces = pos.numPieces;
 	}
 
-	public void set(State s) {
-		AlignmentState as = (AlignmentState) s;
+	@Override
+	public void set(AlignmentState as) {
 		for (int row = 0; row < board.length; row++) {
 			for (int col = 0; col < board[row].length; col++) {
 				board[row][col] = as.board[row][col];

@@ -22,7 +22,7 @@ import edu.berkeley.gamesman.util.qll.QuickLinkedList;
  * @param <S>
  *            The game state
  */
-public final class TopDownGame<S extends State> extends TopDownMutaGame {
+public final class TopDownGame<S extends State<S>> extends TopDownMutaGame {
 	private final Game<S> myGame;
 	private final QuickLinkedList<SIterator> moveLists = new QuickLinkedList<SIterator>();
 	private final Pool<SIterator> moveArrayPool = new Pool<SIterator>(

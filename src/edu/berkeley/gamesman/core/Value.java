@@ -6,7 +6,6 @@ package edu.berkeley.gamesman.core;
  * @author dnspies
  */
 public enum Value implements Comparable<Value> {
-	NEGATIVE_INFINITY(false),
 	/**
 	 * The player who just moved can force a win
 	 */
@@ -33,7 +32,7 @@ public enum Value implements Comparable<Value> {
 	/**
 	 * This is not a legal position
 	 */
-	IMPOSSIBLE(false), POSITIVE_INFINITY(false);
+	IMPOSSIBLE(false);
 
 	/**
 	 * Does it make sense to include remoteness with this value?
@@ -41,14 +40,12 @@ public enum Value implements Comparable<Value> {
 	public final boolean hasRemoteness;
 	private Value opposite;
 	static {
-		NEGATIVE_INFINITY.opposite = POSITIVE_INFINITY;
 		LOSE.opposite = WIN;
 		DRAW.opposite = DRAW;
 		TIE.opposite = TIE;
 		UNDECIDED.opposite = UNDECIDED;
 		WIN.opposite = LOSE;
 		IMPOSSIBLE.opposite = IMPOSSIBLE;
-		POSITIVE_INFINITY.opposite = NEGATIVE_INFINITY;
 	}
 	/**
 	 * The same as PrimitiveValue.values(), but without needing to allocate new
@@ -62,18 +59,6 @@ public enum Value implements Comparable<Value> {
 
 	public String toString() {
 		return this.name();
-	}
-
-	/**
-	 * @return The value of this move from the perspective of the other player.
-	 */
-	public Value flipValue() {
-		if (this == LOSE)
-			return WIN;
-		else if (this == WIN)
-			return LOSE;
-		else
-			return this;
 	}
 
 	public static Value getValue(int vNum) {

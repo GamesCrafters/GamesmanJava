@@ -239,7 +239,7 @@ public class Pyraminx extends TwistyPuzzle<PyraminxState> {
 	}
 }
 
-class PyraminxState implements State {
+class PyraminxState implements State<PyraminxState> {
 	final int[] edgePermutation, centerOrientation, edgeOrientation;
 
 	public PyraminxState(int[] edgePermutation, int[] edgeOrientation,
@@ -272,16 +272,12 @@ class PyraminxState implements State {
 	}
 
 	@Override
-	public void set(State s) {
-		if (s instanceof PyraminxState) {
-			PyraminxState p = (PyraminxState) s;
-			for (int i = 0; i < edgePermutation.length; i++)
-				edgePermutation[i] = p.edgePermutation[i];
-			for (int i = 0; i < edgeOrientation.length; i++)
-				edgeOrientation[i] = p.edgeOrientation[i];
-			for (int i = 0; i < centerOrientation.length; i++)
-				centerOrientation[i] = p.centerOrientation[i];
-		} else
-			throw new Error("Type mismatch");
+	public void set(PyraminxState p) {
+		for (int i = 0; i < edgePermutation.length; i++)
+			edgePermutation[i] = p.edgePermutation[i];
+		for (int i = 0; i < edgeOrientation.length; i++)
+			edgeOrientation[i] = p.edgeOrientation[i];
+		for (int i = 0; i < centerOrientation.length; i++)
+			centerOrientation[i] = p.centerOrientation[i];
 	}
 }

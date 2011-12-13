@@ -39,8 +39,8 @@ public final class Play {
 	 * @throws ClassNotFoundException
 	 *             If the configuration contains a nonexistent class
 	 */
-	public static void main(String[] args) throws IOException,
-			ClassNotFoundException {
+	public static <S extends State<S>> void main(String[] args)
+			throws IOException, ClassNotFoundException {
 		Configuration conf;
 		Database db;
 		if (args[0].endsWith(".job")) {
@@ -52,12 +52,11 @@ public final class Play {
 			conf = db.conf;
 			// Fetch the configuration information from that database
 		}
-		Game<? extends State> g = conf.getGame();
 		// Get the game object for the current game
-		playGame(g, db);
+		playGame(conf.<S> getCheckedGame(), db);
 	}
 
-	private static <S extends State> void playGame(Game<S> g, Database db)
+	private static <S extends State<S>> void playGame(Game<S> g, Database db)
 			throws IOException {
 		S position = g.startingPositions().iterator().next();
 		/*

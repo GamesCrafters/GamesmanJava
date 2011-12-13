@@ -2,7 +2,7 @@ package edu.berkeley.gamesman.game;
 
 import edu.berkeley.gamesman.core.State;
 
-public class HashState implements State {
+public class HashState implements State<HashState> {
 
 	public long hash;
 
@@ -13,8 +13,9 @@ public class HashState implements State {
 		this.hash = hash;
 	}
 
-	public void set(State s) {
-		hash = ((HashState) s).hash;
+	@Override
+	public void set(HashState s) {
+		hash = s.hash;
 	}
 
 }

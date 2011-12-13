@@ -18,7 +18,7 @@ import edu.berkeley.gamesman.util.Util;
  * @author David, Brent, Nancy, Kevin, Peter, Sharmishtha, Raji
  * 
  */
-public class LoopySolver extends Solver {
+public class LoopySolver<S extends State<S>> extends Solver {
 	private boolean askedJob = false;
 
 	public LoopySolver(Configuration conf, Database db) {
@@ -30,7 +30,7 @@ public class LoopySolver extends Solver {
 		private final LoopyMutaGame game;
 
 		private LoopySolveTask() {
-			Game<?> g = conf.getGame();
+			Game<S> g = conf.getCheckedGame();
 			if (g instanceof LoopyMutaGame) {
 				game = (LoopyMutaGame) g;
 			} else {
@@ -48,8 +48,7 @@ public class LoopySolver extends Solver {
 			}
 		}
 
-		private <S extends State> LoopyMutaGame wrapGame(Configuration conf,
-				Game<S> g) {
+		private LoopyMutaGame wrapGame(Configuration conf, Game<S> g) {
 			return new LoopyGameWrapper<S>(conf, g);
 		}
 
