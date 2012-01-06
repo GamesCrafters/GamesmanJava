@@ -6,13 +6,18 @@
     <version>0.0.1-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
-  <artifactId>GamesmanJava-propogater</artifactId>
+  <artifactId>GamesmanJava-parallel-reader</artifactId>
   <dependencies>
+  	<dependency>
+  		<groupId>edu.berkeley.gamesman</groupId>
+  		<artifactId>GamesmanJava-parallel</artifactId>
+  		<version>0.0.1-SNAPSHOT</version>
+  	</dependency>
   	<dependency>
   		<groupId>org.apache.hadoop</groupId>
   		<artifactId>hadoop-core</artifactId>
   		<version>0.20.205.0</version>
-  		<scope>provided</scope>
+  		<scope>runtime</scope>
   	</dependency>
   </dependencies>
 </project>
