@@ -1,0 +1,10 @@
+gamesman.game = Connect4
+gamesman.game.width = 5
+gamesman.game.height = 5
+gamesman.game.pieces = 4
+gamesman.solver = TierSolver
+gamesman.database = GZippedFileDatabase
+gamesman.database.writing.wrapper = MemoryDatabase
+gamesman.db.uri = /tmp/database55.db
+gamesman.threads = 16
+gamesman.debug.SOLVER = true

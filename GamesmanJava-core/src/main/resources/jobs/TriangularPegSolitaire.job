@@ -1,0 +1,11 @@
+gamesman.game = PythonPuzzle.py
+gamesman.game.size = 5
+gamesman.game.start = 0
+gamesman.solver = TopDownSolver
+gamesman.hasher = NullHasher
+gamesman.db.uri = pegsolitaire.db
+gamesman.database = GZippedFileDatabase
+gamesman.database.writing.wrapper = MemoryDatabase
+gamesman.debug.SOLVER = true
+record.fields = VALUE,REMOTENESS,SCORE
+pythonpuzzle = TriangularPegSolitaire

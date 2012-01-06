@@ -1,0 +1,12 @@
+gamesman.game = Connect4
+gamesman.game.width = 7
+gamesman.game.height = 4
+gamesman.game.pieces = 4
+gamesman.solver = CacheTierSolver
+gamesman.database = FileDatabase
+gamesman.db.uri = /tmp/database74.db
+gamesman.threads = 16
+gamesman.memory = 2g
+gamesman.splits = 48
+gamesman.debug.SOLVER = true
+gamesman.debug.DATABASE = true

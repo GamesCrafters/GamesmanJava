@@ -1,0 +1,2 @@
+gamesman.game = StrictQuarto
+gamesman.database = DummyDatabase

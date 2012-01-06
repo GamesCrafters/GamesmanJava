@@ -1,0 +1,9 @@
+gamesman.game = VIQuickCross
+gamesman.game.width = 4
+gamesman.game.height = 4
+gamesman.game.pieces = 4
+gamesman.game.variant = 1
+gamesman.solver = VISolver
+gamesman.db.uri = QuickCross.db
+gamesman.database = GZippedFileDatabase
+gamesman.database.writing.wrapper = MemoryDatabase

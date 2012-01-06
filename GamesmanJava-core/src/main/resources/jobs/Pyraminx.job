@@ -1,0 +1,6 @@
+gamesman.game = Pyraminx
+gamesman.solver = BreadthFirstSolver
+gamesman.db.uri = pyraminx.db
+gamesman.database = GZippedFileDatabase
+gamesman.database.writing.wrapper = MemoryDatabase
+gamesman.debug.SOLVER = true

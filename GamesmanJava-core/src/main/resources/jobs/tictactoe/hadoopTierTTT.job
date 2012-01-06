@@ -1,0 +1,12 @@
+gamesman.game = TicTacToe
+gamesman.game.width = 3
+gamesman.game.height = 3
+gamesman.solver = CacheTierSolver
+gamesman.db.uri = ttt.db
+gamesman.hadoop.tierDb = ttt/tier
+gamesman.hadoop.dbfolder = ttt
+gamesman.minimum.splits = 48
+gamesman.minimum.split.size = 65536
+gamesman.preferred.split.size = 67108864
+gamesman.debug.SOLVER = true
+gamesman.debug.DATABASE = true

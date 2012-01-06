@@ -1,0 +1,3 @@
+gamesman.game = YGame
+gamesman.game.centerRows = 3
+gamesman.game.outerRows = 2
