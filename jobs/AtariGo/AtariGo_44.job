@@ -1,9 +1,0 @@
-gamesman.game = AtariGo
-gamesman.game.width = 4
-gamesman.game.height = 4
-gamesman.solver = TierSolver
-gamesman.database = GZippedFileDatabase
-gamesman.database.writing.wrapper = MemoryDatabase
-gamesman.db.uri = /tmp/atari44.db
-gamesman.threads = 16
-gamesman.debug.SOLVER = true

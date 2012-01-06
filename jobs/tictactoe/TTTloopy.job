@@ -1,6 +1,0 @@
-gamesman.game = TicTacToeLoopy
-gamesman.solver = LoopySolver
-gamesman.database = GZippedFileDatabase
-gamesman.database.writing.wrapper = MemoryDatabase
-gamesman.db.uri = tttloopy.db
-gamesman.debug.THREADING = true

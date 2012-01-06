@@ -1,7 +1,0 @@
-gamesman.game = Connections
-gamesman.game.side = 3
-gamesman.solver = TierSolver
-gamesman.database = GZippedFileDatabase
-gamesman.database.writing.wrapper = MemoryDatabase
-gamesman.db.uri = connections.db
-gamesman.debug.SOLVER = true

@@ -1,8 +1,0 @@
-gamesman.game = Y2
-game.centerRows = 3
-game.outerRows = 1
-gamesman.solver = TierSolver
-gamesman.database = GZippedFileDatabase
-gamesman.database.writing.wrapper = MemoryDatabase
-gamesman.db.uri = ygame.db
-gamesman.debug.SOLVER = true
