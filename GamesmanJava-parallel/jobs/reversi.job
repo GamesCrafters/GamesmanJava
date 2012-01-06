@@ -1,0 +1,5 @@
+gamesman.hadoop.game.name=reversi
+propogater.tree.class=edu.berkeley.gamesman.hadoop.game.reversi.Reversi
+propogation.work.path=work
+propogater.out.path=reversi
+propogater.output.parameters=reversi.job
