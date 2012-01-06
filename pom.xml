@@ -20,7 +20,6 @@
 		<module>GamesmanJava-oldHadoop</module>
 		<module>GamesmanJava-propogater</module>
 		<module>GamesmanJava-parallel</module>
-		<module>GamesmanJava-parallel-reader</module>
 	</modules>
 	<build>
 		<plugins>
