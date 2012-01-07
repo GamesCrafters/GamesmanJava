@@ -1,6 +1,5 @@
 package edu.berkeley.gamesman;
 
-
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -30,7 +29,7 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author Steven Schlansker
  */
-public class JSONInterface extends GamesmanApplication implements Iface {
+public class JSONInterface implements Iface {
 	private static final Map<String, Opener> gameOpeners = Collections
 			.synchronizedMap(new HashMap<String, Opener>());
 
@@ -38,22 +37,21 @@ public class JSONInterface extends GamesmanApplication implements Iface {
 		gameOpeners.put(game, opener);
 	}
 
-	private DefaultOpener defaultOpen;
+	private final DefaultOpener defaultOpen;
 
 	/**
 	 * No arg constructor
 	 */
-	public JSONInterface() {
-	}
-
-	private Properties serverConf;
-
-	private Map<String, RecordFetcher> loadedConfigurations = new HashMap<String, RecordFetcher>();
-
-	@Override
-	public int run(Properties props) {
+	public JSONInterface(Properties props) {
 		this.serverConf = props;
 		defaultOpen = new DefaultOpener(props);
+	}
+
+	private final Properties serverConf;
+
+	private final Map<String, RecordFetcher> loadedConfigurations = new HashMap<String, RecordFetcher>();
+
+	public int run() {
 		/*
 		 * try { db = Util.typedInstantiate(, Database.class); } catch
 		 * (ClassNotFoundException e1) {
