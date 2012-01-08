@@ -27,7 +27,7 @@ public class CountingState extends GenState {
 			base = Math.max(base, myHasher.baseFor(i));
 		}
 		this.numPieces = new int[base];
-		numPieces[0] = myHasher.numElements;
+		numPieces[0] = countTo;
 	}
 
 	/**

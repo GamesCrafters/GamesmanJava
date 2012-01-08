@@ -11,6 +11,7 @@ import edu.berkeley.gamesman.hasher.invhasher.OptimizingInvariantHasher;
 public final class DBHasher extends OptimizingInvariantHasher<DBState> {
 	private final int boardSize;
 	private final int numInvariants;
+	private final int prod;
 
 	/**
 	 * @param numElements
@@ -20,7 +21,8 @@ public final class DBHasher extends OptimizingInvariantHasher<DBState> {
 	public DBHasher(int boardSize) {
 		super(makeParams(boardSize));
 		this.boardSize = boardSize;
-		numInvariants = boardSize * boardSize;
+		prod = (boardSize + 1) * (boardSize + 1);
+		numInvariants = prod * (boardSize + 1);
 	}
 
 	private static int[] makeParams(int boardSize) {
@@ -37,7 +39,8 @@ public final class DBHasher extends OptimizingInvariantHasher<DBState> {
 
 	@Override
 	protected int getInvariant(DBState state) {
-		return state.numPieces(1) * boardSize + state.numPieces(2);
+		return state.get(boardSize) * prod + state.numPieces(1)
+				* (boardSize + 1) + state.numPieces(2);
 	}
 
 	@Override
