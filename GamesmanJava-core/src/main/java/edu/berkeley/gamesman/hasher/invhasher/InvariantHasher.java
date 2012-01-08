@@ -1,12 +1,12 @@
 package edu.berkeley.gamesman.hasher.invhasher;
 
-import java.util.Arrays;
+import java.util.HashMap;
 
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.hasher.genhasher.GenState;
 
 public abstract class InvariantHasher<S extends GenState> extends GenHasher<S> {
-	private long[][] invariantCounts;
+	private HashMap<Long, Long>[] invariantCounts;
 
 	/**
 	 * @param numElements
@@ -15,54 +15,49 @@ public abstract class InvariantHasher<S extends GenState> extends GenHasher<S> {
 	 */
 	public InvariantHasher(int[] digitBase) {
 		super(digitBase);
-		invariantCounts = new long[numElements + 1][];
+		invariantCounts = new HashMap[numElements + 1];
+		for (int i = 0; i <= numElements; i++)
+			invariantCounts[i] = new HashMap<Long, Long>();
 	}
 
 	@Override
 	protected long innerCountCompletions(S state) {
 		int start = getStart(state);
-		if (invariantCounts[start] == null) {
-			invariantCounts[start] = new long[numInvariants(start)];
-			Arrays.fill(invariantCounts[start], -1L);
-		}
-		int inv = getInvariant(state);
+		long inv = getInvariant(state);
 		if (inv < 0)
 			return 0L;
-		if (invariantCounts[start][inv] >= 0) {
-			return invariantCounts[start][inv];
+		Long count = invariantCounts[start].get(inv);
+		if (count != null) {
+			return count;
 		}
+		long posCount;
 		if (isComplete(state)) {
-			if (valid(state))
-				invariantCounts[start][inv] = 1L;
-			else
-				invariantCounts[start][inv] = 0L;
+			if (valid(state)) {
+				posCount = 1L;
+			} else {
+				posCount = 0L;
+			}
 		} else {
 			S tempState = getPoolPref();
 			tempState.set(state);
 			assert validLS(tempState);
 			addOn(tempState, false);
-			long posCount = 0L;
+			posCount = 0L;
 			do {
 				posCount += countCompletions(tempState);
 			} while (incr(tempState, 1));
 			releasePref(tempState);
-			invariantCounts[start][inv] = posCount;
 		}
-		return invariantCounts[start][inv];
+		invariantCounts[start].put(inv, posCount);
+		return posCount;
 	}
 
 	/**
 	 * @param state
 	 * @return
 	 */
-	protected abstract int getInvariant(S state);
+	protected abstract long getInvariant(S state);
 
 	@Override
 	protected abstract boolean valid(S state);
-
-	/**
-	 * @param startPoint
-	 * @return
-	 */
-	protected abstract int numInvariants(int startPoint);
 }

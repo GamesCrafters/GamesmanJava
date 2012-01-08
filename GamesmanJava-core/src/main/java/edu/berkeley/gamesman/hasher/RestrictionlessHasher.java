@@ -10,18 +10,13 @@ public class RestrictionlessHasher extends OptimizingInvariantHasher<GenState> {
 	}
 
 	@Override
-	protected int getInvariant(GenState state) {
+	protected long getInvariant(GenState state) {
 		return 0;
 	}
 
 	@Override
 	protected boolean valid(GenState state) {
 		return true;
-	}
-
-	@Override
-	protected int numInvariants(int startPoint) {
-		return 1;
 	}
 
 	@Override

@@ -2,16 +2,17 @@ package edu.berkeley.gamesman.hasher;
 
 import java.util.Arrays;
 
+import edu.berkeley.gamesman.hasher.counting.CountingState;
+import edu.berkeley.gamesman.hasher.genhasher.DBInvCalculator;
 import edu.berkeley.gamesman.hasher.invhasher.OptimizingInvariantHasher;
 
 /**
  * @author dnspies
  * 
  */
-public final class DBHasher extends OptimizingInvariantHasher<DBState> {
+public final class DBHasher extends OptimizingInvariantHasher<CountingState> {
 	private final int boardSize;
-	private final int numInvariants;
-	private final int prod;
+	private final DBInvCalculator calc;
 
 	/**
 	 * @param numElements
@@ -21,8 +22,7 @@ public final class DBHasher extends OptimizingInvariantHasher<DBState> {
 	public DBHasher(int boardSize) {
 		super(makeParams(boardSize));
 		this.boardSize = boardSize;
-		prod = (boardSize + 1) * (boardSize + 1);
-		numInvariants = prod * (boardSize + 1);
+		calc = new DBInvCalculator(boardSize);
 	}
 
 	private static int[] makeParams(int boardSize) {
@@ -33,26 +33,24 @@ public final class DBHasher extends OptimizingInvariantHasher<DBState> {
 	}
 
 	@Override
-	protected DBState innerNewState() {
-		return new DBState(this, boardSize);
+	protected CountingState innerNewState() {
+		return new CountingState(this, boardSize);
 	}
 
 	@Override
-	protected int getInvariant(DBState state) {
-		return state.get(boardSize) * prod + state.numPieces(1)
-				* (boardSize + 1) + state.numPieces(2);
+	protected long getInvariant(CountingState state) {
+		return calc.getInv(state);
 	}
 
 	@Override
-	protected boolean valid(DBState state) {
+	protected boolean valid(CountingState state) {
+		return dbValid(state, boardSize);
+	}
+
+	public static boolean dbValid(CountingState state, int boardSize) {
 		int num1 = state.numPieces(1);
 		int num2 = state.numPieces(2);
 		return num1 + num2 == state.get(boardSize)
 				&& (num1 - num2 == 1 || num1 - num2 == 0);
-	}
-
-	@Override
-	protected int numInvariants(int startPoint) {
-		return numInvariants;
 	}
 }

@@ -1,6 +1,6 @@
 package edu.berkeley.gamesman.hasher.invhasher;
 
-import java.util.Arrays;
+import java.util.HashMap;
 
 import edu.berkeley.gamesman.hasher.genhasher.GenState;
 
@@ -21,7 +21,7 @@ import edu.berkeley.gamesman.hasher.genhasher.GenState;
  */
 public abstract class OptimizingInvariantHasher<S extends GenState> extends
 		InvariantHasher<S> {
-	private long[][][] invariantVals;
+	private HashMap<Long, Long>[][] invariantVals;
 
 	/**
 	 * @param numElements
@@ -30,35 +30,33 @@ public abstract class OptimizingInvariantHasher<S extends GenState> extends
 	 */
 	public OptimizingInvariantHasher(int[] digitBase) {
 		super(digitBase);
-		invariantVals = new long[numElements][][];
+		invariantVals = new HashMap[numElements][];
+		for (int i = 0; i < numElements; i++) {
+			invariantVals[i] = new HashMap[digitBase[i]];
+		}
 	}
 
 	@Override
 	protected long sigValue(S state) {
 		int place = getStart(state);
-		if (invariantVals[place] == null) {
-			int numInvs = numInvariants(place);
-			invariantVals[place] = new long[numInvs][baseFor(place)];
-			for (long[] arr : invariantVals[place]) {
-				Arrays.fill(arr, -1);
-			}
-		}
-		int lastInv = lastInvariant(state);
-		assert lastInv >= 0;
 		int ls = leastSig(state);
-		if (invariantVals[place][lastInv][ls] == -1)
-			invariantVals[place][lastInv][ls] = super.sigValue(state);
-		return invariantVals[place][lastInv][ls];
+		long lastInv = lastInvariant(state);
+		assert lastInv >= 0;
+		Long count = invariantVals[place][ls].get(lastInv);
+		if (count == null)
+			count = super.sigValue(state);
+		invariantVals[place][ls].put(lastInv, count);
+		return count;
 	}
 
 	/**
 	 * @param state
 	 * @return
 	 */
-	protected int lastInvariant(S state) {
+	protected long lastInvariant(S state) {
 		int ls = leastSig(state);
 		trunc(state);
-		int result = getInvariant(state);
+		long result = getInvariant(state);
 		assert result >= 0;
 		addLS(state, ls);
 		return result;

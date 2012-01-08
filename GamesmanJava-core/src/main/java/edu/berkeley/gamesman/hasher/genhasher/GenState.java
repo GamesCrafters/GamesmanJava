@@ -9,7 +9,7 @@ import edu.berkeley.gamesman.util.Util;
  * @author dnspies
  * 
  */
-public class GenState implements State<GenState> {
+public class GenState implements State<GenState>, Comparable<GenState> {
 	/**
 	 * 
 	 */
@@ -154,6 +154,7 @@ public class GenState implements State<GenState> {
 	 * @return
 	 */
 	public final int get(int place) {
+		assert startPoint <= place;
 		return sequence[place];
 	}
 
@@ -220,5 +221,20 @@ public class GenState implements State<GenState> {
 
 	public final boolean hasHasher(GenHasher<?> h) {
 		return h == myHasher;
+	}
+
+	@Override
+	public int compareTo(GenState o) {
+		if (sequence.length != o.sequence.length)
+			return sequence.length - o.sequence.length;
+		else {
+			int maxPoint = Math.max(startPoint, o.startPoint);
+			for (int i = sequence.length - 1; i >= maxPoint; i--) {
+				if (sequence[i] != o.sequence[i])
+					return sequence[i] - o.sequence[i];
+			}
+			return o.startPoint - startPoint;
+			// Yes this is correct, larger start point = smaller suffix
+		}
 	}
 }

@@ -782,6 +782,11 @@ public abstract class GenHasher<S extends GenState> {
 		assert validTest(state);
 	}
 
+	public final void set(S state, S seq) {
+		state.setOther(seq);
+		assert validTest(state);
+	}
+
 	/**
 	 * Returns whether get(state,getStart(state)) is in [0,digBase)
 	 * 

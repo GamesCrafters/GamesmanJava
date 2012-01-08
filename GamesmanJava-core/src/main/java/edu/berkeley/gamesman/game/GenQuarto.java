@@ -219,7 +219,7 @@ class GenQuartoState extends GenState {
 		}
 	}
 
-	public int getInvariant() {
+	public long getInvariant() {
 		if (extraPiece == -1) {
 			return numPieces;
 		} else
@@ -239,18 +239,13 @@ class GenQuartoHasher extends InvariantHasher<GenQuartoState> {
 	}
 
 	@Override
-	protected int getInvariant(GenQuartoState state) {
+	protected long getInvariant(GenQuartoState state) {
 		return state.getInvariant();
 	}
 
 	@Override
 	protected boolean valid(GenQuartoState state) {
 		return state.getInvariant() != -1;
-	}
-
-	@Override
-	protected int numInvariants(int startPoint) {
-		return 17 - startPoint;
 	}
 
 	@Override
