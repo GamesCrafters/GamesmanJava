@@ -1,6 +1,7 @@
 package edu.berkeley.gamesman.game;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 
 import edu.berkeley.gamesman.core.Configuration;
@@ -26,7 +27,7 @@ public class VIQuickCross extends VIGame {
 		height = conf.getInteger("gamesman.game.height", 4);
 		piecesInARow = conf.getInteger("gamesman.game.pieces", 4);
 		boardSize = width * height;
-		this.myHasher = new RestrictionlessHasher(boardSize, 3);
+		this.myHasher = new RestrictionlessHasher(makeArr());
 		CacheMove[] allMoves = new CacheMove[boardSize * 4];
 		for (int i = 0; i < boardSize; i++) {
 			allMoves[4 * i] = new CacheMove(i, 0, 1);
@@ -37,6 +38,12 @@ public class VIQuickCross extends VIGame {
 		this.myCacher = new CacheHasher<GenState>(myHasher, myHasher, allMoves,
 				true);
 		myBoard = new BitSetBoard(height, width);
+	}
+
+	private int[] makeArr() {
+		int[] board = new int[boardSize];
+		Arrays.fill(board, 3);
+		return board;
 	}
 
 	@Override

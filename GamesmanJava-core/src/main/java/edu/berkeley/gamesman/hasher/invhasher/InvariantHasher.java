@@ -13,8 +13,8 @@ public abstract class InvariantHasher<S extends GenState> extends GenHasher<S> {
 	 * @param digitBase
 	 * @param initState
 	 */
-	public InvariantHasher(int numElements, int digitBase) {
-		super(numElements, digitBase);
+	public InvariantHasher(int[] digitBase) {
+		super(digitBase);
 		invariantCounts = new long[numElements + 1][];
 	}
 

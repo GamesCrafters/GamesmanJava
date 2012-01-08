@@ -28,8 +28,8 @@ public abstract class OptimizingInvariantHasher<S extends GenState> extends
 	 * @param digitBase
 	 * @param initState
 	 */
-	public OptimizingInvariantHasher(int numElements, int digitBase) {
-		super(numElements, digitBase);
+	public OptimizingInvariantHasher(int[] digitBase) {
+		super(digitBase);
 		invariantVals = new long[numElements][][];
 	}
 

@@ -1,5 +1,6 @@
 package edu.berkeley.gamesman.game;
 
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
@@ -228,7 +229,13 @@ class GenQuartoState extends GenState {
 
 class GenQuartoHasher extends InvariantHasher<GenQuartoState> {
 	public GenQuartoHasher() {
-		super(16, 17);
+		super(makeArr());
+	}
+
+	private static int[] makeArr() {
+		int[] arr = new int[16];
+		Arrays.fill(arr, 17);
+		return arr;
 	}
 
 	@Override

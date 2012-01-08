@@ -1,93 +1,55 @@
 package edu.berkeley.gamesman.hasher;
 
-import edu.berkeley.gamesman.hasher.fixed.FixedHasher;
-import edu.berkeley.gamesman.hasher.fixed.FixedState;
+import java.util.Arrays;
+
+import edu.berkeley.gamesman.hasher.invhasher.OptimizingInvariantHasher;
 
 /**
  * @author dnspies
  * 
  */
-public final class DBHasher extends FixedHasher<FixedState> {
+public final class DBHasher extends OptimizingInvariantHasher<DBState> {
+	private final int boardSize;
+	private final int numInvariants;
+
 	/**
 	 * @param numElements
 	 * @param digitBase
 	 * @param numPieces
 	 */
-	public DBHasher(int numElements, int digitBase, int[] numPieces) {
-		super(numElements, digitBase, numPieces);
+	public DBHasher(int boardSize) {
+		super(makeParams(boardSize));
+		this.boardSize = boardSize;
+		numInvariants = boardSize * boardSize;
+	}
+
+	private static int[] makeParams(int boardSize) {
+		int[] result = new int[boardSize + 1];
+		Arrays.fill(result, 3);
+		result[boardSize] = boardSize + 1;
+		return result;
 	}
 
 	@Override
-	protected int innerStep(FixedState state, int dir) {
-		assert dir == 1 || dir == -1;
-		int last = leastSig(state);
-		boolean incred;
-		do {
-			incred = incr(state, dir);
-		} while (incred && !validPref(state));
-		int numTruncs = 0;
-		if (!incred) {
-			trunc(state);
-			numTruncs = 1;
-			if (isEmpty(state)) {
-				addValid(state, dir == -1);
-				return -1;
-			}
-			int ls = leastSig(state);
-			while (dir == 1 && ls >= last || dir == -1 && ls <= last) {
-				trunc(state);
-				numTruncs++;
-				if (isEmpty(state)) {
-					for (int i = 0; i < numTruncs; i++)
-						addValid(state, dir == -1);
-					return -1;
-				}
-				last = ls;
-				ls = leastSig(state);
-			}
-			do {
-				incred = incr(state, dir);
-				assert incred;
-			} while (!validPref(state));
-			addValid(state, dir == -1);
-			last = leastSig(state);
-			for (int i = 1; i < numTruncs; i++) {
-				addLS(state, last);
-				while (!validPref(state))
-					incr(state, dir);
-				last = leastSig(state);
-			}
-		}
-		return getStart(state) + numTruncs + 1;
+	protected DBState innerNewState() {
+		return new DBState(this, boardSize);
 	}
 
 	@Override
-	protected boolean validPref(FixedState state) {
-		return baseValidPref(state);
+	protected int getInvariant(DBState state) {
+		return state.numPieces(1) * boardSize + state.numPieces(2);
 	}
 
 	@Override
-	protected FixedState innerNewState() {
-		return new FixedState(this, numElements);
-	}
-
-	@Override
-	protected int getInvariant(FixedState state) {
-		return baseGetInvariant(state);
-	}
-
-	@Override
-	protected int lastInvariant(FixedState state) {
-		return baseLastInvariant(state);
-	}
-
-	@Override
-	protected boolean valid(FixedState state) {
-		return baseValid(state);
+	protected boolean valid(DBState state) {
+		int num1 = state.numPieces(1);
+		int num2 = state.numPieces(2);
+		return num1 + num2 == state.get(boardSize)
+				&& (num1 - num2 == 1 || num1 - num2 == 0);
 	}
 
 	@Override
 	protected int numInvariants(int startPoint) {
-		return baseNumInvariants(startPoint);
+		return numInvariants;
 	}
 }

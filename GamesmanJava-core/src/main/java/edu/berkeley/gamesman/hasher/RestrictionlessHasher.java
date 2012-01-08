@@ -5,8 +5,8 @@ import edu.berkeley.gamesman.hasher.invhasher.OptimizingInvariantHasher;
 
 public class RestrictionlessHasher extends OptimizingInvariantHasher<GenState> {
 
-	public RestrictionlessHasher(int numElements, int digitBase) {
-		super(numElements, digitBase);
+	public RestrictionlessHasher(int[] digitBase) {
+		super(digitBase);
 	}
 
 	@Override
