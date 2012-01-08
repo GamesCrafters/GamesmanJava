@@ -6,7 +6,6 @@ import java.io.IOException;
 
 import edu.berkeley.gamesman.propogater.writable.WritableSettableCombinable;
 
-
 public class GameRecord implements Comparable<GameRecord>,
 		WritableSettableCombinable<GameRecord> {
 	public static final GameRecord DRAW = new GameRecord(GameValue.DRAW);
@@ -110,5 +109,9 @@ public class GameRecord implements Comparable<GameRecord>,
 
 	public int getRemoteness() {
 		return remoteness;
+	}
+
+	public void previousPosition() {
+		previousPosition(this);
 	}
 }

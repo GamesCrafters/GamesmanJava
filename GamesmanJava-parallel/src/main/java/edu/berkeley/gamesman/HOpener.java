@@ -13,7 +13,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.thrift.TException;
 
-
 import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.solve.reader.SolveReaders;
@@ -55,6 +54,7 @@ public class HOpener implements Opener {
 				try {
 					rec = SolveReaders.<KEY> readPosition(conf, folderPath,
 							child.cdr);
+					rec.previousPosition();
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}
@@ -98,11 +98,12 @@ public class HOpener implements Opener {
 	public RecordFetcher addDatabase(Map<String, String> params, String game,
 			String filename) {
 		Properties props = new Properties();
-		Path solvePath = new Path(solveDirectory, filename);
+		Path solvePath = new Path(solveDirectory, filename + ".job");
 		InputStream is;
 		try {
 			is = fs.open(solvePath);
 			props.load(is);
+			is.close();
 			Configuration hConf = new Configuration(conf);
 			for (Map.Entry<Object, Object> entry : props.entrySet()) {
 				hConf.set(entry.getKey().toString(), entry.getValue()

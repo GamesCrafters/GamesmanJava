@@ -16,12 +16,11 @@ import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.lib.output.MapFileOutputFormat;
 import org.apache.hadoop.util.ReflectionUtils;
 
-
 public class SolveReaders {
 	private static final HashMap<String, Class<? extends SolveReader>> gameClasses = new HashMap<String, Class<? extends SolveReader>>();
 
 	static {
-		gameClasses.put("tictactoe", TicTacToe.class);
+		gameClasses.put("ttt", TicTacToe.class);
 		gameClasses.put("reversi", Reversi.class);
 		// TODO Add more games here
 	}
@@ -38,14 +37,13 @@ public class SolveReaders {
 
 	public static <KEY extends WritableSettableComparable<KEY>> GameRecord readPosition(
 			Configuration conf, Path folder, KEY position) throws IOException {
-		KEY key = ConfParser.<KEY> newKey(conf);
 		Partitioner<KEY, GameRecord> partitioner = ConfParser
 				.<KEY, GameRecord> getPartitionerInstance(conf);
 		GameRecord value = ConfParser.<GameRecord> newValue(conf);
 		MapFile.Reader[] readers = MapFileOutputFormat.getReadersArray(
 				new Path[] { folder }, conf);
 		MapFileOutputFormat.<KEY, GameRecord> getEntry(readers, partitioner,
-				key, value);
+				position, value);
 		return value;
 	}
 }
