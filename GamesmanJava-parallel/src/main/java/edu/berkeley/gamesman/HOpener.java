@@ -11,8 +11,10 @@ import java.util.Properties;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.thrift.TException;
 
+import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.solve.reader.SolveReaders;
@@ -26,16 +28,24 @@ public class HOpener implements Opener {
 		private final Configuration conf;
 		private final Path folderPath;
 		private final SolveReader<KEY> reader;
+		private final boolean solved;
+		private final Partitioner<KEY, GameRecord> partitioner;
 
 		public HFetcher(Configuration hConf, String game, String filename)
-				throws ClassNotFoundException {
+				throws ClassNotFoundException, IOException {
 			conf = hConf;
 			String folderName = hConf.get("solve.folder");
 			if (folderName == null) {
 				folderPath = new Path(solveDirectory, filename + "_folder");
 			} else
 				folderPath = new Path(folderName);
+			solved = folderPath.getFileSystem(hConf).exists(folderPath);
 			reader = SolveReaders.<KEY> get(hConf, game);
+			if (solved)
+				partitioner = ConfParser
+						.<KEY, GameRecord> getPartitionerInstance(conf);
+			else
+				partitioner = null;
 		}
 
 		@Override
@@ -47,19 +57,8 @@ public class HOpener implements Opener {
 			ArrayList<GamestateResponse> records = new ArrayList<GamestateResponse>(
 					children.size());
 			for (Pair<String, KEY> child : children) {
-				GamestateResponse response = new GamestateResponse();
+				GamestateResponse response = getMoveValue(child.cdr, true);
 				response.setMove(child.car);
-				response.setBoard(reader.getString(child.cdr));
-				GameRecord rec;
-				try {
-					rec = SolveReaders.<KEY> readPosition(conf, folderPath,
-							child.cdr);
-					rec.previousPosition();
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-				response.setValue(rec.getValue().name().toLowerCase());
-				response.setRemoteness(rec.getRemoteness());
 				records.add(response);
 			}
 			return records;
@@ -68,17 +67,26 @@ public class HOpener implements Opener {
 		@Override
 		public GamestateResponse getMoveValue(String board) throws TException {
 			KEY position = reader.getPosition(board);
+			return getMoveValue(position, false);
+		}
+
+		private GamestateResponse getMoveValue(KEY position,
+				boolean previousPosition) {
 			GamestateResponse response = new GamestateResponse();
 			response.setBoard(reader.getString(position));
-			GameRecord rec;
-			try {
-				rec = SolveReaders.<KEY> readPosition(conf, folderPath,
-						position);
-			} catch (IOException e) {
-				throw new RuntimeException(e);
+			if (solved) {
+				GameRecord rec;
+				try {
+					rec = SolveReaders.<KEY> readPosition(conf, folderPath,
+							position, partitioner);
+					if (previousPosition)
+						rec.previousPosition();
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+				response.setValue(rec.getValue().name().toLowerCase());
+				response.setRemoteness(rec.getRemoteness());
 			}
-			response.setValue(rec.getValue().name().toLowerCase());
-			response.setRemoteness(rec.getRemoteness());
 			return response;
 		}
 
@@ -99,9 +107,13 @@ public class HOpener implements Opener {
 			String filename) {
 		Properties props = new Properties();
 		Path solvePath = new Path(solveDirectory, filename + ".job");
-		InputStream is;
 		try {
-			is = fs.open(solvePath);
+			InputStream is;
+			if (fs.exists(solvePath)) {
+				is = fs.open(solvePath);
+			} else {
+				is = fs.open(new Path(solveDirectory, game + ".job"));
+			}
 			props.load(is);
 			is.close();
 			Configuration hConf = new Configuration(conf);

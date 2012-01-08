@@ -1,4 +1,4 @@
-gamesman.hadoop.game.name=tictactoe
+gamesman.hadoop.game.name=ttt
 propogater.tree.class=edu.berkeley.gamesman.hadoop.game.tictactoe.TicTacToe
 propogation.work.path=work
 propogater.out.path=tictactoe

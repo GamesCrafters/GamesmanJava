@@ -36,9 +36,8 @@ public class SolveReaders {
 	}
 
 	public static <KEY extends WritableSettableComparable<KEY>> GameRecord readPosition(
-			Configuration conf, Path folder, KEY position) throws IOException {
-		Partitioner<KEY, GameRecord> partitioner = ConfParser
-				.<KEY, GameRecord> getPartitionerInstance(conf);
+			Configuration conf, Path folder, KEY position,
+			Partitioner<KEY, GameRecord> partitioner) throws IOException {
 		GameRecord value = ConfParser.<GameRecord> newValue(conf);
 		MapFile.Reader[] readers = MapFileOutputFormat.getReadersArray(
 				new Path[] { folder }, conf);
