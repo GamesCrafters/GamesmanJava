@@ -1,5 +1,7 @@
 package edu.berkeley.gamesman.hasher.genhasher;
 
+import java.util.Arrays;
+
 import edu.berkeley.gamesman.util.qll.Factory;
 import edu.berkeley.gamesman.util.qll.Pool;
 import edu.berkeley.gamesman.hasher.cachehasher.CacheMove;
@@ -22,7 +24,7 @@ public abstract class GenHasher<S extends GenState> {
 	/**
 	 * The number of possible digits for each element of the sequence
 	 */
-	public final int digitBase;
+	private final int[] digitBase;
 
 	private long allPositions = -1L;
 
@@ -56,7 +58,8 @@ public abstract class GenHasher<S extends GenState> {
 	 */
 	public GenHasher(int numElements, int digitBase) {
 		this.numElements = numElements;
-		this.digitBase = digitBase;
+		this.digitBase = new int[numElements];
+		Arrays.fill(this.digitBase, digitBase);
 	}
 
 	/**
@@ -790,5 +793,9 @@ public abstract class GenHasher<S extends GenState> {
 	 */
 	protected final boolean validLS(S state) {
 		return state.validLS();
+	}
+
+	public int baseFor(int n) {
+		return digitBase[n];
 	}
 }

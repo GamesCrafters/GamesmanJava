@@ -12,13 +12,21 @@ import edu.berkeley.gamesman.hasher.genhasher.GenState;
 public class CountingState extends GenState {
 	private final int[] numPieces;
 	private int[] testing = null;
+	protected final int countTo;
 
 	/**
 	 * @param myHasher
 	 */
-	public CountingState(GenHasher<? extends CountingState> myHasher) {
+	public CountingState(GenHasher<? extends CountingState> myHasher,
+			int countTo) {
 		super(myHasher);
-		this.numPieces = new int[myHasher.digitBase];
+		this.countTo = countTo;
+		int base = 0;
+		for (int i = 0; i < countTo; i++) {
+			assert i == 0 || myHasher.baseFor(i) == base;
+			base = Math.max(base, myHasher.baseFor(i));
+		}
+		this.numPieces = new int[base];
 		numPieces[0] = myHasher.numElements;
 	}
 
@@ -47,9 +55,9 @@ public class CountingState extends GenState {
 	@Override
 	protected void matchSeq() {
 		clearNums();
-		for (int i = getStart(); i < numElements(); i++) {
+		for (int i = getStart(); i < countTo; i++) {
 			int el = get(i);
-			if (el >= 0 && el < digBase)
+			if (el >= 0 && el < digitBase())
 				incNum(el);
 			else
 				assert i == getStart();
@@ -61,11 +69,11 @@ public class CountingState extends GenState {
 		if (!GenHasher.useToughAsserts())
 			return true;
 		if (testing == null)
-			testing = new int[digBase];
+			testing = new int[digitBase()];
 		Arrays.fill(testing, 0);
-		for (int i = getStart(); i < numElements(); i++) {
+		for (int i = getStart(); i < countTo; i++) {
 			int el = get(i);
-			if (el >= 0 && el < digBase)
+			if (el >= 0 && el < digitBase())
 				testing[el]++;
 			else
 				assert i == getStart();
@@ -76,9 +84,11 @@ public class CountingState extends GenState {
 	@Override
 	protected boolean incr(int dir) {
 		if (validLS())
-			decNum(leastSig());
+			if (getStart() < countTo)
+				decNum(leastSig());
 		if (super.incr(dir)) {
-			incNum(leastSig());
+			if (getStart() < countTo)
+				incNum(leastSig());
 			assert numPieceMatches();
 			return true;
 		} else {
@@ -89,7 +99,7 @@ public class CountingState extends GenState {
 
 	@Override
 	protected void trunc() {
-		if (validLS())
+		if (validLS() && getStart() < countTo)
 			decNum(leastSig());
 		super.trunc();
 		assert numPieceMatches();
@@ -113,7 +123,8 @@ public class CountingState extends GenState {
 	@Override
 	protected void addLS(int ls) {
 		super.addLS(ls);
-		incNum(ls);
+		if (getStart() < countTo)
+			incNum(ls);
 		assert numPieceMatches();
 	}
 
@@ -127,9 +138,15 @@ public class CountingState extends GenState {
 
 	@Override
 	protected void set(int place, int val) {
-		decNum(get(place));
+		if (place < countTo)
+			decNum(get(place));
 		super.set(place, val);
-		incNum(get(place));
+		if (place < countTo)
+			incNum(get(place));
 		assert numPieceMatches();
+	}
+
+	protected final int digitBase() {
+		return numPieces.length;
 	}
 }

@@ -17,10 +17,6 @@ public class GenState implements State<GenState> {
 	/**
 	 * 
 	 */
-	public final int digBase;
-	/**
-	 * 
-	 */
 	private int startPoint;
 
 	private GenHasher<?> myHasher;
@@ -30,7 +26,6 @@ public class GenState implements State<GenState> {
 	 */
 	public GenState(GenHasher<?> myHasher) {
 		this.sequence = new int[myHasher.numElements];
-		this.digBase = myHasher.digitBase;
 		this.myHasher = myHasher;
 	}
 
@@ -84,7 +79,7 @@ public class GenState implements State<GenState> {
 	protected boolean incr(int dir) {
 		assert dir == 1 || dir == -1;
 		sequence[startPoint] += dir;
-		if (sequence[startPoint] < 0 || sequence[startPoint] >= digBase) {
+		if (sequence[startPoint] < 0 || sequence[startPoint] >= lsBase()) {
 			return false;
 		} else
 			return true;
@@ -110,7 +105,7 @@ public class GenState implements State<GenState> {
 	 * @param startHigh
 	 */
 	final void addOn(boolean startHigh) {
-		addLS(startHigh ? digBase - 1 : 0);
+		addLS(startHigh ? myHasher.baseFor(startPoint - 1) - 1 : 0);
 	}
 
 	protected void addLS(int ls) {
@@ -133,7 +128,7 @@ public class GenState implements State<GenState> {
 	}
 
 	final void resetLS(boolean startHigh) {
-		setLS(startHigh ? digBase - 1 : 0);
+		setLS(startHigh ? lsBase() - 1 : 0);
 	}
 
 	protected void clear() {
@@ -198,7 +193,11 @@ public class GenState implements State<GenState> {
 	}
 
 	protected final boolean validLS() {
-		return isEmpty() || leastSig() >= 0 && leastSig() < digBase;
+		return isEmpty() || leastSig() >= 0 && leastSig() < lsBase();
+	}
+
+	private int lsBase() {
+		return myHasher.baseFor(startPoint);
 	}
 
 	public final boolean matches(GenState other, int off) {

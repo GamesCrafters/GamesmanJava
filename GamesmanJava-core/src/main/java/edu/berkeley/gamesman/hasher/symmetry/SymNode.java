@@ -23,9 +23,9 @@ public class SymNode<S extends GenState> {
 			numPositions = wrapper.numPositions(pieces);
 		} else {
 			this.pieces = null;
-			children = new SymNode[wrapper.myHasher.digitBase];
+			children = new SymNode[wrapper.myHasher.baseFor(index)];
 			long numPositions = 0;
-			for (int d = 0; d < wrapper.myHasher.digitBase; d++) {
+			for (int d = 0; d < wrapper.myHasher.baseFor(index); d++) {
 				pieces[index - 1] = d;
 				children[d] = new SymNode<S>(wrapper, index - 1, pieces, offset
 						+ numPositions);

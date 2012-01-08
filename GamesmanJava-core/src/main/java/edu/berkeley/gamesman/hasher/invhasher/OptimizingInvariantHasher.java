@@ -38,7 +38,7 @@ public abstract class OptimizingInvariantHasher<S extends GenState> extends
 		int place = getStart(state);
 		if (invariantVals[place] == null) {
 			int numInvs = numInvariants(place);
-			invariantVals[place] = new long[numInvs][digitBase];
+			invariantVals[place] = new long[numInvs][baseFor(place)];
 			for (long[] arr : invariantVals[place]) {
 				Arrays.fill(arr, -1);
 			}

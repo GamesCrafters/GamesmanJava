@@ -68,7 +68,7 @@ public final class DBHasher extends FixedHasher<FixedState> {
 
 	@Override
 	protected FixedState innerNewState() {
-		return new FixedState(this);
+		return new FixedState(this, numElements);
 	}
 
 	@Override

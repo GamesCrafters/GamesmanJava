@@ -8,22 +8,22 @@ public class FixedState extends CountingState {
 	private int inv;
 	private int invalidColCount;
 
-	public FixedState(FixedHasher<?> myHasher) {
-		super(myHasher);
+	public FixedState(FixedHasher<?> myHasher, int countTo) {
+		super(myHasher, countTo);
 		this.mults = myHasher;
-		if (numElements() > mults.numPieces(0))
+		if (countTo > mults.numPieces(0))
 			invalidColCount = 1;
 		else
 			invalidColCount = 0;
-		inv = numElements() * mults.getMult(0);
+		inv = countTo * mults.getMult(0);
 		int place = 0;
-		for (int i = digBase - 1; i >= 0; i--) {
+		for (int i = digitBase() - 1; i >= 0; i--) {
 			for (int j = 0; j < mults.numPieces(i); j++) {
 				set(place, i);
 				place++;
 			}
 		}
-		assert place == numElements();
+		assert place == countTo;
 	}
 
 	/**
@@ -68,7 +68,7 @@ public class FixedState extends CountingState {
 			return true;
 		}
 		int testInv = 0;
-		for (int i = 0; i < digBase; i++) {
+		for (int i = 0; i < digitBase(); i++) {
 			testInv += numPieces(i) * mults.getMult(i);
 		}
 		return testInv == inv;

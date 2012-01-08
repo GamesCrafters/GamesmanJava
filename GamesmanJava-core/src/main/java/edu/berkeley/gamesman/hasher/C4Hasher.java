@@ -9,6 +9,7 @@ import edu.berkeley.gamesman.hasher.fixed.FixedState;
  */
 public final class C4Hasher extends FixedHasher<FixedState> {
 
+	public final int gameSize;
 	public final int height;
 	private final int addOn, numInvariants;
 
@@ -21,13 +22,14 @@ public final class C4Hasher extends FixedHasher<FixedState> {
 		super(width * height, 3, new int[] { width * height - tier,
 				(tier + 1) / 2, tier / 2 });
 		this.height = height;
+		this.gameSize = width * height;
 		addOn = super.numInvariants;
 		numInvariants = addOn + super.numInvariants;
 	}
 
 	@Override
 	protected FixedState innerNewState() {
-		return new FixedState(this);
+		return new FixedState(this, gameSize);
 	}
 
 	@Override
