@@ -7,6 +7,7 @@ import edu.berkeley.gamesman.hadoop.ranges.Range;
 import edu.berkeley.gamesman.hadoop.ranges.RangeTree;
 import edu.berkeley.gamesman.hasher.cachehasher.CacheMove;
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
+import edu.berkeley.gamesman.hasher.genhasher.Move;
 
 public class Connect4 extends RangeTree<C4State, C4ModState> {
 	@Override
@@ -34,7 +35,7 @@ public class Connect4 extends RangeTree<C4State, C4ModState> {
 	}
 
 	@Override
-	protected CacheMove[] getMoves() {
+	protected Move[] getMoves() {
 		// TODO Auto-generated method stub
 		return null;
 	}

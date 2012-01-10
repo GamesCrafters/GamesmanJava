@@ -4,9 +4,9 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.berkeley.gamesman.hasher.cachehasher.CacheMove;
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.hasher.genhasher.GenState;
+import edu.berkeley.gamesman.hasher.genhasher.Move;
 import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
 import edu.berkeley.gamesman.propogater.writable.list.WritableList;
 
@@ -59,15 +59,15 @@ public abstract class Range<S extends GenState, T extends GenKey<S, T>>
 
 	public abstract T newKey();
 
-	public void set(GenHasher<S> hasher, T t, int suffLen, CacheMove[] moves) {
+	public void set(GenHasher<S> hasher, T t, int suffLen, Move[] moves) {
 		setLength(suffLen);
 		t.getSuffix(suffix, suffLen);
 		addMoves(hasher, moves);
 	}
 
-	private void addMoves(GenHasher<S> hasher, CacheMove[] moves) {
+	private void addMoves(GenHasher<S> hasher, Move[] moves) {
 		moveList.clear();
-		for (CacheMove move : moves) {
+		for (Move move : moves) {
 			if (this.canMakeMove(hasher, move)) {
 				MoveWritable writ = moveList.add();
 				writ.set(move);
@@ -75,9 +75,9 @@ public abstract class Range<S extends GenState, T extends GenKey<S, T>>
 		}
 	}
 
-	private boolean canMakeMove(GenHasher<S> h, CacheMove move) {
+	private boolean canMakeMove(GenHasher<S> h, Move move) {
 		int startPoint = h.numElements - suffLen;
-		for (int i = move.numChanges - 1; i >= 0; i--) {
+		for (int i = move.numChanges() - 1; i >= 0; i--) {
 			int place = move.getChangePlace(i);
 			if (place < startPoint)
 				return true;
@@ -91,12 +91,60 @@ public abstract class Range<S extends GenState, T extends GenKey<S, T>>
 		return hasher.numPositions(suffix);
 	}
 
-	public void firstPosition(GenHasher<S> hasher, S toFill) {
-		boolean exists = hasher.firstPosition(suffix, toFill);
-		assert exists;
+	public long firstPosition(GenHasher<S> hasher, int childNum, S toFill) {
+		boolean exists = firstPosition(hasher, toFill);
+		if (!exists)
+			return -1;
+		long total = 0L;
+		while (!canMeet(hasher, childNum, toFill)) {
+			long stepped = step(hasher, childNum, toFill);
+			if (stepped == -1)
+				return -1;
+			else
+				total += stepped;
+		}
+		return total;
 	}
 
-	public void makeMove(GenHasher<S> h, int moveNum, CacheMove[] moves) {
+	public boolean firstPosition(GenHasher<S> hasher, S toFill) {
+		return hasher.firstPosition(suffix, toFill);
+	}
+
+	private boolean canMeet(GenHasher<S> hasher, int childNum, S pos) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	public long step(GenHasher<S> hasher, int childNum, S pos) {
+		// TODO Auto-generated method stub
+		return -1;
+	}
+
+	public long subHash(GenHasher<S> hasher, S pos) {
+		assert matches(pos);
+		return hasher.subHash(pos, hasher.numElements - suffLen);
+	}
+
+	private boolean matches(S pos) {
+		int startFrom = pos.numElements() - suffLen;
+		for (int i = 0; i < suffLen; i++) {
+			if (pos.get(i + startFrom) != suffix[i])
+				return false;
+		}
+		return true;
+	}
+
+	public long indexOf(GenHasher<S> hasher, S pos, Move m) {
+		S tempState = hasher.getPoolState();
+		try {
+			hasher.makeMove(pos, m, tempState);
+			return hasher.subHash(pos, hasher.numElements - suffLen);
+		} finally {
+			hasher.release(tempState);
+		}
+	}
+
+	public void makeMove(GenHasher<S> h, int moveNum, Move[] moves) {
 		MoveWritable move = moveList.get(moveNum);
 		int startPoint = h.numElements - suffLen;
 		for (int i = move.numChanges() - 1; i >= 0; i--) {
@@ -113,5 +161,9 @@ public abstract class Range<S extends GenState, T extends GenKey<S, T>>
 
 	public int numMoves() {
 		return moveList.length();
+	}
+
+	public MoveWritable getMove(int childNum) {
+		return moveList.get(childNum);
 	}
 }

@@ -5,12 +5,13 @@ import java.util.Arrays;
 import java.util.Comparator;
 
 import edu.berkeley.gamesman.hasher.genhasher.GenState;
+import edu.berkeley.gamesman.hasher.genhasher.Move;
 
 /**
  * @author dnspies
  * 
  */
-public final class CacheMove {
+public final class CacheMove implements Move {
 	private final int[][] changes;
 	public final int minPlace;
 	public final int numChanges;
@@ -102,5 +103,10 @@ public final class CacheMove {
 	@Override
 	public int hashCode() {
 		return Arrays.deepHashCode(changes);
+	}
+
+	@Override
+	public int numChanges() {
+		return numChanges;
 	}
 }

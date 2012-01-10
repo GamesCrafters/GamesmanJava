@@ -2,7 +2,6 @@ package edu.berkeley.gamesman.hasher.genhasher;
 
 import edu.berkeley.gamesman.util.qll.Factory;
 import edu.berkeley.gamesman.util.qll.Pool;
-import edu.berkeley.gamesman.hasher.cachehasher.CacheMove;
 
 /**
  * A very generalized hasher for sequences where it's possible to count the
@@ -623,7 +622,7 @@ public abstract class GenHasher<S extends GenState> {
 	 * @param childState
 	 *            The state in which to store the result
 	 */
-	public final void makeMove(GenState firstState, CacheMove move, S childState) {
+	public final void makeMove(GenState firstState, Move move, S childState) {
 		childState.setOther(firstState);
 		// Theoretically someone could override matchSeq(s) in order to modify
 		// firstState. This would not be appropriately checked. There doesn't
@@ -653,7 +652,7 @@ public abstract class GenHasher<S extends GenState> {
 	 *         TODO Check this is correct when dir==-1
 	 */
 	public final <T extends GenState> long stepTo(S steppingState,
-			GenHasher<T> parentHasher, T parentState, CacheMove move, int same,
+			GenHasher<T> parentHasher, T parentState, Move move, int same,
 			int dir) {
 		assert !useToughAsserts() || steppingState.matches(parentState, same);
 		long diff = 0;
@@ -703,10 +702,10 @@ public abstract class GenHasher<S extends GenState> {
 	 * @return The lower/upper bound for the child
 	 */
 	public final <T extends GenState> long getChildBound(
-			GenHasher<T> parentHasher, T parentState, CacheMove move, int dir) {
+			GenHasher<T> parentHasher, T parentState, Move move, int dir) {
 		assert dir == 1 || dir == -1;
 		assert parentHasher.validTest(parentState);
-		int pMove = move.numChanges - 1;
+		int pMove = move.numChanges() - 1;
 		S childState = getPoolPref();
 		childState.clear();
 		boolean clobbered = false;
@@ -751,8 +750,8 @@ public abstract class GenHasher<S extends GenState> {
 		return result;
 	}
 
-	private final void makeMove(GenState state, CacheMove move) {
-		for (int i = 0; i < move.numChanges; i++) {
+	private final void makeMove(GenState state, Move move) {
+		for (int i = 0; i < move.numChanges(); i++) {
 			if (state.get(move.getChangePlace(i)) == move.getChangeFrom(i))
 				state.set(move.getChangePlace(i), move.getChangeTo(i));
 			else
@@ -760,8 +759,8 @@ public abstract class GenHasher<S extends GenState> {
 		}
 	}
 
-	private final void unmakeMove(GenState state, CacheMove move) {
-		for (int i = 0; i < move.numChanges; i++) {
+	private final void unmakeMove(GenState state, Move move) {
+		for (int i = 0; i < move.numChanges(); i++) {
 			if (state.get(move.getChangePlace(i)) == move.getChangeTo(i))
 				state.set(move.getChangePlace(i), move.getChangeFrom(i));
 			else

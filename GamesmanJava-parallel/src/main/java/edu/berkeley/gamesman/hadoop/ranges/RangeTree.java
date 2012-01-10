@@ -8,16 +8,16 @@ import org.apache.hadoop.util.ReflectionUtils;
 
 import edu.berkeley.gamesman.game.type.GameRecord;
 import edu.berkeley.gamesman.game.type.GameValue;
-import edu.berkeley.gamesman.hasher.cachehasher.CacheMove;
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.hasher.genhasher.GenState;
+import edu.berkeley.gamesman.hasher.genhasher.Move;
 import edu.berkeley.gamesman.propogater.tree.Tree;
 import edu.berkeley.gamesman.propogater.writable.list.WritableArray;
 import edu.berkeley.gamesman.propogater.writable.list.WritableList;
 
 public abstract class RangeTree<S extends GenState, T extends GenKey<S, T>>
 		extends Tree<Range<S, T>, RangeRecords> {
-	private CacheMove[] moves;
+	private Move[] moves;
 
 	@Override
 	public Collection<Range<S, T>> getRoots() {
@@ -98,13 +98,30 @@ public abstract class RangeTree<S extends GenState, T extends GenKey<S, T>>
 	public void travelUp(RangeRecords tVal, int childNum, Range<S, T> child,
 			Range<S, T> parent, RangeRecords toFill) {
 		GenHasher<S> hasher = getHasher();
+		MoveWritable move = parent.getMove(childNum);
 		long lParentPositions = parent.numPositions(hasher);
 		assert lParentPositions <= Integer.MAX_VALUE;
 		int numParentPositions = (int) lParentPositions;
 		toFill.setLength(numParentPositions);
 		S state = hasher.getPoolState();
-		parent.firstPosition(hasher, state);
-		//TODO Finish
+		try {
+			long lChange = parent.firstPosition(hasher, childNum, state);
+			assert lChange <= Integer.MAX_VALUE;
+			int change = (int) lChange;
+			for (int i = change; change != -1; i += change) {
+				assert child.subHash(hasher, state) == i;
+				long lIndex = child.indexOf(hasher, state, move);
+				assert lIndex <= Integer.MAX_VALUE;
+				GameRecord childRec = tVal.get((int) lIndex);
+				tempRecord.previousPosition(childRec);
+				toFill.set(i, tempRecord);
+				lChange = parent.step(hasher, childNum, state);
+				assert i + lChange <= Integer.MAX_VALUE;
+				change = (int) lChange;
+			}
+		} finally {
+			hasher.release(state);
+		}
 	}
 
 	@Override
@@ -157,7 +174,7 @@ public abstract class RangeTree<S extends GenState, T extends GenKey<S, T>>
 		moves = getMoves();
 	}
 
-	protected abstract CacheMove[] getMoves();
+	protected abstract Move[] getMoves();
 
 	protected void innerConfigure(Configuration conf) {
 	}

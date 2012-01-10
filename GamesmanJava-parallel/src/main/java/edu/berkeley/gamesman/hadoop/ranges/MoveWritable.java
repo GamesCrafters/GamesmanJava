@@ -4,11 +4,11 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.berkeley.gamesman.hasher.cachehasher.CacheMove;
+import edu.berkeley.gamesman.hasher.genhasher.Move;
 import edu.berkeley.gamesman.propogater.writable.WritableSettable;
 import edu.berkeley.gamesman.propogater.writable.list.WritableList;
 
-public class MoveWritable implements WritableSettable<MoveWritable> {
+public class MoveWritable implements WritableSettable<MoveWritable>, Move {
 	private static class TripletWritable implements
 			WritableSettable<TripletWritable> {
 		int place, from, to;
@@ -53,9 +53,9 @@ public class MoveWritable implements WritableSettable<MoveWritable> {
 		changeList.set(t.changeList);
 	}
 
-	public void set(CacheMove move) {
+	public void set(Move move) {
 		changeList.clear();
-		for (int i = 0; i < move.numChanges; i++) {
+		for (int i = 0; i < move.numChanges(); i++) {
 			TripletWritable tw = changeList.add();
 			tw.place = move.getChangePlace(i);
 			tw.from = move.getChangeFrom(i);
@@ -63,18 +63,22 @@ public class MoveWritable implements WritableSettable<MoveWritable> {
 		}
 	}
 
+	@Override
 	public int numChanges() {
 		return changeList.length();
 	}
 
+	@Override
 	public int getChangePlace(int i) {
 		return changeList.get(i).place;
 	}
 
+	@Override
 	public int getChangeFrom(int i) {
 		return changeList.get(i).from;
 	}
 
+	@Override
 	public int getChangeTo(int i) {
 		return changeList.get(i).to;
 	}
