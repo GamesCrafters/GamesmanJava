@@ -847,4 +847,27 @@ public abstract class GenHasher<S extends GenState> {
 		}
 		return true;
 	}
+
+	public final long stepTo(S state, Move move, int cutoff) {
+		long diff = 0;
+		int place = Moves.matches(move, state);
+		while (state.getStart() < place) {
+			diff -= sigValue(state);
+			state.trunc();
+		}
+		while (place < cutoff && place != -1) {
+			if (state.getStart() < place) {
+				state.trunc(place);
+			}
+			diff += countCompletions(state);
+			basicStep(state, 1);
+			validComplete(state, false);
+			place = Moves.matches(move, state);
+		}
+		if (place >= cutoff)
+			return -1;
+		else
+			return diff;
+	}
+
 }

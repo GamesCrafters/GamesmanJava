@@ -111,13 +111,19 @@ public abstract class Range<S extends GenState, T extends GenKey<S, T>>
 	}
 
 	private boolean canMeet(GenHasher<S> hasher, int childNum, S pos) {
-		// TODO Auto-generated method stub
-		return false;
+		MoveWritable move = moveList.get(childNum);
+		for (int i = 0; i < move.numChanges(); i++) {
+			int place = move.getChangePlace(i);
+			if (move.getChangeFrom(i) != pos.get(place))
+				return false;
+		}
+		return true;
 	}
 
 	public long step(GenHasher<S> hasher, int childNum, S pos) {
-		// TODO Auto-generated method stub
-		return -1;
+		assert matches(pos);
+		return hasher.stepTo(pos, moveList.get(childNum), hasher.numElements
+				- suffLen);
 	}
 
 	public long subHash(GenHasher<S> hasher, S pos) {
