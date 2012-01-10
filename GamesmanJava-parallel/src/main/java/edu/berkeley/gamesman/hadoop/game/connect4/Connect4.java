@@ -46,7 +46,7 @@ public class Connect4 extends RangeTree<C4State, C4ModState> {
 	}
 
 	@Override
-	public Class<Range<C4ModState>> getKeyClass() {
+	public Class<Range<C4State, C4ModState>> getKeyClass() {
 		// TODO Auto-generated method stub
 		return null;
 	}
