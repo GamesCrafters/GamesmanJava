@@ -15,51 +15,50 @@ import edu.berkeley.gamesman.propogater.tree.Tree;
 import edu.berkeley.gamesman.propogater.writable.list.WritableArray;
 import edu.berkeley.gamesman.propogater.writable.list.WritableList;
 
-public abstract class RangeTree<S extends GenState, T extends GenKey<S, T>>
-		extends Tree<Range<S, T>, RangeRecords> {
+public abstract class RangeTree<S extends GenState> extends
+		Tree<Range<S>, RangeRecords> {
 	private Move[] moves;
 
 	@Override
-	public Collection<Range<S, T>> getRoots() {
-		Collection<T> startingPositions = getStartingPositions();
-		HashSet<Range<S, T>> containingRanges = new HashSet<Range<S, T>>();
-		for (T t : startingPositions) {
-			Range<S, T> containingRange = makeContainingRange(t);
+	public Collection<Range<S>> getRoots() {
+		Collection<GenKey<S>> startingPositions = getStartingPositions();
+		HashSet<Range<S>> containingRanges = new HashSet<Range<S>>();
+		for (GenKey<S> t : startingPositions) {
+			Range<S> containingRange = makeContainingRange(t);
 			containingRanges.add(containingRange);
 		}
 		return containingRanges;
 	}
 
-	private Range<S, T> makeContainingRange(T t) {
-		Range<S, T> range = newRange();
+	private Range<S> makeContainingRange(GenKey<S> t) {
+		Range<S> range = newRange();
 		makeContainingRange(t, range);
 		return range;
 	}
 
-	private void makeContainingRange(T t, Range<S, T> range) {
+	private void makeContainingRange(GenKey<S> t, Range<S> range) {
 		range.set(getHasher(), t, suffixLength(), moves);
 	}
 
 	protected abstract int suffixLength();
 
-	private final Range<S, T> newRange() {
+	private final Range<S> newRange() {
 		return ReflectionUtils.newInstance(getKeyClass(), getConf());
 	}
 
-	protected abstract Collection<T> getStartingPositions();
+	protected abstract Collection<GenKey<S>> getStartingPositions();
 
 	@Override
-	public void getChildren(Range<S, T> position,
-			WritableList<Range<S, T>> toFill) {
+	public void getChildren(Range<S> position, WritableList<Range<S>> toFill) {
 		for (int i = 0; i < position.numMoves(); i++) {
-			Range<S, T> result = toFill.add();
+			Range<S> result = toFill.add();
 			result.set(position);
 			result.makeMove(getHasher(), i, moves);
 		}
 	}
 
 	@Override
-	public boolean getInitialValue(Range<S, T> position, RangeRecords toFill) {
+	public boolean getInitialValue(Range<S> position, RangeRecords toFill) {
 		GenHasher<S> hasher = getHasher();
 		long lPositions = position.numPositions(hasher);
 		if (lPositions > Integer.MAX_VALUE)
@@ -95,8 +94,8 @@ public abstract class RangeTree<S extends GenState, T extends GenKey<S, T>>
 	protected abstract GameValue getValue(S state);
 
 	@Override
-	public void travelUp(RangeRecords tVal, int childNum, Range<S, T> child,
-			Range<S, T> parent, RangeRecords toFill) {
+	public void travelUp(RangeRecords tVal, int childNum, Range<S> child,
+			Range<S> parent, RangeRecords toFill) {
 		GenHasher<S> hasher = getHasher();
 		MoveWritable move = parent.getMove(childNum);
 		long lParentPositions = parent.numPositions(hasher);

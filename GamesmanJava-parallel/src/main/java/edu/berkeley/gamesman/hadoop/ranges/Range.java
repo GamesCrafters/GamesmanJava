@@ -10,58 +10,39 @@ import edu.berkeley.gamesman.hasher.genhasher.Move;
 import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
 import edu.berkeley.gamesman.propogater.writable.list.WritableList;
 
-public abstract class Range<S extends GenState, T extends GenKey<S, T>>
-		implements WritableSettableComparable<Range<S, T>> {
+public abstract class Range<S extends GenState> implements
+		WritableSettableComparable<Range<S>> {
 	private final WritableList<MoveWritable> moveList = new WritableList<MoveWritable>(
 			MoveWritable.class, null);
-	private int[] suffix = new int[0];
-	private int suffLen;
-
-	private void setLength(int length) {
-		suffLen = length;
-		if (suffix.length < suffLen)
-			suffix = new int[suffLen];
-	}
+	private final IntArrWritable suffix = new IntArrWritable();
 
 	@Override
 	public void readFields(DataInput in) throws IOException {
-		setLength(in.readInt());
-		for (int i = 0; i < suffLen; i++)
-			suffix[i] = in.readInt();
+		suffix.readFields(in);
 		moveList.readFields(in);
 	}
 
 	@Override
 	public void write(DataOutput out) throws IOException {
-		out.writeInt(suffLen);
-		for (int i = 0; i < suffLen; i++)
-			out.writeInt(suffix[i]);
+		suffix.write(out);
 		moveList.write(out);
 	}
 
 	@Override
-	public void set(Range<S, T> t) {
-		setLength(t.suffLen);
-		System.arraycopy(t.suffix, 0, suffix, 0, suffLen);
+	public void set(Range<S> t) {
+		suffix.set(t.suffix);
 		moveList.set(t.moveList);
 	}
 
 	@Override
-	public int compareTo(Range<S, T> o) {
-		if (suffLen != o.suffLen)
-			return suffLen - o.suffLen;
-		for (int i = suffLen - 1; i >= 0; i--) {
-			if (suffix[i] != o.suffix[i])
-				return suffix[i] - o.suffix[i];
-		}
-		return 0;
+	public int compareTo(Range<S> o) {
+		return suffix.compareTo(o.suffix);
 	}
 
-	public abstract T newKey();
+	public abstract GenKey<S> newKey();
 
-	public void set(GenHasher<S> hasher, T t, int suffLen, Move[] moves) {
-		setLength(suffLen);
-		t.getSuffix(suffix, suffLen);
+	public void set(GenHasher<S> hasher, GenKey<S> t, int suffLen, Move[] moves) {
+		suffix.set(t.get(), suffLen);
 		addMoves(hasher, moves);
 	}
 
@@ -76,19 +57,19 @@ public abstract class Range<S extends GenState, T extends GenKey<S, T>>
 	}
 
 	private boolean canMakeMove(GenHasher<S> h, Move move) {
-		int startPoint = h.numElements - suffLen;
+		int startPoint = h.numElements - suffix.length();
 		for (int i = move.numChanges() - 1; i >= 0; i--) {
 			int place = move.getChangePlace(i);
 			if (place < startPoint)
 				return true;
-			if (move.getChangeFrom(i) != suffix[place - startPoint])
+			if (move.getChangeFrom(i) != suffix.get(place - startPoint))
 				return false;
 		}
 		return true;
 	}
 
 	public long numPositions(GenHasher<?> hasher) {
-		return hasher.numPositions(suffix);
+		return suffix.numPositions(hasher);
 	}
 
 	public long firstPosition(GenHasher<S> hasher, int childNum, S toFill) {
@@ -107,7 +88,7 @@ public abstract class Range<S extends GenState, T extends GenKey<S, T>>
 	}
 
 	public boolean firstPosition(GenHasher<S> hasher, S toFill) {
-		return hasher.firstPosition(suffix, toFill);
+		return suffix.firstPosition(hasher, toFill);
 	}
 
 	private boolean canMeet(GenHasher<S> hasher, int childNum, S pos) {
@@ -123,28 +104,23 @@ public abstract class Range<S extends GenState, T extends GenKey<S, T>>
 	public long step(GenHasher<S> hasher, int childNum, S pos) {
 		assert matches(pos);
 		return hasher.stepTo(pos, moveList.get(childNum), hasher.numElements
-				- suffLen);
+				- suffix.length());
 	}
 
 	public long subHash(GenHasher<S> hasher, S pos) {
 		assert matches(pos);
-		return hasher.subHash(pos, hasher.numElements - suffLen);
+		return hasher.subHash(pos, hasher.numElements - suffix.length());
 	}
 
 	private boolean matches(S pos) {
-		int startFrom = pos.numElements() - suffLen;
-		for (int i = 0; i < suffLen; i++) {
-			if (pos.get(i + startFrom) != suffix[i])
-				return false;
-		}
-		return true;
+		return suffix.matches(pos);
 	}
 
 	public long indexOf(GenHasher<S> hasher, S pos, Move m) {
 		S tempState = hasher.getPoolState();
 		try {
 			hasher.makeMove(pos, m, tempState);
-			return hasher.subHash(pos, hasher.numElements - suffLen);
+			return hasher.subHash(pos, hasher.numElements - suffix.length());
 		} finally {
 			hasher.release(tempState);
 		}
@@ -152,15 +128,15 @@ public abstract class Range<S extends GenState, T extends GenKey<S, T>>
 
 	public void makeMove(GenHasher<S> h, int moveNum, Move[] moves) {
 		MoveWritable move = moveList.get(moveNum);
-		int startPoint = h.numElements - suffLen;
+		int startPoint = h.numElements - suffix.length();
 		for (int i = move.numChanges() - 1; i >= 0; i--) {
 			int place = move.getChangePlace(i);
 			if (place < startPoint)
 				break;
-			if (move.getChangeFrom(i) != suffix[place - startPoint])
+			if (move.getChangeFrom(i) != suffix.get(place - startPoint))
 				throw new RuntimeException("Invalid move");
 			else
-				suffix[place - startPoint] = move.getChangeTo(i);
+				suffix.set(place - startPoint, move.getChangeTo(i));
 		}
 		addMoves(h, moves);
 	}

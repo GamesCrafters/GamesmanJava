@@ -806,12 +806,13 @@ public abstract class GenHasher<S extends GenState> {
 	 * 
 	 * @param suffix
 	 *            The suffix to count
+	 * @param len
 	 * @return The number of positions for this suffix
 	 */
-	public long numPositions(int[] suffix) {
+	public long numPositions(int[] suffix, int len) {
 		S pref = getPoolPref();
 		pref.clear();
-		for (int i = suffix.length - 1; i >= 0; i--) {
+		for (int i = len - 1; i >= 0; i--) {
 			if (!validPref(pref))
 				break;
 			addLS(pref, suffix[i]);
@@ -835,16 +836,14 @@ public abstract class GenHasher<S extends GenState> {
 		return hash(state, suffixStart);
 	}
 
-	public boolean firstPosition(int[] suffix, S toFill) {
+	public boolean firstPosition(int[] suffix, int suffLen, S toFill) {
 		toFill.clear();
-		for (int i = numElements - 1; i >= numElements - suffix.length; i--) {
+		for (int i = suffLen - 1; i >= 0; i--) {
 			toFill.addLS(suffix[i]);
 			if (!validPref(toFill))
 				return false;
 		}
-		while (!toFill.isComplete()) {
-			addValid(toFill, false);
-		}
+		validComplete(toFill, false);
 		return true;
 	}
 
@@ -868,6 +867,10 @@ public abstract class GenHasher<S extends GenState> {
 			return -1;
 		else
 			return diff;
+	}
+
+	public long numPositions(int[] pieces) {
+		return numPositions(pieces, pieces.length);
 	}
 
 }
