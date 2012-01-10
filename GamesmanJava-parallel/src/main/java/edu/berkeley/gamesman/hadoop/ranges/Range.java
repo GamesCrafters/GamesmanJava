@@ -62,6 +62,10 @@ public abstract class Range<S extends GenState, T extends GenKey<S, T>>
 	public void set(GenHasher<S> hasher, T t, int suffLen, CacheMove[] moves) {
 		setLength(suffLen);
 		t.getSuffix(suffix, suffLen);
+		addMoves(hasher, moves);
+	}
+
+	private void addMoves(GenHasher<S> hasher, CacheMove[] moves) {
 		moveList.clear();
 		for (CacheMove move : moves) {
 			if (this.canMakeMove(hasher, move)) {
@@ -92,9 +96,19 @@ public abstract class Range<S extends GenState, T extends GenKey<S, T>>
 		assert exists;
 	}
 
-	public void makeMove(int moveNum, CacheMove[] moves) {
-		// TODO Auto-generated method stub
-
+	public void makeMove(GenHasher<S> h, int moveNum, CacheMove[] moves) {
+		MoveWritable move = moveList.get(moveNum);
+		int startPoint = h.numElements - suffLen;
+		for (int i = move.numChanges() - 1; i >= 0; i--) {
+			int place = move.getChangePlace(i);
+			if (place < startPoint)
+				break;
+			if (move.getChangeFrom(i) != suffix[place - startPoint])
+				throw new RuntimeException("Invalid move");
+			else
+				suffix[place - startPoint] = move.getChangeTo(i);
+		}
+		addMoves(h, moves);
 	}
 
 	public int numMoves() {

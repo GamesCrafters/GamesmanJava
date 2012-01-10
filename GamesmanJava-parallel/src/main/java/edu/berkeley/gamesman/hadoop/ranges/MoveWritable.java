@@ -35,32 +35,48 @@ public class MoveWritable implements WritableSettable<MoveWritable> {
 		}
 	}
 
-	private final WritableList<TripletWritable> moveList = new WritableList<TripletWritable>(
+	private final WritableList<TripletWritable> changeList = new WritableList<TripletWritable>(
 			TripletWritable.class, null);
 
 	@Override
 	public void readFields(DataInput in) throws IOException {
-		moveList.readFields(in);
+		changeList.readFields(in);
 	}
 
 	@Override
 	public void write(DataOutput out) throws IOException {
-		moveList.write(out);
+		changeList.write(out);
 	}
 
 	@Override
 	public void set(MoveWritable t) {
-		moveList.set(t.moveList);
+		changeList.set(t.changeList);
 	}
 
 	public void set(CacheMove move) {
-		moveList.clear();
+		changeList.clear();
 		for (int i = 0; i < move.numChanges; i++) {
-			TripletWritable tw = moveList.add();
+			TripletWritable tw = changeList.add();
 			tw.place = move.getChangePlace(i);
 			tw.from = move.getChangeFrom(i);
 			tw.to = move.getChangeTo(i);
 		}
+	}
+
+	public int numChanges() {
+		return changeList.length();
+	}
+
+	public int getChangePlace(int i) {
+		return changeList.get(i).place;
+	}
+
+	public int getChangeFrom(int i) {
+		return changeList.get(i).from;
+	}
+
+	public int getChangeTo(int i) {
+		return changeList.get(i).to;
 	}
 
 }

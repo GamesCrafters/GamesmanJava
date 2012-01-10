@@ -54,7 +54,7 @@ public abstract class RangeTree<S extends GenState, T extends GenKey<S, T>>
 		for (int i = 0; i < position.numMoves(); i++) {
 			Range<S, T> result = toFill.add();
 			result.set(position);
-			result.makeMove(i, moves);
+			result.makeMove(getHasher(), i, moves);
 		}
 	}
 
@@ -104,6 +104,7 @@ public abstract class RangeTree<S extends GenState, T extends GenKey<S, T>>
 		toFill.setLength(numParentPositions);
 		S state = hasher.getPoolState();
 		parent.firstPosition(hasher, state);
+		//TODO Finish
 	}
 
 	@Override
