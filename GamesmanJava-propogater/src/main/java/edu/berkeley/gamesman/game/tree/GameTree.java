@@ -28,8 +28,8 @@ public abstract class GameTree<STATE extends WritableSettableComparable<STATE>>
 	protected abstract GameValue getPrimitiveValue(STATE position);
 
 	@Override
-	public final void travelUp(GameRecord tVal, STATE child, STATE parent,
-			GameRecord toFill) {
+	public final void travelUp(GameRecord tVal, int childNum, STATE child,
+			STATE parent, GameRecord toFill) {
 		toFill.previousPosition(tVal);
 	}
 

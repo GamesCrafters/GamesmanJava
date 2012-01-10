@@ -8,7 +8,6 @@ import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 
 import edu.berkeley.gamesman.propogater.common.Combinable;
-import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.factory.Factory;
 import edu.berkeley.gamesman.propogater.tree.Tree;
 import edu.berkeley.gamesman.propogater.writable.ParentPair;
@@ -122,7 +121,7 @@ public final class TreeNode<KEY extends WritableSettableComparable<KEY>, VALUE e
 		ParentPair<KEY> pair = childNode.parents.get(parentNum);
 		int childNum = pair.getInt();
 		children.setLength(childNum + 1);
-		tree.travelUp(childNode.getValue(), childKey, pair.getKey(),
+		tree.travelUp(childNode.getValue(), childNum, childKey, pair.getKey(),
 				children.setHasAndGet(childNum));
 	}
 

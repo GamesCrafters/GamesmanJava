@@ -45,8 +45,8 @@ public abstract class Tree<KEY extends WritableSettableComparable<KEY>, VALUE ex
 	 * @param toFill
 	 *            Where to store the result
 	 */
-	public abstract void travelUp(VALUE tVal, KEY child, KEY parent,
-			VALUE toFill);
+	public abstract void travelUp(VALUE tVal, int childNum, KEY child,
+			KEY parent, VALUE toFill);
 
 	public abstract Class<KEY> getKeyClass();
 
