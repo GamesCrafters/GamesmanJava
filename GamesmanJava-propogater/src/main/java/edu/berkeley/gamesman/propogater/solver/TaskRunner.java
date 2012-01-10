@@ -8,6 +8,8 @@ import org.apache.hadoop.fs.Path;
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.common.Util;
 import edu.berkeley.gamesman.propogater.tree.Tree;
+import edu.berkeley.gamesman.propogater.writable.WritableSettable;
+import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
 
 abstract class TaskRunner implements Runnable {
 	public static final int COMBINE = 0, CREATE = 1, PROPOGATE = 2,
@@ -19,7 +21,8 @@ abstract class TaskRunner implements Runnable {
 
 	TaskRunner(Configuration conf, int type, TierGraph graph) {
 		assert type >= 0 && type <= 4;
-		this.tree = ConfParser.newTree(conf);
+		this.tree = ConfParser
+				.<WritableSettableComparable, WritableSettable> newTree(conf);
 		this.type = type;
 		myGraph = graph;
 	}
