@@ -2,7 +2,6 @@ package edu.berkeley.gamesman.solve.reader;
 
 import edu.berkeley.gamesman.hadoop.game.reversi.Reversi;
 import edu.berkeley.gamesman.hadoop.game.tictactoe.TicTacToe;
-import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
 import edu.berkeley.gamesman.game.type.GameRecord;
 
@@ -38,7 +37,7 @@ public class SolveReaders {
 	public static <KEY extends WritableSettableComparable<KEY>> GameRecord readPosition(
 			Configuration conf, Path folder, KEY position,
 			Partitioner<KEY, GameRecord> partitioner) throws IOException {
-		GameRecord value = ConfParser.<GameRecord> newValue(conf);
+		GameRecord value = new GameRecord();
 		MapFile.Reader[] readers = MapFileOutputFormat.getReadersArray(
 				new Path[] { folder }, conf);
 		MapFileOutputFormat.<KEY, GameRecord> getEntry(readers, partitioner,

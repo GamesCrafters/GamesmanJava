@@ -7,25 +7,24 @@ import java.io.IOException;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 
+import edu.berkeley.gamesman.propogater.common.Combinable;
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.factory.Factory;
 import edu.berkeley.gamesman.propogater.tree.Tree;
 import edu.berkeley.gamesman.propogater.writable.ParentPair;
 import edu.berkeley.gamesman.propogater.writable.ValueWrapper;
-import edu.berkeley.gamesman.propogater.writable.WritableSettableCombinable;
+import edu.berkeley.gamesman.propogater.writable.WritableSettable;
 import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
 import edu.berkeley.gamesman.propogater.writable.list.WritableArray;
 import edu.berkeley.gamesman.propogater.writable.list.WritableList;
 
-
-public final class TreeNode<KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettableCombinable<VALUE>>
-		implements WritableSettableCombinable<TreeNode<KEY, VALUE>>,
-		Configurable {
+public final class TreeNode<KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettable<VALUE>>
+		implements WritableSettable<TreeNode<KEY, VALUE>>,
+		Combinable<TreeNode<KEY, VALUE>>, Configurable {
 	private WritableList<ParentPair<KEY>> parents;
 	private ValueWrapper<VALUE> myValue;
 	private WritableArray<VALUE> children;
 	private Configuration conf;
-	private transient ValueWrapper<VALUE> tempValue;
 
 	public TreeNode() {
 	}
@@ -66,7 +65,11 @@ public final class TreeNode<KEY extends WritableSettableComparable<KEY>, VALUE e
 		children.merge(other.children, isMain());
 		// Careful not to do these in the wrong order since isMain() depends on
 		// myValue
-		myValue.combineWith(other.myValue);
+		if (myValue.hasValue()) {
+			assert !other.myValue.hasValue();
+		} else {
+			myValue.set(other.myValue);
+		}
 	}
 
 	public boolean isMain() {
@@ -109,19 +112,8 @@ public final class TreeNode<KEY extends WritableSettableComparable<KEY>, VALUE e
 	}
 
 	public boolean combine(Tree<KEY, VALUE> tree) {
-		tempValue.clear();
-		for (int i = 0; i < children.length(); i++) {
-			VALUE child = children.get(i);
-			if (child != null)
-				tempValue.combineWith(child);
-		}
-		if (tempValue.hasValue()
-				&& (!myValue.hasValue() || tree.changed(myValue.get(),
-						tempValue.get()))) {
-			myValue.set(tempValue);
-			return true;
-		} else
-			return false;
+		assert myValue.hasValue();
+		return tree.combine(children, myValue.get());
 	}
 
 	public void toParent(Tree<KEY, VALUE> tree, KEY childKey,
@@ -151,12 +143,11 @@ public final class TreeNode<KEY extends WritableSettableComparable<KEY>, VALUE e
 
 	@Override
 	public void setConf(Configuration conf) {
-		Class<KEY> keyClass = ConfParser.getKeyClass(conf);
-		Class<VALUE> valClass = ConfParser.getValueClass(conf);
+		Class<KEY> keyClass = Tree.<KEY> getRunKeyClass(conf);
+		Class<VALUE> valClass = Tree.<VALUE> getRunValueClass(conf);
 		parents = new WritableList<ParentPair<KEY>>(makePairFactory(keyClass,
 				conf));
 		myValue = new ValueWrapper<VALUE>(valClass, conf);
-		tempValue = new ValueWrapper<VALUE>(valClass, conf);
 		children = new WritableArray<VALUE>(valClass, conf);
 		this.conf = conf;
 	}

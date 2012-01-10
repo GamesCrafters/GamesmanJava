@@ -15,10 +15,6 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.tasks.CleanupMapper;
-import edu.berkeley.gamesman.propogater.tree.Tree;
-import edu.berkeley.gamesman.propogater.writable.WritableSettableCombinable;
-import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
-
 
 public class CleanupRunner extends TaskRunner {
 
@@ -29,26 +25,25 @@ public class CleanupRunner extends TaskRunner {
 	@Override
 	protected void runTask() throws IOException, InterruptedException,
 			ClassNotFoundException {
-		Tree<?, ?> tree = ConfParser
-				.<WritableSettableComparable, WritableSettableCombinable> getTree(conf);
-		Job job = new Job(conf, "Cleanup");
+		Configuration treeConf = tree.getConf();
+		Job job = new Job(treeConf, "Cleanup");
 		job.setMapperClass(CleanupMapper.class);
 		job.setReducerClass(tree.getCleanupReducerClass());
 		Class<? extends Partitioner> partitionerClass = ConfParser
-				.getCleanupPartitionerClass(conf);
+				.getCleanupPartitionerClass(treeConf);
 		if (partitionerClass != null) {
 			job.setPartitionerClass(partitionerClass);
 		} else {
 			partitionerClass = job.getPartitionerClass();
-			ConfParser.addOutputParameter(conf,
+			ConfParser.addOutputParameter(treeConf,
 					"propogater.cleanup.partitioner",
 					partitionerClass.getName());
 		}
 		job.setInputFormatClass(SequenceFileInputFormat.class);
 		job.setOutputFormatClass(tree.getCleanupOutputFormatClass());
 		job.setJarByClass(Solver.class);
-		job.setOutputKeyClass(ConfParser.getRawKeyClass(conf));
-		job.setOutputValueClass(ConfParser.getRawValueClass(conf));
+		job.setOutputKeyClass(tree.getKeyClass());
+		job.setOutputValueClass(tree.getValClass());
 		Collection<Tier> allTiers = myGraph.getTiers();
 		Path[] allData = new Path[allTiers.size()];
 		int i = 0;
@@ -56,7 +51,7 @@ public class CleanupRunner extends TaskRunner {
 			allData[i++] = t.dataPath;
 		}
 		FileInputFormat.setInputPaths(job, allData);
-		FileOutputFormat.setOutputPath(job, ConfParser.getOutputPath(conf));
+		FileOutputFormat.setOutputPath(job, ConfParser.getOutputPath(treeConf));
 		SequenceFileOutputFormat.setOutputCompressionType(job,
 				SequenceFile.CompressionType.BLOCK);
 		boolean succeeded = job.waitForCompletion(true);

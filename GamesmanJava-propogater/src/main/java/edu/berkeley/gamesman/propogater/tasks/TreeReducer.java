@@ -6,11 +6,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Reducer;
 
 import edu.berkeley.gamesman.propogater.tree.node.TreeNode;
-import edu.berkeley.gamesman.propogater.writable.WritableSettableCombinable;
+import edu.berkeley.gamesman.propogater.writable.WritableSettable;
 import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
 
-
-public class TreeReducer<KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettableCombinable<VALUE>>
+public class TreeReducer<KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettable<VALUE>>
 		extends Reducer<KEY, TreeNode<KEY, VALUE>, KEY, TreeNode<KEY, VALUE>> {
 	protected TreeNode<KEY, VALUE> curNode;
 

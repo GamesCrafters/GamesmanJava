@@ -9,10 +9,8 @@ import org.apache.hadoop.conf.Configuration;
 import edu.berkeley.gamesman.propogater.factory.Factory;
 import edu.berkeley.gamesman.propogater.writable.ValueWrapper;
 import edu.berkeley.gamesman.propogater.writable.WritableSettable;
-import edu.berkeley.gamesman.propogater.writable.WritableSettableCombinable;
 
-
-public class WritableArray<T extends WritableSettableCombinable<T>> implements
+public class WritableArray<T extends WritableSettable<T>> implements
 		WritableSettable<WritableArray<T>> {
 	private final WritableList<ValueWrapper<T>> objs;
 
@@ -107,7 +105,7 @@ public class WritableArray<T extends WritableSettableCombinable<T>> implements
 		return objs.toString();
 	}
 
-	private static <T extends WritableSettableCombinable<T>> Factory<ValueWrapper<T>> makeFact(
+	private static <T extends WritableSettable<T>> Factory<ValueWrapper<T>> makeFact(
 			final Class<? extends T> fClass, final Configuration conf) {
 		return new Factory<ValueWrapper<T>>() {
 			@Override

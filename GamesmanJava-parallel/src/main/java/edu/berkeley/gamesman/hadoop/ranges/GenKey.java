@@ -13,10 +13,12 @@ public class GenKey<S extends GenState, T extends GenKey<S, T>> implements
 	public GenKey(GenHasher<S> hasher) {
 		myHasher = hasher;
 		myState = hasher.newState();
+		tempNums = new int[myHasher.numElements];
 	}
 
 	private final GenHasher<S> myHasher;
 	private final S myState;
+	private transient final int[] tempNums;
 
 	@Override
 	public int compareTo(T o) {
@@ -27,22 +29,28 @@ public class GenKey<S extends GenState, T extends GenKey<S, T>> implements
 		hasher.set(toFill, myState);
 	}
 
-	@Override
-	public void readFields(DataInput arg0) throws IOException {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void write(DataOutput arg0) throws IOException {
-		// TODO Auto-generated method stub
-
+	public void getSuffix(int[] toFill, int length) {
+		myState.getSuffix(toFill, length);
 	}
 
 	@Override
 	public void set(T t) {
-		// TODO Auto-generated method stub
+		myHasher.set(myState, t.myState);
+	}
 
+	@Override
+	public void readFields(DataInput in) throws IOException {
+		for (int i = myHasher.numElements - 1; i >= 0; i--) {
+			tempNums[i] = in.readInt();
+		}
+		myHasher.set(myState, tempNums);
+	}
+
+	@Override
+	public void write(DataOutput out) throws IOException {
+		for (int i = myHasher.numElements - 1; i >= 0; i--) {
+			out.write(myState.get(i));
+		}
 	}
 
 }

@@ -5,24 +5,17 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Set;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.tree.Tree;
-import edu.berkeley.gamesman.propogater.writable.WritableSettableCombinable;
-import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
-
 
 public class TierGraph {
-	private final Configuration conf;
 	private final Tree<?, ?> tree;
 	private final HashMap<Integer, Tier> tierMap = new HashMap<Integer, Tier>();
 
-	public TierGraph(Configuration conf) {
-		this.conf = conf;
-		this.tree = ConfParser
-				.<WritableSettableComparable, WritableSettableCombinable> getTree(conf);
+	public TierGraph(Tree<?, ?> tree) {
+		this.tree = tree;
 	}
 
 	public Tier getTier(int t) throws IOException {
@@ -36,7 +29,7 @@ public class TierGraph {
 	private synchronized Tier getTier(int t, boolean orNull) throws IOException {
 		Tier result = tierMap.get(t);
 		if (!orNull && result == null) {
-			result = new Tier(conf, t, this);
+			result = new Tier(tree.getConf(), t, this);
 			tierMap.put(t, result);
 			for (int child : tree.getChildren(t)) {
 				getTier(child).addParent(t);

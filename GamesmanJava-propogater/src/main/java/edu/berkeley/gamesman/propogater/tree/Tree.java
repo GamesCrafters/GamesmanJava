@@ -4,17 +4,21 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
+import org.apache.hadoop.conf.Configurable;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.OutputFormat;
-import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.output.MapFileOutputFormat;
 
-import edu.berkeley.gamesman.propogater.writable.WritableSettableCombinable;
+import edu.berkeley.gamesman.propogater.writable.WritableSettable;
 import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
+import edu.berkeley.gamesman.propogater.writable.list.WritableArray;
 import edu.berkeley.gamesman.propogater.writable.list.WritableList;
 
+public abstract class Tree<KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettable<VALUE>>
+		implements Configurable {
+	private Configuration conf;
 
-public abstract class Tree<KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettableCombinable<VALUE>> {
 	public abstract Collection<KEY> getRoots();
 
 	public abstract void getChildren(KEY position, WritableList<KEY> toFill);
@@ -68,7 +72,45 @@ public abstract class Tree<KEY extends WritableSettableComparable<KEY>, VALUE ex
 		return Reducer.class;
 	}
 
-	public boolean changed(VALUE from, VALUE to) {
-		return !to.equals(from);
+	public abstract boolean combine(WritableArray<VALUE> children, VALUE toFill);
+
+	@Override
+	public final Configuration getConf() {
+		return conf;
+	}
+
+	@Override
+	public final void setConf(Configuration conf) {
+		this.conf = conf;
+		configure(conf);
+	}
+
+	protected void configure(Configuration conf) {
+	}
+
+	public final void prepareRun(Configuration conf) {
+		conf.setClass("propogater.run.key.class", getKeyClass(),
+				WritableSettableComparable.class);
+		conf.setClass("propogater.run.value.class", getValClass(),
+				WritableSettable.class);
+	}
+
+	public static <KEY extends WritableSettableComparable<KEY>> Class<KEY> getRunKeyClass(
+			Configuration conf) {
+		Class<KEY> kClass = (Class<KEY>) conf.getClass(
+				"propogater.run.key.class", null,
+				WritableSettableComparable.class);
+		if (kClass == null)
+			throw new NullPointerException();
+		return kClass;
+	}
+
+	public static <VALUE extends WritableSettable<VALUE>> Class<VALUE> getRunValueClass(
+			Configuration conf) {
+		Class<VALUE> vClass = (Class<VALUE>) conf.getClass(
+				"propogater.run.value.class", null, WritableSettable.class);
+		if (vClass == null)
+			throw new NullPointerException();
+		return vClass;
 	}
 }

@@ -52,7 +52,7 @@ public final class Play {
 		String[] remainArgs = parser.getRemainingArgs();
 		Path p = new Path(remainArgs[0]);
 		ConfParser.addParameters(conf, p, false);
-		Tree<K, GameRecord> tree = ConfParser.<K, GameRecord> getTree(conf);
+		Tree<K, GameRecord> tree = ConfParser.<K, GameRecord> newTree(conf);
 		K position = tree.getRoots().iterator().next();
 		Path[] outPath = new Path[1];
 		outPath[0] = ConfParser.getOutputPath(conf);

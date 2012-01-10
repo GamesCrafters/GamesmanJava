@@ -4,10 +4,10 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.berkeley.gamesman.propogater.writable.WritableSettableCombinable;
+import edu.berkeley.gamesman.propogater.writable.WritableSettable;
 
 public class GameRecord implements Comparable<GameRecord>,
-		WritableSettableCombinable<GameRecord> {
+		WritableSettable<GameRecord> {
 	public static final GameRecord DRAW = new GameRecord(GameValue.DRAW);
 	private GameValue value;
 	private int remoteness;
@@ -57,7 +57,6 @@ public class GameRecord implements Comparable<GameRecord>,
 			return c1;
 	}
 
-	@Override
 	public void combineWith(GameRecord t) {
 		if (compareTo(t) < 0)
 			set(t);

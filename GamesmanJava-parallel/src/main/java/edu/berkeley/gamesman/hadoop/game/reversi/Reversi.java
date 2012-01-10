@@ -15,13 +15,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.WritableComparator;
 import org.apache.hadoop.util.ReflectionUtils;
 
-
 public class Reversi<T extends ReversiState<T>> extends GameTree<T> implements
 		Configurable, SolveReader<T> {
 
 	private static final int DEFAULT_WIDTH = 4, DEFAULT_HEIGHT = 4;
 	private int height, width;
-	private Configuration conf;
 	private Class<T> stateClass;
 
 	public Reversi() {
@@ -37,7 +35,7 @@ public class Reversi<T extends ReversiState<T>> extends GameTree<T> implements
 	}
 
 	private T newState() {
-		return ReflectionUtils.newInstance(stateClass, conf);
+		return ReflectionUtils.newInstance(stateClass, getConf());
 	}
 
 	private T tempState;
@@ -92,8 +90,7 @@ public class Reversi<T extends ReversiState<T>> extends GameTree<T> implements
 	}
 
 	@Override
-	public void setConf(Configuration conf) {
-		this.conf = conf;
+	public void configure(Configuration conf) {
 		height = getHeight(conf);
 		width = getWidth(conf);
 		try {
@@ -111,11 +108,6 @@ public class Reversi<T extends ReversiState<T>> extends GameTree<T> implements
 				ReversiState.class.getName() + Integer.toString(width)
 						+ Integer.toString(height)).asSubclass(
 				ReversiState.class);
-	}
-
-	@Override
-	public Configuration getConf() {
-		return conf;
 	}
 
 	@Override

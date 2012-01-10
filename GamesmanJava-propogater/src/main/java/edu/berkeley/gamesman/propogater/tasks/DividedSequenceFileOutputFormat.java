@@ -19,9 +19,8 @@ import org.apache.hadoop.util.ReflectionUtils;
 
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.tree.Tree;
-import edu.berkeley.gamesman.propogater.writable.WritableSettableCombinable;
+import edu.berkeley.gamesman.propogater.writable.WritableSettable;
 import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
-
 
 public class DividedSequenceFileOutputFormat<KEY extends WritableSettableComparable<KEY>, OUTVALUE extends Writable>
 		extends FileOutputFormat<KEY, OUTVALUE> {
@@ -33,7 +32,7 @@ public class DividedSequenceFileOutputFormat<KEY extends WritableSettableCompara
 			InterruptedException {
 		final Configuration conf = context.getConfiguration();
 		final Tree<KEY, ?> myTree = ConfParser
-				.<KEY, WritableSettableCombinable> getTree(conf);
+				.<KEY, WritableSettable> newTree(conf);
 		final CompressionCodec codec;
 		final CompressionType compressionType;
 		if (getCompressOutput(context)) {

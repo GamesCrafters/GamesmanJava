@@ -15,7 +15,6 @@ import edu.berkeley.gamesman.propogater.tasks.TreeCreationReducer;
 import edu.berkeley.gamesman.propogater.tasks.TreeReducer;
 import edu.berkeley.gamesman.propogater.tree.node.TreeNode;
 
-
 public class CreateRunner extends TaskRunner {
 	public final Tier tier;
 
@@ -31,7 +30,7 @@ public class CreateRunner extends TaskRunner {
 		try {
 			if (!tier.startCreation())
 				return;
-			Configuration jConf = new Configuration(conf);
+			Configuration jConf = new Configuration(tree.getConf());
 			ConfParser.setDivision(jConf, tier.num);
 			Job j = new Job(jConf, String.format(
 					ConfParser.CREATION_JOB_FORMAT, tier.num));
@@ -40,7 +39,7 @@ public class CreateRunner extends TaskRunner {
 			j.setReducerClass(TreeCreationReducer.class);
 			j.setInputFormatClass(SequenceFileInputFormat.class);
 			j.setOutputFormatClass(DividedSequenceFileOutputFormat.class);
-			j.setOutputKeyClass(ConfParser.getRawKeyClass(jConf));
+			j.setOutputKeyClass(tree.getKeyClass());
 			j.setOutputValueClass(TreeNode.class);
 			j.setJarByClass(Solver.class);
 			FileInputFormat.setInputPaths(j, tier.dataPath);

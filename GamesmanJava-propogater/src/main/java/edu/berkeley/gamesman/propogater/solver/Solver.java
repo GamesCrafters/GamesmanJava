@@ -19,11 +19,10 @@ import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.common.IOCheckOperations;
 import edu.berkeley.gamesman.propogater.tree.Tree;
 import edu.berkeley.gamesman.propogater.tree.node.TreeNode;
-import edu.berkeley.gamesman.propogater.writable.WritableSettableCombinable;
+import edu.berkeley.gamesman.propogater.writable.WritableSettable;
 import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
 
-
-public class Solver<KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettableCombinable<VALUE>> {
+public class Solver<KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettable<VALUE>> {
 	private static final int CREATE_COMBINE = 0, PROPOGATE = 1, CLEANUP = 2;
 	public static final PathFilter underscoreFilter = new PathFilter() {
 		@Override
@@ -42,9 +41,10 @@ public class Solver<KEY extends WritableSettableComparable<KEY>, VALUE extends W
 
 	public Solver(Configuration conf) throws IOException {
 		this.conf = conf;
-		tree = ConfParser.<KEY, VALUE> getTree(conf);
+		tree = ConfParser.<KEY, VALUE> newTree(conf);
+		tree.prepareRun(conf);
 		taskManager = new TaskManager(tree.isSingleLinear());
-		myGraph = new TierGraph(conf);
+		myGraph = new TierGraph(tree);
 		Path workPath = ConfParser.getWorkPath(conf);
 		FileSystem fs = ConfParser.getWorkFileSystem(conf);
 		boolean starting = IOCheckOperations.mkdirs(fs, workPath);
@@ -171,7 +171,7 @@ public class Solver<KEY extends WritableSettableComparable<KEY>, VALUE extends W
 			if (writer == null) {
 				writer = new SequenceFile.Writer(fs, conf, new Path(
 						myGraph.getTier(num).dataPath, START_FILE_NAME),
-						ConfParser.<KEY> getKeyClass(conf), TreeNode.class);
+						tree.getKeyClass(), TreeNode.class);
 				startWriters.put(num, writer);
 			}
 			writer.append(key, startingNode);

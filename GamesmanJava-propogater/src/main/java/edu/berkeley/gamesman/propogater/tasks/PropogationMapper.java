@@ -11,11 +11,10 @@ import org.apache.hadoop.mapreduce.Mapper;
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.tree.Tree;
 import edu.berkeley.gamesman.propogater.tree.node.TreeNode;
-import edu.berkeley.gamesman.propogater.writable.WritableSettableCombinable;
+import edu.berkeley.gamesman.propogater.writable.WritableSettable;
 import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
 
-
-public class PropogationMapper<KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettableCombinable<VALUE>>
+public class PropogationMapper<KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettable<VALUE>>
 		extends Mapper<KEY, TreeNode<KEY, VALUE>, KEY, TreeNode<KEY, VALUE>> {
 	private Tree<KEY, VALUE> tree;
 	private TreeNode<KEY, VALUE> parNode;
@@ -25,7 +24,7 @@ public class PropogationMapper<KEY extends WritableSettableComparable<KEY>, VALU
 	@Override
 	protected void setup(Context context) {
 		Configuration conf = context.getConfiguration();
-		tree = ConfParser.<KEY, VALUE> getTree(conf);
+		tree = ConfParser.<KEY, VALUE> newTree(conf);
 		workingSet = ConfParser.getWorkingSet(conf);
 		parNode = new TreeNode<KEY, VALUE>(conf);
 		changed.clear();

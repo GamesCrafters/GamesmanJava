@@ -6,6 +6,7 @@ import java.util.HashSet;
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.hasher.genhasher.GenState;
 import edu.berkeley.gamesman.propogater.tree.Tree;
+import edu.berkeley.gamesman.propogater.writable.list.WritableArray;
 import edu.berkeley.gamesman.propogater.writable.list.WritableList;
 
 public abstract class RangeTree<S extends GenState, T extends GenKey<S, T>>
@@ -28,8 +29,10 @@ public abstract class RangeTree<S extends GenState, T extends GenKey<S, T>>
 	}
 
 	private void makeContainingRange(T t, Range<T> range) {
-		// TODO Write method
+		range.setSuffix(t, suffixLength());
 	}
+
+	protected abstract int suffixLength();
 
 	protected abstract Range<T> newRange();
 
@@ -64,6 +67,13 @@ public abstract class RangeTree<S extends GenState, T extends GenKey<S, T>>
 	public Class<RangeRecords> getValClass() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public boolean combine(WritableArray<RangeRecords> children,
+			RangeRecords toFill) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 	protected abstract int getVarianceLength();

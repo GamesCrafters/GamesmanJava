@@ -4,6 +4,7 @@ import edu.berkeley.gamesman.game.type.GameRecord;
 import edu.berkeley.gamesman.game.type.GameValue;
 import edu.berkeley.gamesman.propogater.tree.Tree;
 import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
+import edu.berkeley.gamesman.propogater.writable.list.WritableArray;
 
 public abstract class GameTree<STATE extends WritableSettableComparable<STATE>>
 		extends Tree<STATE, GameRecord> {
@@ -35,5 +36,29 @@ public abstract class GameTree<STATE extends WritableSettableComparable<STATE>>
 	@Override
 	public final Class<GameRecord> getValClass() {
 		return GameRecord.class;
+	}
+
+	private final GameRecord tempRecord = new GameRecord();
+
+	@Override
+	public boolean combine(WritableArray<GameRecord> children, GameRecord toFill) {
+		boolean firstFound = false;
+		for (int i = 0; i < children.length(); i++) {
+			GameRecord reci = children.get(i);
+			if (reci != null) {
+				if (firstFound)
+					tempRecord.combineWith(reci);
+				else {
+					firstFound = true;
+					tempRecord.set(reci);
+				}
+			}
+		}
+		if (firstFound) {
+			boolean result = !tempRecord.equals(toFill);
+			toFill.set(tempRecord);
+			return result;
+		} else
+			return false;
 	}
 }

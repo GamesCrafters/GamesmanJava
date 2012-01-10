@@ -237,4 +237,14 @@ public class GenState implements State<GenState>, Comparable<GenState> {
 			// Yes this is correct, larger start point = smaller suffix
 		}
 	}
+
+	public void getSuffix(int[] toFill, int length) {
+		assert toFill.length >= length;
+		assert sequence.length - startPoint >= length;
+		int place = sequence.length - length;
+		for (int i = 0; i < length; i++) {
+			toFill[i] = sequence[place++];
+		}
+		assert place == sequence.length;
+	}
 }

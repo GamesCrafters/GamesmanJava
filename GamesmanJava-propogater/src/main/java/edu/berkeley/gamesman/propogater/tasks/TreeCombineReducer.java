@@ -7,11 +7,10 @@ import org.apache.hadoop.fs.Path;
 
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.tree.node.TreeNode;
-import edu.berkeley.gamesman.propogater.writable.WritableSettableCombinable;
+import edu.berkeley.gamesman.propogater.writable.WritableSettable;
 import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
 
-
-public class TreeCombineReducer<KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettableCombinable<VALUE>>
+public class TreeCombineReducer<KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettable<VALUE>>
 		extends TreeReducer<KEY, VALUE> {
 	private boolean hasNew;
 

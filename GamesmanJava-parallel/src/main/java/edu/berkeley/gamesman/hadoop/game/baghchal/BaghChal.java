@@ -37,8 +37,6 @@ public class BaghChal<T extends BaghChalState<T>> extends GameTree<T> implements
 		}
 	}
 
-	private Configuration conf;
-
 	private Class<T> keyClass;
 	private Square[][] board;
 	private Square[] squares;
@@ -76,13 +74,7 @@ public class BaghChal<T extends BaghChalState<T>> extends GameTree<T> implements
 	}
 
 	@Override
-	public Configuration getConf() {
-		return conf;
-	}
-
-	@Override
-	public void setConf(Configuration conf) {
-		this.conf = conf;
+	protected void configure(Configuration conf) {
 		this.width = conf.getInt("game.width", DEFAULT_WIDTH);
 		this.height = conf.getInt("game.height", DEFAULT_HEIGHT);
 		boardSize = width * height;

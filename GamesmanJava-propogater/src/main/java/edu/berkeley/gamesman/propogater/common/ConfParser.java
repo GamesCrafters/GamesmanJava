@@ -2,7 +2,6 @@ package edu.berkeley.gamesman.propogater.common;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
@@ -19,9 +18,8 @@ import org.apache.hadoop.util.ReflectionUtils;
 
 import edu.berkeley.gamesman.propogater.solver.Tier;
 import edu.berkeley.gamesman.propogater.tree.Tree;
-import edu.berkeley.gamesman.propogater.writable.WritableSettableCombinable;
+import edu.berkeley.gamesman.propogater.writable.WritableSettable;
 import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
-
 
 public class ConfParser {
 	public static final String CHILDREN_FOLDER = "children";
@@ -44,62 +42,17 @@ public class ConfParser {
 	public static final String PROPOGATION_JOB_FORMAT = "Tier %d Propogation";
 	public static final String COMBINATION_JOB_FORMAT = "Tier %d Combination";
 
-	private static final HashMap<Configuration, Tree<?, ?>> treeMap = new HashMap<Configuration, Tree<?, ?>>();
-
-	public static <KEY extends WritableSettableComparable<KEY>> Class<KEY> getKeyClass(
-			Configuration conf) {
-		return ConfParser.<KEY, WritableSettableCombinable> getTree(conf)
-				.getKeyClass();
-	}
-
-	public static <KEY extends WritableSettableComparable<KEY>> KEY newKey(
-			Configuration conf) {
-		return ReflectionUtils.newInstance(ConfParser.<KEY> getKeyClass(conf),
-				conf);
-	}
-
-	public static <VALUE extends WritableSettableCombinable<VALUE>> Class<VALUE> getValueClass(
-			Configuration conf) {
-		return ConfParser.<WritableSettableComparable, VALUE> getTree(conf)
-				.getValClass();
-	}
-
-	public static <VALUE extends WritableSettableCombinable<VALUE>> VALUE newValue(
-			Configuration conf) {
-		return ReflectionUtils.newInstance(
-				ConfParser.<VALUE> getValueClass(conf), conf);
-	}
-
 	public static Path getNeedsPropogationPath(Configuration conf, int division) {
 		return new Path(getTierPath(conf, division), NEEDS_PROPOGATION_NAME);
 	}
 
-	public static <KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettableCombinable<VALUE>> Tree<KEY, VALUE> getTree(
+	public static <KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettable<VALUE>> Tree<KEY, VALUE> newTree(
 			Configuration conf) {
-		Tree<KEY, VALUE> t = (Tree<KEY, VALUE>) treeMap.get(conf);
-		if (t == null) {
-			t = ReflectionUtils.newInstance(
-					ConfParser.<KEY, VALUE> getTreeClass(conf), conf);
-			treeMap.put(conf, t);
-		}
-		return t;
+		return ReflectionUtils.newInstance(
+				ConfParser.<KEY, VALUE> getTreeClass(conf), conf);
 	}
 
-	public static Class<? extends WritableSettableComparable> getRawKeyClass(
-			Configuration conf) {
-		return ConfParser
-				.<WritableSettableComparable, WritableSettableCombinable> getTree(
-						conf).getKeyClass();
-	}
-
-	public static Class<? extends WritableSettableCombinable> getRawValueClass(
-			Configuration conf) {
-		return ConfParser
-				.<WritableSettableComparable, WritableSettableCombinable> getTree(
-						conf).getValClass();
-	}
-
-	private static <KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettableCombinable<VALUE>> Class<Tree<KEY, VALUE>> getTreeClass(
+	private static <KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettable<VALUE>> Class<Tree<KEY, VALUE>> getTreeClass(
 			Configuration conf) {
 		@SuppressWarnings("unchecked")
 		Class<Tree<KEY, VALUE>> c = (Class<Tree<KEY, VALUE>>) conf.getClass(

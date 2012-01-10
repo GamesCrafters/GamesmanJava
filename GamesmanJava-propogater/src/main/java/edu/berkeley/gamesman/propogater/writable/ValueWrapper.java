@@ -9,9 +9,8 @@ import org.apache.hadoop.conf.Configuration;
 import edu.berkeley.gamesman.propogater.factory.Factory;
 import edu.berkeley.gamesman.propogater.factory.FactoryUtil;
 
-
-public class ValueWrapper<VALUE extends WritableSettableCombinable<VALUE>>
-		implements WritableSettableCombinable<ValueWrapper<VALUE>> {
+public class ValueWrapper<VALUE extends WritableSettable<VALUE>> implements
+		WritableSettable<ValueWrapper<VALUE>> {
 
 	private boolean hasValue = true;
 	private final VALUE myValue;
@@ -36,30 +35,6 @@ public class ValueWrapper<VALUE extends WritableSettableCombinable<VALUE>>
 		hasValue = in.readBoolean();
 		if (hasValue)
 			myValue.readFields(in);
-	}
-
-	@Override
-	public void combineWith(ValueWrapper<VALUE> t) {
-		combineWithOther(t);
-	}
-
-	public void combineWithOther(ValueWrapper<? extends VALUE> t) {
-		if (!hasValue) {
-			hasValue = t.hasValue;
-			if (hasValue)
-				myValue.set(t.myValue);
-		} else if (t.hasValue) {
-			myValue.combineWith(t.myValue);
-		}
-	}
-
-	public void combineWith(VALUE t) {
-		if (hasValue) {
-			myValue.combineWith(t);
-		} else {
-			hasValue = true;
-			myValue.set(t);
-		}
 	}
 
 	@Override

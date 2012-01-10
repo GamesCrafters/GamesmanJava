@@ -16,7 +16,6 @@ import edu.berkeley.gamesman.propogater.tasks.TreeCombineReducer;
 import edu.berkeley.gamesman.propogater.tasks.TreeReducer;
 import edu.berkeley.gamesman.propogater.tree.node.TreeNode;
 
-
 public class CombineRunner extends TaskRunner {
 	public final Tier tier;
 
@@ -33,7 +32,7 @@ public class CombineRunner extends TaskRunner {
 				return;
 			Path oldDataPath = tier.makeCombinePath();
 			tier.renameDataPath(oldDataPath);
-			Configuration jConf = new Configuration(conf);
+			Configuration jConf = new Configuration(tree.getConf());
 			ConfParser.setDivision(jConf, tier.num);
 			Job j = new Job(jConf, String.format(
 					ConfParser.COMBINATION_JOB_FORMAT, tier.num));
@@ -41,12 +40,14 @@ public class CombineRunner extends TaskRunner {
 			j.setReducerClass(TreeCombineReducer.class);
 			j.setInputFormatClass(SequenceFileInputFormat.class);
 			j.setOutputFormatClass(SequenceFileOutputFormat.class);
-			j.setOutputKeyClass(ConfParser.getRawKeyClass(jConf));
+			j.setOutputKeyClass(tree.getKeyClass());
 			j.setOutputValueClass(TreeNode.class);
 			j.setJarByClass(Solver.class);
 			Path[] allPaths = tier.getCombinePaths();
-			assert Util.contains(allPaths, oldDataPath.getFileSystem(conf)
-					.getFileStatus(oldDataPath).getPath());
+			assert Util.contains(
+					allPaths,
+					oldDataPath.getFileSystem(tree.getConf())
+							.getFileStatus(oldDataPath).getPath());
 			FileInputFormat.setInputPaths(j, allPaths);
 			FileOutputFormat.setOutputPath(j, tier.dataPath);
 			boolean succeeded = j.waitForCompletion(true);

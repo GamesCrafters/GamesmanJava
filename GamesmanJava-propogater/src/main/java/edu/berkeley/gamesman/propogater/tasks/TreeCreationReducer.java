@@ -8,11 +8,10 @@ import org.apache.hadoop.fs.Path;
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.tree.Tree;
 import edu.berkeley.gamesman.propogater.tree.node.TreeNode;
-import edu.berkeley.gamesman.propogater.writable.WritableSettableCombinable;
+import edu.berkeley.gamesman.propogater.writable.WritableSettable;
 import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
 
-
-public class TreeCreationReducer<KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettableCombinable<VALUE>>
+public class TreeCreationReducer<KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettable<VALUE>>
 		extends TreeReducer<KEY, VALUE> {
 	private boolean hasNew;
 	private int creationDivision;
@@ -24,7 +23,7 @@ public class TreeCreationReducer<KEY extends WritableSettableComparable<KEY>, VA
 		super.setup(context);
 		hasNew = false;
 		Configuration conf = context.getConfiguration();
-		tree = ConfParser.<KEY, VALUE> getTree(conf);
+		tree = ConfParser.<KEY, VALUE> newTree(conf);
 		creationDivision = ConfParser.getDivision(conf);
 	}
 

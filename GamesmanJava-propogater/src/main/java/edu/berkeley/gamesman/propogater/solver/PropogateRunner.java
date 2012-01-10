@@ -17,7 +17,6 @@ import edu.berkeley.gamesman.propogater.tasks.PropogationMapper;
 import edu.berkeley.gamesman.propogater.tasks.TreeReducer;
 import edu.berkeley.gamesman.propogater.tree.node.TreeNode;
 
-
 public class PropogateRunner extends TaskRunner {
 	private final Set<Tier> wholeSet;
 	public final SortedSet<Tier> cycleSet;
@@ -53,7 +52,7 @@ public class PropogateRunner extends TaskRunner {
 			}
 			if (!changed)
 				return;
-			Configuration jConf = new Configuration(conf);
+			Configuration jConf = new Configuration(tree.getConf());
 			ConfParser.setWorkingSet(jConf, cycleSet);
 			Job j = new Job(jConf, String.format(
 					ConfParser.PROPOGATION_JOB_FORMAT, headTier.num));
@@ -62,7 +61,7 @@ public class PropogateRunner extends TaskRunner {
 			j.setReducerClass(TreeReducer.class);
 			j.setInputFormatClass(SequenceFileInputFormat.class);
 			j.setOutputFormatClass(DividedSequenceFileOutputFormat.class);
-			j.setOutputKeyClass(ConfParser.getRawKeyClass(jConf));
+			j.setOutputKeyClass(tree.getKeyClass());
 			j.setOutputValueClass(TreeNode.class);
 			j.setJarByClass(Solver.class);
 			FileInputFormat.setInputPaths(j, TierGraph.mixPaths(wholeSet));
