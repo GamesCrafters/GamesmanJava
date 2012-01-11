@@ -10,7 +10,7 @@ import org.apache.hadoop.conf.Configuration;
 import edu.berkeley.gamesman.propogater.common.Combinable;
 import edu.berkeley.gamesman.propogater.factory.Factory;
 import edu.berkeley.gamesman.propogater.tree.Tree;
-import edu.berkeley.gamesman.propogater.writable.ParentPair;
+import edu.berkeley.gamesman.propogater.writable.IntEntry;
 import edu.berkeley.gamesman.propogater.writable.ValueWrapper;
 import edu.berkeley.gamesman.propogater.writable.WritableSettable;
 import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
@@ -20,7 +20,7 @@ import edu.berkeley.gamesman.propogater.writable.list.WritableList;
 public final class TreeNode<KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettable<VALUE>>
 		implements WritableSettable<TreeNode<KEY, VALUE>>,
 		Combinable<TreeNode<KEY, VALUE>>, Configurable {
-	private WritableList<ParentPair<KEY>> parents;
+	private WritableList<IntEntry<KEY>> parents;
 	private ValueWrapper<VALUE> myValue;
 	private WritableArray<VALUE> children;
 	private Configuration conf;
@@ -118,19 +118,19 @@ public final class TreeNode<KEY extends WritableSettableComparable<KEY>, VALUE e
 	public void toParent(Tree<KEY, VALUE> tree, KEY childKey,
 			TreeNode<KEY, VALUE> childNode, int parentNum) {
 		clear();
-		ParentPair<KEY> pair = childNode.parents.get(parentNum);
+		IntEntry<KEY> pair = childNode.parents.get(parentNum);
 		int childNum = pair.getInt();
 		children.setLength(childNum + 1);
 		tree.travelUp(childNode.getValue(), childNum, childKey, pair.getKey(),
 				children.setHasAndGet(childNum));
 	}
 
-	private static <KEY extends WritableSettableComparable<KEY>> Factory<ParentPair<KEY>> makePairFactory(
+	private static <KEY extends WritableSettableComparable<KEY>> Factory<IntEntry<KEY>> makePairFactory(
 			final Class<KEY> keyClass, final Configuration conf) {
-		return new Factory<ParentPair<KEY>>() {
+		return new Factory<IntEntry<KEY>>() {
 			@Override
-			public ParentPair<KEY> create() {
-				return new ParentPair<KEY>(keyClass, conf);
+			public IntEntry<KEY> create() {
+				return new IntEntry<KEY>(keyClass, conf);
 			}
 		};
 	}
@@ -144,7 +144,7 @@ public final class TreeNode<KEY extends WritableSettableComparable<KEY>, VALUE e
 	public void setConf(Configuration conf) {
 		Class<KEY> keyClass = Tree.<KEY> getRunKeyClass(conf);
 		Class<VALUE> valClass = Tree.<VALUE> getRunValueClass(conf);
-		parents = new WritableList<ParentPair<KEY>>(makePairFactory(keyClass,
+		parents = new WritableList<IntEntry<KEY>>(makePairFactory(keyClass,
 				conf));
 		myValue = new ValueWrapper<VALUE>(valClass, conf);
 		children = new WritableArray<VALUE>(valClass, conf);

@@ -64,7 +64,7 @@ public abstract class RangeTree<S extends GenState> extends
 		if (lPositions > Integer.MAX_VALUE)
 			throw new RuntimeException("Too large for me");
 		int numPositions = (int) lPositions;
-		toFill.setLength(numPositions);
+		toFill.clear(numPositions, RangeRecords.ARRAY);
 		boolean result = false;
 		S tempState = hasher.getPoolState();
 		try {
@@ -101,7 +101,7 @@ public abstract class RangeTree<S extends GenState> extends
 		long lParentPositions = parent.numPositions(hasher);
 		assert lParentPositions <= Integer.MAX_VALUE;
 		int numParentPositions = (int) lParentPositions;
-		toFill.setLength(numParentPositions);
+		toFill.clear(numParentPositions, RangeRecords.MAP);
 		S state = hasher.getPoolState();
 		try {
 			long lChange = parent.firstPosition(hasher, childNum, state);
@@ -115,7 +115,7 @@ public abstract class RangeTree<S extends GenState> extends
 				long lIndex = child.indexOf(hasher, state, move);
 				assert lIndex <= Integer.MAX_VALUE;
 				GameRecord childRec = tVal.get((int) lIndex);
-				toFill.setHasAndGet(i).previousPosition(childRec);
+				toFill.add(i).previousPosition(childRec);
 				lChange = parent.step(hasher, childNum, state);
 				assert i + lChange <= Integer.MAX_VALUE;
 				change = (int) lChange;
@@ -134,38 +134,32 @@ public abstract class RangeTree<S extends GenState> extends
 
 	@Override
 	public boolean combine(WritableArray<RangeRecords> children,
-			RangeRecords toFill) {
-		int numPositions = toFill.numPositions();
-		assert allMatches(children, numPositions);
+			RangeRecords toReplace) {
+		int numPositions = toReplace.numPositions();
 		boolean changed = false;
 		for (int pos = 0; pos < numPositions; pos++) {
+			if (toReplace.get(pos).isPrimitive())
+				continue;
 			boolean hasValue = false;
 			for (int i = 0; i < children.length(); i++) {
-				if (children.hasValue(i) && children.get(i).hasValue(pos)) {
-					if (hasValue)
-						tempRecord.combineWith(children.get(i).get(pos));
-					else {
-						hasValue = true;
-						tempRecord.set(children.get(i).get(pos));
+				if (children.hasValue(i)) {
+					GameRecord value = children.get(i).get(pos);
+					if (children.hasValue(i) && value != null) {
+						if (hasValue)
+							tempRecord.combineWith(value);
+						else {
+							hasValue = true;
+							tempRecord.set(value);
+						}
 					}
 				}
 			}
 			if (hasValue) {
-				changed |= !tempRecord.equals(toFill.get(pos));
-				toFill.set(pos, tempRecord);
+				changed |= !tempRecord.equals(toReplace.get(pos));
+				toReplace.set(pos, tempRecord);
 			}
 		}
 		return changed;
-	}
-
-	private boolean allMatches(WritableArray<RangeRecords> children,
-			int numPositions) {
-		for (int i = 0; i < children.length(); i++) {
-			if (children.hasValue(i)
-					&& children.get(i).numPositions() != numPositions)
-				return false;
-		}
-		return true;
 	}
 
 	protected abstract GenHasher<S> getHasher();

@@ -113,4 +113,8 @@ public class GameRecord implements Comparable<GameRecord>,
 	public void previousPosition() {
 		previousPosition(this);
 	}
+
+	public boolean isPrimitive() {
+		return value.hasRemoteness && remoteness == 0;
+	}
 }

@@ -9,18 +9,17 @@ import org.apache.hadoop.conf.Configuration;
 import edu.berkeley.gamesman.propogater.factory.Factory;
 import edu.berkeley.gamesman.propogater.factory.FactoryUtil;
 
-
-public final class ParentPair<KEY extends WritableSettable<KEY>> implements
-		WritableSettable<ParentPair<KEY>> {
+public final class IntEntry<KEY extends WritableSettable<KEY>> implements
+		WritableSettable<IntEntry<KEY>> {
 	private int whichNum;
 	private boolean seen = false;
 	private final KEY parent;
 
-	public ParentPair(Class<KEY> keyClass, Configuration conf) {
+	public IntEntry(Class<? extends KEY> keyClass, Configuration conf) {
 		this(FactoryUtil.makeFactory(keyClass, conf));
 	}
 
-	public ParentPair(Factory<KEY> keyFact) {
+	public IntEntry(Factory<KEY> keyFact) {
 		parent = keyFact.create();
 	}
 
@@ -39,11 +38,11 @@ public final class ParentPair<KEY extends WritableSettable<KEY>> implements
 	}
 
 	@Override
-	public void set(ParentPair<KEY> t) {
+	public void set(IntEntry<KEY> t) {
 		setOther(t);
 	}
 
-	public void setOther(ParentPair<? extends KEY> t) {
+	public void setOther(IntEntry<? extends KEY> t) {
 		whichNum = t.whichNum;
 		seen = t.seen;
 		parent.set(t.parent);
@@ -57,10 +56,10 @@ public final class ParentPair<KEY extends WritableSettable<KEY>> implements
 
 	@Override
 	public boolean equals(Object other) {
-		return (other instanceof ParentPair) && equals((ParentPair<?>) other);
+		return (other instanceof IntEntry) && equals((IntEntry<?>) other);
 	}
 
-	public boolean equals(ParentPair<?> other) {
+	public boolean equals(IntEntry<?> other) {
 		return whichNum == other.whichNum && seen == other.seen
 				&& parent.equals(other.parent);
 	}
@@ -71,6 +70,7 @@ public final class ParentPair<KEY extends WritableSettable<KEY>> implements
 				+ parent.hashCode();
 	}
 
+	@Override
 	public String toString() {
 		return whichNum + " : " + parent.toString()
 				+ (seen ? " is seen" : " is not seen");
@@ -88,5 +88,9 @@ public final class ParentPair<KEY extends WritableSettable<KEY>> implements
 		boolean s = seen;
 		seen = true;
 		return s;
+	}
+
+	public void setInt(int i) {
+		whichNum = i;
 	}
 }
