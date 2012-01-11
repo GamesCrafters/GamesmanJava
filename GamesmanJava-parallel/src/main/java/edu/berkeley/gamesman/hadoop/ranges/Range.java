@@ -119,11 +119,11 @@ public class Range<S extends GenState> implements
 
 	public long step(GenHasher<S> hasher, int childNum, S pos) {
 		assert matches(pos);
+		int cutoff = hasher.numElements - suffix.length();
 		int changed = hasher.step(pos);
-		if (changed == -1)
+		if (changed == -1 || changed >= cutoff)
 			return -1;
-		long result = hasher.stepTo(pos, moveList.get(childNum),
-				hasher.numElements - suffix.length());
+		long result = hasher.stepTo(pos, moveList.get(childNum), cutoff);
 		if (result == -1)
 			return -1;
 		else

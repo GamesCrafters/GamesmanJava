@@ -115,6 +115,8 @@ public class C4RangeTest {
 			int change = (int) lChange;
 			long childPositions = child.numPositions(hasher);
 			for (int i = change; change != -1; i += change) {
+				if (i == 251)
+					System.out.println("Here");
 				Assert.assertEquals(parent.subHash(hasher, state), i);
 				hasher.makeMove(state, move, childState);
 				long lIndex = child.indexOf(hasher, state, move);
