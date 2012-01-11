@@ -162,4 +162,12 @@ public class Range<S extends GenState> implements
 	public String toString() {
 		return suffix.toString();
 	}
+
+	public int get(int i) {
+		return suffix.get(i);
+	}
+
+	public int length() {
+		return suffix.length();
+	}
 }

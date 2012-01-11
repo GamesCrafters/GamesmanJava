@@ -8,6 +8,7 @@ import org.apache.hadoop.conf.Configuration;
 
 import edu.berkeley.gamesman.game.type.GameValue;
 import edu.berkeley.gamesman.hadoop.ranges.GenKey;
+import edu.berkeley.gamesman.hadoop.ranges.Range;
 import edu.berkeley.gamesman.hadoop.ranges.RangeTree;
 import edu.berkeley.gamesman.hasher.cachehasher.CacheMove;
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
@@ -162,8 +163,8 @@ public class Connect4 extends RangeTree<C4State> {
 			allMoves.addAll(result[i]);
 		}
 		myMoves = allMoves.toArray(new Move[allMoves.size()]);
-		suffLen = Math.max(gameSize,
-				conf.getInt("gamesman.game.suffix.length", 10));
+		int varianceLength = conf.getInt("gamesman.game.variance.length", 10);
+		suffLen = Math.max(1, gameSize + 1 - varianceLength);
 	}
 
 	public C4State newState() {
@@ -182,4 +183,13 @@ public class Connect4 extends RangeTree<C4State> {
 		return made;
 	}
 
+	@Override
+	public int getDivision(Range<C4State> range) {
+		return range.get(gameSize - suffLen);
+	}
+
+	@Override
+	protected int getDivision(GenHasher<C4State> hasher, C4State state) {
+		throw new UnsupportedOperationException();
+	}
 }

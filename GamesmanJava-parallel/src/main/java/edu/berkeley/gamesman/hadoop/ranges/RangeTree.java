@@ -182,4 +182,19 @@ public abstract class RangeTree<S extends GenState> extends
 	public Class<? extends Range<S>> getKeyClass() {
 		return (Class<? extends Range<S>>) Range.class;
 	}
+
+	public int getDivision(Range<S> range) {
+		GenHasher<S> hasher = getHasher();
+		S tempState = hasher.getPoolState();
+		try {
+			range.firstPosition(hasher, tempState);
+			return getDivision(hasher, tempState);
+		} finally {
+			hasher.release(tempState);
+		}
+	}
+
+	protected int getDivision(GenHasher<S> hasher, S state) {
+		return 0;
+	}
 }

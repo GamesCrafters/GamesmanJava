@@ -56,6 +56,7 @@ public class IntArrWritable implements
 	}
 
 	public int get(int i) {
+		assert i < arrLen;
 		return arr[i];
 	}
 
@@ -78,6 +79,7 @@ public class IntArrWritable implements
 	}
 
 	public void set(int i, int val) {
+		assert i < arrLen;
 		arr[i] = val;
 	}
 
