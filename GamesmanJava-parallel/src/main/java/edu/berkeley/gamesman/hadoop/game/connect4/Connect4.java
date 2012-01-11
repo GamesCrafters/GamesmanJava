@@ -7,7 +7,6 @@ import java.util.Collections;
 import org.apache.hadoop.conf.Configuration;
 
 import edu.berkeley.gamesman.game.type.GameValue;
-import edu.berkeley.gamesman.hadoop.ranges.GenKey;
 import edu.berkeley.gamesman.hadoop.ranges.Range;
 import edu.berkeley.gamesman.hadoop.ranges.RangeTree;
 import edu.berkeley.gamesman.hasher.cachehasher.CacheMove;
@@ -29,15 +28,9 @@ public class Connect4 extends RangeTree<C4State> {
 	}
 
 	@Override
-	protected Collection<GenKey<C4State>> getStartingPositions() {
-		GenKey<C4State> result = new GenKey<C4State>();
-		C4State poolState = myHasher.getPoolState();
-		try {
-			result.set(poolState);
-			return Collections.singleton(result);
-		} finally {
-			myHasher.release(poolState);
-		}
+	public Collection<C4State> getStartingPositions() {
+		C4State result = myHasher.newState();
+		return Collections.singleton(result);
 	}
 
 	@Override

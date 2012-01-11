@@ -11,40 +11,16 @@ import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.lib.output.MapFileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
-
 import edu.berkeley.gamesman.propogater.common.ConfParser;
-import edu.berkeley.gamesman.propogater.tree.Tree;
 import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.solve.reader.SolveReaders;
 import edu.berkeley.gamesman.util.Pair;
+import edu.berkeley.gamesman.game.tree.GameTree;
 import edu.berkeley.gamesman.game.type.GameRecord;
 import edu.berkeley.gamesman.game.type.GameValue;
 
-/**
- * Outcomes: edu.berkeley.gamesman.core.Value
- * <p>
- * displayBoard: edu.berkeley.gamesman.game.Game.displayState
- * <p>
- * getCurrentOutcome: {Hash position, fetch record from database, unhash it}
- * <p>
- * getNumberOfMovesForCurrentOutcome: {Look at the size of the collection
- * returned by validMoves}
- * <p>
- * getValidMoves = edu.berkeley.gamesman.game.Game.validMoves {with only one
- * argument}
- */
 public final class Play {
-	/**
-	 * The main method for playing a game inside the console.
-	 * 
-	 * @param args
-	 *            The path to a job file.
-	 * @throws IOException
-	 *             If an IO exception occurs while reading the file
-	 * @throws ClassNotFoundException
-	 *             If the configuration contains a nonexistent class
-	 */
 	public static <K extends WritableSettableComparable<K>> void main(
 			String[] args) throws IOException, ClassNotFoundException {
 		GenericOptionsParser parser = new GenericOptionsParser(args);
@@ -52,7 +28,8 @@ public final class Play {
 		String[] remainArgs = parser.getRemainingArgs();
 		Path p = new Path(remainArgs[0]);
 		ConfParser.addParameters(conf, p, false);
-		Tree<K, GameRecord> tree = ConfParser.<K, GameRecord> newTree(conf);
+		GameTree<K> tree = (GameTree<K>) ConfParser
+				.<K, GameRecord> newTree(conf);
 		K position = tree.getRoots().iterator().next();
 		Path[] outPath = new Path[1];
 		outPath[0] = ConfParser.getOutputPath(conf);

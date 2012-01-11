@@ -83,9 +83,9 @@ public class IntArrWritable implements
 		arr[i] = val;
 	}
 
-	public void set(IntArrWritable other, int suffLen) {
+	public void set(GenState other, int suffLen) {
 		setLength(suffLen);
-		System.arraycopy(other.arr, other.arrLen - suffLen, arr, 0, suffLen);
+		other.getSuffix(arr, suffLen);
 	}
 
 	@Override

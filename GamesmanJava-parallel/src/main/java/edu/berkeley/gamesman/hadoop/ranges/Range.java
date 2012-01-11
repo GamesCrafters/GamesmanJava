@@ -48,8 +48,8 @@ public class Range<S extends GenState> implements
 		return suffix.compareTo(o.suffix);
 	}
 
-	public void set(GenHasher<S> hasher, GenKey<S> t, int suffLen, Move[] moves) {
-		suffix.set(t.get(), suffLen);
+	public void set(GenHasher<S> hasher, S t, int suffLen, Move[] moves) {
+		suffix.set(t, suffLen);
 		addMoves(hasher, moves);
 	}
 

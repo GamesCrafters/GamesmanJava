@@ -21,22 +21,22 @@ public abstract class RangeTree<S extends GenState> extends
 
 	@Override
 	public Collection<Range<S>> getRoots() {
-		Collection<GenKey<S>> startingPositions = getStartingPositions();
+		Collection<S> startingPositions = getStartingPositions();
 		HashSet<Range<S>> containingRanges = new HashSet<Range<S>>();
-		for (GenKey<S> t : startingPositions) {
+		for (S t : startingPositions) {
 			Range<S> containingRange = makeContainingRange(t);
 			containingRanges.add(containingRange);
 		}
 		return containingRanges;
 	}
 
-	private Range<S> makeContainingRange(GenKey<S> t) {
+	private Range<S> makeContainingRange(S t) {
 		Range<S> range = newRange();
 		makeContainingRange(t, range);
 		return range;
 	}
 
-	private void makeContainingRange(GenKey<S> t, Range<S> range) {
+	private void makeContainingRange(S t, Range<S> range) {
 		range.set(getHasher(), t, suffixLength(), moves);
 	}
 
@@ -46,7 +46,7 @@ public abstract class RangeTree<S extends GenState> extends
 		return ReflectionUtils.newInstance(getKeyClass(), getConf());
 	}
 
-	protected abstract Collection<GenKey<S>> getStartingPositions();
+	public abstract Collection<S> getStartingPositions();
 
 	@Override
 	public void getChildren(Range<S> position, WritableList<Range<S>> toFill) {
