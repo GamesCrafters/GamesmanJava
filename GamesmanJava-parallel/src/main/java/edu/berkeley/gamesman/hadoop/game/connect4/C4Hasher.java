@@ -65,7 +65,7 @@ public class C4Hasher extends OptimizingInvariantHasher<C4State> {
 		} while (dbh.step(s) != -1);
 	}
 
-	private String printBoard(C4State s) {
+	public String printBoard(C4State s) {
 		StringBuilder sb = new StringBuilder();
 		for (int row = height - 1; row >= 0; row--) {
 			sb.append("|");

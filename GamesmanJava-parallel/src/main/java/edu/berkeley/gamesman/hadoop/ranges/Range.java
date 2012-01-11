@@ -10,7 +10,7 @@ import edu.berkeley.gamesman.hasher.genhasher.Move;
 import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
 import edu.berkeley.gamesman.propogater.writable.list.WritableList;
 
-public abstract class Range<S extends GenState> implements
+public class Range<S extends GenState> implements
 		WritableSettableComparable<Range<S>> {
 	private final WritableList<MoveWritable> moveList = new WritableList<MoveWritable>(
 			MoveWritable.class, null);
@@ -38,8 +38,6 @@ public abstract class Range<S extends GenState> implements
 	public int compareTo(Range<S> o) {
 		return suffix.compareTo(o.suffix);
 	}
-
-	public abstract GenKey<S> newKey();
 
 	public void set(GenHasher<S> hasher, GenKey<S> t, int suffLen, Move[] moves) {
 		suffix.set(t.get(), suffLen);
@@ -147,5 +145,21 @@ public abstract class Range<S extends GenState> implements
 
 	public MoveWritable getMove(int childNum) {
 		return moveList.get(childNum);
+	}
+
+	@Override
+	public int hashCode() {
+		return suffix.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		return other instanceof Range
+				&& suffix.equals(((Range<?>) other).suffix);
+	}
+
+	@Override
+	public String toString() {
+		return suffix.toString();
 	}
 }

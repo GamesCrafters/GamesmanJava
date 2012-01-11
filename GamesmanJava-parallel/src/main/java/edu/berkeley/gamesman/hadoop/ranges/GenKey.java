@@ -35,4 +35,11 @@ public class GenKey<S extends GenState> implements
 		return myState;
 	}
 
+	public void set(S state) {
+		myState.setLength(state.numElements());
+		for (int i = 0; i < state.numElements(); i++) {
+			myState.set(i, state.get(i));
+		}
+	}
+
 }

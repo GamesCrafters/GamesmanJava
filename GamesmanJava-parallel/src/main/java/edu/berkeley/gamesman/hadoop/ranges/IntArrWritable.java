@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.hadoop.ranges;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Arrays;
 
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.hasher.genhasher.GenState;
@@ -83,5 +84,34 @@ public class IntArrWritable implements
 	public void set(IntArrWritable other, int suffLen) {
 		setLength(suffLen);
 		System.arraycopy(other.arr, other.arrLen - suffLen, arr, 0, suffLen);
+	}
+
+	@Override
+	public int hashCode() {
+		int hash = 1;
+		for (int i = 0; i < arrLen; i++) {
+			hash *= 31;
+			hash += arr[i];
+		}
+		return hash;
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if (!(other instanceof IntArrWritable))
+			return false;
+		IntArrWritable o = (IntArrWritable) other;
+		if (arrLen != o.arrLen)
+			return false;
+		for (int i = 0; i < arrLen; i++) {
+			if (arr[i] != o.arr[i])
+				return false;
+		}
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		return Arrays.toString(Arrays.copyOfRange(arr, 0, arrLen));
 	}
 }

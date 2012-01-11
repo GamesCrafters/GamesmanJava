@@ -628,7 +628,6 @@ public abstract class GenHasher<S extends GenState> {
 		// firstState. This would not be appropriately checked. There doesn't
 		// seem to be any way around that.
 		makeMove(childState, move);
-		assert validTest(childState);
 	}
 
 	/**
@@ -660,7 +659,7 @@ public abstract class GenHasher<S extends GenState> {
 			diff -= sigValue(steppingState);
 			steppingState.trunc();
 		}
-		parentHasher.makeMove(parentState, move);
+		parentHasher.makeUncheckedMove(parentState, move);
 		while (true) {
 			while (steppingState.leastSig() != parentState.get(steppingState
 					.getStart())) {
@@ -672,7 +671,7 @@ public abstract class GenHasher<S extends GenState> {
 				break;
 			steppingState.addOn(dir == -1);
 		}
-		parentHasher.unmakeMove(parentState, move);
+		parentHasher.unmakeUncheckedMove(parentState, move);
 		assert parentHasher.validTest(parentState);
 		assert validTest(steppingState);
 		return diff;
@@ -750,7 +749,12 @@ public abstract class GenHasher<S extends GenState> {
 		return result;
 	}
 
-	private final void makeMove(GenState state, Move move) {
+	public final void makeMove(S state, Move move) {
+		makeUncheckedMove(state, move);
+		assert validTest(state);
+	}
+
+	private void makeUncheckedMove(S state, Move move) throws Error {
 		for (int i = 0; i < move.numChanges(); i++) {
 			if (state.get(move.getChangePlace(i)) == move.getChangeFrom(i))
 				state.set(move.getChangePlace(i), move.getChangeTo(i));
@@ -759,7 +763,7 @@ public abstract class GenHasher<S extends GenState> {
 		}
 	}
 
-	private final void unmakeMove(GenState state, Move move) {
+	private void unmakeUncheckedMove(GenState state, Move move) throws Error {
 		for (int i = 0; i < move.numChanges(); i++) {
 			if (state.get(move.getChangePlace(i)) == move.getChangeTo(i))
 				state.set(move.getChangePlace(i), move.getChangeFrom(i));

@@ -1,0 +1,5 @@
+gamesman.hadoop.game.name=Connect4
+propogater.tree.class=edu.berkeley.gamesman.hadoop.game.connect4.Connect4
+propogation.work.path=target/work
+propogater.out.path=target/c4
+propogater.output.parameters=target/c4.job

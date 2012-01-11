@@ -48,9 +48,9 @@ public abstract class Tree<KEY extends WritableSettableComparable<KEY>, VALUE ex
 	public abstract void travelUp(VALUE tVal, int childNum, KEY child,
 			KEY parent, VALUE toFill);
 
-	public abstract Class<KEY> getKeyClass();
+	public abstract Class<? extends KEY> getKeyClass();
 
-	public abstract Class<VALUE> getValClass();
+	public abstract Class<? extends VALUE> getValClass();
 
 	public int getDivision(KEY position) {
 		return 0;

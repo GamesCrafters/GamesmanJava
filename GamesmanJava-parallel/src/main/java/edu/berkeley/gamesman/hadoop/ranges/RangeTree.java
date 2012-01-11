@@ -148,8 +148,10 @@ public abstract class RangeTree<S extends GenState> extends
 					}
 				}
 			}
-			changed |= !tempRecord.equals(toFill.get(pos));
-			toFill.set(pos, tempRecord);
+			if (hasValue) {
+				changed |= !tempRecord.equals(toFill.get(pos));
+				toFill.set(pos, tempRecord);
+			}
 		}
 		return changed;
 	}
@@ -164,8 +166,6 @@ public abstract class RangeTree<S extends GenState> extends
 		return true;
 	}
 
-	protected abstract int getVarianceLength();
-
 	protected abstract GenHasher<S> getHasher();
 
 	protected final void configure(Configuration conf) {
@@ -176,5 +176,10 @@ public abstract class RangeTree<S extends GenState> extends
 	protected abstract Move[] getMoves();
 
 	protected void innerConfigure(Configuration conf) {
+	}
+
+	@Override
+	public Class<? extends Range<S>> getKeyClass() {
+		return (Class<? extends Range<S>>) Range.class;
 	}
 }
