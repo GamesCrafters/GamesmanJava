@@ -180,7 +180,8 @@ public abstract class RangeTree<S extends GenState> extends
 
 	@Override
 	public Class<? extends Range<S>> getKeyClass() {
-		return (Class<? extends Range<S>>) Range.class;
+		return (Class<? extends Range<S>>) Range.class
+				.<Range> asSubclass(Range.class);
 	}
 
 	public int getDivision(Range<S> range) {
