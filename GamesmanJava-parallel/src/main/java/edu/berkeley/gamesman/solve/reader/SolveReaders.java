@@ -1,9 +1,11 @@
 package edu.berkeley.gamesman.solve.reader;
 
+import edu.berkeley.gamesman.hadoop.game.connect4.Connect4;
 import edu.berkeley.gamesman.hadoop.game.reversi.Reversi;
 import edu.berkeley.gamesman.hadoop.game.tictactoe.TicTacToe;
+import edu.berkeley.gamesman.propogater.tree.Tree;
+import edu.berkeley.gamesman.propogater.writable.WritableSettable;
 import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
-import edu.berkeley.gamesman.game.type.GameRecord;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -21,11 +23,12 @@ public class SolveReaders {
 	static {
 		gameClasses.put("ttt", TicTacToe.class);
 		gameClasses.put("reversi", Reversi.class);
+		gameClasses.put("Connect4", Connect4.class);
 		// TODO Add more games here
 	}
 
-	public static <KEY extends WritableSettableComparable<KEY>> SolveReader<KEY> get(
-			Configuration conf, String game) throws ClassNotFoundException {
+	public static <KEY> SolveReader<KEY> get(Configuration conf, String game)
+			throws ClassNotFoundException {
 		Class<? extends SolveReader<KEY>> gameClass = (Class<? extends SolveReader<KEY>>) gameClasses
 				.get(game);
 		if (gameClass == null)
@@ -34,13 +37,13 @@ public class SolveReaders {
 		return t;
 	}
 
-	public static <KEY extends WritableSettableComparable<KEY>> GameRecord readPosition(
-			Configuration conf, Path folder, KEY position,
-			Partitioner<KEY, GameRecord> partitioner) throws IOException {
-		GameRecord value = new GameRecord();
+	public static <KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettable<VALUE>> VALUE readPosition(
+			Tree<KEY, VALUE> tree, Path folder, KEY position,
+			Partitioner<KEY, VALUE> partitioner) throws IOException {
+		VALUE value = tree.newValue();
 		MapFile.Reader[] readers = MapFileOutputFormat.getReadersArray(
-				new Path[] { folder }, conf);
-		MapFileOutputFormat.<KEY, GameRecord> getEntry(readers, partitioner,
+				new Path[] { folder }, tree.getConf());
+		MapFileOutputFormat.<KEY, VALUE> getEntry(readers, partitioner,
 				position, value);
 		return value;
 	}

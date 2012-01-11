@@ -30,7 +30,7 @@ public abstract class RangeTree<S extends GenState> extends
 		return containingRanges;
 	}
 
-	private Range<S> makeContainingRange(S t) {
+	public Range<S> makeContainingRange(S t) {
 		Range<S> range = newRange();
 		makeContainingRange(t, range);
 		return range;
@@ -91,7 +91,7 @@ public abstract class RangeTree<S extends GenState> extends
 		return false;
 	}
 
-	protected abstract GameValue getValue(S state);
+	public abstract GameValue getValue(S state);
 
 	@Override
 	public void travelUp(RangeRecords tVal, int childNum, Range<S> child,
@@ -193,5 +193,11 @@ public abstract class RangeTree<S extends GenState> extends
 
 	protected int getDivision(GenHasher<S> hasher, S state) {
 		return 0;
+	}
+
+	public GameRecord getRecord(Range<S> range, S state, RangeRecords records) {
+		long iVal = range.subHash(getHasher(), state);
+		assert iVal <= Integer.MAX_VALUE;
+		return records.get((int) iVal);
 	}
 }

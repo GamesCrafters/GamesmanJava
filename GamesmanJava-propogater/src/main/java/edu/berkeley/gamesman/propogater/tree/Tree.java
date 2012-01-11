@@ -9,6 +9,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.OutputFormat;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.output.MapFileOutputFormat;
+import org.apache.hadoop.util.ReflectionUtils;
 
 import edu.berkeley.gamesman.propogater.writable.WritableSettable;
 import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
@@ -112,5 +113,9 @@ public abstract class Tree<KEY extends WritableSettableComparable<KEY>, VALUE ex
 		if (vClass == null)
 			throw new NullPointerException();
 		return vClass;
+	}
+
+	public VALUE newValue() {
+		return ReflectionUtils.newInstance(getValClass(), conf);
 	}
 }

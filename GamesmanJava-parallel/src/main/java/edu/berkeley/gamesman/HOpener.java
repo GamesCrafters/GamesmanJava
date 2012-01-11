@@ -20,12 +20,13 @@ import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.solve.reader.SolveReaders;
 import edu.berkeley.gamesman.thrift.GamestateResponse;
 import edu.berkeley.gamesman.util.Pair;
+import edu.berkeley.gamesman.game.tree.GameTree;
 import edu.berkeley.gamesman.game.type.GameRecord;
 
 public class HOpener implements Opener {
 	private class HFetcher<KEY extends WritableSettableComparable<KEY>>
 			implements RecordFetcher {
-		private final Configuration conf;
+		private final GameTree<KEY> tree;
 		private final Path folderPath;
 		private final SolveReader<KEY> reader;
 		private final boolean solved;
@@ -33,7 +34,8 @@ public class HOpener implements Opener {
 
 		public HFetcher(Configuration hConf, String game, String filename)
 				throws ClassNotFoundException, IOException {
-			conf = hConf;
+			this.tree = (GameTree<KEY>) ConfParser
+					.<KEY, GameRecord> newTree(hConf);
 			String folderName = hConf.get("solve.folder");
 			if (folderName == null) {
 				folderPath = new Path(solveDirectory, filename + "_folder");
@@ -77,8 +79,8 @@ public class HOpener implements Opener {
 			if (solved) {
 				GameRecord rec;
 				try {
-					rec = SolveReaders.<KEY> readPosition(conf, folderPath,
-							position, partitioner);
+					rec = SolveReaders.<KEY, GameRecord> readPosition(tree,
+							folderPath, position, partitioner);
 					if (previousPosition)
 						rec.previousPosition();
 				} catch (IOException e) {
