@@ -53,7 +53,7 @@ public class C4Hasher extends OptimizingInvariantHasher<C4State> {
 
 	@Override
 	protected C4State innerNewState() {
-		return new C4State(this, boardSize);
+		return new C4State(this, width, height);
 	}
 
 	public static void main(String[] args) {

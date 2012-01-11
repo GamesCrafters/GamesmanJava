@@ -837,7 +837,19 @@ public abstract class GenHasher<S extends GenState> {
 	 * @return The hash
 	 */
 	public long subHash(S state, int suffixStart) {
-		return hash(state, suffixStart);
+		// TODO Fix this problem everywhere
+		boolean matchesHasher = state.hasHasher(this);
+		if (!matchesHasher) {
+			S tempState = getPoolState();
+			set(tempState, state);
+			state = tempState;
+		}
+		try {
+			return hash(state, suffixStart);
+		} finally {
+			if (!matchesHasher)
+				release(state);
+		}
 	}
 
 	public boolean firstPosition(int[] suffix, int suffLen, S toFill) {

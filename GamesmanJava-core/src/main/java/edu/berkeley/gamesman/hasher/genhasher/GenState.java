@@ -208,7 +208,7 @@ public class GenState implements State<GenState>, Comparable<GenState> {
 	}
 
 	@Override
-	public final String toString() {
+	public String toString() {
 		String[] starSeq = new String[sequence.length];
 		for (int i = 0; i < startPoint; i++) {
 			starSeq[sequence.length - 1 - i] = "*";

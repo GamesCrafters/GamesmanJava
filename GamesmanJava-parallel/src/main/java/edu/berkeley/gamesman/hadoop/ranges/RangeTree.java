@@ -185,13 +185,13 @@ public abstract class RangeTree<S extends GenState> extends
 		S tempState = hasher.getPoolState();
 		try {
 			range.firstPosition(hasher, tempState);
-			return getDivision(hasher, tempState);
+			return getDivision(tempState);
 		} finally {
 			hasher.release(tempState);
 		}
 	}
 
-	protected int getDivision(GenHasher<S> hasher, S state) {
+	protected int getDivision(S state) {
 		return 0;
 	}
 

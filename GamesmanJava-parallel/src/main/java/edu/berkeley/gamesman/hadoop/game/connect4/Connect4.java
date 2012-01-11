@@ -10,7 +10,6 @@ import edu.berkeley.gamesman.game.type.GameValue;
 import edu.berkeley.gamesman.hadoop.ranges.Range;
 import edu.berkeley.gamesman.hadoop.ranges.RangeTree;
 import edu.berkeley.gamesman.hasher.cachehasher.CacheMove;
-import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
 import edu.berkeley.gamesman.hasher.genhasher.Moves;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
@@ -186,7 +185,7 @@ public class Connect4 extends RangeTree<C4State> implements
 	}
 
 	@Override
-	protected int getDivision(GenHasher<C4State> hasher, C4State state) {
+	protected int getDivision(C4State state) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -247,7 +246,7 @@ public class Connect4 extends RangeTree<C4State> implements
 		return sb.toString();
 	}
 
-	private static char charFor(int piece) {
+	static char charFor(int piece) {
 		switch (piece) {
 		case 0:
 			return ' ';
