@@ -13,7 +13,7 @@ import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
 import edu.berkeley.gamesman.propogater.writable.list.WritableList;
 
-public class C4RangeTester {
+public class C4RangeTest {
 	@Test
 	public void testRangeSize() {
 		Configuration conf = new Configuration();
@@ -46,7 +46,9 @@ public class C4RangeTester {
 		Range<C4State> root = roots.iterator().next();
 		Assert.assertEquals(c4.getDivision(root), 0);
 		WritableList<Range<C4State>> toFill = new WritableList<Range<C4State>>(
-				(Class<? extends Range<C4State>>) Range.class, null);
+				(Class<? extends Range<C4State>>) Range.class
+						.<Range> asSubclass(Range.class),
+				null);
 		c4.getChildren(root, toFill);
 		for (int i = 0; i < toFill.length(); i++) {
 			Assert.assertEquals(c4.getDivision(toFill.get(i)), 1);

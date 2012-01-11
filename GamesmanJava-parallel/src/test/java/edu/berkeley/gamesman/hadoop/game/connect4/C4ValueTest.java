@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import edu.berkeley.gamesman.game.type.GameValue;
 
-public class C4ValueTester {
+public class C4ValueTest {
 	@Test
 	public void testTurnSwaps() {
 		Configuration conf = new Configuration();

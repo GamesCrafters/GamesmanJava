@@ -4,7 +4,7 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-public class GameRecordTester {
+public class GameRecordTest {
 	@Test
 	public void testPreviousMatches() {
 		GameRecord gr1 = new GameRecord(GameValue.WIN, 5);
