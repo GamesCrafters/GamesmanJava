@@ -33,6 +33,8 @@ public abstract class OptimizingInvariantHasher<S extends GenState> extends
 		invariantVals = new HashMap[numElements][];
 		for (int i = 0; i < numElements; i++) {
 			invariantVals[i] = new HashMap[digitBase[i]];
+			for (int j = 0; j < digitBase[i]; j++)
+				invariantVals[i][j] = new HashMap<Long, Long>();
 		}
 	}
 

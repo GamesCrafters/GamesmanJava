@@ -27,6 +27,11 @@ public class RangeRecords implements WritableSettable<RangeRecords> {
 		arr.set(t.arr);
 	}
 
+	@Override
+	public String toString() {
+		return arr.toString();
+	}
+
 	public void setLength(int numPositions) {
 		arr.setLength(numPositions);
 	}

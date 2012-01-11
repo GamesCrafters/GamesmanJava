@@ -16,6 +16,15 @@ public class Range<S extends GenState> implements
 			MoveWritable.class, null);
 	private final IntArrWritable suffix = new IntArrWritable();
 
+	public Range() {
+	}
+
+	public Range(int... values) {
+		suffix.setLength(values.length);
+		for (int i = 0; i < values.length; i++)
+			suffix.set(i, values[i]);
+	}
+
 	@Override
 	public void readFields(DataInput in) throws IOException {
 		suffix.readFields(in);
@@ -44,7 +53,13 @@ public class Range<S extends GenState> implements
 		addMoves(hasher, moves);
 	}
 
-	private void addMoves(GenHasher<S> hasher, Move[] moves) {
+	/**
+	 * This method is only public for testing purposes
+	 * 
+	 * @param hasher
+	 * @param moves
+	 */
+	public void addMoves(GenHasher<S> hasher, Move[] moves) {
 		moveList.clear();
 		for (Move move : moves) {
 			if (this.canMakeMove(hasher, move)) {
@@ -74,15 +89,18 @@ public class Range<S extends GenState> implements
 		boolean exists = firstPosition(hasher, toFill);
 		if (!exists)
 			return -1;
-		long total = 0L;
-		while (!canMeet(hasher, childNum, toFill)) {
+		if (canMeet(hasher, childNum, toFill))
+			return 0;
+		else {
 			long stepped = step(hasher, childNum, toFill);
 			if (stepped == -1)
 				return -1;
-			else
-				total += stepped;
+			else {
+				assert canMeet(hasher, childNum, toFill);
+				assert matches(toFill);
+				return stepped;
+			}
 		}
-		return total;
 	}
 
 	public boolean firstPosition(GenHasher<S> hasher, S toFill) {
@@ -101,8 +119,16 @@ public class Range<S extends GenState> implements
 
 	public long step(GenHasher<S> hasher, int childNum, S pos) {
 		assert matches(pos);
-		return hasher.stepTo(pos, moveList.get(childNum), hasher.numElements
-				- suffix.length());
+		int changed = hasher.step(pos);
+		if (changed == -1)
+			return -1;
+		long result = hasher.stepTo(pos, moveList.get(childNum),
+				hasher.numElements - suffix.length());
+		if (result == -1)
+			return -1;
+		else
+			return result + 1;
+		// Adding 1 because of the initial step
 	}
 
 	public long subHash(GenHasher<S> hasher, S pos) {
@@ -110,7 +136,7 @@ public class Range<S extends GenState> implements
 		return hasher.subHash(pos, hasher.numElements - suffix.length());
 	}
 
-	private boolean matches(S pos) {
+	public boolean matches(S pos) {
 		return suffix.matches(pos);
 	}
 
@@ -118,7 +144,7 @@ public class Range<S extends GenState> implements
 		S tempState = hasher.getPoolState();
 		try {
 			hasher.makeMove(pos, m, tempState);
-			return hasher.subHash(pos, hasher.numElements - suffix.length());
+			return subHash(hasher, tempState);
 		} finally {
 			hasher.release(tempState);
 		}
@@ -169,5 +195,13 @@ public class Range<S extends GenState> implements
 
 	public int length() {
 		return suffix.length();
+	}
+
+	public void setLength(int length) {
+		suffix.setLength(length);
+	}
+
+	public void set(int place, int val) {
+		suffix.set(place, val);
 	}
 }

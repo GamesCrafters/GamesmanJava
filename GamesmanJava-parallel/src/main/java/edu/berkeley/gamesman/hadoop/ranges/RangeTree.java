@@ -105,15 +105,17 @@ public abstract class RangeTree<S extends GenState> extends
 		S state = hasher.getPoolState();
 		try {
 			long lChange = parent.firstPosition(hasher, childNum, state);
+			if (lChange != -1) {
+				assert parent.matches(state);
+			}
 			assert lChange <= Integer.MAX_VALUE;
 			int change = (int) lChange;
 			for (int i = change; change != -1; i += change) {
-				assert child.subHash(hasher, state) == i;
+				assert parent.subHash(hasher, state) == i;
 				long lIndex = child.indexOf(hasher, state, move);
 				assert lIndex <= Integer.MAX_VALUE;
 				GameRecord childRec = tVal.get((int) lIndex);
-				tempRecord.previousPosition(childRec);
-				toFill.set(i, tempRecord);
+				toFill.setHasAndGet(i).previousPosition(childRec);
 				lChange = parent.step(hasher, childNum, state);
 				assert i + lChange <= Integer.MAX_VALUE;
 				change = (int) lChange;

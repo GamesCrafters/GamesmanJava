@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.hadoop.ranges;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Arrays;
 
 import edu.berkeley.gamesman.hasher.genhasher.Move;
 import edu.berkeley.gamesman.propogater.writable.WritableSettable;
@@ -32,6 +33,11 @@ public class MoveWritable implements WritableSettable<MoveWritable>, Move {
 			place = t.place;
 			from = t.from;
 			to = t.to;
+		}
+
+		@Override
+		public String toString() {
+			return Arrays.toString(new int[] { place, from, to });
 		}
 	}
 
@@ -83,4 +89,8 @@ public class MoveWritable implements WritableSettable<MoveWritable>, Move {
 		return changeList.get(i).to;
 	}
 
+	@Override
+	public String toString() {
+		return changeList.toString();
+	}
 }

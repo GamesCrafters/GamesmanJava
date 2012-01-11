@@ -31,6 +31,11 @@ public class GenKey<S extends GenState> implements
 		myState.write(out);
 	}
 
+	@Override
+	public String toString() {
+		return myState.toString();
+	}
+
 	public IntArrWritable get() {
 		return myState;
 	}

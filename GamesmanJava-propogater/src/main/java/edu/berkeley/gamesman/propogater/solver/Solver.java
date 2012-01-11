@@ -54,7 +54,7 @@ public class Solver<KEY extends WritableSettableComparable<KEY>, VALUE extends W
 		Collection<KEY> keyRoots = tree.getRoots();
 		HashSet<Tier> rootTiers = new HashSet<Tier>();
 		for (KEY root : keyRoots) {
-			Tier tier = myGraph.getTierOrNull(tree.getDivision(root));
+			Tier tier = myGraph.getTier(tree.getDivision(root));
 			if (tier == null)
 				throw new NullPointerException();
 			rootTiers.add(tier);

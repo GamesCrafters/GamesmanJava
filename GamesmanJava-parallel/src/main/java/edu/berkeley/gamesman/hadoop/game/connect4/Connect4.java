@@ -107,7 +107,7 @@ public class Connect4 extends RangeTree<C4State> {
 	}
 
 	@Override
-	protected GenHasher<C4State> getHasher() {
+	protected C4Hasher getHasher() {
 		return myHasher;
 	}
 
@@ -185,7 +185,8 @@ public class Connect4 extends RangeTree<C4State> {
 
 	@Override
 	public int getDivision(Range<C4State> range) {
-		return range.get(gameSize - suffLen);
+		assert range.length() == suffLen;
+		return range.get(suffLen - 1);
 	}
 
 	@Override

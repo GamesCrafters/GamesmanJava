@@ -61,6 +61,7 @@ public class C4Hasher extends OptimizingInvariantHasher<C4State> {
 		C4Hasher dbh = new C4Hasher(3, 2);
 		C4State s = dbh.newState();
 		do {
+			System.out.println(dbh.hash(s));
 			System.out.println(dbh.printBoard(s));
 		} while (dbh.step(s) != -1);
 	}

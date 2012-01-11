@@ -852,25 +852,33 @@ public abstract class GenHasher<S extends GenState> {
 	}
 
 	public final long stepTo(S state, Move move, int cutoff) {
+		long startHash = 0;
+		assert (startHash = hash(state)) != -1;
+		// How do you perform a computation and store it only when asserts are
+		// enabled? See here
+
 		long diff = 0;
 		int place = Moves.matches(move, state);
 		while (state.getStart() < place) {
 			diff -= sigValue(state);
 			state.trunc();
 		}
-		while (place < cutoff && place != -1) {
+		int changedPlace = place;
+		while (changedPlace < cutoff && place != -1) {
 			if (state.getStart() < place) {
 				state.trunc(place);
 			}
 			diff += countCompletions(state);
-			basicStep(state, 1);
+			changedPlace = basicStep(state, 1);
 			validComplete(state, false);
 			place = Moves.matches(move, state);
 		}
-		if (place >= cutoff)
+		if (changedPlace >= cutoff)
 			return -1;
-		else
+		else {
+			assert diff == hash(state) - startHash;
 			return diff;
+		}
 	}
 
 	public long numPositions(int[] pieces) {
