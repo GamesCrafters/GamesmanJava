@@ -132,6 +132,7 @@ public abstract class RangeTree<S extends GenState> extends
 	@Override
 	public boolean combine(WritableArray<RangeRecords> children,
 			RangeRecords toReplace) {
+		//TODO Take advantage of ordered calls here
 		int numPositions = toReplace.numPositions();
 		boolean changed = false;
 		for (int pos = 0; pos < numPositions; pos++) {

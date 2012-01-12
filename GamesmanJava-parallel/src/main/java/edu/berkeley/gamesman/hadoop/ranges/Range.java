@@ -73,12 +73,21 @@ public class Range<S extends GenState> implements
 		int startPoint = h.numElements - suffix.length();
 		for (int i = move.numChanges() - 1; i >= 0; i--) {
 			int place = move.getChangePlace(i);
-			if (place < startPoint)
-				return true;
+			if (place < startPoint) {
+				break;
+			}
 			if (move.getChangeFrom(i) != suffix.get(place - startPoint))
 				return false;
 		}
-		return true;
+		S s = h.getPoolState();
+		try {
+			// TODO Is this really smart? Less space, more time perhaps or less
+			// of both? Perhaps there's a way to save this information so it
+			// need only be computed once
+			return firstPosition(h, move, s) != -1;
+		} finally {
+			h.release(s);
+		}
 	}
 
 	public long numPositions(GenHasher<?> hasher) {
@@ -86,17 +95,21 @@ public class Range<S extends GenState> implements
 	}
 
 	public long firstPosition(GenHasher<S> hasher, int childNum, S toFill) {
+		return firstPosition(hasher, moveList.get(childNum), toFill);
+	}
+
+	public long firstPosition(GenHasher<S> hasher, Move m, S toFill) {
 		boolean exists = firstPosition(hasher, toFill);
 		if (!exists)
 			return -1;
-		if (canMeet(hasher, childNum, toFill))
+		if (canMeet(hasher, m, toFill))
 			return 0;
 		else {
-			long stepped = step(hasher, childNum, toFill);
+			long stepped = step(hasher, m, toFill);
 			if (stepped == -1)
 				return -1;
 			else {
-				assert canMeet(hasher, childNum, toFill);
+				assert canMeet(hasher, m, toFill);
 				assert matches(toFill);
 				return stepped;
 			}
@@ -107,8 +120,7 @@ public class Range<S extends GenState> implements
 		return suffix.firstPosition(hasher, toFill);
 	}
 
-	private boolean canMeet(GenHasher<S> hasher, int childNum, S pos) {
-		MoveWritable move = moveList.get(childNum);
+	private boolean canMeet(GenHasher<S> hasher, Move move, S pos) {
 		for (int i = 0; i < move.numChanges(); i++) {
 			int place = move.getChangePlace(i);
 			if (move.getChangeFrom(i) != pos.get(place))
@@ -118,12 +130,16 @@ public class Range<S extends GenState> implements
 	}
 
 	public long step(GenHasher<S> hasher, int childNum, S pos) {
+		return step(hasher, moveList.get(childNum), pos);
+	}
+
+	public long step(GenHasher<S> hasher, Move m, S pos) {
 		assert matches(pos);
 		int cutoff = hasher.numElements - suffix.length();
 		int changed = hasher.step(pos);
 		if (changed == -1 || changed >= cutoff)
 			return -1;
-		long result = hasher.stepTo(pos, moveList.get(childNum), cutoff);
+		long result = hasher.stepTo(pos, m, cutoff);
 		if (result == -1)
 			return -1;
 		else
