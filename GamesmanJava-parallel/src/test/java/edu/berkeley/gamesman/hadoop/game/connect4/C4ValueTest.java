@@ -91,9 +91,6 @@ public class C4ValueTest {
 		for (int row = 0; row < 4; row++) {
 			c4.playMove(state, 2);
 		}
-		for (int row = 0; row < 3; row++) {
-			c4.playMove(state, 4);
-		}
 		Assert.assertNull(c4.getValue(state));
 		c4.playMove(state, 4);
 		Assert.assertEquals(c4.getValue(state), GameValue.LOSE);
