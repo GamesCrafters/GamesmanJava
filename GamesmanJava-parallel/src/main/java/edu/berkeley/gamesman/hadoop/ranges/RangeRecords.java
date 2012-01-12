@@ -149,4 +149,13 @@ public class RangeRecords implements WritableSettable<RangeRecords> {
 	public boolean initialized() {
 		return initialized;
 	}
+
+	public int peekNext() {
+		if (type == ARRAY)
+			throw new UnsupportedOperationException();
+		else if (type == MAP)
+			return map.peekNext();
+		else
+			throw new Error("WTF!!??");
+	}
 }

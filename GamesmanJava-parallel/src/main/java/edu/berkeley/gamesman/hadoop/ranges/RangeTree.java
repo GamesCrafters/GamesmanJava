@@ -14,6 +14,7 @@ import edu.berkeley.gamesman.hasher.genhasher.Move;
 import edu.berkeley.gamesman.propogater.tree.Tree;
 import edu.berkeley.gamesman.propogater.writable.list.WritableArray;
 import edu.berkeley.gamesman.propogater.writable.list.WritableList;
+import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 
 public abstract class RangeTree<S extends GenState> extends
 		Tree<Range<S>, RangeRecords> {
@@ -134,39 +135,73 @@ public abstract class RangeTree<S extends GenState> extends
 		return RangeRecords.class;
 	}
 
-	private final GameRecord tempRecord = new GameRecord();
+	private final QuickLinkedList<RangeRecords> current = new QuickLinkedList<RangeRecords>();
+	private final QuickLinkedList<RangeRecords> waiting = new QuickLinkedList<RangeRecords>();
 
 	@Override
 	public boolean combine(Range<S> posRange,
 			WritableArray<RangeRecords> children, RangeRecords toReplace) {
-		// TODO Put children on appropriate queues
 		if (!toReplace.initialized()) {
 			initialize(posRange, toReplace);
 		}
 		int numPositions = toReplace.numPositions();
 		boolean changed = false;
-		for (int i = 0; i < children.length(); i++)
-			children.get(i).restart();
+		current.clear();
+		waiting.clear();
+		for (int i = 0; i < children.length(); i++) {
+			RangeRecords child = children.get(i);
+			if (child != null) {
+				child.restart();
+				current.push(child);
+			}
+		}
 		for (int pos = 0; pos < numPositions; pos++) {
 			if (toReplace.get(pos).isPrimitive())
 				continue;
-			boolean hasValue = false;
-			for (int i = 0; i < children.length(); i++) {
-				if (children.hasValue(i)) {
-					GameRecord value = children.get(i).getNext(pos);
-					if (children.hasValue(i) && value != null) {
-						if (hasValue)
-							tempRecord.combineWith(value);
-						else {
-							hasValue = true;
-							tempRecord.set(value);
+			GameRecord bestRecord = null;
+			while (!waiting.isEmpty() && waiting.peek().peekNext() <= pos) {
+				current.push(waiting.pop());
+			}
+			QuickLinkedList<RangeRecords>.QLLIterator iter = current.iterator();
+			try {
+				while (iter.hasNext()) {
+					RangeRecords child = iter.next();
+					GameRecord value = child.getNext(pos);
+					if (value == null) {
+						iter.remove();
+						int childNext = child.peekNext();
+						if (childNext >= 0) {
+							assert childNext > pos;
+							QuickLinkedList<RangeRecords>.QLLIterator waitingIter = waiting
+									.listIterator();
+							try {
+								while (waitingIter.hasNext()) {
+									if (childNext <= waitingIter.next()
+											.peekNext()) {
+										waitingIter.previous();
+										break;
+									}
+								}
+								waitingIter.add(child);
+							} finally {
+								waiting.release(waitingIter);
+							}
+						}
+					} else {
+						if (bestRecord == null) {
+							bestRecord = value;
+						} else {
+							bestRecord = bestRecord.compareTo(value) < 0 ? value
+									: bestRecord;
 						}
 					}
 				}
+			} finally {
+				current.release(iter);
 			}
-			if (hasValue) {
-				changed |= !tempRecord.equals(toReplace.get(pos));
-				toReplace.set(pos, tempRecord);
+			if (bestRecord != null) {
+				changed |= !bestRecord.equals(toReplace.get(pos));
+				toReplace.set(pos, bestRecord);
 			}
 		}
 		return changed;

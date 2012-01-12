@@ -13,6 +13,10 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 		boolean lastCallWasPrevious;
 
 		QLLIterator() {
+			reset();
+		}
+
+		private void reset() {
 			nextNode = beforeFirst.next;
 			lastCallWasPrevious = false;
 		}
@@ -117,6 +121,18 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 
 	private final Node<T> beforeFirst, afterLast;
 	private final QLLNullPool<T> pool;
+	private final Pool<QLLIterator> iterPool = new Pool<QLLIterator>(
+			new Factory<QLLIterator>() {
+				@Override
+				public QLLIterator newObject() {
+					return new QLLIterator();
+				}
+
+				@Override
+				public void reset(QLLIterator t) {
+					t.reset();
+				}
+			});
 	int size;
 	final QLLIterator myIterator;
 
@@ -236,7 +252,11 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 	}
 
 	public QLLIterator listIterator() {
-		return new QLLIterator();
+		return iterPool.get();
+	}
+
+	public void release(QLLIterator iter) {
+		iterPool.release(iter);
 	}
 
 	public QLLIterator listIterator(int index) {

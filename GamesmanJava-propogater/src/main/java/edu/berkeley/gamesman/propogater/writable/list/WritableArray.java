@@ -73,16 +73,12 @@ public class WritableArray<T extends WritableSettable<T>> implements
 		int minLength = Math.min(length(), othLength);
 		for (i = 0; i < minLength; i++) {
 			T oth = other.get(i);
-			if (oth != null && (overwrite || !hasValue(i)))
+			if (oth != null && (overwrite || !objs.get(i).hasValue()))
 				set(i, oth);
 		}
 		for (; i < othLength; i++) {
 			objs.add().set(other.get(i));
 		}
-	}
-
-	public boolean hasValue(int i) {
-		return objs.get(i).hasValue();
 	}
 
 	@Override

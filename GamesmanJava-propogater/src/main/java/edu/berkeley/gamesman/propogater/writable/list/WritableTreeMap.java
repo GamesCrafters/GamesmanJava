@@ -104,4 +104,11 @@ public class WritableTreeMap<T extends WritableSettable<T>> implements
 			}
 		};
 	}
+
+	public int peekNext() {
+		if (counter == objs.length())
+			return -1;
+		else
+			return objs.get(counter).getInt();
+	}
 }
