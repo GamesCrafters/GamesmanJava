@@ -41,8 +41,8 @@ public class Connect4 extends RangeTree<C4State> implements
 		for (int row = 0; row < height; row++) {
 			for (int col = 0; col < width; col++) {
 				for (int dRow = 0; dRow <= 1; dRow++) {
-					for (int dCol = 0; dCol <= 1; dCol++) {
-						if (dRow == 0 && dCol == 0)
+					for (int dCol = -1; dCol <= 1; dCol++) {
+						if (dRow == 0 && (dCol == 0 || dCol == -1))
 							continue;
 						int r = row, c = col;
 						boolean hasLine = true;
