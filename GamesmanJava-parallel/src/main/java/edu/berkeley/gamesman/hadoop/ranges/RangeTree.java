@@ -132,16 +132,18 @@ public abstract class RangeTree<S extends GenState> extends
 	@Override
 	public boolean combine(WritableArray<RangeRecords> children,
 			RangeRecords toReplace) {
-		//TODO Take advantage of ordered calls here
+		// TODO Put children on appropriate queues
 		int numPositions = toReplace.numPositions();
 		boolean changed = false;
+		for (int i = 0; i < children.length(); i++)
+			children.get(i).restart();
 		for (int pos = 0; pos < numPositions; pos++) {
 			if (toReplace.get(pos).isPrimitive())
 				continue;
 			boolean hasValue = false;
 			for (int i = 0; i < children.length(); i++) {
 				if (children.hasValue(i)) {
-					GameRecord value = children.get(i).get(pos);
+					GameRecord value = children.get(i).getNext(pos);
 					if (children.hasValue(i) && value != null) {
 						if (hasValue)
 							tempRecord.combineWith(value);

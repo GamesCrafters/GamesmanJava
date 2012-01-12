@@ -13,34 +13,29 @@ import edu.berkeley.gamesman.propogater.writable.WritableSettable;
 public class WritableTreeMap<T extends WritableSettable<T>> implements
 		WritableSettable<WritableTreeMap<T>> {
 	private final WritableList<IntEntry<T>> objs;
+	private int counter;
 
 	public WritableTreeMap(Class<? extends T> fClass, Configuration conf) {
 		objs = new WritableList<IntEntry<T>>(WritableTreeMap.<T> makeFact(
 				fClass, conf));
 	}
 
-	public T get(int i) {
-		// Binary search
-		int bottom = 0, top = objs.length();
-		if (top == 0)
-			return null;
-		IntEntry<T> first = objs.get(0);
-		if (i < first.getInt() || i > objs.get(top - 1).getInt())
-			return null;
-		else if (i == first.getInt())
-			return first.getKey();
-		while (top - bottom > 1) {
-			int guess = (bottom + top) / 2;
-			IntEntry<T> t = objs.get(guess);
-			int val = t.getInt();
-			if (i < val) {
-				top = guess;
-			} else if (i > val) {
-				bottom = guess;
-			} else
-				return t.getKey();
+	public T getNext(int i) {
+		while (counter < objs.length() && i > objs.get(counter).getInt())
+			counter++;
+		if (counter == objs.length() || i < objs.get(counter).getInt()) {
+			if (counter > 0 && i <= objs.get(counter - 1).getInt())
+				throw new RuntimeException("Counting backwards");
+			else
+				return null;
+		} else {
+			assert counter < objs.length();
+			return objs.get(counter++).getKey();
 		}
-		return null;
+	}
+
+	public void restart() {
+		counter = 0;
 	}
 
 	public void clear() {

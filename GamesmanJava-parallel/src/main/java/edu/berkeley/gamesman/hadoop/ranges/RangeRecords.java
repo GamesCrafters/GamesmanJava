@@ -83,7 +83,16 @@ public class RangeRecords implements WritableSettable<RangeRecords> {
 		if (type == ARRAY)
 			return arr.get(i);
 		else if (type == MAP)
-			return map.get(i);
+			throw new UnsupportedOperationException();
+		else
+			throw new Error("WTF!!??");
+	}
+
+	public GameRecord getNext(int i) {
+		if (type == ARRAY)
+			throw new UnsupportedOperationException();
+		else if (type == MAP)
+			return map.getNext(i);
 		else
 			throw new Error("WTF!!??");
 	}
@@ -111,6 +120,15 @@ public class RangeRecords implements WritableSettable<RangeRecords> {
 			return arr.add();
 		else if (type == MAP)
 			throw new UnsupportedOperationException();
+		else
+			throw new Error("WTF!!??");
+	}
+
+	public void restart() {
+		if (type == ARRAY)
+			throw new UnsupportedOperationException();
+		else if (type == MAP)
+			map.restart();
 		else
 			throw new Error("WTF!!??");
 	}
