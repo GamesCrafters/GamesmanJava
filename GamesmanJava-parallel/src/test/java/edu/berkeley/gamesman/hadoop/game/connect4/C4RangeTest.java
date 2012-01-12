@@ -11,6 +11,7 @@ import edu.berkeley.gamesman.hadoop.ranges.MoveWritable;
 import edu.berkeley.gamesman.hadoop.ranges.Range;
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
+import edu.berkeley.gamesman.hasher.genhasher.Moves;
 import edu.berkeley.gamesman.propogater.writable.list.WritableList;
 
 public class C4RangeTest {
@@ -97,6 +98,14 @@ public class C4RangeTest {
 		child.addMoves(hasher, moves);
 
 		testCase(hasher, parent, child, 5);
+
+		parent = new Range<C4State>(0, 0, 2, 2, 1, 1, 13);
+		parent.addMoves(hasher, moves);
+		for (int i = 0; i < parent.numMoves(); i++) {
+			child.set(parent);
+			child.makeMove(hasher, i, moves);
+			testCase(hasher, parent, child, i);
+		}
 	}
 
 	private void testCase(C4Hasher hasher, Range<C4State> parent,
@@ -106,17 +115,25 @@ public class C4RangeTest {
 		assert lParentPositions <= Integer.MAX_VALUE;
 		C4State state = hasher.getPoolState();
 		C4State childState = hasher.getPoolState();
+		C4State stepper = hasher.getPoolState();
 		try {
 			long lChange = parent.firstPosition(hasher, childNum, state);
+			boolean hasFirst = parent.firstPosition(hasher, stepper);
 			if (lChange != -1) {
 				assert parent.matches(state);
+				Assert.assertTrue(hasFirst);
 			}
 			assert lChange <= Integer.MAX_VALUE;
 			int change = (int) lChange;
 			long childPositions = child.numPositions(hasher);
 			for (int i = change; change != -1; i += change) {
-				if (i == 251)
-					System.out.println("Here");
+				if (change >= 1)
+					hasher.step(stepper);
+				for (int j = 1; j < change; j++) {
+					Assert.assertTrue(Moves.matches(move, stepper) >= 0);
+					hasher.step(stepper);
+				}
+				Assert.assertEquals(stepper, state);
 				Assert.assertEquals(parent.subHash(hasher, state), i);
 				hasher.makeMove(state, move, childState);
 				long lIndex = child.indexOf(hasher, state, move);
@@ -129,6 +146,7 @@ public class C4RangeTest {
 				change = (int) lChange;
 			}
 		} finally {
+			hasher.release(stepper);
 			hasher.release(childState);
 			hasher.release(state);
 		}
