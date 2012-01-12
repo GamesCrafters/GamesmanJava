@@ -61,8 +61,17 @@ public abstract class RangeTree<S extends GenState> extends
 	@Override
 	public boolean getInitialValue(Range<S> position, RangeRecords toFill) {
 		toFill.clear(RangeRecords.ARRAY, false);
-		position.addMoves(getHasher(), moves);
-		return position.numMoves() > 0;
+		GenHasher<S> hasher = getHasher();
+		S s = hasher.getPoolState();
+		try {
+			if (position.firstPosition(hasher, s)) {
+				position.addMoves(hasher, moves);
+				return position.numMoves() > 0;
+			} else
+				return false;
+		} finally {
+			hasher.release(s);
+		}
 	}
 
 	private void initialize(Range<S> position, RangeRecords toFill) {

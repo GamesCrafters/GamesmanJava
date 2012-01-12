@@ -52,12 +52,6 @@ public class Range<S extends GenState> implements
 		suffix.set(t, suffLen);
 	}
 
-	/**
-	 * This method is only public for testing purposes
-	 * 
-	 * @param hasher
-	 * @param moves
-	 */
 	public void addMoves(GenHasher<S> hasher, Move[] moves) {
 		moveList.clear();
 		for (Move move : moves) {
