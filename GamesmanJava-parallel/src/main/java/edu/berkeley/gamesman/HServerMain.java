@@ -18,6 +18,7 @@ public class HServerMain {
 		String dbPath = props.getProperty("json.databasedirectory");
 		HOpener ho = new HOpener(conf, new Path(dbPath));
 		JSONInterface.addOpener("ttt", ho);
+		JSONInterface.addOpener("connect4", ho);
 		JSONInterface iface = new JSONInterface(props);
 		iface.run();
 	}

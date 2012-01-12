@@ -15,6 +15,8 @@ import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.thrift.TException;
 
 import edu.berkeley.gamesman.propogater.common.ConfParser;
+import edu.berkeley.gamesman.propogater.tree.Tree;
+import edu.berkeley.gamesman.propogater.writable.WritableSettable;
 import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.solve.reader.SolveReaders;
@@ -22,8 +24,84 @@ import edu.berkeley.gamesman.thrift.GamestateResponse;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.game.tree.GameTree;
 import edu.berkeley.gamesman.game.type.GameRecord;
+import edu.berkeley.gamesman.hadoop.ranges.Range;
+import edu.berkeley.gamesman.hadoop.ranges.RangeRecords;
+import edu.berkeley.gamesman.hadoop.ranges.RangeTree;
+import edu.berkeley.gamesman.hasher.genhasher.GenState;
 
 public class HOpener implements Opener {
+
+	private class GFetcher<S extends GenState> implements RecordFetcher {
+		private final RangeTree<S> tree;
+		private final Path folderPath;
+		private final SolveReader<S> reader;
+		private final boolean solved;
+		private final Partitioner<Range<S>, RangeRecords> partitioner;
+
+		public GFetcher(Configuration hConf, String game, String filename)
+				throws ClassNotFoundException, IOException {
+			this.tree = (RangeTree<S>) ConfParser
+					.<Range<S>, RangeRecords> newTree(hConf);
+			String folderName = hConf.get("solve.folder");
+			if (folderName == null) {
+				folderPath = new Path(solveDirectory, filename + "_folder");
+			} else
+				folderPath = new Path(folderName);
+			solved = folderPath.getFileSystem(hConf).exists(folderPath);
+			reader = SolveReaders.<S> get(hConf, game);
+			if (solved)
+				partitioner = ConfParser
+						.<Range<S>, RangeRecords> getPartitionerInstance(hConf);
+			else
+				partitioner = null;
+		}
+
+		@Override
+		public List<GamestateResponse> getNextMoveValues(String board)
+				throws TException {
+			S position = reader.getPosition(board);
+			Collection<Pair<String, S>> children = reader.getChildren(position);
+			ArrayList<GamestateResponse> records = new ArrayList<GamestateResponse>(
+					children.size());
+			for (Pair<String, S> child : children) {
+				GamestateResponse response = getMoveValue(child.cdr, true);
+				response.setMove(child.car);
+				records.add(response);
+			}
+			return records;
+		}
+
+		@Override
+		public GamestateResponse getMoveValue(String board) throws TException {
+			S position = reader.getPosition(board);
+			return getMoveValue(position, false);
+		}
+
+		private GamestateResponse getMoveValue(S position,
+				boolean previousPosition) {
+			GamestateResponse response = new GamestateResponse();
+			response.setBoard(reader.getString(position));
+			if (solved) {
+				GameRecord rec;
+				try {
+					Range<S> posRange = tree.makeContainingRange(position);
+					RangeRecords recs = SolveReaders
+							.<Range<S>, RangeRecords> readPosition(tree,
+									folderPath, posRange, partitioner);
+					rec = tree.getRecord(posRange, position, recs);
+					if (previousPosition)
+						rec.previousPosition();
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+				response.setValue(rec.getValue().name().toLowerCase());
+				response.setRemoteness(rec.getRemoteness());
+			}
+			return response;
+		}
+
+	}
+
 	private class HFetcher<KEY extends WritableSettableComparable<KEY>>
 			implements RecordFetcher {
 		private final GameTree<KEY> tree;
@@ -45,7 +123,7 @@ public class HOpener implements Opener {
 			reader = SolveReaders.<KEY> get(hConf, game);
 			if (solved)
 				partitioner = ConfParser
-						.<KEY, GameRecord> getPartitionerInstance(conf);
+						.<KEY, GameRecord> getPartitionerInstance(hConf);
 			else
 				partitioner = null;
 		}
@@ -123,7 +201,12 @@ public class HOpener implements Opener {
 				hConf.set(entry.getKey().toString(), entry.getValue()
 						.toString());
 			}
-			return new HFetcher(hConf, game, filename);
+			Class<? extends Tree<?, ?>> c = ConfParser
+					.<WritableSettableComparable, WritableSettable> getTreeClass(hConf);
+			if (RangeTree.class.isAssignableFrom(c))
+				return new GFetcher(hConf, game, filename);
+			else
+				return new HFetcher(hConf, game, filename);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		} catch (ClassNotFoundException e) {

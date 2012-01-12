@@ -23,7 +23,7 @@ public class SolveReaders {
 	static {
 		gameClasses.put("ttt", TicTacToe.class);
 		gameClasses.put("reversi", Reversi.class);
-		gameClasses.put("Connect4", Connect4.class);
+		gameClasses.put("connect4", Connect4.class);
 		// TODO Add more games here
 	}
 
@@ -45,6 +45,8 @@ public class SolveReaders {
 				new Path[] { folder }, tree.getConf());
 		MapFileOutputFormat.<KEY, VALUE> getEntry(readers, partitioner,
 				position, value);
+		for (MapFile.Reader r : readers)
+			r.close();
 		return value;
 	}
 }

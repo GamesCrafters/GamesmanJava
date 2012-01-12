@@ -52,7 +52,7 @@ public class ConfParser {
 				ConfParser.<KEY, VALUE> getTreeClass(conf), conf);
 	}
 
-	private static <KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettable<VALUE>> Class<Tree<KEY, VALUE>> getTreeClass(
+	public static <KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettable<VALUE>> Class<Tree<KEY, VALUE>> getTreeClass(
 			Configuration conf) {
 		@SuppressWarnings("unchecked")
 		Class<Tree<KEY, VALUE>> c = (Class<Tree<KEY, VALUE>>) conf.getClass(
