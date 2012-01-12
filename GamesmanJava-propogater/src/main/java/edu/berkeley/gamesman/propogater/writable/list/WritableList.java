@@ -11,7 +11,6 @@ import edu.berkeley.gamesman.propogater.factory.Factory;
 import edu.berkeley.gamesman.propogater.factory.FactoryUtil;
 import edu.berkeley.gamesman.propogater.writable.WritableSettable;
 
-
 public final class WritableList<T extends WritableSettable<T>> implements
 		WritableSettable<WritableList<? extends T>> {
 	protected final ArrayList<T> myList = new ArrayList<T>(0);
@@ -126,5 +125,9 @@ public final class WritableList<T extends WritableSettable<T>> implements
 
 	public boolean isEmpty() {
 		return length == 0;
+	}
+
+	public void set(int i, T val) {
+		get(i).set(val);
 	}
 }

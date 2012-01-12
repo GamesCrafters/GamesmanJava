@@ -64,13 +64,13 @@ public abstract class RangeTree<S extends GenState> extends
 		if (lPositions > Integer.MAX_VALUE)
 			throw new RuntimeException("Too large for me");
 		int numPositions = (int) lPositions;
-		toFill.clear(numPositions, RangeRecords.ARRAY);
+		toFill.clear(RangeRecords.ARRAY);
 		boolean result = false;
 		S tempState = hasher.getPoolState();
 		try {
 			position.firstPosition(hasher, tempState);
 			for (int i = 0; i < numPositions; i++) {
-				result |= setInitialRecord(tempState, toFill.setHasAndGet(i));
+				result |= setInitialRecord(tempState, toFill.add());
 				hasher.step(tempState);
 			}
 		} finally {
@@ -98,10 +98,7 @@ public abstract class RangeTree<S extends GenState> extends
 			Range<S> parent, RangeRecords toFill) {
 		GenHasher<S> hasher = getHasher();
 		MoveWritable move = parent.getMove(childNum);
-		long lParentPositions = parent.numPositions(hasher);
-		assert lParentPositions <= Integer.MAX_VALUE;
-		int numParentPositions = (int) lParentPositions;
-		toFill.clear(numParentPositions, RangeRecords.MAP);
+		toFill.clear(RangeRecords.MAP);
 		S state = hasher.getPoolState();
 		try {
 			long lChange = parent.firstPosition(hasher, childNum, state);

@@ -6,12 +6,12 @@ import java.io.IOException;
 
 import edu.berkeley.gamesman.game.type.GameRecord;
 import edu.berkeley.gamesman.propogater.writable.WritableSettable;
-import edu.berkeley.gamesman.propogater.writable.list.WritableArray;
+import edu.berkeley.gamesman.propogater.writable.list.WritableList;
 import edu.berkeley.gamesman.propogater.writable.list.WritableTreeMap;
 
 public class RangeRecords implements WritableSettable<RangeRecords> {
 	static final boolean ARRAY = false, MAP = true;
-	private WritableArray<GameRecord> arr = new WritableArray<GameRecord>(
+	private WritableList<GameRecord> arr = new WritableList<GameRecord>(
 			GameRecord.class, null);
 	private WritableTreeMap<GameRecord> map = new WritableTreeMap<GameRecord>(
 			GameRecord.class, null);
@@ -60,21 +60,12 @@ public class RangeRecords implements WritableSettable<RangeRecords> {
 			return "WTF!!??";
 	}
 
-	public void clear(int numPositions, boolean type) {
+	public void clear(boolean type) {
 		this.type = type;
 		if (type == ARRAY)
-			arr.setLength(numPositions);
+			arr.clear();
 		else if (type == MAP)
 			map.clear();
-		else
-			throw new Error("WTF!!??");
-	}
-
-	public GameRecord setHasAndGet(int i) {
-		if (type == ARRAY)
-			return arr.setHasAndGet(i);
-		else if (type == MAP)
-			throw new UnsupportedOperationException();
 		else
 			throw new Error("WTF!!??");
 	}
@@ -111,6 +102,15 @@ public class RangeRecords implements WritableSettable<RangeRecords> {
 			throw new UnsupportedOperationException();
 		else if (type == MAP)
 			return map.add(i);
+		else
+			throw new Error("WTF!!??");
+	}
+
+	public GameRecord add() {
+		if (type == ARRAY)
+			return arr.add();
+		else if (type == MAP)
+			throw new UnsupportedOperationException();
 		else
 			throw new Error("WTF!!??");
 	}
