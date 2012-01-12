@@ -91,7 +91,7 @@ public final class CacheHasher<S extends GenState> {
 		hash++;
 		if (place == -1)
 			return -1;
-		Arrays.fill(lastChange, 0, place, hash);
+		Arrays.fill(lastChange, 0, place + 1, hash);
 		if (GenHasher.useToughAsserts()) {
 			assert tempState.matches(myState, place + 1);
 			assert mainHasher.hash(myState) == hash;

@@ -281,7 +281,7 @@ public abstract class GenHasher<S extends GenState> {
 			}
 		}
 		if (incred)
-			result = state.getStart() + 1;
+			result = state.getStart();
 		else {
 			state.trunc();
 			result = basicStep(state, dir);
@@ -876,17 +876,17 @@ public abstract class GenHasher<S extends GenState> {
 			diff -= sigValue(state);
 			state.trunc();
 		}
-		int stablePlace = place + 1;
-		while (stablePlace <= cutoff && place != -1) {
+		int changedPlace = place;
+		while (changedPlace < cutoff && place != -1) {
 			if (state.getStart() < place) {
 				state.trunc(place);
 			}
 			diff += countCompletions(state);
-			stablePlace = basicStep(state, 1);
+			changedPlace = basicStep(state, 1);
 			validComplete(state, false);
 			place = Moves.matches(move, state);
 		}
-		if (stablePlace > cutoff)
+		if (changedPlace >= cutoff)
 			return -1;
 		else {
 			assert diff == hash(state) - startHash;

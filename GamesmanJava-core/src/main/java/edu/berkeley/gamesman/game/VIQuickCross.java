@@ -211,13 +211,13 @@ public class VIQuickCross extends VIGame {
 
 	@Override
 	public boolean next() {
-		int firstSame = myCacher.next();
-		if (firstSame == -1)
+		int lastChanged = myCacher.next();
+		if (lastChanged == -1)
 			return false;
 		int i = 0;
 		OUTER: for (int row = 0; row < height; row++) {
 			for (int col = 0; col < width; col++) {
-				if (i == firstSame)
+				if (i > lastChanged)
 					break OUTER;
 				int piece = myCacher.get(i);
 				myBoard.setPiece(row, col, getChar(piece));
