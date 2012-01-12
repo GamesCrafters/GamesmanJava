@@ -19,11 +19,16 @@ public class C4State extends CountingState {
 		for (int row = height - 1; row >= 0; row--) {
 			sb.append('|');
 			for (int col = 0; col < width; col++) {
-				sb.append(Connect4.charFor(get(col * height + row)));
+				sb.append(getChar(row, col));
 				sb.append('|');
 			}
 			sb.append('\n');
 		}
 		return sb.toString();
+	}
+
+	private char getChar(int row, int col) {
+		int place = col * height + row;
+		return place < getStart() ? '*' : Connect4.charFor(get(place));
 	}
 }

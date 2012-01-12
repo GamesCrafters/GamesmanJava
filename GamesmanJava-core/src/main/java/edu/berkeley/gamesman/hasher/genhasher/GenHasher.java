@@ -756,8 +756,9 @@ public abstract class GenHasher<S extends GenState> {
 
 	private void makeUncheckedMove(S state, Move move) throws Error {
 		for (int i = 0; i < move.numChanges(); i++) {
-			if (state.get(move.getChangePlace(i)) == move.getChangeFrom(i))
-				state.set(move.getChangePlace(i), move.getChangeTo(i));
+			int place = move.getChangePlace(i);
+			if (state.get(place) == move.getChangeFrom(i))
+				state.set(place, move.getChangeTo(i));
 			else
 				throw new Error("Cannot make this move");
 		}
@@ -875,17 +876,17 @@ public abstract class GenHasher<S extends GenState> {
 			diff -= sigValue(state);
 			state.trunc();
 		}
-		int changedPlace = place;
-		while (changedPlace < cutoff && place != -1) {
+		int stablePlace = place + 1;
+		while (stablePlace <= cutoff && place != -1) {
 			if (state.getStart() < place) {
 				state.trunc(place);
 			}
 			diff += countCompletions(state);
-			changedPlace = basicStep(state, 1);
+			stablePlace = basicStep(state, 1);
 			validComplete(state, false);
 			place = Moves.matches(move, state);
 		}
-		if (changedPlace >= cutoff)
+		if (stablePlace > cutoff)
 			return -1;
 		else {
 			assert diff == hash(state) - startHash;

@@ -108,6 +108,24 @@ public class C4RangeTest {
 		}
 	}
 
+	@Test
+	public void testNextBug() {
+		Configuration conf = new Configuration();
+		conf.setInt("gamesman.game.width", 4);
+		Connect4 c4 = new Connect4();
+		c4.setConf(conf);
+		C4Hasher hasher = c4.getHasher();
+		Move[] moves = c4.getMoves();
+
+		Range<C4State> parent = new Range<C4State>(0, 0, 2, 2, 1, 1, 13);
+		parent.addMoves(hasher, moves);
+		Range<C4State> child = new Range<C4State>(0, 0, 2, 2, 1, 1, 14);
+		child.addMoves(hasher, moves);
+		C4State toFill = hasher.newState();
+		long fPlace = parent.firstPosition(hasher, 6, toFill);
+		Assert.assertTrue(fPlace >= 0);
+	}
+
 	private void testCase(C4Hasher hasher, Range<C4State> parent,
 			Range<C4State> child, int childNum) {
 		MoveWritable move = parent.getMove(childNum);
