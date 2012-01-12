@@ -60,6 +60,7 @@ public abstract class RangeTree<S extends GenState> extends
 	@Override
 	public boolean getInitialValue(Range<S> position, RangeRecords toFill) {
 		toFill.clear(RangeRecords.ARRAY, false);
+		position.addMoves(getHasher(), moves);
 		return position.numMoves() > 0;
 	}
 

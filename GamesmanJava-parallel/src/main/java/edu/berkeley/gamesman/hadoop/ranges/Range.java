@@ -50,7 +50,6 @@ public class Range<S extends GenState> implements
 
 	public void set(GenHasher<S> hasher, S t, int suffLen, Move[] moves) {
 		suffix.set(t, suffLen);
-		addMoves(hasher, moves);
 	}
 
 	/**
@@ -79,15 +78,7 @@ public class Range<S extends GenState> implements
 			if (move.getChangeFrom(i) != suffix.get(place - startPoint))
 				return false;
 		}
-		S s = h.getPoolState();
-		try {
-			// TODO Is this really smart? Less space, more time perhaps or less
-			// of both? Perhaps there's a way to save this information so it
-			// need only be computed once
-			return firstPosition(h, move, s) != -1;
-		} finally {
-			h.release(s);
-		}
+		return true;
 	}
 
 	public long numPositions(GenHasher<?> hasher) {
@@ -178,7 +169,6 @@ public class Range<S extends GenState> implements
 			else
 				suffix.set(place - startPoint, move.getChangeTo(i));
 		}
-		addMoves(h, moves);
 	}
 
 	public int numMoves() {

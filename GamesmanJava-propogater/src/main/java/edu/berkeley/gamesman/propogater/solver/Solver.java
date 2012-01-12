@@ -48,10 +48,10 @@ public class Solver<KEY extends WritableSettableComparable<KEY>, VALUE extends W
 		Path workPath = ConfParser.getWorkPath(conf);
 		FileSystem fs = ConfParser.getWorkFileSystem(conf);
 		boolean starting = IOCheckOperations.mkdirs(fs, workPath);
-		if (starting) {
-			start(fs);
-		}
 		Collection<KEY> keyRoots = tree.getRoots();
+		if (starting) {
+			start(fs, keyRoots);
+		}
 		HashSet<Tier> rootTiers = new HashSet<Tier>();
 		for (KEY root : keyRoots) {
 			Tier tier = myGraph.getTier(tree.getDivision(root));
@@ -161,11 +161,12 @@ public class Solver<KEY extends WritableSettableComparable<KEY>, VALUE extends W
 		taskManager.run();
 	}
 
-	private void start(FileSystem fs) throws IOException {
+	private void start(FileSystem fs, Collection<KEY> keyRoots)
+			throws IOException {
 		HashMap<Integer, SequenceFile.Writer> startWriters = new HashMap<Integer, SequenceFile.Writer>();
 		TreeNode<KEY, VALUE> startingNode = new TreeNode<KEY, VALUE>(conf);
 		startingNode.clear();
-		for (KEY key : tree.getRoots()) {
+		for (KEY key : keyRoots) {
 			int num = tree.getDivision(key);
 			SequenceFile.Writer writer = startWriters.get(num);
 			if (writer == null) {
