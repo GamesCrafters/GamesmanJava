@@ -110,9 +110,9 @@ public final class TreeNode<KEY extends WritableSettableComparable<KEY>, VALUE e
 		return !myValue.hasValue();
 	}
 
-	public boolean combine(Tree<KEY, VALUE> tree) {
+	public boolean combine(Tree<KEY, VALUE> tree, KEY pos) {
 		assert myValue.hasValue();
-		return tree.combine(children, myValue.get());
+		return tree.combine(pos, children, myValue.get());
 	}
 
 	public void toParent(Tree<KEY, VALUE> tree, KEY childKey,

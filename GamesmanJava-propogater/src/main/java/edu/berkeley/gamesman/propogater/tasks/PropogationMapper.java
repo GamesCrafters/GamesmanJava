@@ -35,7 +35,7 @@ public class PropogationMapper<KEY extends WritableSettableComparable<KEY>, VALU
 			throws IOException, InterruptedException {
 		int division = tree.getDivision(key);
 		if (workingSet.contains(division)) {
-			final boolean needsToSend = node.combine(tree);
+			final boolean needsToSend = node.combine(tree, key);
 			boolean divisionSet = false;
 			for (int i = 0; i < node.numParents(); i++) {
 				if (!node.seenParent(i) || needsToSend) {

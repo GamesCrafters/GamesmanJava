@@ -41,7 +41,8 @@ public abstract class GameTree<STATE extends WritableSettableComparable<STATE>>
 	private final GameRecord tempRecord = new GameRecord();
 
 	@Override
-	public boolean combine(WritableArray<GameRecord> children, GameRecord toFill) {
+	public boolean combine(STATE pos, WritableArray<GameRecord> children,
+			GameRecord toFill) {
 		boolean firstFound = false;
 		for (int i = 0; i < children.length(); i++) {
 			GameRecord reci = children.get(i);

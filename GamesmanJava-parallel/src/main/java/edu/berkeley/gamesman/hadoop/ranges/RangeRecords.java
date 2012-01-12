@@ -16,10 +16,12 @@ public class RangeRecords implements WritableSettable<RangeRecords> {
 	private WritableTreeMap<GameRecord> map = new WritableTreeMap<GameRecord>(
 			GameRecord.class, null);
 	private boolean type;
+	private boolean initialized;
 
 	@Override
 	public void readFields(DataInput in) throws IOException {
 		type = in.readBoolean();
+		initialized = in.readBoolean();
 		if (type == ARRAY)
 			arr.readFields(in);
 		else if (type == MAP)
@@ -31,6 +33,7 @@ public class RangeRecords implements WritableSettable<RangeRecords> {
 	@Override
 	public void write(DataOutput out) throws IOException {
 		out.writeBoolean(type);
+		out.writeBoolean(initialized);
 		if (type == ARRAY)
 			arr.write(out);
 		else if (type == MAP)
@@ -42,6 +45,7 @@ public class RangeRecords implements WritableSettable<RangeRecords> {
 	@Override
 	public void set(RangeRecords t) {
 		type = t.type;
+		initialized = t.initialized;
 		if (type == ARRAY)
 			arr.set(t.arr);
 		else if (type == MAP)
@@ -60,8 +64,9 @@ public class RangeRecords implements WritableSettable<RangeRecords> {
 			return "WTF!!??";
 	}
 
-	public void clear(boolean type) {
+	public void clear(boolean type, boolean initialized) {
 		this.type = type;
+		this.initialized = initialized;
 		if (type == ARRAY)
 			arr.clear();
 		else if (type == MAP)
@@ -70,7 +75,13 @@ public class RangeRecords implements WritableSettable<RangeRecords> {
 			throw new Error("WTF!!??");
 	}
 
+	public void initialize() {
+		this.initialized = true;
+	}
+
 	public int numPositions() {
+		if (!initialized)
+			throw new RuntimeException("Not yet initialized");
 		if (type == ARRAY)
 			return arr.length();
 		else if (type == MAP)
@@ -116,6 +127,8 @@ public class RangeRecords implements WritableSettable<RangeRecords> {
 	}
 
 	public GameRecord add() {
+		if (!initialized)
+			throw new RuntimeException("Not yet initialized");
 		if (type == ARRAY)
 			return arr.add();
 		else if (type == MAP)
@@ -131,5 +144,9 @@ public class RangeRecords implements WritableSettable<RangeRecords> {
 			map.restart();
 		else
 			throw new Error("WTF!!??");
+	}
+
+	public boolean initialized() {
+		return initialized;
 	}
 }

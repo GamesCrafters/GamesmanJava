@@ -59,24 +59,27 @@ public abstract class RangeTree<S extends GenState> extends
 
 	@Override
 	public boolean getInitialValue(Range<S> position, RangeRecords toFill) {
+		toFill.clear(RangeRecords.ARRAY, false);
+		return position.numMoves() > 0;
+	}
+
+	private void initialize(Range<S> position, RangeRecords toFill) {
+		toFill.initialize();
 		GenHasher<S> hasher = getHasher();
 		long lPositions = position.numPositions(hasher);
 		if (lPositions > Integer.MAX_VALUE)
 			throw new RuntimeException("Too large for me");
 		int numPositions = (int) lPositions;
-		toFill.clear(RangeRecords.ARRAY);
-		boolean result = false;
 		S tempState = hasher.getPoolState();
 		try {
 			position.firstPosition(hasher, tempState);
 			for (int i = 0; i < numPositions; i++) {
-				result |= setInitialRecord(tempState, toFill.add());
+				setInitialRecord(tempState, toFill.add());
 				hasher.step(tempState);
 			}
 		} finally {
 			hasher.release(tempState);
 		}
-		return result;
 	}
 
 	private boolean setInitialRecord(S state, GameRecord rec) {
@@ -96,9 +99,12 @@ public abstract class RangeTree<S extends GenState> extends
 	@Override
 	public void travelUp(RangeRecords tVal, int childNum, Range<S> child,
 			Range<S> parent, RangeRecords toFill) {
+		if (!tVal.initialized()) {
+			initialize(child, tVal);
+		}
 		GenHasher<S> hasher = getHasher();
 		MoveWritable move = parent.getMove(childNum);
-		toFill.clear(RangeRecords.MAP);
+		toFill.clear(RangeRecords.MAP, true);
 		S state = hasher.getPoolState();
 		try {
 			long lChange = parent.firstPosition(hasher, childNum, state);
@@ -130,9 +136,12 @@ public abstract class RangeTree<S extends GenState> extends
 	private final GameRecord tempRecord = new GameRecord();
 
 	@Override
-	public boolean combine(WritableArray<RangeRecords> children,
-			RangeRecords toReplace) {
+	public boolean combine(Range<S> posRange,
+			WritableArray<RangeRecords> children, RangeRecords toReplace) {
 		// TODO Put children on appropriate queues
+		if (!toReplace.initialized()) {
+			initialize(posRange, toReplace);
+		}
 		int numPositions = toReplace.numPositions();
 		boolean changed = false;
 		for (int i = 0; i < children.length(); i++)

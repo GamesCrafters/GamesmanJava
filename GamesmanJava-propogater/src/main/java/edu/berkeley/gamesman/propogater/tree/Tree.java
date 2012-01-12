@@ -73,7 +73,7 @@ public abstract class Tree<KEY extends WritableSettableComparable<KEY>, VALUE ex
 		return Reducer.class;
 	}
 
-	public abstract boolean combine(WritableArray<VALUE> children, VALUE toFill);
+	public abstract boolean combine(KEY pos, WritableArray<VALUE> children, VALUE toFill);
 
 	@Override
 	public final Configuration getConf() {
