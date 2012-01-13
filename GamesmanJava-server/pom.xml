@@ -14,7 +14,7 @@
 			<artifactId>libthrift</artifactId>
 			<version>unknown</version>
 			<scope>system</scope>
-			<systemPath>${project.basedir}/lib/libthrift.jar</systemPath>
+			<systemPath>${project.basedir}/../lib/libthrift.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
