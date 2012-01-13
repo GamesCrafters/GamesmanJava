@@ -5,7 +5,7 @@ public final class Moves {
 	}
 
 	public static int matches(Move m, GenState s) {
-		for (int i = m.numChanges() - 1; i >= 0; i--) {
+		for (int i = m.numChanges() - 1; i >= s.getStart(); i--) {
 			int place = m.getChangePlace(i);
 			if (m.getChangeFrom(i) != s.get(place))
 				return place;

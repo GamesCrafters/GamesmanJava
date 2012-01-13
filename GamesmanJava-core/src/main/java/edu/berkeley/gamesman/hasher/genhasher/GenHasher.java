@@ -259,8 +259,7 @@ public abstract class GenHasher<S extends GenState> {
 	 *            The state to modify
 	 * @param dir
 	 *            The direction to step
-	 * @return The index n of the smallest-index piece such that for all m>=n
-	 *         piece m was not changed.
+	 * @return The index n of the largest-index piece which was changed
 	 */
 	protected int innerStep(S state, int dir) {
 		return basicStep(state, dir);
@@ -269,26 +268,26 @@ public abstract class GenHasher<S extends GenState> {
 	// Handles the case where state is invalid
 	private int basicStep(S state, int dir) {
 		assert dir == 1 || dir == -1;
-		if (state.isEmpty())
-			return -1;
-		boolean incred = state.incr(dir);
-		int result;
-		if (incred) {
-			while (!validPref(state)) {
-				incred = state.incr(dir);
-				if (!incred)
+		int truncTimes = 0;
+		try {
+			while (true) {
+				if (state.isEmpty())
+					return -1;
+				boolean incred = state.incr(dir);
+				if (incred) {
+					incred = incToValid(state, dir);
+				}
+				if (incred)
 					break;
+				state.trunc();
+				truncTimes++;
 			}
+		} finally {
+			for (int i = 0; i < truncTimes; i++)
+				addValid(state, dir == -1);
+			assert validPrefTest(state);
 		}
-		if (incred)
-			result = state.getStart();
-		else {
-			state.trunc();
-			result = basicStep(state, dir);
-			addValid(state, dir == -1);
-		}
-		assert validPrefTest(state);
-		return result;
+		return state.getStart() + truncTimes;
 	}
 
 	/**
@@ -882,9 +881,12 @@ public abstract class GenHasher<S extends GenState> {
 				state.trunc(place);
 			}
 			diff += countCompletions(state);
-			changedPlace = basicStep(state, 1);
-			validComplete(state, false);
+			changedPlace = innerStep(state, 1);
 			place = Moves.matches(move, state);
+			if (place == -1) {
+				validComplete(state, false);
+				place = Moves.matches(move, state);
+			}
 		}
 		if (changedPlace >= cutoff)
 			return -1;
