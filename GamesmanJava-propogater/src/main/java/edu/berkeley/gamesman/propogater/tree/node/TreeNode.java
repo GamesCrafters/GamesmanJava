@@ -7,7 +7,6 @@ import java.io.IOException;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 
-import edu.berkeley.gamesman.propogater.common.Combinable;
 import edu.berkeley.gamesman.propogater.factory.Factory;
 import edu.berkeley.gamesman.propogater.tree.Tree;
 import edu.berkeley.gamesman.propogater.writable.IntEntry;
@@ -18,8 +17,7 @@ import edu.berkeley.gamesman.propogater.writable.list.WritableArray;
 import edu.berkeley.gamesman.propogater.writable.list.WritableList;
 
 public final class TreeNode<KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettable<VALUE>>
-		implements WritableSettable<TreeNode<KEY, VALUE>>,
-		Combinable<TreeNode<KEY, VALUE>>, Configurable {
+		implements WritableSettable<TreeNode<KEY, VALUE>>, Configurable {
 	private WritableList<IntEntry<KEY>> parents;
 	private ValueWrapper<VALUE> myValue;
 	private WritableArray<VALUE> children;
@@ -58,7 +56,6 @@ public final class TreeNode<KEY extends WritableSettableComparable<KEY>, VALUE e
 		return tree.getInitialValue(place, myValue.setHasAndGet());
 	}
 
-	@Override
 	public void combineWith(TreeNode<KEY, VALUE> other) {
 		parents.addAll(other.parents);
 		children.merge(other.children, isMain());
