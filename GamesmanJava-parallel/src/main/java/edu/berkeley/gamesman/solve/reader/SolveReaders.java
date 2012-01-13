@@ -1,8 +1,8 @@
 package edu.berkeley.gamesman.solve.reader;
 
-import edu.berkeley.gamesman.hadoop.game.connect4.Connect4;
-import edu.berkeley.gamesman.hadoop.game.reversi.Reversi;
-import edu.berkeley.gamesman.hadoop.game.tictactoe.TicTacToe;
+import edu.berkeley.gamesman.parallel.game.connect4.Connect4;
+import edu.berkeley.gamesman.parallel.game.reversi.Reversi;
+import edu.berkeley.gamesman.parallel.game.tictactoe.TicTacToe;
 import edu.berkeley.gamesman.propogater.tree.Tree;
 import edu.berkeley.gamesman.propogater.writable.WritableSettable;
 import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;

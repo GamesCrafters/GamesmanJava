@@ -14,6 +14,9 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.thrift.TException;
 
+import edu.berkeley.gamesman.parallel.ranges.Range;
+import edu.berkeley.gamesman.parallel.ranges.RangeRecords;
+import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.tree.Tree;
 import edu.berkeley.gamesman.propogater.writable.WritableSettable;
@@ -24,9 +27,6 @@ import edu.berkeley.gamesman.thrift.GamestateResponse;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.game.tree.GameTree;
 import edu.berkeley.gamesman.game.type.GameRecord;
-import edu.berkeley.gamesman.hadoop.ranges.Range;
-import edu.berkeley.gamesman.hadoop.ranges.RangeRecords;
-import edu.berkeley.gamesman.hadoop.ranges.RangeTree;
 import edu.berkeley.gamesman.hasher.genhasher.GenState;
 
 public class HOpener implements Opener {
