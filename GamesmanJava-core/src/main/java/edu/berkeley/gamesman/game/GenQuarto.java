@@ -163,14 +163,6 @@ class GenQuartoState extends GenState {
 	}
 
 	@Override
-	protected void matchSeq(GenState other) {
-		clearUsed();
-		GenQuartoState otherQState = (GenQuartoState) other;
-		usedPieces.or(otherQState.usedPieces);
-		extraPiece = otherQState.extraPiece;
-	}
-
-	@Override
 	protected void set(int place, int val) {
 		removeUsed(get(place));
 		super.set(place, val);

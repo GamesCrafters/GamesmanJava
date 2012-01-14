@@ -15,5 +15,11 @@
 			<version>0.20.205.0</version>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.codehaus.jackson</groupId>
+			<artifactId>jackson-mapper-asl</artifactId>
+			<version>1.0.1</version>
+			<scope>provided</scope>
+		</dependency>
 	</dependencies>
 </project>

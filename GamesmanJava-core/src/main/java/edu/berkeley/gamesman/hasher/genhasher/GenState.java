@@ -38,7 +38,7 @@ public class GenState implements State<GenState>, Comparable<GenState> {
 
 	protected final void setOther(GenState s) {
 		setSeq(s.sequence, s.startPoint);
-		matchSeq(s);
+		matchSeq();
 		assert s.startPoint == startPoint;
 		assert !GenHasher.useToughAsserts()
 				|| Util.arraysEquals(s.sequence, startPoint, sequence,
@@ -59,10 +59,6 @@ public class GenState implements State<GenState>, Comparable<GenState> {
 	}
 
 	protected void matchSeq() {
-	}
-
-	protected void matchSeq(GenState other) {
-		matchSeq();
 	}
 
 	private final void setSeq(int[] othersequence, int startPoint) {
@@ -238,7 +234,7 @@ public class GenState implements State<GenState>, Comparable<GenState> {
 		}
 	}
 
-	public void getSuffix(int[] toFill, int length) {
+	public final void getSuffix(int[] toFill, int length) {
 		assert toFill.length >= length;
 		assert sequence.length - startPoint >= length;
 		System.arraycopy(sequence, sequence.length - length, toFill, 0, length);

@@ -37,45 +37,11 @@ public class Connect4 extends RangeTree<C4State> implements
 
 	@Override
 	public GameValue getValue(C4State state) {
-		int lastTurn = opposite(getTurn(state));
-		for (int row = 0; row < height; row++) {
-			for (int col = 0; col < width; col++) {
-				for (int dRow = 0; dRow <= 1; dRow++) {
-					for (int dCol = -1; dCol <= 1; dCol++) {
-						if (dRow == 0 && (dCol == 0 || dCol == -1))
-							continue;
-						int r = row, c = col;
-						boolean hasLine = true;
-						for (int i = 0; i < inARow; i++) {
-							if (!is(state, r, c, lastTurn)) {
-								hasLine = false;
-								break;
-							}
-							r += dRow;
-							c += dCol;
-						}
-						if (hasLine)
-							return GameValue.LOSE;
-					}
-				}
-			}
-		}
-		if (numPieces(state) == gameSize)
-			return GameValue.TIE;
-		else
-			return null;
+		return state.getValue(inARow, opposite(getTurn(state)));
 	}
 
 	int numPieces(C4State state) {
 		return state.get(gameSize);
-	}
-
-	private boolean is(C4State state, int row, int col, int val) {
-		return inBounds(row, col) && get(state, row, col) == val;
-	}
-
-	private boolean inBounds(int row, int col) {
-		return row >= 0 && row < height && col >= 0 && col < width;
 	}
 
 	int get(C4State state, int row, int col) {
