@@ -7,14 +7,13 @@ import edu.berkeley.gamesman.game.type.GameRecord;
 import edu.berkeley.gamesman.game.type.GameValue;
 import edu.berkeley.gamesman.propogater.common.Adder;
 import edu.berkeley.gamesman.propogater.common.Entry3;
-import edu.berkeley.gamesman.propogater.tree.Tree;
+import edu.berkeley.gamesman.propogater.tree.SimpleTree;
 import edu.berkeley.gamesman.propogater.writable.Entry;
 import edu.berkeley.gamesman.propogater.writable.list.WritList;
 import edu.berkeley.gamesman.propogater.writable.list.WritableList;
 
-public abstract class GameTree<STATE extends WritableComparable<STATE>>
-		extends
-		Tree<STATE, GameRecord, NullWritable, GameRecord, GameRecord, NullWritable> {
+public abstract class GameTree<STATE extends WritableComparable<STATE>> extends
+		SimpleTree<STATE, GameRecord, NullWritable, GameRecord> {
 
 	public abstract void getChildren(STATE position, Adder<STATE> toFill);
 
@@ -64,17 +63,6 @@ public abstract class GameTree<STATE extends WritableComparable<STATE>>
 	}
 
 	@Override
-	public void receiveDown(STATE key, GameRecord currentValue,
-			STATE parentKey, NullWritable parentMessage, NullWritable toFill) {
-	}
-
-	@Override
-	public void receiveUp(STATE key, GameRecord currentValue, STATE childKey,
-			GameRecord childMessage, GameRecord currentChildInfo) {
-		currentChildInfo.set(childMessage);
-	}
-
-	@Override
 	public void sendUp(STATE key, GameRecord value, STATE parentKey,
 			NullWritable parentInfo, GameRecord toFill) {
 		toFill.previousPosition(value);
@@ -88,15 +76,5 @@ public abstract class GameTree<STATE extends WritableComparable<STATE>>
 	@Override
 	public Class<GameRecord> getCiClass() {
 		return GameRecord.class;
-	}
-
-	@Override
-	public Class<GameRecord> getUmClass() {
-		return GameRecord.class;
-	}
-
-	@Override
-	public Class<NullWritable> getDmClass() {
-		return NullWritable.class;
 	}
 }

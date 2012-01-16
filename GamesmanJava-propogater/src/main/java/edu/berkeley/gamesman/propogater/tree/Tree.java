@@ -40,6 +40,14 @@ public abstract class Tree<K extends WritableComparable<K>, V extends Writable, 
 	public abstract void sendUp(K key, V value, K parentKey, PI parentInfo,
 			UM toFill);
 
+	public boolean copyUM() {
+		return false;
+	}
+
+	public boolean copyDM() {
+		return false;
+	}
+
 	public abstract Class<K> getKeyClass();
 
 	public abstract Class<V> getValClass();
@@ -77,8 +85,21 @@ public abstract class Tree<K extends WritableComparable<K>, V extends Writable, 
 	@Override
 	public final void setConf(Configuration conf) {
 		super.setConf(conf);
-		if (conf != null)
+		if (conf != null) {
 			configure(conf);
+			if (copyUM()) {
+				if (!getUmClass().equals(getCiClass()))
+					throw new ClassCastException("CIClass: " + getCiClass()
+							+ " and UMClass: " + getUmClass()
+							+ " are not equal");
+			}
+			if (copyDM()) {
+				if (!getDmClass().equals(getPiClass()))
+					throw new ClassCastException("PIClass: " + getPiClass()
+							+ " and DMClass: " + getDmClass()
+							+ " are not equal");
+			}
+		}
 	}
 
 	protected void configure(Configuration conf) {

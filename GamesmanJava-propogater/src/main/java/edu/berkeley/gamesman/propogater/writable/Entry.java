@@ -44,6 +44,10 @@ public class Entry<K extends Writable, V extends Writable> implements Writable {
 
 	public void setDummy(K key, V value) {
 		setDummyKey(key);
+		setDummyValue(value);
+	}
+
+	public void setDummyValue(V value) {
 		if (realValue != null)
 			throw new RuntimeException("Already a dummy value! Revert first");
 		realValue = this.value;
@@ -59,6 +63,10 @@ public class Entry<K extends Writable, V extends Writable> implements Writable {
 
 	public void revert() {
 		revertKey();
+		revertValue();
+	}
+
+	public void revertValue() {
 		this.value = realValue;
 		realValue = null;
 	}

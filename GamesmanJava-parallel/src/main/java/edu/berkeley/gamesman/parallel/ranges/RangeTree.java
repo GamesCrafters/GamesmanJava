@@ -15,7 +15,7 @@ import edu.berkeley.gamesman.hasher.genhasher.Move;
 import edu.berkeley.gamesman.hasher.genhasher.Moves;
 import edu.berkeley.gamesman.propogater.common.Adder;
 import edu.berkeley.gamesman.propogater.common.Entry3;
-import edu.berkeley.gamesman.propogater.tree.Tree;
+import edu.berkeley.gamesman.propogater.tree.SimpleTree;
 import edu.berkeley.gamesman.propogater.writable.Entry;
 import edu.berkeley.gamesman.propogater.writable.list.WritList;
 import edu.berkeley.gamesman.propogater.writable.list.WritableList;
@@ -25,7 +25,7 @@ import edu.berkeley.gamesman.util.qll.QLLFactory;
 import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 
 public abstract class RangeTree<S extends GenState> extends
-		Tree<Range<S>, MainRecords, ChildMap, RecordMap, RecordMap, ChildMap> {
+		SimpleTree<Range<S>, MainRecords, ChildMap, RecordMap> {
 
 	private GenHasher<S> myHasher;
 	private Move[] moves;
@@ -200,19 +200,6 @@ public abstract class RangeTree<S extends GenState> extends
 	}
 
 	@Override
-	public void receiveDown(Range<S> key, MainRecords currentValue,
-			Range<S> parentKey, ChildMap parentMessage, ChildMap toFill) {
-		toFill.set(parentMessage);
-	}
-
-	@Override
-	public void receiveUp(Range<S> key, MainRecords currentValue,
-			Range<S> childKey, RecordMap childMessage,
-			RecordMap currentChildInfo) {
-		currentChildInfo.set(childMessage);
-	}
-
-	@Override
 	public void sendUp(Range<S> key, MainRecords value, Range<S> parentKey,
 			ChildMap parentInfo, RecordMap toFill) {
 		toFill.clear();
@@ -243,16 +230,6 @@ public abstract class RangeTree<S extends GenState> extends
 	@Override
 	public Class<RecordMap> getCiClass() {
 		return RecordMap.class;
-	}
-
-	@Override
-	public Class<RecordMap> getUmClass() {
-		return RecordMap.class;
-	}
-
-	@Override
-	public Class<ChildMap> getDmClass() {
-		return ChildMap.class;
 	}
 
 	@Override

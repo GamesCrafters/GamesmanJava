@@ -40,11 +40,30 @@ public class TreePropogationReducer<K extends WritableComparable<K>, V extends W
 			for (int i = 0; i < upList.length(); i++) {
 				IntEntry<UM> mess = upList.get(i);
 				Entry<K, CI> child = childList.get(mess.getInt());
-				tree.receiveUp(key, value.getValue(), child.getKey(),
-						mess.getKey(), child.getValue());
+				if (tree.copyUM())
+					child.setDummyValue((CI) mess.getKey());
+				else
+					tree.receiveUp(key, value.getValue(), child.getKey(),
+							mess.getKey(), child.getValue());
+			}
+			if (tree.copyUM())
+				upList.magicClear();
+			else
+				upList.clear();
+		}
+	}
+
+	@Override
+	protected void revertDummies(TreeNode<K, V, PI, UM, CI, DM> value,
+			int newParentsStart) {
+		if (tree.copyUM()) {
+			WritableList<IntEntry<UM>> upList = value.getUpList();
+			WritableList<Entry<K, CI>> childList = value.getChildren();
+			upList.revertClear();
+			for (int i = 0; i < upList.length(); i++) {
+				childList.get(upList.get(i).getInt()).revertValue();
 			}
 		}
-		upList.clear();
 	}
 
 	@Override
