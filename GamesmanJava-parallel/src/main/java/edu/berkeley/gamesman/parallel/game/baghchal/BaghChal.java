@@ -10,7 +10,7 @@ import org.apache.hadoop.conf.Configuration;
 
 import edu.berkeley.gamesman.game.tree.GameTree;
 import edu.berkeley.gamesman.game.type.GameValue;
-import edu.berkeley.gamesman.propogater.writable.list.WritableList;
+import edu.berkeley.gamesman.propogater.common.Adder;
 
 public class BaghChal<T extends BaghChalState<T>> extends GameTree<T> implements
 		Configurable {
@@ -51,7 +51,7 @@ public class BaghChal<T extends BaghChalState<T>> extends GameTree<T> implements
 	}
 
 	@Override
-	protected GameValue getPrimitiveValue(T position) {
+	public GameValue getPrimitiveValue(T position) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -63,7 +63,7 @@ public class BaghChal<T extends BaghChalState<T>> extends GameTree<T> implements
 	}
 
 	@Override
-	public void getChildren(T position, WritableList<T> toFill) {
+	public void getChildren(T position, Adder<T> toFill) {
 		// TODO Auto-generated method stub
 
 	}

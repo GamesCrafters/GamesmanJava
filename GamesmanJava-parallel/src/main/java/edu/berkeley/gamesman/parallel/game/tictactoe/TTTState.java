@@ -5,10 +5,9 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Arrays;
 
-import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
+import org.apache.hadoop.io.WritableComparable;
 
-
-public class TTTState implements WritableSettableComparable<TTTState> {
+public class TTTState implements WritableComparable<TTTState> {
 	private final int[][] board = new int[3][3];
 	private int turn = 1;
 
@@ -32,7 +31,6 @@ public class TTTState implements WritableSettableComparable<TTTState> {
 		turn = in.readInt();
 	}
 
-	@Override
 	public void set(TTTState t) {
 		for (int row = 0; row < 3; row++) {
 			for (int col = 0; col < 3; col++) {

@@ -5,47 +5,42 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.util.ReflectionUtils;
 
-import edu.berkeley.gamesman.propogater.factory.Factory;
-import edu.berkeley.gamesman.propogater.factory.FactoryUtil;
+public class ValueWrapper<V extends Writable> implements Writable {
+	private boolean hasValue;
+	private final V myVal;
 
-public class ValueWrapper<VALUE extends WritableSettable<VALUE>> implements
-		WritableSettable<ValueWrapper<VALUE>> {
-
-	private boolean hasValue = true;
-	private final VALUE myValue;
-
-	public ValueWrapper(Factory<? extends VALUE> valFact) {
-		myValue = valFact.create();
-	}
-
-	public ValueWrapper(Class<? extends VALUE> valClass, Configuration conf) {
-		this(FactoryUtil.makeFactory(valClass, conf));
-	}
-
-	@Override
-	public void write(DataOutput out) throws IOException {
-		out.writeBoolean(hasValue);
-		if (hasValue)
-			myValue.write(out);
+	public ValueWrapper(Class<? extends V> vClass, Configuration conf) {
+		myVal = ReflectionUtils.newInstance(vClass, conf);
+		hasValue = false;
 	}
 
 	@Override
 	public void readFields(DataInput in) throws IOException {
 		hasValue = in.readBoolean();
 		if (hasValue)
-			myValue.readFields(in);
+			myVal.readFields(in);
 	}
 
 	@Override
-	public void set(ValueWrapper<VALUE> t) {
-		setOther(t);
+	public void write(DataOutput out) throws IOException {
+		out.writeBoolean(hasValue);
+		if (hasValue)
+			myVal.write(out);
 	}
 
-	public void setOther(ValueWrapper<? extends VALUE> t) {
-		hasValue = t.hasValue;
+	public V get() {
 		if (hasValue)
-			myValue.set(t.myValue);
+			return myVal;
+		else
+			return null;
+	}
+
+	public V setHasAndGet() {
+		hasValue = true;
+		return myVal;
 	}
 
 	public boolean hasValue() {
@@ -56,38 +51,8 @@ public class ValueWrapper<VALUE extends WritableSettable<VALUE>> implements
 		hasValue = false;
 	}
 
-	public void set(VALUE value) {
-		hasValue = value != null;
-		if (hasValue)
-			myValue.set(value);
-	}
-
-	public VALUE get() {
-		return hasValue ? myValue : null;
-	}
-
-	public VALUE setHasAndGet() {
-		hasValue = true;
-		return myValue;
-	}
-
-	@Override
-	public boolean equals(Object other) {
-		return (other instanceof ValueWrapper)
-				&& equals((ValueWrapper<?>) other);
-	}
-
-	public boolean equals(ValueWrapper<?> other) {
-		return hasValue ? myValue.equals(other.get()) : !other.hasValue;
-	}
-
-	@Override
-	public int hashCode() {
-		return hasValue ? myValue.hashCode() : 0;
-	}
-
 	@Override
 	public String toString() {
-		return hasValue ? myValue.toString() : "NULL";
+		return hasValue ? myVal.toString() : "NONE";
 	}
 }

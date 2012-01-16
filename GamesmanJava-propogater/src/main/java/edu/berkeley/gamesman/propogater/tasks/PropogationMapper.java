@@ -1,67 +1,60 @@
 package edu.berkeley.gamesman.propogater.tasks;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.Mapper;
 
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.tree.Tree;
-import edu.berkeley.gamesman.propogater.tree.node.TreeNode;
-import edu.berkeley.gamesman.propogater.writable.WritableSettable;
-import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
+import edu.berkeley.gamesman.propogater.tree.TreeNode;
+import edu.berkeley.gamesman.propogater.writable.BitSetWritable;
+import edu.berkeley.gamesman.propogater.writable.Entry;
+import edu.berkeley.gamesman.propogater.writable.IntEntry;
+import edu.berkeley.gamesman.propogater.writable.list.WritableList;
 
-public class PropogationMapper<KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettable<VALUE>>
-		extends Mapper<KEY, TreeNode<KEY, VALUE>, KEY, TreeNode<KEY, VALUE>> {
-	private Tree<KEY, VALUE> tree;
-	private TreeNode<KEY, VALUE> parNode;
-	private final HashSet<Integer> changed = new HashSet<Integer>();
+public class PropogationMapper<K extends WritableComparable<K>, V extends Writable, PI extends Writable, UM extends Writable, CI extends Writable, DM extends Writable>
+		extends
+		Mapper<K, TreeNode<K, V, PI, UM, CI, DM>, K, TreeNode<K, V, PI, UM, CI, DM>> {
+	private Tree<K, V, PI, UM, CI, DM> tree;
+	private TreeNode<K, V, PI, UM, CI, DM> parNode;
 	private Set<Integer> workingSet;
+	private IntEntry<UM> parPair;
 
 	@Override
 	protected void setup(Context context) {
 		Configuration conf = context.getConfiguration();
-		tree = ConfParser.<KEY, VALUE> newTree(conf);
+		tree = ConfParser.<K, V, PI, UM, CI, DM> newTree(conf);
+		parNode = new TreeNode<K, V, PI, UM, CI, DM>(conf);
+		WritableList<IntEntry<UM>> upList = parNode.getUpList();
+		parPair = upList.add();
 		workingSet = ConfParser.getWorkingSet(conf);
-		parNode = new TreeNode<KEY, VALUE>(conf);
-		changed.clear();
 	}
 
 	@Override
-	protected void map(KEY key, TreeNode<KEY, VALUE> node, Context context)
-			throws IOException, InterruptedException {
+	protected void map(K key, TreeNode<K, V, PI, UM, CI, DM> node,
+			Context context) throws IOException, InterruptedException {
 		int division = tree.getDivision(key);
 		if (workingSet.contains(division)) {
-			final boolean needsToSend = node.combine(tree, key);
-			boolean divisionSet = false;
-			for (int i = 0; i < node.numParents(); i++) {
-				if (!node.seenParent(i) || needsToSend) {
-					KEY parent = node.getParentKey(i);
-					if (!divisionSet) {
-						division = tree.getDivision(parent);
-						divisionSet = true;
-						changed.add(division);
-					}
-					parNode.toParent(tree, key, node, i);
-					context.write(parent, parNode);
+			boolean nodeChanged = node.combineUp(tree, key);
+			BitSetWritable cleanSet = node.getCleanSet();
+			WritableList<IntEntry<Entry<K, PI>>> parentList = node
+					.getParentList();
+			for (int i = 0; i < parentList.length(); i++) {
+				if (nodeChanged || !cleanSet.get(i)) {
+					IntEntry<Entry<K, PI>> intEntry = parentList.get(i);
+					Entry<K, PI> parent = intEntry.getKey();
+					tree.sendUp(key, node.getValue(), parent.getKey(),
+							parent.getValue(), parPair.getKey());
+					parPair.setInt(intEntry.getInt());
+					context.write(parent.getKey(), parNode);
+					cleanSet.set(i);
 				}
 			}
 		}
 		context.write(key, node);
-	}
-
-	@Override
-	protected void cleanup(Context context) throws IOException {
-		for (int division : changed) {
-			Configuration conf = context.getConfiguration();
-			Path signalPath = ConfParser
-					.getNeedsPropogationPath(conf, division);
-			signalPath.getFileSystem(conf).createNewFile(signalPath);
-			if (!signalPath.getFileSystem(conf).exists(signalPath))
-				throw new IOException(signalPath + " not successfully created");
-		}
 	}
 }

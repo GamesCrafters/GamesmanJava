@@ -12,9 +12,9 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.common.Util;
-import edu.berkeley.gamesman.propogater.tasks.TreeCombineReducer;
+import edu.berkeley.gamesman.propogater.tasks.TreeCreationReducer;
 import edu.berkeley.gamesman.propogater.tasks.TreeReducer;
-import edu.berkeley.gamesman.propogater.tree.node.TreeNode;
+import edu.berkeley.gamesman.propogater.tree.TreeNode;
 
 public class CombineRunner extends TaskRunner {
 	public final Tier tier;
@@ -37,7 +37,7 @@ public class CombineRunner extends TaskRunner {
 			Job j = new Job(jConf, String.format(
 					ConfParser.COMBINATION_JOB_FORMAT, tier.num));
 			j.setCombinerClass(TreeReducer.class);
-			j.setReducerClass(TreeCombineReducer.class);
+			j.setReducerClass(TreeCreationReducer.class);
 			j.setInputFormatClass(SequenceFileInputFormat.class);
 			j.setOutputFormatClass(SequenceFileOutputFormat.class);
 			j.setOutputKeyClass(tree.getKeyClass());
@@ -66,12 +66,7 @@ public class CombineRunner extends TaskRunner {
 		Path[] combinePaths = tier.getCombinePaths();
 		if (combinePaths.length == 0)
 			return true;
-		else if (combinePaths.length == 1 && !tier.hasData()) {
-			Path name = combinePaths[0];
-			tier.replaceDataPath(name);
-			tier.setNeedsCreation();
-			return true;
-		} else
+		else
 			return false;
 	}
 

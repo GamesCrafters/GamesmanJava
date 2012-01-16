@@ -14,15 +14,15 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.common.IOCheckOperations;
 import edu.berkeley.gamesman.propogater.tree.Tree;
-import edu.berkeley.gamesman.propogater.tree.node.TreeNode;
-import edu.berkeley.gamesman.propogater.writable.WritableSettable;
-import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
+import edu.berkeley.gamesman.propogater.tree.TreeNode;
 
-public class Solver<KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettable<VALUE>> {
+public class Solver<K extends WritableComparable<K>> {
 	private static final int CREATE_COMBINE = 0, PROPOGATE = 1, CLEANUP = 2;
 	public static final PathFilter underscoreFilter = new PathFilter() {
 		@Override
@@ -34,26 +34,27 @@ public class Solver<KEY extends WritableSettableComparable<KEY>, VALUE extends W
 
 	private final Configuration conf;
 	private final TierGraph myGraph;
-	private final Tree<KEY, VALUE> tree;
+	private final Tree<K, ?, ?, ?, ?, ?> tree;
 	private final Set<Tier> rootTiers;
 	private final TaskManager taskManager;
 	private int stage;
 
 	public Solver(Configuration conf) throws IOException {
 		this.conf = conf;
-		tree = ConfParser.<KEY, VALUE> newTree(conf);
+		tree = ConfParser
+				.<K, Writable, Writable, Writable, Writable, Writable> newTree(conf);
 		tree.prepareRun(conf);
 		taskManager = new TaskManager(tree.isSingleLinear());
 		myGraph = new TierGraph(tree);
 		Path workPath = ConfParser.getWorkPath(conf);
 		FileSystem fs = ConfParser.getWorkFileSystem(conf);
 		boolean starting = IOCheckOperations.mkdirs(fs, workPath);
-		Collection<KEY> keyRoots = tree.getRoots();
+		Collection<K> keyRoots = tree.getRoots();
 		if (starting) {
 			start(fs, keyRoots);
 		}
 		HashSet<Tier> rootTiers = new HashSet<Tier>();
-		for (KEY root : keyRoots) {
+		for (K root : keyRoots) {
 			Tier tier = myGraph.getTier(tree.getDivision(root));
 			if (tier == null)
 				throw new NullPointerException();
@@ -161,12 +162,12 @@ public class Solver<KEY extends WritableSettableComparable<KEY>, VALUE extends W
 		taskManager.run();
 	}
 
-	private void start(FileSystem fs, Collection<KEY> keyRoots)
+	private void start(FileSystem fs, Collection<K> keyRoots)
 			throws IOException {
 		HashMap<Integer, SequenceFile.Writer> startWriters = new HashMap<Integer, SequenceFile.Writer>();
-		TreeNode<KEY, VALUE> startingNode = new TreeNode<KEY, VALUE>(conf);
-		startingNode.clear();
-		for (KEY key : keyRoots) {
+		TreeNode<K, ?, ?, ?, ?, ?> startingNode = new TreeNode<K, Writable, Writable, Writable, Writable, Writable>(
+				conf);
+		for (K key : keyRoots) {
 			int num = tree.getDivision(key);
 			SequenceFile.Writer writer = startWriters.get(num);
 			if (writer == null) {

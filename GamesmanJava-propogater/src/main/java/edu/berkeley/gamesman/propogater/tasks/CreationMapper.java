@@ -3,44 +3,55 @@ package edu.berkeley.gamesman.propogater.tasks;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.Mapper;
 
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.tree.Tree;
-import edu.berkeley.gamesman.propogater.tree.node.TreeNode;
-import edu.berkeley.gamesman.propogater.writable.WritableSettable;
-import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
+import edu.berkeley.gamesman.propogater.tree.TreeNode;
+import edu.berkeley.gamesman.propogater.writable.Entry;
+import edu.berkeley.gamesman.propogater.writable.IntEntry;
 import edu.berkeley.gamesman.propogater.writable.list.WritableList;
 
-public class CreationMapper<KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettable<VALUE>>
-		extends Mapper<KEY, TreeNode<KEY, VALUE>, KEY, TreeNode<KEY, VALUE>> {
-	private Tree<KEY, VALUE> tree;
-	private TreeNode<KEY, VALUE> parNode;
-	private WritableList<KEY> children;
+public class CreationMapper<K extends WritableComparable<K>, V extends Writable, PI extends Writable, UM extends Writable, CI extends Writable, DM extends Writable>
+		extends
+		Mapper<K, TreeNode<K, V, PI, UM, CI, DM>, K, TreeNode<K, V, PI, UM, CI, DM>> {
+	private Tree<K, V, PI, UM, CI, DM> tree;
+	private TreeNode<K, V, PI, UM, CI, DM> parNode;
+	private IntEntry<Entry<K, DM>> childEntry;
+	private WritableList<DM> childMessageList;
 
 	@Override
 	protected void setup(Context context) {
 		Configuration conf = context.getConfiguration();
-		tree = ConfParser.<KEY, VALUE> newTree(conf);
-		parNode = new TreeNode<KEY, VALUE>(conf);
-		children = new WritableList<KEY>(tree.getKeyClass(), conf);
+		tree = ConfParser.<K, V, PI, UM, CI, DM> newTree(conf);
+		parNode = new TreeNode<K, V, PI, UM, CI, DM>(conf);
+		childEntry = parNode.getDownList().add();
+		childMessageList = new WritableList<DM>(tree.getDmClass(), conf);
 	}
 
 	@Override
-	protected void map(KEY key, TreeNode<KEY, VALUE> node, Context context)
-			throws IOException, InterruptedException {
-		if (node.isNew()) {
-			if (node.makeInitial(tree, key)) {
-				children.clear();
-				tree.getChildren(key, children);
-				for (int i = 0; i < children.length(); i++) {
-					parNode.setParent(i, key);
-					context.write(children.get(i), parNode);
+	protected void map(K key, TreeNode<K, V, PI, UM, CI, DM> node,
+			Context context) throws IOException, InterruptedException {
+		if (node.hasValue())
+			node.combineDown(tree, key);
+		else {
+			childMessageList.clear();
+			node.firstVisit(tree, key, childMessageList);
+			WritableList<Entry<K, CI>> children = node.getChildren();
+			for (int i = 0; i < children.length(); i++) {
+				Entry<K, CI> nextChild = children.get(i);
+				DM message = childMessageList.get(i);
+				childEntry.setInt(i);
+				childEntry.getKey().setDummy(key, message);
+				try {
+					context.write(nextChild.getKey(), parNode);
+				} finally {
+					childEntry.getKey().revert();
 				}
-				node.setNumChildren(children.length());
 			}
 		}
-		assert !node.isNew();
 		context.write(key, node);
 	}
 }

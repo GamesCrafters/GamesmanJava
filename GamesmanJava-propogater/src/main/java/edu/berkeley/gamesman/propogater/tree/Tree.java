@@ -4,56 +4,57 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
-import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.OutputFormat;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.output.MapFileOutputFormat;
-import org.apache.hadoop.util.ReflectionUtils;
 
-import edu.berkeley.gamesman.propogater.writable.WritableSettable;
-import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
-import edu.berkeley.gamesman.propogater.writable.list.WritableArray;
+import edu.berkeley.gamesman.propogater.common.Adder;
+import edu.berkeley.gamesman.propogater.common.Entry3;
+import edu.berkeley.gamesman.propogater.writable.Entry;
+import edu.berkeley.gamesman.propogater.writable.list.WritList;
 import edu.berkeley.gamesman.propogater.writable.list.WritableList;
 
-public abstract class Tree<KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettable<VALUE>>
-		implements Configurable {
-	private Configuration conf;
+public abstract class Tree<K extends WritableComparable<K>, V extends Writable, PI extends Writable, UM extends Writable, CI extends Writable, DM extends Writable>
+		extends Configured {
+	public abstract void firstVisit(K key, V valueToFill,
+			WritList<Entry<K, PI>> parents,
+			Adder<Entry3<K, CI, DM>> childrenToFill);
 
-	public abstract Collection<KEY> getRoots();
+	public abstract void combineDown(K key, V value,
+			WritList<Entry<K, PI>> parents, int firstNewParent,
+			WritableList<Entry<K, CI>> children);
 
-	public abstract void getChildren(KEY position, WritableList<KEY> toFill);
+	public abstract boolean combineUp(K key, V value,
+			WritList<Entry<K, PI>> parents, WritableList<Entry<K, CI>> children);
 
-	/**
-	 * Returns true if this position has children (in this case initial value
-	 * only has meaning if the tree is cyclic)
-	 * 
-	 * @param position
-	 *            The position to get the initial value for
-	 * @param toFill
-	 *            The value to fill in
-	 * @return Whether this position has children
-	 */
-	public abstract boolean getInitialValue(KEY position, VALUE toFill);
+	public abstract void receiveDown(K key, V currentValue, K parentKey,
+			DM parentMessage, PI toFill);
 
-	/**
-	 * @param tVal
-	 *            The original value
-	 * @param child
-	 *            The child you're coming from
-	 * @param parent
-	 *            The parent you're going to
-	 * @param toFill
-	 *            Where to store the result
-	 */
-	public abstract void travelUp(VALUE tVal, int childNum, KEY child,
-			KEY parent, VALUE toFill);
+	public abstract void receiveUp(K key, V currentValue, K childKey,
+			UM childMessage, CI currentChildInfo);
 
-	public abstract Class<? extends KEY> getKeyClass();
+	public abstract void sendUp(K key, V value, K parentKey, PI parentInfo,
+			UM toFill);
 
-	public abstract Class<? extends VALUE> getValClass();
+	public abstract Class<K> getKeyClass();
 
-	public int getDivision(KEY position) {
+	public abstract Class<V> getValClass();
+
+	public abstract Class<PI> getPiClass();
+
+	public abstract Class<CI> getCiClass();
+
+	public abstract Class<UM> getUmClass();
+
+	public abstract Class<DM> getDmClass();
+
+	public abstract Collection<K> getRoots();
+
+	public int getDivision(K position) {
 		return 0;
 	}
 
@@ -65,25 +66,19 @@ public abstract class Tree<KEY extends WritableSettableComparable<KEY>, VALUE ex
 		return Collections.emptySet();
 	}
 
-	public Class<? extends OutputFormat> getCleanupOutputFormatClass() {
-		return MapFileOutputFormat.class;
-	}
-
 	public Class<? extends Reducer> getCleanupReducerClass() {
 		return Reducer.class;
 	}
 
-	public abstract boolean combine(KEY pos, WritableArray<VALUE> children, VALUE toFill);
-
-	@Override
-	public final Configuration getConf() {
-		return conf;
+	public Class<? extends OutputFormat> getCleanupOutputFormatClass() {
+		return MapFileOutputFormat.class;
 	}
 
 	@Override
 	public final void setConf(Configuration conf) {
-		this.conf = conf;
-		configure(conf);
+		super.setConf(conf);
+		if (conf != null)
+			configure(conf);
 	}
 
 	protected void configure(Configuration conf) {
@@ -91,31 +86,66 @@ public abstract class Tree<KEY extends WritableSettableComparable<KEY>, VALUE ex
 
 	public final void prepareRun(Configuration conf) {
 		conf.setClass("propogater.run.key.class", getKeyClass(),
-				WritableSettableComparable.class);
+				WritableComparable.class);
 		conf.setClass("propogater.run.value.class", getValClass(),
-				WritableSettable.class);
+				Writable.class);
+		conf.setClass("propogater.run.pi.class", getPiClass(), Writable.class);
+		conf.setClass("propogater.run.ci.class", getCiClass(), Writable.class);
+		conf.setClass("propogater.run.um.class", getUmClass(), Writable.class);
+		conf.setClass("propogater.run.dm.class", getDmClass(), Writable.class);
 	}
 
-	public static <KEY extends WritableSettableComparable<KEY>> Class<KEY> getRunKeyClass(
+	static <K extends WritableComparable<K>> Class<K> getRunKClass(
 			Configuration conf) {
-		Class<KEY> kClass = (Class<KEY>) conf.getClass(
-				"propogater.run.key.class", null,
-				WritableSettableComparable.class);
+		Class<K> kClass = (Class<K>) conf.getClass("propogater.run.key.class",
+				null, WritableComparable.class);
 		if (kClass == null)
 			throw new NullPointerException();
 		return kClass;
 	}
 
-	public static <VALUE extends WritableSettable<VALUE>> Class<VALUE> getRunValueClass(
+	static <V extends Writable> Class<? extends V> getRunVClass(
 			Configuration conf) {
-		Class<VALUE> vClass = (Class<VALUE>) conf.getClass(
-				"propogater.run.value.class", null, WritableSettable.class);
+		Class<? extends V> vClass = (Class<? extends V>) conf.getClass(
+				"propogater.run.value.class", null, Writable.class);
 		if (vClass == null)
 			throw new NullPointerException();
 		return vClass;
 	}
 
-	public VALUE newValue() {
-		return ReflectionUtils.newInstance(getValClass(), conf);
+	static <PI extends Writable> Class<? extends PI> getRunPiClass(
+			Configuration conf) {
+		Class<? extends PI> vClass = (Class<? extends PI>) conf.getClass(
+				"propogater.run.pi.class", null, Writable.class);
+		if (vClass == null)
+			throw new NullPointerException();
+		return vClass;
+	}
+
+	static <CI extends Writable> Class<? extends CI> getRunCiClass(
+			Configuration conf) {
+		Class<? extends CI> vClass = (Class<? extends CI>) conf.getClass(
+				"propogater.run.ci.class", null, Writable.class);
+		if (vClass == null)
+			throw new NullPointerException();
+		return vClass;
+	}
+
+	static <PM extends Writable> Class<? extends PM> getRunUmClass(
+			Configuration conf) {
+		Class<? extends PM> vClass = (Class<? extends PM>) conf.getClass(
+				"propogater.run.um.class", null, Writable.class);
+		if (vClass == null)
+			throw new NullPointerException();
+		return vClass;
+	}
+
+	static <CM extends Writable> Class<? extends CM> getRunDmClass(
+			Configuration conf) {
+		Class<? extends CM> vClass = (Class<? extends CM>) conf.getClass(
+				"propogater.run.dm.class", null, Writable.class);
+		if (vClass == null)
+			throw new NullPointerException();
+		return vClass;
 	}
 }

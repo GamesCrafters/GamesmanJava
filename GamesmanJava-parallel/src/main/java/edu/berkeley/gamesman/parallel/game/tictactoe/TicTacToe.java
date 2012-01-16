@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
-import edu.berkeley.gamesman.propogater.writable.list.WritableList;
+import edu.berkeley.gamesman.propogater.common.Adder;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.util.Pair;
 
@@ -23,7 +23,7 @@ public class TicTacToe extends GameTree<TTTState> implements
 	}
 
 	@Override
-	public void getChildren(TTTState position, WritableList<TTTState> toFill) {
+	public void getChildren(TTTState position, Adder<TTTState> toFill) {
 		for (int row = 0; row < 3; row++) {
 			for (int col = 0; col < 3; col++) {
 				if (position.get(row, col) == 0) {
@@ -36,7 +36,7 @@ public class TicTacToe extends GameTree<TTTState> implements
 	}
 
 	@Override
-	protected GameValue getPrimitiveValue(TTTState position) {
+	public GameValue getPrimitiveValue(TTTState position) {
 		if (position.isWin()) {
 			return GameValue.LOSE;
 		} else if (position.isFull()) {

@@ -5,12 +5,10 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 
-import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
-
-
-public class QuadSet implements WritableSettableComparable<QuadSet> {
+public class QuadSet implements WritableComparable<QuadSet> {
 	private byte[] bs = new byte[0];
 	private int numEntries;
 	private int bytesNeeded;
@@ -48,7 +46,6 @@ public class QuadSet implements WritableSettableComparable<QuadSet> {
 		in.readFully(bs, 0, bytesNeeded);
 	}
 
-	@Override
 	public void set(QuadSet t) {
 		setNumEntries(t.numEntries);
 		System.arraycopy(t.bs, 0, bs, 0, bytesNeeded);

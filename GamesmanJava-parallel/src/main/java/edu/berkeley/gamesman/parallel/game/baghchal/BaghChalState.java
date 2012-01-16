@@ -4,10 +4,10 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
+import org.apache.hadoop.io.WritableComparable;
 
 public class BaghChalState<T extends BaghChalState<T>> implements
-		WritableSettableComparable<T> {
+		WritableComparable<T> {
 
 	public BaghChalState(int width, int height, int tigers, int goats) {
 
@@ -21,12 +21,6 @@ public class BaghChalState<T extends BaghChalState<T>> implements
 
 	@Override
 	public void write(DataOutput out) throws IOException {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void set(T t) {
 		// TODO Auto-generated method stub
 
 	}

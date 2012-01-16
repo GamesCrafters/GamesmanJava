@@ -6,128 +6,88 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.Writable;
 
 import edu.berkeley.gamesman.propogater.factory.Factory;
 import edu.berkeley.gamesman.propogater.factory.FactoryUtil;
-import edu.berkeley.gamesman.propogater.writable.WritableSettable;
 
-public final class WritableList<T extends WritableSettable<T>> implements
-		WritableSettable<WritableList<? extends T>> {
-	protected final ArrayList<T> myList = new ArrayList<T>(0);
-	protected int length = 0;
-	private final Factory<? extends T> fact;
+public class WritableList<T extends Writable> implements Writable, WritList<T> {
+	private final Factory<T> fact;
+	private final ArrayList<T> arr = new ArrayList<T>();
+	private int len = 0;
 
-	public WritableList(Factory<? extends T> fact) {
+	public WritableList(Class<? extends T> tClass, Configuration conf) {
+		this(FactoryUtil.makeFactory(tClass, conf));
+	}
+
+	public WritableList(Factory<T> fact) {
 		this.fact = fact;
-	}
-
-	public WritableList(Class<? extends T> fClass, Configuration conf) {
-		this(FactoryUtil.makeFactory(fClass, conf));
-	}
-
-	public void add(T obj) {
-		checkContainsNext(length);
-		myList.get(length).set(obj);
-		length++;
-	}
-
-	public T add() {
-		checkContainsNext(length);
-		return myList.get(length++);
-	}
-
-	public void clear() {
-		length = 0;
-	}
-
-	protected void checkInBounds(int i) {
-		if (i >= length)
-			throw new IndexOutOfBoundsException();
-	}
-
-	public T get(int i) {
-		checkInBounds(i);
-		return myList.get(i);
-	}
-
-	public int length() {
-		return length;
-	}
-
-	@Override
-	public void write(DataOutput out) throws IOException {
-		out.writeInt(length);
-		for (int i = 0; i < length; i++)
-			myList.get(i).write(out);
 	}
 
 	@Override
 	public void readFields(DataInput in) throws IOException {
-		length = in.readInt();
-		myList.ensureCapacity(length);
-		for (int i = 0; i < length; i++) {
-			checkContainsNext(i);
-			myList.get(i).readFields(in);
-		}
-	}
-
-	private void checkContainsNext(int i) {
-		if (myList.size() == i)
-			myList.add(fact.create());
-	}
-
-	@Override
-	public void set(WritableList<? extends T> other) {
 		clear();
-		addAll(other);
+		addFields(in);
 	}
 
-	public void addAll(WritableList<? extends T> other) {
-		ensureCapacity(length + other.length());
-		for (int i = 0; i < other.length(); i++) {
-			add(other.get(i));
+	private void ensureCapacity(int len) {
+		arr.ensureCapacity(len);
+		for (int i = arr.size(); i < len; i++) {
+			arr.add(fact.create());
 		}
 	}
 
-	public void ensureCapacity(int length) {
-		myList.ensureCapacity(length);
-		while (myList.size() < length)
-			myList.add(fact.create());
+	@Override
+	public void write(DataOutput out) throws IOException {
+		out.writeInt(len);
+		for (int i = 0; i < len; i++)
+			arr.get(i).write(out);
 	}
 
 	@Override
-	public boolean equals(Object other) {
-		return other instanceof WritableList && equals((WritableList<?>) other);
-	}
-
-	public boolean equals(WritableList<?> other) {
-		if (length != other.length)
-			return false;
-		for (int i = 0; i < length; i++) {
-			if (!myList.get(i).equals(other.myList.get(i)))
-				return false;
-		}
-		return true;
+	public int length() {
+		return len;
 	}
 
 	@Override
-	public int hashCode() {
-		int code = 1;
-		for (int i = 0; i < length; i++)
-			code = code * 31 + myList.get(i).hashCode();
-		return code;
+	public T get(int i) {
+		if (i < len)
+			return arr.get(i);
+		else
+			throw new IndexOutOfBoundsException(i
+					+ " is too large for array of length " + len);
+	}
+
+	public void clear() {
+		len = 0;
+	}
+
+	public T add() {
+		ensureCapacity(len + 1);
+		return arr.get(len++);
+	}
+
+	public void addFields(DataInput in) throws IOException {
+		int addLen = in.readInt();
+		int newLen = len + addLen;
+		ensureCapacity(newLen);
+		for (int i = len; i < newLen; i++)
+			arr.get(i).readFields(in);
+		len = newLen;
+	}
+
+	// Warning! Not really popped, do not try to add to list while still
+	// accessing popped item
+	public T popLast() {
+		return arr.get(--len);
+	}
+
+	public boolean isEmpty() {
+		return len == 0;
 	}
 
 	@Override
 	public String toString() {
-		return myList.subList(0, length).toString();
-	}
-
-	public boolean isEmpty() {
-		return length == 0;
-	}
-
-	public void set(int i, T val) {
-		get(i).set(val);
+		return arr.subList(0, len).toString();
 	}
 }

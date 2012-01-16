@@ -14,8 +14,9 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.tasks.DividedSequenceFileOutputFormat;
 import edu.berkeley.gamesman.propogater.tasks.PropogationMapper;
+import edu.berkeley.gamesman.propogater.tasks.TreePropogationReducer;
 import edu.berkeley.gamesman.propogater.tasks.TreeReducer;
-import edu.berkeley.gamesman.propogater.tree.node.TreeNode;
+import edu.berkeley.gamesman.propogater.tree.TreeNode;
 
 public class PropogateRunner extends TaskRunner {
 	private final Set<Tier> wholeSet;
@@ -58,7 +59,7 @@ public class PropogateRunner extends TaskRunner {
 					ConfParser.PROPOGATION_JOB_FORMAT, headTier.num));
 			j.setMapperClass(PropogationMapper.class);
 			j.setCombinerClass(TreeReducer.class);
-			j.setReducerClass(TreeReducer.class);
+			j.setReducerClass(TreePropogationReducer.class);
 			j.setInputFormatClass(SequenceFileInputFormat.class);
 			j.setOutputFormatClass(DividedSequenceFileOutputFormat.class);
 			j.setOutputKeyClass(tree.getKeyClass());

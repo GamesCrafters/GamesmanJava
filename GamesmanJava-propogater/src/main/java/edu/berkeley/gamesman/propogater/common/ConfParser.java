@@ -18,8 +18,6 @@ import org.apache.hadoop.util.ReflectionUtils;
 
 import edu.berkeley.gamesman.propogater.solver.Tier;
 import edu.berkeley.gamesman.propogater.tree.Tree;
-import edu.berkeley.gamesman.propogater.writable.WritableSettable;
-import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
 
 public class ConfParser {
 	public static final String CHILDREN_FOLDER = "children";
@@ -46,17 +44,17 @@ public class ConfParser {
 		return new Path(getTierPath(conf, division), NEEDS_PROPOGATION_NAME);
 	}
 
-	public static <KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettable<VALUE>> Tree<KEY, VALUE> newTree(
+	public static <K extends WritableComparable<K>, V extends Writable, PI extends Writable, PM extends Writable, CI extends Writable, CM extends Writable> Tree<K, V, PI, PM, CI, CM> newTree(
 			Configuration conf) {
 		return ReflectionUtils.newInstance(
-				ConfParser.<KEY, VALUE> getTreeClass(conf), conf);
+				ConfParser.<K, V, PI, PM, CI, CM> getTreeClass(conf), conf);
 	}
 
-	public static <KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettable<VALUE>> Class<Tree<KEY, VALUE>> getTreeClass(
+	public static <K extends WritableComparable<K>, V extends Writable, PI extends Writable, PM extends Writable, CI extends Writable, CM extends Writable> Class<? extends Tree<K, V, PI, PM, CI, CM>> getTreeClass(
 			Configuration conf) {
 		@SuppressWarnings("unchecked")
-		Class<Tree<KEY, VALUE>> c = (Class<Tree<KEY, VALUE>>) conf.getClass(
-				"propogater.tree.class", null, Tree.class);
+		Class<? extends Tree<K, V, PI, PM, CI, CM>> c = (Class<? extends Tree<K, V, PI, PM, CI, CM>>) conf
+				.<Tree> getClass("propogater.tree.class", null, Tree.class);
 		if (c == null)
 			throw new RuntimeException("Tree class not set");
 		else

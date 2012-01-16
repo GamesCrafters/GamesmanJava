@@ -178,6 +178,25 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 		myIterator.add(element);
 	}
 
+	public boolean stealAll(QuickLinkedList<T> c) {
+		if (c.isEmpty())
+			return false;
+		if (pool == c.pool) {
+			afterLast.previous.next = c.beforeFirst.next;
+			c.beforeFirst.next.previous = afterLast.previous;
+			afterLast.previous = c.afterLast.previous;
+			afterLast.previous.next = afterLast;
+			size += c.size;
+			c.beforeFirst.next = c.afterLast;
+			c.afterLast.previous = c.beforeFirst;
+			c.size = 0;
+		} else {
+			addAll(c);
+			c.clear();
+		}
+		return true;
+	}
+
 	public boolean addAll(Collection<? extends T> c) {
 		myIterator.toEnd();
 		for (T t : c)
@@ -476,16 +495,21 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 
 	@Override
 	public String toString() {
-		if (isEmpty())
-			return "[]";
-		StringBuilder sb = new StringBuilder("[");
-		myIterator.toStart();
-		sb.append(myIterator.next());
-		while (myIterator.hasNext()) {
-			sb.append(", ");
+		QLLIterator myIterator = listIterator();
+		try {
+			if (isEmpty())
+				return "[]";
+			StringBuilder sb = new StringBuilder("[");
+			myIterator.toStart();
 			sb.append(myIterator.next());
+			while (myIterator.hasNext()) {
+				sb.append(", ");
+				sb.append(myIterator.next());
+			}
+			sb.append("]");
+			return sb.toString();
+		} finally {
+			release(myIterator);
 		}
-		sb.append("]");
-		return sb.toString();
 	}
 }

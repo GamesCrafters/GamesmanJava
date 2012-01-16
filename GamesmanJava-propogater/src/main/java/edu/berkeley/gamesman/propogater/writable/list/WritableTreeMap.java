@@ -5,13 +5,12 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.Writable;
 
 import edu.berkeley.gamesman.propogater.factory.Factory;
 import edu.berkeley.gamesman.propogater.writable.IntEntry;
-import edu.berkeley.gamesman.propogater.writable.WritableSettable;
 
-public class WritableTreeMap<T extends WritableSettable<T>> implements
-		WritableSettable<WritableTreeMap<T>> {
+public class WritableTreeMap<T extends Writable> implements Writable {
 	private final WritableList<IntEntry<T>> objs;
 	private int counter;
 
@@ -61,11 +60,6 @@ public class WritableTreeMap<T extends WritableSettable<T>> implements
 	}
 
 	@Override
-	public void set(WritableTreeMap<T> t) {
-		objs.set(t.objs);
-	}
-
-	@Override
 	public boolean equals(Object other) {
 		return other instanceof WritableTreeMap
 				&& equals((WritableTreeMap<?>) other);
@@ -95,7 +89,7 @@ public class WritableTreeMap<T extends WritableSettable<T>> implements
 		return entry.getKey();
 	}
 
-	private static <T extends WritableSettable<T>> Factory<IntEntry<T>> makeFact(
+	private static <T extends Writable> Factory<IntEntry<T>> makeFact(
 			final Class<? extends T> fClass, final Configuration conf) {
 		return new Factory<IntEntry<T>>() {
 			@Override

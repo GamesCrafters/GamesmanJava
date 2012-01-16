@@ -7,17 +7,17 @@ import java.util.Scanner;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.MapFile;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.lib.output.MapFileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
+import edu.berkeley.gamesman.parallel.ranges.MainRecords;
 import edu.berkeley.gamesman.parallel.ranges.Range;
-import edu.berkeley.gamesman.parallel.ranges.RangeRecords;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.tree.Tree;
-import edu.berkeley.gamesman.propogater.writable.WritableSettable;
-import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.solve.reader.SolveReaders;
 import edu.berkeley.gamesman.util.Pair;
@@ -27,15 +27,15 @@ import edu.berkeley.gamesman.game.type.GameValue;
 import edu.berkeley.gamesman.hasher.genhasher.GenState;
 
 public final class Play {
-	public static <K extends WritableSettableComparable<K>> void main(
-			String[] args) throws IOException, ClassNotFoundException {
+	public static <K extends WritableComparable<K>> void main(String[] args)
+			throws IOException, ClassNotFoundException {
 		GenericOptionsParser parser = new GenericOptionsParser(args);
 		Configuration conf = parser.getConfiguration();
 		String[] remainArgs = parser.getRemainingArgs();
 		Path p = new Path(remainArgs[0]);
 		ConfParser.addParameters(conf, p, false);
-		Tree<?, ?> tree = ConfParser
-				.<WritableSettableComparable, WritableSettable> newTree(conf);
+		Tree<K, ?, ?, ?, ?, ?> tree = ConfParser
+				.<K, Writable, Writable, Writable, Writable, Writable> newTree(conf);
 		if (tree instanceof GameTree) {
 			Play.<K> subMain(conf, (GameTree<K>) tree);
 		} else if (tree instanceof RangeTree) {
@@ -43,7 +43,7 @@ public final class Play {
 		}
 	}
 
-	private static <K extends WritableSettableComparable<K>> void subMain(
+	private static <K extends WritableComparable<K>> void subMain(
 			Configuration conf, GameTree<K> tree) throws IOException,
 			ClassNotFoundException {
 		K position = tree.getRoots().iterator().next();
@@ -58,8 +58,8 @@ public final class Play {
 
 		Scanner scan = new Scanner(System.in);
 		GameRecord storeRecord = new GameRecord();
-		tree.getInitialValue(position, storeRecord);
-		while (storeRecord.getValue() == GameValue.DRAW) {
+		GameValue primVal = tree.getPrimitiveValue(position);
+		while (primVal == null) {
 			System.out.println(position.toString());
 			MapFileOutputFormat.getEntry(readers, partitioner, position,
 					storeRecord);
@@ -84,10 +84,9 @@ public final class Play {
 			} else {
 				break;
 			}
-			tree.getInitialValue(position, storeRecord);
+			primVal = tree.getPrimitiveValue(position);
 		}
-		tree.getInitialValue(position, storeRecord);
-		if (storeRecord.getValue() != GameValue.DRAW) {
+		if (primVal != null) {
 			System.out.println(position.toString());
 			System.out.println("Game over");
 		}
@@ -100,15 +99,13 @@ public final class Play {
 		outPath[0] = ConfParser.getOutputPath(conf);
 		MapFile.Reader[] readers = MapFileOutputFormat.getReadersArray(outPath,
 				conf);
-		Partitioner<Range<S>, RangeRecords> partitioner = ConfParser
-				.<Range<S>, RangeRecords> getPartitionerInstance(conf);
+		Partitioner<Range<S>, MainRecords> partitioner = ConfParser
+				.<Range<S>, MainRecords> getPartitionerInstance(conf);
 		String gameName = GamesmanParser.getGameName(conf);
 		SolveReader<S> gameReader = SolveReaders.<S> get(conf, gameName);
 
 		Scanner scan = new Scanner(System.in);
-		RangeRecords recs = new RangeRecords();
-		tree.getInitialValue(posRange, recs);
-
+		MainRecords recs = new MainRecords();
 		S position = tree.getStartingPositions().iterator().next();
 		boolean gameFinished = true;
 		while (tree.getValue(position) == null) {

@@ -1,65 +1,102 @@
 package edu.berkeley.gamesman.game.tree;
 
+import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.WritableComparable;
+
 import edu.berkeley.gamesman.game.type.GameRecord;
 import edu.berkeley.gamesman.game.type.GameValue;
+import edu.berkeley.gamesman.propogater.common.Adder;
+import edu.berkeley.gamesman.propogater.common.Entry3;
 import edu.berkeley.gamesman.propogater.tree.Tree;
-import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
-import edu.berkeley.gamesman.propogater.writable.list.WritableArray;
+import edu.berkeley.gamesman.propogater.writable.Entry;
+import edu.berkeley.gamesman.propogater.writable.list.WritList;
+import edu.berkeley.gamesman.propogater.writable.list.WritableList;
 
-public abstract class GameTree<STATE extends WritableSettableComparable<STATE>>
-		extends Tree<STATE, GameRecord> {
+public abstract class GameTree<STATE extends WritableComparable<STATE>>
+		extends
+		Tree<STATE, GameRecord, NullWritable, GameRecord, GameRecord, NullWritable> {
 
-	@Override
-	public final boolean getInitialValue(STATE position, GameRecord toFill) {
-		GameValue primitiveValue = getPrimitiveValue(position);
-		if (primitiveValue == null) {
-			toFill.set(initialNonPrimitivePosition(position));
-			return true;
-		} else {
-			toFill.set(primitiveValue, 0);
-			return false;
-		}
-	}
+	public abstract void getChildren(STATE position, Adder<STATE> toFill);
 
-	protected GameRecord initialNonPrimitivePosition(STATE position) {
-		return GameRecord.DRAW;
-	}
-
-	protected abstract GameValue getPrimitiveValue(STATE position);
-
-	@Override
-	public final void travelUp(GameRecord tVal, int childNum, STATE child,
-			STATE parent, GameRecord toFill) {
-		toFill.previousPosition(tVal);
-	}
+	public abstract GameValue getPrimitiveValue(STATE position);
 
 	@Override
 	public final Class<GameRecord> getValClass() {
 		return GameRecord.class;
 	}
 
-	private final GameRecord tempRecord = new GameRecord();
+	private final GameAdder<STATE> childAdder = new GameAdder<STATE>();
 
 	@Override
-	public boolean combine(STATE pos, WritableArray<GameRecord> children,
-			GameRecord toFill) {
-		boolean firstFound = false;
+	public void firstVisit(STATE key, GameRecord valueToFill,
+			WritList<Entry<STATE, NullWritable>> parents,
+			Adder<Entry3<STATE, GameRecord, NullWritable>> childrenToFill) {
+		GameValue primitiveValue = getPrimitiveValue(key);
+		if (primitiveValue == null) {
+			valueToFill.set(GameRecord.DRAW);
+			childAdder.setList(childrenToFill);
+			getChildren(key, childAdder);
+		} else
+			valueToFill.set(primitiveValue, 0);
+	}
+
+	@Override
+	public void combineDown(STATE key, GameRecord value,
+			WritList<Entry<STATE, NullWritable>> parents, int firstNewParent,
+			WritableList<Entry<STATE, GameRecord>> children) {
+	}
+
+	@Override
+	public boolean combineUp(STATE key, GameRecord value,
+			WritList<Entry<STATE, NullWritable>> parents,
+			WritableList<Entry<STATE, GameRecord>> children) {
+		GameRecord bestRecord = null;
 		for (int i = 0; i < children.length(); i++) {
-			GameRecord reci = children.get(i);
-			if (reci != null) {
-				if (firstFound)
-					tempRecord.combineWith(reci);
-				else {
-					firstFound = true;
-					tempRecord.set(reci);
-				}
-			}
+			GameRecord rec = children.get(i).getValue();
+			if (bestRecord == null || rec.compareTo(bestRecord) > 0)
+				bestRecord = rec;
 		}
-		if (firstFound) {
-			boolean result = !tempRecord.equals(toFill);
-			toFill.set(tempRecord);
-			return result;
+		if (bestRecord != null && !value.equals(bestRecord)) {
+			value.set(bestRecord);
+			return true;
 		} else
 			return false;
+	}
+
+	@Override
+	public void receiveDown(STATE key, GameRecord currentValue,
+			STATE parentKey, NullWritable parentMessage, NullWritable toFill) {
+	}
+
+	@Override
+	public void receiveUp(STATE key, GameRecord currentValue, STATE childKey,
+			GameRecord childMessage, GameRecord currentChildInfo) {
+		currentChildInfo.set(childMessage);
+	}
+
+	@Override
+	public void sendUp(STATE key, GameRecord value, STATE parentKey,
+			NullWritable parentInfo, GameRecord toFill) {
+		toFill.previousPosition(value);
+	}
+
+	@Override
+	public Class<NullWritable> getPiClass() {
+		return NullWritable.class;
+	}
+
+	@Override
+	public Class<GameRecord> getCiClass() {
+		return GameRecord.class;
+	}
+
+	@Override
+	public Class<GameRecord> getUmClass() {
+		return GameRecord.class;
+	}
+
+	@Override
+	public Class<NullWritable> getDmClass() {
+		return NullWritable.class;
 	}
 }

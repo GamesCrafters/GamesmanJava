@@ -151,11 +151,6 @@ public class Connect4 extends RangeTree<C4State> implements
 	}
 
 	@Override
-	protected int getDivision(C4State state) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public C4State getPosition(String board) {
 		assert board.length() == gameSize;
 		int[] pos = new int[gameSize + 1];

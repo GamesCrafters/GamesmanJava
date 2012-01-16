@@ -4,25 +4,25 @@ import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.common.Util;
 import edu.berkeley.gamesman.propogater.tree.Tree;
-import edu.berkeley.gamesman.propogater.writable.WritableSettable;
-import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
 
 abstract class TaskRunner implements Runnable {
 	public static final int COMBINE = 0, CREATE = 1, PROPOGATE = 2,
 			CLEANUP = 3;
 	public static final int NUM_TYPES = 4;
 	public final int type;
-	protected final Tree<?, ?> tree;
+	protected final Tree<?, ?, ?, ?, ?, ?> tree;
 	protected final TierGraph myGraph;
 
 	TaskRunner(Configuration conf, int type, TierGraph graph) {
 		assert type >= 0 && type <= 4;
 		this.tree = ConfParser
-				.<WritableSettableComparable, WritableSettable> newTree(conf);
+				.<WritableComparable, Writable, Writable, Writable, Writable, Writable> newTree(conf);
 		this.type = type;
 		myGraph = graph;
 	}

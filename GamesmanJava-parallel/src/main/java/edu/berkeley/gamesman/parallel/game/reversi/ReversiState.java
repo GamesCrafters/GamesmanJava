@@ -1,16 +1,16 @@
 package edu.berkeley.gamesman.parallel.game.reversi;
 
 import edu.berkeley.gamesman.game.type.GameValue;
-import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.apache.hadoop.io.WritableComparable;
 
 abstract class ReversiState<T extends ReversiState<T>> implements
-		WritableSettableComparable<T> {
+		WritableComparable<T> {
 	private final QuadSet board = new QuadSet();
 	private final int[] count = new int[3];
 	private final int width, height;
@@ -78,7 +78,6 @@ abstract class ReversiState<T extends ReversiState<T>> implements
 		assert (lastByte >>> 4) == 0;
 	}
 
-	@Override
 	public void set(T t) {
 		assert height == t.height;
 		assert width == t.width;

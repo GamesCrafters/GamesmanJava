@@ -4,8 +4,6 @@ import edu.berkeley.gamesman.parallel.game.connect4.Connect4;
 import edu.berkeley.gamesman.parallel.game.reversi.Reversi;
 import edu.berkeley.gamesman.parallel.game.tictactoe.TicTacToe;
 import edu.berkeley.gamesman.propogater.tree.Tree;
-import edu.berkeley.gamesman.propogater.writable.WritableSettable;
-import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -13,6 +11,8 @@ import java.util.HashMap;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.MapFile;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.lib.output.MapFileOutputFormat;
 import org.apache.hadoop.util.ReflectionUtils;
@@ -37,14 +37,15 @@ public class SolveReaders {
 		return t;
 	}
 
-	public static <KEY extends WritableSettableComparable<KEY>, VALUE extends WritableSettable<VALUE>> VALUE readPosition(
-			Tree<KEY, VALUE> tree, Path folder, KEY position,
-			Partitioner<KEY, VALUE> partitioner) throws IOException {
-		VALUE value = tree.newValue();
+	public static <K extends WritableComparable<K>, V extends Writable> V readPosition(
+			Tree<K, V, ?, ?, ?, ?> tree, Path folder, K position,
+			Partitioner<K, V> partitioner) throws IOException {
+		V value = ReflectionUtils.newInstance(tree.getValClass(),
+				tree.getConf());
 		MapFile.Reader[] readers = MapFileOutputFormat.getReadersArray(
 				new Path[] { folder }, tree.getConf());
-		MapFileOutputFormat.<KEY, VALUE> getEntry(readers, partitioner,
-				position, value);
+		MapFileOutputFormat.<K, V> getEntry(readers, partitioner, position,
+				value);
 		for (MapFile.Reader r : readers)
 			r.close();
 		return value;

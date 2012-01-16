@@ -1,6 +1,6 @@
 package edu.berkeley.gamesman.parallel.game.reversi;
 
-import edu.berkeley.gamesman.propogater.writable.list.WritableList;
+import edu.berkeley.gamesman.propogater.common.Adder;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.game.tree.GameTree;
@@ -42,19 +42,21 @@ public class Reversi<T extends ReversiState<T>> extends GameTree<T> implements
 	private int boardSize;
 
 	@Override
-	public void getChildren(T position, WritableList<T> toFill) {
+	public void getChildren(T position, Adder<T> toFill) {
 		tempState.set(position);
+		boolean addedAny = false;
 		for (int row = 0; row < height; row++) {
 			for (int col = 0; col < width; col++) {
 				if (tempState.makeMove(row, col)) {
-					toFill.add(tempState);
+					toFill.add().set(tempState);
 					tempState.set(position);
+					addedAny = true;
 				}
 			}
 		}
-		if (toFill.isEmpty()) {
+		if (!addedAny) {
 			tempState.makePass();
-			toFill.add(tempState);
+			toFill.add().set(tempState);
 		}
 	}
 
@@ -71,7 +73,7 @@ public class Reversi<T extends ReversiState<T>> extends GameTree<T> implements
 	}
 
 	@Override
-	protected GameValue getPrimitiveValue(T position) {
+	public GameValue getPrimitiveValue(T position) {
 		return position.getPrimitiveValue();
 	}
 

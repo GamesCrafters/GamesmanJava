@@ -9,6 +9,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.DefaultCodec;
 import org.apache.hadoop.mapreduce.RecordWriter;
@@ -19,20 +20,18 @@ import org.apache.hadoop.util.ReflectionUtils;
 
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.tree.Tree;
-import edu.berkeley.gamesman.propogater.writable.WritableSettable;
-import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
 
-public class DividedSequenceFileOutputFormat<KEY extends WritableSettableComparable<KEY>, OUTVALUE extends Writable>
-		extends FileOutputFormat<KEY, OUTVALUE> {
-	private final HashMap<Integer, RecordWriter<KEY, OUTVALUE>> writers = new HashMap<Integer, RecordWriter<KEY, OUTVALUE>>();
+public class DividedSequenceFileOutputFormat<K extends WritableComparable<K>, OUTVALUE extends Writable>
+		extends FileOutputFormat<K, OUTVALUE> {
+	private final HashMap<Integer, RecordWriter<K, OUTVALUE>> writers = new HashMap<Integer, RecordWriter<K, OUTVALUE>>();
 
 	@Override
-	public RecordWriter<KEY, OUTVALUE> getRecordWriter(
+	public RecordWriter<K, OUTVALUE> getRecordWriter(
 			final TaskAttemptContext context) throws IOException,
 			InterruptedException {
 		final Configuration conf = context.getConfiguration();
-		final Tree<KEY, ?> myTree = ConfParser
-				.<KEY, WritableSettable> newTree(conf);
+		final Tree<K, ?, ?, ?, ?, ?> myTree = ConfParser
+				.<K, Writable, Writable, Writable, Writable, Writable> newTree(conf);
 		final CompressionCodec codec;
 		final CompressionType compressionType;
 		if (getCompressOutput(context)) {
@@ -49,19 +48,19 @@ public class DividedSequenceFileOutputFormat<KEY extends WritableSettableCompara
 			codec = null;
 			compressionType = CompressionType.NONE;
 		}
-		return new RecordWriter<KEY, OUTVALUE>() {
+		return new RecordWriter<K, OUTVALUE>() {
 
 			@Override
-			public void write(KEY key, OUTVALUE value) throws IOException,
+			public void write(K key, OUTVALUE value) throws IOException,
 					InterruptedException {
 				int division = myTree.getDivision(key);
-				RecordWriter<KEY, OUTVALUE> writer = getWriter(division);
+				RecordWriter<K, OUTVALUE> writer = getWriter(division);
 				writer.write(key, value);
 			}
 
-			private RecordWriter<KEY, OUTVALUE> getWriter(int division)
+			private RecordWriter<K, OUTVALUE> getWriter(int division)
 					throws IOException {
-				RecordWriter<KEY, OUTVALUE> writer = writers.get(division);
+				RecordWriter<K, OUTVALUE> writer = writers.get(division);
 				if (writer == null) {
 					writer = createWriter(context, conf, codec,
 							compressionType, division);
@@ -73,13 +72,13 @@ public class DividedSequenceFileOutputFormat<KEY extends WritableSettableCompara
 			@Override
 			public void close(TaskAttemptContext context) throws IOException,
 					InterruptedException {
-				for (RecordWriter<KEY, OUTVALUE> writer : writers.values())
+				for (RecordWriter<K, OUTVALUE> writer : writers.values())
 					writer.close(context);
 			}
 		};
 	}
 
-	private RecordWriter<KEY, OUTVALUE> createWriter(
+	private RecordWriter<K, OUTVALUE> createWriter(
 			TaskAttemptContext context, Configuration conf,
 			CompressionCodec codec, CompressionType compressionType, int tier)
 			throws IOException {
@@ -91,10 +90,10 @@ public class DividedSequenceFileOutputFormat<KEY extends WritableSettableCompara
 				file, context.getOutputKeyClass(),
 				context.getOutputValueClass(), compressionType, codec, context);
 
-		return new RecordWriter<KEY, OUTVALUE>() {
+		return new RecordWriter<K, OUTVALUE>() {
 
 			@Override
-			public void write(KEY key, OUTVALUE value) throws IOException {
+			public void write(K key, OUTVALUE value) throws IOException {
 				out.append(key, value);
 			}
 

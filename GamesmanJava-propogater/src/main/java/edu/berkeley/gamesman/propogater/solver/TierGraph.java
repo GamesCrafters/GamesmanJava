@@ -11,10 +11,10 @@ import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.tree.Tree;
 
 public class TierGraph {
-	private final Tree<?, ?> tree;
+	private final Tree<?, ?, ?, ?, ?, ?> tree;
 	private final HashMap<Integer, Tier> tierMap = new HashMap<Integer, Tier>();
 
-	public TierGraph(Tree<?, ?> tree) {
+	public TierGraph(Tree<?, ?, ?, ?, ?, ?> tree) {
 		this.tree = tree;
 	}
 

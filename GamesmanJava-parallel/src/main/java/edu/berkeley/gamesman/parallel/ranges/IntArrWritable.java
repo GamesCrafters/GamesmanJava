@@ -5,12 +5,12 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.apache.hadoop.io.WritableComparable;
+
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.hasher.genhasher.GenState;
-import edu.berkeley.gamesman.propogater.writable.WritableSettableComparable;
 
-public class IntArrWritable implements
-		WritableSettableComparable<IntArrWritable> {
+public class IntArrWritable implements WritableComparable<IntArrWritable> {
 	private int[] arr = new int[0];
 	private int arrLen;
 
@@ -34,11 +34,10 @@ public class IntArrWritable implements
 			out.writeInt(arr[i]);
 	}
 
-	@Override
-	public void set(IntArrWritable t) {
-		setLength(t.arrLen);
-		System.arraycopy(t.arr, 0, arr, 0, arrLen);
-	}
+//	public void set(IntArrWritable t) {
+//		setLength(t.arrLen);
+//		System.arraycopy(t.arr, 0, arr, 0, arrLen);
+//	}
 
 	@Override
 	public int compareTo(IntArrWritable o) {

@@ -11,9 +11,8 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.tasks.CreationMapper;
 import edu.berkeley.gamesman.propogater.tasks.DividedSequenceFileOutputFormat;
-import edu.berkeley.gamesman.propogater.tasks.TreeCreationReducer;
 import edu.berkeley.gamesman.propogater.tasks.TreeReducer;
-import edu.berkeley.gamesman.propogater.tree.node.TreeNode;
+import edu.berkeley.gamesman.propogater.tree.TreeNode;
 
 public class CreateRunner extends TaskRunner {
 	public final Tier tier;
@@ -36,7 +35,7 @@ public class CreateRunner extends TaskRunner {
 					ConfParser.CREATION_JOB_FORMAT, tier.num));
 			j.setMapperClass(CreationMapper.class);
 			j.setCombinerClass(TreeReducer.class);
-			j.setReducerClass(TreeCreationReducer.class);
+			j.setReducerClass(TreeReducer.class);
 			j.setInputFormatClass(SequenceFileInputFormat.class);
 			j.setOutputFormatClass(DividedSequenceFileOutputFormat.class);
 			j.setOutputKeyClass(tree.getKeyClass());

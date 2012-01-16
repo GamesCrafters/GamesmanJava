@@ -4,10 +4,9 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import edu.berkeley.gamesman.propogater.writable.WritableSettable;
+import org.apache.hadoop.io.Writable;
 
-public class GameRecord implements Comparable<GameRecord>,
-		WritableSettable<GameRecord> {
+public class GameRecord implements Comparable<GameRecord>, Writable {
 	public static final GameRecord DRAW = new GameRecord(GameValue.DRAW);
 	private GameValue value;
 	private int remoteness;
@@ -40,7 +39,6 @@ public class GameRecord implements Comparable<GameRecord>,
 			remoteness = in.readInt();
 	}
 
-	@Override
 	public void set(GameRecord t) {
 		value = t.value;
 		if (value.hasRemoteness)
