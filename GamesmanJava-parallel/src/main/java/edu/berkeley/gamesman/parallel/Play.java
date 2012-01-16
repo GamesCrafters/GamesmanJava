@@ -141,5 +141,8 @@ public final class Play {
 			System.out.println(position.toString());
 			System.out.println("Game over");
 		}
+		for (MapFile.Reader r : readers) {
+			r.close();
+		}
 	}
 }

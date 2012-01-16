@@ -68,7 +68,7 @@ public class Connect4 extends RangeTree<C4State> implements
 	}
 
 	@Override
-	protected C4Hasher getHasher() {
+	public C4Hasher getHasher() {
 		return myHasher;
 	}
 

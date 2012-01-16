@@ -272,7 +272,7 @@ public abstract class RangeTree<S extends GenState> extends
 		return range;
 	}
 
-	private void makeContainingRange(S t, Range<S> range) {
+	public void makeContainingRange(S t, Range<S> range) {
 		range.set(t, suffLen);
 	}
 
@@ -300,7 +300,7 @@ public abstract class RangeTree<S extends GenState> extends
 	protected void innerConfigure(Configuration conf) {
 	}
 
-	protected abstract GenHasher<S> getHasher();
+	public abstract GenHasher<S> getHasher();
 
 	protected abstract Move[] getMoves();
 

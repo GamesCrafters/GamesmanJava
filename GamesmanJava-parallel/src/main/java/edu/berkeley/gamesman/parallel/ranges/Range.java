@@ -31,10 +31,6 @@ public class Range<S extends GenState> implements WritableComparable<Range<S>> {
 		suffix.write(out);
 	}
 
-//	public void set(Range<S> t) {
-//		suffix.set(t.suffix);
-//	}
-
 	@Override
 	public int compareTo(Range<S> o) {
 		return suffix.compareTo(o.suffix);
@@ -67,5 +63,9 @@ public class Range<S extends GenState> implements WritableComparable<Range<S>> {
 	@Override
 	public String toString() {
 		return suffix.toString();
+	}
+
+	public boolean matches(S position) {
+		return suffix.matches(position);
 	}
 }
