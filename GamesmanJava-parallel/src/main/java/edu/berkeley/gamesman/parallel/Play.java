@@ -37,9 +37,9 @@ public final class Play {
 		Tree<K, ?, ?, ?, ?, ?> tree = ConfParser
 				.<K, Writable, Writable, Writable, Writable, Writable> newTree(conf);
 		if (tree instanceof GameTree) {
-			Play.<K> subMain(conf, (GameTree<K>) tree);
+			Play.<K> subMain(conf, (GameTree) tree);
 		} else if (tree instanceof RangeTree) {
-			Play.<GenState> rangeSubMain(conf, (RangeTree<GenState>) tree);
+			Play.<GenState> rangeSubMain(conf, (RangeTree) tree);
 		}
 	}
 
