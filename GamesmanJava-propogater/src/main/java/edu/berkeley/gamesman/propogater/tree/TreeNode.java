@@ -49,7 +49,7 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 
 			parents.addFields(in);
 			// This works since only one of the inputs will have non-empty
-			// parents and parCNums. It's important since the value may not have
+			// parents. It's important since the value may not have
 			// been set yet
 
 			uMess.addFields(in);
@@ -146,6 +146,8 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 
 	public void firstVisit(Tree<K, V, PI, UM, CI, DM> tree, K key,
 			WritableList<DM> childMessagesToFill) {
+		children.clear();
+		cleanSet.clear();
 		fvAdder.setList(children, childMessagesToFill);
 		parList.setList(parents);
 		tree.firstVisit(key, value.setHasAndGet(), parList, fvAdder);
@@ -157,6 +159,8 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 	}
 
 	public void combineDown(Tree<K, V, PI, UM, CI, DM> tree, K key) {
+		if (!value.hasValue())
+			throw new RuntimeException("firstVisit should be called first");
 		parList.setList(parents);
 		tree.combineDown(key, value.get(), parList, lastParentsLength, children);
 		lastParentsLength = parents.length();
@@ -185,6 +189,8 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 	}
 
 	public WritableList<Entry<K, CI>> getChildren() {
+		if (!value.hasValue())
+			throw new RuntimeException("firstVisit should be called first");
 		return children;
 	}
 
@@ -193,6 +199,8 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 	}
 
 	public BitSetWritable getCleanSet() {
+		if (!value.hasValue())
+			throw new RuntimeException("firstVisit should be called first");
 		return cleanSet;
 	}
 
