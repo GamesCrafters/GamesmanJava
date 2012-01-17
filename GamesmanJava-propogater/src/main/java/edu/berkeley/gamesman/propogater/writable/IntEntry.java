@@ -10,32 +10,32 @@ import org.apache.hadoop.io.Writable;
 import edu.berkeley.gamesman.propogater.factory.Factory;
 import edu.berkeley.gamesman.propogater.factory.FactoryUtil;
 
-public final class IntEntry<KEY extends Writable> implements Writable {
-	private int whichNum;
-	private KEY parent;
+public final class IntEntry<V extends Writable> implements Writable {
+	private int key;
+	private V value;
 
-	public IntEntry(KEY parent) {
-		this.parent = parent;
+	public IntEntry(V parent) {
+		this.value = parent;
 	}
 
-	public IntEntry(Class<? extends KEY> keyClass, Configuration conf) {
+	public IntEntry(Class<? extends V> keyClass, Configuration conf) {
 		this(FactoryUtil.makeFactory(keyClass, conf));
 	}
 
-	public IntEntry(Factory<KEY> keyFact) {
+	public IntEntry(Factory<V> keyFact) {
 		this(keyFact.create());
 	}
 
 	@Override
 	public void write(DataOutput out) throws IOException {
-		out.writeInt(whichNum);
-		parent.write(out);
+		out.writeInt(key);
+		value.write(out);
 	}
 
 	@Override
 	public void readFields(DataInput in) throws IOException {
-		whichNum = in.readInt();
-		parent.readFields(in);
+		key = in.readInt();
+		value.readFields(in);
 	}
 
 	@Override
@@ -44,28 +44,34 @@ public final class IntEntry<KEY extends Writable> implements Writable {
 	}
 
 	public boolean equals(IntEntry<?> other) {
-		return whichNum == other.whichNum && parent.equals(other.parent);
+		return key == other.key && value.equals(other.value);
 	}
 
 	@Override
 	public int hashCode() {
-		return (whichNum + 31) * 31 + parent.hashCode();
+		return (key + 31) * 31 + value.hashCode();
 	}
 
 	@Override
 	public String toString() {
-		return whichNum + " : " + parent.toString();
+		return key + " : " + value.toString();
 	}
 
-	public KEY getKey() {
-		return parent;
+	public V getValue() {
+		return value;
 	}
 
-	public int getInt() {
-		return whichNum;
+	public int getKey() {
+		return key;
 	}
 
-	public void setInt(int i) {
-		whichNum = i;
+	public void setKey(int i) {
+		key = i;
+	}
+
+	public void swapValues(Entry<?, V> entry) {
+		V temp = value;
+		value = entry.getValue();
+		entry.setValue(temp);
 	}
 }

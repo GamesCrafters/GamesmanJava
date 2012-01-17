@@ -44,30 +44,19 @@ public class TreeCreationReducer<K extends WritableComparable<K>, V extends Writ
 		WritableList<IntEntry<Entry<K, DM>>> downList = value.getDownList();
 		WritableList<IntEntry<Entry<K, PI>>> parentList = value.getParentList();
 		if (tree.copyDM()) {
-			parentList.magicSteal((WritableList) downList);
+			parentList.steal((WritableList) downList);
 		} else {
 			for (int i = 0; i < downList.length(); i++) {
 				IntEntry<Entry<K, DM>> mess = downList.get(i);
 				IntEntry<Entry<K, PI>> parent = parentList.add();
-				parent.setInt(mess.getInt());
-				parent.getKey().setDummyKey(mess.getKey().getKey());
-				tree.receiveDown(key, value.getValue(), mess.getKey().getKey(),
-						mess.getKey().getValue(), parent.getKey().getValue());
+				parent.setKey(mess.getKey());
+				Entry<K, PI> parentVal = parent.getValue();
+				Entry<K, DM> messVal = mess.getValue();
+				tree.receiveDown(key, value.getValue(), messVal.getKey(),
+						messVal.getValue(), parentVal.getValue());
+				parentVal.swapKeys(messVal);
 			}
 			downList.clear();
-		}
-	}
-
-	@Override
-	protected void revertDummies(TreeNode<K, V, PI, UM, CI, DM> value,
-			int newParentsStart) {
-		WritableList<IntEntry<Entry<K, PI>>> parentList = value.getParentList();
-		if (tree.copyDM()) {
-			parentList.revertSteal();
-		} else {
-			for (int i = newParentsStart; i < parentList.length(); i++) {
-				parentList.get(i).getKey().revertKey();
-			}
 		}
 	}
 

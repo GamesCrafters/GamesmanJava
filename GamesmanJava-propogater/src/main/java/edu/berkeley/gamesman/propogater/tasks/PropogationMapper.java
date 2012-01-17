@@ -46,10 +46,10 @@ public class PropogationMapper<K extends WritableComparable<K>, V extends Writab
 			for (int i = 0; i < parentList.length(); i++) {
 				if (nodeChanged || !cleanSet.get(i)) {
 					IntEntry<Entry<K, PI>> intEntry = parentList.get(i);
-					Entry<K, PI> parent = intEntry.getKey();
+					Entry<K, PI> parent = intEntry.getValue();
 					tree.sendUp(key, node.getValue(), parent.getKey(),
-							parent.getValue(), parPair.getKey());
-					parPair.setInt(intEntry.getInt());
+							parent.getValue(), parPair.getValue());
+					parPair.setKey(intEntry.getKey());
 					context.write(parent.getKey(), parNode);
 					cleanSet.set(i);
 				}

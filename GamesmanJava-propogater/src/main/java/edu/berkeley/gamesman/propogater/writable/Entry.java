@@ -13,13 +13,15 @@ public class Entry<K extends Writable, V extends Writable> implements Writable {
 	private K key;
 	private V value;
 
-	private K realKey = null;
-	private V realValue = null;
-
 	public Entry(Class<? extends K> kClass, Class<? extends V> vClass,
 			Configuration conf) {
 		key = ReflectionUtils.newInstance(kClass, conf);
 		value = ReflectionUtils.newInstance(vClass, conf);
+	}
+
+	public Entry() {
+		key = null;
+		value = null;
 	}
 
 	public K getKey() {
@@ -28,6 +30,14 @@ public class Entry<K extends Writable, V extends Writable> implements Writable {
 
 	public V getValue() {
 		return value;
+	}
+
+	public void setValue(V value) {
+		this.value = value;
+	}
+
+	public void setKey(K key) {
+		this.key = key;
 	}
 
 	@Override
@@ -42,42 +52,25 @@ public class Entry<K extends Writable, V extends Writable> implements Writable {
 		value.write(out);
 	}
 
-	public void setDummy(K key, V value) {
-		setDummyKey(key);
-		setDummyValue(value);
-	}
-
-	public void setDummyValue(V value) {
-		if (realValue != null)
-			throw new RuntimeException("Already a dummy value! Revert first");
-		realValue = this.value;
-		this.value = value;
-	}
-
-	public void setDummyKey(K key) {
-		if (realKey != null)
-			throw new RuntimeException("Already a dummy key! Revert first");
-		realKey = this.key;
-		this.key = key;
-	}
-
-	public void revert() {
-		revertKey();
-		revertValue();
-	}
-
-	public void revertValue() {
-		this.value = realValue;
-		realValue = null;
-	}
-
-	public void revertKey() {
-		this.key = realKey;
-		realKey = null;
-	}
-
 	@Override
 	public String toString() {
 		return Arrays.toString(new Object[] { key, value });
+	}
+
+	public void swapKeys(Entry<K, ?> other) {
+		K temp = key;
+		key = other.key;
+		other.key = temp;
+	}
+
+	public void swapValues(Entry<?, V> other) {
+		V temp = value;
+		value = other.value;
+		other.value = temp;
+	}
+
+	public void swap(Entry<K, V> other) {
+		swapKeys(other);
+		swapValues(other);
 	}
 }

@@ -20,6 +20,7 @@ public class CreationMapper<K extends WritableComparable<K>, V extends Writable,
 	private Tree<K, V, PI, UM, CI, DM> tree;
 	private TreeNode<K, V, PI, UM, CI, DM> parNode;
 	private IntEntry<Entry<K, DM>> childEntry;
+	private Entry<K, DM> entry;
 	private WritableList<DM> childMessageList;
 
 	@Override
@@ -28,12 +29,14 @@ public class CreationMapper<K extends WritableComparable<K>, V extends Writable,
 		tree = ConfParser.<K, V, PI, UM, CI, DM> newTree(conf);
 		parNode = new TreeNode<K, V, PI, UM, CI, DM>(conf);
 		childEntry = parNode.getDownList().add();
+		entry = childEntry.getValue();
 		childMessageList = new WritableList<DM>(tree.getDmClass(), conf);
 	}
 
 	@Override
 	protected void map(K key, TreeNode<K, V, PI, UM, CI, DM> node,
 			Context context) throws IOException, InterruptedException {
+		entry.setKey(key);
 		if (node.hasValue())
 			node.combineDown(tree, key);
 		else {
@@ -41,15 +44,11 @@ public class CreationMapper<K extends WritableComparable<K>, V extends Writable,
 			node.firstVisit(tree, key, childMessageList);
 			WritableList<Entry<K, CI>> children = node.getChildren();
 			for (int i = 0; i < children.length(); i++) {
+				childEntry.setKey(i);
 				Entry<K, CI> nextChild = children.get(i);
 				DM message = childMessageList.get(i);
-				childEntry.setInt(i);
-				childEntry.getKey().setDummy(key, message);
-				try {
-					context.write(nextChild.getKey(), parNode);
-				} finally {
-					childEntry.getKey().revert();
-				}
+				entry.setValue(message);
+				context.write(nextChild.getKey(), parNode);
 			}
 		}
 		context.write(key, node);

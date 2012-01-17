@@ -22,7 +22,7 @@ class ParList<K extends Writable, PI extends Writable> implements
 
 	@Override
 	public Entry<K, PI> get(int i) {
-		return list.get(i).getKey();
+		return list.get(i).getValue();
 	}
 
 	@Override

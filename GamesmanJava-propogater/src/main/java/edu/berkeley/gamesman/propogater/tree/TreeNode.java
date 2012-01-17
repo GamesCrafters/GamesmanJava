@@ -21,15 +21,12 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 	private ValueWrapper<V> value;
 	private int lastParentsLength = 0;
 	private WritableList<IntEntry<Entry<K, PI>>> parents;
-	private final BitSetWritable cleanSet = new BitSetWritable();
+	private BitSetWritable cleanSet = new BitSetWritable();
 	private WritableList<Entry<K, CI>> children;
 
 	private WritableList<IntEntry<UM>> uMess;
 
 	private WritableList<IntEntry<Entry<K, DM>>> dMess;
-
-	private boolean combine = false;
-	private ValueWrapper<V> tempValue;
 
 	public TreeNode() {
 	}
@@ -40,56 +37,24 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 
 	@Override
 	public void readFields(DataInput in) throws IOException {
-		if (combine) {
-			tempValue.readFields(in);
-			if (tempValue.hasValue()) {
-				swapValues();
-				readMain(in);
-			}
-
-			parents.addFields(in);
-			// This works since only one of the inputs will have non-empty
-			// parents. It's important since the value may not have
-			// been set yet
-
-			uMess.addFields(in);
-			dMess.addFields(in);
-		} else {
-			value.readFields(in);
-			if (value.hasValue())
-				readMain(in);
-			parents.readFields(in);
-			uMess.readFields(in);
-			dMess.readFields(in);
-		}
-	}
-
-	private void readMain(DataInput in) throws IOException {
+		value.readFields(in);
 		lastParentsLength = in.readInt();
 		cleanSet.readFields(in);
 		children.readFields(in);
-	}
-
-	private void swapValues() {
-		ValueWrapper<V> tmp = tempValue;
-		tempValue = value;
-		value = tmp;
+		parents.readFields(in);
+		uMess.readFields(in);
+		dMess.readFields(in);
 	}
 
 	@Override
 	public void write(DataOutput out) throws IOException {
 		value.write(out);
-		if (value.hasValue())
-			writeMain(out);
-		parents.write(out);
-		uMess.write(out);
-		dMess.write(out);
-	}
-
-	private void writeMain(DataOutput out) throws IOException {
 		out.writeInt(lastParentsLength);
 		cleanSet.write(out);
 		children.write(out);
+		parents.write(out);
+		uMess.write(out);
+		dMess.write(out);
 	}
 
 	@Override
@@ -101,7 +66,6 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 			final Class<? extends PI> piClass = Tree.getRunPiClass(conf);
 			final Class<? extends CI> ciClass = Tree.getRunCiClass(conf);
 			value = new ValueWrapper<V>(vClass, conf);
-			tempValue = new ValueWrapper<V>(vClass, conf);
 			parents = new WritableList<IntEntry<Entry<K, PI>>>(
 					new Factory<IntEntry<Entry<K, PI>>>() {
 
@@ -146,8 +110,9 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 
 	public void firstVisit(Tree<K, V, PI, UM, CI, DM> tree, K key,
 			WritableList<DM> childMessagesToFill) {
-		children.clear();
-		cleanSet.clear();
+		assert children.isEmpty();
+		assert cleanSet.isEmpty();
+		assert lastParentsLength == 0;
 		fvAdder.setList(children, childMessagesToFill);
 		parList.setList(parents);
 		tree.firstVisit(key, value.setHasAndGet(), parList, fvAdder);
@@ -170,14 +135,6 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 	public boolean combineUp(Tree<K, V, PI, UM, CI, DM> tree, K key) {
 		parList.setList(parents);
 		return tree.combineUp(key, value.get(), parList, children);
-	}
-
-	public void beginCombine() {
-		combine = true;
-	}
-
-	public void endCombine() {
-		combine = false;
 	}
 
 	public V getValue() {
@@ -206,5 +163,60 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 
 	public WritableList<IntEntry<UM>> getUpList() {
 		return uMess;
+	}
+
+	public void clear() {
+		value.clear();
+		lastParentsLength = 0;
+		cleanSet.clear();
+		children.clear();
+		parents.clear();
+		uMess.clear();
+		dMess.clear();
+	}
+
+	public void combineWith(TreeNode<K, V, PI, UM, CI, DM> other) {
+		if (other.value.hasValue()) {
+			stealValue(other);
+			lastParentsLength = other.lastParentsLength;
+			stealCleanSet(other);
+			stealChildren(other);
+		}
+		addAllParents(other);
+		addAllUMess(other);
+		addAllDMess(other);
+	}
+
+	private void addAllDMess(TreeNode<K, V, PI, UM, CI, DM> other) {
+		dMess.steal(other.dMess);
+	}
+
+	private void addAllUMess(TreeNode<K, V, PI, UM, CI, DM> other) {
+		uMess.steal(other.uMess);
+	}
+
+	private void addAllParents(TreeNode<K, V, PI, UM, CI, DM> other) {
+		parents.steal(other.parents);
+	}
+
+	private void stealChildren(TreeNode<K, V, PI, UM, CI, DM> other) {
+		children.clear();
+		WritableList<Entry<K, CI>> temp = children;
+		children = other.children;
+		other.children = temp;
+	}
+
+	private void stealCleanSet(TreeNode<K, V, PI, UM, CI, DM> other) {
+		cleanSet.clear();
+		BitSetWritable temp = cleanSet;
+		cleanSet = other.cleanSet;
+		other.cleanSet = temp;
+	}
+
+	private void stealValue(TreeNode<K, V, PI, UM, CI, DM> other) {
+		value.clear();
+		ValueWrapper<V> temp = value;
+		value = other.value;
+		other.value = temp;
 	}
 }

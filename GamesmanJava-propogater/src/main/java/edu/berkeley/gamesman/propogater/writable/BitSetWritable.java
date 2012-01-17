@@ -9,42 +9,44 @@ import org.apache.hadoop.io.Writable;
 
 public class BitSetWritable implements Writable {
 	private byte[] bsBytes = new byte[0];
-	private int numBits;
+	private int numBytes;
 
 	@Override
 	public void write(DataOutput out) throws IOException {
-		out.writeInt(numBits);
-		out.write(bsBytes, 0, numBytes());
+		out.writeInt(numBytes);
+		out.write(bsBytes, 0, numBytes);
 	}
 
 	@Override
 	public void readFields(DataInput in) throws IOException {
-		numBits = in.readInt();
+		numBytes = in.readInt();
 		ensureSize();
-		in.readFully(bsBytes, 0, numBytes());
+		in.readFully(bsBytes, 0, numBytes);
 	}
 
 	public void set(int i) {
-		increaseLength(i + 1);
+		increaseLength(numBytes(i + 1));
 		bsBytes[byteNum(i)] |= shiftNum(i);
 	}
 
 	private void increaseLength(int newLen) {
-		int oldLen = numBits;
-		if (numBits <= newLen)
-			numBits = newLen;
+		int oldLen = numBytes;
+		if (numBytes <= newLen)
+			numBytes = newLen;
 		ensureSize();
 		for (int i = oldLen; i < newLen; i++)
-			clear(i);
+			bsBytes[i] = 0;
 	}
 
 	public void clear(int i) {
-		if (i < numBits)
-			bsBytes[byteNum(i)] &= ~shiftNum(i);
+		int byteNum = byteNum(i);
+		if (byteNum < numBytes)
+			bsBytes[byteNum] &= ~shiftNum(i);
 	}
 
 	public boolean get(int i) {
-		return i < numBits ? ((bsBytes[byteNum(i)] & shiftNum(i)) != 0) : false;
+		int byteNum = byteNum(i);
+		return byteNum < numBytes && ((bsBytes[byteNum] & shiftNum(i)) != 0);
 	}
 
 	private byte shiftNum(int i) {
@@ -56,13 +58,11 @@ public class BitSetWritable implements Writable {
 	}
 
 	private void ensureSize() {
-		int numBytes = numBytes();
-		if (bsBytes.length < numBytes)
-			bsBytes = new byte[numBytes];
-	}
-
-	private int numBytes() {
-		return numBytes(numBits);
+		if (bsBytes.length < numBytes) {
+			byte[] newBytes = new byte[numBytes];
+			System.arraycopy(bsBytes, 0, newBytes, 0, bsBytes.length);
+			bsBytes = newBytes;
+		}
 	}
 
 	private static int numBytes(int numBits) {
@@ -70,6 +70,13 @@ public class BitSetWritable implements Writable {
 	}
 
 	public void clear() {
-		Arrays.fill(bsBytes, 0, numBytes(), (byte) 0);
+		Arrays.fill(bsBytes, 0, numBytes, (byte) 0);
+	}
+
+	public boolean isEmpty() {
+		for (int i = 0; i < numBytes; i++)
+			if (bsBytes[i] != 0)
+				return false;
+		return true;
 	}
 }

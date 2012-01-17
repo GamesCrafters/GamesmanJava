@@ -4,8 +4,6 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Writable;
@@ -18,9 +16,6 @@ public class WritableList<T extends Writable> implements Writable, WritList<T> {
 	private final ArrayList<T> arr = new ArrayList<T>();
 	private int len = 0;
 
-	private WritableList<T> appended = null;
-	private boolean stolen = false;
-
 	public WritableList(Class<? extends T> tClass, Configuration conf) {
 		this(FactoryUtil.makeFactory(tClass, conf));
 	}
@@ -31,14 +26,10 @@ public class WritableList<T extends Writable> implements Writable, WritList<T> {
 
 	@Override
 	public void readFields(DataInput in) throws IOException {
-		notModedCheck();
-		clear();
-		addFields(in);
-	}
-
-	private void notModedCheck() {
-		if (stolen || appended != null)
-			throw new RuntimeException("Cannot perform this while appended");
+		len = in.readInt();
+		ensureCapacity(len);
+		for (int i = 0; i < len; i++)
+			arr.get(i).readFields(in);
 	}
 
 	public void ensureCapacity(int len) {
@@ -51,63 +42,36 @@ public class WritableList<T extends Writable> implements Writable, WritList<T> {
 	@Override
 	public void write(DataOutput out) throws IOException {
 		out.writeInt(length());
-		if (stolen)
-			return;
 		for (int i = 0; i < len; i++)
 			arr.get(i).write(out);
-		if (appended != null) {
-			for (int i = 0; i < appended.len; i++)
-				appended.arr.get(i).write(out);
-		}
 	}
 
 	@Override
 	public int length() {
-		return stolen ? 0 : (len + (appended == null ? 0 : appended.len));
+		return len;
 	}
 
 	@Override
 	public T get(int i) {
-		if (stolen)
-			throw new IndexOutOfBoundsException(i
-					+ " is too large for array of length " + length());
 		if (i < len)
 			return arr.get(i);
-		else {
-			int j = i - len;
-			if (appended != null && j < appended.len)
-				return appended.arr.get(j);
-			else
-				throw new IndexOutOfBoundsException(i
-						+ " is too large for array of length " + length());
-		}
+		else
+			throw new IndexOutOfBoundsException(i
+					+ " is too large for array of length " + length());
 	}
 
 	public void clear() {
-		notModedCheck();
 		len = 0;
 	}
 
 	public T add() {
-		notModedCheck();
 		ensureCapacity(len + 1);
 		return arr.get(len++);
-	}
-
-	public void addFields(DataInput in) throws IOException {
-		notModedCheck();
-		int addLen = in.readInt();
-		int newLen = len + addLen;
-		ensureCapacity(newLen);
-		for (int i = len; i < newLen; i++)
-			arr.get(i).readFields(in);
-		len = newLen;
 	}
 
 	// Warning! Not really popped, do not try to add to list while still
 	// accessing popped item
 	public T popLast() {
-		notModedCheck();
 		return arr.get(--len);
 	}
 
@@ -115,36 +79,24 @@ public class WritableList<T extends Writable> implements Writable, WritList<T> {
 		return length() == 0;
 	}
 
-	public void magicSteal(WritableList<T> other) {
-		notModedCheck();
-		other.magicClear();
-		appended = other;
+	public void steal(WritableList<T> other) {
+		ensureCapacity(len + other.len);
+		for (int i = 0; i < other.len; i++) {
+			WritableList.<T> swap(arr, len + i, other.arr, i);
+		}
+		len += other.len;
+		other.len = 0;
 	}
 
-	public void revertSteal() {
-		appended.revertClear();
-		appended = null;
+	private static <T> void swap(ArrayList<T> arr1, int i, ArrayList<T> arr2,
+			int j) {
+		T temp = arr1.get(i);
+		arr1.set(i, arr2.get(j));
+		arr2.set(j, temp);
 	}
 
 	@Override
 	public String toString() {
-		if (stolen)
-			return Collections.EMPTY_LIST.toString();
-		List<T> subList1 = arr.subList(0, len);
-		List<T> subList2 = (appended == null) ? Collections.<T> emptyList()
-				: appended.arr.subList(0, appended.len);
-		ArrayList<T> newList = new ArrayList<T>();
-		newList.addAll(subList1);
-		newList.addAll(subList2);
-		return newList.toString();
-	}
-
-	public void magicClear() {
-		notModedCheck();
-		stolen = true;
-	}
-
-	public void revertClear() {
-		stolen = false;
+		return arr.subList(0, len).toString();
 	}
 }

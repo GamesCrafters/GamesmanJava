@@ -14,36 +14,24 @@ public class TreeReducer<K extends WritableComparable<K>, V extends Writable, PI
 		Reducer<K, TreeNode<K, V, PI, UM, CI, DM>, K, TreeNode<K, V, PI, UM, CI, DM>> {
 	protected TreeNode<K, V, PI, UM, CI, DM> value;
 
-	// This is heavy abuse of abstraction barriers, but hadoop gives no other
-	// way to do this without unnecessary copying
+	protected void setup(Context context) throws IOException,
+			InterruptedException {
+		value = new TreeNode<K, V, PI, UM, CI, DM>(context.getConfiguration());
+	}
+
 	@Override
 	protected void reduce(K key,
 			Iterable<TreeNode<K, V, PI, UM, CI, DM>> values, Context context)
 			throws IOException, InterruptedException {
+		value.clear();
 		Iterator<TreeNode<K, V, PI, UM, CI, DM>> iter = values.iterator();
-		value = iter.next();
-		value.beginCombine();
-		try {
-			while (iter.hasNext()) {
-				TreeNode<K, V, PI, UM, CI, DM> nextValue = iter.next();
-				assert value == nextValue;
-			}
-		} finally {
-			value.endCombine();
+		while (iter.hasNext()) {
+			value.combineWith(iter.next());
 		}
-		int newParentsStart = value.getParentList().length();
 		combine(key, value);
-		try {
-			context.write(key, value);
-		} finally {
-			revertDummies(value, newParentsStart);
-		}
+		context.write(key, value);
 	}
 
 	protected void combine(K key, TreeNode<K, V, PI, UM, CI, DM> value) {
-	}
-
-	protected void revertDummies(TreeNode<K, V, PI, UM, CI, DM> value,
-			int newParentsStart) {
 	}
 }

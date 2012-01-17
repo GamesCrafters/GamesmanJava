@@ -20,16 +20,16 @@ public class WritableTreeMap<T extends Writable> implements Writable {
 	}
 
 	public T getNext(int i) {
-		while (counter < objs.length() && i > objs.get(counter).getInt())
+		while (counter < objs.length() && i > objs.get(counter).getKey())
 			counter++;
-		if (counter == objs.length() || i < objs.get(counter).getInt()) {
-			if (counter > 0 && i <= objs.get(counter - 1).getInt())
+		if (counter == objs.length() || i < objs.get(counter).getKey()) {
+			if (counter > 0 && i <= objs.get(counter - 1).getKey())
 				throw new RuntimeException("Counting backwards");
 			else
 				return null;
 		} else {
 			assert counter < objs.length();
-			return objs.get(counter++).getKey();
+			return objs.get(counter++).getValue();
 		}
 	}
 
@@ -80,13 +80,13 @@ public class WritableTreeMap<T extends Writable> implements Writable {
 	}
 
 	public T add(int i) {
-		if (!objs.isEmpty() && i <= objs.get(objs.length() - 1).getInt())
+		if (!objs.isEmpty() && i <= objs.get(objs.length() - 1).getKey())
 			throw new RuntimeException("Cannot add " + i
 					+ ", must be greater than "
-					+ objs.get(objs.length() - 1).getInt());
+					+ objs.get(objs.length() - 1).getKey());
 		IntEntry<T> entry = objs.add();
-		entry.setInt(i);
-		return entry.getKey();
+		entry.setKey(i);
+		return entry.getValue();
 	}
 
 	private static <T extends Writable> Factory<IntEntry<T>> makeFact(
@@ -103,6 +103,6 @@ public class WritableTreeMap<T extends Writable> implements Writable {
 		if (counter == objs.length())
 			return -1;
 		else
-			return objs.get(counter).getInt();
+			return objs.get(counter).getKey();
 	}
 }
