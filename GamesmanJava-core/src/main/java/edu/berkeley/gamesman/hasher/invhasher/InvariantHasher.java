@@ -60,4 +60,23 @@ public abstract class InvariantHasher<S extends GenState> extends GenHasher<S> {
 
 	@Override
 	protected abstract boolean valid(S state);
+
+	public void printStates() {
+		long tot = totalPositions();
+		System.out.println("Total positions: " + tot);
+		for (int i = 0; i <= numElements; i++) {
+			System.out.println("Variance Length " + i + ":");
+			System.out.println("Maximum size: " + maximum(i));
+			System.out.println();
+		}
+	}
+
+	private long maximum(int i) {
+		long max = Long.MIN_VALUE;
+		for (Long l : invariantCounts[i].values()) {
+			if (l > max)
+				max = l;
+		}
+		return max;
+	}
 }
