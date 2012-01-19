@@ -32,6 +32,11 @@ public class TreePropogationReducer<K extends WritableComparable<K>, V extends W
 
 	@Override
 	protected void combine(K key, TreeNode<K, V, PI, UM, CI, DM> value) {
+		if (!value.hasValue()) {
+			throw new RuntimeException(
+					"No value found at too late a stage: key = \n"
+							+ key.toString());
+		}
 		WritableList<IntEntry<UM>> upList = value.getUpList();
 		if (!upList.isEmpty()) {
 			changed.add(tree.getDivision(key));

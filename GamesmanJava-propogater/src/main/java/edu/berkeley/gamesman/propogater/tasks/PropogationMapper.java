@@ -37,6 +37,11 @@ public class PropogationMapper<K extends WritableComparable<K>, V extends Writab
 	@Override
 	protected void map(K key, TreeNode<K, V, PI, UM, CI, DM> node,
 			Context context) throws IOException, InterruptedException {
+		if (!node.hasValue()) {
+			throw new RuntimeException(
+					"No value found at too late a stage: key = \n"
+							+ key.toString());
+		}
 		int division = tree.getDivision(key);
 		if (workingSet.contains(division)) {
 			boolean nodeChanged = node.combineUp(tree, key);

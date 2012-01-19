@@ -37,6 +37,7 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 
 	@Override
 	public void readFields(DataInput in) throws IOException {
+		checkConf();
 		value.readFields(in);
 		lastParentsLength = in.readInt();
 		cleanSet.readFields(in);
@@ -48,6 +49,7 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 
 	@Override
 	public void write(DataOutput out) throws IOException {
+		checkConf();
 		value.write(out);
 		out.writeInt(lastParentsLength);
 		cleanSet.write(out);
@@ -102,6 +104,7 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 	}
 
 	public boolean hasValue() {
+		checkConf();
 		return value.hasValue();
 	}
 
@@ -110,6 +113,7 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 
 	public void firstVisit(Tree<K, V, PI, UM, CI, DM> tree, K key,
 			WritableList<DM> childMessagesToFill) {
+		checkConf();
 		assert children.isEmpty();
 		assert cleanSet.isEmpty();
 		assert lastParentsLength == 0;
@@ -124,8 +128,8 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 	}
 
 	public void combineDown(Tree<K, V, PI, UM, CI, DM> tree, K key) {
-		if (!value.hasValue())
-			throw new RuntimeException("firstVisit should be called first");
+		checkConf();
+		checkVisited();
 		parList.setList(parents);
 		tree.combineDown(key, value.get(), parList, lastParentsLength, children);
 		lastParentsLength = parents.length();
@@ -133,39 +137,55 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 	}
 
 	public boolean combineUp(Tree<K, V, PI, UM, CI, DM> tree, K key) {
+		checkConf();
 		parList.setList(parents);
 		return tree.combineUp(key, value.get(), parList, children);
 	}
 
+	private void checkConf() {
+		if (getConf() == null)
+			throw new RuntimeException("setConf() never called");
+	}
+
 	public V getValue() {
+		checkConf();
 		return value.get();
 	}
 
 	public WritableList<IntEntry<Entry<K, PI>>> getParentList() {
+		checkConf();
 		return parents;
 	}
 
 	public WritableList<Entry<K, CI>> getChildren() {
-		if (!value.hasValue())
-			throw new RuntimeException("firstVisit should be called first");
+		checkConf();
+		checkVisited();
 		return children;
 	}
 
+	private void checkVisited() {
+		if (!value.hasValue())
+			throw new RuntimeException("firstVisit should be called first");
+	}
+
 	public WritableList<IntEntry<Entry<K, DM>>> getDownList() {
+		checkConf();
 		return dMess;
 	}
 
 	public BitSetWritable getCleanSet() {
-		if (!value.hasValue())
-			throw new RuntimeException("firstVisit should be called first");
+		checkConf();
+		checkVisited();
 		return cleanSet;
 	}
 
 	public WritableList<IntEntry<UM>> getUpList() {
+		checkConf();
 		return uMess;
 	}
 
 	public void clear() {
+		checkConf();
 		value.clear();
 		lastParentsLength = 0;
 		cleanSet.clear();
@@ -176,6 +196,7 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 	}
 
 	public void combineWith(TreeNode<K, V, PI, UM, CI, DM> other) {
+		checkConf();
 		if (other.value.hasValue()) {
 			stealValue(other);
 			lastParentsLength = other.lastParentsLength;

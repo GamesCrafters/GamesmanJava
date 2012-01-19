@@ -68,4 +68,15 @@ public class Range<S extends GenState> implements WritableComparable<Range<S>> {
 	public boolean matches(S position) {
 		return suffix.matches(position);
 	}
+
+	@Override
+	public int hashCode() {
+		return suffix.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		return (other instanceof Range)
+				&& suffix.equals(((Range<?>) other).suffix);
+	}
 }
