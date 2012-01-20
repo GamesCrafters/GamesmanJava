@@ -5,12 +5,14 @@ import java.util.Collection;
 import java.util.Collections;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.Reducer;
 
 import edu.berkeley.gamesman.game.type.GameValue;
 import edu.berkeley.gamesman.hasher.cachehasher.CacheMove;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
 import edu.berkeley.gamesman.hasher.genhasher.Moves;
 import edu.berkeley.gamesman.parallel.ranges.Range;
+import edu.berkeley.gamesman.parallel.ranges.RangeReducer;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.util.Pair;
@@ -27,6 +29,12 @@ public class Connect4 extends RangeTree<C4State> implements
 	@Override
 	protected int suffixLength() {
 		return suffLen;
+	}
+
+	public int innerSuffixLength() {
+		int innerVarLen = getConf().getInt(
+				"gamesman.game.output.variance.length", gameSize);
+		return Math.max(gameSize + 1 - innerVarLen, suffLen);
 	}
 
 	@Override
@@ -218,5 +226,10 @@ public class Connect4 extends RangeTree<C4State> implements
 		default:
 			return '?';
 		}
+	}
+
+	@Override
+	public Class<? extends Reducer> getCleanupReducerClass() {
+		return RangeReducer.class;
 	}
 }

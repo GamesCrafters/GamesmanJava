@@ -61,7 +61,7 @@ public class CompareDBs {
 					if (posRange[i] == null || !posRange[i].matches(position)) {
 						if (posRange[i] == null)
 							posRange[i] = new Range<S>();
-						treeList[i].makeContainingRange(position, posRange[i]);
+						treeList[i].makeOutputContainingRange(position, posRange[i]);
 						MainRecords result = (MainRecords) MapFileOutputFormat
 								.getEntry(readers[i], partitioner[i],
 										posRange[i], recs[i]);

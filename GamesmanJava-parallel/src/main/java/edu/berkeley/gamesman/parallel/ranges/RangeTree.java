@@ -253,6 +253,10 @@ public abstract class RangeTree<S extends GenState> extends
 		range.set(t, suffLen);
 	}
 
+	public void makeOutputContainingRange(S t, Range<S> range) {
+		range.set(t, innerSuffixLength());
+	}
+
 	private final Range<S> newRange() {
 		return ReflectionUtils.newInstance(getKeyClass(), getConf());
 	}
@@ -287,5 +291,9 @@ public abstract class RangeTree<S extends GenState> extends
 		long iVal = range.subHash(getHasher(), state);
 		assert iVal <= Integer.MAX_VALUE;
 		return records.get((int) iVal);
+	}
+
+	public int innerSuffixLength() {
+		return suffixLength();
 	}
 }

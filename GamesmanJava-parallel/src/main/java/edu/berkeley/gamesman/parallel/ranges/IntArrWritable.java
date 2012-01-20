@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.hadoop.io.WritableComparable;
+import org.apache.hadoop.io.WritableComparator;
+import org.apache.hadoop.record.RecordComparator;
 
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.hasher.genhasher.GenState;
@@ -23,21 +25,16 @@ public class IntArrWritable implements WritableComparable<IntArrWritable> {
 	@Override
 	public void readFields(DataInput in) throws IOException {
 		setLength(in.readInt());
-		for (int i = 0; i < arrLen; i++)
+		for (int i = arrLen - 1; i >= 0; i--)
 			arr[i] = in.readInt();
 	}
 
 	@Override
 	public void write(DataOutput out) throws IOException {
 		out.writeInt(arrLen);
-		for (int i = 0; i < arrLen; i++)
+		for (int i = arrLen - 1; i >= 0; i--)
 			out.writeInt(arr[i]);
 	}
-
-//	public void set(IntArrWritable t) {
-//		setLength(t.arrLen);
-//		System.arraycopy(t.arr, 0, arr, 0, arrLen);
-//	}
 
 	@Override
 	public int compareTo(IntArrWritable o) {
@@ -114,5 +111,10 @@ public class IntArrWritable implements WritableComparable<IntArrWritable> {
 	@Override
 	public String toString() {
 		return Arrays.toString(Arrays.copyOfRange(arr, 0, arrLen));
+	}
+
+	static {
+		WritableComparator.define(IntArrWritable.class,
+				RawByteComparator.instance);
 	}
 }
