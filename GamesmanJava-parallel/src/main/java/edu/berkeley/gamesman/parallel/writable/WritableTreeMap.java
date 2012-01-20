@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.propogater.writable.list;
+package edu.berkeley.gamesman.parallel.writable;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -9,32 +9,32 @@ import org.apache.hadoop.io.Writable;
 
 import edu.berkeley.gamesman.propogater.factory.Factory;
 import edu.berkeley.gamesman.propogater.writable.IntEntry;
+import edu.berkeley.gamesman.util.qll.Pool;
+import edu.berkeley.gamesman.util.qll.QLLFactory;
 
 public class WritableTreeMap<T extends Writable> implements Writable {
-	private final WritableList<IntEntry<T>> objs;
-	private int counter;
+	private final WritableQLL<IntEntry<T>> objs;
+	private IntEntry<T> next;
 
-	public WritableTreeMap(Class<? extends T> fClass, Configuration conf) {
-		objs = new WritableList<IntEntry<T>>(WritableTreeMap.<T> makeFact(
-				fClass, conf));
+	public WritableTreeMap(QLLFactory<IntEntry<T>> fact, Pool<IntEntry<T>> pool) {
+		objs = new WritableQLL<IntEntry<T>>(fact, pool);
 	}
 
 	public T getNext(int i) {
-		while (counter < objs.length() && i > objs.get(counter).getKey())
-			counter++;
-		if (counter == objs.length() || i < objs.get(counter).getKey()) {
-			if (counter > 0 && i <= objs.get(counter - 1).getKey())
-				throw new RuntimeException("Counting backwards");
-			else
-				return null;
+		while (next != null && i > next.getKey())
+			next = objs.next();
+		if (next == null || i < next.getKey()) {
+			return null;
 		} else {
-			assert counter < objs.length();
-			return objs.get(counter++).getValue();
+			IntEntry<T> last = next;
+			next = objs.next();
+			return last.getValue();
 		}
 	}
 
 	public void restart() {
-		counter = 0;
+		objs.restart();
+		next = objs.next();
 	}
 
 	public void clear() {
@@ -42,7 +42,7 @@ public class WritableTreeMap<T extends Writable> implements Writable {
 	}
 
 	public int size() {
-		return objs.length();
+		return objs.size();
 	}
 
 	public boolean isEmpty() {
@@ -80,10 +80,9 @@ public class WritableTreeMap<T extends Writable> implements Writable {
 	}
 
 	public T add(int i) {
-		if (!objs.isEmpty() && i <= objs.get(objs.length() - 1).getKey())
+		if (!objs.isEmpty() && i <= objs.getLast().getKey())
 			throw new RuntimeException("Cannot add " + i
-					+ ", must be greater than "
-					+ objs.get(objs.length() - 1).getKey());
+					+ ", must be greater than " + objs.getLast().getKey());
 		IntEntry<T> entry = objs.add();
 		entry.setKey(i);
 		return entry.getValue();
@@ -100,9 +99,9 @@ public class WritableTreeMap<T extends Writable> implements Writable {
 	}
 
 	public int peekNext() {
-		if (counter == objs.length())
+		if (next == null)
 			return -1;
 		else
-			return objs.get(counter).getKey();
+			return next.getKey();
 	}
 }

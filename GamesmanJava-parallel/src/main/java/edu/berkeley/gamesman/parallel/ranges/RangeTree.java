@@ -234,18 +234,19 @@ public abstract class RangeTree<S extends GenState> extends
 
 	@Override
 	public Collection<Range<S>> getRoots() {
-		Collection<S> startingPositions = getStartingPositions();
-		HashSet<Range<S>> containingRanges = new HashSet<Range<S>>();
-		for (S t : startingPositions) {
-			Range<S> containingRange = makeContainingRange(t);
-			containingRanges.add(containingRange);
-		}
-		return containingRanges;
+		return getRoots(false);
 	}
 
 	public Range<S> makeContainingRange(S t) {
+		return makeContainingRange(t, false);
+	}
+
+	public Range<S> makeContainingRange(S t, boolean output) {
 		Range<S> range = newRange();
-		makeContainingRange(t, range);
+		if (output)
+			makeOutputContainingRange(t, range);
+		else
+			makeContainingRange(t, range);
 		return range;
 	}
 
@@ -295,5 +296,16 @@ public abstract class RangeTree<S extends GenState> extends
 
 	public int innerSuffixLength() {
 		return suffixLength();
+	}
+
+	public Collection<Range<S>> getRoots(boolean output) {
+		Collection<S> startingPositions = getStartingPositions();
+		HashSet<Range<S>> containingRanges = new HashSet<Range<S>>();
+		for (S t : startingPositions) {
+			Range<S> containingRange;
+			containingRange = makeContainingRange(t, output);
+			containingRanges.add(containingRange);
+		}
+		return containingRanges;
 	}
 }

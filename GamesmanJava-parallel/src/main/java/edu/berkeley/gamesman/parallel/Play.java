@@ -94,7 +94,7 @@ public final class Play {
 
 	private static <S extends GenState> void rangeSubMain(Configuration conf,
 			RangeTree<S> tree) throws IOException, ClassNotFoundException {
-		Range<S> posRange = tree.getRoots().iterator().next();
+		Range<S> posRange = tree.getRoots(true).iterator().next();
 		Path[] outPath = new Path[1];
 		outPath[0] = ConfParser.getOutputPath(conf);
 		MapFile.Reader[] readers = MapFileOutputFormat.getReadersArray(outPath,
@@ -135,7 +135,7 @@ public final class Play {
 				gameFinished = false;
 				break;
 			}
-			posRange = tree.makeContainingRange(position);
+			posRange = tree.makeContainingRange(position, true);
 		}
 		if (gameFinished) {
 			System.out.println(position.toString());

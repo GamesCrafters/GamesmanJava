@@ -250,6 +250,26 @@ public abstract class GenHasher<S extends GenState> {
 		return result;
 	}
 
+	public final long step(S state, int dir, int minChange) {
+		long initialHash = 0L;
+		assert (initialHash = hash(state)) != -1;
+		long diff = 0;
+		while (state.getStart() < minChange) {
+			diff -= sigValue(state);
+			state.trunc();
+		}
+		if (dir == 1)
+			diff += countCompletions(state);
+		else if (dir == -1)
+			diff--;
+		else
+			throw new RuntimeException("dir can only be 1 or -1");
+		int place = innerStep(state, dir);
+		validComplete(state, dir == -1);
+		assert place == -1 || hash(state) - initialHash == diff;
+		return diff;
+	}
+
 	/**
 	 * Takes a state with hash h and modifies it so it hashes to h+dir where dir
 	 * = +/- 1. You may override this method for efficiency purposes. It will be

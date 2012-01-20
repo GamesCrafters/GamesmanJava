@@ -1,9 +1,9 @@
 package edu.berkeley.gamesman.util.qll;
 
 class QLLNullPool<T> {
-	Node<T> firstNull = null;
+	private Node<T> firstNull = null;
 
-	Node<T> getNode() {
+	synchronized Node<T> getNode() {
 		if (firstNull == null) {
 			return new Node<T>();
 		} else {
@@ -13,12 +13,12 @@ class QLLNullPool<T> {
 		}
 	}
 
-	void giveBack(Node<T> n) {
+	synchronized void giveBack(Node<T> n) {
 		n.next = firstNull;
 		firstNull = n;
 	}
 
-	void giveBack(Node<T> first, Node<T> last) {
+	synchronized void giveBack(Node<T> first, Node<T> last) {
 		last.next = firstNull;
 		firstNull = first;
 	}

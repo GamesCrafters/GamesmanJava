@@ -23,6 +23,8 @@ public class Pool<T> {
 	}
 
 	public synchronized void release(T el) {
+		if (el == null)
+			throw new NullPointerException("Cannot release null element");
 		Node<T> changeNode;
 		if (firstNullNode == null)
 			changeNode = new Node<T>();
