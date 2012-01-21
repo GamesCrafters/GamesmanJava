@@ -7,7 +7,9 @@ import java.util.Arrays;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.util.ReflectionUtils;
+
+import edu.berkeley.gamesman.propogater.factory.Factory;
+import edu.berkeley.gamesman.propogater.factory.FactoryUtil;
 
 public class Entry<K extends Writable, V extends Writable> implements Writable {
 	private K key;
@@ -15,13 +17,18 @@ public class Entry<K extends Writable, V extends Writable> implements Writable {
 
 	public Entry(Class<? extends K> kClass, Class<? extends V> vClass,
 			Configuration conf) {
-		key = ReflectionUtils.newInstance(kClass, conf);
-		value = ReflectionUtils.newInstance(vClass, conf);
+		this(FactoryUtil.makeFactory(kClass, conf), FactoryUtil.makeFactory(
+				vClass, conf));
 	}
 
 	public Entry() {
 		key = null;
 		value = null;
+	}
+
+	public Entry(Factory<K> kFactory, Factory<V> vFactory) {
+		key = kFactory.create();
+		value = vFactory.create();
 	}
 
 	public K getKey() {

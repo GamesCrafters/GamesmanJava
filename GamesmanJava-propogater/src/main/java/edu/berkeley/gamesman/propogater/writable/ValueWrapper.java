@@ -6,14 +6,20 @@ import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.util.ReflectionUtils;
+
+import edu.berkeley.gamesman.propogater.factory.Factory;
+import edu.berkeley.gamesman.propogater.factory.FactoryUtil;
 
 public class ValueWrapper<V extends Writable> implements Writable {
 	private boolean hasValue;
 	private final V myVal;
 
 	public ValueWrapper(Class<? extends V> vClass, Configuration conf) {
-		myVal = ReflectionUtils.newInstance(vClass, conf);
+		this(FactoryUtil.makeFactory(vClass, conf));
+	}
+
+	public ValueWrapper(Factory<? extends V> vFactory) {
+		myVal = vFactory.create();
 		hasValue = false;
 	}
 

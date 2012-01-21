@@ -165,15 +165,14 @@ public class Solver<K extends WritableComparable<K>> {
 	private void start(FileSystem fs, Collection<K> keyRoots)
 			throws IOException {
 		HashMap<Integer, SequenceFile.Writer> startWriters = new HashMap<Integer, SequenceFile.Writer>();
-		TreeNode<K, ?, ?, ?, ?, ?> startingNode = new TreeNode<K, Writable, Writable, Writable, Writable, Writable>(
-				conf);
+		TreeNode<K, ?, ?, ?, ?, ?> startingNode = tree.newNode();
 		for (K key : keyRoots) {
 			int num = tree.getDivision(key);
 			SequenceFile.Writer writer = startWriters.get(num);
 			if (writer == null) {
 				writer = new SequenceFile.Writer(fs, conf, new Path(
 						myGraph.getTier(num).dataPath, START_FILE_NAME),
-						tree.getKeyClass(), TreeNode.class);
+						tree.getKeyClass(), tree.getTreeNodeClass());
 				startWriters.put(num, writer);
 			}
 			writer.append(key, startingNode);

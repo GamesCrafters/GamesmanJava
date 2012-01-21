@@ -308,4 +308,10 @@ public abstract class RangeTree<S extends GenState> extends
 		}
 		return containingRanges;
 	}
+
+	@Override
+	public Class<? extends RangeTreeNode<S>> getTreeNodeClass() {
+		return (Class<? extends RangeTreeNode<S>>) RangeTreeNode.class
+				.<RangeTreeNode> asSubclass(RangeTreeNode.class);
+	}
 }

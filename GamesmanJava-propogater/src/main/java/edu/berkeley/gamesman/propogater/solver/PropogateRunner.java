@@ -16,7 +16,6 @@ import edu.berkeley.gamesman.propogater.tasks.DividedSequenceFileOutputFormat;
 import edu.berkeley.gamesman.propogater.tasks.PropogationMapper;
 import edu.berkeley.gamesman.propogater.tasks.TreePropogationReducer;
 import edu.berkeley.gamesman.propogater.tasks.TreeReducer;
-import edu.berkeley.gamesman.propogater.tree.TreeNode;
 
 public class PropogateRunner extends TaskRunner {
 	private final Set<Tier> wholeSet;
@@ -63,7 +62,7 @@ public class PropogateRunner extends TaskRunner {
 			j.setInputFormatClass(SequenceFileInputFormat.class);
 			j.setOutputFormatClass(DividedSequenceFileOutputFormat.class);
 			j.setOutputKeyClass(tree.getKeyClass());
-			j.setOutputValueClass(TreeNode.class);
+			j.setOutputValueClass(tree.getTreeNodeClass());
 			j.setJarByClass(Solver.class);
 			FileInputFormat.setInputPaths(j, TierGraph.mixPaths(wholeSet));
 			FileOutputFormat.setOutputPath(j, headTier.outputFolder);

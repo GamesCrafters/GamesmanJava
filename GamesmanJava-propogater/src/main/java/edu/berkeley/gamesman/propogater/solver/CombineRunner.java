@@ -14,7 +14,6 @@ import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.common.Util;
 import edu.berkeley.gamesman.propogater.tasks.TreeCreationReducer;
 import edu.berkeley.gamesman.propogater.tasks.TreeReducer;
-import edu.berkeley.gamesman.propogater.tree.TreeNode;
 
 public class CombineRunner extends TaskRunner {
 	public final Tier tier;
@@ -41,7 +40,7 @@ public class CombineRunner extends TaskRunner {
 			j.setInputFormatClass(SequenceFileInputFormat.class);
 			j.setOutputFormatClass(SequenceFileOutputFormat.class);
 			j.setOutputKeyClass(tree.getKeyClass());
-			j.setOutputValueClass(TreeNode.class);
+			j.setOutputValueClass(tree.getTreeNodeClass());
 			j.setJarByClass(Solver.class);
 			Path[] allPaths = tier.getCombinePaths();
 			assert Util.contains(

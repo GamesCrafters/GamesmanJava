@@ -12,7 +12,6 @@ import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.tasks.CreationMapper;
 import edu.berkeley.gamesman.propogater.tasks.DividedSequenceFileOutputFormat;
 import edu.berkeley.gamesman.propogater.tasks.TreeReducer;
-import edu.berkeley.gamesman.propogater.tree.TreeNode;
 
 public class CreateRunner extends TaskRunner {
 	public final Tier tier;
@@ -39,7 +38,7 @@ public class CreateRunner extends TaskRunner {
 			j.setInputFormatClass(SequenceFileInputFormat.class);
 			j.setOutputFormatClass(DividedSequenceFileOutputFormat.class);
 			j.setOutputKeyClass(tree.getKeyClass());
-			j.setOutputValueClass(TreeNode.class);
+			j.setOutputValueClass(tree.getTreeNodeClass());
 			j.setJarByClass(Solver.class);
 			FileInputFormat.setInputPaths(j, tier.dataPath);
 			FileOutputFormat.setOutputPath(j, tier.outputFolder);

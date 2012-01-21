@@ -27,10 +27,10 @@ public class CreationMapper<K extends WritableComparable<K>, V extends Writable,
 	protected void setup(Context context) {
 		Configuration conf = context.getConfiguration();
 		tree = ConfParser.<K, V, PI, UM, CI, DM> newTree(conf);
-		parNode = new TreeNode<K, V, PI, UM, CI, DM>(conf);
+		parNode = tree.newNode();
 		childEntry = parNode.getDownList().add();
 		entry = childEntry.getValue();
-		childMessageList = new WritableList<DM>(tree.getDmClass(), conf);
+		childMessageList = new WritableList<DM>(parNode.makeDMFactory(conf));
 	}
 
 	@Override

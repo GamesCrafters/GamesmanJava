@@ -7,6 +7,8 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.Reducer;
 
+import edu.berkeley.gamesman.propogater.common.ConfParser;
+import edu.berkeley.gamesman.propogater.tree.Tree;
 import edu.berkeley.gamesman.propogater.tree.TreeNode;
 
 public class TreeReducer<K extends WritableComparable<K>, V extends Writable, PI extends Writable, UM extends Writable, CI extends Writable, DM extends Writable>
@@ -16,7 +18,9 @@ public class TreeReducer<K extends WritableComparable<K>, V extends Writable, PI
 
 	protected void setup(Context context) throws IOException,
 			InterruptedException {
-		value = new TreeNode<K, V, PI, UM, CI, DM>(context.getConfiguration());
+		Tree<K, V, PI, UM, CI, DM> tree = ConfParser.newTree(context
+				.getConfiguration());
+		value = tree.newNode();
 	}
 
 	@Override

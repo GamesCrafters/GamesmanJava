@@ -11,6 +11,7 @@ import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.OutputFormat;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.output.MapFileOutputFormat;
+import org.apache.hadoop.util.ReflectionUtils;
 
 import edu.berkeley.gamesman.propogater.common.Adder;
 import edu.berkeley.gamesman.propogater.common.Entry3;
@@ -72,6 +73,11 @@ public abstract class Tree<K extends WritableComparable<K>, V extends Writable, 
 
 	public Set<Integer> getChildren(int t) {
 		return Collections.emptySet();
+	}
+
+	public Class<? extends TreeNode<K, V, PI, UM, CI, DM>> getTreeNodeClass() {
+		return (Class<? extends TreeNode<K, V, PI, UM, CI, DM>>) TreeNode.class
+				.<TreeNode> asSubclass(TreeNode.class);
 	}
 
 	public Class<? extends Reducer> getCleanupReducerClass() {
@@ -168,5 +174,9 @@ public abstract class Tree<K extends WritableComparable<K>, V extends Writable, 
 		if (vClass == null)
 			throw new NullPointerException();
 		return vClass;
+	}
+
+	public TreeNode<K, V, PI, UM, CI, DM> newNode() {
+		return ReflectionUtils.newInstance(getTreeNodeClass(), getConf());
 	}
 }

@@ -28,7 +28,7 @@ public class PropogationMapper<K extends WritableComparable<K>, V extends Writab
 	protected void setup(Context context) {
 		Configuration conf = context.getConfiguration();
 		tree = ConfParser.<K, V, PI, UM, CI, DM> newTree(conf);
-		parNode = new TreeNode<K, V, PI, UM, CI, DM>(conf);
+		parNode = tree.newNode();
 		WritableList<IntEntry<UM>> upList = parNode.getUpList();
 		parPair = upList.add();
 		workingSet = ConfParser.getWorkingSet(conf);

@@ -34,4 +34,11 @@ public abstract class SimpleTree<K extends WritableComparable<K>, V extends Writ
 	public final Class<PI> getDmClass() {
 		return getPiClass();
 	}
+
+	@Override
+	public Class<? extends SimpleTreeNode<K, V, PI, CI>> getTreeNodeClass() {
+		return (Class<? extends SimpleTreeNode<K, V, PI, CI>>) SimpleTreeNode.class
+				.<SimpleTreeNode> asSubclass(SimpleTreeNode.class);
+	}
+
 }

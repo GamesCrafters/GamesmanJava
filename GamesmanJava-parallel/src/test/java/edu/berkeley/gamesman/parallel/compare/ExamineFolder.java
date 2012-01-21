@@ -30,8 +30,7 @@ public class ExamineFolder {
 				.<K, Writable, Writable, Writable, Writable, Writable> newTree(conf);
 		tree.prepareRun(conf);
 
-		TreeNode<K, ?, ?, ?, ?, ?> node = ReflectionUtils
-				.<TreeNode> newInstance(TreeNode.class, conf);
+		TreeNode<K, ?, ?, ?, ?, ?> node = tree.newNode();
 		K key = ReflectionUtils.<K> newInstance(tree.getKeyClass(), conf);
 		for (SequenceFile.Reader reader : readers) {
 			while (reader.next(key, node)) {

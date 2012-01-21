@@ -10,6 +10,7 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
 import edu.berkeley.gamesman.propogater.factory.Factory;
+import edu.berkeley.gamesman.propogater.factory.FactoryUtil;
 import edu.berkeley.gamesman.propogater.writable.BitSetWritable;
 import edu.berkeley.gamesman.propogater.writable.Entry;
 import edu.berkeley.gamesman.propogater.writable.IntEntry;
@@ -63,33 +64,33 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 	public void setConf(final Configuration conf) {
 		super.setConf(conf);
 		if (conf != null) {
-			final Class<? extends K> kClass = Tree.getRunKClass(conf);
-			final Class<? extends V> vClass = Tree.getRunVClass(conf);
-			final Class<? extends PI> piClass = Tree.getRunPiClass(conf);
-			final Class<? extends CI> ciClass = Tree.getRunCiClass(conf);
-			value = new ValueWrapper<V>(vClass, conf);
+			final Factory<K> kFactory = makeKFactory(conf);
+			Factory<V> vFactory = makeVFactory(conf);
+			final Factory<PI> piFactory = makePIFactory(conf);
+			final Factory<CI> ciFactory = makeCIFactory(conf);
+			value = new ValueWrapper<V>(vFactory);
 			parents = new WritableList<IntEntry<Entry<K, PI>>>(
 					new Factory<IntEntry<Entry<K, PI>>>() {
 
 						@Override
 						public IntEntry<Entry<K, PI>> create() {
 							return new IntEntry<Entry<K, PI>>(new Entry<K, PI>(
-									kClass, piClass, conf));
+									kFactory, piFactory));
 						}
 					});
 			children = new WritableList<Entry<K, CI>>(
 					new Factory<Entry<K, CI>>() {
 						@Override
 						public Entry<K, CI> create() {
-							return new Entry<K, CI>(kClass, ciClass, conf);
+							return new Entry<K, CI>(kFactory, ciFactory);
 						}
 					});
-			final Class<? extends UM> umClass = Tree.getRunUmClass(conf);
-			final Class<? extends DM> dmClass = Tree.getRunDmClass(conf);
+			final Factory<UM> umFactory = makeUMFactory(conf);
+			final Factory<DM> dmFactory = makeDMFactory(conf);
 			uMess = new WritableList<IntEntry<UM>>(new Factory<IntEntry<UM>>() {
 				@Override
 				public IntEntry<UM> create() {
-					return new IntEntry<UM>(umClass, conf);
+					return new IntEntry<UM>(umFactory);
 				}
 			});
 			dMess = new WritableList<IntEntry<Entry<K, DM>>>(
@@ -97,10 +98,38 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 						@Override
 						public IntEntry<Entry<K, DM>> create() {
 							return new IntEntry<Entry<K, DM>>(new Entry<K, DM>(
-									kClass, dmClass, conf));
+									kFactory, dmFactory));
 						}
 					});
 		}
+	}
+
+	protected Factory<UM> makeUMFactory(Configuration conf) {
+		return FactoryUtil
+				.<UM> makeFactory(Tree.<UM> getRunUmClass(conf), conf);
+	}
+
+	public Factory<DM> makeDMFactory(Configuration conf) {
+		return FactoryUtil
+				.<DM> makeFactory(Tree.<DM> getRunDmClass(conf), conf);
+	}
+
+	protected Factory<PI> makePIFactory(Configuration conf) {
+		return FactoryUtil
+				.<PI> makeFactory(Tree.<PI> getRunPiClass(conf), conf);
+	}
+
+	protected Factory<CI> makeCIFactory(Configuration conf) {
+		return FactoryUtil
+				.<CI> makeFactory(Tree.<CI> getRunCiClass(conf), conf);
+	}
+
+	protected Factory<V> makeVFactory(Configuration conf) {
+		return FactoryUtil.<V> makeFactory(Tree.<V> getRunVClass(conf), conf);
+	}
+
+	protected Factory<K> makeKFactory(Configuration conf) {
+		return FactoryUtil.<K> makeFactory(Tree.<K> getRunKClass(conf), conf);
 	}
 
 	public boolean hasValue() {
