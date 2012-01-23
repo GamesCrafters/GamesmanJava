@@ -52,6 +52,7 @@ public class CleanupRunner extends TaskRunner {
 		}
 		FileInputFormat.setInputPaths(job, allData);
 		FileOutputFormat.setOutputPath(job, ConfParser.getOutputPath(treeConf));
+		job.setNumReduceTasks(getNumReducers(job, allData));
 		SequenceFileOutputFormat.setOutputCompressionType(job,
 				SequenceFile.CompressionType.BLOCK);
 		boolean succeeded = job.waitForCompletion(true);

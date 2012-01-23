@@ -49,6 +49,7 @@ public class CombineRunner extends TaskRunner {
 							.getFileStatus(oldDataPath).getPath());
 			FileInputFormat.setInputPaths(j, allPaths);
 			FileOutputFormat.setOutputPath(j, tier.dataPath);
+			j.setNumReduceTasks(getNumReducers(j, allPaths));
 			boolean succeeded = j.waitForCompletion(true);
 			if (!succeeded)
 				throw new RuntimeException("Job did not succeed " + j);

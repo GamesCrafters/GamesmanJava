@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.propogater.solver;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
@@ -42,6 +43,7 @@ public class CreateRunner extends TaskRunner {
 			j.setJarByClass(Solver.class);
 			FileInputFormat.setInputPaths(j, tier.dataPath);
 			FileOutputFormat.setOutputPath(j, tier.outputFolder);
+			j.setNumReduceTasks(getNumReducers(j, tier.dataPath));
 			boolean succeeded = j.waitForCompletion(true);
 			if (!succeeded)
 				throw new RuntimeException("Job did not succeed " + j);

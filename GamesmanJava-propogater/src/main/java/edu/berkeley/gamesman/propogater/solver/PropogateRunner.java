@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.SortedSet;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
@@ -64,8 +65,10 @@ public class PropogateRunner extends TaskRunner {
 			j.setOutputKeyClass(tree.getKeyClass());
 			j.setOutputValueClass(tree.getTreeNodeClass());
 			j.setJarByClass(Solver.class);
-			FileInputFormat.setInputPaths(j, TierGraph.mixPaths(wholeSet));
+			Path[] mixedPaths = TierGraph.mixPaths(wholeSet);
+			FileInputFormat.setInputPaths(j, mixedPaths);
 			FileOutputFormat.setOutputPath(j, headTier.outputFolder);
+			j.setNumReduceTasks(getNumReducers(j, mixedPaths));
 			boolean succeeded = j.waitForCompletion(true);
 			if (!succeeded)
 				throw new RuntimeException("Job did not succeed " + j);

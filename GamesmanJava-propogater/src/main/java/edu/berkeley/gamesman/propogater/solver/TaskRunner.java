@@ -6,6 +6,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.common.Util;
@@ -72,4 +74,21 @@ abstract class TaskRunner implements Runnable {
 	}
 
 	protected abstract void runTask() throws Throwable;
+
+	protected final int getNumReducers(Job j, Path inPath) throws IOException {
+		return getNumReducers(j, new Path[] { inPath });
+	}
+	
+	protected final int getNumReducers(Job j, Path[] allPaths) throws IOException {
+		long maxSplitSize = FileInputFormat.getMaxSplitSize(j);
+		long totalSize = 0L;
+		for (Path p : allPaths) {
+			totalSize += p.getFileSystem(tree.getConf()).getFileStatus(p)
+					.getLen();
+		}
+		long numTasksL = totalSize / maxSplitSize;
+		int numTasks = (int) Math.min(Integer.MAX_VALUE, numTasksL);
+		return Math.max(j.getNumReduceTasks(), numTasks);
+	}
+
 }
