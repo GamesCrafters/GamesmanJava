@@ -78,17 +78,17 @@ abstract class TaskRunner implements Runnable {
 	protected final int getNumReducers(Job j, Path inPath) throws IOException {
 		return getNumReducers(j, new Path[] { inPath });
 	}
-	
-	protected final int getNumReducers(Job j, Path[] allPaths) throws IOException {
+
+	protected final int getNumReducers(Job j, Path[] allPaths)
+			throws IOException {
 		long maxSplitSize = FileInputFormat.getMaxSplitSize(j);
 		long totalSize = 0L;
 		for (Path p : allPaths) {
 			totalSize += p.getFileSystem(tree.getConf()).getFileStatus(p)
 					.getLen();
 		}
-		long numTasksL = totalSize / maxSplitSize;
+		long numTasksL = (totalSize + maxSplitSize - 1) / maxSplitSize;
 		int numTasks = (int) Math.min(Integer.MAX_VALUE, numTasksL);
 		return Math.max(j.getNumReduceTasks(), numTasks);
 	}
-
 }
