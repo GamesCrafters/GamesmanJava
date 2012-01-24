@@ -3,6 +3,8 @@ package edu.berkeley.gamesman.propogater.solver;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
@@ -82,13 +84,23 @@ abstract class TaskRunner implements Runnable {
 	protected final int getNumReducers(Job j, Path[] allPaths)
 			throws IOException {
 		long maxSplitSize = FileInputFormat.getMaxSplitSize(j);
-		long totalSize = 0L;
+		long totSize = 0L;
+		double spSizeSum = 0;
 		for (Path p : allPaths) {
-			totalSize += p.getFileSystem(tree.getConf()).getFileStatus(p)
-					.getLen();
+			FileSystem fs = p.getFileSystem(tree.getConf());
+			FileStatus[] stati = fs.listStatus(p);
+			for (FileStatus status : stati) {
+				double splitSize = Math
+						.min(maxSplitSize, status.getBlockSize());
+				totSize += status.getLen();
+				spSizeSum += status.getLen() * splitSize;
+			}
 		}
-		long numTasksL = (totalSize + maxSplitSize - 1) / maxSplitSize;
-		int numTasks = (int) Math.min(Integer.MAX_VALUE, numTasksL);
+		double splitSize = ((spSizeSum + totSize - 1) / totSize);
+		int numTasks = (int) ((totSize + splitSize - 1) / splitSize);
+		System.out.println("totSize = " + totSize);
+		System.out.println("splitSize = " + splitSize);
+		System.out.println("numTasks = " + numTasks);
 		return Math.max(j.getNumReduceTasks(), numTasks);
 	}
 }

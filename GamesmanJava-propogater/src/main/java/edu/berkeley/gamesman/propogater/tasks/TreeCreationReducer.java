@@ -8,6 +8,7 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
 import edu.berkeley.gamesman.propogater.common.ConfParser;
+import edu.berkeley.gamesman.propogater.common.IOCheckOperations;
 import edu.berkeley.gamesman.propogater.tree.Tree;
 import edu.berkeley.gamesman.propogater.tree.TreeNode;
 import edu.berkeley.gamesman.propogater.writable.Entry;
@@ -67,7 +68,7 @@ public class TreeCreationReducer<K extends WritableComparable<K>, V extends Writ
 			Path hnPath = ConfParser.getNeedsCreationPath(conf,
 					creationDivision);
 			try {
-				hnPath.getFileSystem(conf).createNewFile(hnPath);
+				IOCheckOperations.createNewFile(hnPath.getFileSystem(conf), hnPath);
 				if (!hnPath.getFileSystem(conf).exists(hnPath))
 					throw new IOException(hnPath + " not successfully created");
 			} catch (IOException e) {
