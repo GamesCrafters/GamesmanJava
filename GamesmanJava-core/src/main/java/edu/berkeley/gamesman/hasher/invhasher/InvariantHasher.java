@@ -7,6 +7,7 @@ import edu.berkeley.gamesman.hasher.genhasher.GenState;
 
 public abstract class InvariantHasher<S extends GenState> extends GenHasher<S> {
 	private HashMap<Long, Long>[] invariantCounts;
+	private final int countingPlace;
 
 	/**
 	 * @param numElements
@@ -14,10 +15,15 @@ public abstract class InvariantHasher<S extends GenState> extends GenHasher<S> {
 	 * @param initState
 	 */
 	public InvariantHasher(int[] digitBase) {
+		this(digitBase, 0);
+	}
+
+	public InvariantHasher(int[] digitBase, int countingPlace) {
 		super(digitBase);
 		invariantCounts = new HashMap[numElements + 1];
 		for (int i = 0; i <= numElements; i++)
 			invariantCounts[i] = new HashMap<Long, Long>();
+		this.countingPlace = countingPlace;
 	}
 
 	@Override
@@ -48,6 +54,8 @@ public abstract class InvariantHasher<S extends GenState> extends GenHasher<S> {
 			} while (incr(tempState, 1));
 			releasePref(tempState);
 		}
+		if (countingPlace == start && posCount > 0)
+			posCount = 1L;
 		invariantCounts[start].put(inv, posCount);
 		return posCount;
 	}

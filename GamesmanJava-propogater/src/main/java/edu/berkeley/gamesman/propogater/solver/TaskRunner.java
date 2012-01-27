@@ -96,7 +96,7 @@ abstract class TaskRunner implements Runnable {
 				spSizeSum += status.getLen() * splitSize;
 			}
 		}
-		double splitSize = ((spSizeSum + totSize - 1) / totSize);
+		double splitSize = spSizeSum / totSize;
 		int numTasks = (int) ((totSize + splitSize - 1) / splitSize);
 		System.out.println("totSize = " + totSize);
 		System.out.println("splitSize = " + splitSize);

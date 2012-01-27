@@ -109,4 +109,9 @@ public class WritableQLL<T extends Writable> implements Writable {
 		return myList.getLast();
 	}
 
+	@Override
+	public String toString() {
+		return myList.toString();
+	}
+
 }

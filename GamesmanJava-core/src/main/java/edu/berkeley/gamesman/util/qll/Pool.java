@@ -1,6 +1,8 @@
 package edu.berkeley.gamesman.util.qll;
 
 public class Pool<T> {
+	private int created = 0;
+	private int released = 0;
 	private final Factory<T> fact;
 	private Node<T> firstNode;
 	private Node<T> firstNullNode;
@@ -10,9 +12,10 @@ public class Pool<T> {
 	}
 
 	public synchronized T get() {
-		if (firstNode == null)
+		if (firstNode == null) {
+			created++;
 			return fact.newObject();
-		else {
+		} else {
 			Node<T> changeNode = firstNode;
 			firstNode = changeNode.next;
 			changeNode.next = firstNullNode;
@@ -26,9 +29,12 @@ public class Pool<T> {
 		if (el == null)
 			throw new NullPointerException("Cannot release null element");
 		Node<T> changeNode;
-		if (firstNullNode == null)
+		if (firstNullNode == null) {
 			changeNode = new Node<T>();
-		else
+			released++;
+			if (released > created)
+				throw new RuntimeException("WTF?");
+		} else
 			changeNode = firstNullNode;
 		firstNullNode = changeNode.next;
 		changeNode.next = firstNode;

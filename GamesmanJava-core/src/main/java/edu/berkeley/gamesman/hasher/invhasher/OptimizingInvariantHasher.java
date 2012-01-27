@@ -23,13 +23,18 @@ public abstract class OptimizingInvariantHasher<S extends GenState> extends
 		InvariantHasher<S> {
 	private HashMap<Long, Long>[][] invariantVals;
 
+	public OptimizingInvariantHasher(int[] digitBase) {
+		this(digitBase, 0);
+	}
+
 	/**
 	 * @param numElements
 	 * @param digitBase
+	 * @param countingPlace
 	 * @param initState
 	 */
-	public OptimizingInvariantHasher(int[] digitBase) {
-		super(digitBase);
+	public OptimizingInvariantHasher(int[] digitBase, int countingPlace) {
+		super(digitBase, countingPlace);
 		invariantVals = new HashMap[numElements][];
 		for (int i = 0; i < numElements; i++) {
 			invariantVals[i] = new HashMap[digitBase[i]];

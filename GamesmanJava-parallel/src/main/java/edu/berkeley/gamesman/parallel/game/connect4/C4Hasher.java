@@ -12,7 +12,11 @@ public class C4Hasher extends OptimizingInvariantHasher<C4State> {
 	private final DBInvCalculator calc;
 
 	public C4Hasher(int width, int height) {
-		super(makeDigitBase(width, height));
+		this(width, height, 0);
+	}
+
+	public C4Hasher(int width, int height, int countingPlace) {
+		super(makeDigitBase(width, height), countingPlace);
 		this.width = width;
 		this.height = height;
 		boardSize = width * height;
