@@ -83,24 +83,20 @@ abstract class TaskRunner implements Runnable {
 
 	protected final int getNumReducers(Job j, Path[] allPaths)
 			throws IOException {
-		long maxSplitSize = FileInputFormat.getMaxSplitSize(j);
+		long splitSize = j.getConfiguration().getLong(
+				"propogate.reducer.split.size", 1000000);
 		long totSize = 0L;
-		double spSizeSum = 0;
 		for (Path p : allPaths) {
 			FileSystem fs = p.getFileSystem(tree.getConf());
 			FileStatus[] stati = fs.listStatus(p);
 			for (FileStatus status : stati) {
-				double splitSize = Math
-						.min(maxSplitSize, status.getBlockSize());
 				totSize += status.getLen();
-				spSizeSum += status.getLen() * splitSize;
 			}
 		}
-		double splitSize = spSizeSum / totSize;
 		int numTasks = (int) ((totSize + splitSize - 1) / splitSize);
 		System.out.println("totSize = " + totSize);
 		System.out.println("splitSize = " + splitSize);
 		System.out.println("numTasks = " + numTasks);
-		return Math.max(j.getNumReduceTasks(), numTasks);
+		return numTasks;
 	}
 }
