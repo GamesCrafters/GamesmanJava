@@ -50,9 +50,10 @@ public abstract class OptimizingInvariantHasher<S extends GenState> extends
 		long lastInv = lastInvariant(state);
 		assert lastInv >= 0;
 		Long count = invariantVals[place][ls].get(lastInv);
-		if (count == null)
+		if (count == null) {
 			count = super.sigValue(state);
-		invariantVals[place][ls].put(lastInv, count);
+			invariantVals[place][ls].put(lastInv, count);
+		}
 		return count;
 	}
 
