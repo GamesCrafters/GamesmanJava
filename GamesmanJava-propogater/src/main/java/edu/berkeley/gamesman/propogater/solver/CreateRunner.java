@@ -34,7 +34,6 @@ public class CreateRunner extends TaskRunner {
 			Job j = new Job(jConf, String.format(
 					ConfParser.CREATION_JOB_FORMAT, tier.num));
 			j.setMapperClass(CreationMapper.class);
-			j.setCombinerClass(TreeReducer.class);
 			j.setReducerClass(TreeReducer.class);
 			j.setInputFormatClass(SequenceFileInputFormat.class);
 			j.setOutputFormatClass(DividedSequenceFileOutputFormat.class);

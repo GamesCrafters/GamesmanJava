@@ -35,7 +35,6 @@ public class CombineRunner extends TaskRunner {
 			ConfParser.setDivision(jConf, tier.num);
 			Job j = new Job(jConf, String.format(
 					ConfParser.COMBINATION_JOB_FORMAT, tier.num));
-			j.setCombinerClass(TreeReducer.class);
 			j.setReducerClass(TreeCreationReducer.class);
 			j.setInputFormatClass(SequenceFileInputFormat.class);
 			j.setOutputFormatClass(SequenceFileOutputFormat.class);

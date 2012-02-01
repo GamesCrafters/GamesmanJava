@@ -58,7 +58,6 @@ public class PropogateRunner extends TaskRunner {
 			Job j = new Job(jConf, String.format(
 					ConfParser.PROPOGATION_JOB_FORMAT, headTier.num));
 			j.setMapperClass(PropogationMapper.class);
-			j.setCombinerClass(TreeReducer.class);
 			j.setReducerClass(TreePropogationReducer.class);
 			j.setInputFormatClass(SequenceFileInputFormat.class);
 			j.setOutputFormatClass(DividedSequenceFileOutputFormat.class);

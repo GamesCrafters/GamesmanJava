@@ -1,7 +1,6 @@
 package edu.berkeley.gamesman.propogater.tasks;
 
 import java.io.IOException;
-import java.util.Iterator;
 
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
@@ -27,11 +26,9 @@ public class TreeReducer<K extends WritableComparable<K>, V extends Writable, PI
 	protected void reduce(K key,
 			Iterable<TreeNode<K, V, PI, UM, CI, DM>> values, Context context)
 			throws IOException, InterruptedException {
-		value.clear();
-		Iterator<TreeNode<K, V, PI, UM, CI, DM>> iter = values.iterator();
-		while (iter.hasNext()) {
-			value.combineWith(iter.next());
-		}
+		value.clearMixes();
+		for (TreeNode<K, V, PI, UM, CI, DM> node : values)
+			value.combineWith(node);
 		combine(key, value);
 		context.write(key, value);
 	}

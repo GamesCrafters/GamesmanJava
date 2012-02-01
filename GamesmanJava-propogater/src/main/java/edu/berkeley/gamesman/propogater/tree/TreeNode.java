@@ -40,9 +40,11 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 	public void readFields(DataInput in) throws IOException {
 		checkConf();
 		value.readFields(in);
-		lastParentsLength = in.readInt();
-		cleanSet.readFields(in);
-		children.readFields(in);
+		if (value.hasValue()) {
+			lastParentsLength = in.readInt();
+			cleanSet.readFields(in);
+			children.readFields(in);
+		}
 		parents.readFields(in);
 		uMess.readFields(in);
 		dMess.readFields(in);
@@ -52,9 +54,11 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 	public void write(DataOutput out) throws IOException {
 		checkConf();
 		value.write(out);
-		out.writeInt(lastParentsLength);
-		cleanSet.write(out);
-		children.write(out);
+		if (value.hasValue()) {
+			out.writeInt(lastParentsLength);
+			cleanSet.write(out);
+			children.write(out);
+		}
 		parents.write(out);
 		uMess.write(out);
 		dMess.write(out);
@@ -143,9 +147,9 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 	public void firstVisit(Tree<K, V, PI, UM, CI, DM> tree, K key,
 			WritableList<DM> childMessagesToFill) {
 		checkConf();
-		assert children.isEmpty();
-		assert cleanSet.isEmpty();
-		assert lastParentsLength == 0;
+		children.clear();
+		cleanSet.clear();
+		lastParentsLength = 0;
 		fvAdder.setList(children, childMessagesToFill);
 		parList.setList(parents);
 		tree.firstVisit(key, value.setHasAndGet(), parList, fvAdder);
@@ -213,12 +217,9 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 		return uMess;
 	}
 
-	public void clear() {
+	public void clearMixes() {
 		checkConf();
 		value.clear();
-		lastParentsLength = 0;
-		cleanSet.clear();
-		children.clear();
 		parents.clear();
 		uMess.clear();
 		dMess.clear();
@@ -227,6 +228,8 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 	public void combineWith(TreeNode<K, V, PI, UM, CI, DM> other) {
 		checkConf();
 		if (other.value.hasValue()) {
+			if (value.hasValue())
+				throw new Error("Two nodes claim to be correct");
 			stealValue(other);
 			lastParentsLength = other.lastParentsLength;
 			stealCleanSet(other);
@@ -250,21 +253,18 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 	}
 
 	private void stealChildren(TreeNode<K, V, PI, UM, CI, DM> other) {
-		children.clear();
 		WritableList<Entry<K, CI>> temp = children;
 		children = other.children;
 		other.children = temp;
 	}
 
 	private void stealCleanSet(TreeNode<K, V, PI, UM, CI, DM> other) {
-		cleanSet.clear();
 		BitSetWritable temp = cleanSet;
 		cleanSet = other.cleanSet;
 		other.cleanSet = temp;
 	}
 
 	private void stealValue(TreeNode<K, V, PI, UM, CI, DM> other) {
-		value.clear();
 		ValueWrapper<V> temp = value;
 		value = other.value;
 		other.value = temp;

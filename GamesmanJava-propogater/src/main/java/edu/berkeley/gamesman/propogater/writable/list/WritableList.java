@@ -69,12 +69,6 @@ public class WritableList<T extends Writable> implements Writable, WritList<T> {
 		return arr.get(len++);
 	}
 
-	// Warning! Not really popped, do not try to add to list while still
-	// accessing popped item
-	public T popLast() {
-		return arr.get(--len);
-	}
-
 	public boolean isEmpty() {
 		return length() == 0;
 	}
@@ -90,9 +84,7 @@ public class WritableList<T extends Writable> implements Writable, WritList<T> {
 
 	private static <T> void swap(ArrayList<T> arr1, int i, ArrayList<T> arr2,
 			int j) {
-		T temp = arr1.get(i);
-		arr1.set(i, arr2.get(j));
-		arr2.set(j, temp);
+		arr1.set(i, arr2.set(j, arr1.get(i)));
 	}
 
 	@Override
