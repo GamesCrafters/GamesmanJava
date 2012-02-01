@@ -7,7 +7,6 @@ import java.io.IOException;
 import org.apache.hadoop.io.Writable;
 
 public class GameRecord implements Comparable<GameRecord>, Writable {
-	public static final GameRecord DRAW = new GameRecord(GameValue.DRAW);
 	private GameValue value;
 	private int remoteness;
 

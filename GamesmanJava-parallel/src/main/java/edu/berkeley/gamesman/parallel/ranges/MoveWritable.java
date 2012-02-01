@@ -43,6 +43,18 @@ public class MoveWritable implements Writable, Move {
 	private final WritableList<TripletWritable> changeList = new WritableList<TripletWritable>(
 			TripletWritable.class, null);
 
+	public MoveWritable(int... changes) {
+		int lastPlace = -1;
+		for (int i = 0; i < changes.length; i += 3) {
+			TripletWritable writ = changeList.add();
+			writ.place = changes[i];
+			assert writ.place > lastPlace;
+			lastPlace = writ.place;
+			writ.from = changes[i + 1];
+			writ.to = changes[i + 2];
+		}
+	}
+
 	@Override
 	public void readFields(DataInput in) throws IOException {
 		changeList.readFields(in);
@@ -53,19 +65,19 @@ public class MoveWritable implements Writable, Move {
 		changeList.write(out);
 	}
 
-//	public void set(MoveWritable t) {
-//		changeList.set(t.changeList);
-//	}
-//
-//	public void set(Move move) {
-//		changeList.clear();
-//		for (int i = 0; i < move.numChanges(); i++) {
-//			TripletWritable tw = changeList.add();
-//			tw.place = move.getChangePlace(i);
-//			tw.from = move.getChangeFrom(i);
-//			tw.to = move.getChangeTo(i);
-//		}
-//	}
+	// public void set(MoveWritable t) {
+	// changeList.set(t.changeList);
+	// }
+	//
+	// public void set(Move move) {
+	// changeList.clear();
+	// for (int i = 0; i < move.numChanges(); i++) {
+	// TripletWritable tw = changeList.add();
+	// tw.place = move.getChangePlace(i);
+	// tw.from = move.getChangeFrom(i);
+	// tw.to = move.getChangeTo(i);
+	// }
+	// }
 
 	@Override
 	public int numChanges() {

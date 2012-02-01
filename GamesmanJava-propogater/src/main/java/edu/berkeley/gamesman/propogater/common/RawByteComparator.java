@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.parallel.ranges;
+package edu.berkeley.gamesman.propogater.common;
 
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;

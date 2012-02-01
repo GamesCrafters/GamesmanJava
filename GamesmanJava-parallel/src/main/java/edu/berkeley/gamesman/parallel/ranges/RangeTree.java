@@ -1,5 +1,6 @@
 package edu.berkeley.gamesman.parallel.ranges;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -27,23 +28,42 @@ import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 public abstract class RangeTree<S extends GenState> extends
 		SimpleTree<Range<S>, MainRecords, ChildMap, RecordMap> {
 
+	private class SaveMove {
+		public SaveMove() {
+			childState = myHasher.newState();
+			rotatedState = myHasher.newState();
+			childSubHashes = new long[myHasher.numElements];
+		}
+
+		final S childState;
+		final S rotatedState;
+		final long[] childSubHashes;
+		Move move;
+		ChildMap map;
+		int lastParentPosition;
+	}
+
 	private GenHasher<S> myHasher;
 	private Move[] moves;
 	private int varLen;
 	private int suffLen;
+	private int[] rotDep;
 
-	private QuickLinkedList<MutPair<Move, ChildMap>>[] movePlaces;
-	private QuickLinkedList<MutPair<Move, ChildMap>> currentMoves;
+	// Temporary variables
+	private QuickLinkedList<SaveMove>[] movePlaces;
+	private QuickLinkedList<SaveMove> currentMoves;
+	private int[] lastChanged;
+	private S state;
 
-	private final Pool<MutPair<Move, ChildMap>> movePool = new Pool<MutPair<Move, ChildMap>>(
-			new Factory<MutPair<Move, ChildMap>>() {
+	private final Pool<SaveMove> movePool = new Pool<SaveMove>(
+			new Factory<SaveMove>() {
 				@Override
-				public MutPair<Move, ChildMap> newObject() {
-					return new MutPair<Move, ChildMap>();
+				public SaveMove newObject() {
+					return new SaveMove();
 				}
 
 				@Override
-				public void reset(MutPair<Move, ChildMap> t) {
+				public void reset(SaveMove t) {
 				}
 			});
 
@@ -53,74 +73,114 @@ public abstract class RangeTree<S extends GenState> extends
 	public void firstVisit(Range<S> key, MainRecords valueToFill,
 			WritList<Entry<Range<S>, ChildMap>> parents,
 			Adder<Entry3<Range<S>, RecordMap, ChildMap>> childrenToFill) {
-		for (int i = 0; i < varLen; i++) {
-			movePlaces[i].clear();
+		boolean hasFirst = key.firstPosition(myHasher, state);
+		assert hasFirst;
+		valueToFill.clear();
+		Arrays.fill(lastChanged, 0);
+		for (Move move : moves) {
+			SaveMove sm = movePool.get();
+			sm.move = move;
+			sm.lastParentPosition = -1;
+			Arrays.fill(sm.childSubHashes, 0L);
+			currentMoves.add(sm);
 		}
-		S state = myHasher.getPoolState();
-		S childState = myHasher.getPoolState();
-		try {
-			if (key.firstPosition(myHasher, state)) {
-				for (int i = 0; i < moves.length; i++) {
-					MutPair<Move, ChildMap> pair = movePool.get();
-					pair.car = moves[i];
-					pair.cdr = null;
-					currentMoves.add(pair);
-				}
-				int changed = 0, pos = 0;
-				while (changed >= 0 && changed < varLen) {
-					GameValue primitiveValue = getValue(state);
-					if (primitiveValue == null) {
-						valueToFill.add().set(GameRecord.DRAW);
-						QuickLinkedList<MutPair<Move, ChildMap>>.QLLIterator iter = currentMoves
-								.listIterator();
-						try {
-							while (iter.hasNext()) {
-								MutPair<Move, ChildMap> movePair = iter.next();
-								int place = Moves.matches(movePair.car, state);
-								if (place == -1) {
-									myHasher.makeMove(state, movePair.car,
-											childState);
-									if (movePair.cdr == null) {
-										Entry3<Range<S>, RecordMap, ChildMap> toFill = childrenToFill
-												.add();
-										toFill.getT1().set(childState, suffLen);
-										toFill.getT2().clear();
-										ChildMap childMap = toFill.getT3();
-										childMap.clear();
-										movePair.cdr = childMap;
-									}
-									IntWritable writ = movePair.cdr.add(pos);
-									long subHash = myHasher.subHash(childState,
-											varLen);
-									assert subHash <= Integer.MAX_VALUE;
-									writ.set((int) subHash);
-								} else if (place < varLen) {
-									iter.remove();
-									movePlaces[place].add(movePair);
+		int changed = myHasher.numElements - 1;
+		int pos = 0;
+		while (true) {
+			assert pos == myHasher.hash(state, null, varLen);
+			GameValue prim = getValue(state);
+			GameRecord rec = valueToFill.add();
+			if (prim == null) {
+				rec.set(GameValue.DRAW);
+				QuickLinkedList<SaveMove>.QLLIterator sIter = currentMoves
+						.iterator();
+				try {
+					while (sIter.hasNext()) {
+						SaveMove sm = sIter.next();
+						int matches = Moves.matches(sm.move, state);
+						if (matches == -1) {
+							if (validMove(state, sm.move)) {
+								int numChanged;
+								if (sm.map == null) {
+									numChanged = varLen;
+									myHasher.makeMove(state, sm.move,
+											sm.childState, myHasher.numElements);
+									rotateToBaseState(myHasher, sm.childState,
+											sm.rotatedState,
+											myHasher.numElements);
+									Entry3<Range<S>, RecordMap, ChildMap> entry = childrenToFill
+											.add();
+									entry.getT1().set(sm.rotatedState, suffLen);
+									entry.getT2().clear();
+									ChildMap childMap = entry.getT3();
+									childMap.clear();
+									sm.map = childMap;
 								} else {
-									iter.remove();
-									movePool.release(movePair);
+									numChanged = 0;
+									while (numChanged < varLen
+											&& sm.lastParentPosition < lastChanged[numChanged])
+										numChanged++;
+									myHasher.makeMove(state, sm.move,
+											sm.childState, numChanged);
+									rotateToBaseState(myHasher, sm.childState,
+											sm.rotatedState, numChanged);
 								}
+								long childHash = myHasher.hash(sm.rotatedState,
+										sm.childSubHashes, rotDep[numChanged]);
+								assert childHash == myHasher.hash(
+										sm.rotatedState, null, varLen);
+								assert childHash <= Integer.MAX_VALUE;
+								IntWritable writ = sm.map.add(pos);
+								writ.set((int) childHash);
+								sm.lastParentPosition = pos;
 							}
-						} finally {
-							currentMoves.release(iter);
+						} else {
+							sIter.remove();
+							if (matches < varLen) {
+								movePlaces[matches].add(sm);
+							} else {
+								movePool.release(sm);
+							}
 						}
-					} else {
-						valueToFill.add().set(primitiveValue, 0);
 					}
-					changed = myHasher.step(state);
-					pos++;
-					for (int place = 0; place < varLen && place <= changed; place++) {
-						currentMoves.stealAll(movePlaces[place]);
-					}
+				} finally {
+					currentMoves.release(sIter);
 				}
-				while (!currentMoves.isEmpty())
-					movePool.release(currentMoves.pop());
+			} else {
+				rec.set(prim, 0);
 			}
-		} finally {
-			myHasher.release(childState);
-			myHasher.release(state);
+			changed = myHasher.step(state);
+			pos++;
+			for (int i = Math.min(changed, varLen - 1); i >= 0; i--) {
+				currentMoves.stealAll(movePlaces[i]);
+			}
+			if (changed < 0 || changed >= varLen)
+				break;
+			for (int i = rotDep[changed]; i >= 0; i--) {
+				lastChanged[i] = pos;
+			}
 		}
+		QuickLinkedList<SaveMove>.QLLIterator iter = currentMoves.iterator();
+		while (iter.hasNext())
+			movePool.release(iter.next());
+		currentMoves.release(iter);
+		currentMoves.clear();
+	}
+
+	public boolean validMove(S state, Move move) {
+		return true;
+	}
+
+	public int[] getRotationDependencies() {
+		int[] rdep = new int[myHasher.numElements + 1];
+		for (int i = 0; i <= myHasher.numElements; i++)
+			rdep[i] = i;
+		return rdep;
+	}
+
+	public void rotateToBaseState(GenHasher<S> hasher, S state, S rotateTo,
+			int numChanged) {
+		hasher.set(state, rotateTo, numChanged);
 	}
 
 	@Override
@@ -271,12 +331,17 @@ public abstract class RangeTree<S extends GenState> extends
 		moves = getMoves();
 		suffLen = suffixLength();
 		varLen = myHasher.numElements - suffLen;
-		QLLFactory<MutPair<Move, ChildMap>> fact = new QLLFactory<MutPair<Move, ChildMap>>();
+		QLLFactory<SaveMove> fact = new QLLFactory<SaveMove>();
 		currentMoves = fact.getList();
 		movePlaces = new QuickLinkedList[varLen];
 		for (int i = 0; i < varLen; i++) {
 			movePlaces[i] = fact.getList();
 		}
+		rotDep = getRotationDependencies();
+		assert rotDep.length == myHasher.numElements + 1;
+		assert rotDep[varLen] == varLen;
+		lastChanged = new int[varLen];
+		state = myHasher.newState();
 	}
 
 	protected void innerConfigure(Configuration conf) {

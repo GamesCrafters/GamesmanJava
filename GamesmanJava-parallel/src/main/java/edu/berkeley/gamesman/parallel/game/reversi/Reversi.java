@@ -1,6 +1,7 @@
 package edu.berkeley.gamesman.parallel.game.reversi;
 
 import edu.berkeley.gamesman.propogater.common.Adder;
+import edu.berkeley.gamesman.propogater.common.RawByteComparator;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.game.tree.GameTree;
@@ -119,13 +120,7 @@ public class Reversi<T extends ReversiState<T>> extends GameTree<T> implements
 
 	public static <T extends ReversiState<T>> void defineComparator(
 			Class<T> stateClass) {
-		WritableComparator.define(stateClass, new WritableComparator(
-				stateClass, false) {
-			public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2,
-					int l2) {
-				return compareBytes(b1, s1, l1, b2, s2, l2);
-			}
-		});
+		WritableComparator.define(stateClass, RawByteComparator.instance);
 	}
 
 	@Override

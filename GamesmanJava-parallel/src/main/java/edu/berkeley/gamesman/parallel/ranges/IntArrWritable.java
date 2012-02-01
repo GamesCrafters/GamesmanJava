@@ -7,10 +7,10 @@ import java.util.Arrays;
 
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
-import org.apache.hadoop.record.RecordComparator;
 
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.hasher.genhasher.GenState;
+import edu.berkeley.gamesman.propogater.common.RawByteComparator;
 
 public class IntArrWritable implements WritableComparable<IntArrWritable> {
 	private int[] arr = new int[0];

@@ -54,37 +54,34 @@ public class CompareDBs {
 			GameRecord checkAgainst = null;
 			for (int i = 0; i < treeList.length; i++) {
 				GenHasher<S> hasher = treeList[i].getHasher();
-				S position = hasher.getPoolState();
-				try {
-					hasher.unhash(pos, position);
+				S position = hasher.newState();
+				hasher.unhash(pos, position);
 
-					if (posRange[i] == null || !posRange[i].matches(position)) {
-						if (posRange[i] == null)
-							posRange[i] = new Range<S>();
-						treeList[i].makeOutputContainingRange(position, posRange[i]);
-						MainRecords result = (MainRecords) MapFileOutputFormat
-								.getEntry(readers[i], partitioner[i],
-										posRange[i], recs[i]);
-						if (result == null)
-							unused[i] = true;
-						else
-							unused[i] = false;
-					}
-					GameRecord record = null;
-					if (!unused[i]) {
-						record = treeList[i].getRecord(posRange[i], position,
-								recs[i]);
-						if (checkAgainst == null)
-							checkAgainst = record;
-						else
-							Assert.assertEquals(checkAgainst, record);
-					}
-					if (pos % 100000 == 0) {
-						System.out.println(position);
-						System.out.println(record);
-					}
-				} finally {
-					hasher.release(position);
+				if (posRange[i] == null || !posRange[i].matches(position)) {
+					if (posRange[i] == null)
+						posRange[i] = new Range<S>();
+					treeList[i]
+							.makeOutputContainingRange(position, posRange[i]);
+					MainRecords result = (MainRecords) MapFileOutputFormat
+							.getEntry(readers[i], partitioner[i], posRange[i],
+									recs[i]);
+					if (result == null)
+						unused[i] = true;
+					else
+						unused[i] = false;
+				}
+				GameRecord record = null;
+				if (!unused[i]) {
+					record = treeList[i].getRecord(posRange[i], position,
+							recs[i]);
+					if (checkAgainst == null)
+						checkAgainst = record;
+					else
+						Assert.assertEquals(checkAgainst, record);
+				}
+				if (pos % 100000 == 0) {
+					System.out.println(position);
+					System.out.println(record);
 				}
 			}
 		}

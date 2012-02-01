@@ -104,6 +104,10 @@ public class GenState implements State<GenState>, Comparable<GenState> {
 		addLS(startHigh ? myHasher.baseFor(startPoint - 1) - 1 : 0);
 	}
 
+	final void unsafeAdd() {
+		addLS(sequence[startPoint - 1]);
+	}
+
 	protected void addLS(int ls) {
 		startPoint--;
 		sequence[startPoint] = ls;

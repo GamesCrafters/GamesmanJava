@@ -32,7 +32,7 @@ public abstract class GameTree<STATE extends WritableComparable<STATE>> extends
 			Adder<Entry3<STATE, GameRecord, NullWritable>> childrenToFill) {
 		GameValue primitiveValue = getPrimitiveValue(key);
 		if (primitiveValue == null) {
-			valueToFill.set(GameRecord.DRAW);
+			valueToFill.set(GameValue.DRAW);
 			childAdder.setList(childrenToFill);
 			getChildren(key, childAdder);
 		} else

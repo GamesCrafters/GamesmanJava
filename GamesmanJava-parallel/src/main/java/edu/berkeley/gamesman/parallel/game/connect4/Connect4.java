@@ -8,9 +8,9 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Reducer;
 
 import edu.berkeley.gamesman.game.type.GameValue;
-import edu.berkeley.gamesman.hasher.cachehasher.CacheMove;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
 import edu.berkeley.gamesman.hasher.genhasher.Moves;
+import edu.berkeley.gamesman.parallel.ranges.MoveWritable;
 import edu.berkeley.gamesman.parallel.ranges.Range;
 import edu.berkeley.gamesman.parallel.ranges.RangeReducer;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
@@ -111,17 +111,15 @@ public class Connect4 extends RangeTree<C4State> implements
 				for (int col = 0; col < width; col++) {
 					int place = getPlace(row, col);
 					if (isBottom(row, col)) {
-						result[col].add(new CacheMove(gameSize, numPieces,
-								numPieces + 1, place, 0, turn));
+						result[col].add(new MoveWritable(place, 0, turn,
+								gameSize, numPieces, numPieces + 1));
 					} else {
-						result[col]
-								.add(new CacheMove(gameSize, numPieces,
-										numPieces + 1, place - 1, 1, 1, place,
-										0, turn));
-						result[col]
-								.add(new CacheMove(gameSize, numPieces,
-										numPieces + 1, place - 1, 2, 2, place,
-										0, turn));
+						result[col].add(new MoveWritable(place - 1, 1, 1,
+								place, 0, turn, gameSize, numPieces,
+								numPieces + 1));
+						result[col].add(new MoveWritable(place - 1, 2, 2,
+								place, 0, turn, gameSize, numPieces,
+								numPieces + 1));
 					}
 				}
 			}

@@ -42,7 +42,8 @@ public class Range<S extends GenState> implements WritableComparable<Range<S>> {
 
 	public int subHash(GenHasher<S> hasher, S t) {
 		assert suffix.matches(t);
-		long result = hasher.subHash(t, hasher.numElements - suffix.length());
+		long result = hasher
+				.hash(t, null, hasher.numElements - suffix.length());
 		if (result > Integer.MAX_VALUE)
 			throw new RuntimeException("subhash too large " + result);
 		return (int) result;

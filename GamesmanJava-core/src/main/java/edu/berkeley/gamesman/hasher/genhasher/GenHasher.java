@@ -25,17 +25,17 @@ public abstract class GenHasher<S extends GenState> {
 
 	private long allPositions = -1L;
 
-	private final Pool<S> statePool = new Pool<S>(new Factory<S>() {
-		@Override
-		public S newObject() {
-			return newState();
-		}
-
-		@Override
-		public void reset(S t) {
-			assert validTest(t);
-		}
-	});
+	// private final Pool<S> statePool = new Pool<S>(new Factory<S>() {
+	// @Override
+	// public S newObject() {
+	// return newState();
+	// }
+	//
+	// @Override
+	// public void reset(S t) {
+	// assert validTest(t);
+	// }
+	// });
 	private final Pool<S> interStatePool = new Pool<S>(new Factory<S>() {
 		@Override
 		public S newObject() {
@@ -67,7 +67,7 @@ public abstract class GenHasher<S extends GenState> {
 	 * @return The hash of the state
 	 */
 	public final long hash(S state) {
-		return hash(state, numElements);
+		return hash(state, null, numElements);
 	}
 
 	/**
@@ -79,10 +79,32 @@ public abstract class GenHasher<S extends GenState> {
 	 *            The place to stop hashing at (exclusive)
 	 * @return The hash of the pieces up to the start of the suffix
 	 */
-	final long hash(S state, int suffixStart) {
+	public final long hash(S state, long[] valAt, int upTo) {
 		assert validTest(state);
-		long hash = innerHash(state, suffixStart);
-		assert validTest(state);
+		S state2 = null;
+		long hash;
+		if (superAsserts) {
+			state2 = getPoolPref();
+			state2.set(state);
+		}
+		try {
+			if (valAt == null || upTo == valAt.length)
+				hash = 0L;
+			else
+				hash = valAt[upTo];
+			state.trunc(upTo);
+			while (!state.isComplete()) {
+				state.unsafeAdd();
+				hash += sigValue(state);
+				if (valAt != null)
+					valAt[state.getStart()] = hash;
+			}
+			assert !superAsserts || state.equals(state2);
+		} finally {
+			if (superAsserts) {
+				releasePref(state2);
+			}
+		}
 		return hash;
 	}
 
@@ -126,28 +148,6 @@ public abstract class GenHasher<S extends GenState> {
 	}
 
 	/**
-	 * Compute the hash of the state. This method may be overridden for
-	 * efficiency purposes. It will be called by the hash method.
-	 * 
-	 * @param state
-	 *            The state to hash
-	 * @param suffixStart
-	 *            The place to stop hashing at
-	 * @return The hash of the state
-	 */
-	protected long innerHash(S state, int suffixStart) {
-		S tempState = getPoolPref();
-		tempState.set(state);
-		long total = 0L;
-		while (tempState.getStart() < suffixStart) {
-			total += sigValue(tempState);
-			tempState.trunc();
-		}
-		releasePref(tempState);
-		return total;
-	}
-
-	/**
 	 * @param state
 	 *            Computes the hash contribution for the lowest digit in this
 	 *            prefix
@@ -175,20 +175,6 @@ public abstract class GenHasher<S extends GenState> {
 	 *            A state object to be filled
 	 */
 	public final void unhash(long hash, S fillState) {
-		innerUnhash(hash, fillState);
-		assert validTest(fillState);
-	}
-
-	/**
-	 * Unhashes a state and stores it in fillState. This method may be
-	 * overridden for efficiency purposes. It will be called by unhash.
-	 * 
-	 * @param hash
-	 *            The hash of the state
-	 * @param fillState
-	 *            A state object to be filled
-	 */
-	protected void innerUnhash(long hash, S fillState) {
 		fillState.clear();
 		while (!fillState.isComplete()) {
 			fillState.addOn(false);
@@ -232,24 +218,6 @@ public abstract class GenHasher<S extends GenState> {
 		return step(state, 1);
 	}
 
-	/**
-	 * Takes a state with hash h and modifies it so it hashes to h+dir where dir
-	 * = +/- 1
-	 * 
-	 * @param state
-	 *            The state to modify
-	 * @param dir
-	 *            The direction to step
-	 * @return The index n of the smallest-index piece such that for all m>=n
-	 *         piece m was not changed.
-	 */
-	public final int step(S state, int dir) {
-		assert validTest(state);
-		int result = innerStep(state, dir);
-		assert validTest(state);
-		return result;
-	}
-
 	public final long step(S state, int dir, int minChange) {
 		long initialHash = 0L;
 		assert (initialHash = hash(state)) != -1;
@@ -264,29 +232,13 @@ public abstract class GenHasher<S extends GenState> {
 			diff--;
 		else
 			throw new RuntimeException("dir can only be 1 or -1");
-		int place = innerStep(state, dir);
+		int place = step(state, dir);
 		validComplete(state, dir == -1);
 		assert place == -1 || hash(state) - initialHash == diff;
 		return diff;
 	}
 
-	/**
-	 * Takes a state with hash h and modifies it so it hashes to h+dir where dir
-	 * = +/- 1. You may override this method for efficiency purposes. It will be
-	 * called by step.
-	 * 
-	 * @param state
-	 *            The state to modify
-	 * @param dir
-	 *            The direction to step
-	 * @return The index n of the largest-index piece which was changed
-	 */
-	protected int innerStep(S state, int dir) {
-		return basicStep(state, dir);
-	}
-
-	// Handles the case where state is invalid
-	private int basicStep(S state, int dir) {
+	public final int step(S state, int dir) {
 		assert dir == 1 || dir == -1;
 		int truncTimes = 0;
 		try {
@@ -436,10 +388,7 @@ public abstract class GenHasher<S extends GenState> {
 	 */
 	public final long totalPositions() {
 		if (allPositions == -1) {
-			S state = getPoolPref();
-			state.clear();
-			allPositions = countCompletions(state);
-			releasePref(state);
+			allPositions = numPositions(null, 0);
 		}
 		return allPositions;
 	}
@@ -464,15 +413,15 @@ public abstract class GenHasher<S extends GenState> {
 		superAsserts = true;
 	}
 
-	/**
-	 * @return A state from the inner state pool. Use release to return it to
-	 *         the pool.
-	 */
-	public final S getPoolState() {
-		S state = statePool.get();
-		assert validTest(state);
-		return state;
-	}
+	// /**
+	// * @return A state from the inner state pool. Use release to return it to
+	// * the pool.
+	// */
+	// public final S getPoolState() {
+	// S state = statePool.get();
+	// assert validTest(state);
+	// return state;
+	// }
 
 	/**
 	 * @return A state from the prefix pool. This one is not validated so it may
@@ -482,17 +431,17 @@ public abstract class GenHasher<S extends GenState> {
 		return interStatePool.get();
 	}
 
-	/**
-	 * Releases a state back to the pool. It should be valid and complete
-	 * 
-	 * @param poolState
-	 *            The state to release
-	 */
-	public final void release(S poolState) {
-		assert validTest(poolState);
-		assert poolState.hasHasher(this);
-		statePool.release(poolState);
-	}
+	// /**
+	// * Releases a state back to the pool. It should be valid and complete
+	// *
+	// * @param poolState
+	// * The state to release
+	// */
+	// public final void release(S poolState) {
+	// assert validTest(poolState);
+	// assert poolState.hasHasher(this);
+	// statePool.release(poolState);
+	// }
 
 	/**
 	 * Releases a state back to the prefix pool. It does not need to be valid or
@@ -510,7 +459,7 @@ public abstract class GenHasher<S extends GenState> {
 	 *            The state
 	 * @return The place where the prefix starts for this state
 	 */
-	protected final int getStart(GenState state) {
+	protected final int getStart(S state) {
 		return state.getStart();
 	}
 
@@ -640,156 +589,38 @@ public abstract class GenHasher<S extends GenState> {
 	 *            The move
 	 * @param childState
 	 *            The state in which to store the result
+	 * @param numChanged
 	 */
-	public final void makeMove(GenState firstState, Move move, S childState) {
-		childState.setOther(firstState);
-		// Theoretically someone could override matchSeq(s) in order to modify
-		// firstState. This would not be appropriately checked. There doesn't
-		// seem to be any way around that.
-		makeMove(childState, move);
+	public final void makeMove(S firstState, Move move, S childState,
+			int numChanged) {
+		set(firstState, childState, numChanged, false);
+		makeMove(childState, move, numChanged);
+		assert !superAsserts || sameAsMakeMove(firstState, move, childState);
 	}
 
-	/**
-	 * Steps steppingState until it reaches parentState+move. Returns the amount
-	 * by which the hash changes as a result.
-	 * 
-	 * @param steppingState
-	 *            The state to be modified
-	 * @param parentHasher
-	 *            The hasher for the parent state
-	 * @param parentState
-	 *            The parent state
-	 * @param move
-	 *            The move to search for
-	 * @param same
-	 *            The point at which all elements are known to be the same
-	 *            passed here (so nothing needs to be incremented)
-	 * @param dir
-	 *            The direction in which to step
-	 * @return The amount by which the hash changed<br />
-	 *         TODO Check this is correct when dir==-1
-	 */
-	public final <T extends GenState> long stepTo(S steppingState,
-			GenHasher<T> parentHasher, T parentState, Move move, int same,
-			int dir) {
-		assert !useToughAsserts() || steppingState.matches(parentState, same);
-		long diff = 0;
-		for (int i = 0; i < same - 1; i++) {
-			diff -= sigValue(steppingState);
-			steppingState.trunc();
-		}
-		parentHasher.makeUncheckedMove(parentState, move);
-		while (true) {
-			while (steppingState.leastSig() != parentState.get(steppingState
-					.getStart())) {
-				diff += countCompletions(steppingState);
-				boolean incred = steppingState.incr(dir);
-				assert incred;
-			}
-			if (steppingState.isComplete())
-				break;
-			steppingState.addOn(dir == -1);
-		}
-		parentHasher.unmakeUncheckedMove(parentState, move);
-		assert parentHasher.validTest(parentState);
-		assert validTest(steppingState);
-		return diff;
-	}
-
-	/**
-	 * Puts a lower bound on the hash of the next child from move given a
-	 * starting parent state (or upper bound on hash of previous child if
-	 * dir==-1). In the general case the problem of finding it exactly appears
-	 * to be NP-complete (TODO Prove this) which is why this method only finds a
-	 * bound rather than finding it exactly although most specific instances
-	 * appear to have a polynomial-time shortcut. This method guarantees that if
-	 * you call it with dir == 1 for the start of a range and dir==-1 for the
-	 * end of a range, the produced range of children will be on the order of
-	 * the initial range.<br />
-	 * In particular if the start and end share a prefix which invalidates the
-	 * move, the returned range will have negative length
-	 * 
-	 * @param parentHasher
-	 *            The hasher for the parent state
-	 * @param parentState
-	 *            The parent state
-	 * @param move
-	 *            The move to search for
-	 * @param dir
-	 *            The direction in which to search
-	 * @return The lower/upper bound for the child
-	 */
-	public final <T extends GenState> long getChildBound(
-			GenHasher<T> parentHasher, T parentState, Move move, int dir) {
-		assert dir == 1 || dir == -1;
-		assert parentHasher.validTest(parentState);
-		int pMove = move.numChanges() - 1;
-		S childState = getPoolPref();
-		childState.clear();
-		boolean clobbered = false;
-		while (validPref(childState) && !childState.isComplete()) {
-			int nextStart = childState.getStart() - 1;
-			int nextLS = parentState.get(nextStart);
-			if (pMove >= 0 && move.getChangePlace(pMove) == nextStart) {
-				int changeFrom = move.getChangeFrom(pMove);
-				int changeTo = move.getChangeTo(pMove);
-				if (nextLS == changeFrom) {
-					childState.addLS(changeTo);
-				} else {
-					if (dir == -1 && changeFrom > nextLS || dir == 1
-							&& changeFrom < nextLS) {
-						clobbered = innerStep(childState, dir) == -1;
-					}
-					if (!clobbered)
-						childState.addLS(changeTo);
-					break;
-				}
-				pMove--;
-			} else
-				childState.addLS(nextLS);
-		}
-		final long result;
-		if (clobbered)
-			result = -1;
-		else if (isComplete(childState) && valid(childState)) {
-			result = hash(childState);
-		} else {
-			final boolean isValid = validPref(childState)
-					|| basicStep(childState, dir) != -1;
-			if (isValid) {
-				assert validPrefTest(childState);
-				validComplete(childState, dir == -1);
-				assert validTest(childState);
-				result = hash(childState);
-			} else
-				result = -1;
-		}
-		releasePref(childState);
-		return result;
+	private boolean sameAsMakeMove(S firstState, Move move, S childState) {
+		S state2 = getPoolPref();
+		state2.set(firstState);
+		makeMove(state2, move);
+		releasePref(state2);
+		return childState.equals(state2);
 	}
 
 	public final void makeMove(S state, Move move) {
-		makeUncheckedMove(state, move);
-		assert validTest(state);
+		makeMove(state, move, numElements);
 	}
 
-	private void makeUncheckedMove(S state, Move move) throws Error {
+	private final void makeMove(S state, Move move, int numChanged) {
 		for (int i = 0; i < move.numChanges(); i++) {
 			int place = move.getChangePlace(i);
+			if (place >= numChanged)
+				break;
 			if (state.get(place) == move.getChangeFrom(i))
 				state.set(place, move.getChangeTo(i));
 			else
 				throw new Error("Cannot make this move");
 		}
-	}
-
-	private void unmakeUncheckedMove(GenState state, Move move) throws Error {
-		for (int i = 0; i < move.numChanges(); i++) {
-			if (state.get(move.getChangePlace(i)) == move.getChangeTo(i))
-				state.set(move.getChangePlace(i), move.getChangeFrom(i));
-			else
-				throw new Error("Cannot unmake this move");
-		}
+		assert validTest(state);
 	}
 
 	/**
@@ -846,32 +677,6 @@ public abstract class GenHasher<S extends GenState> {
 		return numCompletions;
 	}
 
-	/**
-	 * Returns the hash ignoring the suffix (ie the hash of the pieces only up
-	 * to suffixStart exclusive)
-	 * 
-	 * @param state
-	 *            The state to hash
-	 * @param suffixStart
-	 *            The place where the suffix starts
-	 * @return The hash
-	 */
-	public long subHash(S state, int suffixStart) {
-		// TODO Fix this problem everywhere
-		boolean matchesHasher = state.hasHasher(this);
-		if (!matchesHasher) {
-			S tempState = getPoolState();
-			set(tempState, state);
-			state = tempState;
-		}
-		try {
-			return hash(state, suffixStart);
-		} finally {
-			if (!matchesHasher)
-				release(state);
-		}
-	}
-
 	public boolean firstPosition(int[] suffix, int suffLen, S toFill) {
 		toFill.clear();
 		for (int i = suffLen - 1; i >= 0; i--) {
@@ -901,7 +706,7 @@ public abstract class GenHasher<S extends GenState> {
 				state.trunc(place);
 			}
 			diff += countCompletions(state);
-			changedPlace = innerStep(state, 1);
+			changedPlace = step(state, 1);
 			place = Moves.matches(move, state);
 			if (place == -1) {
 				validComplete(state, false);
@@ -918,6 +723,17 @@ public abstract class GenHasher<S extends GenState> {
 
 	public long numPositions(int[] pieces) {
 		return numPositions(pieces, pieces.length);
+	}
+
+	public void set(S from, S to, int numChanged) {
+		set(from, to, numChanged, true);
+	}
+
+	private void set(S from, S to, int numChanged, boolean assertEquals) {
+		for (int i = numChanged - 1; i >= 0; i--) {
+			to.set(i, from.get(i));
+		}
+		assert !assertEquals || from.equals(to);
 	}
 
 }
