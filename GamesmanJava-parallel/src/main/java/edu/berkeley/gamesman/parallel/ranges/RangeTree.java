@@ -64,6 +64,7 @@ public abstract class RangeTree<S extends GenState> extends
 
 				@Override
 				public void reset(SaveMove t) {
+					t.map = null;
 				}
 			});
 
