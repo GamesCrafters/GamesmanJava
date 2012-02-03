@@ -19,7 +19,7 @@ public class TicTacToe extends RectangularDartboardGame {
 
 	@Override
 	public Value primitiveValue() {
-		return bsb.xInALine(piecesToWin, oppositeTurn()) == 1 ? Value.LOSE
+		return bsb.xInALine(piecesToWin, oppositeTurn()) ? Value.LOSE
 				: (getTier() == gameSize ? Value.TIE : Value.UNDECIDED);
 	}
 

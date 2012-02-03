@@ -8,6 +8,7 @@ import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 public class C4State extends CountingState {
 	private final int width, height, boardSize;
 	private final BitSetBoard myBoard;
+	private int changePlace;
 
 	public C4State(GenHasher<? extends CountingState> myHasher, int width,
 			int height) {
@@ -15,6 +16,7 @@ public class C4State extends CountingState {
 		this.width = width;
 		this.height = height;
 		this.boardSize = width * height;
+		changePlace = boardSize - 1;
 		this.myBoard = new BitSetBoard(height, width);
 	}
 
@@ -34,27 +36,27 @@ public class C4State extends CountingState {
 
 	private char getChar(int row, int col) {
 		int place = col * height + row;
-		return place < getStart() ? '*' : Connect4.charFor(get(place));
+		return place < getStart() ? '*' : getChar(place);
+	}
+
+	private char getChar(int place) {
+		return Connect4.charFor(get(place));
 	}
 
 	@Override
 	protected void addLS(int ls) {
 		super.addLS(ls);
-		int start = getStart();
-		setPiece(start, ls);
+		upChange(getStart());
 	}
 
-	private void setPiece(int place, int val) {
-		if (place < boardSize) {
-			int row = place % height, col = place / height;
-			myBoard.setPiece(row, col, Connect4.charFor(val));
-		}
+	private void upChange(int place) {
+		changePlace = Math.max(changePlace, place);
 	}
 
 	@Override
 	protected boolean incr(int dir) {
 		if (super.incr(dir)) {
-			setLS();
+			upChange(getStart());
 			return true;
 		} else
 			return false;
@@ -63,30 +65,31 @@ public class C4State extends CountingState {
 	@Override
 	protected void matchSeq() {
 		super.matchSeq();
-		matchAll();
+		changePlace = boardSize - 1;
 	}
 
 	@Override
 	protected void set(int place, int val) {
 		super.set(place, val);
-		setPiece(place, val);
-	}
-
-	private void matchAll() {
-		for (int i = getStart(); i < boardSize; i++)
-			setPiece(i);
-	}
-
-	private void setLS() {
-		setPiece(getStart());
-	}
-
-	private void setPiece(int place) {
-		setPiece(place, get(place));
+		upChange(place);
 	}
 
 	public GameValue getValue(int inALine, int lastTurn) {
-		return myBoard.xInALine(inALine, Connect4.charFor(lastTurn)) != 0 ? GameValue.LOSE
+		assert isComplete();
+		int col = 0;
+		int boardCounter = 0;
+		int stopAt = Math.min(changePlace, boardSize - 1);
+		for (int i = 0; i <= stopAt; i++) {
+			if (col == height) {
+				col = 0;
+				boardCounter++;
+			}
+			myBoard.setPiece(boardCounter, getChar(i));
+			boardCounter++;
+			col++;
+		}
+		changePlace = 0;
+		return myBoard.xInALine(inALine, Connect4.charFor(lastTurn)) ? GameValue.LOSE
 				: (numPieces() == boardSize ? GameValue.TIE : null);
 	}
 

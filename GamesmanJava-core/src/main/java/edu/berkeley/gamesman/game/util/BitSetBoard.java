@@ -1,24 +1,13 @@
 package edu.berkeley.gamesman.game.util;
 
-import java.math.BigInteger;
-
 /**
  * @author dnspies
  */
 public class BitSetBoard {
-	protected BigInteger xPlayer;
 
-	protected BigInteger oPlayer;
+	private long xPlayer = 0L, oPlayer = 0L;
 
-	protected long xPlayerLong;
-
-	protected long oPlayerLong;
-
-	protected final int height;
-
-	protected final int width;
-
-	protected final boolean usesLong;
+	private final int height, width;
 
 	/**
 	 * @param gameHeight
@@ -29,17 +18,12 @@ public class BitSetBoard {
 	public BitSetBoard(int gameHeight, int gameWidth) {
 		height = gameHeight;
 		width = gameWidth;
-		usesLong = (height + 1) * width <= 64;
-		if (usesLong) {
-			xPlayerLong = 0L;
-			oPlayerLong = 0L;
-		} else {
-			xPlayer = BigInteger.ZERO;
-			oPlayer = BigInteger.ZERO;
-		}
+		if ((height + 1) * width > 64)
+			throw new IllegalArgumentException(
+					"Only works when (height+1)*width<=64");
 	}
 
-	protected int getBit(int row, int col) {
+	private int getBit(int row, int col) {
 		return col * (height + 1) + row;
 	}
 
@@ -53,13 +37,18 @@ public class BitSetBoard {
 	 */
 	public void flipPiece(int row, int col) {
 		int bit = getBit(row, col);
-		if (usesLong) {
-			xPlayerLong = xPlayerLong ^ (1L << bit);
-			oPlayerLong = oPlayerLong ^ (1L << bit);
-		} else {
-			xPlayer = xPlayer.flipBit(bit);
-			oPlayer = oPlayer.flipBit(bit);
-		}
+		flipPiece(bit);
+	}
+
+	public void flipPiece(int bit) {
+		assert oneHas(bit);
+		long xorWith = 1L << bit;
+		xPlayer ^= xorWith;
+		oPlayer ^= xorWith;
+	}
+
+	private boolean oneHas(int bit) {
+		return ((xPlayer ^ oPlayer) & (1L << bit)) != 0;
 	}
 
 	/**
@@ -72,13 +61,14 @@ public class BitSetBoard {
 	 */
 	public void removePiece(int row, int col) {
 		int bit = getBit(row, col);
-		if (usesLong) {
-			xPlayerLong = xPlayerLong & ~(1L << bit);
-			oPlayerLong = oPlayerLong & ~(1L << bit);
-		} else {
-			xPlayer = xPlayer.clearBit(bit);
-			oPlayer = oPlayer.clearBit(bit);
-		}
+		removePiece(bit);
+	}
+
+	public void removePiece(int bit) {
+		assert oneHas(bit);
+		long andWith = ~(1L << bit);
+		xPlayer &= andWith;
+		oPlayer &= andWith;
 	}
 
 	/**
@@ -92,18 +82,23 @@ public class BitSetBoard {
 	 *            The color of the piece
 	 */
 	public void addPiece(int row, int col, char color) {
+		int bit = getBit(row, col);
+		addPiece(bit, color);
+	}
+
+	private boolean noneHas(int bit) {
+		return ((xPlayer | oPlayer) & (1L << bit)) == 0;
+	}
+
+	public void addPiece(int bit, char color) throws Error {
+		assert noneHas(bit);
+		long shamt = 1L << bit;
 		switch (color) {
 		case 'X':
-			if (usesLong)
-				xPlayerLong |= (1L << getBit(row, col));
-			else
-				xPlayer = xPlayer.setBit(getBit(row, col));
+			xPlayer |= shamt;
 			break;
 		case 'O':
-			if (usesLong)
-				oPlayerLong |= (1L << getBit(row, col));
-			else
-				oPlayer = oPlayer.setBit(getBit(row, col));
+			oPlayer |= shamt;
 			break;
 		default:
 			throw new Error("Bad piece");
@@ -114,15 +109,9 @@ public class BitSetBoard {
 	 * Switches X with O
 	 */
 	public void switchColors() {
-		if (usesLong) {
-			long tmp = xPlayerLong;
-			xPlayerLong = oPlayerLong;
-			oPlayerLong = tmp;
-		} else {
-			BigInteger tmp = xPlayer;
-			xPlayer = oPlayer;
-			oPlayer = tmp;
-		}
+		long tmp = xPlayer;
+		xPlayer = oPlayer;
+		oPlayer = tmp;
 	}
 
 	/**
@@ -133,121 +122,69 @@ public class BitSetBoard {
 	 * @return Whether there are x pieces of color color in a straight line on
 	 *         the board. 0 for false, 1 for true.
 	 */
-	public int xInALine(int x, char color) {
-		boolean isLine;
-		if (usesLong) {
-			long board = (color == 'X' ? xPlayerLong : oPlayerLong);
-			isLine = checkDirection(x, 1, board)
-					|| checkDirection(x, height, board)
-					|| checkDirection(x, height + 1, board)
-					|| checkDirection(x, height + 2, board);
-		} else {
-			BigInteger board = (color == 'X' ? xPlayer : oPlayer);
-			isLine = checkDirection(x, 1, board)
-					|| checkDirection(x, height, board)
-					|| checkDirection(x, height + 1, board)
-					|| checkDirection(x, height + 2, board);
-		}
-		return isLine ? 1 : 0;
+	public boolean xInALine(int x, char color) {
+		long board = (color == 'X' ? xPlayer : oPlayer);
+		return checkDirection(x, 1, board) || checkDirection(x, height, board)
+				|| checkDirection(x, height + 1, board)
+				|| checkDirection(x, height + 2, board);
 	}
 
-	protected boolean checkDirection(int x, int direction, long board) {
+	private boolean checkDirection(int x, int direction, long board) {
 		int dist = direction * x;
 		int checked = direction;
 		while (checked << 1 < dist) {
-			board = board & (board >> checked);
+			board &= board >> checked;
 			checked <<= 1;
 		}
 		int lastCheck = dist - checked;
-		board = board & (board >> lastCheck);
+		board &= board >> lastCheck;
 		return board != 0;
-	}
-
-	/*
-	 * A rather complicated mathematical function. Runs in log time with respect
-	 * to x to see if there are x 1's anywhere in the number evenly spaced at
-	 * intervals of length direction.
-	 */
-	protected boolean checkDirection(int x, int direction, BigInteger board) {
-		int dist = direction * x;
-		int checked = direction;
-		while (checked << 1 < dist) {
-			board = board.and(board.shiftRight(checked));
-			checked <<= 1;
-		}
-		int lastCheck = dist - checked;
-		board = board.and(board.shiftRight(lastCheck));
-		return !board.equals(BigInteger.ZERO);
 	}
 
 	/**
 	 * Clears the board
 	 */
 	public void clear() {
-		if (usesLong) {
-			xPlayerLong = 0L;
-			oPlayerLong = 0L;
-		} else {
-			xPlayer = BigInteger.ZERO;
-			oPlayer = BigInteger.ZERO;
-		}
+		xPlayer = 0L;
+		oPlayer = 0L;
 	}
 
 	public String toString() {
 		StringBuilder str = new StringBuilder(width * 2 + 1);
-		if (usesLong) {
-			for (int row = height - 1; row >= 0; row--) {
+		for (int row = height - 1; row >= 0; row--) {
+			str.append('|');
+			for (int col = 0; col < width; col++) {
+				if ((xPlayer & (1L << getBit(row, col))) > 0L)
+					str.append('X');
+				else if ((oPlayer & (1L << getBit(row, col))) > 0L)
+					str.append('O');
+				else
+					str.append(' ');
 				str.append('|');
-				for (int col = 0; col < width; col++) {
-					if ((xPlayerLong & (1L << getBit(row, col))) > 0L)
-						str.append('X');
-					else if ((oPlayerLong & (1L << getBit(row, col))) > 0L)
-						str.append('O');
-					else
-						str.append(' ');
-					str.append('|');
-				}
-				str.append('\n');
 			}
-		} else {
-			for (int row = height - 1; row >= 0; row--) {
-				str.append('|');
-				for (int col = 0; col < width; col++) {
-					if (xPlayer.testBit(getBit(row, col)))
-						str.append('X');
-					else if (oPlayer.testBit(getBit(row, col)))
-						str.append('O');
-					else
-						str.append(' ');
-					str.append('|');
-				}
-				str.append('\n');
-			}
+			str.append('\n');
 		}
 		return str.toString();
 	}
 
-	public void setPiece(int row, int col, char c) {
-		removePiece(row, col);
-		if (c != ' ')
-			addPiece(row, col, c);
-	}
-
-	public char getPiece(int row, int col) {
-		if (usesLong) {
-			if ((xPlayerLong & (1L << getBit(row, col))) != 0)
-				return 'X';
-			else if ((oPlayerLong & (1L << getBit(row, col))) != 0)
-				return 'O';
-			else
-				return ' ';
-		} else {
-			if (xPlayer.testBit(getBit(row, col)))
-				return 'X';
-			else if (oPlayer.testBit(getBit(row, col)))
-				return 'O';
-			else
-				return ' ';
+	public void setPiece(int bit, char c) throws Error {
+		long orWith = 1L << bit;
+		long andWith = ~orWith;
+		switch (c) {
+		case ' ':
+			xPlayer &= andWith;
+			oPlayer &= andWith;
+			break;
+		case 'X':
+			oPlayer = oPlayer & andWith;
+			xPlayer |= orWith;
+			break;
+		case 'O':
+			xPlayer = xPlayer & andWith;
+			oPlayer |= orWith;
+			break;
+		default:
+			throw new Error("Bad piece");
 		}
 	}
 }

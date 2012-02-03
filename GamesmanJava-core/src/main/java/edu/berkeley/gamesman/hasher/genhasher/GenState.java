@@ -145,7 +145,7 @@ public class GenState implements State<GenState>, Comparable<GenState> {
 	/**
 	 * @return
 	 */
-	final boolean isComplete() {
+	protected final boolean isComplete() {
 		return startPoint == 0;
 	}
 

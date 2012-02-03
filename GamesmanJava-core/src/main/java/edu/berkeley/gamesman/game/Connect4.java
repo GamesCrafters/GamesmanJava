@@ -208,11 +208,9 @@ public final class Connect4 extends TierGame {
 	@Override
 	public Value primitiveValue() {
 		char lastTurn = (pieces.size() % 2 == 1 ? 'X' : 'O');
-		int result = bsb.xInALine(piecesToWin, lastTurn);
-		if (result > 0)
+		boolean result = bsb.xInALine(piecesToWin, lastTurn);
+		if (result)
 			return Value.LOSE;
-		else if (result < 0)
-			return Value.IMPOSSIBLE;
 		else if (pieces.size() == gameSize)
 			return Value.TIE;
 		else
