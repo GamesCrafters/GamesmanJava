@@ -11,11 +11,11 @@ import org.apache.hadoop.io.WritableComparable;
 
 abstract class ReversiState<T extends ReversiState<T>> implements
 		WritableComparable<T> {
-	private final QuadSet board = new QuadSet();
-	private final int[] count = new int[3];
-	private final int width, height;
-	private int turn;
-	private int passes;
+	final QuadSet board = new QuadSet();
+	final int[] count = new int[3];
+	public final int width, height;
+	int turn;
+	int passes;
 
 	public ReversiState(int width, int height) {
 		this.width = width;
