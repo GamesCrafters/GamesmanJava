@@ -48,6 +48,7 @@ public abstract class RangeTree<S extends GenState> extends
 	private int varLen;
 	private int suffLen;
 	private int[] rotDep;
+	private boolean useRotation;
 
 	// Temporary variables
 	private QuickLinkedList<SaveMove>[] movePlaces;
@@ -102,34 +103,37 @@ public abstract class RangeTree<S extends GenState> extends
 						if (matches == -1) {
 							if (validMove(state, sm.move)) {
 								int numChanged;
-								if (sm.map == null) {
-									numChanged = varLen;
-									myHasher.makeMove(state, sm.move,
-											sm.childState, myHasher.numElements);
-									rotateToBaseState(myHasher, sm.childState,
-											sm.rotatedState,
-											myHasher.numElements);
-									Entry3<Range<S>, RecordMap, ChildMap> entry = childrenToFill
-											.add();
-									entry.getT1().set(sm.rotatedState, suffLen);
-									entry.getT2().clear();
-									ChildMap childMap = entry.getT3();
-									childMap.clear();
-									sm.map = childMap;
-								} else {
+								S childState;
+								if (sm.map == null)
+									numChanged = myHasher.numElements;
+								else {
 									numChanged = 0;
 									while (numChanged < varLen
 											&& sm.lastParentPosition < lastChanged[numChanged])
 										numChanged++;
-									myHasher.makeMove(state, sm.move,
-											sm.childState, numChanged);
+								}
+								myHasher.makeMove(state, sm.move,
+										sm.childState, numChanged);
+								if (useRotation) {
 									rotateToBaseState(myHasher, sm.childState,
 											sm.rotatedState, numChanged);
+									childState = sm.rotatedState;
+								} else
+									childState = sm.childState;
+								if (sm.map == null) {
+									Entry3<Range<S>, RecordMap, ChildMap> entry = childrenToFill
+											.add();
+									entry.getT1().set(childState, suffLen);
+									entry.getT2().clear();
+									ChildMap childMap = entry.getT3();
+									childMap.clear();
+									sm.map = childMap;
+									numChanged = varLen;
 								}
-								long childHash = myHasher.hash(sm.rotatedState,
+								long childHash = myHasher.hash(childState,
 										sm.childSubHashes, rotDep[numChanged]);
-								assert childHash == myHasher.hash(
-										sm.rotatedState, null, varLen);
+								assert childHash == myHasher.hash(childState,
+										null, varLen);
 								assert childHash <= Integer.MAX_VALUE;
 								IntWritable writ = sm.map.add(pos);
 								writ.set((int) childHash);
@@ -172,7 +176,7 @@ public abstract class RangeTree<S extends GenState> extends
 		return true;
 	}
 
-	public int[] getRotationDependencies() {
+	protected int[] getRotationDependencies() {
 		int[] rdep = new int[myHasher.numElements + 1];
 		for (int i = 0; i <= myHasher.numElements; i++)
 			rdep[i] = i;
@@ -181,7 +185,7 @@ public abstract class RangeTree<S extends GenState> extends
 
 	public void rotateToBaseState(GenHasher<S> hasher, S state, S rotateTo,
 			int numChanged) {
-		hasher.set(state, rotateTo, numChanged);
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -338,11 +342,16 @@ public abstract class RangeTree<S extends GenState> extends
 		for (int i = 0; i < varLen; i++) {
 			movePlaces[i] = fact.getList();
 		}
+		useRotation = usesRotation();
 		rotDep = getRotationDependencies();
 		assert rotDep.length == myHasher.numElements + 1;
 		assert rotDep[varLen] == varLen;
 		lastChanged = new int[varLen];
 		state = myHasher.newState();
+	}
+
+	protected boolean usesRotation() {
+		return false;
 	}
 
 	protected void innerConfigure(Configuration conf) {
