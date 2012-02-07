@@ -54,8 +54,8 @@ public abstract class InvariantHasher<S extends GenState> extends GenHasher<S> {
 			} while (incr(tempState, 1));
 			releasePref(tempState);
 		}
-		if (countingPlace == start && posCount > 0)
-			posCount = 1L;
+		if (countingPlace == start)
+			posCount *= posCount;
 		invariantCounts[start].put(inv, posCount);
 		return posCount;
 	}

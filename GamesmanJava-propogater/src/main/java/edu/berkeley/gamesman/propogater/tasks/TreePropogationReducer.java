@@ -5,6 +5,7 @@ import java.util.HashSet;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
@@ -19,7 +20,8 @@ import edu.berkeley.gamesman.propogater.writable.list.WritableList;
 public class TreePropogationReducer<K extends WritableComparable<K>, V extends Writable, PI extends Writable, UM extends Writable, CI extends Writable, DM extends Writable>
 		extends TreeReducer<K, V, PI, UM, CI, DM> {
 	private Tree<K, V, PI, UM, CI, DM> tree;
-	private final HashSet<Integer> changed = new HashSet<Integer>();
+	private final HashSet<IntWritable> changed = new HashSet<IntWritable>();
+	private IntWritable div = new IntWritable();
 
 	@Override
 	protected void setup(Context context) throws IOException,
@@ -39,7 +41,9 @@ public class TreePropogationReducer<K extends WritableComparable<K>, V extends W
 		}
 		WritableList<IntEntry<UM>> upList = value.getUpList();
 		if (!upList.isEmpty()) {
-			changed.add(tree.getDivision(key));
+			div.set(tree.getDivision(key));
+			if (changed.add(div))
+				div = new IntWritable();
 			WritableList<Entry<K, CI>> childList = value.getChildren();
 			for (int i = 0; i < upList.length(); i++) {
 				IntEntry<UM> mess = upList.get(i);
@@ -58,8 +62,8 @@ public class TreePropogationReducer<K extends WritableComparable<K>, V extends W
 	protected void cleanup(Context context) throws IOException {
 		if (!changed.isEmpty()) {
 			Configuration conf = context.getConfiguration();
-			for (Integer i : changed) {
-				Path npp = ConfParser.getNeedsPropogationPath(conf, i);
+			for (IntWritable i : changed) {
+				Path npp = ConfParser.getNeedsPropogationPath(conf, i.get());
 				IOCheckOperations.createNewFile(npp.getFileSystem(conf), npp);
 			}
 		}

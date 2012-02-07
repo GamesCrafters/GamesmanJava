@@ -7,16 +7,17 @@ import java.util.SortedSet;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.tasks.DividedSequenceFileOutputFormat;
 import edu.berkeley.gamesman.propogater.tasks.PropogationMapper;
 import edu.berkeley.gamesman.propogater.tasks.TreePropogationReducer;
-import edu.berkeley.gamesman.propogater.tasks.TreeReducer;
 
 public class PropogateRunner extends TaskRunner {
 	private final Set<Tier> wholeSet;
@@ -68,6 +69,9 @@ public class PropogateRunner extends TaskRunner {
 			FileInputFormat.setInputPaths(j, mixedPaths);
 			FileOutputFormat.setOutputPath(j, headTier.outputFolder);
 			j.setNumReduceTasks(getNumReducers(j, mixedPaths));
+			j.getConfiguration().setBoolean("mapred.compress.map.output", true);
+			SequenceFileOutputFormat.setOutputCompressionType(j,
+					CompressionType.BLOCK);
 			boolean succeeded = j.waitForCompletion(true);
 			if (!succeeded)
 				throw new RuntimeException("Job did not succeed " + j);

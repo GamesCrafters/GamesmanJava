@@ -8,7 +8,8 @@ import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.hasher.invhasher.OptimizingInvariantHasher;
 
 public class C4Hasher extends OptimizingInvariantHasher<C4State> {
-	private final int width, height, boardSize;
+	private final int width, height;
+	public final int boardSize;
 	private final DBInvCalculator calc;
 
 	public C4Hasher(int width, int height) {
@@ -42,7 +43,7 @@ public class C4Hasher extends OptimizingInvariantHasher<C4State> {
 		if (!isTop(start) && startEmpty && state.get(start + 1) != 0)
 			return -1;
 		else {
-			return calc.getInv(state) + (startEmpty ? 0 : calc.numValues);
+			return calc.getInv(state) | (startEmpty ? 0 : 1 << 24);
 		}
 	}
 

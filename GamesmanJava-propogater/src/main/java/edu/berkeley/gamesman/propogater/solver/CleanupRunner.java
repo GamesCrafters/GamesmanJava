@@ -6,6 +6,7 @@ import java.util.Collection;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -55,6 +56,9 @@ public class CleanupRunner extends TaskRunner {
 		job.setNumReduceTasks(getNumReducers(job, allData));
 		SequenceFileOutputFormat.setOutputCompressionType(job,
 				SequenceFile.CompressionType.BLOCK);
+		job.getConfiguration().setBoolean("mapred.compress.map.output", true);
+		SequenceFileOutputFormat.setOutputCompressionType(job,
+				CompressionType.BLOCK);
 		boolean succeeded = job.waitForCompletion(true);
 		if (!succeeded)
 			throw new RuntimeException("Job did not succeed: " + job);

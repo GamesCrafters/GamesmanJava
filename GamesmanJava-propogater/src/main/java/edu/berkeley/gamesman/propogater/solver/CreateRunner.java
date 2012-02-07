@@ -3,11 +3,12 @@ package edu.berkeley.gamesman.propogater.solver;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.tasks.CreationMapper;
@@ -43,6 +44,9 @@ public class CreateRunner extends TaskRunner {
 			FileInputFormat.setInputPaths(j, tier.dataPath);
 			FileOutputFormat.setOutputPath(j, tier.outputFolder);
 			j.setNumReduceTasks(getNumReducers(j, tier.dataPath));
+			j.getConfiguration().setBoolean("mapred.compress.map.output", true);
+			SequenceFileOutputFormat.setOutputCompressionType(j,
+					CompressionType.BLOCK);
 			boolean succeeded = j.waitForCompletion(true);
 			if (!succeeded)
 				throw new RuntimeException("Job did not succeed " + j);
