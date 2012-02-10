@@ -213,7 +213,7 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 
 	public void clear() {
 		if (size > 0) {
-			pool.giveBack(beforeFirst.next, afterLast.previous);
+			pool.giveBack(beforeFirst.next, afterLast.previous, size);
 			beforeFirst.next = afterLast;
 			afterLast.previous = beforeFirst;
 			size = 0;

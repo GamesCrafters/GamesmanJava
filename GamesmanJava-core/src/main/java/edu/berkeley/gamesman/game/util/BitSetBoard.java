@@ -176,11 +176,11 @@ public class BitSetBoard {
 			oPlayer &= andWith;
 			break;
 		case 'X':
-			oPlayer = oPlayer & andWith;
+			oPlayer &= andWith;
 			xPlayer |= orWith;
 			break;
 		case 'O':
-			xPlayer = xPlayer & andWith;
+			xPlayer &= andWith;
 			oPlayer |= orWith;
 			break;
 		default:
