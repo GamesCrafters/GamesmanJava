@@ -11,6 +11,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.Partitioner;
@@ -99,7 +100,7 @@ public class ConfParser {
 		return new Path(conf.get("propogater.out.path", "out"));
 	}
 
-	public static Set<Integer> getWorkingSet(Configuration conf) {
+	public static Set<IntWritable> getWorkingSet(Configuration conf) {
 		return makeIntSet(conf.get("propogater.working.set"));
 	}
 
@@ -120,11 +121,11 @@ public class ConfParser {
 		return s.toString();
 	}
 
-	private static Set<Integer> makeIntSet(String s) {
-		HashSet<Integer> result = new HashSet<Integer>();
+	private static Set<IntWritable> makeIntSet(String s) {
+		HashSet<IntWritable> result = new HashSet<IntWritable>();
 		String[] stringRes = s.split(",");
 		for (int i = 0; i < stringRes.length; i++) {
-			result.add(Integer.parseInt(stringRes[i]));
+			result.add(new IntWritable(Integer.parseInt(stringRes[i])));
 		}
 		return result;
 	}

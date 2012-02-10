@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -21,8 +22,9 @@ public class PropogationMapper<K extends WritableComparable<K>, V extends Writab
 		Mapper<K, TreeNode<K, V, PI, UM, CI, DM>, K, TreeNode<K, V, PI, UM, CI, DM>> {
 	private Tree<K, V, PI, UM, CI, DM> tree;
 	private TreeNode<K, V, PI, UM, CI, DM> parNode;
-	private Set<Integer> workingSet;
+	private Set<IntWritable> workingSet;
 	private IntEntry<UM> parPair;
+	private final IntWritable writ = new IntWritable();
 
 	@Override
 	protected void setup(Context context) {
@@ -42,8 +44,8 @@ public class PropogationMapper<K extends WritableComparable<K>, V extends Writab
 					"No value found at too late a stage: key = \n"
 							+ key.toString());
 		}
-		int division = tree.getDivision(key);
-		if (workingSet.contains(division)) {
+		writ.set(tree.getDivision(key));
+		if (workingSet.contains(writ)) {
 			boolean nodeChanged = node.combineUp(tree, key);
 			BitSetWritable cleanSet = node.getCleanSet();
 			WritableList<IntEntry<Entry<K, PI>>> parentList = node

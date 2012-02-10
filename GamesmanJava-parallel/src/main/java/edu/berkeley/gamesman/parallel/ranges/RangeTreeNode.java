@@ -13,6 +13,7 @@ import edu.berkeley.gamesman.util.qll.QLLFactory;
 
 public class RangeTreeNode<S extends GenState> extends
 		SimpleTreeNode<Range<S>, MainRecords, ChildMap, RecordMap> {
+	@Override
 	protected Factory<ChildMap> makePIFactory(Configuration conf) {
 		return new Factory<ChildMap>() {
 			private final QLLFactory<IntEntry<IntWritable>> fact = new QLLFactory<IntEntry<IntWritable>>();
@@ -36,6 +37,7 @@ public class RangeTreeNode<S extends GenState> extends
 		};
 	}
 
+	@Override
 	protected Factory<RecordMap> makeCIFactory(Configuration conf) {
 		return new Factory<RecordMap>() {
 			private final QLLFactory<IntEntry<GameRecord>> fact = new QLLFactory<IntEntry<GameRecord>>();

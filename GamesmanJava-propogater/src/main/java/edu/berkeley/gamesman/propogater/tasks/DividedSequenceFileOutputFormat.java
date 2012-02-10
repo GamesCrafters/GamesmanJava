@@ -6,6 +6,7 @@ import java.util.HashMap;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.io.Writable;
@@ -23,7 +24,7 @@ import edu.berkeley.gamesman.propogater.tree.Tree;
 
 public class DividedSequenceFileOutputFormat<K extends WritableComparable<K>, OUTVALUE extends Writable>
 		extends FileOutputFormat<K, OUTVALUE> {
-	private final HashMap<Integer, RecordWriter<K, OUTVALUE>> writers = new HashMap<Integer, RecordWriter<K, OUTVALUE>>();
+	private final HashMap<IntWritable, RecordWriter<K, OUTVALUE>> writers = new HashMap<IntWritable, RecordWriter<K, OUTVALUE>>();
 
 	@Override
 	public RecordWriter<K, OUTVALUE> getRecordWriter(
@@ -58,13 +59,17 @@ public class DividedSequenceFileOutputFormat<K extends WritableComparable<K>, OU
 				writer.write(key, value);
 			}
 
+			private IntWritable writ = new IntWritable();
+
 			private RecordWriter<K, OUTVALUE> getWriter(int division)
 					throws IOException {
-				RecordWriter<K, OUTVALUE> writer = writers.get(division);
+				writ.set(division);
+				RecordWriter<K, OUTVALUE> writer = writers.get(writ);
 				if (writer == null) {
 					writer = createWriter(context, conf, codec,
 							compressionType, division);
-					writers.put(division, writer);
+					writers.put(writ, writer);
+					writ = new IntWritable();
 				}
 				return writer;
 			}
@@ -78,10 +83,9 @@ public class DividedSequenceFileOutputFormat<K extends WritableComparable<K>, OU
 		};
 	}
 
-	private RecordWriter<K, OUTVALUE> createWriter(
-			TaskAttemptContext context, Configuration conf,
-			CompressionCodec codec, CompressionType compressionType, int tier)
-			throws IOException {
+	private RecordWriter<K, OUTVALUE> createWriter(TaskAttemptContext context,
+			Configuration conf, CompressionCodec codec,
+			CompressionType compressionType, int tier) throws IOException {
 		// get the path of the temporary output file
 		Path file = getDefaultWorkFile(context,
 				String.format(ConfParser.EXTENSION_FORMAT, tier));
