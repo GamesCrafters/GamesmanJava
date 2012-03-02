@@ -26,7 +26,7 @@ public class RangeReducer<S extends GenState> extends
 				.<Range<S>, MainRecords, ChildMap, RecordMap, RecordMap, ChildMap> newTree(conf);
 		hasher = tree.getHasher();
 		state = hasher.newState();
-		innerSufLen = tree.innerSuffixLength();
+		innerSufLen = tree.outputSuffixLength();
 		innerVarLen = hasher.numElements - innerSufLen;
 	}
 

@@ -2,6 +2,7 @@ package edu.berkeley.gamesman.parallel.ranges;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 
 import org.apache.hadoop.conf.Configuration;
@@ -69,6 +70,14 @@ public abstract class RangeTree<S extends GenState> extends
 				}
 			});
 
+	/**
+	 * Return the W/L/T value of the game for a given primitive state. If the
+	 * state is not primitive, return null.
+	 * 
+	 * @param state
+	 *            The (possibly) primitive position
+	 * @return W/L/T or null (if not primitive)
+	 */
 	public abstract GameValue getValue(S state);
 
 	@Override
@@ -320,13 +329,18 @@ public abstract class RangeTree<S extends GenState> extends
 	}
 
 	public void makeOutputContainingRange(S t, Range<S> range) {
-		range.set(t, innerSuffixLength());
+		range.set(t, outputSuffixLength());
 	}
 
 	private final Range<S> newRange() {
 		return ReflectionUtils.newInstance(getKeyClass(), getConf());
 	}
 
+	/**
+	 * @return The possible starting positions for a game. In case the game has
+	 *         different variants which may be solved simultaneously, you may
+	 *         have more than one.
+	 */
 	public abstract Collection<S> getStartingPositions();
 
 	@Override
@@ -357,10 +371,19 @@ public abstract class RangeTree<S extends GenState> extends
 	protected void innerConfigure(Configuration conf) {
 	}
 
+	/**
+	 * @return The hasher for this game
+	 */
 	public abstract GenHasher<S> getHasher();
 
 	protected abstract Move[] getMoves();
 
+	/**
+	 * The suffix length is the number of pieces which are fixed in a given
+	 * range.<br />
+	 * Note that if you're handling symmetries, you should expect only certain
+	 * values will work.
+	 */
 	protected abstract int suffixLength();
 
 	public GameRecord getRecord(Range<S> range, S state, MainRecords records) {
@@ -369,7 +392,15 @@ public abstract class RangeTree<S extends GenState> extends
 		return records.get((int) iVal);
 	}
 
-	public int innerSuffixLength() {
+	/**
+	 * This is the length of the suffix in the final output database. In general
+	 * it should be the same or larger than the suffix length when solving. This
+	 * makes it easier to read positions from the database, since only smaller
+	 * ranges need to be read.
+	 * 
+	 * @return
+	 */
+	public int outputSuffixLength() {
 		return suffixLength();
 	}
 

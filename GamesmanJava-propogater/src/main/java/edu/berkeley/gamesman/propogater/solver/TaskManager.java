@@ -8,7 +8,7 @@ import java.util.LinkedList;
 import java.util.Set;
 
 public class TaskManager {
-	private static final boolean ALLOWS_MULTIPLE = false;
+	private static final boolean ALLOWS_MULTIPLE = true;
 
 	private final HashMap<Tier, CreateRunner> creationRunnerMap = new HashMap<Tier, CreateRunner>();
 	private final HashMap<Tier, CombineRunner> combiningRunnerMap = new HashMap<Tier, CombineRunner>();

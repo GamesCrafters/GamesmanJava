@@ -31,9 +31,11 @@ public class Connect4 extends RangeTree<C4State> implements
 		return suffLen;
 	}
 
-	public int innerSuffixLength() {
+	@Override
+	public int outputSuffixLength() {
 		int innerVarLen = getConf().getInt(
 				"gamesman.game.output.variance.length", gameSize);
+		// TODO Why is gameSize the default?
 		return Math.max(gameSize + 1 - innerVarLen, suffLen);
 	}
 
@@ -48,10 +50,27 @@ public class Connect4 extends RangeTree<C4State> implements
 		return state.getValue(inARow, opposite(getTurn(state)));
 	}
 
+	/**
+	 * Returns expected number of pieces for a state (the high-index element of
+	 * the state array)
+	 * 
+	 * @param state
+	 *            The state
+	 * @return The number of pieces/tier for this state
+	 */
 	int numPieces(C4State state) {
 		return state.get(gameSize);
 	}
 
+	/**
+	 * Given a state, fetches the piece at row-col (0 empty, 1 first player, 2
+	 * second player)
+	 * 
+	 * @param state
+	 * @param row
+	 * @param col
+	 * @return
+	 */
 	int get(C4State state, int row, int col) {
 		return state.get(col * height + row);
 	}
@@ -67,6 +86,12 @@ public class Connect4 extends RangeTree<C4State> implements
 		}
 	}
 
+	/**
+	 * Returns whose turn it is for this state
+	 * 
+	 * @param state
+	 * @return
+	 */
 	int getTurn(C4State state) {
 		return getTurn(numPieces(state));
 	}

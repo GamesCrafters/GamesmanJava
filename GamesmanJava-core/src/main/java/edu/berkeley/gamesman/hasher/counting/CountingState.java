@@ -14,6 +14,7 @@ public class CountingState extends GenState {
 	private int[] testing = null;
 	protected final int countTo;
 
+	// TODO Explain countTo
 	/**
 	 * @param myHasher
 	 */

@@ -8,6 +8,7 @@ import java.util.Arrays;
 import org.apache.hadoop.io.Writable;
 
 import edu.berkeley.gamesman.hasher.genhasher.Move;
+import edu.berkeley.gamesman.hasher.genhasher.Moves;
 import edu.berkeley.gamesman.propogater.writable.list.WritableList;
 
 public class MoveWritable implements Writable, Move {
@@ -52,6 +53,18 @@ public class MoveWritable implements Writable, Move {
 			lastPlace = writ.place;
 			writ.from = changes[i + 1];
 			writ.to = changes[i + 2];
+		}
+	}
+
+	public MoveWritable(Move m) {
+		int lastPlace = -1;
+		for (int i = 0; i < m.numChanges(); i++) {
+			TripletWritable writ = changeList.add();
+			writ.place = m.getChangePlace(i);
+			assert writ.place > lastPlace;
+			lastPlace = writ.place;
+			writ.from = m.getChangeFrom(i);
+			writ.to = m.getChangeTo(i);
 		}
 	}
 
@@ -102,5 +115,15 @@ public class MoveWritable implements Writable, Move {
 	@Override
 	public String toString() {
 		return changeList.toString();
+	}
+
+	@Override
+	public int hashCode() {
+		return Moves.moveHashCode(this);
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		return other instanceof Move && Moves.equals(this, (Move) other);
 	}
 }

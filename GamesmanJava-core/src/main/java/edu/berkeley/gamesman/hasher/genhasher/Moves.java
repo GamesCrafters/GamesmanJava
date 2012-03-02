@@ -12,4 +12,31 @@ public final class Moves {
 		}
 		return -1;
 	}
+
+	public static int moveHashCode(Move m) {
+		int hashCode = 1;
+		for (int i = 0; i < m.numChanges(); i++) {
+			hashCode *= 31;
+			hashCode += m.getChangePlace(i);
+			hashCode *= 31;
+			hashCode += m.getChangeFrom(i);
+			hashCode *= 31;
+			hashCode += m.getChangeTo(i);
+		}
+		return hashCode;
+	}
+
+	public static boolean equals(Move first, Move second) {
+		if (first.numChanges() != second.numChanges())
+			return false;
+		for (int i = 0; i < first.numChanges(); i++) {
+			if (first.getChangePlace(i) != second.getChangePlace(i))
+				return false;
+			if (first.getChangeFrom(i) != second.getChangeFrom(i))
+				return false;
+			if (first.getChangeTo(i) != second.getChangeTo(i))
+				return false;
+		}
+		return true;
+	}
 }
