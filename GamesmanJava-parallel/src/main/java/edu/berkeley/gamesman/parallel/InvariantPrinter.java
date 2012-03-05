@@ -11,7 +11,7 @@ import edu.berkeley.gamesman.hasher.genhasher.GenState;
 import edu.berkeley.gamesman.hasher.invhasher.InvariantHasher;
 import edu.berkeley.gamesman.parallel.ranges.ChildMap;
 import edu.berkeley.gamesman.parallel.ranges.MainRecords;
-import edu.berkeley.gamesman.parallel.ranges.Range;
+import edu.berkeley.gamesman.parallel.ranges.Suffix;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.parallel.ranges.RecordMap;
 import edu.berkeley.gamesman.propogater.common.ConfParser;
@@ -25,7 +25,7 @@ public class InvariantPrinter {
 		Path p = new Path(remainArgs[0]);
 		ConfParser.addParameters(conf, p, false);
 		RangeTree<S> tree = (RangeTree<S>) ConfParser
-				.<Range<S>, MainRecords, ChildMap, RecordMap, RecordMap, ChildMap> newTree(conf);
+				.<Suffix<S>, MainRecords, ChildMap, RecordMap, RecordMap, ChildMap> newTree(conf);
 		GenHasher<S> hasher = tree.getHasher();
 		InvariantHasher<S> h = (InvariantHasher<S>) hasher;
 		h.printStates();

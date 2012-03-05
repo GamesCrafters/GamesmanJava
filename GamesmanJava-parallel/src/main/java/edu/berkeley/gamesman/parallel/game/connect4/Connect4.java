@@ -5,14 +5,12 @@ import java.util.Collection;
 import java.util.Collections;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapreduce.Reducer;
 
 import edu.berkeley.gamesman.game.type.GameValue;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
 import edu.berkeley.gamesman.hasher.genhasher.Moves;
 import edu.berkeley.gamesman.parallel.ranges.MoveWritable;
-import edu.berkeley.gamesman.parallel.ranges.Range;
-import edu.berkeley.gamesman.parallel.ranges.RangeReducer;
+import edu.berkeley.gamesman.parallel.ranges.Suffix;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.util.Pair;
@@ -35,7 +33,7 @@ public class Connect4 extends RangeTree<C4State> implements
 	public int outputSuffixLength() {
 		int innerVarLen = getConf().getInt(
 				"gamesman.game.output.variance.length", gameSize);
-		// TODO Why is gameSize the default?
+		// gameSize default ensures outputSuffixLength == suffixLength
 		return Math.max(gameSize + 1 - innerVarLen, suffLen);
 	}
 
@@ -119,16 +117,16 @@ public class Connect4 extends RangeTree<C4State> implements
 	}
 
 	@Override
-	public void innerConfigure(Configuration conf) {
+	public void rangeTreeConfigure(Configuration conf) {
 		width = conf.getInt("gamesman.game.width", 5);
 		height = conf.getInt("gamesman.game.height", 4);
 		gameSize = width * height;
 		inARow = conf.getInt("gamemsan.game.pieces", 4);
 		myHasher = new C4Hasher(width, height);
-		ArrayList<Move>[] result = new ArrayList[width];
+		ArrayList<Move>[] columnMoveList = new ArrayList[width];
 		colMoves = new Move[width][];
 		for (int i = 0; i < width; i++) {
-			result[i] = new ArrayList<Move>();
+			columnMoveList[i] = new ArrayList<Move>();
 		}
 		for (int numPieces = 0; numPieces < gameSize; numPieces++) {
 			int turn = getTurn(numPieces);
@@ -136,14 +134,14 @@ public class Connect4 extends RangeTree<C4State> implements
 				for (int col = 0; col < width; col++) {
 					int place = getPlace(row, col);
 					if (isBottom(row, col)) {
-						result[col].add(new MoveWritable(place, 0, turn,
-								gameSize, numPieces, numPieces + 1));
+						columnMoveList[col].add(new MoveWritable(place, 0,
+								turn, gameSize, numPieces, numPieces + 1));
 					} else {
-						result[col].add(new MoveWritable(place - 1, 1, 1,
-								place, 0, turn, gameSize, numPieces,
+						columnMoveList[col].add(new MoveWritable(place - 1, 1,
+								1, place, 0, turn, gameSize, numPieces,
 								numPieces + 1));
-						result[col].add(new MoveWritable(place - 1, 2, 2,
-								place, 0, turn, gameSize, numPieces,
+						columnMoveList[col].add(new MoveWritable(place - 1, 2,
+								2, place, 0, turn, gameSize, numPieces,
 								numPieces + 1));
 					}
 				}
@@ -151,8 +149,9 @@ public class Connect4 extends RangeTree<C4State> implements
 		}
 		ArrayList<Move> allMoves = new ArrayList<Move>();
 		for (int i = 0; i < width; i++) {
-			colMoves[i] = result[i].toArray(new Move[result[i].size()]);
-			allMoves.addAll(result[i]);
+			colMoves[i] = columnMoveList[i].toArray(new Move[columnMoveList[i]
+					.size()]);
+			allMoves.addAll(columnMoveList[i]);
 		}
 		myMoves = allMoves.toArray(new Move[allMoves.size()]);
 		int varianceLength = conf.getInt("gamesman.game.variance.length", 10);
@@ -175,10 +174,13 @@ public class Connect4 extends RangeTree<C4State> implements
 		return made;
 	}
 
+	/**
+	 * Returns the tier which is just the last element of the sequence.
+	 */
 	@Override
-	public int getDivision(Range<C4State> range) {
-		assert range.length() == suffLen;
-		return range.get(suffLen - 1);
+	public int getDivision(Suffix<C4State> suff) {
+		assert suff.length() == suffLen;
+		return suff.get(suffLen - 1);
 	}
 
 	@Override
@@ -249,10 +251,5 @@ public class Connect4 extends RangeTree<C4State> implements
 		default:
 			return '?';
 		}
-	}
-
-	@Override
-	public Class<? extends Reducer> getCleanupReducerClass() {
-		return RangeReducer.class;
 	}
 }

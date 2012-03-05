@@ -19,7 +19,7 @@ import org.apache.thrift.TException;
 
 import edu.berkeley.gamesman.parallel.ranges.ChildMap;
 import edu.berkeley.gamesman.parallel.ranges.MainRecords;
-import edu.berkeley.gamesman.parallel.ranges.Range;
+import edu.berkeley.gamesman.parallel.ranges.Suffix;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.parallel.ranges.RecordMap;
 import edu.berkeley.gamesman.propogater.common.ConfParser;
@@ -39,12 +39,12 @@ public class HOpener implements Opener {
 		private final Path folderPath;
 		private final SolveReader<S> reader;
 		private final boolean solved;
-		private final Partitioner<Range<S>, MainRecords> partitioner;
+		private final Partitioner<Suffix<S>, MainRecords> partitioner;
 
 		public GFetcher(Configuration hConf, String game, String filename)
 				throws ClassNotFoundException, IOException {
 			this.tree = (RangeTree<S>) ConfParser
-					.<Range<S>, MainRecords, ChildMap, RecordMap, RecordMap, ChildMap> newTree(hConf);
+					.<Suffix<S>, MainRecords, ChildMap, RecordMap, RecordMap, ChildMap> newTree(hConf);
 			String folderName = hConf.get("solve.folder");
 			if (folderName == null) {
 				folderPath = new Path(solveDirectory, filename + "_folder");
@@ -54,7 +54,7 @@ public class HOpener implements Opener {
 			reader = SolveReaders.<S> get(hConf, game);
 			if (solved)
 				partitioner = ConfParser
-						.<Range<S>, MainRecords> getPartitionerInstance(hConf);
+						.<Suffix<S>, MainRecords> getPartitionerInstance(hConf);
 			else
 				partitioner = null;
 		}
@@ -87,9 +87,9 @@ public class HOpener implements Opener {
 			if (solved) {
 				GameRecord rec;
 				try {
-					Range<S> posRange = tree.makeContainingRange(position);
+					Suffix<S> posRange = tree.makeContainingRange(position);
 					MainRecords recs = SolveReaders
-							.<Range<S>, MainRecords> readPosition(tree,
+							.<Suffix<S>, MainRecords> readPosition(tree,
 									folderPath, posRange, partitioner);
 					rec = tree.getRecord(posRange, position, recs);
 					if (previousPosition)

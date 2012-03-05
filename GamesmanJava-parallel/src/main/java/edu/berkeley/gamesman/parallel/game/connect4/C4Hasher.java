@@ -16,6 +16,16 @@ public class C4Hasher extends OptimizingInvariantHasher<C4State> {
 		this(width, height, 0);
 	}
 
+	/**
+	 * @param width
+	 *            The width of the board
+	 * @param height
+	 *            The height of the board
+	 * @param countingPlace
+	 *            The size of the ranges which we wish to count. <-- Should only
+	 *            be used for evaluating the average number of states per range
+	 *            per state
+	 */
 	public C4Hasher(int width, int height, int countingPlace) {
 		super(makeDigitBase(width, height), countingPlace);
 		this.width = width;
@@ -32,6 +42,12 @@ public class C4Hasher extends OptimizingInvariantHasher<C4State> {
 		return digitBase;
 	}
 
+	/**
+	 * See superclass method explanation For connect 4, this is the dartboard
+	 * hash together with an extra 1<<24 if the leastSig is non-empty (this
+	 * restricts the number of ways of completing because the rest of the column
+	 * must also be non-empty)
+	 */
 	@Override
 	protected long getInvariant(C4State state) {
 		int start = getStart(state);
@@ -57,7 +73,7 @@ public class C4Hasher extends OptimizingInvariantHasher<C4State> {
 	}
 
 	@Override
-	protected C4State innerNewState() {
+	protected C4State genHasherNewState() {
 		return new C4State(this, width, height);
 	}
 

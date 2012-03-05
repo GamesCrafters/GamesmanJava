@@ -20,7 +20,7 @@ public class RestrictionlessHasher extends OptimizingInvariantHasher<GenState> {
 	}
 
 	@Override
-	protected GenState innerNewState() {
+	protected GenState genHasherNewState() {
 		return new GenState(this);
 	}
 

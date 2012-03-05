@@ -61,8 +61,15 @@ public abstract class InvariantHasher<S extends GenState> extends GenHasher<S> {
 	}
 
 	/**
+	 * This invariant should be associated with the number of ways of completing
+	 * this state
+	 * 
 	 * @param state
-	 * @return
+	 *            A (possibly incomplete state)
+	 * @return A unique number associated with all states that match this in
+	 *         some way such that the number of ways of completing it is
+	 *         equivalent. (This includes invalid states should not be mixed
+	 *         with valid ones)
 	 */
 	protected abstract long getInvariant(S state);
 

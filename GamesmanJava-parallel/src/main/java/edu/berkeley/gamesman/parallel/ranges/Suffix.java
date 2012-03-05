@@ -9,13 +9,13 @@ import org.apache.hadoop.io.WritableComparable;
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.hasher.genhasher.GenState;
 
-public class Range<S extends GenState> implements WritableComparable<Range<S>> {
+public class Suffix<S extends GenState> implements WritableComparable<Suffix<S>> {
 	private final IntArrWritable suffix = new IntArrWritable();
 
-	public Range() {
+	public Suffix() {
 	}
 
-	public Range(int... values) {
+	public Suffix(int... values) {
 		suffix.setLength(values.length);
 		for (int i = 0; i < values.length; i++)
 			suffix.set(i, values[i]);
@@ -32,7 +32,7 @@ public class Range<S extends GenState> implements WritableComparable<Range<S>> {
 	}
 
 	@Override
-	public int compareTo(Range<S> o) {
+	public int compareTo(Suffix<S> o) {
 		return suffix.compareTo(o.suffix);
 	}
 
@@ -77,7 +77,7 @@ public class Range<S extends GenState> implements WritableComparable<Range<S>> {
 
 	@Override
 	public boolean equals(Object other) {
-		return (other instanceof Range)
-				&& suffix.equals(((Range<?>) other).suffix);
+		return (other instanceof Suffix)
+				&& suffix.equals(((Suffix<?>) other).suffix);
 	}
 }

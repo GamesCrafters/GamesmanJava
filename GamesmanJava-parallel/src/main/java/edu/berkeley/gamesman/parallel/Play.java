@@ -14,7 +14,7 @@ import org.apache.hadoop.mapreduce.lib.output.MapFileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 
 import edu.berkeley.gamesman.parallel.ranges.MainRecords;
-import edu.berkeley.gamesman.parallel.ranges.Range;
+import edu.berkeley.gamesman.parallel.ranges.Suffix;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.tree.Tree;
@@ -94,13 +94,13 @@ public final class Play {
 
 	private static <S extends GenState> void rangeSubMain(Configuration conf,
 			RangeTree<S> tree) throws IOException, ClassNotFoundException {
-		Range<S> posRange = tree.getRoots(true).iterator().next();
+		Suffix<S> posRange = tree.getRoots(true).iterator().next();
 		Path[] outPath = new Path[1];
 		outPath[0] = ConfParser.getOutputPath(conf);
 		MapFile.Reader[] readers = MapFileOutputFormat.getReadersArray(outPath,
 				conf);
-		Partitioner<Range<S>, MainRecords> partitioner = ConfParser
-				.<Range<S>, MainRecords> getPartitionerInstance(conf);
+		Partitioner<Suffix<S>, MainRecords> partitioner = ConfParser
+				.<Suffix<S>, MainRecords> getPartitionerInstance(conf);
 		String gameName = GamesmanParser.getGameName(conf);
 		SolveReader<S> gameReader = SolveReaders.<S> get(conf, gameName);
 

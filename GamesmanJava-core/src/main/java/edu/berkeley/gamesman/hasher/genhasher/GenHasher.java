@@ -397,7 +397,7 @@ public abstract class GenHasher<S extends GenState> {
 	 * @return A new complete valid instance of type S
 	 */
 	public final S newState() {
-		S res = innerNewState();
+		S res = genHasherNewState();
 		assert validTest(res);
 		return res;
 	}
@@ -407,7 +407,7 @@ public abstract class GenHasher<S extends GenState> {
 	 * 
 	 * @return Returns a new state
 	 */
-	protected abstract S innerNewState();
+	protected abstract S genHasherNewState();
 
 	public static void enableToughAsserts() {
 		superAsserts = true;

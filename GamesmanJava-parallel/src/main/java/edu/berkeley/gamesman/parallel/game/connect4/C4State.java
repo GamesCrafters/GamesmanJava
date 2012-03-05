@@ -51,6 +51,9 @@ public class C4State extends CountingState {
 	}
 
 	@Override
+	/**
+	 *TODO Document what methods modify state
+	 */
 	protected void addLS(int ls) {
 		super.addLS(ls);
 		upChange(getStart());
@@ -96,7 +99,8 @@ public class C4State extends CountingState {
 	 *            The number of pieces you need to get
 	 * @param lastTurn
 	 *            Who played last
-	 * @return
+	 * @return The value of this primitive position or null if it's not
+	 *         primitive
 	 */
 	public GameValue getValue(int inALine, int lastTurn) {
 		assert isComplete();

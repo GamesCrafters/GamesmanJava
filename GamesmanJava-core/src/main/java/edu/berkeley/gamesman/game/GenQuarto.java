@@ -241,7 +241,7 @@ class GenQuartoHasher extends InvariantHasher<GenQuartoState> {
 	}
 
 	@Override
-	protected GenQuartoState innerNewState() {
+	protected GenQuartoState genHasherNewState() {
 		return new GenQuartoState(this);
 	}
 

@@ -6,23 +6,42 @@ import edu.berkeley.gamesman.core.State;
 import edu.berkeley.gamesman.util.Util;
 
 /**
- * @author dnspies
+ * A general state for the GenHashers framework. If you subclass this with a
+ * state which memoizes information as it changes, the following methods change
+ * the state:<br />
  * 
+ * addLS(int) decrements start by 1 and sets the new start to the int parameter<br />
+ * clear() sets start to the sequence length so all pieces are starred<br />
+ * incr(int) causes the ls to go up by some amount but not past the next valid
+ * position (possibly exceeding the digit-base by one)<br />
+ * matchSeq() asks all other information to reset to match the new valid
+ * sequence (in other words anything might have changed)<br />
+ * set(int,int) makes the piece at pos match the passed value<br />
+ * trunc() increments start by one and throws off the bottom piece<br />
+ * trunc(int) increments the star to int and throws off all the bottom pieces
+ * below it (some subclasses override this with repeated calls to trunc, be
+ * careful not to double-update)<br />
+ * 
+ * @author dnspies
  */
 public class GenState implements State<GenState>, Comparable<GenState> {
 	/**
-	 * 
+	 * The sequence representing this board-state
 	 */
 	private final int[] sequence;
 	/**
-	 * 
+	 * Imagine everything from 0 to startPoint-1 is starred out
 	 */
 	private int startPoint;
 
 	private GenHasher<?> myHasher;
 
 	/**
+	 * This constructor should only be called from within the hasher method
+	 * newState(). Otherwise everything else should call hasher.newState()
+	 * 
 	 * @param myHasher
+	 *            The hasher corresponding to this state
 	 */
 	public GenState(GenHasher<?> myHasher) {
 		this.sequence = new int[myHasher.numElements];

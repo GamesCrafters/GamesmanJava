@@ -63,6 +63,15 @@ public abstract class Tree<K extends WritableComparable<K>, V extends Writable, 
 
 	public abstract Collection<K> getRoots();
 
+	/**
+	 * Returns a value which is unique to the tier at which this position
+	 * occurs. This allows for optimization in dealing with what should be
+	 * passed to each hadoop task and what will remain unchanged
+	 * 
+	 * @param position
+	 *            The position
+	 * @return A unique integer corresponding to the tier of this position
+	 */
 	public int getDivision(K position) {
 		return 0;
 	}

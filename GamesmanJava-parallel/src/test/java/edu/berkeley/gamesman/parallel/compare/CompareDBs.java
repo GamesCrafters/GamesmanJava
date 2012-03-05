@@ -17,7 +17,7 @@ import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.hasher.genhasher.GenState;
 import edu.berkeley.gamesman.parallel.ranges.ChildMap;
 import edu.berkeley.gamesman.parallel.ranges.MainRecords;
-import edu.berkeley.gamesman.parallel.ranges.Range;
+import edu.berkeley.gamesman.parallel.ranges.Suffix;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.parallel.ranges.RecordMap;
 import edu.berkeley.gamesman.propogater.common.ConfParser;
@@ -30,22 +30,22 @@ public class CompareDBs {
 		String[] remainArgs = parser.getRemainingArgs();
 
 		RangeTree<S>[] treeList = new RangeTree[remainArgs.length];
-		Range<S>[] posRange = new Range[treeList.length];
+		Suffix<S>[] posRange = new Suffix[treeList.length];
 		MainRecords[] recs = new MainRecords[treeList.length];
 		boolean[] unused = new boolean[treeList.length];
 		MapFile.Reader[][] readers = new MapFile.Reader[remainArgs.length][];
-		Partitioner<Range<S>, MainRecords>[] partitioner = new Partitioner[remainArgs.length];
+		Partitioner<Suffix<S>, MainRecords>[] partitioner = new Partitioner[remainArgs.length];
 		for (int i = 0; i < remainArgs.length; i++) {
 			Path p = new Path(remainArgs[i]);
 			Configuration tConf = new Configuration(conf);
 			ConfParser.addParameters(tConf, p, false);
 			treeList[i] = (RangeTree<S>) ConfParser
-					.<Range<S>, MainRecords, ChildMap, RecordMap, RecordMap, ChildMap> newTree(tConf);
+					.<Suffix<S>, MainRecords, ChildMap, RecordMap, RecordMap, ChildMap> newTree(tConf);
 			Path[] outPath = new Path[1];
 			outPath[0] = ConfParser.getOutputPath(tConf);
 			readers[i] = MapFileOutputFormat.getReadersArray(outPath, tConf);
 			partitioner[i] = ConfParser
-					.<Range<S>, MainRecords> getPartitionerInstance(tConf);
+					.<Suffix<S>, MainRecords> getPartitionerInstance(tConf);
 			recs[i] = new MainRecords();
 		}
 
@@ -59,7 +59,7 @@ public class CompareDBs {
 
 				if (posRange[i] == null || !posRange[i].matches(position)) {
 					if (posRange[i] == null)
-						posRange[i] = new Range<S>();
+						posRange[i] = new Suffix<S>();
 					treeList[i]
 							.makeOutputContainingRange(position, posRange[i]);
 					MainRecords result = (MainRecords) MapFileOutputFormat

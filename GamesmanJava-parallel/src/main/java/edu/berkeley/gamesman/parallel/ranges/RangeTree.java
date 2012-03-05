@@ -2,11 +2,11 @@ package edu.berkeley.gamesman.parallel.ranges;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import edu.berkeley.gamesman.game.type.GameRecord;
@@ -26,8 +26,19 @@ import edu.berkeley.gamesman.util.qll.Pool;
 import edu.berkeley.gamesman.util.qll.QLLFactory;
 import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 
+/**
+ * Corresponds to games of a specific format.<br />
+ * Where the state can be hashed using the GenHasher and the moves are a small
+ * set of combinations of replacements (ie can be specified using the Move
+ * interface)
+ * 
+ * @author dnspies
+ * 
+ * @param <S>
+ *            The state type
+ */
 public abstract class RangeTree<S extends GenState> extends
-		SimpleTree<Range<S>, MainRecords, ChildMap, RecordMap> {
+		SimpleTree<Suffix<S>, MainRecords, ChildMap, RecordMap> {
 
 	private class SaveMove {
 		public SaveMove() {
@@ -81,9 +92,9 @@ public abstract class RangeTree<S extends GenState> extends
 	public abstract GameValue getValue(S state);
 
 	@Override
-	public void firstVisit(Range<S> key, MainRecords valueToFill,
-			WritList<Entry<Range<S>, ChildMap>> parents,
-			Adder<Entry3<Range<S>, RecordMap, ChildMap>> childrenToFill) {
+	public void firstVisit(Suffix<S> key, MainRecords valueToFill,
+			WritList<Entry<Suffix<S>, ChildMap>> parents,
+			Adder<Entry3<Suffix<S>, RecordMap, ChildMap>> childrenToFill) {
 		boolean hasFirst = key.firstPosition(myHasher, state);
 		assert hasFirst;
 		valueToFill.clear();
@@ -130,7 +141,7 @@ public abstract class RangeTree<S extends GenState> extends
 								} else
 									childState = sm.childState;
 								if (sm.map == null) {
-									Entry3<Range<S>, RecordMap, ChildMap> entry = childrenToFill
+									Entry3<Suffix<S>, RecordMap, ChildMap> entry = childrenToFill
 											.add();
 									entry.getT1().set(childState, suffLen);
 									entry.getT2().clear();
@@ -198,18 +209,18 @@ public abstract class RangeTree<S extends GenState> extends
 	}
 
 	@Override
-	public void combineDown(Range<S> key, MainRecords value,
-			WritList<Entry<Range<S>, ChildMap>> parents, int firstNewParent,
-			WritableList<Entry<Range<S>, RecordMap>> children) {
+	public void combineDown(Suffix<S> key, MainRecords value,
+			WritList<Entry<Suffix<S>, ChildMap>> parents, int firstNewParent,
+			WritableList<Entry<Suffix<S>, RecordMap>> children) {
 	}
 
 	private final QuickLinkedList<RecordMap> current = new QuickLinkedList<RecordMap>();
 	private final QuickLinkedList<RecordMap> waiting = new QuickLinkedList<RecordMap>();
 
 	@Override
-	public boolean combineUp(Range<S> key, MainRecords value,
-			WritList<Entry<Range<S>, ChildMap>> parents,
-			WritableList<Entry<Range<S>, RecordMap>> children) {
+	public boolean combineUp(Suffix<S> key, MainRecords value,
+			WritList<Entry<Suffix<S>, ChildMap>> parents,
+			WritableList<Entry<Suffix<S>, RecordMap>> children) {
 		int numPositions = value.length();
 		boolean changed = false;
 		current.clear();
@@ -274,7 +285,7 @@ public abstract class RangeTree<S extends GenState> extends
 	}
 
 	@Override
-	public void sendUp(Range<S> key, MainRecords value, Range<S> parentKey,
+	public void sendUp(Suffix<S> key, MainRecords value, Suffix<S> parentKey,
 			ChildMap parentInfo, RecordMap toFill) {
 		toFill.clear();
 		parentInfo.restart();
@@ -287,8 +298,8 @@ public abstract class RangeTree<S extends GenState> extends
 	}
 
 	@Override
-	public Class<Range<S>> getKeyClass() {
-		return (Class<Range<S>>) Range.class.<Range> asSubclass(Range.class);
+	public Class<Suffix<S>> getKeyClass() {
+		return (Class<Suffix<S>>) Suffix.class.<Suffix> asSubclass(Suffix.class);
 	}
 
 	@Override
@@ -307,16 +318,16 @@ public abstract class RangeTree<S extends GenState> extends
 	}
 
 	@Override
-	public Collection<Range<S>> getRoots() {
+	public Collection<Suffix<S>> getRoots() {
 		return getRoots(false);
 	}
 
-	public Range<S> makeContainingRange(S t) {
+	public Suffix<S> makeContainingRange(S t) {
 		return makeContainingRange(t, false);
 	}
 
-	public Range<S> makeContainingRange(S t, boolean output) {
-		Range<S> range = newRange();
+	public Suffix<S> makeContainingRange(S t, boolean output) {
+		Suffix<S> range = newRange();
 		if (output)
 			makeOutputContainingRange(t, range);
 		else
@@ -324,15 +335,15 @@ public abstract class RangeTree<S extends GenState> extends
 		return range;
 	}
 
-	public void makeContainingRange(S t, Range<S> range) {
+	public void makeContainingRange(S t, Suffix<S> range) {
 		range.set(t, suffLen);
 	}
 
-	public void makeOutputContainingRange(S t, Range<S> range) {
+	public void makeOutputContainingRange(S t, Suffix<S> range) {
 		range.set(t, outputSuffixLength());
 	}
 
-	private final Range<S> newRange() {
+	private final Suffix<S> newRange() {
 		return ReflectionUtils.newInstance(getKeyClass(), getConf());
 	}
 
@@ -345,7 +356,7 @@ public abstract class RangeTree<S extends GenState> extends
 
 	@Override
 	public final void configure(Configuration conf) {
-		innerConfigure(conf);
+		rangeTreeConfigure(conf);
 		myHasher = getHasher();
 		moves = getMoves();
 		suffLen = suffixLength();
@@ -368,7 +379,7 @@ public abstract class RangeTree<S extends GenState> extends
 		return false;
 	}
 
-	protected void innerConfigure(Configuration conf) {
+	protected void rangeTreeConfigure(Configuration conf) {
 	}
 
 	/**
@@ -376,6 +387,11 @@ public abstract class RangeTree<S extends GenState> extends
 	 */
 	public abstract GenHasher<S> getHasher();
 
+	/**
+	 * @return An array consisting of all possible moves for this game from any
+	 *         position. If further discrimination is needed, override
+	 *         validMove()
+	 */
 	protected abstract Move[] getMoves();
 
 	/**
@@ -386,7 +402,7 @@ public abstract class RangeTree<S extends GenState> extends
 	 */
 	protected abstract int suffixLength();
 
-	public GameRecord getRecord(Range<S> range, S state, MainRecords records) {
+	public GameRecord getRecord(Suffix<S> range, S state, MainRecords records) {
 		long iVal = range.subHash(getHasher(), state);
 		assert iVal <= Integer.MAX_VALUE;
 		return records.get((int) iVal);
@@ -404,11 +420,11 @@ public abstract class RangeTree<S extends GenState> extends
 		return suffixLength();
 	}
 
-	public Collection<Range<S>> getRoots(boolean output) {
+	public Collection<Suffix<S>> getRoots(boolean output) {
 		Collection<S> startingPositions = getStartingPositions();
-		HashSet<Range<S>> containingRanges = new HashSet<Range<S>>();
+		HashSet<Suffix<S>> containingRanges = new HashSet<Suffix<S>>();
 		for (S t : startingPositions) {
-			Range<S> containingRange;
+			Suffix<S> containingRange;
 			containingRange = makeContainingRange(t, output);
 			containingRanges.add(containingRange);
 		}
@@ -419,5 +435,10 @@ public abstract class RangeTree<S extends GenState> extends
 	public Class<? extends RangeTreeNode<S>> getTreeNodeClass() {
 		return (Class<? extends RangeTreeNode<S>>) RangeTreeNode.class
 				.<RangeTreeNode> asSubclass(RangeTreeNode.class);
+	}
+
+	@Override
+	public Class<? extends Reducer> getCleanupReducerClass() {
+		return RangeReducer.class;
 	}
 }

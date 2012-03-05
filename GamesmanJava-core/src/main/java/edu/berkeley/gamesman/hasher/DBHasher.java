@@ -33,7 +33,7 @@ public final class DBHasher extends OptimizingInvariantHasher<CountingState> {
 	}
 
 	@Override
-	protected CountingState innerNewState() {
+	protected CountingState genHasherNewState() {
 		return new CountingState(this, boardSize);
 	}
 

@@ -12,7 +12,7 @@ import edu.berkeley.gamesman.util.qll.Pool;
 import edu.berkeley.gamesman.util.qll.QLLFactory;
 
 public class RangeTreeNode<S extends GenState> extends
-		SimpleTreeNode<Range<S>, MainRecords, ChildMap, RecordMap> {
+		SimpleTreeNode<Suffix<S>, MainRecords, ChildMap, RecordMap> {
 	@Override
 	protected Factory<ChildMap> makePIFactory(Configuration conf) {
 		return new Factory<ChildMap>() {

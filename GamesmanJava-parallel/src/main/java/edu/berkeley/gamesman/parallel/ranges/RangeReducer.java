@@ -11,10 +11,10 @@ import edu.berkeley.gamesman.hasher.genhasher.GenState;
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 
 public class RangeReducer<S extends GenState> extends
-		Reducer<Range<S>, MainRecords, Range<S>, MainRecords> {
+		Reducer<Suffix<S>, MainRecords, Suffix<S>, MainRecords> {
 	private GenHasher<S> hasher;
 	private S state;
-	private final Range<S> innerRange = new Range<S>();
+	private final Suffix<S> innerRange = new Suffix<S>();
 	private final MainRecords recs = new MainRecords();
 	private int innerSufLen;
 	private int innerVarLen;
@@ -23,7 +23,7 @@ public class RangeReducer<S extends GenState> extends
 	protected void setup(Context context) {
 		Configuration conf = context.getConfiguration();
 		RangeTree<S> tree = (RangeTree<S>) ConfParser
-				.<Range<S>, MainRecords, ChildMap, RecordMap, RecordMap, ChildMap> newTree(conf);
+				.<Suffix<S>, MainRecords, ChildMap, RecordMap, RecordMap, ChildMap> newTree(conf);
 		hasher = tree.getHasher();
 		state = hasher.newState();
 		innerSufLen = tree.outputSuffixLength();
@@ -31,7 +31,7 @@ public class RangeReducer<S extends GenState> extends
 	}
 
 	@Override
-	protected void reduce(Range<S> key, Iterable<MainRecords> values,
+	protected void reduce(Suffix<S> key, Iterable<MainRecords> values,
 			Context context) throws IOException, InterruptedException {
 		if (key.length() > innerSufLen)
 			throw new RuntimeException("The inner suffix length: "
