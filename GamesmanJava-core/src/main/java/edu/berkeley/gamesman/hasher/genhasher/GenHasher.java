@@ -695,7 +695,7 @@ public abstract class GenHasher<S extends GenState> {
 		// enabled? See here
 
 		long diff = 0;
-		int place = Moves.matches(move, state);
+		int place = move.matches(state);
 		while (state.getStart() < place) {
 			diff -= sigValue(state);
 			state.trunc();
@@ -707,10 +707,10 @@ public abstract class GenHasher<S extends GenState> {
 			}
 			diff += countCompletions(state);
 			changedPlace = step(state, 1);
-			place = Moves.matches(move, state);
+			place = move.matches(state);
 			if (place == -1) {
 				validComplete(state, false);
-				place = Moves.matches(move, state);
+				place = move.matches(state);
 			}
 		}
 		if (changedPlace >= cutoff)

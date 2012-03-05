@@ -14,7 +14,6 @@ import edu.berkeley.gamesman.game.type.GameValue;
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.hasher.genhasher.GenState;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
-import edu.berkeley.gamesman.hasher.genhasher.Moves;
 import edu.berkeley.gamesman.propogater.common.Adder;
 import edu.berkeley.gamesman.propogater.common.Entry3;
 import edu.berkeley.gamesman.propogater.tree.SimpleTree;
@@ -119,7 +118,7 @@ public abstract class RangeTree<S extends GenState> extends
 				try {
 					while (sIter.hasNext()) {
 						SaveMove sm = sIter.next();
-						int matches = Moves.matches(sm.move, state);
+						int matches = sm.move.matches(state);
 						if (matches == -1) {
 							if (validMove(state, sm.move)) {
 								int numChanged;
@@ -299,7 +298,8 @@ public abstract class RangeTree<S extends GenState> extends
 
 	@Override
 	public Class<Suffix<S>> getKeyClass() {
-		return (Class<Suffix<S>>) Suffix.class.<Suffix> asSubclass(Suffix.class);
+		return (Class<Suffix<S>>) Suffix.class
+				.<Suffix> asSubclass(Suffix.class);
 	}
 
 	@Override

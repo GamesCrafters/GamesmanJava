@@ -4,10 +4,8 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Writable;
 
-import edu.berkeley.gamesman.propogater.factory.Factory;
 import edu.berkeley.gamesman.propogater.writable.IntEntry;
 import edu.berkeley.gamesman.util.qll.Pool;
 import edu.berkeley.gamesman.util.qll.QLLFactory;
@@ -86,16 +84,6 @@ public class WritableTreeMap<T extends Writable> implements Writable {
 		IntEntry<T> entry = objs.add();
 		entry.setKey(i);
 		return entry.getValue();
-	}
-
-	private static <T extends Writable> Factory<IntEntry<T>> makeFact(
-			final Class<? extends T> fClass, final Configuration conf) {
-		return new Factory<IntEntry<T>>() {
-			@Override
-			public IntEntry<T> create() {
-				return new IntEntry<T>(fClass, conf);
-			}
-		};
 	}
 
 	public int peekNext() {

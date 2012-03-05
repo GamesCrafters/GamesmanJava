@@ -8,8 +8,6 @@ import org.apache.hadoop.conf.Configuration;
 
 import edu.berkeley.gamesman.game.type.GameValue;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
-import edu.berkeley.gamesman.hasher.genhasher.Moves;
-import edu.berkeley.gamesman.parallel.ranges.MoveWritable;
 import edu.berkeley.gamesman.parallel.ranges.Suffix;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
@@ -134,14 +132,14 @@ public class Connect4 extends RangeTree<C4State> implements
 				for (int col = 0; col < width; col++) {
 					int place = getPlace(row, col);
 					if (isBottom(row, col)) {
-						columnMoveList[col].add(new MoveWritable(place, 0,
-								turn, gameSize, numPieces, numPieces + 1));
+						columnMoveList[col].add(new Move(place, 0, turn,
+								gameSize, numPieces, numPieces + 1));
 					} else {
-						columnMoveList[col].add(new MoveWritable(place - 1, 1,
-								1, place, 0, turn, gameSize, numPieces,
+						columnMoveList[col].add(new Move(place - 1, 1, 1,
+								place, 0, turn, gameSize, numPieces,
 								numPieces + 1));
-						columnMoveList[col].add(new MoveWritable(place - 1, 2,
-								2, place, 0, turn, gameSize, numPieces,
+						columnMoveList[col].add(new Move(place - 1, 2, 2,
+								place, 0, turn, gameSize, numPieces,
 								numPieces + 1));
 					}
 				}
@@ -165,7 +163,7 @@ public class Connect4 extends RangeTree<C4State> implements
 	public boolean playMove(C4State state, int col) {
 		boolean made = false;
 		for (Move m : colMoves[col]) {
-			if (Moves.matches(m, state) == -1) {
+			if (m.matches(state) == -1) {
 				myHasher.makeMove(state, m);
 				made = true;
 				break;
