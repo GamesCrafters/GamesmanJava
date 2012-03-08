@@ -33,6 +33,12 @@ public class TOHasher extends OptimizingInvariantHasher<TOState> {
 		calc = new DBInvCalculator(boardSize);
 	}
 
+	/**
+	 * Creates the array specifying the number of possible values for each position in the sequence
+	 * @param width
+	 * @param height
+	 * @return
+	 */
 	private static int[] makeDigitBase(int width, int height) {
 		int boardSize = width * height;
 		int[] digitBase = new int[boardSize + 5];
