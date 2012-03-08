@@ -4,7 +4,6 @@ import java.util.Arrays;
 
 import edu.berkeley.gamesman.hasher.genhasher.DBInvCalculator;
 import edu.berkeley.gamesman.hasher.invhasher.OptimizingInvariantHasher;
-import edu.berkeley.gamesman.parallel.game.connect4.C4State;
 
 public class TOHasher extends OptimizingInvariantHasher<TOState> {
 	private final int width, height;
@@ -34,7 +33,9 @@ public class TOHasher extends OptimizingInvariantHasher<TOState> {
 	}
 
 	/**
-	 * Creates the array specifying the number of possible values for each position in the sequence
+	 * Creates the array specifying the number of possible values for each
+	 * position in the sequence
+	 * 
 	 * @param width
 	 * @param height
 	 * @return
