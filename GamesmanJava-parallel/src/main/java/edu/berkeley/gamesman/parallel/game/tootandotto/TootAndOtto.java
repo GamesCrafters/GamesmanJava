@@ -2,7 +2,6 @@ package edu.berkeley.gamesman.parallel.game.tootandotto;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 
 import org.apache.hadoop.conf.Configuration;
 
@@ -92,8 +91,10 @@ public class TootAndOtto extends RangeTree<TOState> implements
 
 	/**
 	 * Determine whose turn it is, given the number of pieces on the board
+	 * 
 	 * @param numPieces
-	 * @return 1 if it is the first player's turn, 2 if it is the second player's turn.
+	 * @return 1 if it is the first player's turn, 2 if it is the second
+	 *         player's turn.
 	 */
 	private int getTurn(int numPieces) {
 		return (numPieces % 2) + 1;
