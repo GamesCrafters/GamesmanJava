@@ -2,6 +2,7 @@ package edu.berkeley.gamesman.parallel.game.tootandotto;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 
 import org.apache.hadoop.conf.Configuration;
 
@@ -28,7 +29,7 @@ public class TootAndOtto extends RangeTree<TOState> implements
 		gameSize = width * height;
 		myHasher = new TOHasher(width, height);
 		int varianceLength = conf.getInt("gamesman.game.variance.length", 10);
-		suffLen = Math.max(1, gameSize + 5 - varianceLength);
+		suffLen = Math.max(5, gameSize + 5 - varianceLength);
 
 		ArrayList<Move>[] columnMoveList = new ArrayList[width];
 		colMoves = new Move[width][];
@@ -126,26 +127,31 @@ public class TootAndOtto extends RangeTree<TOState> implements
 
 	@Override
 	public Collection<TOState> getStartingPositions() {
-		// TODO Auto-generated method stub
-		return null;
+		TOState result = myHasher.newState();
+		return Collections.singleton(result);
 	}
 
 	@Override
-	public GenHasher<TOState> getHasher() {
-		// TODO Auto-generated method stub
-		return null;
+	public TOHasher getHasher() {
+		return myHasher;
 	}
 
 	@Override
 	protected Move[] getMoves() {
-		// TODO Auto-generated method stub
-		return null;
+		return myMoves;
 	}
 
 	@Override
 	protected int suffixLength() {
-		// TODO Auto-generated method stub
-		return 0;
+		return suffLen;
+	}
+
+	@Override
+	public int outputSuffixLength() {
+		int innerVarLen = getConf().getInt(
+				"gamesman.game.output.variance.length", gameSize);
+		// gameSize default ensures outputSuffixLength == suffixLength
+		return Math.max(gameSize + 5 - innerVarLen, suffLen);
 	}
 
 }
