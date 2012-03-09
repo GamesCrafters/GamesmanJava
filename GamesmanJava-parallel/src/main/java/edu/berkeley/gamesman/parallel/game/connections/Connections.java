@@ -1,21 +1,11 @@
 package edu.berkeley.gamesman.parallel.game.connections;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapreduce.Reducer;
 
 import edu.berkeley.gamesman.game.type.GameValue;
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
-import edu.berkeley.gamesman.hasher.genhasher.Moves;
 import edu.berkeley.gamesman.parallel.game.connect4.C4Hasher;
-import edu.berkeley.gamesman.parallel.game.connect4.C4State;
-import edu.berkeley.gamesman.parallel.ranges.MoveWritable;
-import edu.berkeley.gamesman.parallel.ranges.Range;
-import edu.berkeley.gamesman.parallel.ranges.RangeReducer;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.util.Pair;
