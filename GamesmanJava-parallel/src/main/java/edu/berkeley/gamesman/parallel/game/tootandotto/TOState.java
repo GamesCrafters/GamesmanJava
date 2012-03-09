@@ -15,19 +15,16 @@ import edu.berkeley.gamesman.hasher.counting.CountingState;
  */
 public class TOState extends CountingState {
 	private final int width, height, boardSize;
-	private final BitSetBoard myBoard; // TODO: does bitsetboard work here? it
-										// seems to be designed for c4
-	private int changePlace;
+	private final BitSetBoard myBoard; // TODO: need a different rep of the
+										// board
 
 	public TOState(TOHasher myHasher, int width, int height) {
 		super(myHasher, width * height);
 		this.width = width;
 		this.height = height;
 		this.boardSize = width * height;
-		changePlace = boardSize - 1;
-		this.myBoard = new BitSetBoard(height, width); // TODO: does bitsetboard
-														// work here? it seems
-														// to be designed for c4
+		this.myBoard = new BitSetBoard(height, width); // TODO: need a different
+														// rep of the board
 	}
 
 }
