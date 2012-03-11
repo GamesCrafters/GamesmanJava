@@ -10,8 +10,8 @@ public class TOHasher extends OptimizingInvariantHasher<TOState> {
 	public final int boardSize; // TODO: why not private?
 	private final DBInvCalculator calc;
 
-	public TOHasher(int width, int height) {
-		this(width, height, 0);
+	public TOHasher(int width, int height, int maxPieces) {
+		this(width, height, maxPieces, 0);
 	}
 
 	/**
@@ -24,8 +24,8 @@ public class TOHasher extends OptimizingInvariantHasher<TOState> {
 	 *            be used for evaluating the average number of states per range
 	 *            per state
 	 */
-	public TOHasher(int width, int height, int countingPlace) {
-		super(makeDigitBase(width, height), countingPlace);
+	public TOHasher(int width, int height, int maxPieces, int countingPlace) {
+		super(makeDigitBase(width, height, maxPieces), countingPlace);
 		this.width = width;
 		this.height = height;
 		boardSize = width * height;
@@ -40,11 +40,11 @@ public class TOHasher extends OptimizingInvariantHasher<TOState> {
 	 * @param height
 	 * @return
 	 */
-	private static int[] makeDigitBase(int width, int height) {
+	private static int[] makeDigitBase(int width, int height, int maxPieces) {
 		int boardSize = width * height;
 		int[] digitBase = new int[boardSize + 5];
 		Arrays.fill(digitBase, 3);
-		Arrays.fill(digitBase, boardSize - 4, boardSize - 1, 7);
+		Arrays.fill(digitBase, boardSize - 4, boardSize - 1, maxPieces + 1);
 		digitBase[boardSize] = boardSize + 1;
 		return digitBase;
 	}
