@@ -16,7 +16,7 @@ import edu.berkeley.gamesman.util.Pair;
 public class TootAndOtto extends RangeTree<TOState> implements
 		SolveReader<TOState> {
 	private Move[] myMoves;
-	private Move[][] colMoves; // TODO: what does colMoves do?
+	private Move[][] colMoves;
 	private TOHasher myHasher;
 	private int width, height;
 	private int gameSize;
