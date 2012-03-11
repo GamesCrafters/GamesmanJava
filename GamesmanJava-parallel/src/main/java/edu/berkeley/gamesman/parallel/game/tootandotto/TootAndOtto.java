@@ -21,13 +21,15 @@ public class TootAndOtto extends RangeTree<TOState> implements
 	private int width, height;
 	private int gameSize;
 	private int suffLen;
+	private int maxPieces;
 
 	@Override
 	public void rangeTreeConfigure(Configuration conf) {
 		width = conf.getInt("gamesman.game.width", 5);
 		height = conf.getInt("gamesman.game.height", 4);
 		gameSize = width * height;
-		myHasher = new TOHasher(width, height);
+		maxPieces = conf.getInt("gamesman.game.maxPieces", 6);
+		myHasher = new TOHasher(width, height, maxPieces);
 		int varianceLength = conf.getInt("gamesman.game.variance.length", 10);
 		suffLen = Math.max(5, gameSize + 5 - varianceLength);
 
@@ -36,27 +38,7 @@ public class TootAndOtto extends RangeTree<TOState> implements
 		for (int i = 0; i < width; i++) {
 			columnMoveList[i] = new ArrayList<Move>();
 		}
-		// TODO: how to rewrite this block for TO
-		for (int numPieces = 0; numPieces < gameSize; numPieces++) {
-			int turn = getTurn(numPieces);
-			for (int row = 0; row < height; row++) {
-				for (int col = 0; col < width; col++) {
-					int place = getPlace(row, col);
-					if (isBottom(row, col)) {
-						columnMoveList[col].add(new Move(place, 0, turn,
-								gameSize, numPieces, numPieces + 1));
-					} else {
-						columnMoveList[col].add(new Move(place - 1, 1, 1,
-								place, 0, turn, gameSize, numPieces,
-								numPieces + 1));
-						columnMoveList[col].add(new Move(place - 1, 2, 2,
-								place, 0, turn, gameSize, numPieces,
-								numPieces + 1));
-					}
-				}
-			}
-		}
-
+		generateMoves(0, 0, 0, 0, 0, columnMoveList);
 		ArrayList<Move> allMoves = new ArrayList<Move>();
 		for (int i = 0; i < width; i++) {
 			colMoves[i] = columnMoveList[i].toArray(new Move[columnMoveList[i]
@@ -65,6 +47,70 @@ public class TootAndOtto extends RangeTree<TOState> implements
 		}
 		myMoves = allMoves.toArray(new Move[allMoves.size()]);
 
+	}
+	// TODO: does this work now? and how can it be cleaned up more.
+	private void generateMoves(int numPieces, int player1T, int player1O,
+			int player2T, int player2O, ArrayList<Move>[] columnMoveList) {
+		int turn = getTurn(numPieces);
+		int TIndex = gameSize + 3;
+		int OIndex = gameSize + 2;
+		int numT = player1T;
+		int numO = player1O;
+		int numPiecesIndex = gameSize + 4;
+		if (turn == 2) {
+			TIndex -= 2;
+			OIndex -= 2;
+			numT = player2T;
+			numO = player2O;
+		}
+
+		for (int row = 0; row < height; row++) {
+			for (int col = 0; col < width; col++) {
+				int place = getPlace(row, col);
+				if (numT < maxPieces) {
+					if (isBottom(row, col)) {
+						columnMoveList[col].add(new Move(place - 1, 1, 1,
+								place, 0, 1, TIndex, numT, numT + 1,
+								numPiecesIndex, numPieces, numPieces + 1));
+					} else {
+						columnMoveList[col].add(new Move(place - 1, 1, 1,
+								place, 0, 1, TIndex, numT, numT + 1,
+								numPiecesIndex, numPieces, numPieces + 1));
+						columnMoveList[col].add(new Move(place - 1, 2, 2,
+								place, 0, 1, TIndex, numT, numT + 1,
+								numPiecesIndex, numPieces, numPieces + 1));
+					}
+					if (turn == 1) {
+						generateMoves(numPieces + 1, player1T + 1, player1O,
+								player2T, player2O, columnMoveList);
+					} else {
+						generateMoves(numPieces + 1, player1T, player1O,
+								player2T + 1, player2O, columnMoveList);
+					}
+				}
+				if (numO < maxPieces) {
+					if (isBottom(row, col)) {
+						columnMoveList[col].add(new Move(place - 1, 2, 2,
+								place, 0, 2, OIndex, numO, numO + 1,
+								numPiecesIndex, numPieces, numPieces + 1));
+					} else {
+						columnMoveList[col].add(new Move(place - 1, 1, 1,
+								place, 0, 2, OIndex, numO, numO + 1,
+								numPiecesIndex, numPieces, numPieces + 1));
+						columnMoveList[col].add(new Move(place - 1, 2, 2,
+								place, 0, 2, OIndex, numO, numO + 1,
+								numPiecesIndex, numPieces, numPieces + 1));
+					}
+				}
+				if (turn == 1) {
+					generateMoves(numPieces + 1, player1T, player1O + 1,
+							player2T, player2O, columnMoveList);
+				} else {
+					generateMoves(numPieces + 1, player1T, player1O, player2T,
+							player2O + 1, columnMoveList);
+				}
+			}
+		}
 	}
 
 	/**
