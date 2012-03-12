@@ -9,7 +9,9 @@ import org.apache.hadoop.conf.Configuration;
 import edu.berkeley.gamesman.game.type.GameValue;
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
+import edu.berkeley.gamesman.parallel.game.connect4.C4State;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
+import edu.berkeley.gamesman.parallel.ranges.Suffix;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.util.Pair;
 
@@ -48,6 +50,7 @@ public class TootAndOtto extends RangeTree<TOState> implements
 		myMoves = allMoves.toArray(new Move[allMoves.size()]);
 
 	}
+
 	// TODO: does this work now? and how can it be cleaned up more.
 	private void generateMoves(int numPieces, int player1T, int player1O,
 			int player2T, int player2O, ArrayList<Move>[] columnMoveList) {
@@ -69,9 +72,9 @@ public class TootAndOtto extends RangeTree<TOState> implements
 				int place = getPlace(row, col);
 				if (numT < maxPieces) {
 					if (isBottom(row, col)) {
-						columnMoveList[col].add(new Move(place - 1, 1, 1,
-								place, 0, 1, TIndex, numT, numT + 1,
-								numPiecesIndex, numPieces, numPieces + 1));
+						columnMoveList[col].add(new Move(place, 0, 1, TIndex,
+								numT, numT + 1, numPiecesIndex, numPieces,
+								numPieces + 1));
 					} else {
 						columnMoveList[col].add(new Move(place - 1, 1, 1,
 								place, 0, 1, TIndex, numT, numT + 1,
@@ -90,9 +93,9 @@ public class TootAndOtto extends RangeTree<TOState> implements
 				}
 				if (numO < maxPieces) {
 					if (isBottom(row, col)) {
-						columnMoveList[col].add(new Move(place - 1, 2, 2,
-								place, 0, 2, OIndex, numO, numO + 1,
-								numPiecesIndex, numPieces, numPieces + 1));
+						columnMoveList[col].add(new Move(place, 0, 2, OIndex,
+								numO, numO + 1, numPiecesIndex, numPieces,
+								numPieces + 1));
 					} else {
 						columnMoveList[col].add(new Move(place - 1, 1, 1,
 								place, 0, 2, OIndex, numO, numO + 1,
@@ -198,6 +201,15 @@ public class TootAndOtto extends RangeTree<TOState> implements
 				"gamesman.game.output.variance.length", gameSize);
 		// gameSize default ensures outputSuffixLength == suffixLength
 		return Math.max(gameSize + 5 - innerVarLen, suffLen);
+	}
+
+	/**
+	 * Returns the tier which is just the last element of the sequence.
+	 */
+	@Override
+	public int getDivision(Suffix<TOState> suff) {
+		assert suff.length() == suffLen;
+		return suff.get(suffLen - 1);
 	}
 
 }
