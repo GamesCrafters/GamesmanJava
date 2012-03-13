@@ -9,10 +9,11 @@ import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.util.Pair;
 
 import edu.berkeley.gamesman.game.tree.GameTree;
+import edu.berkeley.gamesman.game.type.GameRecord;
 import edu.berkeley.gamesman.game.type.GameValue;
 
 public class TicTacToe extends GameTree<TTTState> implements
-		SolveReader<TTTState> {
+		SolveReader<TTTState, GameRecord> {
 
 	public TicTacToe() {
 	}
@@ -100,5 +101,10 @@ public class TicTacToe extends GameTree<TTTState> implements
 			}
 		}
 		return sb.toString();
+	}
+
+	@Override
+	public GameRecord getRecord(TTTState position, GameRecord fetchedRec) {
+		return fetchedRec;
 	}
 }

@@ -4,57 +4,74 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Writable;
 
-import edu.berkeley.gamesman.propogater.writable.IntEntry;
 import edu.berkeley.gamesman.util.qll.Pool;
 import edu.berkeley.gamesman.util.qll.QLLFactory;
 
 public class WritableTreeMap<T extends Writable> implements Writable {
-	private final WritableQLL<IntEntry<T>> objs;
-	private IntEntry<T> next;
+	private final JumpList keys;
+	private final WritableQLL<T> objs;
+	private int nextKey;
+	private T nextVal;
 
-	public WritableTreeMap(QLLFactory<IntEntry<T>> fact, Pool<IntEntry<T>> pool) {
-		objs = new WritableQLL<IntEntry<T>>(fact, pool);
+	public WritableTreeMap(QLLFactory<IntWritable> facti,
+			Pool<IntWritable> pooli, QLLFactory<T> fact, Pool<T> pool) {
+		keys = new JumpList(facti, pooli);
+		objs = new WritableQLL<T>(fact, pool);
 	}
 
 	public T getNext(int i) {
-		while (next != null && i > next.getKey())
-			next = objs.next();
-		if (next == null || i < next.getKey()) {
+		while (nextKey >= 0 && i > nextKey) {
+			next();
+		}
+		if (nextKey == -1 || i < nextKey) {
 			return null;
 		} else {
-			IntEntry<T> last = next;
-			next = objs.next();
-			return last.getValue();
+			T lastVal = nextVal;
+			next();
+			return lastVal;
 		}
 	}
 
+	private void next() {
+		nextKey = keys.next();
+		nextVal = objs.next();
+	}
+
 	public void restart() {
+		keys.restart();
 		objs.restart();
-		next = objs.next();
+		next();
 	}
 
 	public void clear() {
+		keys.clear();
 		objs.clear();
 	}
 
 	public int size() {
-		return objs.size();
+		assert keys.size() == objs.size();
+		return keys.size();
 	}
 
 	public boolean isEmpty() {
-		return objs.isEmpty();
+		assert keys.isEmpty() == objs.isEmpty();
+		return keys.isEmpty();
 	}
 
 	@Override
 	public void write(DataOutput out) throws IOException {
+		keys.write(out);
 		objs.write(out);
 	}
 
 	@Override
 	public void readFields(DataInput in) throws IOException {
+		keys.readFields(in);
 		objs.readFields(in);
+		restart();
 	}
 
 	@Override
@@ -64,32 +81,28 @@ public class WritableTreeMap<T extends Writable> implements Writable {
 	}
 
 	public boolean equals(WritableTreeMap<?> other) {
-		return objs.equals(other.objs);
+		return keys.equals(other.keys) && objs.equals(other.objs);
 	}
 
 	@Override
 	public int hashCode() {
-		return objs.hashCode();
+		return keys.hashCode() * 31 + objs.hashCode();
 	}
 
 	@Override
 	public String toString() {
-		return objs.toString();
+		return keys.toString() + " : " + objs.toString();
 	}
 
 	public T add(int i) {
-		if (!objs.isEmpty() && i <= objs.getLast().getKey())
+		if (!objs.isEmpty() && i <= keys.getLast())
 			throw new RuntimeException("Cannot add " + i
-					+ ", must be greater than " + objs.getLast().getKey());
-		IntEntry<T> entry = objs.add();
-		entry.setKey(i);
-		return entry.getValue();
+					+ ", must be greater than " + keys.getLast());
+		keys.add(i);
+		return objs.add();
 	}
 
 	public int peekNext() {
-		if (next == null)
-			return -1;
-		else
-			return next.getKey();
+		return nextKey;
 	}
 }

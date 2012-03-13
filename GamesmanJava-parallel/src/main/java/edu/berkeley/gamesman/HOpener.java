@@ -21,7 +21,7 @@ import edu.berkeley.gamesman.parallel.ranges.ChildMap;
 import edu.berkeley.gamesman.parallel.ranges.MainRecords;
 import edu.berkeley.gamesman.parallel.ranges.Suffix;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
-import edu.berkeley.gamesman.parallel.ranges.RecordMap;
+import edu.berkeley.gamesman.parallel.writable.WritableTreeMap;
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.tree.Tree;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
@@ -34,27 +34,28 @@ import edu.berkeley.gamesman.hasher.genhasher.GenState;
 
 public class HOpener implements Opener {
 
-	private class GFetcher<S extends GenState> implements RecordFetcher {
-		private final RangeTree<S> tree;
+	private class GFetcher<S extends GenState, GR extends Writable> implements
+			RecordFetcher {
+		private final RangeTree<S, GR> tree;
 		private final Path folderPath;
-		private final SolveReader<S> reader;
+		private final SolveReader<S, GR> reader;
 		private final boolean solved;
-		private final Partitioner<Suffix<S>, MainRecords> partitioner;
+		private final Partitioner<Suffix<S>, MainRecords<GR>> partitioner;
 
 		public GFetcher(Configuration hConf, String game, String filename)
 				throws ClassNotFoundException, IOException {
-			this.tree = (RangeTree<S>) ConfParser
-					.<Suffix<S>, MainRecords, ChildMap, RecordMap, RecordMap, ChildMap> newTree(hConf);
+			this.tree = (RangeTree<S, GR>) ConfParser
+					.<Suffix<S>, MainRecords<GR>, ChildMap, WritableTreeMap<GR>, WritableTreeMap<GR>, ChildMap> newTree(hConf);
 			String folderName = hConf.get("solve.folder");
 			if (folderName == null) {
 				folderPath = new Path(solveDirectory, filename + "_folder");
 			} else
 				folderPath = new Path(folderName);
 			solved = folderPath.getFileSystem(hConf).exists(folderPath);
-			reader = SolveReaders.<S> get(hConf, game);
+			reader = SolveReaders.<S, GR> get(hConf, game);
 			if (solved)
 				partitioner = ConfParser
-						.<Suffix<S>, MainRecords> getPartitionerInstance(hConf);
+						.<Suffix<S>, MainRecords<GR>> getPartitionerInstance(hConf);
 			else
 				partitioner = null;
 		}
@@ -85,13 +86,15 @@ public class HOpener implements Opener {
 			GamestateResponse response = new GamestateResponse();
 			response.setBoard(reader.getString(position));
 			if (solved) {
+				GR unparsedRec;
 				GameRecord rec;
 				try {
 					Suffix<S> posRange = tree.makeContainingRange(position);
-					MainRecords recs = SolveReaders
-							.<Suffix<S>, MainRecords> readPosition(tree,
+					MainRecords<GR> recs = SolveReaders
+							.<Suffix<S>, MainRecords<GR>> readPosition(tree,
 									folderPath, posRange, partitioner);
-					rec = tree.getRecord(posRange, position, recs);
+					unparsedRec = tree.getRecord(posRange, position, recs);
+					rec = reader.getRecord(position, unparsedRec);
 					if (previousPosition)
 						rec.previousPosition();
 				} catch (IOException e) {
@@ -105,11 +108,11 @@ public class HOpener implements Opener {
 
 	}
 
-	private class HFetcher<KEY extends WritableComparable<KEY>> implements
+	private class HFetcher<KEY extends WritableComparable<KEY>, GR> implements
 			RecordFetcher {
 		private final GameTree<KEY> tree;
 		private final Path folderPath;
-		private final SolveReader<KEY> reader;
+		private final SolveReader<KEY, GR> reader;
 		private final boolean solved;
 		private final Partitioner<KEY, GameRecord> partitioner;
 
@@ -123,7 +126,7 @@ public class HOpener implements Opener {
 			} else
 				folderPath = new Path(folderName);
 			solved = folderPath.getFileSystem(hConf).exists(folderPath);
-			reader = SolveReaders.<KEY> get(hConf, game);
+			reader = SolveReaders.<KEY, GR> get(hConf, game);
 			if (solved)
 				partitioner = ConfParser
 						.<KEY, GameRecord> getPartitionerInstance(hConf);

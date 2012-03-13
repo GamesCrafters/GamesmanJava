@@ -213,7 +213,8 @@ public class GenState implements State<GenState>, Comparable<GenState> {
 	}
 
 	protected final boolean validLS() {
-		return isEmpty() || leastSig() >= 0 && leastSig() < lsBase();
+		int ls = leastSig();
+		return isEmpty() || ls >= 0 && ls < lsBase();
 	}
 
 	private int lsBase() {

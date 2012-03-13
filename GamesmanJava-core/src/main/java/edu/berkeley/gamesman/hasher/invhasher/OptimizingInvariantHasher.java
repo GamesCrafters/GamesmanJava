@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.hasher.invhasher;
 import java.util.HashMap;
 
 import edu.berkeley.gamesman.hasher.genhasher.GenState;
+import edu.berkeley.gamesman.util.LongSet;
 
 /**
  * Whereas the only assumption made by the InvariantHasher is that if two
@@ -21,7 +22,8 @@ import edu.berkeley.gamesman.hasher.genhasher.GenState;
  */
 public abstract class OptimizingInvariantHasher<S extends GenState> extends
 		InvariantHasher<S> {
-	private HashMap<Long, Long>[][] invariantVals;
+	private HashMap<LongSet, Long>[][] invariantVals;
+	private final LongSet tempVal = new LongSet();
 
 	public OptimizingInvariantHasher(int[] digitBase) {
 		this(digitBase, 0);
@@ -39,7 +41,7 @@ public abstract class OptimizingInvariantHasher<S extends GenState> extends
 		for (int i = 0; i < numElements; i++) {
 			invariantVals[i] = new HashMap[digitBase[i]];
 			for (int j = 0; j < digitBase[i]; j++)
-				invariantVals[i][j] = new HashMap<Long, Long>();
+				invariantVals[i][j] = new HashMap<LongSet, Long>();
 		}
 	}
 
@@ -49,10 +51,13 @@ public abstract class OptimizingInvariantHasher<S extends GenState> extends
 		int ls = leastSig(state);
 		long lastInv = lastInvariant(state);
 		assert lastInv >= 0;
-		Long count = invariantVals[place][ls].get(lastInv);
+		tempVal.value = lastInv;
+		Long count = invariantVals[place][ls].get(tempVal);
 		if (count == null) {
 			count = super.sigValue(state);
-			invariantVals[place][ls].put(lastInv, count);
+			Long prevVal = invariantVals[place][ls].put(new LongSet(lastInv),
+					count);
+			assert prevVal == null;
 		}
 		return count;
 	}

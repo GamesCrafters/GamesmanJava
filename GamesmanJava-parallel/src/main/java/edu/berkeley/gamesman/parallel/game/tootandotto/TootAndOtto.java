@@ -6,17 +6,18 @@ import java.util.Collections;
 
 import org.apache.hadoop.conf.Configuration;
 
+import edu.berkeley.gamesman.game.type.GameRecord;
 import edu.berkeley.gamesman.game.type.GameValue;
-import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
 import edu.berkeley.gamesman.parallel.game.connect4.C4State;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.parallel.ranges.Suffix;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.util.Pair;
+import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 
-public class TootAndOtto extends RangeTree<TOState> implements
-		SolveReader<TOState> {
+public class TootAndOtto extends RangeTree<TOState, TORecord> implements
+		SolveReader<TOState, TORecord> {
 	private Move[] myMoves;
 	private Move[][] colMoves;
 	private TOHasher myHasher;
@@ -203,6 +204,37 @@ public class TootAndOtto extends RangeTree<TOState> implements
 		return Math.max(gameSize + 5 - innerVarLen, suffLen);
 	}
 
+	@Override
+	public GameRecord getRecord(TOState position, TORecord fetchedRec) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	protected boolean setNewRecordAndHasChildren(TOState state, TORecord rec) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	protected boolean combineValues(QuickLinkedList<TORecord> grList,
+			TORecord gr) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	protected void previousPosition(TORecord gr, TORecord toFill) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	protected Class<TORecord> getGameRecordClass() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	/**
 	 * Returns the tier which is just the last element of the sequence.
 	 */
@@ -211,5 +243,4 @@ public class TootAndOtto extends RangeTree<TOState> implements
 		assert suff.length() == suffLen;
 		return suff.get(suffLen - 1);
 	}
-
 }

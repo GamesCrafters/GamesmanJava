@@ -6,15 +6,17 @@ import java.util.Collections;
 
 import org.apache.hadoop.conf.Configuration;
 
+import edu.berkeley.gamesman.game.type.GameRecord;
 import edu.berkeley.gamesman.game.type.GameValue;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
 import edu.berkeley.gamesman.parallel.ranges.Suffix;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.util.Pair;
+import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 
-public class Connect4 extends RangeTree<C4State> implements
-		SolveReader<C4State> {
+public class Connect4 extends RangeTree<C4State, C4Record> implements
+		SolveReader<C4State, C4Record> {
 	private Move[] myMoves;
 	private Move[][] colMoves;
 	private C4Hasher myHasher;
@@ -119,6 +121,8 @@ public class Connect4 extends RangeTree<C4State> implements
 		width = conf.getInt("gamesman.game.width", 5);
 		height = conf.getInt("gamesman.game.height", 4);
 		gameSize = width * height;
+		if (gameSize + 2 >= Byte.MAX_VALUE)
+			throw new RuntimeException("gameSize is too large");
 		inARow = conf.getInt("gamemsan.game.pieces", 4);
 		myHasher = new C4Hasher(width, height);
 		ArrayList<Move>[] columnMoveList = new ArrayList[width];
@@ -248,6 +252,67 @@ public class Connect4 extends RangeTree<C4State> implements
 			return 'O';
 		default:
 			return '?';
+		}
+	}
+
+	@Override
+	protected boolean setNewRecordAndHasChildren(C4State state, C4Record rec) {
+		GameValue val = getValue(state);
+		if (val == null) {
+			rec.set(GameValue.DRAW);
+			return true;
+		} else {
+			if (val == GameValue.TIE)
+				rec.set(GameValue.TIE, 0);
+			else if (val == GameValue.LOSE)
+				rec.set(GameValue.LOSE, 0);
+			else
+				throw new RuntimeException("No other primitives");
+			return false;
+		}
+	}
+
+	@Override
+	protected boolean combineValues(QuickLinkedList<C4Record> grList,
+			C4Record gr) {
+		QuickLinkedList<C4Record>.QLLIterator iter = grList.iterator();
+		try {
+			C4Record best = null;
+			while (iter.hasNext()) {
+				C4Record next = iter.next();
+				if (best == null || next.compareTo(best) > 0) {
+					best = next;
+				}
+			}
+			if (best == null || gr.equals(best))
+				return false;
+			else {
+				gr.set(best);
+				return true;
+			}
+		} finally {
+			grList.release(iter);
+		}
+	}
+
+	@Override
+	protected void previousPosition(C4Record gr, C4Record toFill) {
+		toFill.previousPosition(gr);
+	}
+
+	@Override
+	protected Class<C4Record> getGameRecordClass() {
+		return C4Record.class;
+	}
+
+	@Override
+	public GameRecord getRecord(C4State position, C4Record fetchedRec) {
+		GameValue gv = fetchedRec.getValue();
+		if (gv == GameValue.TIE)
+			return new GameRecord(GameValue.TIE, gameSize - numPieces(position));
+		else {
+			assert gv == GameValue.LOSE || gv == GameValue.WIN;
+			return new GameRecord(gv, fetchedRec.getRemoteness());
 		}
 	}
 }

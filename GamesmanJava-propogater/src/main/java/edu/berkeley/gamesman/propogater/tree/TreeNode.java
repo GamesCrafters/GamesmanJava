@@ -65,9 +65,10 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 	}
 
 	@Override
-	public void setConf(final Configuration conf) {
+	public final void setConf(final Configuration conf) {
 		super.setConf(conf);
 		if (conf != null) {
+			treeNodeConfigure(conf);
 			final Factory<K> kFactory = makeKFactory(conf);
 			Factory<V> vFactory = makeVFactory(conf);
 			final Factory<PI> piFactory = makePIFactory(conf);
@@ -106,6 +107,9 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 						}
 					});
 		}
+	}
+
+	protected void treeNodeConfigure(Configuration conf) {
 	}
 
 	protected Factory<UM> makeUMFactory(Configuration conf) {

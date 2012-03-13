@@ -5,6 +5,7 @@ import edu.berkeley.gamesman.propogater.common.RawByteComparator;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.game.tree.GameTree;
+import edu.berkeley.gamesman.game.type.GameRecord;
 import edu.berkeley.gamesman.game.type.GameValue;
 
 import java.util.ArrayList;
@@ -17,7 +18,7 @@ import org.apache.hadoop.io.WritableComparator;
 import org.apache.hadoop.util.ReflectionUtils;
 
 public class Reversi<T extends ReversiState<T>> extends GameTree<T> implements
-		Configurable, SolveReader<T> {
+		Configurable, SolveReader<T, GameRecord> {
 
 	private static final int DEFAULT_WIDTH = 4, DEFAULT_HEIGHT = 4;
 	private int height, width;
@@ -180,5 +181,10 @@ public class Reversi<T extends ReversiState<T>> extends GameTree<T> implements
 			}
 		}
 		return sb.toString();
+	}
+
+	@Override
+	public GameRecord getRecord(T position, GameRecord fetchedRec) {
+		return fetchedRec;
 	}
 }

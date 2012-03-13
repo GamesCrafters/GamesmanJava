@@ -1,6 +1,5 @@
 gamesman.hadoop.game.name=connect4
 gamesman.game.variance.length=16
-gamesman.game.output.variance.length=12
 propogater.tree.class=edu.berkeley.gamesman.parallel.game.connect4.Connect4
 propogation.work.path=target/work
 propogater.out.path=target/c4

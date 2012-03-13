@@ -2,6 +2,7 @@ package edu.berkeley.gamesman.solve.reader;
 
 import java.util.Collection;
 
+import edu.berkeley.gamesman.game.type.GameRecord;
 import edu.berkeley.gamesman.util.Pair;
 
 /**
@@ -12,7 +13,7 @@ import edu.berkeley.gamesman.util.Pair;
  * 
  * @param <KEY>
  */
-public interface SolveReader<KEY> {
+public interface SolveReader<KEY, GR> {
 	/**
 	 * Unhashes a string to a position.
 	 * 
@@ -39,4 +40,6 @@ public interface SolveReader<KEY> {
 	 * @return The resulting string
 	 */
 	public abstract String getString(KEY position);
+
+	public abstract GameRecord getRecord(KEY position, GR fetchedRec);
 }

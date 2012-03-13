@@ -104,7 +104,11 @@ public class GameRecord implements Comparable<GameRecord>, Writable {
 	}
 
 	public int getRemoteness() {
-		return remoteness;
+		if (value.hasRemoteness)
+			return remoteness;
+		else
+			throw new UnsupportedOperationException(value
+					+ " does not have remoteness");
 	}
 
 	public void previousPosition() {

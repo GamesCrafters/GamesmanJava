@@ -1,22 +1,16 @@
 package edu.berkeley.gamesman.parallel.game.ninemensmorris;
 
-import edu.berkeley.gamesman.hasher.counting.CountingState;
 import edu.berkeley.gamesman.hasher.invhasher.OptimizingInvariantHasher;
 
 public class NMMHasher extends OptimizingInvariantHasher<NMMState> {
-	
-	
-	
 
 	public NMMHasher(int[] digitBase) {
 		super(digitBase);
 		// TODO Auto-generated constructor stub
 	}
 
-
-
 	@Override
-	protected NMMState innerNewState() {
+	protected NMMState genHasherNewState() {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -31,6 +25,5 @@ public class NMMHasher extends OptimizingInvariantHasher<NMMState> {
 	protected boolean valid(NMMState state) {
 		// TODO Auto-generated method stub
 		return false;
-	}
-	
+	}	
 }

@@ -5,15 +5,14 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
 
-import edu.berkeley.gamesman.game.type.GameRecord;
 import edu.berkeley.gamesman.game.type.GameValue;
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.hasher.genhasher.GenState;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
+import edu.berkeley.gamesman.parallel.writable.WritableTreeMap;
 import edu.berkeley.gamesman.propogater.common.Adder;
 import edu.berkeley.gamesman.propogater.common.Entry3;
 import edu.berkeley.gamesman.propogater.tree.SimpleTree;
@@ -36,8 +35,9 @@ import edu.berkeley.gamesman.util.qll.QuickLinkedList;
  * @param <S>
  *            The state type
  */
-public abstract class RangeTree<S extends GenState> extends
-		SimpleTree<Suffix<S>, MainRecords, ChildMap, RecordMap> {
+public abstract class RangeTree<S extends GenState, GR extends Writable>
+		extends
+		SimpleTree<Suffix<S>, MainRecords<GR>, ChildMap, WritableTreeMap<GR>> {
 
 	private class SaveMove {
 		public SaveMove() {
@@ -91,9 +91,11 @@ public abstract class RangeTree<S extends GenState> extends
 	public abstract GameValue getValue(S state);
 
 	@Override
-	public void firstVisit(Suffix<S> key, MainRecords valueToFill,
+	public void firstVisit(
+			Suffix<S> key,
+			MainRecords<GR> valueToFill,
 			WritList<Entry<Suffix<S>, ChildMap>> parents,
-			Adder<Entry3<Suffix<S>, RecordMap, ChildMap>> childrenToFill) {
+			Adder<Entry3<Suffix<S>, WritableTreeMap<GR>, ChildMap>> childrenToFill) {
 		boolean hasFirst = key.firstPosition(myHasher, state);
 		assert hasFirst;
 		valueToFill.clear();
@@ -109,10 +111,8 @@ public abstract class RangeTree<S extends GenState> extends
 		int pos = 0;
 		while (true) {
 			assert pos == myHasher.hash(state, null, varLen);
-			GameValue prim = getValue(state);
-			GameRecord rec = valueToFill.add();
-			if (prim == null) {
-				rec.set(GameValue.DRAW);
+			GR rec = valueToFill.add();
+			if (setNewRecordAndHasChildren(state, rec)) {
 				QuickLinkedList<SaveMove>.QLLIterator sIter = currentMoves
 						.iterator();
 				try {
@@ -140,7 +140,7 @@ public abstract class RangeTree<S extends GenState> extends
 								} else
 									childState = sm.childState;
 								if (sm.map == null) {
-									Entry3<Suffix<S>, RecordMap, ChildMap> entry = childrenToFill
+									Entry3<Suffix<S>, WritableTreeMap<GR>, ChildMap> entry = childrenToFill
 											.add();
 									entry.getT1().set(childState, suffLen);
 									entry.getT2().clear();
@@ -154,8 +154,7 @@ public abstract class RangeTree<S extends GenState> extends
 								assert childHash == myHasher.hash(childState,
 										null, varLen);
 								assert childHash <= Integer.MAX_VALUE;
-								IntWritable writ = sm.map.add(pos);
-								writ.set((int) childHash);
+								sm.map.add(pos, (int) childHash);
 								sm.lastParentPosition = pos;
 							}
 						} else {
@@ -170,8 +169,6 @@ public abstract class RangeTree<S extends GenState> extends
 				} finally {
 					currentMoves.release(sIter);
 				}
-			} else {
-				rec.set(prim, 0);
 			}
 			changed = myHasher.step(state);
 			pos++;
@@ -191,6 +188,8 @@ public abstract class RangeTree<S extends GenState> extends
 		currentMoves.clear();
 	}
 
+	protected abstract boolean setNewRecordAndHasChildren(S state, GR rec);
+
 	public boolean validMove(S state, Move move) {
 		return true;
 	}
@@ -208,47 +207,47 @@ public abstract class RangeTree<S extends GenState> extends
 	}
 
 	@Override
-	public void combineDown(Suffix<S> key, MainRecords value,
+	public void combineDown(Suffix<S> key, MainRecords<GR> value,
 			WritList<Entry<Suffix<S>, ChildMap>> parents, int firstNewParent,
-			WritableList<Entry<Suffix<S>, RecordMap>> children) {
+			WritableList<Entry<Suffix<S>, WritableTreeMap<GR>>> children) {
 	}
 
-	private final QuickLinkedList<RecordMap> current = new QuickLinkedList<RecordMap>();
-	private final QuickLinkedList<RecordMap> waiting = new QuickLinkedList<RecordMap>();
+	private final QuickLinkedList<WritableTreeMap<GR>> current = new QuickLinkedList<WritableTreeMap<GR>>();
+	private final QuickLinkedList<WritableTreeMap<GR>> waiting = new QuickLinkedList<WritableTreeMap<GR>>();
+	private final QuickLinkedList<GR> grList = new QuickLinkedList<GR>();
 
 	@Override
-	public boolean combineUp(Suffix<S> key, MainRecords value,
+	public boolean combineUp(Suffix<S> key, MainRecords<GR> value,
 			WritList<Entry<Suffix<S>, ChildMap>> parents,
-			WritableList<Entry<Suffix<S>, RecordMap>> children) {
+			WritableList<Entry<Suffix<S>, WritableTreeMap<GR>>> children) {
 		int numPositions = value.length();
 		boolean changed = false;
 		current.clear();
 		waiting.clear();
 		for (int i = 0; i < children.length(); i++) {
-			RecordMap child = children.get(i).getValue();
+			WritableTreeMap<GR> child = children.get(i).getValue();
 			if (child != null) {
 				child.restart();
 				current.push(child);
 			}
 		}
 		for (int pos = 0; pos < numPositions; pos++) {
-			if (value.get(pos).isPrimitive())
-				continue;
-			GameRecord bestRecord = null;
+			grList.clear();
 			while (!waiting.isEmpty() && waiting.peek().peekNext() <= pos) {
 				current.push(waiting.pop());
 			}
-			QuickLinkedList<RecordMap>.QLLIterator iter = current.iterator();
+			QuickLinkedList<WritableTreeMap<GR>>.QLLIterator iter = current
+					.iterator();
 			try {
 				while (iter.hasNext()) {
-					RecordMap child = iter.next();
-					GameRecord gvalue = child.getNext(pos);
+					WritableTreeMap<GR> child = iter.next();
+					GR gvalue = child.getNext(pos);
 					if (gvalue == null) {
 						iter.remove();
 						int childNext = child.peekNext();
 						if (childNext >= 0) {
 							assert childNext > pos;
-							QuickLinkedList<RecordMap>.QLLIterator waitingIter = waiting
+							QuickLinkedList<WritableTreeMap<GR>>.QLLIterator waitingIter = waiting
 									.listIterator();
 							try {
 								while (waitingIter.hasNext()) {
@@ -264,37 +263,37 @@ public abstract class RangeTree<S extends GenState> extends
 							}
 						}
 					} else {
-						if (bestRecord == null) {
-							bestRecord = gvalue;
-						} else {
-							bestRecord = bestRecord.compareTo(gvalue) < 0 ? gvalue
-									: bestRecord;
-						}
+						grList.add(gvalue);
 					}
 				}
 			} finally {
 				current.release(iter);
 			}
-			if (bestRecord != null) {
-				changed |= !bestRecord.equals(value.get(pos));
-				value.get(pos).set(bestRecord);
-			}
+			changed |= combineValues(grList, value.get(pos));
 		}
 		return changed;
 	}
 
+	protected abstract boolean combineValues(QuickLinkedList<GR> grList, GR gr);
+
 	@Override
-	public void sendUp(Suffix<S> key, MainRecords value, Suffix<S> parentKey,
-			ChildMap parentInfo, RecordMap toFill) {
+	public void sendUp(Suffix<S> key, MainRecords<GR> value,
+			Suffix<S> parentKey, ChildMap parentInfo, WritableTreeMap<GR> toFill) {
 		toFill.clear();
 		parentInfo.restart();
-		int nextParentNum = parentInfo.peekNext();
+		int nextParentNum = parentInfo.parent();
+		int lastParentNum = -1;
 		while (nextParentNum >= 0) {
-			int nextChildNum = parentInfo.getNext(nextParentNum).get();
-			toFill.add(nextParentNum).previousPosition(value.get(nextChildNum));
-			nextParentNum = parentInfo.peekNext();
+			assert nextParentNum > lastParentNum;
+			int nextChildNum = parentInfo.child();
+			previousPosition(value.get(nextChildNum), toFill.add(nextParentNum));
+			parentInfo.next();
+			lastParentNum = nextParentNum;
+			nextParentNum = parentInfo.parent();
 		}
 	}
+
+	protected abstract void previousPosition(GR gr, GR toFill);
 
 	@Override
 	public Class<Suffix<S>> getKeyClass() {
@@ -303,8 +302,9 @@ public abstract class RangeTree<S extends GenState> extends
 	}
 
 	@Override
-	public Class<MainRecords> getValClass() {
-		return MainRecords.class;
+	public Class<MainRecords<GR>> getValClass() {
+		return (Class<MainRecords<GR>>) MainRecords.class
+				.<MainRecords> asSubclass(MainRecords.class);
 	}
 
 	@Override
@@ -313,9 +313,18 @@ public abstract class RangeTree<S extends GenState> extends
 	}
 
 	@Override
-	public Class<RecordMap> getCiClass() {
-		return RecordMap.class;
+	public Class<WritableTreeMap<GR>> getCiClass() {
+		return (Class<WritableTreeMap<GR>>) WritableTreeMap.class
+				.<WritableTreeMap> asSubclass(WritableTreeMap.class);
 	}
+
+	@Override
+	protected void treePrepareRun(Configuration conf) {
+		conf.setClass("propogater.run.record.class", getGameRecordClass(),
+				Writable.class);
+	}
+
+	protected abstract Class<GR> getGameRecordClass();
 
 	@Override
 	public Collection<Suffix<S>> getRoots() {
@@ -402,8 +411,11 @@ public abstract class RangeTree<S extends GenState> extends
 	 */
 	protected abstract int suffixLength();
 
-	public GameRecord getRecord(Suffix<S> range, S state, MainRecords records) {
-		long iVal = range.subHash(getHasher(), state);
+	public GR getRecord(Suffix<S> range, S state, MainRecords<GR> records) {
+		GenHasher<S> hasher = getHasher();
+		S myState = hasher.newState();
+		hasher.set(myState, state);
+		long iVal = range.subHash(getHasher(), myState);
 		assert iVal <= Integer.MAX_VALUE;
 		return records.get((int) iVal);
 	}
@@ -432,13 +444,18 @@ public abstract class RangeTree<S extends GenState> extends
 	}
 
 	@Override
-	public Class<? extends RangeTreeNode<S>> getTreeNodeClass() {
-		return (Class<? extends RangeTreeNode<S>>) RangeTreeNode.class
+	public Class<? extends RangeTreeNode<S, GR>> getTreeNodeClass() {
+		return (Class<? extends RangeTreeNode<S, GR>>) RangeTreeNode.class
 				.<RangeTreeNode> asSubclass(RangeTreeNode.class);
 	}
 
-	@Override
-	public Class<? extends Reducer> getCleanupReducerClass() {
-		return RangeReducer.class;
+	public static <GR extends Writable> Class<GR> getRunGRClass(
+			Configuration conf) {
+		Class<GR> result = (Class<GR>) conf.getClass(
+				"propogater.run.record.class", null, Writable.class);
+		if (result == null)
+			throw new NullPointerException();
+		else
+			return result;
 	}
 }

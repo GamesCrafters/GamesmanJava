@@ -2,33 +2,32 @@ package edu.berkeley.gamesman.parallel.ranges;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.util.ReflectionUtils;
 
-import edu.berkeley.gamesman.game.type.GameRecord;
 import edu.berkeley.gamesman.hasher.genhasher.GenState;
+import edu.berkeley.gamesman.parallel.writable.WritableTreeMap;
 import edu.berkeley.gamesman.propogater.factory.Factory;
 import edu.berkeley.gamesman.propogater.tree.SimpleTreeNode;
 import edu.berkeley.gamesman.propogater.writable.IntEntry;
 import edu.berkeley.gamesman.util.qll.Pool;
 import edu.berkeley.gamesman.util.qll.QLLFactory;
 
-public class RangeTreeNode<S extends GenState> extends
-		SimpleTreeNode<Suffix<S>, MainRecords, ChildMap, RecordMap> {
+public class RangeTreeNode<S extends GenState, GR extends Writable>
+		extends
+		SimpleTreeNode<Suffix<S>, MainRecords<GR>, ChildMap, WritableTreeMap<GR>> {
+	private Class<? extends GR> grClass;
+
+	@Override
+	protected void treeNodeConfigure(Configuration conf) {
+		grClass = RangeTree.getRunGRClass(conf);
+	}
+
 	@Override
 	protected Factory<ChildMap> makePIFactory(Configuration conf) {
 		return new Factory<ChildMap>() {
-			private final QLLFactory<IntEntry<IntWritable>> fact = new QLLFactory<IntEntry<IntWritable>>();
-			private final Pool<IntEntry<IntWritable>> pool = new Pool<IntEntry<IntWritable>>(
-					new edu.berkeley.gamesman.util.qll.Factory<IntEntry<IntWritable>>() {
-						@Override
-						public IntEntry<IntWritable> newObject() {
-							return new IntEntry<IntWritable>(new IntWritable());
-						}
-
-						@Override
-						public void reset(IntEntry<IntWritable> t) {
-
-						}
-					});
+			private final QLLFactory<IntWritable> fact = new QLLFactory<IntWritable>();
+			private final Pool<IntWritable> pool = newPoolI();
 
 			@Override
 			public ChildMap create() {
@@ -37,26 +36,44 @@ public class RangeTreeNode<S extends GenState> extends
 		};
 	}
 
+	private Pool<IntWritable> newPoolI() {
+		return new Pool<IntWritable>(
+				new edu.berkeley.gamesman.util.qll.Factory<IntWritable>() {
+					@Override
+					public IntWritable newObject() {
+						return new IntWritable();
+					}
+
+					@Override
+					public void reset(IntWritable t) {
+
+					}
+				});
+	}
+
 	@Override
-	protected Factory<RecordMap> makeCIFactory(Configuration conf) {
-		return new Factory<RecordMap>() {
-			private final QLLFactory<IntEntry<GameRecord>> fact = new QLLFactory<IntEntry<GameRecord>>();
-			private final Pool<IntEntry<GameRecord>> pool = new Pool<IntEntry<GameRecord>>(
-					new edu.berkeley.gamesman.util.qll.Factory<IntEntry<GameRecord>>() {
+	protected Factory<WritableTreeMap<GR>> makeCIFactory(
+			final Configuration conf) {
+		return new Factory<WritableTreeMap<GR>>() {
+			private final QLLFactory<IntWritable> facti = new QLLFactory<IntWritable>();
+			private final Pool<IntWritable> pooli = newPoolI();
+			private final QLLFactory<GR> fact = new QLLFactory<GR>();
+			private final Pool<GR> pool = new Pool<GR>(
+					new edu.berkeley.gamesman.util.qll.Factory<GR>() {
 						@Override
-						public IntEntry<GameRecord> newObject() {
-							return new IntEntry<GameRecord>(new GameRecord());
+						public GR newObject() {
+							return ReflectionUtils.newInstance(grClass, conf);
 						}
 
 						@Override
-						public void reset(IntEntry<GameRecord> t) {
+						public void reset(GR t) {
 
 						}
 					});
 
 			@Override
-			public RecordMap create() {
-				return new RecordMap(fact, pool);
+			public WritableTreeMap<GR> create() {
+				return new WritableTreeMap<GR>(facti, pooli, fact, pool);
 			}
 		};
 	}

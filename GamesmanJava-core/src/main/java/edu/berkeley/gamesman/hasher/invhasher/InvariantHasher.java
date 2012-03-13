@@ -4,10 +4,12 @@ import java.util.HashMap;
 
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.hasher.genhasher.GenState;
+import edu.berkeley.gamesman.util.LongSet;
 
 public abstract class InvariantHasher<S extends GenState> extends GenHasher<S> {
-	private HashMap<Long, Long>[] invariantCounts;
+	private HashMap<LongSet, Long>[] invariantCounts;
 	private final int countingPlace;
+	private final LongSet tempVal = new LongSet();
 
 	/**
 	 * @param numElements
@@ -22,7 +24,7 @@ public abstract class InvariantHasher<S extends GenState> extends GenHasher<S> {
 		super(digitBase);
 		invariantCounts = new HashMap[numElements + 1];
 		for (int i = 0; i <= numElements; i++)
-			invariantCounts[i] = new HashMap<Long, Long>();
+			invariantCounts[i] = new HashMap<LongSet, Long>();
 		this.countingPlace = countingPlace;
 	}
 
@@ -32,7 +34,8 @@ public abstract class InvariantHasher<S extends GenState> extends GenHasher<S> {
 		long inv = getInvariant(state);
 		if (inv < 0)
 			return 0L;
-		Long count = invariantCounts[start].get(inv);
+		tempVal.value = inv;
+		Long count = invariantCounts[start].get(tempVal);
 		if (count != null) {
 			return count;
 		}
@@ -56,7 +59,8 @@ public abstract class InvariantHasher<S extends GenState> extends GenHasher<S> {
 		}
 		if (countingPlace == start)
 			posCount *= posCount;
-		invariantCounts[start].put(inv, posCount);
+		Long prevVal = invariantCounts[start].put(new LongSet(inv), posCount);
+		assert prevVal == null;
 		return posCount;
 	}
 

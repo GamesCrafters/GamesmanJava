@@ -27,8 +27,8 @@ import edu.berkeley.gamesman.game.type.GameValue;
 import edu.berkeley.gamesman.hasher.genhasher.GenState;
 
 public final class Play {
-	public static <K extends WritableComparable<K>> void main(String[] args)
-			throws IOException, ClassNotFoundException {
+	public static <K extends WritableComparable<K>, GR extends Writable> void main(
+			String[] args) throws IOException, ClassNotFoundException {
 		GenericOptionsParser parser = new GenericOptionsParser(args);
 		Configuration conf = parser.getConfiguration();
 		String[] remainArgs = parser.getRemainingArgs();
@@ -36,14 +36,15 @@ public final class Play {
 		ConfParser.addParameters(conf, p, false);
 		Tree<K, ?, ?, ?, ?, ?> tree = ConfParser
 				.<K, Writable, Writable, Writable, Writable, Writable> newTree(conf);
+		tree.prepareRun(conf);
 		if (tree instanceof GameTree) {
-			Play.<K> subMain(conf, (GameTree) tree);
+			Play.<K, GR> subMain(conf, (GameTree) tree);
 		} else if (tree instanceof RangeTree) {
-			Play.<GenState> rangeSubMain(conf, (RangeTree) tree);
+			Play.<GenState, GR> rangeSubMain(conf, (RangeTree) tree);
 		}
 	}
 
-	private static <K extends WritableComparable<K>> void subMain(
+	private static <K extends WritableComparable<K>, GR extends Writable> void subMain(
 			Configuration conf, GameTree<K> tree) throws IOException,
 			ClassNotFoundException {
 		K position = tree.getRoots().iterator().next();
@@ -54,7 +55,7 @@ public final class Play {
 		Partitioner<K, GameRecord> partitioner = ConfParser
 				.<K, GameRecord> getPartitionerInstance(conf);
 		String gameName = GamesmanParser.getGameName(conf);
-		SolveReader<K> gameReader = SolveReaders.get(conf, gameName);
+		SolveReader<K, GR> gameReader = SolveReaders.get(conf, gameName);
 
 		Scanner scan = new Scanner(System.in);
 		GameRecord storeRecord = new GameRecord();
@@ -92,26 +93,29 @@ public final class Play {
 		}
 	}
 
-	private static <S extends GenState> void rangeSubMain(Configuration conf,
-			RangeTree<S> tree) throws IOException, ClassNotFoundException {
+	private static <S extends GenState, GR extends Writable> void rangeSubMain(
+			Configuration conf, RangeTree<S, GR> tree) throws IOException,
+			ClassNotFoundException {
 		Suffix<S> posRange = tree.getRoots(true).iterator().next();
 		Path[] outPath = new Path[1];
 		outPath[0] = ConfParser.getOutputPath(conf);
 		MapFile.Reader[] readers = MapFileOutputFormat.getReadersArray(outPath,
 				conf);
-		Partitioner<Suffix<S>, MainRecords> partitioner = ConfParser
-				.<Suffix<S>, MainRecords> getPartitionerInstance(conf);
+		Partitioner<Suffix<S>, MainRecords<GR>> partitioner = ConfParser
+				.<Suffix<S>, MainRecords<GR>> getPartitionerInstance(conf);
 		String gameName = GamesmanParser.getGameName(conf);
-		SolveReader<S> gameReader = SolveReaders.<S> get(conf, gameName);
+		SolveReader<S, GR> gameReader = SolveReaders
+				.<S, GR> get(conf, gameName);
 
 		Scanner scan = new Scanner(System.in);
-		MainRecords recs = new MainRecords();
+		MainRecords<GR> recs = new MainRecords<GR>(conf);
 		S position = tree.getStartingPositions().iterator().next();
 		boolean gameFinished = true;
 		while (tree.getValue(position) == null) {
 			System.out.println(position.toString());
 			MapFileOutputFormat.getEntry(readers, partitioner, posRange, recs);
-			GameRecord record = tree.getRecord(posRange, position, recs);
+			GR unparsedRecord = tree.getRecord(posRange, position, recs);
+			GameRecord record = gameReader.getRecord(position, unparsedRecord);
 			System.out.println(record);
 
 			Collection<Pair<String, S>> moves = gameReader

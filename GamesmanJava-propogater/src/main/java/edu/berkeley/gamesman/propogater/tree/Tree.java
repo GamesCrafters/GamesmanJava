@@ -121,6 +121,7 @@ public abstract class Tree<K extends WritableComparable<K>, V extends Writable, 
 	}
 
 	public final void prepareRun(Configuration conf) {
+		treePrepareRun(conf);
 		conf.setClass("propogater.run.key.class", getKeyClass(),
 				WritableComparable.class);
 		conf.setClass("propogater.run.value.class", getValClass(),
@@ -129,6 +130,9 @@ public abstract class Tree<K extends WritableComparable<K>, V extends Writable, 
 		conf.setClass("propogater.run.ci.class", getCiClass(), Writable.class);
 		conf.setClass("propogater.run.um.class", getUmClass(), Writable.class);
 		conf.setClass("propogater.run.dm.class", getDmClass(), Writable.class);
+	}
+
+	protected void treePrepareRun(Configuration conf) {
 	}
 
 	static <K extends WritableComparable<K>> Class<K> getRunKClass(

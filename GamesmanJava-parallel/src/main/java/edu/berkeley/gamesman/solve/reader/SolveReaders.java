@@ -27,13 +27,13 @@ public class SolveReaders {
 		// TODO Add more games here
 	}
 
-	public static <KEY> SolveReader<KEY> get(Configuration conf, String game)
-			throws ClassNotFoundException {
-		Class<? extends SolveReader<KEY>> gameClass = (Class<? extends SolveReader<KEY>>) gameClasses
+	public static <KEY, GR> SolveReader<KEY, GR> get(Configuration conf,
+			String game) throws ClassNotFoundException {
+		Class<? extends SolveReader<KEY, GR>> gameClass = (Class<? extends SolveReader<KEY, GR>>) gameClasses
 				.get(game);
 		if (gameClass == null)
 			throw new ClassNotFoundException(game);
-		SolveReader<KEY> t = ReflectionUtils.newInstance(gameClass, conf);
+		SolveReader<KEY, GR> t = ReflectionUtils.newInstance(gameClass, conf);
 		return t;
 	}
 
