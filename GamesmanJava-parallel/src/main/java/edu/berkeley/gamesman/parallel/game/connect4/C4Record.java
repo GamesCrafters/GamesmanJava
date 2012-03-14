@@ -79,7 +79,7 @@ public class C4Record implements Writable, Comparable<C4Record> {
 	public GameValue getValue() {
 		return myRecord.getValue();
 	}
-
+A
 	public int getRemoteness() {
 		if (getValue() != GameValue.TIE)
 			return myRecord.getRemoteness();
