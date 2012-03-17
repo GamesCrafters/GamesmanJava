@@ -8,9 +8,6 @@ import edu.berkeley.gamesman.parallel.writable.WritableTreeMap;
 import edu.berkeley.gamesman.propogater.factory.Factory;
 import edu.berkeley.gamesman.propogater.tree.SimpleTreeNode;
 import edu.berkeley.gamesman.propogater.writable.FixedLengthWritable;
-import edu.berkeley.gamesman.propogater.writable.Resetables;
-import edu.berkeley.gamesman.util.qll.Pool;
-import edu.berkeley.gamesman.util.qll.QLLFactory;
 
 public class RangeTreeNode<S extends GenState, GR extends FixedLengthWritable>
 		extends
@@ -20,21 +17,6 @@ public class RangeTreeNode<S extends GenState, GR extends FixedLengthWritable>
 	@Override
 	protected void treeNodeConfigure(Configuration conf) {
 		grClass = RangeTree.getRunGRClass(conf);
-	}
-
-	@Override
-	protected Factory<ChildMap> makePIFactory(Configuration conf) {
-		return new Factory<ChildMap>() {
-
-			@Override
-			public ChildMap create() {
-				return new ChildMap();
-			}
-
-			@Override
-			public void reset(ChildMap obj) {
-			}
-		};
 	}
 
 	@Override

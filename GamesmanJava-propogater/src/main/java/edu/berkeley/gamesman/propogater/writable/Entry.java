@@ -11,8 +11,7 @@ import org.apache.hadoop.io.Writable;
 import edu.berkeley.gamesman.propogater.factory.Factory;
 import edu.berkeley.gamesman.propogater.factory.FactoryUtil;
 
-public class Entry<K extends Writable, V extends Writable> implements Writable,
-		Resetable {
+public class Entry<K extends Writable, V extends Writable> implements Writable {
 	private K key;
 	private V value;
 
@@ -80,16 +79,5 @@ public class Entry<K extends Writable, V extends Writable> implements Writable,
 	public void swap(Entry<K, V> other) {
 		swapKeys(other);
 		swapValues(other);
-	}
-
-	@Override
-	public void reset() {
-		Resetables.reset(key);
-		Resetables.reset(value);
-	}
-
-	@Override
-	public boolean checkReset() {
-		return Resetables.checkReset(key) && Resetables.checkReset(value);
 	}
 }

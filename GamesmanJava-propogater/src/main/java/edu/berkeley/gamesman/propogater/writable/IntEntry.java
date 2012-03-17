@@ -10,7 +10,7 @@ import org.apache.hadoop.io.Writable;
 import edu.berkeley.gamesman.propogater.factory.Factory;
 import edu.berkeley.gamesman.propogater.factory.FactoryUtil;
 
-public final class IntEntry<V extends Writable> implements Writable, Resetable {
+public final class IntEntry<V extends Writable> implements Writable {
 	private int key;
 	private V value;
 
@@ -73,15 +73,5 @@ public final class IntEntry<V extends Writable> implements Writable, Resetable {
 		V temp = value;
 		value = entry.getValue();
 		entry.setValue(temp);
-	}
-
-	@Override
-	public void reset() {
-		Resetables.reset(value);
-	}
-
-	@Override
-	public boolean checkReset() {
-		return Resetables.checkReset(value);
 	}
 }

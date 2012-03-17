@@ -9,7 +9,6 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
 
-import edu.berkeley.gamesman.propogater.writable.ByteArrayDOutputStream;
 import edu.berkeley.gamesman.propogater.writable.FixedLengthWritable;
 import edu.berkeley.gamesman.propogater.writable.list.FLWritList;
 

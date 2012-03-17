@@ -26,12 +26,11 @@ public class TreeReducer<K extends WritableComparable<K>, V extends Writable, PI
 	protected void reduce(K key,
 			Iterable<TreeNode<K, V, PI, UM, CI, DM>> values, Context context)
 			throws IOException, InterruptedException {
-		assert value.checkReset();
+		value.reset();
 		for (TreeNode<K, V, PI, UM, CI, DM> node : values)
 			value.combineWith(node);
 		combine(key, value);
 		context.write(key, value);
-		value.reset();
 	}
 
 	protected void combine(K key, TreeNode<K, V, PI, UM, CI, DM> value) {

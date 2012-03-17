@@ -14,12 +14,11 @@ import edu.berkeley.gamesman.propogater.factory.FactoryUtil;
 import edu.berkeley.gamesman.propogater.writable.BitSetWritable;
 import edu.berkeley.gamesman.propogater.writable.Entry;
 import edu.berkeley.gamesman.propogater.writable.IntEntry;
-import edu.berkeley.gamesman.propogater.writable.Resetable;
 import edu.berkeley.gamesman.propogater.writable.ValueWrapper;
 import edu.berkeley.gamesman.propogater.writable.list.WritableList;
 
 public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI extends Writable, UM extends Writable, CI extends Writable, DM extends Writable>
-		extends Configured implements Writable, Resetable {
+		extends Configured implements Writable {
 	private ValueWrapper<V> value;
 	private int lastParentsLength = 0;
 	private WritableList<IntEntry<Entry<K, PI>>> parents;
@@ -40,14 +39,11 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 	@Override
 	public void readFields(DataInput in) throws IOException {
 		checkConf();
-		boolean hadValue = value.hasValue();
 		value.readFields(in);
 		if (value.hasValue()) {
 			lastParentsLength = in.readInt();
 			cleanSet.readFields(in);
 			children.readFields(in);
-		}else if(hadValue){
-			children.clear();
 		}
 		parents.readFields(in);
 		uMess.readFields(in);
@@ -92,7 +88,6 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 
 					@Override
 					public void reset(IntEntry<Entry<K, PI>> obj) {
-						obj.reset();
 					}
 				});
 		children = new WritableList<Entry<K, CI>>(new Factory<Entry<K, CI>>() {
@@ -103,7 +98,6 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 
 			@Override
 			public void reset(Entry<K, CI> obj) {
-				obj.reset();
 			}
 		});
 		final Factory<UM> umFactory = makeUMFactory(conf);
@@ -116,7 +110,6 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 
 			@Override
 			public void reset(IntEntry<UM> obj) {
-				obj.reset();
 			}
 		});
 		dMess = new WritableList<IntEntry<Entry<K, DM>>>(
@@ -129,7 +122,6 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 
 					@Override
 					public void reset(IntEntry<Entry<K, DM>> obj) {
-						obj.reset();
 					}
 				});
 	}
@@ -176,7 +168,7 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 	public void firstVisit(Tree<K, V, PI, UM, CI, DM> tree, K key,
 			WritableList<DM> childMessagesToFill) {
 		checkConf();
-		assert children.isEmpty();
+		children.clear();
 		cleanSet.clear();
 		lastParentsLength = 0;
 		fvAdder.setList(children, childMessagesToFill);
@@ -254,7 +246,6 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 			stealValue(other);
 			lastParentsLength = other.lastParentsLength;
 			stealCleanSet(other);
-			assert children.isEmpty();
 			stealChildren(other);
 		}
 		addAllParents(other);
@@ -292,18 +283,11 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 		other.value = temp;
 	}
 
-	@Override
 	public void reset() {
 		value.clear();
 		parents.clear();
 		children.clear();
 		uMess.clear();
 		dMess.clear();
-	}
-
-	@Override
-	public boolean checkReset() {
-		return !value.hasValue() && parents.isEmpty() && children.isEmpty()
-				&& uMess.isEmpty() && dMess.isEmpty();
 	}
 }
