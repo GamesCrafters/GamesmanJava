@@ -17,6 +17,7 @@ import edu.berkeley.gamesman.propogater.common.Adder;
 import edu.berkeley.gamesman.propogater.common.Entry3;
 import edu.berkeley.gamesman.propogater.tree.SimpleTree;
 import edu.berkeley.gamesman.propogater.writable.Entry;
+import edu.berkeley.gamesman.propogater.writable.FixedLengthWritable;
 import edu.berkeley.gamesman.propogater.writable.list.WritList;
 import edu.berkeley.gamesman.propogater.writable.list.WritableList;
 import edu.berkeley.gamesman.util.qll.Factory;
@@ -35,7 +36,7 @@ import edu.berkeley.gamesman.util.qll.QuickLinkedList;
  * @param <S>
  *            The state type
  */
-public abstract class RangeTree<S extends GenState, GR extends Writable>
+public abstract class RangeTree<S extends GenState, GR extends FixedLengthWritable>
 		extends
 		SimpleTree<Suffix<S>, MainRecords<GR>, ChildMap, WritableTreeMap<GR>> {
 
@@ -90,6 +91,8 @@ public abstract class RangeTree<S extends GenState, GR extends Writable>
 	 */
 	public abstract GameValue getValue(S state);
 
+	private GR tempRec;
+
 	@Override
 	public void firstVisit(
 			Suffix<S> key,
@@ -98,7 +101,7 @@ public abstract class RangeTree<S extends GenState, GR extends Writable>
 			Adder<Entry3<Suffix<S>, WritableTreeMap<GR>, ChildMap>> childrenToFill) {
 		boolean hasFirst = key.firstPosition(myHasher, state);
 		assert hasFirst;
-		valueToFill.clear();
+		valueToFill.reset(true);
 		Arrays.fill(lastChanged, 0);
 		for (Move move : moves) {
 			SaveMove sm = movePool.get();
@@ -111,8 +114,7 @@ public abstract class RangeTree<S extends GenState, GR extends Writable>
 		int pos = 0;
 		while (true) {
 			assert pos == myHasher.hash(state, null, varLen);
-			GR rec = valueToFill.add();
-			if (setNewRecordAndHasChildren(state, rec)) {
+			if (setNewRecordAndHasChildren(state, tempRec)) {
 				QuickLinkedList<SaveMove>.QLLIterator sIter = currentMoves
 						.iterator();
 				try {
@@ -143,9 +145,9 @@ public abstract class RangeTree<S extends GenState, GR extends Writable>
 									Entry3<Suffix<S>, WritableTreeMap<GR>, ChildMap> entry = childrenToFill
 											.add();
 									entry.getT1().set(childState, suffLen);
-									entry.getT2().clear();
+									entry.getT2().clear(false);
 									ChildMap childMap = entry.getT3();
-									childMap.clear();
+									childMap.clear(true);
 									sm.map = childMap;
 									numChanged = varLen;
 								}
@@ -162,6 +164,8 @@ public abstract class RangeTree<S extends GenState, GR extends Writable>
 							if (matches < varLen) {
 								movePlaces[matches].add(sm);
 							} else {
+								if (sm.map != null)
+									sm.map.finish();
 								movePool.release(sm);
 							}
 						}
@@ -170,6 +174,7 @@ public abstract class RangeTree<S extends GenState, GR extends Writable>
 					currentMoves.release(sIter);
 				}
 			}
+			valueToFill.add(tempRec);
 			changed = myHasher.step(state);
 			pos++;
 			for (int i = Math.min(changed, varLen - 1); i >= 0; i--) {
@@ -182,9 +187,16 @@ public abstract class RangeTree<S extends GenState, GR extends Writable>
 			}
 		}
 		QuickLinkedList<SaveMove>.QLLIterator iter = currentMoves.iterator();
-		while (iter.hasNext())
-			movePool.release(iter.next());
-		currentMoves.release(iter);
+		try {
+			while (iter.hasNext()) {
+				SaveMove sm = iter.next();
+				if (sm.map != null)
+					sm.map.finish();
+				movePool.release(sm);
+			}
+		} finally {
+			currentMoves.release(iter);
+		}
 		currentMoves.clear();
 	}
 
@@ -269,7 +281,11 @@ public abstract class RangeTree<S extends GenState, GR extends Writable>
 			} finally {
 				current.release(iter);
 			}
-			changed |= combineValues(grList, value.get(pos));
+			GR grValue = value.get(pos);
+			if (combineValues(grList, grValue)) {
+				value.writeBack(pos, grValue);
+				changed = true;
+			}
 		}
 		return changed;
 	}
@@ -279,18 +295,20 @@ public abstract class RangeTree<S extends GenState, GR extends Writable>
 	@Override
 	public void sendUp(Suffix<S> key, MainRecords<GR> value,
 			Suffix<S> parentKey, ChildMap parentInfo, WritableTreeMap<GR> toFill) {
-		toFill.clear();
+		toFill.clear(true);
 		parentInfo.restart();
 		int nextParentNum = parentInfo.parent();
 		int lastParentNum = -1;
 		while (nextParentNum >= 0) {
 			assert nextParentNum > lastParentNum;
 			int nextChildNum = parentInfo.child();
-			previousPosition(value.get(nextChildNum), toFill.add(nextParentNum));
+			previousPosition(value.get(nextChildNum), tempRec);
+			toFill.add(nextParentNum, tempRec);
 			parentInfo.next();
 			lastParentNum = nextParentNum;
 			nextParentNum = parentInfo.parent();
 		}
+		toFill.finish();
 	}
 
 	protected abstract void previousPosition(GR gr, GR toFill);
@@ -382,6 +400,11 @@ public abstract class RangeTree<S extends GenState, GR extends Writable>
 		assert rotDep[varLen] == varLen;
 		lastChanged = new int[varLen];
 		state = myHasher.newState();
+		tempRec = newRecord();
+	}
+
+	protected GR newRecord() {
+		return ReflectionUtils.newInstance(getGameRecordClass(), getConf());
 	}
 
 	protected boolean usesRotation() {

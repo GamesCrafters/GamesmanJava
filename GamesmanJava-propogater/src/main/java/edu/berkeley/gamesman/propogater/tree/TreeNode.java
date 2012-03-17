@@ -14,11 +14,12 @@ import edu.berkeley.gamesman.propogater.factory.FactoryUtil;
 import edu.berkeley.gamesman.propogater.writable.BitSetWritable;
 import edu.berkeley.gamesman.propogater.writable.Entry;
 import edu.berkeley.gamesman.propogater.writable.IntEntry;
+import edu.berkeley.gamesman.propogater.writable.Resetable;
 import edu.berkeley.gamesman.propogater.writable.ValueWrapper;
 import edu.berkeley.gamesman.propogater.writable.list.WritableList;
 
 public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI extends Writable, UM extends Writable, CI extends Writable, DM extends Writable>
-		extends Configured implements Writable {
+		extends Configured implements Writable, Resetable {
 	private ValueWrapper<V> value;
 	private int lastParentsLength = 0;
 	private WritableList<IntEntry<Entry<K, PI>>> parents;
@@ -39,11 +40,14 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 	@Override
 	public void readFields(DataInput in) throws IOException {
 		checkConf();
+		boolean hadValue = value.hasValue();
 		value.readFields(in);
 		if (value.hasValue()) {
 			lastParentsLength = in.readInt();
 			cleanSet.readFields(in);
 			children.readFields(in);
+		}else if(hadValue){
+			children.clear();
 		}
 		parents.readFields(in);
 		uMess.readFields(in);
@@ -66,47 +70,68 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 
 	@Override
 	public final void setConf(final Configuration conf) {
+		if (conf == getConf())
+			return;
+		else if (conf == null)
+			return;
 		super.setConf(conf);
-		if (conf != null) {
-			treeNodeConfigure(conf);
-			final Factory<K> kFactory = makeKFactory(conf);
-			Factory<V> vFactory = makeVFactory(conf);
-			final Factory<PI> piFactory = makePIFactory(conf);
-			final Factory<CI> ciFactory = makeCIFactory(conf);
-			value = new ValueWrapper<V>(vFactory);
-			parents = new WritableList<IntEntry<Entry<K, PI>>>(
-					new Factory<IntEntry<Entry<K, PI>>>() {
+		treeNodeConfigure(conf);
+		final Factory<K> kFactory = makeKFactory(conf);
+		Factory<V> vFactory = makeVFactory(conf);
+		final Factory<PI> piFactory = makePIFactory(conf);
+		final Factory<CI> ciFactory = makeCIFactory(conf);
+		value = new ValueWrapper<V>(vFactory);
+		parents = new WritableList<IntEntry<Entry<K, PI>>>(
+				new Factory<IntEntry<Entry<K, PI>>>() {
 
-						@Override
-						public IntEntry<Entry<K, PI>> create() {
-							return new IntEntry<Entry<K, PI>>(new Entry<K, PI>(
-									kFactory, piFactory));
-						}
-					});
-			children = new WritableList<Entry<K, CI>>(
-					new Factory<Entry<K, CI>>() {
-						@Override
-						public Entry<K, CI> create() {
-							return new Entry<K, CI>(kFactory, ciFactory);
-						}
-					});
-			final Factory<UM> umFactory = makeUMFactory(conf);
-			final Factory<DM> dmFactory = makeDMFactory(conf);
-			uMess = new WritableList<IntEntry<UM>>(new Factory<IntEntry<UM>>() {
-				@Override
-				public IntEntry<UM> create() {
-					return new IntEntry<UM>(umFactory);
-				}
-			});
-			dMess = new WritableList<IntEntry<Entry<K, DM>>>(
-					new Factory<IntEntry<Entry<K, DM>>>() {
-						@Override
-						public IntEntry<Entry<K, DM>> create() {
-							return new IntEntry<Entry<K, DM>>(new Entry<K, DM>(
-									kFactory, dmFactory));
-						}
-					});
-		}
+					@Override
+					public IntEntry<Entry<K, PI>> create() {
+						return new IntEntry<Entry<K, PI>>(new Entry<K, PI>(
+								kFactory, piFactory));
+					}
+
+					@Override
+					public void reset(IntEntry<Entry<K, PI>> obj) {
+						obj.reset();
+					}
+				});
+		children = new WritableList<Entry<K, CI>>(new Factory<Entry<K, CI>>() {
+			@Override
+			public Entry<K, CI> create() {
+				return new Entry<K, CI>(kFactory, ciFactory);
+			}
+
+			@Override
+			public void reset(Entry<K, CI> obj) {
+				obj.reset();
+			}
+		});
+		final Factory<UM> umFactory = makeUMFactory(conf);
+		final Factory<DM> dmFactory = makeDMFactory(conf);
+		uMess = new WritableList<IntEntry<UM>>(new Factory<IntEntry<UM>>() {
+			@Override
+			public IntEntry<UM> create() {
+				return new IntEntry<UM>(umFactory);
+			}
+
+			@Override
+			public void reset(IntEntry<UM> obj) {
+				obj.reset();
+			}
+		});
+		dMess = new WritableList<IntEntry<Entry<K, DM>>>(
+				new Factory<IntEntry<Entry<K, DM>>>() {
+					@Override
+					public IntEntry<Entry<K, DM>> create() {
+						return new IntEntry<Entry<K, DM>>(new Entry<K, DM>(
+								kFactory, dmFactory));
+					}
+
+					@Override
+					public void reset(IntEntry<Entry<K, DM>> obj) {
+						obj.reset();
+					}
+				});
 	}
 
 	protected void treeNodeConfigure(Configuration conf) {
@@ -151,7 +176,7 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 	public void firstVisit(Tree<K, V, PI, UM, CI, DM> tree, K key,
 			WritableList<DM> childMessagesToFill) {
 		checkConf();
-		children.clear();
+		assert children.isEmpty();
 		cleanSet.clear();
 		lastParentsLength = 0;
 		fvAdder.setList(children, childMessagesToFill);
@@ -221,14 +246,6 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 		return uMess;
 	}
 
-	public void clearMixes() {
-		checkConf();
-		value.clear();
-		parents.clear();
-		uMess.clear();
-		dMess.clear();
-	}
-
 	public void combineWith(TreeNode<K, V, PI, UM, CI, DM> other) {
 		checkConf();
 		if (other.value.hasValue()) {
@@ -237,6 +254,7 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 			stealValue(other);
 			lastParentsLength = other.lastParentsLength;
 			stealCleanSet(other);
+			assert children.isEmpty();
 			stealChildren(other);
 		}
 		addAllParents(other);
@@ -272,5 +290,20 @@ public class TreeNode<K extends WritableComparable<K>, V extends Writable, PI ex
 		ValueWrapper<V> temp = value;
 		value = other.value;
 		other.value = temp;
+	}
+
+	@Override
+	public void reset() {
+		value.clear();
+		parents.clear();
+		children.clear();
+		uMess.clear();
+		dMess.clear();
+	}
+
+	@Override
+	public boolean checkReset() {
+		return !value.hasValue() && parents.isEmpty() && children.isEmpty()
+				&& uMess.isEmpty() && dMess.isEmpty();
 	}
 }

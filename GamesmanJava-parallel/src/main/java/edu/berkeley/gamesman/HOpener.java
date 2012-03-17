@@ -24,6 +24,7 @@ import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.parallel.writable.WritableTreeMap;
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.tree.Tree;
+import edu.berkeley.gamesman.propogater.writable.FixedLengthWritable;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.solve.reader.SolveReaders;
 import edu.berkeley.gamesman.thrift.GamestateResponse;
@@ -34,7 +35,7 @@ import edu.berkeley.gamesman.hasher.genhasher.GenState;
 
 public class HOpener implements Opener {
 
-	private class GFetcher<S extends GenState, GR extends Writable> implements
+	private class GFetcher<S extends GenState, GR extends FixedLengthWritable> implements
 			RecordFetcher {
 		private final RangeTree<S, GR> tree;
 		private final Path folderPath;

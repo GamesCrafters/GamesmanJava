@@ -13,7 +13,7 @@ import edu.berkeley.gamesman.propogater.tree.TreeNode;
 public class TreeReducer<K extends WritableComparable<K>, V extends Writable, PI extends Writable, UM extends Writable, CI extends Writable, DM extends Writable>
 		extends
 		Reducer<K, TreeNode<K, V, PI, UM, CI, DM>, K, TreeNode<K, V, PI, UM, CI, DM>> {
-	protected TreeNode<K, V, PI, UM, CI, DM> value;
+	private TreeNode<K, V, PI, UM, CI, DM> value;
 
 	protected void setup(Context context) throws IOException,
 			InterruptedException {
@@ -26,11 +26,12 @@ public class TreeReducer<K extends WritableComparable<K>, V extends Writable, PI
 	protected void reduce(K key,
 			Iterable<TreeNode<K, V, PI, UM, CI, DM>> values, Context context)
 			throws IOException, InterruptedException {
-		value.clearMixes();
+		assert value.checkReset();
 		for (TreeNode<K, V, PI, UM, CI, DM> node : values)
 			value.combineWith(node);
 		combine(key, value);
 		context.write(key, value);
+		value.reset();
 	}
 
 	protected void combine(K key, TreeNode<K, V, PI, UM, CI, DM> value) {

@@ -99,21 +99,21 @@ public abstract class Tree<K extends WritableComparable<K>, V extends Writable, 
 
 	@Override
 	public final void setConf(Configuration conf) {
+		if (conf == getConf())
+			return;
+		else if (conf == null)
+			return;
 		super.setConf(conf);
-		if (conf != null) {
-			configure(conf);
-			if (copyUM()) {
-				if (!getUmClass().equals(getCiClass()))
-					throw new ClassCastException("CIClass: " + getCiClass()
-							+ " and UMClass: " + getUmClass()
-							+ " are not equal");
-			}
-			if (copyDM()) {
-				if (!getDmClass().equals(getPiClass()))
-					throw new ClassCastException("PIClass: " + getPiClass()
-							+ " and DMClass: " + getDmClass()
-							+ " are not equal");
-			}
+		configure(conf);
+		if (copyUM()) {
+			if (!getUmClass().equals(getCiClass()))
+				throw new ClassCastException("CIClass: " + getCiClass()
+						+ " and UMClass: " + getUmClass() + " are not equal");
+		}
+		if (copyDM()) {
+			if (!getDmClass().equals(getPiClass()))
+				throw new ClassCastException("PIClass: " + getPiClass()
+						+ " and DMClass: " + getDmClass() + " are not equal");
 		}
 	}
 
@@ -126,10 +126,14 @@ public abstract class Tree<K extends WritableComparable<K>, V extends Writable, 
 				WritableComparable.class);
 		conf.setClass("propogater.run.value.class", getValClass(),
 				Writable.class);
-		conf.setClass("propogater.run.pi.class", getPiClass(), Writable.class);
-		conf.setClass("propogater.run.ci.class", getCiClass(), Writable.class);
-		conf.setClass("propogater.run.um.class", getUmClass(), Writable.class);
-		conf.setClass("propogater.run.dm.class", getDmClass(), Writable.class);
+		conf.setClass("propogater.run.pi.class", getPiClass(),
+				Writable.class);
+		conf.setClass("propogater.run.ci.class", getCiClass(),
+				Writable.class);
+		conf.setClass("propogater.run.um.class", getUmClass(),
+				Writable.class);
+		conf.setClass("propogater.run.dm.class", getDmClass(),
+				Writable.class);
 	}
 
 	protected void treePrepareRun(Configuration conf) {

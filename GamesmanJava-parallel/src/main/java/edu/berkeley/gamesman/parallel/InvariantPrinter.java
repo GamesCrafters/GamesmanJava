@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.GenericOptionsParser;
 
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
@@ -16,9 +15,10 @@ import edu.berkeley.gamesman.parallel.ranges.Suffix;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.parallel.writable.WritableTreeMap;
 import edu.berkeley.gamesman.propogater.common.ConfParser;
+import edu.berkeley.gamesman.propogater.writable.FixedLengthWritable;
 
 public class InvariantPrinter {
-	public static <S extends GenState, GR extends Writable> void main(
+	public static <S extends GenState, GR extends FixedLengthWritable> void main(
 			String[] args) throws IOException {
 		GenericOptionsParser parser = new GenericOptionsParser(args);
 		Configuration conf = parser.getConfiguration();

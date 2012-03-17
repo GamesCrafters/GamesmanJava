@@ -8,12 +8,7 @@ import java.io.IOException;
 
 import junit.framework.Assert;
 
-import org.apache.hadoop.io.IntWritable;
 import org.junit.Test;
-
-import edu.berkeley.gamesman.util.qll.Factory;
-import edu.berkeley.gamesman.util.qll.Pool;
-import edu.berkeley.gamesman.util.qll.QLLFactory;
 
 public class WritableTreeMapTest {
 
@@ -37,21 +32,9 @@ public class WritableTreeMapTest {
 	public void testMap() throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		DataOutputStream dos = new DataOutputStream(baos);
-		QLLFactory<IntWritable> qFact = new QLLFactory<IntWritable>();
-		Pool<IntWritable> pool = new Pool<IntWritable>(
-				new Factory<IntWritable>() {
-
-					@Override
-					public IntWritable newObject() {
-						return new IntWritable();
-					}
-
-					@Override
-					public void reset(IntWritable t) {
-					}
-				});
-		WritableTreeMap<IntWritable> wtm = new WritableTreeMap<IntWritable>(
-				qFact, pool, qFact, pool);
+		WritableTreeMap<FLIntWritable> wtm = new WritableTreeMap<FLIntWritable>(
+				new FLIntWritable());
+		wtm.clear(true);
 		int[][] pairs = new int[204][2];
 		pairs[0][0] = 0;
 		pairs[0][1] = 38;
@@ -61,18 +44,21 @@ public class WritableTreeMapTest {
 		pairs[2][1] = 1;
 		pairs[3][0] = 1000;
 		pairs[3][1] = 2;
+		FLIntWritable writ = new FLIntWritable();
 		for (int i = 0; i < 200; i++) {
 			pairs[i + 4][0] = (1 << 17) + i;
 			pairs[i + 4][1] = i;
 		}
 		for (int i = 0; i < 204; i++) {
-			wtm.add(pairs[i][0]).set(pairs[i][1]);
+			writ.set(pairs[i][1]);
+			wtm.add(pairs[i][0], writ);
 		}
+		wtm.finish();
 		wtm.write(dos);
 		dos.close();
 		byte[] b = baos.toByteArray();
-		WritableTreeMap<IntWritable> wtm2 = new WritableTreeMap<IntWritable>(
-				qFact, pool, qFact, pool);
+		WritableTreeMap<FLIntWritable> wtm2 = new WritableTreeMap<FLIntWritable>(
+				new FLIntWritable());
 		DataInputStream dis = new DataInputStream(new ByteArrayInputStream(b));
 		wtm2.readFields(dis);
 		for (int i = 0; i < 204; i++) {
@@ -85,28 +71,17 @@ public class WritableTreeMapTest {
 	public void testJump() throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		DataOutputStream dos = new DataOutputStream(baos);
-		QLLFactory<IntWritable> qFact = new QLLFactory<IntWritable>();
-		Pool<IntWritable> pool = new Pool<IntWritable>(
-				new Factory<IntWritable>() {
-
-					@Override
-					public IntWritable newObject() {
-						return new IntWritable();
-					}
-
-					@Override
-					public void reset(IntWritable t) {
-					}
-				});
-		JumpList wtm = new JumpList(qFact, pool);
+		JumpList wtm = new JumpList();
+		wtm.reset(true);
 		for (int i = 0; i < 204; i++) {
 			wtm.add(pairs[i][0]);
 		}
+		wtm.finish();
 		wtm.write(dos);
 		dos.close();
 		Assert.assertTrue(wtm.noWaiting());
 		byte[] b = baos.toByteArray();
-		JumpList wtm2 = new JumpList(qFact, pool);
+		JumpList wtm2 = new JumpList();
 		DataInputStream dis = new DataInputStream(new ByteArrayInputStream(b));
 		wtm2.readFields(dis);
 		for (int i = 0; i < 204; i++) {

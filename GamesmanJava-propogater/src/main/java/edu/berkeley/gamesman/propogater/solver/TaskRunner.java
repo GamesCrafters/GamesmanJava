@@ -8,9 +8,12 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
+import org.apache.hadoop.mapreduce.Counter;
+import org.apache.hadoop.mapreduce.CounterGroup;
 import org.apache.hadoop.mapreduce.Job;
 
 import edu.berkeley.gamesman.propogater.common.ConfParser;
+import edu.berkeley.gamesman.propogater.common.IOCheckOperations;
 import edu.berkeley.gamesman.propogater.common.Util;
 import edu.berkeley.gamesman.propogater.tree.Tree;
 
@@ -97,5 +100,16 @@ abstract class TaskRunner implements Runnable {
 		System.out.println("splitSize = " + splitSize);
 		System.out.println("numTasks = " + numTasks);
 		return numTasks;
+	}
+
+	protected void makeFiles(Configuration jConf, Job j) throws IOException {
+		CounterGroup g = j.getCounters().getGroup("file");
+		for (Counter c : g) {
+			if (c.getValue() > 0) {
+				Path hnPath = new Path(c.getName());
+				IOCheckOperations.createNewFile(hnPath.getFileSystem(jConf),
+						hnPath);
+			}
+		}
 	}
 }

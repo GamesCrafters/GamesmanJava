@@ -6,7 +6,6 @@ import org.apache.hadoop.io.Writable;
 
 import edu.berkeley.gamesman.propogater.writable.Entry;
 
-
 public class SetEntry3<T1 extends Writable, T2 extends Writable, T3> implements
 		Entry3<T1, T2, T3> {
 	private T1 t1;

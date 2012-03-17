@@ -4,12 +4,11 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.hadoop.io.Writable;
-
 import edu.berkeley.gamesman.game.type.GameRecord;
 import edu.berkeley.gamesman.game.type.GameValue;
+import edu.berkeley.gamesman.propogater.writable.FixedLengthWritable;
 
-public class C4Record implements Writable, Comparable<C4Record> {
+public class C4Record implements FixedLengthWritable, Comparable<C4Record> {
 
 	public C4Record() {
 	}
@@ -86,5 +85,10 @@ public class C4Record implements Writable, Comparable<C4Record> {
 		else
 			throw new UnsupportedOperationException(
 					"Remoteness can be calculated");
+	}
+
+	@Override
+	public int size() {
+		return 1;
 	}
 }

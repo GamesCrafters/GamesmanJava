@@ -6,7 +6,9 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.Writable;
 
-public class TORecord implements Writable {
+import edu.berkeley.gamesman.propogater.writable.FixedLengthWritable;
+
+public class TORecord implements FixedLengthWritable {
 
 	@Override
 	public void write(DataOutput out) throws IOException {
@@ -20,4 +22,9 @@ public class TORecord implements Writable {
 		
 	}
 
+	@Override
+	public int size() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }

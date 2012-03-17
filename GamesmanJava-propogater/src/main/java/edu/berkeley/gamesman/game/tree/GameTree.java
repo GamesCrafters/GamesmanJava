@@ -12,7 +12,8 @@ import edu.berkeley.gamesman.propogater.writable.Entry;
 import edu.berkeley.gamesman.propogater.writable.list.WritList;
 import edu.berkeley.gamesman.propogater.writable.list.WritableList;
 
-public abstract class GameTree<STATE extends WritableComparable<STATE>> extends
+public abstract class GameTree<STATE extends WritableComparable<STATE>>
+		extends
 		SimpleTree<STATE, GameRecord, NullWritable, GameRecord> {
 
 	public abstract void getChildren(STATE position, Adder<STATE> toFill);
@@ -27,7 +28,9 @@ public abstract class GameTree<STATE extends WritableComparable<STATE>> extends
 	private final GameAdder<STATE> childAdder = new GameAdder<STATE>();
 
 	@Override
-	public void firstVisit(STATE key, GameRecord valueToFill,
+	public void firstVisit(
+			STATE key,
+			GameRecord valueToFill,
 			WritList<Entry<STATE, NullWritable>> parents,
 			Adder<Entry3<STATE, GameRecord, NullWritable>> childrenToFill) {
 		GameValue primitiveValue = getPrimitiveValue(key);

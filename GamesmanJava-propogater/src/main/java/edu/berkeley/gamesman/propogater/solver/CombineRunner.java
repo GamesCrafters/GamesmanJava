@@ -55,6 +55,7 @@ public class CombineRunner extends TaskRunner {
 			boolean succeeded = j.waitForCompletion(true);
 			if (!succeeded)
 				throw new RuntimeException("Job did not succeed " + j);
+			makeFiles(jConf, j);
 			tier.deleteCombinedPaths(allPaths);
 		} catch (Throwable t) {
 			t.printStackTrace();

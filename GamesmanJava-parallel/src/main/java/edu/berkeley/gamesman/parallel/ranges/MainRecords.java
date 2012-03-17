@@ -7,12 +7,15 @@ import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.util.ReflectionUtils;
 
-import edu.berkeley.gamesman.propogater.writable.list.WritableList;
+import edu.berkeley.gamesman.propogater.writable.ByteArrayDOutputStream;
+import edu.berkeley.gamesman.propogater.writable.FixedLengthWritable;
+import edu.berkeley.gamesman.propogater.writable.list.FLWritList;
 
-public class MainRecords<GR extends Writable> extends Configured implements
-		Writable {
-	private WritableList<GR> myList;
+public class MainRecords<GR extends FixedLengthWritable> extends Configured
+		implements Writable {
+	private FLWritList<GR> myList;
 
 	public MainRecords() {
 	}
@@ -23,10 +26,13 @@ public class MainRecords<GR extends Writable> extends Configured implements
 
 	@Override
 	public void setConf(Configuration conf) {
-		super.setConf(conf);
-		if (conf == null)
+		if (conf == getConf())
 			return;
-		myList = new WritableList<GR>(RangeTree.<GR> getRunGRClass(conf), conf);
+		else if (conf == null)
+			return;
+		super.setConf(conf);
+		myList = new FLWritList<GR>(ReflectionUtils.newInstance(
+				RangeTree.<GR> getRunGRClass(conf), conf));
 	}
 
 	@Override
@@ -39,12 +45,8 @@ public class MainRecords<GR extends Writable> extends Configured implements
 		myList.readFields(in);
 	}
 
-	public void clear() {
-		myList.clear();
-	}
-
-	public GR add() {
-		return myList.add();
+	public void add(GR gr) {
+		myList.add(gr);
 	}
 
 	public int length() {
@@ -55,7 +57,11 @@ public class MainRecords<GR extends Writable> extends Configured implements
 		return myList.get(pos);
 	}
 
-	public boolean isEmpty() {
-		return myList.isEmpty();
+	public void writeBack(int pos, GR value) {
+		myList.writeBack(pos, value);
+	}
+
+	public void reset(boolean adding) {
+		myList.reset(adding);
 	}
 }

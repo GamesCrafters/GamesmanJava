@@ -130,7 +130,6 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 
 				@Override
 				public void reset(QLLIterator t) {
-					t.reset();
 				}
 			});
 	int size;
@@ -271,7 +270,9 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 	}
 
 	public QLLIterator listIterator() {
-		return iterPool.get();
+		QLLIterator qllIterator = iterPool.get();
+		qllIterator.reset();
+		return qllIterator;
 	}
 
 	public void release(QLLIterator iter) {

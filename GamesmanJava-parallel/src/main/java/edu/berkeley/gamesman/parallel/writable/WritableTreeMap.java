@@ -4,22 +4,20 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Writable;
 
-import edu.berkeley.gamesman.util.qll.Pool;
-import edu.berkeley.gamesman.util.qll.QLLFactory;
+import edu.berkeley.gamesman.propogater.writable.FixedLengthWritable;
+import edu.berkeley.gamesman.propogater.writable.list.FLWritList;
 
-public class WritableTreeMap<T extends Writable> implements Writable {
+public class WritableTreeMap<T extends FixedLengthWritable> implements Writable {
 	private final JumpList keys;
-	private final WritableQLL<T> objs;
+	private final FLWritList<T> objs;
 	private int nextKey;
-	private T nextVal;
+	private int valPlace;
 
-	public WritableTreeMap(QLLFactory<IntWritable> facti,
-			Pool<IntWritable> pooli, QLLFactory<T> fact, Pool<T> pool) {
-		keys = new JumpList(facti, pooli);
-		objs = new WritableQLL<T>(fact, pool);
+	public WritableTreeMap(T t) {
+		keys = new JumpList();
+		objs = new FLWritList<T>(t);
 	}
 
 	public T getNext(int i) {
@@ -29,7 +27,7 @@ public class WritableTreeMap<T extends Writable> implements Writable {
 		if (nextKey == -1 || i < nextKey) {
 			return null;
 		} else {
-			T lastVal = nextVal;
+			T lastVal = objs.get(valPlace);
 			next();
 			return lastVal;
 		}
@@ -37,23 +35,22 @@ public class WritableTreeMap<T extends Writable> implements Writable {
 
 	private void next() {
 		nextKey = keys.next();
-		nextVal = objs.next();
+		valPlace++;
 	}
 
 	public void restart() {
 		keys.restart();
-		objs.restart();
-		next();
+		valPlace = 0;
+		nextKey = keys.next();
 	}
 
-	public void clear() {
-		keys.clear();
-		objs.clear();
+	public void clear(boolean adding) {
+		keys.reset(adding);
+		objs.reset(adding);
 	}
 
 	public int size() {
-		assert keys.size() == objs.size();
-		return keys.size();
+		return objs.length();
 	}
 
 	public boolean isEmpty() {
@@ -94,15 +91,19 @@ public class WritableTreeMap<T extends Writable> implements Writable {
 		return keys.toString() + " : " + objs.toString();
 	}
 
-	public T add(int i) {
+	public void add(int i, T t) {
 		if (!objs.isEmpty() && i <= keys.getLast())
 			throw new RuntimeException("Cannot add " + i
 					+ ", must be greater than " + keys.getLast());
 		keys.add(i);
-		return objs.add();
+		objs.add(t);
 	}
 
 	public int peekNext() {
 		return nextKey;
+	}
+
+	public void finish() {
+		keys.finish();
 	}
 }

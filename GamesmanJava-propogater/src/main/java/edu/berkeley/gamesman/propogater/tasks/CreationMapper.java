@@ -40,7 +40,7 @@ public class CreationMapper<K extends WritableComparable<K>, V extends Writable,
 		if (node.hasValue())
 			node.combineDown(tree, key);
 		else {
-			childMessageList.clear();
+			assert childMessageList.isEmpty();
 			node.firstVisit(tree, key, childMessageList);
 			WritableList<Entry<K, CI>> children = node.getChildren();
 			for (int i = 0; i < children.length(); i++) {
@@ -50,6 +50,7 @@ public class CreationMapper<K extends WritableComparable<K>, V extends Writable,
 				entry.setValue(message);
 				context.write(nextChild.getKey(), parNode);
 			}
+			childMessageList.clear();
 		}
 		context.write(key, node);
 	}

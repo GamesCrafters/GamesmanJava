@@ -3,7 +3,7 @@ package edu.berkeley.gamesman.propogater.factory;
 import org.apache.hadoop.conf.Configuration;
 
 public class Pool<T> {
-	private final Factory<? extends T> myFactory;
+	private final Factory<T> myFactory;
 	private final NodePool<T> myPool = new NodePool<T>();
 	private Node<T> first = null;
 
@@ -11,7 +11,7 @@ public class Pool<T> {
 		this(FactoryUtil.makeFactory(type, conf));
 	}
 
-	public Pool(Factory<? extends T> fact) {
+	public Pool(Factory<T> fact) {
 		myFactory = fact;
 	}
 
@@ -28,6 +28,7 @@ public class Pool<T> {
 	}
 
 	public void release(T obj) {
+		myFactory.reset(obj);
 		Node<T> toStore = myPool.get();
 		toStore.object = obj;
 		toStore.next = first;

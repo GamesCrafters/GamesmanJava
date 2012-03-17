@@ -10,7 +10,7 @@ import org.apache.hadoop.io.Writable;
 import edu.berkeley.gamesman.propogater.factory.Factory;
 import edu.berkeley.gamesman.propogater.factory.FactoryUtil;
 
-public class ValueWrapper<V extends Writable> implements Writable {
+public class ValueWrapper<V extends Writable> implements Writable, Resetable {
 	private boolean hasValue;
 	private final V myVal;
 
@@ -20,14 +20,20 @@ public class ValueWrapper<V extends Writable> implements Writable {
 
 	public ValueWrapper(Factory<? extends V> vFactory) {
 		myVal = vFactory.create();
+		assert Resetables.checkReset(myVal);
 		hasValue = false;
 	}
 
 	@Override
 	public void readFields(DataInput in) throws IOException {
-		hasValue = in.readBoolean();
-		if (hasValue)
+		boolean hasValue = in.readBoolean();
+		if (hasValue) {
+			this.hasValue = true;
 			myVal.readFields(in);
+		} else {
+			if (this.hasValue)
+				clear();
+		}
 	}
 
 	@Override
@@ -54,11 +60,22 @@ public class ValueWrapper<V extends Writable> implements Writable {
 	}
 
 	public void clear() {
+		Resetables.reset(myVal);
 		hasValue = false;
 	}
 
 	@Override
 	public String toString() {
 		return hasValue ? myVal.toString() : "NONE";
+	}
+
+	@Override
+	public void reset() {
+		clear();
+	}
+
+	@Override
+	public boolean checkReset() {
+		return !hasValue;
 	}
 }

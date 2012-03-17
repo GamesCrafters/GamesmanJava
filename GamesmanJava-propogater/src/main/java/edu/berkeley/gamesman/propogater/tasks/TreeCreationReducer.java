@@ -32,15 +32,6 @@ public class TreeCreationReducer<K extends WritableComparable<K>, V extends Writ
 	}
 
 	@Override
-	protected void reduce(K key,
-			Iterable<TreeNode<K, V, PI, UM, CI, DM>> values, Context context)
-			throws IOException, InterruptedException {
-		super.reduce(key, values, context);
-		if (!value.hasValue() && tree.getDivision(key) == creationDivision)
-			hasNew = true;
-	}
-
-	@Override
 	protected void combine(K key, TreeNode<K, V, PI, UM, CI, DM> value) {
 		WritableList<IntEntry<Entry<K, DM>>> downList = value.getDownList();
 		WritableList<IntEntry<Entry<K, PI>>> parentList = value.getParentList();
@@ -59,6 +50,8 @@ public class TreeCreationReducer<K extends WritableComparable<K>, V extends Writ
 			}
 			downList.clear();
 		}
+		if (!value.hasValue() && tree.getDivision(key) == creationDivision)
+			hasNew = true;
 	}
 
 	@Override
@@ -67,13 +60,7 @@ public class TreeCreationReducer<K extends WritableComparable<K>, V extends Writ
 			Configuration conf = context.getConfiguration();
 			Path hnPath = ConfParser.getNeedsCreationPath(conf,
 					creationDivision);
-			try {
-				IOCheckOperations.createNewFile(hnPath.getFileSystem(conf), hnPath);
-				if (!hnPath.getFileSystem(conf).exists(hnPath))
-					throw new IOException(hnPath + " not successfully created");
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
+			context.getCounter("file", hnPath.toString()).increment(1L);
 		}
 	}
 }

@@ -1,54 +1,88 @@
 package edu.berkeley.gamesman.parallel.writable;
 
+import java.io.ByteArrayInputStream;
 import java.io.DataInput;
+import java.io.DataInputStream;
 import java.io.DataOutput;
+import java.io.DataOutputStream;
 import java.io.IOException;
 
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Writable;
 
-import edu.berkeley.gamesman.util.qll.Pool;
-import edu.berkeley.gamesman.util.qll.QLLFactory;
+import edu.berkeley.gamesman.propogater.writable.ByteArrayDOutputStream;
 
 public class JumpList implements Writable {
+	private byte[] myBytes;
+	private int byteLength = 0;
+	private final ByteArrayDOutputStream baos = new ByteArrayDOutputStream();
+	private final DataOutputStream dos = new DataOutputStream(baos);
+	private ByteArrayInputStream bais;
+	private DataInputStream dis;
+	private boolean adding = false;
 
-	private final WritableQLL<IntWritable> objs;
+	// Adding variables
+	private int writtenKey = 0;
+	private int startKey = -2;
+	private int lastKey = -2;
+	private int waitingSize = 0;
+	private boolean finished = false;
 
-	public JumpList(QLLFactory<IntWritable> fact, Pool<IntWritable> pool) {
-		objs = new WritableQLL<IntWritable>(fact, pool);
+	// Iterating variables
+	int place = 0;
+	int listRemaining = 0;
+
+	public JumpList() {
+		myBytes = new byte[1];
+		bais = new ByteArrayInputStream(myBytes);
+		dis = new DataInputStream(bais);
 	}
-
-	int waitingSize;
 
 	@Override
 	public void write(DataOutput out) throws IOException {
-		out.writeInt(size());
-		objs.restart();
-		assert waitingSize == 0;
-		int writtenKey = 0;
-		int startKey = -2;
-		int lastKey = -2;
-		for (int i = 0; i < objs.size(); i++) {
-			IntWritable obj = objs.next();
-			int nextKey = obj.get();
-			if (nextKey > lastKey + 1 || waitingSize >= Byte.MAX_VALUE) {
-				writtenKey = writeOut(out, writtenKey, startKey);
-				waitingSize = 0;
-				startKey = nextKey;
-			}
-			waitingSize++;
-			lastKey = nextKey;
+		if (adding) {
+			if (!finished)
+				throw new RuntimeException("Must finish first");
+			out.writeInt(baos.size());
+			baos.writeTo(out);
+		} else {
+			out.writeInt(byteLength);
+			out.write(myBytes, 0, byteLength);
 		}
-		writeOut(out, writtenKey, startKey);
-		waitingSize = 0;
 	}
 
-	boolean noWaiting() {
-		return waitingSize == 0;
+	@Override
+	public void readFields(DataInput in) throws IOException {
+		reset(false);
+		byteLength = in.readInt();
+		ensureByteSize(byteLength);
+		in.readFully(myBytes, 0, byteLength);
+		restart();
 	}
 
-	public int size() {
-		return objs.size();
+	private void ensureByteSize(int byteLength) {
+		if (myBytes.length < byteLength) {
+			myBytes = new byte[Math.max(byteLength, myBytes.length * 2)];
+			bais = new ByteArrayInputStream(myBytes);
+			dis = new DataInputStream(bais);
+		}
+	}
+
+	public void add(int t) {
+		if (!adding)
+			throw new UnsupportedOperationException("Must be adding");
+		else if (finished)
+			throw new RuntimeException("Already finished adding");
+		if (t > lastKey + 1 || waitingSize >= Byte.MAX_VALUE) {
+			try {
+				writtenKey = writeOut(dos, writtenKey, startKey);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+			waitingSize = 0;
+			startKey = t;
+		}
+		waitingSize++;
+		lastKey = t;
 	}
 
 	private int writeOut(DataOutput out, int writtenKey, int startKey)
@@ -82,29 +116,55 @@ public class JumpList implements Writable {
 		}
 	}
 
-	@Override
-	public void readFields(DataInput in) throws IOException {
-		objs.clear();
-		int size = in.readInt();
-		int place = 0;
-		int listRemaining = 0;
-		for (int i = 0; i < size; i++) {
-			IntWritable obj = objs.add();
+	public void reset(boolean adding) {
+		this.adding = adding;
+		if (adding) {
+			baos.reset();
+			writtenKey = 0;
+			startKey = -2;
+			lastKey = -2;
+			waitingSize = 0;
+			finished = false;
+		} else {
+			byteLength = 0;
+		}
+	}
+
+	public void finish() {
+		try {
+			writeOut(dos, writtenKey, startKey);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		waitingSize = 0;
+		finished = true;
+	}
+
+	public boolean hasNext() {
+		return bais.available() > myBytes.length - byteLength
+				|| listRemaining > 0;
+	}
+
+	public int next() {
+		try {
 			if (listRemaining == 0) {
-				byte b = in.readByte();
+				if (bais.available() <= myBytes.length - byteLength)
+					return -1;
+				byte b = dis.readByte();
 				if (b == -1) {
-					b = in.readByte();
-					place += readJump(b, in);
-					listRemaining = in.readByte();
+					b = dis.readByte();
+					place += readJump(b, dis);
+					listRemaining = dis.readByte();
 				} else {
-					place += readJump(b, in);
+					place += readJump(b, dis);
 					listRemaining = 1;
 				}
 			}
-			obj.set(place++);
-			listRemaining--;
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
-		restart();
+		listRemaining--;
+		return place++;
 	}
 
 	private int readJump(byte b, DataInput in) throws IOException {
@@ -119,50 +179,30 @@ public class JumpList implements Writable {
 		}
 	}
 
+	boolean noWaiting() {
+		return waitingSize == 0;
+	}
+
 	public void restart() {
-		objs.restart();
-	}
-
-	public int next() {
-		IntWritable next = objs.next();
-		return next == null ? -1 : next.get();
-	}
-
-	public void clear() {
-		objs.clear();
+		if (adding)
+			throw new UnsupportedOperationException(
+					"Doesn't make sense when adding");
+		bais.reset();
+		place = 0;
+		listRemaining = 0;
 	}
 
 	public boolean isEmpty() {
-		return objs.isEmpty();
-	}
-
-	@Override
-	public boolean equals(Object other) {
-		return other instanceof JumpList && equals((JumpList) other);
-	}
-
-	public boolean equals(JumpList other) {
-		return objs.equals(other.objs);
-	}
-
-	@Override
-	public int hashCode() {
-		return objs.hashCode();
-	}
-
-	@Override
-	public String toString() {
-		return objs.toString();
-	}
-
-	public void add(int i) {
-		if (!objs.isEmpty() && i <= objs.getLast().get())
-			throw new RuntimeException("Cannot add " + i
-					+ ", must be greater than " + objs.getLast().get());
-		objs.add().set(i);
+		if (adding)
+			return baos.size() == 0;
+		else
+			return byteLength == 0;
 	}
 
 	public int getLast() {
-		return objs.getLast().get();
+		if (adding && !finished)
+			return lastKey;
+		else
+			throw new UnsupportedOperationException();
 	}
 }

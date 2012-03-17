@@ -10,7 +10,6 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
 import edu.berkeley.gamesman.propogater.common.ConfParser;
-import edu.berkeley.gamesman.propogater.common.IOCheckOperations;
 import edu.berkeley.gamesman.propogater.tree.Tree;
 import edu.berkeley.gamesman.propogater.tree.TreeNode;
 import edu.berkeley.gamesman.propogater.writable.Entry;
@@ -64,7 +63,7 @@ public class TreePropogationReducer<K extends WritableComparable<K>, V extends W
 			Configuration conf = context.getConfiguration();
 			for (IntWritable i : changed) {
 				Path npp = ConfParser.getNeedsPropogationPath(conf, i.get());
-				IOCheckOperations.createNewFile(npp.getFileSystem(conf), npp);
+				context.getCounter("file", npp.toString()).increment(1L);
 			}
 		}
 	}

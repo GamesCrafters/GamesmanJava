@@ -24,12 +24,12 @@ public class Pool<T> {
 			firstNode = changeNode.next;
 			changeNode.next = firstNullNode;
 			firstNullNode = changeNode;
-			fact.reset(changeNode.object);
 			return changeNode.object;
 		}
 	}
 
 	public synchronized void release(T el) {
+		fact.reset(el);
 		currentSize++;
 		if (el == null)
 			throw new NullPointerException("Cannot release null element");

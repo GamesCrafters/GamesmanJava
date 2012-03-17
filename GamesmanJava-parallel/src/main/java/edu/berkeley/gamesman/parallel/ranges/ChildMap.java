@@ -4,12 +4,9 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Writable;
 
 import edu.berkeley.gamesman.parallel.writable.JumpList;
-import edu.berkeley.gamesman.util.qll.Pool;
-import edu.berkeley.gamesman.util.qll.QLLFactory;
 
 public class ChildMap implements Writable {
 	private final JumpList parentList;
@@ -18,9 +15,9 @@ public class ChildMap implements Writable {
 	private int curParent;
 	private int curChild;
 
-	public ChildMap(QLLFactory<IntWritable> fact, Pool<IntWritable> pool) {
-		parentList = new JumpList(fact, pool);
-		childList = new JumpList(fact, pool);
+	public ChildMap() {
+		parentList = new JumpList();
+		childList = new JumpList();
 	}
 
 	@Override
@@ -36,9 +33,14 @@ public class ChildMap implements Writable {
 		restart();
 	}
 
-	public void clear() {
-		parentList.clear();
-		childList.clear();
+	public void clear(boolean adding) {
+		parentList.reset(adding);
+		childList.reset(adding);
+	}
+
+	public void finish() {
+		parentList.finish();
+		childList.finish();
 	}
 
 	public void add(int parent, int child) {

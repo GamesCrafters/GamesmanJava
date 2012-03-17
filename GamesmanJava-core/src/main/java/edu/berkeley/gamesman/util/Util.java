@@ -650,27 +650,4 @@ public final class Util {
 		}
 		return true;
 	}
-
-	/**
-	 * @param type
-	 * @return
-	 */
-	public static <T> Factory<T> makeFactory(final Class<? extends T> type) {
-		return new Factory<T>() {
-			@Override
-			public T newObject() {
-				try {
-					return type.newInstance();
-				} catch (InstantiationException e) {
-					throw new Error(e);
-				} catch (IllegalAccessException e) {
-					throw new Error(e);
-				}
-			}
-
-			@Override
-			public void reset(T t) {
-			}
-		};
-	}
 }

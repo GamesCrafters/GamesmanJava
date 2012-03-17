@@ -75,6 +75,7 @@ public class PropogateRunner extends TaskRunner {
 			boolean succeeded = j.waitForCompletion(true);
 			if (!succeeded)
 				throw new RuntimeException("Job did not succeed " + j);
+			makeFiles(jConf, j);
 			splitUp(headTier);
 			headTier.deleteOutputFolder();
 		} finally {

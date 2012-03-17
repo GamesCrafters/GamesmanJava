@@ -18,6 +18,7 @@ import edu.berkeley.gamesman.parallel.ranges.Suffix;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.tree.Tree;
+import edu.berkeley.gamesman.propogater.writable.FixedLengthWritable;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.solve.reader.SolveReaders;
 import edu.berkeley.gamesman.util.Pair;
@@ -27,7 +28,7 @@ import edu.berkeley.gamesman.game.type.GameValue;
 import edu.berkeley.gamesman.hasher.genhasher.GenState;
 
 public final class Play {
-	public static <K extends WritableComparable<K>, GR extends Writable> void main(
+	public static <K extends WritableComparable<K>, GR extends FixedLengthWritable> void main(
 			String[] args) throws IOException, ClassNotFoundException {
 		GenericOptionsParser parser = new GenericOptionsParser(args);
 		Configuration conf = parser.getConfiguration();
@@ -38,13 +39,13 @@ public final class Play {
 				.<K, Writable, Writable, Writable, Writable, Writable> newTree(conf);
 		tree.prepareRun(conf);
 		if (tree instanceof GameTree) {
-			Play.<K, GR> subMain(conf, (GameTree) tree);
+			Play.<K> subMain(conf, (GameTree) tree);
 		} else if (tree instanceof RangeTree) {
 			Play.<GenState, GR> rangeSubMain(conf, (RangeTree) tree);
 		}
 	}
 
-	private static <K extends WritableComparable<K>, GR extends Writable> void subMain(
+	private static <K extends WritableComparable<K>> void subMain(
 			Configuration conf, GameTree<K> tree) throws IOException,
 			ClassNotFoundException {
 		K position = tree.getRoots().iterator().next();
@@ -55,7 +56,8 @@ public final class Play {
 		Partitioner<K, GameRecord> partitioner = ConfParser
 				.<K, GameRecord> getPartitionerInstance(conf);
 		String gameName = GamesmanParser.getGameName(conf);
-		SolveReader<K, GR> gameReader = SolveReaders.get(conf, gameName);
+		SolveReader<K, GameRecord> gameReader = SolveReaders
+				.<K, GameRecord> get(conf, gameName);
 
 		Scanner scan = new Scanner(System.in);
 		GameRecord storeRecord = new GameRecord();
@@ -93,7 +95,7 @@ public final class Play {
 		}
 	}
 
-	private static <S extends GenState, GR extends Writable> void rangeSubMain(
+	private static <S extends GenState, GR extends FixedLengthWritable> void rangeSubMain(
 			Configuration conf, RangeTree<S, GR> tree) throws IOException,
 			ClassNotFoundException {
 		Suffix<S> posRange = tree.getRoots(true).iterator().next();
