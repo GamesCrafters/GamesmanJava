@@ -5,8 +5,8 @@ import java.util.Collection;
 import java.util.Scanner;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.MapFile;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.Partitioner;
@@ -51,8 +51,8 @@ public final class Play {
 		K position = tree.getRoots().iterator().next();
 		Path[] outPath = new Path[1];
 		outPath[0] = ConfParser.getOutputPath(conf);
-		MapFile.Reader[] readers = MapFileOutputFormat.getReadersArray(outPath,
-				conf);
+		FileSystem fs = outPath[0].getFileSystem(conf);
+		Path[] readers = MapFileOutputFormat.getFileNames(fs, outPath, conf);
 		Partitioner<K, GameRecord> partitioner = ConfParser
 				.<K, GameRecord> getPartitionerInstance(conf);
 		String gameName = GamesmanParser.getGameName(conf);
@@ -64,8 +64,8 @@ public final class Play {
 		GameValue primVal = tree.getPrimitiveValue(position);
 		while (primVal == null) {
 			System.out.println(position.toString());
-			MapFileOutputFormat.getEntry(readers, partitioner, position,
-					storeRecord);
+			MapFileOutputFormat.getEntry(fs, conf, readers, partitioner,
+					position, storeRecord);
 			System.out.println(storeRecord);
 			Collection<Pair<String, K>> moves = gameReader
 					.getChildren(position);
@@ -101,8 +101,8 @@ public final class Play {
 		Suffix<S> posRange = tree.getRoots(true).iterator().next();
 		Path[] outPath = new Path[1];
 		outPath[0] = ConfParser.getOutputPath(conf);
-		MapFile.Reader[] readers = MapFileOutputFormat.getReadersArray(outPath,
-				conf);
+		FileSystem fs = outPath[0].getFileSystem(conf);
+		Path[] readers = MapFileOutputFormat.getFileNames(fs, outPath, conf);
 		Partitioner<Suffix<S>, MainRecords<GR>> partitioner = ConfParser
 				.<Suffix<S>, MainRecords<GR>> getPartitionerInstance(conf);
 		String gameName = GamesmanParser.getGameName(conf);
@@ -115,7 +115,8 @@ public final class Play {
 		boolean gameFinished = true;
 		while (tree.getValue(position) == null) {
 			System.out.println(position.toString());
-			MapFileOutputFormat.getEntry(readers, partitioner, posRange, recs);
+			MapFileOutputFormat.getEntry(fs, conf, readers, partitioner,
+					posRange, recs);
 			GR unparsedRecord = tree.getRecord(posRange, position, recs);
 			GameRecord record = gameReader.getRecord(position, unparsedRecord);
 			System.out.println(record);
@@ -146,9 +147,6 @@ public final class Play {
 		if (gameFinished) {
 			System.out.println(position.toString());
 			System.out.println("Game over");
-		}
-		for (MapFile.Reader r : readers) {
-			r.close();
 		}
 	}
 }

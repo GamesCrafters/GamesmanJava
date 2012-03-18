@@ -9,8 +9,8 @@ import java.io.IOException;
 import java.util.HashMap;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.MapFile;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.Partitioner;
@@ -40,14 +40,13 @@ public class SolveReaders {
 	public static <K extends WritableComparable<K>, V extends Writable> V readPosition(
 			Tree<K, V, ?, ?, ?, ?> tree, Path folder, K position,
 			Partitioner<K, V> partitioner) throws IOException {
-		V value = ReflectionUtils.newInstance(tree.getValClass(),
-				tree.getConf());
-		MapFile.Reader[] readers = MapFileOutputFormat.getReadersArray(
-				new Path[] { folder }, tree.getConf());
-		MapFileOutputFormat.<K, V> getEntry(readers, partitioner, position,
-				value);
-		for (MapFile.Reader r : readers)
-			r.close();
+		Configuration conf = tree.getConf();
+		FileSystem fs = folder.getFileSystem(conf);
+		V value = ReflectionUtils.newInstance(tree.getValClass(), conf);
+		Path[] readerPaths = MapFileOutputFormat.getFileNames(fs,
+				new Path[] { folder }, conf);
+		MapFileOutputFormat.<K, V> getEntry(fs, conf, readerPaths, partitioner,
+				position, value);
 		return value;
 	}
 }
