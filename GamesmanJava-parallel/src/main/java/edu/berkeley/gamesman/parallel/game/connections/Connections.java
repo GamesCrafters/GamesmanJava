@@ -174,7 +174,9 @@ public class Connections extends RangeTree<CountingState, FlipRecord>
 			throw new RuntimeException("gameSize is too large");
 		myHasher = new ConnectionsHasher(16); // board size is 4x4
 		ArrayList<Move>[] columnMoveList = new ArrayList[width];
-		colMoves = new Move[width][];
+		
+		//###############JUST GENERATED
+		Move[][] colMoves = new Move[width][];
 		for (int i = 0; i < width; i++) {
 			columnMoveList[i] = new ArrayList<Move>();
 		}
@@ -206,6 +208,12 @@ public class Connections extends RangeTree<CountingState, FlipRecord>
 		myMoves = allMoves.toArray(new Move[allMoves.size()]);
 		int varianceLength = conf.getInt("gamesman.game.variance.length", 10);
 		suffLen = Math.max(1, gameSize + 1 - varianceLength);
+	}
+	
+	// #################Just generated
+	private boolean isBottom(int row, int col) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 	private static int getTurn(int numPieces) {
