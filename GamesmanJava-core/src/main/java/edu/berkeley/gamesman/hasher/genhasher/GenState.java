@@ -109,6 +109,9 @@ public class GenState implements State<GenState>, Comparable<GenState> {
 	}
 
 	/**
+	 * WARNING: Do not change thrown-away values. GenHasher actually uses them
+	 * in certain situations.
+	 * 
 	 * @param startAt
 	 */
 	protected void trunc(int startAt) {

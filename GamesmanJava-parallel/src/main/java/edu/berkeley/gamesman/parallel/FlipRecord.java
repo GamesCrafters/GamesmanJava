@@ -1,4 +1,4 @@
-package edu.berkeley.gamesman.parallel.game.connect4;
+package edu.berkeley.gamesman.parallel;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -7,10 +7,11 @@ import java.io.IOException;
 import edu.berkeley.gamesman.game.type.GameRecord;
 import edu.berkeley.gamesman.game.type.GameValue;
 import edu.berkeley.gamesman.propogater.writable.FixedLengthWritable;
+import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 
-public class C4Record implements FixedLengthWritable, Comparable<C4Record> {
+public class FlipRecord implements FixedLengthWritable, Comparable<FlipRecord> {
 
-	public C4Record() {
+	public FlipRecord() {
 	}
 
 	private final GameRecord myRecord = new GameRecord();
@@ -62,16 +63,16 @@ public class C4Record implements FixedLengthWritable, Comparable<C4Record> {
 		myRecord.set(value, remoteness);
 	}
 
-	public void set(C4Record other) {
+	public void set(FlipRecord other) {
 		myRecord.set(other.myRecord);
 	}
 
 	@Override
-	public int compareTo(C4Record other) {
+	public int compareTo(FlipRecord other) {
 		return myRecord.compareTo(other.myRecord);
 	}
 
-	public void previousPosition(C4Record gr) {
+	public void previousPosition(FlipRecord gr) {
 		myRecord.previousPosition(gr.myRecord);
 	}
 
@@ -90,5 +91,37 @@ public class C4Record implements FixedLengthWritable, Comparable<C4Record> {
 	@Override
 	public int size() {
 		return 1;
+	}
+
+	public static boolean combineValues(QuickLinkedList<FlipRecord> grList,
+			FlipRecord gr) {
+		QuickLinkedList<FlipRecord>.QLLIterator iter = grList.iterator();
+		try {
+			FlipRecord best = null;
+			while (iter.hasNext()) {
+				FlipRecord next = iter.next();
+				if (best == null || next.compareTo(best) > 0) {
+					best = next;
+				}
+			}
+			if (best == null || gr.equals(best))
+				return false;
+			else {
+				gr.set(best);
+				return true;
+			}
+		} finally {
+			grList.release(iter);
+		}
+	}
+
+	public static GameRecord getRecord(FlipRecord fetchedRec, int tieRemoteness) {
+		GameValue gv = fetchedRec.getValue();
+		if (gv == GameValue.TIE)
+			return new GameRecord(GameValue.TIE, tieRemoteness);
+		else {
+			assert gv == GameValue.LOSE || gv == GameValue.WIN;
+			return new GameRecord(gv, fetchedRec.getRemoteness());
+		}
 	}
 }

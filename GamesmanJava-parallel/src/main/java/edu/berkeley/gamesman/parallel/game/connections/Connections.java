@@ -12,14 +12,15 @@ import edu.berkeley.gamesman.hasher.DBHasher;
 import edu.berkeley.gamesman.hasher.counting.CountingState;
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
+import edu.berkeley.gamesman.parallel.FlipRecord;
 import edu.berkeley.gamesman.parallel.game.connections.ConnectionsHasher;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 
-public class Connections extends RangeTree<CountingState, ConnectionRecord>
-		implements SolveReader<CountingState, ConnectionRecord> {
+public class Connections extends RangeTree<CountingState, FlipRecord>
+		implements SolveReader<CountingState, FlipRecord> {
 	private Move[] myMoves;
 	private ConnectionsHasher myHasher;
 	private int width, height;
@@ -133,33 +134,33 @@ public class Connections extends RangeTree<CountingState, ConnectionRecord>
 
 	@Override
 	public GameRecord getRecord(CountingState position,
-			ConnectionRecord fetchedRec) {
+			FlipRecord fetchedRec) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	protected boolean setNewRecordAndHasChildren(CountingState state,
-			ConnectionRecord rec) {
+			FlipRecord rec) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	protected boolean combineValues(QuickLinkedList<ConnectionRecord> grList,
-			ConnectionRecord gr) {
+	protected boolean combineValues(QuickLinkedList<FlipRecord> grList,
+			FlipRecord gr) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	protected void previousPosition(ConnectionRecord gr, ConnectionRecord toFill) {
+	protected void previousPosition(FlipRecord gr, FlipRecord toFill) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	protected Class<ConnectionRecord> getGameRecordClass() {
+	protected Class<FlipRecord> getGameRecordClass() {
 		// TODO Auto-generated method stub
 		return null;
 	}

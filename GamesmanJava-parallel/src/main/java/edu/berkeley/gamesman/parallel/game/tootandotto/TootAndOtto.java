@@ -9,6 +9,7 @@ import org.apache.hadoop.conf.Configuration;
 import edu.berkeley.gamesman.game.type.GameRecord;
 import edu.berkeley.gamesman.game.type.GameValue;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
+import edu.berkeley.gamesman.parallel.FlipRecord;
 import edu.berkeley.gamesman.parallel.game.connect4.C4State;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.parallel.ranges.Suffix;
@@ -16,8 +17,8 @@ import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 
-public class TootAndOtto extends RangeTree<TOState, TORecord> implements
-		SolveReader<TOState, TORecord> {
+public class TootAndOtto extends RangeTree<TOState, FlipRecord> implements
+		SolveReader<TOState, FlipRecord> {
 	private Move[] myMoves;
 	private Move[][] colMoves;
 	private TOHasher myHasher;
@@ -205,32 +206,31 @@ public class TootAndOtto extends RangeTree<TOState, TORecord> implements
 	}
 
 	@Override
-	public GameRecord getRecord(TOState position, TORecord fetchedRec) {
+	public GameRecord getRecord(TOState position, FlipRecord fetchedRec) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	protected boolean setNewRecordAndHasChildren(TOState state, TORecord rec) {
+	protected boolean setNewRecordAndHasChildren(TOState state, FlipRecord rec) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	protected boolean combineValues(QuickLinkedList<TORecord> grList,
-			TORecord gr) {
+	protected boolean combineValues(QuickLinkedList<FlipRecord> grList,
+			FlipRecord gr) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	protected void previousPosition(TORecord gr, TORecord toFill) {
-		// TODO Auto-generated method stub
-
+	protected void previousPosition(FlipRecord gr, FlipRecord toFill) {
+		toFill.previousPosition(gr);
 	}
 
 	@Override
-	protected Class<TORecord> getGameRecordClass() {
+	protected Class<FlipRecord> getGameRecordClass() {
 		// TODO Auto-generated method stub
 		return null;
 	}

@@ -9,14 +9,15 @@ import org.apache.hadoop.conf.Configuration;
 import edu.berkeley.gamesman.game.type.GameRecord;
 import edu.berkeley.gamesman.game.type.GameValue;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
+import edu.berkeley.gamesman.parallel.FlipRecord;
 import edu.berkeley.gamesman.parallel.ranges.Suffix;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 
-public class Connect4 extends RangeTree<C4State, C4Record> implements
-		SolveReader<C4State, C4Record> {
+public class Connect4 extends RangeTree<C4State, FlipRecord> implements
+		SolveReader<C4State, FlipRecord> {
 	private Move[] myMoves;
 	private Move[][] colMoves;
 	private C4Hasher myHasher;
@@ -256,7 +257,7 @@ public class Connect4 extends RangeTree<C4State, C4Record> implements
 	}
 
 	@Override
-	protected boolean setNewRecordAndHasChildren(C4State state, C4Record rec) {
+	protected boolean setNewRecordAndHasChildren(C4State state, FlipRecord rec) {
 		GameValue val = getValue(state);
 		if (val == null) {
 			rec.set(GameValue.DRAW);
@@ -273,46 +274,23 @@ public class Connect4 extends RangeTree<C4State, C4Record> implements
 	}
 
 	@Override
-	protected boolean combineValues(QuickLinkedList<C4Record> grList,
-			C4Record gr) {
-		QuickLinkedList<C4Record>.QLLIterator iter = grList.iterator();
-		try {
-			C4Record best = null;
-			while (iter.hasNext()) {
-				C4Record next = iter.next();
-				if (best == null || next.compareTo(best) > 0) {
-					best = next;
-				}
-			}
-			if (best == null || gr.equals(best))
-				return false;
-			else {
-				gr.set(best);
-				return true;
-			}
-		} finally {
-			grList.release(iter);
-		}
+	protected boolean combineValues(QuickLinkedList<FlipRecord> grList,
+			FlipRecord gr) {
+		return FlipRecord.combineValues(grList, gr);
 	}
 
 	@Override
-	protected void previousPosition(C4Record gr, C4Record toFill) {
+	protected void previousPosition(FlipRecord gr, FlipRecord toFill) {
 		toFill.previousPosition(gr);
 	}
 
 	@Override
-	protected Class<C4Record> getGameRecordClass() {
-		return C4Record.class;
+	protected Class<FlipRecord> getGameRecordClass() {
+		return FlipRecord.class;
 	}
 
 	@Override
-	public GameRecord getRecord(C4State position, C4Record fetchedRec) {
-		GameValue gv = fetchedRec.getValue();
-		if (gv == GameValue.TIE)
-			return new GameRecord(GameValue.TIE, gameSize - numPieces(position));
-		else {
-			assert gv == GameValue.LOSE || gv == GameValue.WIN;
-			return new GameRecord(gv, fetchedRec.getRemoteness());
-		}
+	public GameRecord getRecord(C4State position, FlipRecord fetchedRec) {
+		return FlipRecord.getRecord(fetchedRec, gameSize - numPieces(position));
 	}
 }
