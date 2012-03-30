@@ -154,8 +154,39 @@ public class TootAndOtto extends RangeTree<TOState, FlipRecord> implements
 
 	@Override
 	public TOState getPosition(String board) {
-		// TODO Auto-generated method stub
-		return null;
+		assert board.length() == gameSize;
+		int[] pos = new int[gameSize + 1];
+		int pieceCount = 0;
+		int i = 0;
+		for (int row = 0; row < height; row++) {
+			for (int col = 0; col < width; col++) {
+				char c = board.charAt(i++);
+				pos[col * height + row] = pieceFor(c);
+				if (c != ' ')
+					pieceCount++;
+			}
+		}
+		pos[gameSize] = pieceCount;
+		TOState s = newState();
+		getHasher().set(s, pos);
+		return s;
+	}
+	
+	private static int pieceFor(char c) {
+		switch (c) {
+		case ' ':
+			return 0;
+		case 'T':
+			return 1;
+		case 'O':
+			return 2;
+		default:
+			throw new IllegalArgumentException();
+		}
+	}
+	
+	public TOState newState() {
+		return myHasher.newState();
 	}
 
 	@Override
@@ -242,5 +273,18 @@ public class TootAndOtto extends RangeTree<TOState, FlipRecord> implements
 	public int getDivision(Suffix<TOState> suff) {
 		assert suff.length() == suffLen;
 		return suff.get(suffLen - 1);
+	}
+
+	static char charFor(int piece) {
+		switch (piece) {
+		case 0:
+			return ' ';
+		case 1:
+			return 'T';
+		case 2:
+			return 'O';
+		default:
+			return '?';
+		}
 	}
 }
