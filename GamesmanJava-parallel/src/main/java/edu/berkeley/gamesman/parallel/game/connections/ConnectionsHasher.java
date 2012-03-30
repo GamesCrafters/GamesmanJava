@@ -9,7 +9,7 @@ import edu.berkeley.gamesman.hasher.genhasher.DBInvCalculator;
 public class ConnectionsHasher extends OptimizingInvariantHasher<CountingState> {
 
 	/*
-	 * this class exists b/c the fact that not every player can place in any of the edges makes this game not strictly a dartboard game.
+	 * this class exists b/c not every player can place in any of the edges, so this game is not strictly a dartboard game.
 	 * override getInv to return -1 if the wrong player's piece is in one of the edges
 	 * b/c in order to surround, players should be able to place in edges
 	 */

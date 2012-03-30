@@ -13,17 +13,19 @@ import edu.berkeley.gamesman.hasher.counting.CountingState;
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
 import edu.berkeley.gamesman.parallel.FlipRecord;
+import edu.berkeley.gamesman.parallel.game.connect4.C4State;
+import edu.berkeley.gamesman.parallel.game.connect4.Connect4;
 import edu.berkeley.gamesman.parallel.game.connections.ConnectionsHasher;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 
-public class Connections extends RangeTree<CountingState, FlipRecord>
-		implements SolveReader<CountingState, FlipRecord> {
+public class Connections extends RangeTree<CountingState, FlipRecord> implements
+		SolveReader<CountingState, FlipRecord> {
 	private Move[] myMoves;
 	private ConnectionsHasher myHasher;
-	private int width, height;
+	private int width, height = 4;
 	private int gameSize;
 	private int suffLen;
 
@@ -95,7 +97,8 @@ public class Connections extends RangeTree<CountingState, FlipRecord>
 			CountingState s = newState();
 			getHasher().set(s, position);
 			if (playMove(s, i)) {
-				children.add(new Pair<String, CountingState>(Integer.toString(i), s));
+				children.add(new Pair<String, CountingState>(Integer
+						.toString(i), s));
 			}
 		}
 		return children;
@@ -103,8 +106,39 @@ public class Connections extends RangeTree<CountingState, FlipRecord>
 
 	@Override
 	public GameValue getValue(CountingState state) {
-		// TODO Auto-generated method stub
-		return null;
+		return getValueHelper(state, opposite(getTurn(state)));
+	}
+
+	private GameValue getValueHelper(CountingState state, int lastTurn) {
+		// assert isComplete();
+		return (hasSurround(state, lastTurn) || hasConnection(state, lastTurn)) ? GameValue.LOSE
+				: (state.numPieces() == boardSize ? GameValue.TIE : null);
+	}
+
+	public static boolean hasConnection(CountingState state, int lastTurn) {
+		for (int startingX = 0; startingX <= 2; startingX++) {
+			int currXDir = -1;
+			int currYDir = 0;
+			int currX = startingX;
+			int currY = 1;
+			while (!((currXDir == 0 && currYDir == -1) && (currY == 1))) {
+				if (checkDirection(state, currX, currY, currXDir, currYDir) == lastTurn) {
+					currX = currX + currXDir;
+					currY = currY + currYDir;
+					currXDir = (currXDir + 3) % 3 - 1;
+					currYDir = (currYDir + 2) % 3 - 1;
+				}
+				else {
+					currXDir = (currXDir + 2) % 3 - 1;
+					currYDir = (currYDir + 3) % 3 - 1;
+				}
+			}
+		}
+		
+	}
+
+	public static boolean hasSurround(CountingState state, int lastTurn) {
+
 	}
 
 	@Override
@@ -133,8 +167,7 @@ public class Connections extends RangeTree<CountingState, FlipRecord>
 	}
 
 	@Override
-	public GameRecord getRecord(CountingState position,
-			FlipRecord fetchedRec) {
+	public GameRecord getRecord(CountingState position, FlipRecord fetchedRec) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -166,7 +199,7 @@ public class Connections extends RangeTree<CountingState, FlipRecord>
 	}
 
 	@Override
-	public void rangeTreeConfigure(Configuration conf) {	
+	public void rangeTreeConfigure(Configuration conf) {
 		width = conf.getInt("gamesman.game.width", 4);
 		height = conf.getInt("gamesman.game.height", 4);
 		gameSize = width * height;
@@ -174,8 +207,8 @@ public class Connections extends RangeTree<CountingState, FlipRecord>
 			throw new RuntimeException("gameSize is too large");
 		myHasher = new ConnectionsHasher(16); // board size is 4x4
 		ArrayList<Move>[] columnMoveList = new ArrayList[width];
-		
-		//###############JUST GENERATED
+
+		// ###############JUST GENERATED
 		Move[][] colMoves = new Move[width][];
 		for (int i = 0; i < width; i++) {
 			columnMoveList[i] = new ArrayList<Move>();
@@ -209,7 +242,7 @@ public class Connections extends RangeTree<CountingState, FlipRecord>
 		int varianceLength = conf.getInt("gamesman.game.variance.length", 10);
 		suffLen = Math.max(1, gameSize + 1 - varianceLength);
 	}
-	
+
 	// #################Just generated
 	private boolean isBottom(int row, int col) {
 		// TODO Auto-generated method stub
@@ -234,4 +267,24 @@ public class Connections extends RangeTree<CountingState, FlipRecord>
 
 		return made;
 	}
+
+	int getTurn(CountingState state) {
+		return getTurn(numPieces(state));
+	}
+
+	int numPieces(CountingState state) {
+		return state.get(gameSize);
+	}
+
+	private static int opposite(int turn) {
+		switch (turn) {
+		case 1:
+			return 2;
+		case 2:
+			return 1;
+		default:
+			throw new IllegalArgumentException(Integer.toString(turn));
+		}
+	}
+
 }
