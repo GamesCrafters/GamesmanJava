@@ -25,8 +25,8 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 		SolveReader<CountingState, FlipRecord> {
 	private Move[] myMoves;
 	private ConnectionsHasher myHasher;
-	private int width, height = 4;
-	private int gameSize;
+	private int width, height = 7;
+	private int gameSize = 49;
 	private int suffLen;
 
 	public String getString(CountingState position) {
@@ -39,7 +39,7 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 		return sb.toString();
 	}
 
-	private Object charFor(int piece) {
+	private static Object charFor(int piece) {
 		switch (piece) {
 		case 0:
 			return ' ';
@@ -112,33 +112,71 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 	private GameValue getValueHelper(CountingState state, int lastTurn) {
 		// assert isComplete();
 		return (hasSurround(state, lastTurn) || hasConnection(state, lastTurn)) ? GameValue.LOSE
-				: (state.numPieces() == boardSize ? GameValue.TIE : null);
+				: (numPieces(state) == 45 ? GameValue.TIE : null);
 	}
 
-	public static boolean hasConnection(CountingState state, int lastTurn) {
-		for (int startingX = 0; startingX <= 2; startingX++) {
-			int currXDir = -1;
-			int currYDir = 0;
-			int currX = startingX;
-			int currY = 1;
-			while (!((currXDir == 0 && currYDir == -1) && (currY == 1))) {
-				if (checkDirection(state, currX, currY, currXDir, currYDir) == lastTurn) {
-					currX = currX + currXDir;
-					currY = currY + currYDir;
-					currXDir = (currXDir + 3) % 3 - 1;
-					currYDir = (currYDir + 2) % 3 - 1;
+	private static boolean hasConnection(CountingState state, int lastTurn) {
+		if ((Character) charFor(lastTurn) == 'X') {
+			for (int startingX = 1; startingX <= 5; startingX = startingX + 2) {
+				int currXDir = -1;
+				int currYDir = 0;
+				int currX = startingX;
+				int currY = 0;
+				while (!(currXDir == 0 && currYDir == -1 && currY == 0)
+						&& currY != 6) {
+					if ((Character) getChar(state, currX + 2 * currXDir, currY
+							+ 2 * currYDir) == charFor(lastTurn)) {
+						currX = currX + 2 * currXDir;
+						currY = currY + 2 * currYDir;
+						currXDir = (currXDir + 3) % 3 - 1;
+						currYDir = (currYDir + 2) % 3 - 1;
+					} else {
+						currXDir = (currXDir + 2) % 3 - 1;
+						currYDir = (currYDir + 3) % 3 - 1;
+					}
 				}
-				else {
-					currXDir = (currXDir + 2) % 3 - 1;
-					currYDir = (currYDir + 3) % 3 - 1;
+				if (currY == 6) {
+					return true;
 				}
 			}
+			return false;
+		} else if ((Character) charFor(lastTurn) == 'O') {
+			for (int startingY = 1; startingY <= 5; startingY = startingY + 2) {
+				int currXDir = 0;
+				int currYDir = 1;
+				int currX = 0;
+				int currY = startingY;
+				while (!(currXDir == -1 && currYDir == 0 && currX == 0)
+						&& currX != 6) {
+					if ((Character) getChar(state, currX + 2 * currXDir, currY
+							+ 2 * currYDir) == charFor(lastTurn)) {
+						currX = currX + 2 * currXDir;
+						currY = currY + 2 * currYDir;
+						currXDir = (currXDir + 3) % 3 - 1;
+						currYDir = (currYDir + 2) % 3 - 1;
+					} else {
+						currXDir = (currXDir + 2) % 3 - 1;
+						currYDir = (currYDir + 3) % 3 - 1;
+					}
+				}
+				if (currY == 6) {
+					return true;
+				}
+			}
+			return false;
+		} else {
+			System.err.println("fail");
+			return false;
 		}
-		
+
 	}
 
 	public static boolean hasSurround(CountingState state, int lastTurn) {
 
+	}
+
+	private static char getChar(CountingState state, int x, int y) {
+		return (Character) charFor(state.get(y * 4 + x));
 	}
 
 	@Override
@@ -244,10 +282,6 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 	}
 
 	// #################Just generated
-	private boolean isBottom(int row, int col) {
-		// TODO Auto-generated method stub
-		return false;
-	}
 
 	private static int getTurn(int numPieces) {
 		return (numPieces % 2) + 1;
