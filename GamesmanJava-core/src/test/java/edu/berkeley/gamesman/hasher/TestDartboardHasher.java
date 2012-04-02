@@ -2,8 +2,7 @@ package edu.berkeley.gamesman.hasher;
 
 import java.util.Arrays;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
 
 import edu.berkeley.gamesman.hasher.DartboardHasher;

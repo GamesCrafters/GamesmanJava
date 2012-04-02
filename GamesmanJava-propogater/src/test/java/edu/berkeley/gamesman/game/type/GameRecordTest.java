@@ -1,7 +1,6 @@
 package edu.berkeley.gamesman.game.type;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
 
 public class GameRecordTest {

@@ -2,8 +2,7 @@ package edu.berkeley.gamesman.hasher;
 
 import java.util.Arrays;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
 
 import edu.berkeley.gamesman.hasher.QuartoMinorHasher;
@@ -30,7 +29,7 @@ public class TestQuarto {
 			Assert.assertEquals(hash, qmh.getHash());
 			qmh2.unhash(hash);
 			int[] board = qmh.getBoard();
-			Assert.assertTrue(Arrays.equals(board, qmh2.getBoard()));
+			Assert.assertArrayEquals(board, qmh2.getBoard());
 			qmh2.reset();
 			Assert.assertEquals(hash, qmh2.hash(board));
 			if (hash < numHashes - 1)
@@ -92,7 +91,7 @@ public class TestQuarto {
 					}
 					qmh2.dropState(board2);
 					qmh2.unhash(child);
-					Assert.assertTrue(Arrays.equals(board2, qmh2.getBoard()));
+					Assert.assertArrayEquals(board2, qmh2.getBoard());
 				}
 			}
 			if (hash < numHashes - 1L)

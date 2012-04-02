@@ -173,7 +173,8 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 	}
 
 	public static boolean hasSurround(CountingState state, int lastTurn) {
-
+		// TODO Write method
+		return false;
 	}
 
 	private static char getChar(CountingState state, int x, int y) {
@@ -277,17 +278,18 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 			for (int row = 0; row < height; row++) {
 				for (int col = 0; col < width; col++) {
 					int place = getPlace(row, col);
-					if (isBottom(row, col)) {
-						columnMoveList[col].add(new Move(place, 0, turn,
-								gameSize, numPieces, numPieces + 1));
-					} else {
-						columnMoveList[col].add(new Move(place - 1, 1, 1,
-								place, 0, turn, gameSize, numPieces,
-								numPieces + 1));
-						columnMoveList[col].add(new Move(place - 1, 2, 2,
-								place, 0, turn, gameSize, numPieces,
-								numPieces + 1));
-					}
+					// if (isBottom(row, col)) {
+					// columnMoveList[col].add(new Move(place, 0, turn,
+					// gameSize, numPieces, numPieces + 1));
+					// } else {
+					// columnMoveList[col].add(new Move(place - 1, 1, 1,
+					// place, 0, turn, gameSize, numPieces,
+					// numPieces + 1));
+					// columnMoveList[col].add(new Move(place - 1, 2, 2,
+					// place, 0, turn, gameSize, numPieces,
+					// numPieces + 1));
+					// }
+					// TODO Fix this up
 				}
 			}
 		}
