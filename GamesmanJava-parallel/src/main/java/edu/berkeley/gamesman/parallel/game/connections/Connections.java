@@ -25,8 +25,9 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 		SolveReader<CountingState, FlipRecord> {
 	private Move[] myMoves;
 	private ConnectionsHasher myHasher;
-	private int width, height = 7;
-	private int gameSize = 49;
+	private int width = 4;
+	private int height = 7;
+	private int gameSize = 21;
 	private int suffLen;
 
 	public String getString(CountingState position) {
@@ -124,8 +125,8 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 				int currY = 0;
 				while (!(currXDir == 0 && currYDir == -1 && currY == 0)
 						&& currY != 6) {
-					if ((Character) getChar(state, currX + 2 * currXDir, currY
-							+ 2 * currYDir) == charFor(lastTurn)) {
+					if ((Character) getChar(state, currX + currXDir, currY
+							+ currYDir) == charFor(lastTurn)) {
 						currX = currX + 2 * currXDir;
 						currY = currY + 2 * currYDir;
 						currXDir = (currXDir + 3) % 3 - 1;
@@ -148,8 +149,8 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 				int currY = startingY;
 				while (!(currXDir == -1 && currYDir == 0 && currX == 0)
 						&& currX != 6) {
-					if ((Character) getChar(state, currX + 2 * currXDir, currY
-							+ 2 * currYDir) == charFor(lastTurn)) {
+					if ((Character) getChar(state, currX + currXDir, currY
+							+ currYDir) == charFor(lastTurn)) {
 						currX = currX + 2 * currXDir;
 						currY = currY + 2 * currYDir;
 						currXDir = (currXDir + 3) % 3 - 1;
@@ -176,7 +177,27 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 	}
 
 	private static char getChar(CountingState state, int x, int y) {
-		return (Character) charFor(state.get(y * 4 + x));
+		if (x < 1 || x > 5 || y < 1 || y > 5) {
+			return (Character) null;
+		}
+		switch (x) {
+		case 0:
+			return (Character) charFor(state.get(0 + (x / 4)));
+		case 1:
+			return (Character) charFor(state.get(2 + (x / 2)));
+		case 2:
+			return (Character) charFor(state.get(5 + (x / 2)));
+		case 3:
+			return (Character) charFor(state.get(9 + (x / 2)));
+		case 4:
+			return (Character) charFor(state.get(12 + (x / 2)));
+		case 5:
+			return (Character) charFor(state.get(16 + (x / 2)));
+		case 6:
+			return (Character) charFor(state.get(19 + (x / 2)));
+		default:
+			return (Character) null;
+		}
 	}
 
 	@Override
