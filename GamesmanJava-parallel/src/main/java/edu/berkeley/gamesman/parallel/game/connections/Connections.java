@@ -173,7 +173,57 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 	}
 
 	public static boolean hasSurround(CountingState state, int lastTurn) {
-		// TODO Write method
+		if ((Character) charFor(lastTurn) == 'X') {
+			return hasSurroundHelper(state, lastTurn, 3, 0,
+					new ArrayList<Pair<Integer, Integer>>(1), 3, 0, 0)
+					|| hasSurroundHelper(state, lastTurn, 3, 2,
+							new ArrayList<Pair<Integer, Integer>>(1), 3, 2, 0)
+					|| hasSurroundHelper(state, lastTurn, 3, 6,
+							new ArrayList<Pair<Integer, Integer>>(1), 3, 6, 0);
+		} else if ((Character) charFor(lastTurn) == 'O') {
+			return hasSurroundHelper(state, lastTurn, 0, 3,
+					new ArrayList<Pair<Integer, Integer>>(1), 0, 3, 0)
+					|| hasSurroundHelper(state, lastTurn, 2, 3,
+							new ArrayList<Pair<Integer, Integer>>(1), 2, 3, 0)
+					|| hasSurroundHelper(state, lastTurn, 6, 3,
+							new ArrayList<Pair<Integer, Integer>>(1), 6, 3, 0);
+		} else {
+			System.err.println("fail");
+			return false;
+		}
+	}
+
+	private static boolean hasSurroundHelper(CountingState state, int lastTurn,
+			int currX, int currY, ArrayList<Pair<Integer, Integer>> used,
+			int origX, int origY, int currDepth) {
+		if (currX == origX && currY == origY && currDepth != 0 && currDepth != 2) {
+			return true;
+		}
+		else if (currX == origX && currY == origY && currDepth == 2) {
+			return false;
+		}
+		boolean hasSurround = false;
+		for (int xDir = 1, yDir = 0, count = 0; count < 4; xDir = (xDir + 3) % 3 - 1, yDir = (yDir + 2) % 3 - 1, count++) {
+			if (getChar(state, currX + xDir, currY + yDir) == lastTurn
+					&& !isIn(new Pair<Integer, Integer>(currX + (2 * xDir),
+							currY + (2 * yDir)), used)) {
+				used.add(new Pair<Integer, Integer>(currX, currY));
+				hasSurround = hasSurround
+						|| hasSurroundHelper(state, lastTurn, currX
+								+ (2 * xDir), currY + (2 * yDir), used, origX,
+								origY, currDepth + 1);
+			}
+		}
+		return hasSurround;
+	}
+
+	private static boolean isIn(Pair<Integer, Integer> pair,
+			ArrayList<Pair<Integer, Integer>> list) {
+		for (Pair<Integer, Integer> p : list) {
+			if (pair.car == p.car && pair.cdr == p.cdr) {
+				return true;
+			}
+		}
 		return false;
 	}
 
@@ -278,18 +328,17 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 			for (int row = 0; row < height; row++) {
 				for (int col = 0; col < width; col++) {
 					int place = getPlace(row, col);
-					// if (isBottom(row, col)) {
-					// columnMoveList[col].add(new Move(place, 0, turn,
-					// gameSize, numPieces, numPieces + 1));
-					// } else {
-					// columnMoveList[col].add(new Move(place - 1, 1, 1,
-					// place, 0, turn, gameSize, numPieces,
-					// numPieces + 1));
-					// columnMoveList[col].add(new Move(place - 1, 2, 2,
-					// place, 0, turn, gameSize, numPieces,
-					// numPieces + 1));
-					// }
-					// TODO Fix this up
+//					if (isBottom(row, col)) {
+//						columnMoveList[col].add(new Move(place, 0, turn,
+//								gameSize, numPieces, numPieces + 1));
+//					} else {
+						columnMoveList[col].add(new Move(place - 1, 1, 1,
+								place, 0, turn, gameSize, numPieces,
+								numPieces + 1));
+						columnMoveList[col].add(new Move(place - 1, 2, 2,
+								place, 0, turn, gameSize, numPieces,
+								numPieces + 1));
+//					}
 				}
 			}
 		}
