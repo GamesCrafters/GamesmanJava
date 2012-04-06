@@ -31,12 +31,12 @@ public final class DBInvCalculator {
 	 *            The state to find invariant for
 	 * @return A single value from 0 to 1<<24 - 1
 	 */
-	public long getInv(long first48, CountingState s) {
-		assert (first48 >>> 48) == 0;
+	public long getInv(long first47, CountingState s) {
+		assert (first47 >>> 47) == 0;
 		if (s.isEmpty())
 			return 0;
 		else
-			return (first48 << 16L) | getPieceInv(s);
+			return (first47 << 16L) | getPieceInv(s);
 	}
 
 	long getPieceInv(CountingState s) {

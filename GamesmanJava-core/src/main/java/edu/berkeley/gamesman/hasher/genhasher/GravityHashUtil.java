@@ -17,8 +17,8 @@ public class GravityHashUtil<T extends CountingState> {
 		return getInv(hasher, state.get(boardSize), state);
 	}
 
-	public long getInv(GenHasher<T> hasher, long first47, T state) {
-		assert (first47 >>> 47) == 0;
+	public long getInv(GenHasher<T> hasher, long first46, T state) {
+		assert (first46 >>> 46) == 0;
 		int start = hasher.getStart(state);
 		if (start == boardSize + 1)
 			return 0;
@@ -28,7 +28,7 @@ public class GravityHashUtil<T extends CountingState> {
 		if (!isTop(start) && startEmpty && state.get(start + 1) != 0)
 			return -1;
 		else {
-			return calc.getInv(first47 << 1, state)
+			return calc.getInv(first46 << 1, state)
 					| (startEmpty ? 0 : 1 << 16);
 		}
 	}
