@@ -11,7 +11,7 @@ import edu.berkeley.gamesman.hasher.counting.CountingState;
  * @author dnspies
  * 
  */
-public class DBInvCalculator {
+public final class DBInvCalculator {
 	private final int boardSize;
 
 	/**
@@ -22,16 +22,24 @@ public class DBInvCalculator {
 		this.boardSize = boardSize;
 	}
 
+	public long getInv(CountingState s) {
+		return getInv(s.get(boardSize), s);
+	}
+
 	/**
 	 * @param s
 	 *            The state to find invariant for
 	 * @return A single value from 0 to 1<<24 - 1
 	 */
-	public long getInv(CountingState s) {
+	public long getInv(long first48, CountingState s) {
+		assert (first48 >>> 48) == 0;
 		if (s.isEmpty())
 			return 0;
 		else
-			return (((s.get(boardSize) << 8L) | s.numPieces(1)) << 8L)
-					| s.numPieces(2);
+			return (first48 << 16L) | getPieceInv(s);
+	}
+
+	long getPieceInv(CountingState s) {
+		return (s.numPieces(1) << 8L) | s.numPieces(2);
 	}
 }

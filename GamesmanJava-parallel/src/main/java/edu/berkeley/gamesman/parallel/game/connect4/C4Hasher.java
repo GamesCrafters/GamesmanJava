@@ -3,14 +3,14 @@ package edu.berkeley.gamesman.parallel.game.connect4;
 import java.util.Arrays;
 
 import edu.berkeley.gamesman.hasher.DBHasher;
-import edu.berkeley.gamesman.hasher.genhasher.DBInvCalculator;
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
+import edu.berkeley.gamesman.hasher.genhasher.GravityHashUtil;
 import edu.berkeley.gamesman.hasher.invhasher.OptimizingInvariantHasher;
 
 public class C4Hasher extends OptimizingInvariantHasher<C4State> {
 	private final int width, height;
 	public final int boardSize;
-	private final DBInvCalculator calc;
+	private final GravityHashUtil<C4State> myUtil;
 
 	public C4Hasher(int width, int height) {
 		this(width, height, 0);
@@ -31,7 +31,7 @@ public class C4Hasher extends OptimizingInvariantHasher<C4State> {
 		this.width = width;
 		this.height = height;
 		boardSize = width * height;
-		calc = new DBInvCalculator(boardSize);
+		myUtil = new GravityHashUtil<C4State>(width, height);
 	}
 
 	private static int[] makeDigitBase(int width, int height) {
@@ -50,21 +50,7 @@ public class C4Hasher extends OptimizingInvariantHasher<C4State> {
 	 */
 	@Override
 	protected long getInvariant(C4State state) {
-		int start = getStart(state);
-		if (start == boardSize + 1)
-			return 0;
-		else if (start == boardSize)
-			return state.get(boardSize);
-		boolean startEmpty = leastSig(state) == 0;
-		if (!isTop(start) && startEmpty && state.get(start + 1) != 0)
-			return -1;
-		else {
-			return calc.getInv(state) | (startEmpty ? 0 : 1 << 24);
-		}
-	}
-
-	private boolean isTop(int place) {
-		return (place + 1) % height == 0;
+		return myUtil.getInv(this, state);
 	}
 
 	@Override
