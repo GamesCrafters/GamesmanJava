@@ -344,30 +344,14 @@ public abstract class RangeTree<S extends GenState, GR extends FixedLengthWritab
 
 	protected abstract Class<GR> getGameRecordClass();
 
-	@Override
-	public Collection<Suffix<S>> getRoots() {
-		return getRoots(false);
-	}
-
 	public Suffix<S> makeContainingRange(S t) {
-		return makeContainingRange(t, false);
-	}
-
-	public Suffix<S> makeContainingRange(S t, boolean output) {
 		Suffix<S> range = newRange();
-		if (output)
-			makeOutputContainingRange(t, range);
-		else
-			makeContainingRange(t, range);
+		makeContainingRange(t, range);
 		return range;
 	}
 
 	public void makeContainingRange(S t, Suffix<S> range) {
 		range.set(t, suffLen);
-	}
-
-	public void makeOutputContainingRange(S t, Suffix<S> range) {
-		range.set(t, outputSuffixLength());
 	}
 
 	private final Suffix<S> newRange() {
@@ -443,24 +427,13 @@ public abstract class RangeTree<S extends GenState, GR extends FixedLengthWritab
 		return records.get((int) iVal);
 	}
 
-	/**
-	 * This is the length of the suffix in the final output database. In general
-	 * it should be the same or larger than the suffix length when solving. This
-	 * makes it easier to read positions from the database, since only smaller
-	 * ranges need to be read.
-	 * 
-	 * @return
-	 */
-	public int outputSuffixLength() {
-		return suffixLength();
-	}
-
-	public Collection<Suffix<S>> getRoots(boolean output) {
+	@Override
+	public Collection<Suffix<S>> getRoots() {
 		Collection<S> startingPositions = getStartingPositions();
 		HashSet<Suffix<S>> containingRanges = new HashSet<Suffix<S>>();
 		for (S t : startingPositions) {
 			Suffix<S> containingRange;
-			containingRange = makeContainingRange(t, output);
+			containingRange = makeContainingRange(t);
 			containingRanges.add(containingRange);
 		}
 		return containingRanges;

@@ -229,14 +229,6 @@ public class TootAndOtto extends RangeTree<TOState, FlipRecord> implements
 	}
 
 	@Override
-	public int outputSuffixLength() {
-		int innerVarLen = getConf().getInt(
-				"gamesman.game.output.variance.length", gameSize);
-		// gameSize default ensures outputSuffixLength == suffixLength
-		return Math.max(gameSize + 5 - innerVarLen, suffLen);
-	}
-
-	@Override
 	public GameRecord getRecord(TOState position, FlipRecord fetchedRec) {
 		// TODO Auto-generated method stub
 		return null;

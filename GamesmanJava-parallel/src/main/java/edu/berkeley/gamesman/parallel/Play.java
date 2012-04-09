@@ -98,7 +98,7 @@ public final class Play {
 	private static <S extends GenState, GR extends FixedLengthWritable> void rangeSubMain(
 			Configuration conf, RangeTree<S, GR> tree) throws IOException,
 			ClassNotFoundException {
-		Suffix<S> posRange = tree.getRoots(true).iterator().next();
+		Suffix<S> posRange = tree.getRoots().iterator().next();
 		Path[] outPath = new Path[1];
 		outPath[0] = ConfParser.getOutputPath(conf);
 		FileSystem fs = outPath[0].getFileSystem(conf);
@@ -142,7 +142,7 @@ public final class Play {
 				gameFinished = false;
 				break;
 			}
-			posRange = tree.makeContainingRange(position, true);
+			posRange = tree.makeContainingRange(position);
 		}
 		if (gameFinished) {
 			System.out.println(position.toString());

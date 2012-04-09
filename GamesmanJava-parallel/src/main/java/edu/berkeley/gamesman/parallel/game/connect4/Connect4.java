@@ -31,14 +31,6 @@ public class Connect4 extends RangeTree<C4State, FlipRecord> implements
 	}
 
 	@Override
-	public int outputSuffixLength() {
-		int innerVarLen = getConf().getInt(
-				"gamesman.game.output.variance.length", gameSize);
-		// gameSize default ensures outputSuffixLength == suffixLength
-		return Math.max(gameSize + 1 - innerVarLen, suffLen);
-	}
-
-	@Override
 	public Collection<C4State> getStartingPositions() {
 		C4State result = myHasher.newState();
 		return Collections.singleton(result);
