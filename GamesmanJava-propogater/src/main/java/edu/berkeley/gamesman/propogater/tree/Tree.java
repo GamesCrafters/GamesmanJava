@@ -126,14 +126,10 @@ public abstract class Tree<K extends WritableComparable<K>, V extends Writable, 
 				WritableComparable.class);
 		conf.setClass("propogater.run.value.class", getValClass(),
 				Writable.class);
-		conf.setClass("propogater.run.pi.class", getPiClass(),
-				Writable.class);
-		conf.setClass("propogater.run.ci.class", getCiClass(),
-				Writable.class);
-		conf.setClass("propogater.run.um.class", getUmClass(),
-				Writable.class);
-		conf.setClass("propogater.run.dm.class", getDmClass(),
-				Writable.class);
+		conf.setClass("propogater.run.pi.class", getPiClass(), Writable.class);
+		conf.setClass("propogater.run.ci.class", getCiClass(), Writable.class);
+		conf.setClass("propogater.run.um.class", getUmClass(), Writable.class);
+		conf.setClass("propogater.run.dm.class", getDmClass(), Writable.class);
 	}
 
 	protected void treePrepareRun(Configuration conf) {
@@ -195,5 +191,21 @@ public abstract class Tree<K extends WritableComparable<K>, V extends Writable, 
 
 	public TreeNode<K, V, PI, UM, CI, DM> newNode() {
 		return ReflectionUtils.newInstance(getTreeNodeClass(), getConf());
+	}
+
+	public int getNumCleanupReducers(Configuration conf, long totSize) {
+		return -1;
+	}
+
+	public int getNumCombineReducers(Configuration conf, long totSize) {
+		return -1;
+	}
+
+	public int getNumCreateReducers(Configuration conf, long totSize) {
+		return -1;
+	}
+
+	public int getNumPropogateReducers(Configuration conf, long totSize) {
+		return -1;
 	}
 }

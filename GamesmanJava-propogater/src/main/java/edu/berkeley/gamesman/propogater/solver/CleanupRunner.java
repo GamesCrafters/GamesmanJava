@@ -73,4 +73,12 @@ public class CleanupRunner extends TaskRunner {
 	public int hashCode() {
 		return 93;
 	}
+
+	protected int getNumTypeReducers(Configuration conf, long totSize) {
+		int result = tree.getNumCleanupReducers(conf, totSize);
+		if (result == -1)
+			return defaultNumTypeReducers(conf, totSize);
+		else
+			return result;
+	}
 }

@@ -12,6 +12,7 @@ import edu.berkeley.gamesman.hasher.genhasher.Move;
 import edu.berkeley.gamesman.parallel.FlipRecord;
 import edu.berkeley.gamesman.parallel.ranges.Suffix;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
+import edu.berkeley.gamesman.propogater.solver.TaskRunner;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.qll.QuickLinkedList;
@@ -284,5 +285,17 @@ public class Connect4 extends RangeTree<C4State, FlipRecord> implements
 	@Override
 	public GameRecord getRecord(C4State position, FlipRecord fetchedRec) {
 		return FlipRecord.getRecord(fetchedRec, gameSize - numPieces(position));
+	}
+
+	@Override
+	public int getNumCreateReducers(Configuration conf, long totSize) {
+		return TaskRunner.numTypeReducersFromSplit(conf, totSize,
+				Math.max(TaskRunner.readSplitSize(conf) / width, 1));
+	}
+	
+	@Override
+	public int getNumPropogateReducers(Configuration conf, long totSize) {
+		return TaskRunner.numTypeReducersFromSplit(conf, totSize,
+				Math.max(TaskRunner.readSplitSize(conf) / width, 1));
 	}
 }

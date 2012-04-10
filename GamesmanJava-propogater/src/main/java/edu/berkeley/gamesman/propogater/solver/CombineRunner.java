@@ -83,4 +83,13 @@ public class CombineRunner extends TaskRunner {
 	public int hashCode() {
 		return 31 + tier.num;
 	}
+
+	@Override
+	protected int getNumTypeReducers(Configuration conf, long totSize) {
+		int result = tree.getNumCombineReducers(conf, totSize);
+		if (result == -1)
+			return defaultNumTypeReducers(conf, totSize);
+		else
+			return result;
+	}
 }

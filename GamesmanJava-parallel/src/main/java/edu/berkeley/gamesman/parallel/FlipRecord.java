@@ -72,6 +72,22 @@ public class FlipRecord implements FixedLengthWritable, Comparable<FlipRecord> {
 		return myRecord.compareTo(other.myRecord);
 	}
 
+	@Override
+	public boolean equals(Object other) {
+		return other instanceof FlipRecord
+				&& ((getValue() == GameValue.TIE && ((FlipRecord) other)
+						.getValue() == GameValue.TIE) || myRecord
+						.equals(((FlipRecord) other).myRecord));
+	}
+
+	@Override
+	public String toString() {
+		if (getValue() == GameValue.TIE)
+			return "TIE";
+		else
+			return myRecord.toString();
+	}
+
 	public void previousPosition(FlipRecord gr) {
 		myRecord.previousPosition(gr.myRecord);
 	}

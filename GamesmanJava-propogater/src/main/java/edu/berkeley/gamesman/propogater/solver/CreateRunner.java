@@ -89,4 +89,13 @@ public class CreateRunner extends TaskRunner {
 	protected Tier getTier(String ext) throws IOException {
 		return myGraph.getTier(ext);
 	}
+
+	@Override
+	protected int getNumTypeReducers(Configuration conf, long totSize) {
+		int result = tree.getNumCreateReducers(conf, totSize);
+		if (result == -1)
+			return defaultNumTypeReducers(conf, totSize);
+		else
+			return result;
+	}
 }

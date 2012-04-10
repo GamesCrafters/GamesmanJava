@@ -113,4 +113,13 @@ public class PropogateRunner extends TaskRunner {
 	protected Tier getTier(String ext) throws IOException {
 		return myGraph.getTierOrNull(ext);
 	}
+
+	@Override
+	protected int getNumTypeReducers(Configuration conf, long totSize) {
+		int result = tree.getNumPropogateReducers(conf, totSize);
+		if (result == -1)
+			return defaultNumTypeReducers(conf, totSize);
+		else
+			return result;
+	}
 }

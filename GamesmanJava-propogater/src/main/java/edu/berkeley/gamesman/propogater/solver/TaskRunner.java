@@ -17,7 +17,7 @@ import edu.berkeley.gamesman.propogater.common.IOCheckOperations;
 import edu.berkeley.gamesman.propogater.common.Util;
 import edu.berkeley.gamesman.propogater.tree.Tree;
 
-abstract class TaskRunner implements Runnable {
+public abstract class TaskRunner implements Runnable {
 	public static final int COMBINE = 0, CREATE = 1, PROPOGATE = 2,
 			CLEANUP = 3;
 	public static final int NUM_TYPES = 4;
@@ -85,8 +85,6 @@ abstract class TaskRunner implements Runnable {
 
 	protected final int getNumReducers(Job j, Path[] allPaths)
 			throws IOException {
-		long splitSize = j.getConfiguration().getLong(
-				"propogate.reducer.split.size", 1000000);
 		long totSize = 0L;
 		for (Path p : allPaths) {
 			FileSystem fs = p.getFileSystem(tree.getConf());
@@ -95,6 +93,22 @@ abstract class TaskRunner implements Runnable {
 				totSize += status.getLen();
 			}
 		}
+		return getNumTypeReducers(j.getConfiguration(), totSize);
+	}
+
+	protected abstract int getNumTypeReducers(Configuration conf, long totSize);
+
+	public static final int defaultNumTypeReducers(Configuration conf,
+			long totSize) {
+		return numTypeReducersFromSplit(conf, totSize, readSplitSize(conf));
+	}
+
+	public static long readSplitSize(Configuration conf) {
+		return conf.getLong("propogate.reducer.split.size", 1000000);
+	}
+
+	public static final int numTypeReducersFromSplit(Configuration conf,
+			long totSize, long splitSize) {
 		int numTasks = (int) ((totSize + splitSize - 1) / splitSize);
 		System.out.println("totSize = " + totSize);
 		System.out.println("splitSize = " + splitSize);
