@@ -287,15 +287,15 @@ public class Connect4 extends RangeTree<C4State, FlipRecord> implements
 		return FlipRecord.getRecord(fetchedRec, gameSize - numPieces(position));
 	}
 
-	@Override
-	public int getNumCreateReducers(Configuration conf, long totSize) {
-		return TaskRunner.numTypeReducersFromSplit(conf, totSize,
-				Math.max(TaskRunner.readSplitSize(conf) / width, 1));
-	}
-	
-	@Override
-	public int getNumPropogateReducers(Configuration conf, long totSize) {
-		return TaskRunner.numTypeReducersFromSplit(conf, totSize,
-				Math.max(TaskRunner.readSplitSize(conf) / width, 1));
-	}
+//	@Override
+//	public int getNumCreateReducers(Configuration conf, long totSize) {
+//		return TaskRunner.numTypeReducersFromSplit(conf, totSize,
+//				Math.max(TaskRunner.readSplitSize(conf) / width, 1));
+//	}
+//	
+//	@Override
+//	public int getNumPropogateReducers(Configuration conf, long totSize) {
+//		return TaskRunner.numTypeReducersFromSplit(conf, totSize,
+//				Math.max(TaskRunner.readSplitSize(conf) / width, 1));
+//	}
 }
