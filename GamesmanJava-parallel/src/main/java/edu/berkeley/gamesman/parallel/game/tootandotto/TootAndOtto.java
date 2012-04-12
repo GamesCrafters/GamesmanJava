@@ -8,17 +8,17 @@ import org.apache.hadoop.conf.Configuration;
 
 import edu.berkeley.gamesman.game.type.GameRecord;
 import edu.berkeley.gamesman.game.type.GameValue;
+import edu.berkeley.gamesman.hasher.counting.CountingState;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
 import edu.berkeley.gamesman.parallel.FlipRecord;
-import edu.berkeley.gamesman.parallel.game.connect4.C4State;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.parallel.ranges.Suffix;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 
-public class TootAndOtto extends RangeTree<TOState, FlipRecord> implements
-		SolveReader<TOState, FlipRecord> {
+public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
+		SolveReader<CountingState, FlipRecord> {
 	private Move[] myMoves;
 	private Move[][] colMoves;
 	private TOHasher myHasher;
@@ -153,7 +153,7 @@ public class TootAndOtto extends RangeTree<TOState, FlipRecord> implements
 	}
 
 	@Override
-	public TOState getPosition(String board) {
+	public CountingState getPosition(String board) {
 		assert board.length() == gameSize;
 		int[] pos = new int[gameSize + 1];
 		int pieceCount = 0;
@@ -167,7 +167,7 @@ public class TootAndOtto extends RangeTree<TOState, FlipRecord> implements
 			}
 		}
 		pos[gameSize] = pieceCount;
-		TOState s = newState();
+		CountingState s = newState();
 		getHasher().set(s, pos);
 		return s;
 	}
@@ -185,31 +185,31 @@ public class TootAndOtto extends RangeTree<TOState, FlipRecord> implements
 		}
 	}
 	
-	public TOState newState() {
+	public CountingState newState() {
 		return myHasher.newState();
 	}
 
 	@Override
-	public Collection<Pair<String, TOState>> getChildren(TOState position) {
+	public Collection<Pair<String, CountingState>> getChildren(CountingState position) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public String getString(TOState position) {
+	public String getString(CountingState position) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public GameValue getValue(TOState state) {
+	public GameValue getValue(CountingState state) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Collection<TOState> getStartingPositions() {
-		TOState result = myHasher.newState();
+	public Collection<CountingState> getStartingPositions() {
+		CountingState result = myHasher.newState();
 		return Collections.singleton(result);
 	}
 
@@ -229,13 +229,7 @@ public class TootAndOtto extends RangeTree<TOState, FlipRecord> implements
 	}
 
 	@Override
-	public GameRecord getRecord(TOState position, FlipRecord fetchedRec) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	protected boolean setNewRecordAndHasChildren(TOState state, FlipRecord rec) {
+	protected boolean setNewRecordAndHasChildren(CountingState state, FlipRecord rec) {
 		// TODO Auto-generated method stub
 		return false;
 	}
@@ -262,7 +256,7 @@ public class TootAndOtto extends RangeTree<TOState, FlipRecord> implements
 	 * Returns the tier which is just the last element of the sequence.
 	 */
 	@Override
-	public int getDivision(Suffix<TOState> suff) {
+	public int getDivision(Suffix<CountingState> suff) {
 		assert suff.length() == suffLen;
 		return suff.get(suffLen - 1);
 	}
@@ -278,5 +272,11 @@ public class TootAndOtto extends RangeTree<TOState, FlipRecord> implements
 		default:
 			return '?';
 		}
+	}
+
+	@Override
+	public GameRecord getRecord(CountingState position, FlipRecord fetchedRec) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

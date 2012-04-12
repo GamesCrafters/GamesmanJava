@@ -2,10 +2,11 @@ package edu.berkeley.gamesman.parallel.game.tootandotto;
 
 import java.util.Arrays;
 
+import edu.berkeley.gamesman.hasher.counting.CountingState;
 import edu.berkeley.gamesman.hasher.genhasher.DBInvCalculator;
 import edu.berkeley.gamesman.hasher.invhasher.OptimizingInvariantHasher;
 
-public class TOHasher extends OptimizingInvariantHasher<TOState> {
+public class TOHasher extends OptimizingInvariantHasher<CountingState> {
 	private final int width, height;
 	public final int boardSize; // TODO: why not private?
 	private final DBInvCalculator calc;
@@ -50,19 +51,19 @@ public class TOHasher extends OptimizingInvariantHasher<TOState> {
 	}
 
 	@Override
-	protected long getInvariant(TOState state) {
+	protected long getInvariant(CountingState state) {
 		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
-	protected boolean valid(TOState state) {
+	protected boolean valid(CountingState state) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	protected TOState genHasherNewState() {
+	protected CountingState genHasherNewState() {
 		// TODO Auto-generated method stub
 		return null;
 	}
