@@ -17,6 +17,16 @@ import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 
+/**
+ * Similar to the C4State for connect 4, the CountingState for TootAndOtto holds
+ * the game as a list of pieces in col-major order. The highest index in the
+ * array is the number of pieces on the board. The second and third highest,
+ * respectively, are the number of Ts and Os placed by player 1. The fourth and
+ * fifth are the number of Ts and Os placed by player 2. The length of the array
+ * is gameSize + 5.
+ * 
+ * @author williamshen 
+ */
 public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 		SolveReader<CountingState, FlipRecord> {
 	private Move[] myMoves;
@@ -26,7 +36,8 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 	private int gameSize;
 	private int suffLen;
 	private int maxPieces;
-
+	
+	//TODO: why these numbers again...?
 	@Override
 	public void rangeTreeConfigure(Configuration conf) {
 		width = conf.getInt("gamesman.game.width", 5);
@@ -171,7 +182,7 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 		getHasher().set(s, pos);
 		return s;
 	}
-	
+
 	private static int pieceFor(char c) {
 		switch (c) {
 		case ' ':
@@ -184,13 +195,14 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 			throw new IllegalArgumentException();
 		}
 	}
-	
+
 	public CountingState newState() {
 		return myHasher.newState();
 	}
 
 	@Override
-	public Collection<Pair<String, CountingState>> getChildren(CountingState position) {
+	public Collection<Pair<String, CountingState>> getChildren(
+			CountingState position) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -201,9 +213,24 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 		return null;
 	}
 
+	/**
+	 * Return the W/L/T value of the game for a given primitive state. If the
+	 * state is not primitive, return null.
+	 * 
+	 * @param state
+	 *            The (possibly) primitive position
+	 * @return W/L/T or null (if not primitive)
+	 */
 	@Override
 	public GameValue getValue(CountingState state) {
-		// TODO Auto-generated method stub
+		int numPieces = state.get(gameSize + 4);
+		int lastPlayed = getTurn(numPieces);
+		//TODO: complete getValue logic
+		// if there is existing TOOT or OTTO in state
+			// if lastPlayed player's name exists, return GameValue.LOSE
+			// else return GameValue.WIN
+		// else if numPieces equals maxPieces, return GameValue.TIE
+		// else not a primitive position
 		return null;
 	}
 
@@ -229,7 +256,8 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 	}
 
 	@Override
-	protected boolean setNewRecordAndHasChildren(CountingState state, FlipRecord rec) {
+	protected boolean setNewRecordAndHasChildren(CountingState state,
+			FlipRecord rec) {
 		// TODO Auto-generated method stub
 		return false;
 	}
