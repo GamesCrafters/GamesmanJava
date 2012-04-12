@@ -36,6 +36,7 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 	private int gameSize;
 	private int suffLen;
 	private int maxPieces;
+	private int tootPlayer;
 	
 	//TODO: why these numbers again...?
 	@Override
@@ -47,6 +48,7 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 		myHasher = new TOHasher(width, height, maxPieces);
 		int varianceLength = conf.getInt("gamesman.game.variance.length", 10);
 		suffLen = Math.max(5, gameSize + 5 - varianceLength);
+		tootPlayer = conf.getInt("gamesman.game.tootPlayer", 1);
 
 		ArrayList<Move>[] columnMoveList = new ArrayList[width];
 		colMoves = new Move[width][];
@@ -225,13 +227,47 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 	public GameValue getValue(CountingState state) {
 		int numPieces = state.get(gameSize + 4);
 		int lastPlayed = getTurn(numPieces);
-		//TODO: complete getValue logic
-		// if there is existing TOOT or OTTO in state
-			// if lastPlayed player's name exists, return GameValue.LOSE
-			// else return GameValue.WIN
-		// else if numPieces equals maxPieces, return GameValue.TIE
-		// else not a primitive position
-		return null;
+		int pattern = checkPattern(state);
+		
+		switch (pattern) {
+		case 0: 
+			if (numPieces == gameSize) {
+				return GameValue.TIE;
+			} else {
+				return null;
+			}
+		case 4:
+			return GameValue.TIE;
+		default:
+			if (pattern == getPattern(lastPlayed)) {
+				return GameValue.LOSE;
+			} else {
+				return GameValue.WIN;
+			}
+		}
+	}
+
+	/**
+	 * return 0 if the player's pattern is TOOT, 1 if it is OTTO
+	 * @param player
+	 * @return
+	 */
+	private int getPattern(int player) {
+		if (tootPlayer == player) {
+			return 0;
+		} else {
+			return 1;
+		}
+	}
+
+	/**
+	 * given a state, return 0 if no TOOT nor OTTO exists, 1 if TOOT, 2 if OTTO, 3 if both
+	 * @param state
+	 * @return
+	 */
+	private int checkPattern(CountingState state) {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 	@Override
