@@ -7,12 +7,11 @@ import java.util.SortedSet;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.SequenceFile.CompressionType;
+import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.tasks.DividedSequenceFileOutputFormat;
@@ -68,16 +67,25 @@ public class PropogateRunner extends TaskRunner {
 			Path[] mixedPaths = TierGraph.mixPaths(wholeSet);
 			FileInputFormat.setInputPaths(j, mixedPaths);
 			FileOutputFormat.setOutputPath(j, headTier.outputFolder);
-			j.setNumReduceTasks(getNumReducers(j, mixedPaths));
-			j.getConfiguration().setBoolean("mapred.compress.map.output", true);
-			SequenceFileOutputFormat.setOutputCompressionType(j,
-					CompressionType.BLOCK);
+			j.setNumReduceTasks(getNumReducers(j, wholeSet));
+			enableCompression(j, SequenceFile.CompressionType.BLOCK);
 			boolean succeeded = j.waitForCompletion(true);
 			if (!succeeded)
 				throw new RuntimeException("Job did not succeed " + j);
-			makeFiles(jConf, j);
-			splitUp(headTier);
+			Set<Integer> needs = getNeeds("needs_propogation", j.getCounters());
+			for (Tier t : wholeSet) {
+				if (needs.remove(t.num))
+					t.setNeedsPropogation();
+			}
+			assert needs.isEmpty();
+			splitUp(headTier, j);
 			headTier.deleteOutputFolder();
+			for (Tier t : wholeSet) {
+				t.printStats();
+			}
+		} catch (Throwable t) {
+			t.printStackTrace();
+			System.exit(-1);
 		} finally {
 			for (Tier t : wholeSet) {
 				t.unlock();
@@ -86,8 +94,9 @@ public class PropogateRunner extends TaskRunner {
 	}
 
 	@Override
-	protected void putBack(Tier from, Tier to) throws IOException {
-		to.replaceDataPath(from.getTempFolder());
+	protected void putBack(Tier from, Tier to, long numRecords)
+			throws IOException {
+		to.replaceDataPath(from.getTempFolder(), numRecords);
 	}
 
 	public boolean needsToPropogate() throws IOException {
@@ -116,10 +125,14 @@ public class PropogateRunner extends TaskRunner {
 
 	@Override
 	protected int getNumTypeReducers(Configuration conf, long totSize) {
-		int result = tree.getNumPropogateReducers(conf, totSize);
-		if (result == -1)
-			return defaultNumTypeReducers(conf, totSize);
-		else
-			return result;
+		long splitSize = tree.getPropogateSplitSize(conf, makeIntSet(cycleSet));
+		return numTypeReducersFromSplit(totSize, splitSize);
+	}
+
+	private static Set<Integer> makeIntSet(SortedSet<Tier> cycleSet) {
+		HashSet<Integer> result = new HashSet<Integer>(cycleSet.size());
+		for (Tier t : cycleSet)
+			result.add(t.num);
+		return result;
 	}
 }

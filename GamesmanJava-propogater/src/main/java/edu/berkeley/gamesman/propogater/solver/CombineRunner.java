@@ -1,10 +1,11 @@
 package edu.berkeley.gamesman.propogater.solver;
 
 import java.io.IOException;
+import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.SequenceFile.CompressionType;
+import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
@@ -48,15 +49,22 @@ public class CombineRunner extends TaskRunner {
 							.getFileStatus(oldDataPath).getPath());
 			FileInputFormat.setInputPaths(j, allPaths);
 			FileOutputFormat.setOutputPath(j, tier.dataPath);
-			j.setNumReduceTasks(getNumReducers(j, allPaths));
-			j.getConfiguration().setBoolean("mapred.compress.map.output", true);
-			SequenceFileOutputFormat.setOutputCompressionType(j,
-					CompressionType.BLOCK);
+			j.setNumReduceTasks(getNumReducers(j, tier));
+			enableCompression(j, SequenceFile.CompressionType.BLOCK);
 			boolean succeeded = j.waitForCompletion(true);
 			if (!succeeded)
 				throw new RuntimeException("Job did not succeed " + j);
-			makeFiles(jConf, j);
+			tier.setNumRecords(recordsWritten(j, tier.num));
+			tier.clearCombineRecords();
 			tier.deleteCombinedPaths(allPaths);
+			Set<Integer> needs = getNeeds("needs_creation", j.getCounters());
+			for (int tNum : needs) {
+				if (tNum == tier.num)
+					tier.setNeedsCreation();
+				else
+					throw new Error("Should never happen");
+			}
+			tier.printStats();
 		} catch (Throwable t) {
 			t.printStackTrace();
 			System.exit(-1);
@@ -86,10 +94,7 @@ public class CombineRunner extends TaskRunner {
 
 	@Override
 	protected int getNumTypeReducers(Configuration conf, long totSize) {
-		int result = tree.getNumCombineReducers(conf, totSize);
-		if (result == -1)
-			return defaultNumTypeReducers(conf, totSize);
-		else
-			return result;
+		long splitSize = tree.getCombineSplitSize(conf, tier.num);
+		return numTypeReducersFromSplit(totSize, splitSize);
 	}
 }

@@ -1,14 +1,14 @@
 package edu.berkeley.gamesman.propogater.solver;
 
 import java.io.IOException;
+import java.util.Collections;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.SequenceFile.CompressionType;
+import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.tasks.CreationMapper;
@@ -43,16 +43,19 @@ public class CreateRunner extends TaskRunner {
 			j.setJarByClass(Solver.class);
 			FileInputFormat.setInputPaths(j, tier.dataPath);
 			FileOutputFormat.setOutputPath(j, tier.outputFolder);
-			j.setNumReduceTasks(getNumReducers(j, tier.dataPath));
-			j.getConfiguration().setBoolean("mapred.compress.map.output", true);
-			SequenceFileOutputFormat.setOutputCompressionType(j,
-					CompressionType.BLOCK);
+			j.setNumReduceTasks(getNumReducers(j,
+					Collections.<Tier> singleton(tier)));
+			enableCompression(j, SequenceFile.CompressionType.BLOCK);
 			boolean succeeded = j.waitForCompletion(true);
 			if (!succeeded)
 				throw new RuntimeException("Job did not succeed " + j);
-			splitUp(tier);
+			splitUp(tier, j);
 			tier.deleteOutputFolder();
 			tier.setNeedsPropogation();
+			tier.printStats();
+		}  catch (Throwable t) {
+			t.printStackTrace();
+			System.exit(-1);
 		} finally {
 			tier.unlock();
 		}
@@ -67,11 +70,13 @@ public class CreateRunner extends TaskRunner {
 	}
 
 	@Override
-	protected void putBack(Tier from, Tier to) throws IOException {
-		if (from == to)
-			to.replaceDataPath(from.getTempFolder());
-		else
-			to.addCombine(from.getTempFolder());
+	protected void putBack(Tier from, Tier to, long numPositions)
+			throws IOException {
+		if (from == to) {
+			to.replaceDataPath(from.getTempFolder(), numPositions);
+		} else {
+			to.addCombine(from.getTempFolder(), numPositions);
+		}
 	}
 
 	@Override
@@ -92,10 +97,7 @@ public class CreateRunner extends TaskRunner {
 
 	@Override
 	protected int getNumTypeReducers(Configuration conf, long totSize) {
-		int result = tree.getNumCreateReducers(conf, totSize);
-		if (result == -1)
-			return defaultNumTypeReducers(conf, totSize);
-		else
-			return result;
+		long splitSize = tree.getCreateSplitSize(conf, tier.num);
+		return numTypeReducersFromSplit(totSize, splitSize);
 	}
 }

@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.propogater.tree;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
+import java.util.SortedSet;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -193,19 +194,42 @@ public abstract class Tree<K extends WritableComparable<K>, V extends Writable, 
 		return ReflectionUtils.newInstance(getTreeNodeClass(), getConf());
 	}
 
-	public int getNumCleanupReducers(Configuration conf, long totSize) {
-		return -1;
+	public long getCleanupSplitSize(Configuration conf) {
+		long splitSize = conf.getLong("propogater.cleanup.split.size", -1);
+		if (splitSize == -1)
+			splitSize = splitSize(conf);
+		return splitSize;
 	}
 
-	public int getNumCombineReducers(Configuration conf, long totSize) {
-		return -1;
+	public long getCombineSplitSize(Configuration conf, int tier) {
+		long splitSize = conf.getLong("propogater.combine.split.size", -1);
+		if (splitSize == -1)
+			splitSize = splitSize(conf);
+		return splitSize;
 	}
 
-	public int getNumCreateReducers(Configuration conf, long totSize) {
-		return -1;
+	public long getCreateSplitSize(Configuration conf, int tier) {
+		long splitSize = conf.getLong("propogater.create.split.size", -1);
+		if (splitSize == -1)
+			splitSize = splitSize(conf);
+		return splitSize * edgeMultiplier(Collections.singleton(tier));
 	}
 
-	public int getNumPropogateReducers(Configuration conf, long totSize) {
-		return -1;
+	public long getPropogateSplitSize(Configuration conf, Set<Integer> tiers) {
+		long splitSize = conf.getLong("propogater.propogate.split.size", -1);
+		if (splitSize == -1)
+			splitSize = splitSize(conf);
+		return splitSize * edgeMultiplier(tiers);
+	}
+
+	protected long edgeMultiplier(Set<Integer> tiers) {
+		return 1;
+	}
+
+	protected long splitSize(Configuration conf) {
+		long splitSize = conf.getLong("propogater.split.size", -1);
+		if (splitSize == -1)
+			throw new RuntimeException("No split size set");
+		return splitSize;
 	}
 }

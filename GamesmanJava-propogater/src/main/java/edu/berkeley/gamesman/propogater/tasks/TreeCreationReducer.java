@@ -3,13 +3,10 @@ package edu.berkeley.gamesman.propogater.tasks;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
 import edu.berkeley.gamesman.propogater.common.ConfParser;
-import edu.berkeley.gamesman.propogater.common.IOCheckOperations;
-import edu.berkeley.gamesman.propogater.tree.Tree;
 import edu.berkeley.gamesman.propogater.tree.TreeNode;
 import edu.berkeley.gamesman.propogater.writable.Entry;
 import edu.berkeley.gamesman.propogater.writable.IntEntry;
@@ -17,22 +14,20 @@ import edu.berkeley.gamesman.propogater.writable.list.WritableList;
 
 public class TreeCreationReducer<K extends WritableComparable<K>, V extends Writable, PI extends Writable, UM extends Writable, CI extends Writable, DM extends Writable>
 		extends TreeReducer<K, V, PI, UM, CI, DM> {
-	private boolean hasNew;
+	private boolean hasNew = false;
 	private int creationDivision;
-	private Tree<K, V, PI, UM, CI, DM> tree;
 
 	@Override
 	protected void setup(Context context) throws IOException,
 			InterruptedException {
 		super.setup(context);
-		hasNew = false;
 		Configuration conf = context.getConfiguration();
-		tree = ConfParser.<K, V, PI, UM, CI, DM> newTree(conf);
 		creationDivision = ConfParser.getDivision(conf);
 	}
 
 	@Override
-	protected void combine(K key, TreeNode<K, V, PI, UM, CI, DM> value) {
+	protected void combine(K key, TreeNode<K, V, PI, UM, CI, DM> value,
+			int division) {
 		WritableList<IntEntry<Entry<K, DM>>> downList = value.getDownList();
 		WritableList<IntEntry<Entry<K, PI>>> parentList = value.getParentList();
 		if (tree.copyDM()) {
@@ -50,17 +45,16 @@ public class TreeCreationReducer<K extends WritableComparable<K>, V extends Writ
 			}
 			downList.clear();
 		}
-		if (!value.hasValue() && tree.getDivision(key) == creationDivision)
+		if (!value.hasValue() && division == creationDivision)
 			hasNew = true;
 	}
 
 	@Override
 	protected void cleanup(Context context) {
+		super.cleanup(context);
 		if (hasNew) {
-			Configuration conf = context.getConfiguration();
-			Path hnPath = ConfParser.getNeedsCreationPath(conf,
-					creationDivision);
-			context.getCounter("file", hnPath.toString()).increment(1L);
+			context.getCounter("needs_creation", "t" + creationDivision)
+					.increment(1);
 		}
 	}
 }

@@ -6,13 +6,11 @@ import java.util.Collection;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.tasks.CleanupMapper;
@@ -53,12 +51,8 @@ public class CleanupRunner extends TaskRunner {
 		}
 		FileInputFormat.setInputPaths(job, allData);
 		FileOutputFormat.setOutputPath(job, ConfParser.getOutputPath(treeConf));
-		job.setNumReduceTasks(getNumReducers(job, allData));
-		SequenceFileOutputFormat.setOutputCompressionType(job,
-				SequenceFile.CompressionType.BLOCK);
-		job.getConfiguration().setBoolean("mapred.compress.map.output", true);
-		SequenceFileOutputFormat.setOutputCompressionType(job,
-				CompressionType.BLOCK);
+		job.setNumReduceTasks(getNumReducers(job, allTiers));
+		enableCompression(job, SequenceFile.CompressionType.RECORD);
 		boolean succeeded = job.waitForCompletion(true);
 		if (!succeeded)
 			throw new RuntimeException("Job did not succeed: " + job);
@@ -74,11 +68,9 @@ public class CleanupRunner extends TaskRunner {
 		return 93;
 	}
 
+	@Override
 	protected int getNumTypeReducers(Configuration conf, long totSize) {
-		int result = tree.getNumCleanupReducers(conf, totSize);
-		if (result == -1)
-			return defaultNumTypeReducers(conf, totSize);
-		else
-			return result;
+		long splitSize = tree.getCleanupSplitSize(conf);
+		return numTypeReducersFromSplit(totSize, splitSize);
 	}
 }

@@ -1,19 +1,25 @@
 package edu.berkeley.gamesman.propogater.solver;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.compress.GzipCodec;
 import org.apache.hadoop.mapreduce.Counter;
 import org.apache.hadoop.mapreduce.CounterGroup;
+import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 import edu.berkeley.gamesman.propogater.common.ConfParser;
-import edu.berkeley.gamesman.propogater.common.IOCheckOperations;
 import edu.berkeley.gamesman.propogater.common.Util;
 import edu.berkeley.gamesman.propogater.tree.Tree;
 
@@ -33,7 +39,7 @@ public abstract class TaskRunner implements Runnable {
 		myGraph = graph;
 	}
 
-	protected void splitUp(Tier tier) throws IOException {
+	protected void splitUp(Tier tier, Job j) throws IOException {
 		while (true) {
 			Path[] files = tier.getCreationOutputFiles(Solver.underscoreFilter);
 			if (files.length == 0)
@@ -51,7 +57,8 @@ public abstract class TaskRunner implements Runnable {
 			assert Util.contains(sameTier, file);
 			for (Path n : sameTier)
 				tier.moveToTemp(n);
-			putBack(tier, nextTier);
+			long numPositions = recordsWritten(j, nextTier.num);
+			putBack(tier, nextTier, numPositions);
 		}
 	}
 
@@ -59,7 +66,8 @@ public abstract class TaskRunner implements Runnable {
 		throw new UnsupportedOperationException();
 	}
 
-	protected void putBack(Tier from, Tier to) throws IOException {
+	protected void putBack(Tier from, Tier to, long numPositions)
+			throws IOException {
 		throw new UnsupportedOperationException();
 	}
 
@@ -77,53 +85,56 @@ public abstract class TaskRunner implements Runnable {
 		}
 	}
 
+	protected final long recordsWritten(Job j, int tier) throws IOException {
+		return j.getCounters().findCounter("num_records", "t" + tier)
+				.getValue();
+	}
+
 	protected abstract void runTask() throws Throwable;
 
-	protected final int getNumReducers(Job j, Path inPath) throws IOException {
-		return getNumReducers(j, new Path[] { inPath });
-	}
-
-	protected final int getNumReducers(Job j, Path[] allPaths)
+	protected int getNumReducers(Job job, Collection<Tier> allTiers)
 			throws IOException {
-		long totSize = 0L;
-		for (Path p : allPaths) {
-			FileSystem fs = p.getFileSystem(tree.getConf());
-			FileStatus[] stati = fs.listStatus(p);
-			for (FileStatus status : stati) {
-				totSize += status.getLen();
-			}
+		long totRecords = 0;
+		for (Tier t : allTiers) {
+			totRecords += t.getNumRecords();
 		}
-		return getNumTypeReducers(j.getConfiguration(), totSize);
+		return getNumTypeReducers(job.getConfiguration(), totRecords);
 	}
 
-	protected abstract int getNumTypeReducers(Configuration conf, long totSize);
-
-	public static final int defaultNumTypeReducers(Configuration conf,
-			long totSize) {
-		return numTypeReducersFromSplit(conf, totSize, readSplitSize(conf));
+	protected int getNumReducers(Job job, Tier toCombine) {
+		return getNumTypeReducers(job.getConfiguration(),
+				toCombine.getNumCombineRecords());
 	}
 
-	public static long readSplitSize(Configuration conf) {
-		return conf.getLong("propogate.reducer.split.size", 1000000);
+	protected abstract int getNumTypeReducers(Configuration conf,
+			long numRecords);
+
+	public static final int numTypeReducersFromSplit(long totSize,
+			long splitSize) {
+		return (int) ((totSize + splitSize - 1) / splitSize);
 	}
 
-	public static final int numTypeReducersFromSplit(Configuration conf,
-			long totSize, long splitSize) {
-		int numTasks = (int) ((totSize + splitSize - 1) / splitSize);
-		System.out.println("totSize = " + totSize);
-		System.out.println("splitSize = " + splitSize);
-		System.out.println("numTasks = " + numTasks);
-		return numTasks;
-	}
-
-	protected void makeFiles(Configuration jConf, Job j) throws IOException {
-		CounterGroup g = j.getCounters().getGroup("file");
-		for (Counter c : g) {
-			if (c.getValue() > 0) {
-				Path hnPath = new Path(c.getName());
-				IOCheckOperations.createNewFile(hnPath.getFileSystem(jConf),
-						hnPath);
-			}
+	public static void enableCompression(Job j,
+			SequenceFile.CompressionType type) {
+		Configuration conf = j.getConfiguration();
+		conf.setBoolean("mapred.compress.map.output", true);
+		FileOutputFormat.setCompressOutput(j, true);
+		if (conf.getBoolean("propogater.use.gzip", false)) {
+			conf.setClass("mapred.map.output.compression.codec",
+					GzipCodec.class, CompressionCodec.class);
+			FileOutputFormat.setOutputCompressorClass(j, GzipCodec.class);
 		}
+		SequenceFileOutputFormat.setOutputCompressionType(j, type);
+	}
+
+	protected Set<Integer> getNeeds(String type, Counters counts) {
+		CounterGroup group = counts.getGroup(type);
+		HashSet<Integer> result = new HashSet<Integer>(group.size());
+		for (Counter counter : group) {
+			String name = counter.getName();
+			assert name.startsWith("t");
+			result.add(Integer.parseInt(name.substring(1)));
+		}
+		return result;
 	}
 }

@@ -15,17 +15,12 @@ import org.apache.hadoop.fs.PathFilter;
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.common.IOCheckOperations;
 
-
 public class Tier implements Comparable<Tier> {
 	private final FileSystem fs;
 	private final TierGraph graph;
 	public final int num;
 	public final String extension;
 	public final Path workPath;
-	public final Path childrenFolder;
-	public final Path parentsFolder;
-	public final Path needsCreatePath;
-	public final Path needsPropogatePath;
 	public final Path dataPath;
 	public final Path combineFolder;
 	public final Path outputFolder;
@@ -47,6 +42,11 @@ public class Tier implements Comparable<Tier> {
 
 	private Thread holdingThread = null;
 	private int cpNum = 0;
+	private long numRecords = 0;
+	private long numCombineRecords = 0;
+	private final TreeSet<Tier> parents = new TreeSet<Tier>();
+	private final TreeSet<Tier> children = new TreeSet<Tier>();
+	private boolean needsCreation = false, needsPropogation = false;
 
 	public Tier(Configuration conf, int num, TierGraph g) throws IOException {
 		this.graph = g;
@@ -61,12 +61,6 @@ public class Tier implements Comparable<Tier> {
 		}
 		IOCheckOperations.mkdirs(fs, workPath);
 		workPathAbsString = fs.getFileStatus(workPath).getPath().toString();
-		childrenFolder = ConfParser.getChildrenPath(conf, num);
-		IOCheckOperations.mkdirs(fs, childrenFolder);
-		parentsFolder = ConfParser.getParentsPath(conf, num);
-		IOCheckOperations.mkdirs(fs, parentsFolder);
-		needsCreatePath = ConfParser.getNeedsCreationPath(conf, num);
-		needsPropogatePath = ConfParser.getNeedsPropogationPath(conf, num);
 		dataPath = new Path(workPath, ConfParser.DATA_FOLDER);
 		IOCheckOperations.mkdirs(fs, dataPath);
 		combineFolder = new Path(workPath, ConfParser.COMBINE_FOLDER);
@@ -84,34 +78,15 @@ public class Tier implements Comparable<Tier> {
 	}
 
 	public synchronized boolean needsToCreate() throws IOException {
-		return fs.exists(needsCreatePath);
+		return needsCreation;
 	}
 
-	private static final String CHILD_PREF = "c";
-	private static final String PARENT_PREF = "p";
-
-	private Tier[] getTierList(Path fold, String pref) throws IOException {
-		Path[] paths = FileUtil.stat2Paths(fs.listStatus(fold));
-		int[] children = new int[paths.length];
-		for (int i = 0; i < paths.length; i++) {
-			String name = paths[i].getName();
-			assert name.substring(0, pref.length()).equals(pref);
-			int iPart = Integer.parseInt(name.substring(pref.length()));
-			children[i] = iPart;
-		}
-		Tier[] result = new Tier[children.length];
-		for (int i = 0; i < children.length; i++) {
-			result[i] = graph.getTier(children[i]);
-		}
-		return result;
+	public synchronized SortedSet<Tier> getChildren() throws IOException {
+		return children;
 	}
 
-	public synchronized Tier[] getChildren() throws IOException {
-		return getTierList(childrenFolder, CHILD_PREF);
-	}
-
-	public synchronized Tier[] getParents() throws IOException {
-		return getTierList(parentsFolder, PARENT_PREF);
+	public synchronized SortedSet<Tier> getParents() throws IOException {
+		return parents;
 	}
 
 	public synchronized void lock() {
@@ -146,36 +121,32 @@ public class Tier implements Comparable<Tier> {
 		}
 	}
 
-	public synchronized void replaceDataPath(Path name) throws IOException {
+	public synchronized void replaceDataPath(Path name, long numPositions)
+			throws IOException {
 		assert validFolder(name);
 		IOCheckOperations.delete(fs, dataPath, true);
 		IOCheckOperations.rename(fs, name, dataPath);
+		setNumRecords(numPositions);
 	}
 
 	public synchronized void setNeedsCreation() throws IOException {
-		IOCheckOperations.createNewFile(fs, needsCreatePath);
+		needsCreation = true;
 	}
 
 	public synchronized boolean startCreation() {
-		return startSomething(needsCreatePath);
-	}
-
-	private boolean startSomething(Path filePath) {
-		try {
-			return IOCheckOperations.delete(fs, filePath, false);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+		if (needsCreation) {
+			needsCreation = false;
+			return true;
+		} else
+			return false;
 	}
 
 	public synchronized boolean addChild(int childTier) throws IOException {
-		return IOCheckOperations.createNewFile(fs, new Path(childrenFolder,
-				CHILD_PREF + childTier));
+		return children.add(graph.getTier(childTier));
 	}
 
 	public synchronized boolean addParent(int parentTier) throws IOException {
-		return IOCheckOperations.createNewFile(fs, new Path(parentsFolder,
-				PARENT_PREF + parentTier));
+		return parents.add(graph.getTier(parentTier));
 	}
 
 	public synchronized boolean createTempFolder() throws IOException {
@@ -192,9 +163,11 @@ public class Tier implements Comparable<Tier> {
 		return Thread.currentThread() == holdingThread;
 	}
 
-	public synchronized void addCombine(Path folder) throws IOException {
+	public synchronized void addCombine(Path folder, long numPositions)
+			throws IOException {
 		assert validFolder(folder);
 		IOCheckOperations.rename(fs, folder, makeCombinePath());
+		addCombineRecords(numPositions);
 	}
 
 	private boolean validFolder(Path folder) {
@@ -253,11 +226,15 @@ public class Tier implements Comparable<Tier> {
 	}
 
 	public synchronized boolean startPropogation() {
-		return startSomething(needsPropogatePath);
+		if (needsPropogation) {
+			needsPropogation = false;
+			return true;
+		} else
+			return false;
 	}
 
 	public synchronized boolean needsToPropogate() throws IOException {
-		return fs.exists(needsPropogatePath);
+		return needsPropogation;
 	}
 
 	public SortedSet<Tier> getCycle() throws IOException {
@@ -282,11 +259,49 @@ public class Tier implements Comparable<Tier> {
 	}
 
 	public synchronized void setNeedsPropogation() throws IOException {
-		IOCheckOperations.createNewFile(fs, needsPropogatePath);
+		needsPropogation = true;
 	}
 
 	public Path getTempFolder() {
 		assert holdsLock();
 		return tempFolder;
+	}
+
+	public synchronized void setNumRecords(long poses) throws IOException {
+		numRecords = poses;
+	}
+
+	public synchronized long getNumRecords() throws IOException {
+		return numRecords;
+	}
+
+	public synchronized long getNumCombineRecords() {
+		return numCombineRecords;
+	}
+
+	public synchronized void addCombineRecords(long numRecords) {
+		numCombineRecords += numRecords;
+	}
+
+	public synchronized void clearCombineRecords() {
+		numCombineRecords = 0L;
+	}
+
+	public synchronized void printStats() {
+		synchronized (System.out) {
+			System.out.println("Tier " + num);
+			System.out.println("\tNum Records:" + numRecords);
+			System.out.println("\tNum Combine Records:" + numCombineRecords);
+			System.out.println("\tParents: " + parents);
+			System.out.println("\tChildren: " + children);
+			if (needsCreation)
+				System.out.println("\tNeeds Creation");
+			if (needsPropogation)
+				System.out.println("\tNeeds Propogation");
+		}
+	}
+
+	public String toString() {
+		return Integer.toString(num);
 	}
 }

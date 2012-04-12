@@ -4,3 +4,4 @@ propogater.tree.class=edu.berkeley.gamesman.parallel.game.connect4.Connect4
 propogation.work.path=target/work
 propogater.out.path=target/c4
 propogater.output.parameters=target/c4.job
+propogater.split.size=200

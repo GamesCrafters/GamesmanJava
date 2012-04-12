@@ -1,11 +1,12 @@
 package edu.berkeley.gamesman.propogater.tasks;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
@@ -20,6 +21,7 @@ public class TreePropogationReducer<K extends WritableComparable<K>, V extends W
 		extends TreeReducer<K, V, PI, UM, CI, DM> {
 	private Tree<K, V, PI, UM, CI, DM> tree;
 	private final HashSet<IntWritable> changed = new HashSet<IntWritable>();
+	private final HashMap<IntWritable, LongWritable> recordCount = new HashMap<IntWritable, LongWritable>();
 	private IntWritable div = new IntWritable();
 
 	@Override
@@ -28,11 +30,11 @@ public class TreePropogationReducer<K extends WritableComparable<K>, V extends W
 		super.setup(context);
 		Configuration conf = context.getConfiguration();
 		tree = ConfParser.<K, V, PI, UM, CI, DM> newTree(conf);
-		changed.clear();
 	}
 
 	@Override
-	protected void combine(K key, TreeNode<K, V, PI, UM, CI, DM> value) {
+	protected void combine(K key, TreeNode<K, V, PI, UM, CI, DM> value,
+			int division) {
 		if (!value.hasValue()) {
 			throw new RuntimeException(
 					"No value found at too late a stage: key = \n"
@@ -40,7 +42,7 @@ public class TreePropogationReducer<K extends WritableComparable<K>, V extends W
 		}
 		WritableList<IntEntry<UM>> upList = value.getUpList();
 		if (!upList.isEmpty()) {
-			div.set(tree.getDivision(key));
+			div.set(division);
 			if (changed.add(div))
 				div = new IntWritable();
 			WritableList<Entry<K, CI>> childList = value.getChildren();
@@ -58,12 +60,11 @@ public class TreePropogationReducer<K extends WritableComparable<K>, V extends W
 	}
 
 	@Override
-	protected void cleanup(Context context) throws IOException {
+	protected void cleanup(Context context) {
+		super.cleanup(context);
 		if (!changed.isEmpty()) {
-			Configuration conf = context.getConfiguration();
 			for (IntWritable i : changed) {
-				Path npp = ConfParser.getNeedsPropogationPath(conf, i.get());
-				context.getCounter("file", npp.toString()).increment(1L);
+				context.getCounter("needs_propogation", "t" + i);
 			}
 		}
 	}

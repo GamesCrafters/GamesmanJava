@@ -170,10 +170,12 @@ public class Solver<K extends WritableComparable<K>> {
 			int num = tree.getDivision(key);
 			SequenceFile.Writer writer = startWriters.get(num);
 			if (writer == null) {
+				Tier tier = myGraph.getTier(num);
 				writer = new SequenceFile.Writer(fs, conf, new Path(
-						myGraph.getTier(num).dataPath, START_FILE_NAME),
-						tree.getKeyClass(), tree.getTreeNodeClass());
+						tier.dataPath, START_FILE_NAME), tree.getKeyClass(),
+						tree.getTreeNodeClass());
 				startWriters.put(num, writer);
+				tier.setNumRecords(tier.getNumRecords() + 1);
 			}
 			writer.append(key, startingNode);
 		}

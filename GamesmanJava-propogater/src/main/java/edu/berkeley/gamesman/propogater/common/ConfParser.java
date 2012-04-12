@@ -21,11 +21,7 @@ import edu.berkeley.gamesman.propogater.solver.Tier;
 import edu.berkeley.gamesman.propogater.tree.Tree;
 
 public class ConfParser {
-	public static final String CHILDREN_FOLDER = "children";
-	public static final String PARENTS_FOLDER = "parents";
 	public static final String TIER_FOLDER_FORMAT = "t%03d";
-	public static final String NEEDS_PROPOGATION_NAME = "needs_propogation";
-	public static final String NEEDS_CREATION_NAME = "needs_creation";
 	public static final String DATA_FOLDER = "data";
 	public static final String COMBINE_FOLDER = "combine";
 	public static final String CP_FORMAT = "c%03d";
@@ -40,10 +36,6 @@ public class ConfParser {
 	public static final String CREATION_JOB_FORMAT = "Tier %d Creation";
 	public static final String PROPOGATION_JOB_FORMAT = "Tier %d Propogation";
 	public static final String COMBINATION_JOB_FORMAT = "Tier %d Combination";
-
-	public static Path getNeedsPropogationPath(Configuration conf, int division) {
-		return new Path(getTierPath(conf, division), NEEDS_PROPOGATION_NAME);
-	}
 
 	public static <K extends WritableComparable<K>, V extends Writable, PI extends Writable, PM extends Writable, CI extends Writable, CM extends Writable> Tree<K, V, PI, PM, CI, CM> newTree(
 			Configuration conf) {
@@ -80,20 +72,6 @@ public class ConfParser {
 		if (result == -1)
 			throw new RuntimeException("division not set");
 		return result;
-	}
-
-	/**
-	 * Used with a combine task to determine where to store the file to let it
-	 * know there needs to be more creation
-	 * 
-	 * @param conf
-	 *            The configuration
-	 * @param division
-	 *            Which division the position corresponds to
-	 * @return The path to create
-	 */
-	public static Path getNeedsCreationPath(Configuration conf, int division) {
-		return new Path(getTierPath(conf, division), NEEDS_CREATION_NAME);
 	}
 
 	public static Path getOutputPath(Configuration conf) {
@@ -141,14 +119,6 @@ public class ConfParser {
 	public static FileSystem getWorkFileSystem(Configuration conf)
 			throws IOException {
 		return getWorkPath(conf).getFileSystem(conf);
-	}
-
-	public static Path getChildrenPath(Configuration conf, int tier) {
-		return new Path(getTierPath(conf, tier), CHILDREN_FOLDER);
-	}
-
-	public static Path getParentsPath(Configuration conf, int tier) {
-		return new Path(getTierPath(conf, tier), PARENTS_FOLDER);
 	}
 
 	public static void addParameters(Configuration conf, Path p, boolean andSend)
