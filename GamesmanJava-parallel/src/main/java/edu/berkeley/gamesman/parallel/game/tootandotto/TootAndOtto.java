@@ -267,7 +267,7 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 	}
 
 	/**
-	 * given a state, return 0 if no TOOT nor OTTO exists, 1 if TOOT, 2 if OTTO, 3 if both
+	 * given a state, return the pattern(s) detected in state
 	 * @param state
 	 * @return
 	 */
