@@ -16,6 +16,7 @@ import edu.berkeley.gamesman.hasher.genhasher.Move;
 //import edu.berkeley.gamesman.parallel.ranges.RangeReducer;
 import edu.berkeley.gamesman.parallel.game.connect4.C4Hasher;
 import edu.berkeley.gamesman.parallel.game.connect4.C4State;
+import edu.berkeley.gamesman.parallel.game.connect4.Connect4;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.util.Pair;
@@ -28,6 +29,7 @@ SolveReader<NMMState, NMMRecord>	{
 	private final int levelsOfBoxes = 3; //represents how many boxes are in the board. in Typical NMM there are three concentric boxes
 	private final int elementsInABox = 8; // each box has 8 elements in it.
 	private int gameSize = levelsOfBoxes*elementsInABox;
+	private Configuration conf;
 	
 	@Override
 	/* We assume that the String board is in the following format:
@@ -138,23 +140,71 @@ SolveReader<NMMState, NMMRecord>	{
 	}
 
 	
-	//WE ARE HERE RIGHT NOWWWWWWWWWWWWWWWWWWWW (#$&%#$@(%*& #)$(%*) *#
 	@Override
 	protected Move[] getMoves() {
-		// TODO Auto-generated method stub
-		return null;
+
+		ArrayList<Move> allMoves = new ArrayList<Move>();
+		
+		//generate moves that put a new piece on the board
+		for (int place=0; place < gameSize; place++) {
+			for (int toPlace = 0; toPlace < 9; toPlace++ ) {
+				for (int onBoard = 0; onBoard < 9 - toPlace; onBoard++) {
+					allMoves.add(new Move(place,0,1, gameSize+1,toPlace,toPlace-1, gameSize+3,onBoard,onBoard+1 ));
+					allMoves.add(new Move(place,0,2, gameSize,toPlace,toPlace-1, gameSize+2,onBoard,onBoard+1 ));
+				}
+			}
+		}
+		
+		// ACTUALY WE ARE HERE NOW!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		//generate moves that move one piece to another
+		for (int moveFrom=0; moveFrom<gameSize; moveFrom++) {
+			for (int moveTo =0; moveTo<gameSize; moveTo++) {
+				if(moveFrom != moveTo ) {
+					//make the move without removing a piece from board
+					allMoves.add(new Move(moveFrom,1,0, moveTo,0,1));
+					allMoves.add(new Move(moveFrom,2,0, moveTo,0,2));
+					
+					//go through all possible pieces to get rid of and pieces on board and make the move
+					/* actually this is incorrect, we need to make sure that a three in a row exists (where moved)
+					 * there are only horizontal or vertical possible 3-in a rows
+					 * if the element is a corner of box, check those ones
+					 * if it's in the middle of a box, check those ones
+					 * check it with the same element in the other boxes (for all boxes != its box)
+					 * add the existance of those same-colored pieces to the move
+					 */
+					for (int removeFrom=0; removeFrom<gameSize; removeFrom++) {
+						for (int onBoard = 0; onBoard < 9; onBoard++) {
+						allMoves.add(new Move(moveFrom,1,0, moveTo,0,1, removeFrom,2,0, gameSize+2,onBoard,onBoard-1));
+						allMoves.add(new Move(moveFrom,2,0, moveTo,0,2, removeFrom,1,0, gameSize+3,onBoard,onBoard-1));
+						}
+					}
+				}
+			}
+		}
+		return (Move[]) allMoves.toArray();
 	}
 
-	@Override
+	@Override 
 	protected int suffixLength() {
-		// TODO Auto-generated method stub
-		return 0;
+		return Connect4.calcSuffLen(conf, gameSize);
 	}
 
 	@Override
 	protected boolean setNewRecordAndHasChildren(NMMState state, NMMRecord rec) {
-		// TODO Auto-generated method stub
-		return false;
+		GameValue val = getValue(state);
+		if (val == null) {
+			rec.set(GameValue.DRAW);
+			return true;
+		} else {
+			if (val == GameValue.TIE)
+				rec.set(GameValue.TIE, 0);
+			else if (val == GameValue.LOSE)
+				rec.set(GameValue.LOSE, 0);
+			else
+				throw new RuntimeException("No other primitives");
+			return false;
+		}
+		
 	}
 
 	@Override

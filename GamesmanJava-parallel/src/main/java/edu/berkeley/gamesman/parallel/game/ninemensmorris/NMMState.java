@@ -1,19 +1,26 @@
 package edu.berkeley.gamesman.parallel.game.ninemensmorris;
 
 import edu.berkeley.gamesman.game.type.GameValue;
+import edu.berkeley.gamesman.game.util.BitSetBoard;
 import edu.berkeley.gamesman.hasher.counting.CountingState;
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
+import edu.berkeley.gamesman.parallel.game.connect4.C4Hasher;
 
 public class NMMState extends CountingState {
+	private final int levelsOfBoxes, elementsInABox, boardSize;
+
 	
-
-
-	public NMMState(GenHasher<? extends CountingState> myHasher, int countTo) {
-		super(myHasher, countTo);
-		// TODO Auto-generated constructor stub
+	public NMMState(NMMHasher myHasher, int levels, int elements) {
+		
+		super(myHasher, levels * elements);
+		this.levelsOfBoxes = levels;
+		this.elementsInABox = elements;
+		this.boardSize = levels * elements;			
+		//changePlace = boardSize - 1;
+		//this.myBoard = new BitSetBoard(elements, levels);
 	}
 	
-	@Override
+	@Override //FOR DEBUGGING PURPOSES REWRITE THIS LATER
 	public String toString() {
 		return null;
 	}
