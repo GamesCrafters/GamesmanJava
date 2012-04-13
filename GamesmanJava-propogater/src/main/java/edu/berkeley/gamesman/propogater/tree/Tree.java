@@ -3,10 +3,10 @@ package edu.berkeley.gamesman.propogater.tree;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
-import java.util.SortedSet;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.OutputFormat;
@@ -212,17 +212,18 @@ public abstract class Tree<K extends WritableComparable<K>, V extends Writable, 
 		long splitSize = conf.getLong("propogater.create.split.size", -1);
 		if (splitSize == -1)
 			splitSize = splitSize(conf);
-		return splitSize * edgeMultiplier(Collections.singleton(tier));
+		return Math.max(
+				splitSize / edgeMultiplier(Collections.singleton(tier)), 1);
 	}
 
 	public long getPropogateSplitSize(Configuration conf, Set<Integer> tiers) {
 		long splitSize = conf.getLong("propogater.propogate.split.size", -1);
 		if (splitSize == -1)
 			splitSize = splitSize(conf);
-		return splitSize * edgeMultiplier(tiers);
+		return Math.max(splitSize / edgeMultiplier(tiers), 1);
 	}
 
-	protected long edgeMultiplier(Set<Integer> tiers) {
+	protected int edgeMultiplier(Set<Integer> tiers) {
 		return 1;
 	}
 
@@ -231,5 +232,9 @@ public abstract class Tree<K extends WritableComparable<K>, V extends Writable, 
 		if (splitSize == -1)
 			throw new RuntimeException("No split size set");
 		return splitSize;
+	}
+
+	public SequenceFile.CompressionType getCleanupCompressionType() {
+		return SequenceFile.CompressionType.BLOCK;
 	}
 }

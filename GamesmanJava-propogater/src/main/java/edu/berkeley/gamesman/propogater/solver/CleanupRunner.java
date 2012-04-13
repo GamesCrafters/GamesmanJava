@@ -5,7 +5,6 @@ import java.util.Collection;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -52,7 +51,7 @@ public class CleanupRunner extends TaskRunner {
 		FileInputFormat.setInputPaths(job, allData);
 		FileOutputFormat.setOutputPath(job, ConfParser.getOutputPath(treeConf));
 		job.setNumReduceTasks(getNumReducers(job, allTiers));
-		enableCompression(job, SequenceFile.CompressionType.RECORD);
+		enableCompression(job, tree.getCleanupCompressionType());
 		boolean succeeded = job.waitForCompletion(true);
 		if (!succeeded)
 			throw new RuntimeException("Job did not succeed: " + job);

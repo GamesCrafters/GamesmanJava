@@ -17,7 +17,7 @@ public abstract class InvariantHasher<S extends GenState> extends GenHasher<S> {
 	 * @param initState
 	 */
 	public InvariantHasher(int[] digitBase) {
-		this(digitBase, 0);
+		this(digitBase, -1);
 	}
 
 	public InvariantHasher(int[] digitBase, int countingPlace) {
@@ -53,12 +53,16 @@ public abstract class InvariantHasher<S extends GenState> extends GenHasher<S> {
 			addOn(tempState, false);
 			posCount = 0L;
 			do {
-				posCount += countCompletions(tempState);
+				long completions = countCompletions(tempState);
+				assert Long.MAX_VALUE - completions > posCount;
+				posCount += completions;
 			} while (incr(tempState, 1));
 			releasePref(tempState);
 		}
-		if (countingPlace == start)
+		if (countingPlace == start) {
+			assert posCount == 0 || Long.MAX_VALUE / posCount > posCount;
 			posCount *= posCount;
+		}
 		Long prevVal = invariantCounts[start].put(new LongSet(inv), posCount);
 		assert prevVal == null;
 		return posCount;

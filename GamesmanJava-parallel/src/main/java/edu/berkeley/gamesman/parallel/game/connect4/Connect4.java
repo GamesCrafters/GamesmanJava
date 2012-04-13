@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.parallel.game.connect4;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
 
@@ -12,7 +13,6 @@ import edu.berkeley.gamesman.hasher.genhasher.Move;
 import edu.berkeley.gamesman.parallel.FlipRecord;
 import edu.berkeley.gamesman.parallel.ranges.Suffix;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
-import edu.berkeley.gamesman.propogater.solver.TaskRunner;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
 import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.qll.QuickLinkedList;
@@ -287,15 +287,7 @@ public class Connect4 extends RangeTree<C4State, FlipRecord> implements
 		return FlipRecord.getRecord(fetchedRec, gameSize - numPieces(position));
 	}
 
-//	@Override
-//	public int getNumCreateReducers(Configuration conf, long totSize) {
-//		return TaskRunner.numTypeReducersFromSplit(conf, totSize,
-//				Math.max(TaskRunner.readSplitSize(conf) / width, 1));
-//	}
-//	
-//	@Override
-//	public int getNumPropogateReducers(Configuration conf, long totSize) {
-//		return TaskRunner.numTypeReducersFromSplit(conf, totSize,
-//				Math.max(TaskRunner.readSplitSize(conf) / width, 1));
-//	}
+	protected int edgeMultiplier(Set<Integer> tiers) {
+		return width + 1;
+	}
 }

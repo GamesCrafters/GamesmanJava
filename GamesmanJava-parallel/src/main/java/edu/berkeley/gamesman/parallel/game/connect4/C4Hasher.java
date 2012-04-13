@@ -50,7 +50,7 @@ public class C4Hasher extends OptimizingInvariantHasher<C4State> {
 	 */
 	@Override
 	protected long getInvariant(C4State state) {
-		return myUtil.getInv(this, state);
+		return isEmpty(state) ? 0 : myUtil.getInv(this, state);
 	}
 
 	@Override

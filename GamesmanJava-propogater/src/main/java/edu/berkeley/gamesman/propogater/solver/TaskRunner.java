@@ -119,11 +119,6 @@ public abstract class TaskRunner implements Runnable {
 		Configuration conf = j.getConfiguration();
 		conf.setBoolean("mapred.compress.map.output", true);
 		FileOutputFormat.setCompressOutput(j, true);
-		if (conf.getBoolean("propogater.use.gzip", false)) {
-			conf.setClass("mapred.map.output.compression.codec",
-					GzipCodec.class, CompressionCodec.class);
-			FileOutputFormat.setOutputCompressorClass(j, GzipCodec.class);
-		}
 		SequenceFileOutputFormat.setOutputCompressionType(j, type);
 	}
 

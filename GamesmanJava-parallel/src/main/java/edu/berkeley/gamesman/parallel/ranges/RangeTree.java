@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
 
@@ -453,5 +454,10 @@ public abstract class RangeTree<S extends GenState, GR extends FixedLengthWritab
 			throw new NullPointerException();
 		else
 			return result;
+	}
+
+	@Override
+	public SequenceFile.CompressionType getCleanupCompressionType() {
+		return SequenceFile.CompressionType.RECORD;
 	}
 }
