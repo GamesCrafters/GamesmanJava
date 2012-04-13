@@ -25,7 +25,7 @@ import edu.berkeley.gamesman.util.qll.QuickLinkedList;
  * fifth are the number of Ts and Os placed by player 2. The length of the array
  * is gameSize + 5.
  * 
- * @author williamshen 
+ * @author williamshen
  */
 public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 		SolveReader<CountingState, FlipRecord> {
@@ -37,22 +37,24 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 	private int suffLen;
 	private int maxPieces;
 	private int tootPlayer;
-	
+
 	@Override
 	public void rangeTreeConfigure(Configuration conf) {
 		// Defaulting game size to the standard 6x4 unless set by conf file
 		width = conf.getInt("gamesman.game.width", 6);
 		height = conf.getInt("gamesman.game.height", 4);
 		gameSize = width * height;
-		
-		// The number of pieces of each kind that each player gets (each gets 6 Ts and 6 Os by default)
+
+		// The number of pieces of each kind that each player gets (each gets 6
+		// Ts and 6 Os by default)
 		maxPieces = conf.getInt("gamesman.game.maxPieces", 6);
 		myHasher = new TOHasher(width, height, maxPieces);
-		
+
 		int varianceLength = conf.getInt("gamesman.game.variance.length", 10);
-		// gameSize + 5 is the length of the entire sequence (suffLen + varianceLength)
+		// gameSize + 5 is the length of the entire sequence (suffLen +
+		// varianceLength)
 		suffLen = Math.max(5, gameSize + 5 - varianceLength);
-		
+
 		// defaults player one to be TOOT
 		tootPlayer = conf.getInt("gamesman.game.tootPlayer", 1);
 
@@ -234,9 +236,9 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 		int numPieces = state.get(gameSize + 4);
 		int lastPlayed = getTurn(numPieces);
 		TOEnum pattern = checkPattern(state);
-		
+
 		switch (pattern) {
-		case NONE: 
+		case NONE:
 			if (numPieces == gameSize) {
 				return GameValue.TIE;
 			} else {
@@ -255,6 +257,7 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 
 	/**
 	 * return the player's pattern
+	 * 
 	 * @param player
 	 * @return
 	 */
@@ -268,6 +271,7 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 
 	/**
 	 * given a state, return the pattern(s) detected in state
+	 * 
 	 * @param state
 	 * @return
 	 */
@@ -310,7 +314,7 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 			else if (val == GameValue.LOSE)
 				rec.set(GameValue.LOSE, 0);
 			else if (val == GameValue.WIN)
-				rec.set(GameValue.WIN,0);
+				rec.set(GameValue.WIN, 0);
 			else
 				throw new RuntimeException("No other primitives");
 			return false;
