@@ -312,8 +312,7 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 
 	@Override
 	protected Class<FlipRecord> getGameRecordClass() {
-		// TODO Auto-generated method stub
-		return null;
+		return FlipRecord.class;
 	}
 
 	/**
