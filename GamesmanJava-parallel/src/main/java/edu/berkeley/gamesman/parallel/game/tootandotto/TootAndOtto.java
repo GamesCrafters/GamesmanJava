@@ -233,16 +233,16 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 	public GameValue getValue(CountingState state) {
 		int numPieces = state.get(gameSize + 4);
 		int lastPlayed = getTurn(numPieces);
-		int pattern = checkPattern(state);
+		TOEnum pattern = checkPattern(state);
 		
 		switch (pattern) {
-		case 0: 
+		case NONE: 
 			if (numPieces == gameSize) {
 				return GameValue.TIE;
 			} else {
 				return null;
 			}
-		case 3:
+		case BOTH:
 			return GameValue.TIE;
 		default:
 			if (pattern == getPattern(lastPlayed)) {
@@ -254,15 +254,15 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 	}
 
 	/**
-	 * return 0 if the player's pattern is TOOT, 1 if it is OTTO
+	 * return the player's pattern
 	 * @param player
 	 * @return
 	 */
-	private int getPattern(int player) {
+	private TOEnum getPattern(int player) {
 		if (tootPlayer == player) {
-			return 0;
+			return TOEnum.TOOT;
 		} else {
-			return 1;
+			return TOEnum.OTTO;
 		}
 	}
 
@@ -271,9 +271,9 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 	 * @param state
 	 * @return
 	 */
-	private int checkPattern(CountingState state) {
+	private TOEnum checkPattern(CountingState state) {
 		// TODO Auto-generated method stub
-		return 0;
+		return TOEnum.NONE;
 	}
 
 	@Override
