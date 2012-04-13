@@ -371,7 +371,7 @@ public abstract class RangeTree<S extends GenState, GR extends FixedLengthWritab
 		rangeTreeConfigure(conf);
 		myHasher = getHasher();
 		moves = getMoves();
-		suffLen = suffixLength();
+		suffLen = suffixLength(conf);
 		varLen = myHasher.numElements - suffLen;
 		QLLFactory<SaveMove> fact = new QLLFactory<SaveMove>();
 		currentMoves = fact.getList();
@@ -417,7 +417,14 @@ public abstract class RangeTree<S extends GenState, GR extends FixedLengthWritab
 	 * Note that if you're handling symmetries, you should expect only certain
 	 * values will work.
 	 */
-	protected abstract int suffixLength();
+	protected int suffixLength(Configuration conf){
+		int varianceLength = conf.getInt("gamesman.game.variance.length", 10);
+		return Math.max(1, getHasher().numElements - varianceLength);
+	}
+	
+	protected final int suffLen(){
+		return suffLen;
+	}
 
 	public GR getRecord(Suffix<S> range, S state, MainRecords<GR> records) {
 		GenHasher<S> hasher = getHasher();

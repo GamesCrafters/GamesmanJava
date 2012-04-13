@@ -35,7 +35,6 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 	private TOHasher myHasher;
 	private int width, height;
 	private int gameSize;
-	private int suffLen;
 	private int maxPieces;
 	private int tootPlayer;
 
@@ -54,7 +53,7 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 		int varianceLength = conf.getInt("gamesman.game.variance.length", 10);
 		// gameSize + 5 is the length of the entire sequence (suffLen +
 		// varianceLength)
-		suffLen = Math.max(5, gameSize + 5 - varianceLength);
+		assert varianceLength <= gameSize;
 
 		// defaults player one to be TOOT
 		tootPlayer = conf.getInt("gamesman.game.tootPlayer", 1);
@@ -298,11 +297,6 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 	}
 
 	@Override
-	protected int suffixLength() {
-		return suffLen;
-	}
-
-	@Override
 	protected boolean setNewRecordAndHasChildren(CountingState state,
 			FlipRecord rec) {
 		GameValue val = getValue(state);
@@ -343,8 +337,8 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 	 */
 	@Override
 	public int getDivision(Suffix<CountingState> suff) {
-		assert suff.length() == suffLen;
-		return suff.get(suffLen - 1);
+		assert suff.length() == suffLen();
+		return suff.get(suffLen() - 1);
 	}
 
 	static char charFor(int piece) {
@@ -365,6 +359,7 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 		return FlipRecord.getRecord(fetchedRec, gameSize - numPieces(position));
 
 	}
+
 	/**
 	 * Returns expected number of pieces for a state (the high-index element of
 	 * the state array)

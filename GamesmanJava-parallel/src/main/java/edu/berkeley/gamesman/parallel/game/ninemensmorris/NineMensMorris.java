@@ -184,11 +184,6 @@ SolveReader<NMMState, NMMRecord>	{
 		return (Move[]) allMoves.toArray();
 	}
 
-	@Override 
-	protected int suffixLength() {
-		return Connect4.calcSuffLen(conf, gameSize);
-	}
-
 	@Override
 	protected boolean setNewRecordAndHasChildren(NMMState state, NMMRecord rec) {
 		GameValue val = getValue(state);

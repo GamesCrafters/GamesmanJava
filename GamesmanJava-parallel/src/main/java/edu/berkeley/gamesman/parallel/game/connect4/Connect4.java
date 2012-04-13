@@ -24,12 +24,6 @@ public class Connect4 extends RangeTree<C4State, FlipRecord> implements
 	private C4Hasher myHasher;
 	private int width, height, inARow;
 	private int gameSize;
-	private int suffLen;
-
-	@Override
-	protected int suffixLength() {
-		return suffLen;
-	}
 
 	@Override
 	public Collection<C4State> getStartingPositions() {
@@ -150,8 +144,6 @@ public class Connect4 extends RangeTree<C4State, FlipRecord> implements
 			allMoves.addAll(columnMoveList[i]);
 		}
 		myMoves = allMoves.toArray(new Move[allMoves.size()]);
-		int varianceLength = conf.getInt("gamesman.game.variance.length", 10);
-		suffLen = Math.max(1, gameSize + 1 - varianceLength);
 	}
 
 	public C4State newState() {
@@ -175,8 +167,8 @@ public class Connect4 extends RangeTree<C4State, FlipRecord> implements
 	 */
 	@Override
 	public int getDivision(Suffix<C4State> suff) {
-		assert suff.length() == suffLen;
-		return suff.get(suffLen - 1);
+		assert suff.length() == suffLen();
+		return suff.get(suffLen() - 1);
 	}
 
 	@Override

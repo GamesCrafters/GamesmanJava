@@ -271,12 +271,6 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 	}
 
 	@Override
-	protected int suffixLength() {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
 	public GameRecord getRecord(CountingState position, FlipRecord fetchedRec) {
 		// TODO Auto-generated method stub
 		return null;
