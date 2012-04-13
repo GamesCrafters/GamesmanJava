@@ -300,8 +300,21 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 	@Override
 	protected boolean setNewRecordAndHasChildren(CountingState state,
 			FlipRecord rec) {
-		// TODO Auto-generated method stub
-		return false;
+		GameValue val = getValue(state);
+		if (val == null) {
+			rec.set(GameValue.DRAW);
+			return true;
+		} else {
+			if (val == GameValue.TIE)
+				rec.set(GameValue.TIE, 0);
+			else if (val == GameValue.LOSE)
+				rec.set(GameValue.LOSE, 0);
+			else if (val == GameValue.WIN)
+				rec.set(GameValue.WIN,0);
+			else
+				throw new RuntimeException("No other primitives");
+			return false;
+		}
 	}
 
 	@Override
