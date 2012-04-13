@@ -387,4 +387,7 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 		}
 	}
 
+	protected int maxVarianceLength() {
+		return gameSize;
+	}
 }

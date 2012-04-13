@@ -417,12 +417,22 @@ public abstract class RangeTree<S extends GenState, GR extends FixedLengthWritab
 	 * Note that if you're handling symmetries, you should expect only certain
 	 * values will work.
 	 */
-	protected int suffixLength(Configuration conf){
-		int varianceLength = conf.getInt("gamesman.game.variance.length", 10);
-		return Math.max(1, getHasher().numElements - varianceLength);
+	protected int suffixLength(Configuration conf) {
+		int varianceLength = Math.min(conf.getInt(
+				"gamesman.game.variance.length", defaultVarianceLength()),
+				maxVarianceLength());
+		return getHasher().numElements - varianceLength;
 	}
-	
-	protected final int suffLen(){
+
+	protected int maxVarianceLength() {
+		return getHasher().numElements;
+	}
+
+	protected int defaultVarianceLength() {
+		return 10;
+	}
+
+	protected final int suffLen() {
 		return suffLen;
 	}
 

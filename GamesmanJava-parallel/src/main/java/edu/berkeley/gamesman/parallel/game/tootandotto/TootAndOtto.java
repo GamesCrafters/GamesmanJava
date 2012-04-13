@@ -371,4 +371,8 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 	int numPieces(CountingState state) {
 		return state.get(gameSize + 4);
 	}
+	
+	protected int maxVarianceLength() {
+		return gameSize;
+	}
 }

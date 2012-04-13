@@ -282,4 +282,8 @@ public class Connect4 extends RangeTree<C4State, FlipRecord> implements
 	protected int edgeMultiplier(Set<Integer> tiers) {
 		return width + 1;
 	}
+
+	protected int maxVarianceLength() {
+		return gameSize;
+	}
 }

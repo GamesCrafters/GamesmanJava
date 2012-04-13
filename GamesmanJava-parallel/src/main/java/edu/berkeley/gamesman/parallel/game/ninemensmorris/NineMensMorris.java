@@ -226,5 +226,8 @@ SolveReader<NMMState, NMMRecord>	{
 		// TODO Auto-generated method stub
 		return null;
 	}
-
+	
+	protected int maxVarianceLength() {
+		return gameSize;
+	}
 }
