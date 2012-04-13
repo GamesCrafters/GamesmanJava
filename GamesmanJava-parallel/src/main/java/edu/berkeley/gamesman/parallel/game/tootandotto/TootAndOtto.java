@@ -11,6 +11,7 @@ import edu.berkeley.gamesman.game.type.GameValue;
 import edu.berkeley.gamesman.hasher.counting.CountingState;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
 import edu.berkeley.gamesman.parallel.FlipRecord;
+import edu.berkeley.gamesman.parallel.game.connect4.C4State;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.parallel.ranges.Suffix;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
@@ -361,7 +362,18 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 
 	@Override
 	public GameRecord getRecord(CountingState position, FlipRecord fetchedRec) {
-		// TODO Auto-generated method stub
-		return null;
+		return FlipRecord.getRecord(fetchedRec, gameSize - numPieces(position));
+
+	}
+	/**
+	 * Returns expected number of pieces for a state (the high-index element of
+	 * the state array)
+	 * 
+	 * @param state
+	 *            The state
+	 * @return The number of pieces/tier for this state
+	 */
+	int numPieces(CountingState state) {
+		return state.get(gameSize + 4);
 	}
 }
