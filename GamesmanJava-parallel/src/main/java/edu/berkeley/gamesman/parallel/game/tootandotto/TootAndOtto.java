@@ -324,8 +324,7 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 	@Override
 	protected boolean combineValues(QuickLinkedList<FlipRecord> grList,
 			FlipRecord gr) {
-		// TODO Auto-generated method stub
-		return false;
+		return FlipRecord.combineValues(grList, gr);
 	}
 
 	@Override
