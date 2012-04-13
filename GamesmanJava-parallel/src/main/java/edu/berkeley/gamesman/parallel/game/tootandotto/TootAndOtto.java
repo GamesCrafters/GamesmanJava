@@ -38,16 +38,22 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 	private int maxPieces;
 	private int tootPlayer;
 	
-	//TODO: why these numbers again...?
 	@Override
 	public void rangeTreeConfigure(Configuration conf) {
-		width = conf.getInt("gamesman.game.width", 5);
+		// Defaulting game size to the standard 6x4 unless set by conf file
+		width = conf.getInt("gamesman.game.width", 6);
 		height = conf.getInt("gamesman.game.height", 4);
 		gameSize = width * height;
+		
+		// The number of pieces of each kind that each player gets (each gets 6 Ts and 6 Os by default)
 		maxPieces = conf.getInt("gamesman.game.maxPieces", 6);
 		myHasher = new TOHasher(width, height, maxPieces);
+		
 		int varianceLength = conf.getInt("gamesman.game.variance.length", 10);
+		// gameSize + 5 is the length of the entire sequence (suffLen + varianceLength)
 		suffLen = Math.max(5, gameSize + 5 - varianceLength);
+		
+		// defaults player one to be TOOT
 		tootPlayer = conf.getInt("gamesman.game.tootPlayer", 1);
 
 		ArrayList<Move>[] columnMoveList = new ArrayList[width];
@@ -236,7 +242,7 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 			} else {
 				return null;
 			}
-		case 4:
+		case 3:
 			return GameValue.TIE;
 		default:
 			if (pattern == getPattern(lastPlayed)) {
