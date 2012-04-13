@@ -6,5 +6,5 @@ package edu.berkeley.gamesman.parallel.game.tootandotto;
  *
  */
 public enum TOEnum {
-	DETECT_TOOT, DETECT_OTTO, DETECT_BOTH, DETECT_NONE
+	TOOT, OTTO, BOTH, NONE
 }
