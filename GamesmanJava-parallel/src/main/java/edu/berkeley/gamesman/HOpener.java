@@ -35,8 +35,8 @@ import edu.berkeley.gamesman.hasher.genhasher.GenState;
 
 public class HOpener implements Opener {
 
-	private class GFetcher<S extends GenState, GR extends FixedLengthWritable> implements
-			RecordFetcher {
+	private class GFetcher<S extends GenState, GR extends FixedLengthWritable>
+			implements RecordFetcher {
 		private final RangeTree<S, GR> tree;
 		private final Path folderPath;
 		private final SolveReader<S, GR> reader;
@@ -47,6 +47,7 @@ public class HOpener implements Opener {
 				throws ClassNotFoundException, IOException {
 			this.tree = (RangeTree<S, GR>) ConfParser
 					.<Suffix<S>, MainRecords<GR>, ChildMap, WritableTreeMap<GR>, WritableTreeMap<GR>, ChildMap> newTree(hConf);
+			tree.prepareRun(hConf);
 			String folderName = hConf.get("solve.folder");
 			if (folderName == null) {
 				folderPath = new Path(solveDirectory, filename + "_folder");

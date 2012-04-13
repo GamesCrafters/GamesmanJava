@@ -1,0 +1,4 @@
+json.databasedirectory = solved/
+
+json.unsolved.connect4 = jobs/Connect4.job
+json.fields.connect4 = width,height,pieces
