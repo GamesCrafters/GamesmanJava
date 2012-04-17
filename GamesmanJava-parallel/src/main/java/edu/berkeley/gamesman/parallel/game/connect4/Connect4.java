@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.parallel.game.connect4;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
@@ -10,7 +11,9 @@ import org.apache.hadoop.conf.Configuration;
 import edu.berkeley.gamesman.game.type.GameRecord;
 import edu.berkeley.gamesman.game.type.GameValue;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
+import edu.berkeley.gamesman.parallel.DualRecord;
 import edu.berkeley.gamesman.parallel.FlipRecord;
+import edu.berkeley.gamesman.parallel.SingleRecord;
 import edu.berkeley.gamesman.parallel.ranges.Suffix;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
@@ -24,6 +27,8 @@ public class Connect4 extends RangeTree<C4State, FlipRecord> implements
 	private C4Hasher myHasher;
 	private int width, height, inARow;
 	private int gameSize;
+	private boolean useDual;
+	private boolean misere;
 
 	@Override
 	public Collection<C4State> getStartingPositions() {
@@ -144,6 +149,9 @@ public class Connect4 extends RangeTree<C4State, FlipRecord> implements
 			allMoves.addAll(columnMoveList[i]);
 		}
 		myMoves = allMoves.toArray(new Move[allMoves.size()]);
+		useDual = conf.getBoolean("gamesman.game.dual.record", false);
+		misere = conf.getBoolean("gamesman.game.misere", false);
+		assert useDual || !misere;
 	}
 
 	public C4State newState() {
@@ -261,7 +269,12 @@ public class Connect4 extends RangeTree<C4State, FlipRecord> implements
 	@Override
 	protected boolean combineValues(QuickLinkedList<FlipRecord> grList,
 			FlipRecord gr) {
-		return FlipRecord.combineValues(grList, gr);
+		if (useDual)
+			return DualRecord.combineValues((QuickLinkedList) grList,
+					(DualRecord) gr);
+		else
+			return SingleRecord.combineValues((QuickLinkedList) grList,
+					(SingleRecord) gr);
 	}
 
 	@Override
@@ -270,13 +283,23 @@ public class Connect4 extends RangeTree<C4State, FlipRecord> implements
 	}
 
 	@Override
-	protected Class<FlipRecord> getGameRecordClass() {
-		return FlipRecord.class;
+	protected Class<? extends FlipRecord> getGameRecordClass() {
+		if (useDual)
+			return DualRecord.class;
+		else
+			return SingleRecord.class;
 	}
 
 	@Override
 	public GameRecord getRecord(C4State position, FlipRecord fetchedRec) {
-		return FlipRecord.getRecord(fetchedRec, gameSize - numPieces(position));
+		if (useDual)
+			return DualRecord.getRecord((DualRecord) fetchedRec, gameSize
+					- numPieces(position), misere);
+		else {
+			assert !misere;
+			return SingleRecord.getRecord((SingleRecord) fetchedRec, gameSize
+					- numPieces(position));
+		}
 	}
 
 	protected int edgeMultiplier(Set<Integer> tiers) {
@@ -285,5 +308,53 @@ public class Connect4 extends RangeTree<C4State, FlipRecord> implements
 
 	protected int maxVarianceLength() {
 		return gameSize;
+	}
+
+	@Override
+	public long getCleanupSplitSize(Configuration conf) {
+		return toSplits(super.getCleanupSplitSize(conf));
+	}
+
+	@Override
+	public long getCombineSplitSize(Configuration conf, int tier) {
+		return toSplits(super.getCombineSplitSize(conf, tier), tier);
+	}
+
+	@Override
+	public long getCreateSplitSize(Configuration conf, int tier) {
+		return toSplits(super.getCreateSplitSize(conf, tier), tier);
+	}
+
+	@Override
+	public long getPropogateSplitSize(Configuration conf, Set<Integer> tiers) {
+		return toSplits(super.getPropogateSplitSize(conf, tiers), tiers);
+	}
+
+	private long toSplits(long positions) {
+		HashSet<Integer> tierList = new HashSet<Integer>(gameSize + 1);
+		for (int i = 0; i <= gameSize; i++) {
+			tierList.add(i);
+		}
+		return toSplits(positions, tierList);
+	}
+
+	private long toSplits(long positions, int tier) {
+		return toSplits(positions, Collections.singleton(tier));
+	}
+
+	private long toSplits(long positions, Set<Integer> tiers) {
+		C4Hasher h1 = new C4Hasher(width, height, gameSize + 1 - suffLen());
+		double numSum = 0;
+		long numRanges = 0;
+		int[] use = new int[1];
+		for (int tier : tiers) {
+			use[0] = tier;
+			numSum += myHasher.numPositions(use);
+			numRanges += h1.numPositions(use);
+		}
+		System.out.println(tiers);
+		System.out.printf("\tAverage item = %.3f", numSum / numRanges);
+		System.out.println();
+		return Math.max((long) (positions * numRanges / numSum), 1);
 	}
 }

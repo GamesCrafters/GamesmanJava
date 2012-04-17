@@ -118,4 +118,8 @@ public class GameRecord implements Comparable<GameRecord>, Writable {
 	public boolean isPrimitive() {
 		return value.hasRemoteness && remoteness == 0;
 	}
+
+	public void flipValue() {
+		value = value.opposite();
+	}
 }

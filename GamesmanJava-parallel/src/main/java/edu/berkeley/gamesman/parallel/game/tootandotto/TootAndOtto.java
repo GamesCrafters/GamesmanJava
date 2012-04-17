@@ -10,8 +10,7 @@ import edu.berkeley.gamesman.game.type.GameRecord;
 import edu.berkeley.gamesman.game.type.GameValue;
 import edu.berkeley.gamesman.hasher.counting.CountingState;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
-import edu.berkeley.gamesman.parallel.FlipRecord;
-import edu.berkeley.gamesman.parallel.game.connect4.C4State;
+import edu.berkeley.gamesman.parallel.DualRecord;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.parallel.ranges.Suffix;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
@@ -28,8 +27,8 @@ import edu.berkeley.gamesman.util.qll.QuickLinkedList;
  * 
  * @author williamshen
  */
-public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
-		SolveReader<CountingState, FlipRecord> {
+public class TootAndOtto extends RangeTree<CountingState, DualRecord> implements
+		SolveReader<CountingState, DualRecord> {
 	private Move[] myMoves;
 	private Move[][] colMoves;
 	private TOHasher myHasher;
@@ -37,6 +36,7 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 	private int gameSize;
 	private int maxPieces;
 	private int tootPlayer;
+	private boolean misere;
 
 	@Override
 	public void rangeTreeConfigure(Configuration conf) {
@@ -71,7 +71,7 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 			allMoves.addAll(columnMoveList[i]);
 		}
 		myMoves = allMoves.toArray(new Move[allMoves.size()]);
-
+		misere = conf.getBoolean("gamesman.game.misere", false);
 	}
 
 	// TODO: does this work now? and how can it be cleaned up more.
@@ -298,7 +298,7 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 
 	@Override
 	protected boolean setNewRecordAndHasChildren(CountingState state,
-			FlipRecord rec) {
+			DualRecord rec) {
 		GameValue val = getValue(state);
 		if (val == null) {
 			rec.set(GameValue.DRAW);
@@ -317,19 +317,19 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 	}
 
 	@Override
-	protected boolean combineValues(QuickLinkedList<FlipRecord> grList,
-			FlipRecord gr) {
-		return FlipRecord.combineValues(grList, gr);
+	protected boolean combineValues(QuickLinkedList<DualRecord> grList,
+			DualRecord gr) {
+		return DualRecord.combineValues(grList, gr);
 	}
 
 	@Override
-	protected void previousPosition(FlipRecord gr, FlipRecord toFill) {
+	protected void previousPosition(DualRecord gr, DualRecord toFill) {
 		toFill.previousPosition(gr);
 	}
 
 	@Override
-	protected Class<FlipRecord> getGameRecordClass() {
-		return FlipRecord.class;
+	protected Class<DualRecord> getGameRecordClass() {
+		return DualRecord.class;
 	}
 
 	/**
@@ -355,9 +355,9 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 	}
 
 	@Override
-	public GameRecord getRecord(CountingState position, FlipRecord fetchedRec) {
-		return FlipRecord.getRecord(fetchedRec, gameSize - numPieces(position));
-
+	public GameRecord getRecord(CountingState position, DualRecord fetchedRec) {
+		return DualRecord.getRecord(fetchedRec, gameSize - numPieces(position),
+				misere);
 	}
 
 	/**
@@ -371,7 +371,7 @@ public class TootAndOtto extends RangeTree<CountingState, FlipRecord> implements
 	int numPieces(CountingState state) {
 		return state.get(gameSize + 4);
 	}
-	
+
 	protected int maxVarianceLength() {
 		return gameSize;
 	}

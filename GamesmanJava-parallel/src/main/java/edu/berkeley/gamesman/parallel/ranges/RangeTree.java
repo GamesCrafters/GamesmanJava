@@ -13,6 +13,7 @@ import edu.berkeley.gamesman.game.type.GameValue;
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.hasher.genhasher.GenState;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
+import edu.berkeley.gamesman.parallel.FlipRecord;
 import edu.berkeley.gamesman.parallel.writable.WritableTreeMap;
 import edu.berkeley.gamesman.propogater.common.Adder;
 import edu.berkeley.gamesman.propogater.common.Entry3;
@@ -343,7 +344,7 @@ public abstract class RangeTree<S extends GenState, GR extends FixedLengthWritab
 				Writable.class);
 	}
 
-	protected abstract Class<GR> getGameRecordClass();
+	protected abstract Class<? extends GR> getGameRecordClass();
 
 	public Suffix<S> makeContainingRange(S t) {
 		Suffix<S> range = newRange();

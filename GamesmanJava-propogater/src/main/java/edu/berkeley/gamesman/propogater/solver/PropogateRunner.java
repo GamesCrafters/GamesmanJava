@@ -125,11 +125,11 @@ public class PropogateRunner extends TaskRunner {
 
 	@Override
 	protected int getNumTypeReducers(Configuration conf, long totSize) {
-		long splitSize = tree.getPropogateSplitSize(conf, makeIntSet(cycleSet));
+		long splitSize = tree.getPropogateSplitSize(conf, makeIntSet(wholeSet));
 		return numTypeReducersFromSplit(totSize, splitSize);
 	}
 
-	private static Set<Integer> makeIntSet(SortedSet<Tier> cycleSet) {
+	private static Set<Integer> makeIntSet(Set<Tier> cycleSet) {
 		HashSet<Integer> result = new HashSet<Integer>(cycleSet.size());
 		for (Tier t : cycleSet)
 			result.add(t.num);

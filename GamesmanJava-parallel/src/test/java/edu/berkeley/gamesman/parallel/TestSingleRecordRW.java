@@ -7,10 +7,10 @@ import org.junit.Test;
 import edu.berkeley.gamesman.game.type.GameValue;
 import edu.berkeley.gamesman.propogater.writable.GenericTestRW;
 
-public class TestFlipRecordRW {
+public class TestSingleRecordRW {
 	@Test
 	public void testRW() throws IOException {
-		FlipRecord rec = new FlipRecord();
+		SingleRecord rec = new SingleRecord();
 		rec.set(GameValue.LOSE, 4);
 		GenericTestRW.testEqualsCreate(rec);
 		rec.set(GameValue.WIN, 3);

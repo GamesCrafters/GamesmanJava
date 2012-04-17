@@ -60,8 +60,8 @@ public abstract class InvariantHasher<S extends GenState> extends GenHasher<S> {
 			releasePref(tempState);
 		}
 		if (countingPlace == start) {
-			assert posCount == 0 || Long.MAX_VALUE / posCount > posCount;
-			posCount *= posCount;
+			if (posCount > 0)
+				posCount = 1;
 		}
 		Long prevVal = invariantCounts[start].put(new LongSet(inv), posCount);
 		assert prevVal == null;
@@ -94,7 +94,7 @@ public abstract class InvariantHasher<S extends GenState> extends GenHasher<S> {
 		}
 	}
 
-	private long maximum(int i) {
+	public long maximum(int i) {
 		long max = Long.MIN_VALUE;
 		for (Long l : invariantCounts[i].values()) {
 			if (l > max)

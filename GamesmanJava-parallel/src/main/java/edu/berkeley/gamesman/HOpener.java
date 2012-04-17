@@ -83,8 +83,9 @@ public class HOpener implements Opener {
 			return getMoveValue(position, false);
 		}
 
-		private GamestateResponse getMoveValue(S position,
-				boolean previousPosition) {
+		// For some reason GamesmanWeb incremements the remoteness itself, but
+		// expect the server to flip the value. How did nobody notice this?
+		private GamestateResponse getMoveValue(S position, boolean flipValue) {
 			GamestateResponse response = new GamestateResponse();
 			response.setBoard(reader.getString(position));
 			if (solved) {
@@ -97,8 +98,8 @@ public class HOpener implements Opener {
 									folderPath, posRange, partitioner);
 					unparsedRec = tree.getRecord(posRange, position, recs);
 					rec = reader.getRecord(position, unparsedRec);
-					if (previousPosition)
-						rec.previousPosition();
+					if (flipValue)
+						rec.flipValue();
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}
