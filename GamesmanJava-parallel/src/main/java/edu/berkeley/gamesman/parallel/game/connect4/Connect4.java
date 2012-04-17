@@ -342,7 +342,7 @@ public class Connect4 extends RangeTree<C4State, FlipRecord> implements
 		return toSplits(positions, Collections.singleton(tier));
 	}
 
-	private long toSplits(long positions, Set<Integer> tiers) {
+	private synchronized long toSplits(long positions, Set<Integer> tiers) {
 		C4Hasher h1 = new C4Hasher(width, height, gameSize + 1 - suffLen());
 		double numSum = 0;
 		long numRanges = 0;
