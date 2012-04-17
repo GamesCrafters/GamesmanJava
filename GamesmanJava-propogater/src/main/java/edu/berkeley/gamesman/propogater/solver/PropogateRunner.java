@@ -17,15 +17,16 @@ import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.tasks.DividedSequenceFileOutputFormat;
 import edu.berkeley.gamesman.propogater.tasks.PropogationMapper;
 import edu.berkeley.gamesman.propogater.tasks.TreePropogationReducer;
+import edu.berkeley.gamesman.propogater.tree.Tree;
 
 public class PropogateRunner extends TaskRunner {
 	private final Set<Tier> wholeSet;
 	public final SortedSet<Tier> cycleSet;
 	public final Tier headTier;
 
-	public PropogateRunner(Configuration conf, TierGraph graph,
-			SortedSet<Tier> cycleSet) throws IOException {
-		super(conf, PROPOGATE, graph);
+	public PropogateRunner(Configuration conf, Tree<?, ?, ?, ?, ?, ?> tree,
+			TierGraph graph, SortedSet<Tier> cycleSet) throws IOException {
+		super(conf, tree, PROPOGATE, graph);
 		this.wholeSet = new HashSet<Tier>();
 		for (Tier t : cycleSet) {
 			wholeSet.add(t);

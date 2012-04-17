@@ -15,12 +15,14 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.common.Util;
 import edu.berkeley.gamesman.propogater.tasks.TreeCreationReducer;
+import edu.berkeley.gamesman.propogater.tree.Tree;
 
 public class CombineRunner extends TaskRunner {
 	public final Tier tier;
 
-	public CombineRunner(Configuration conf, Tier tier, TierGraph graph) {
-		super(conf, COMBINE, graph);
+	public CombineRunner(Configuration conf, Tree<?, ?, ?, ?, ?, ?> tree,
+			Tier tier, TierGraph graph) {
+		super(conf, tree, COMBINE, graph);
 		this.tier = tier;
 	}
 

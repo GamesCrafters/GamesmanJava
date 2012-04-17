@@ -7,8 +7,6 @@ import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Counter;
 import org.apache.hadoop.mapreduce.CounterGroup;
@@ -17,7 +15,6 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
-import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.common.Util;
 import edu.berkeley.gamesman.propogater.tree.Tree;
 
@@ -29,10 +26,10 @@ public abstract class TaskRunner implements Runnable {
 	protected final Tree<?, ?, ?, ?, ?, ?> tree;
 	protected final TierGraph myGraph;
 
-	TaskRunner(Configuration conf, int type, TierGraph graph) {
+	TaskRunner(Configuration conf, Tree<?, ?, ?, ?, ?, ?> tree, int type,
+			TierGraph graph) {
 		assert type >= 0 && type <= 4;
-		this.tree = ConfParser
-				.<WritableComparable, Writable, Writable, Writable, Writable, Writable> newTree(conf);
+		this.tree = tree;
 		this.type = type;
 		myGraph = graph;
 	}

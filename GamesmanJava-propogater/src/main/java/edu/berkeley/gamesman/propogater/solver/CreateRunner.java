@@ -14,12 +14,14 @@ import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.tasks.CreationMapper;
 import edu.berkeley.gamesman.propogater.tasks.DividedSequenceFileOutputFormat;
 import edu.berkeley.gamesman.propogater.tasks.TreeReducer;
+import edu.berkeley.gamesman.propogater.tree.Tree;
 
 public class CreateRunner extends TaskRunner {
 	public final Tier tier;
 
-	public CreateRunner(Configuration conf, Tier tier, TierGraph graph) {
-		super(conf, CREATE, graph);
+	public CreateRunner(Configuration conf, Tree<?, ?, ?, ?, ?, ?> tree,
+			Tier tier, TierGraph graph) {
+		super(conf, tree, CREATE, graph);
 		this.tier = tier;
 	}
 
@@ -53,7 +55,7 @@ public class CreateRunner extends TaskRunner {
 			tier.deleteOutputFolder();
 			tier.setNeedsPropogation();
 			tier.printStats();
-		}  catch (Throwable t) {
+		} catch (Throwable t) {
 			t.printStackTrace();
 			System.exit(-1);
 		} finally {

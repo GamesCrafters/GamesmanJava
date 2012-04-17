@@ -13,11 +13,12 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import edu.berkeley.gamesman.propogater.common.ConfParser;
 import edu.berkeley.gamesman.propogater.tasks.CleanupMapper;
+import edu.berkeley.gamesman.propogater.tree.Tree;
 
 public class CleanupRunner extends TaskRunner {
 
-	public CleanupRunner(Configuration conf, TierGraph graph) {
-		super(conf, CLEANUP, graph);
+	public CleanupRunner(Configuration conf, Tree<?,?,?,?,?,?> tree, TierGraph graph) {
+		super(conf, tree, CLEANUP, graph);
 	}
 
 	@Override

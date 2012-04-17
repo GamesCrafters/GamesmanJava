@@ -87,7 +87,7 @@ public class Solver<K extends WritableComparable<K>> {
 	}
 
 	private void cleanup() throws IOException {
-		taskManager.add(new CleanupRunner(conf, myGraph));
+		taskManager.add(new CleanupRunner(conf, tree, myGraph));
 	}
 
 	private boolean findPropogate(Tier tier, HashSet<Integer> visited)
@@ -99,7 +99,7 @@ public class Solver<K extends WritableComparable<K>> {
 			visited.add(tier.num);
 		if (tier.needsToPropogate()) {
 			SortedSet<Tier> cycle = tier.getCycle();
-			taskManager.add(new PropogateRunner(conf, myGraph, cycle));
+			taskManager.add(new PropogateRunner(conf, tree, myGraph, cycle));
 			result = true;
 			for (Tier t : cycle) {
 				visited.add(t.num);
@@ -125,11 +125,11 @@ public class Solver<K extends WritableComparable<K>> {
 		else
 			visited.add(tier.num);
 		if (tier.needsToCombine()) {
-			taskManager.add(new CombineRunner(conf, tier, myGraph));
+			taskManager.add(new CombineRunner(conf, tree, tier, myGraph));
 			result = true;
 		}
 		if (tier.needsToCreate()) {
-			taskManager.add(new CreateRunner(conf, tier, myGraph));
+			taskManager.add(new CreateRunner(conf, tree, tier, myGraph));
 			result = true;
 		}
 		for (Tier child : tier.getChildren()) {
