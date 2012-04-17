@@ -10,7 +10,7 @@ import edu.berkeley.gamesman.game.type.GameRecord;
 import edu.berkeley.gamesman.game.type.GameValue;
 import edu.berkeley.gamesman.hasher.counting.CountingState;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
-import edu.berkeley.gamesman.parallel.DualRecord;
+import edu.berkeley.gamesman.parallel.GameRecordCombiner;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.parallel.ranges.Suffix;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
@@ -27,8 +27,8 @@ import edu.berkeley.gamesman.util.qll.QuickLinkedList;
  * 
  * @author williamshen
  */
-public class TootAndOtto extends RangeTree<CountingState, DualRecord> implements
-		SolveReader<CountingState, DualRecord> {
+public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
+		SolveReader<CountingState, GameRecord> {
 	private Move[] myMoves;
 	private Move[][] colMoves;
 	private TOHasher myHasher;
@@ -298,7 +298,7 @@ public class TootAndOtto extends RangeTree<CountingState, DualRecord> implements
 
 	@Override
 	protected boolean setNewRecordAndHasChildren(CountingState state,
-			DualRecord rec) {
+			GameRecord rec) {
 		GameValue val = getValue(state);
 		if (val == null) {
 			rec.set(GameValue.DRAW);
@@ -317,19 +317,19 @@ public class TootAndOtto extends RangeTree<CountingState, DualRecord> implements
 	}
 
 	@Override
-	protected boolean combineValues(QuickLinkedList<DualRecord> grList,
-			DualRecord gr) {
-		return DualRecord.combineValues(grList, gr);
+	protected boolean combineValues(QuickLinkedList<GameRecord> grList,
+			GameRecord gr) {
+		return GameRecordCombiner.combineValues(grList, gr);
 	}
 
 	@Override
-	protected void previousPosition(DualRecord gr, DualRecord toFill) {
+	protected void previousPosition(GameRecord gr, GameRecord toFill) {
 		toFill.previousPosition(gr);
 	}
 
 	@Override
-	protected Class<DualRecord> getGameRecordClass() {
-		return DualRecord.class;
+	protected Class<GameRecord> getGameRecordClass() {
+		return GameRecord.class;
 	}
 
 	/**
@@ -355,9 +355,8 @@ public class TootAndOtto extends RangeTree<CountingState, DualRecord> implements
 	}
 
 	@Override
-	public GameRecord getRecord(CountingState position, DualRecord fetchedRec) {
-		return DualRecord.getRecord(fetchedRec, gameSize - numPieces(position),
-				misere);
+	public GameRecord getRecord(CountingState position, GameRecord fetchedRec) {
+		return fetchedRec;
 	}
 
 	/**

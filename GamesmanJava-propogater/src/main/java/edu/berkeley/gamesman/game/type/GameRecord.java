@@ -6,7 +6,10 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.Writable;
 
-public class GameRecord implements Comparable<GameRecord>, Writable {
+import edu.berkeley.gamesman.propogater.writable.FixedLengthWritable;
+
+public class GameRecord implements Comparable<GameRecord>, Writable,
+		FixedLengthWritable {
 	private GameValue value;
 	private int remoteness;
 
@@ -121,5 +124,10 @@ public class GameRecord implements Comparable<GameRecord>, Writable {
 
 	public void flipValue() {
 		value = value.opposite();
+	}
+
+	@Override
+	public int size() {
+		return 8;
 	}
 }
