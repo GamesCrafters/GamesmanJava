@@ -330,6 +330,15 @@ public class Connect4 extends RangeTree<C4State, FlipRecord> implements
 		return toSplits(super.getPropogateSplitSize(conf, tiers), tiers);
 	}
 
+	@Override
+	public long getMapperMaxSplitSize(Configuration conf, int tier) {
+		long mapperMaxSplitSize = super.getMapperMaxSplitSize(conf, tier);
+		if (mapperMaxSplitSize == -1)
+			return -1;
+		else
+			return toSplits(mapperMaxSplitSize, tier);
+	}
+
 	private long toSplits(long positions) {
 		HashSet<Integer> tierList = new HashSet<Integer>(gameSize + 1);
 		for (int i = 0; i <= gameSize; i++) {
@@ -344,8 +353,8 @@ public class Connect4 extends RangeTree<C4State, FlipRecord> implements
 
 	private synchronized long toSplits(long positions, Set<Integer> tiers) {
 		C4Hasher h1 = new C4Hasher(width, height, gameSize + 1 - suffLen());
-		double numSum = 0;
-		long numRanges = 0;
+		long numSum = 0;
+		double numRanges = 0;
 		int[] use = new int[1];
 		for (int tier : tiers) {
 			use[0] = tier;

@@ -99,4 +99,9 @@ public class CombineRunner extends TaskRunner {
 		long splitSize = tree.getCombineSplitSize(conf, tier.num);
 		return numTypeReducersFromSplit(totSize, splitSize);
 	}
+	
+	private int getNumReducers(Job job, Tier toCombine) {
+		return getNumTypeReducers(job.getConfiguration(),
+				toCombine.getNumCombineRecords());
+	}
 }

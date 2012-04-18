@@ -237,4 +237,8 @@ public abstract class Tree<K extends WritableComparable<K>, V extends Writable, 
 	public SequenceFile.CompressionType getCleanupCompressionType() {
 		return SequenceFile.CompressionType.BLOCK;
 	}
+
+	public long getMapperMaxSplitSize(Configuration conf, int tier) {
+		return conf.getLong("creation.mapper.split.size", -1);
+	}
 }

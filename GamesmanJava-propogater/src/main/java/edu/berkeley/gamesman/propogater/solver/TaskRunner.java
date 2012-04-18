@@ -96,11 +96,6 @@ public abstract class TaskRunner implements Runnable {
 		return getNumTypeReducers(job.getConfiguration(), totRecords);
 	}
 
-	protected int getNumReducers(Job job, Tier toCombine) {
-		return getNumTypeReducers(job.getConfiguration(),
-				toCombine.getNumCombineRecords());
-	}
-
 	protected abstract int getNumTypeReducers(Configuration conf,
 			long numRecords);
 

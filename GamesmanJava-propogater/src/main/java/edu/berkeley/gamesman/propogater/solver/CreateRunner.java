@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.util.Collections;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -47,6 +50,16 @@ public class CreateRunner extends TaskRunner {
 			FileOutputFormat.setOutputPath(j, tier.outputFolder);
 			j.setNumReduceTasks(getNumReducers(j,
 					Collections.<Tier> singleton(tier)));
+			long mapperMaxSplitSize = tree.getMapperMaxSplitSize(jConf,
+					tier.num);
+			if (mapperMaxSplitSize >= 0) {
+				long mapperSplitByteSize = (long) (mapperMaxSplitSize
+						* ((double) byteSize(tier.dataPath)) / tier
+						.getNumRecords());
+				System.out
+						.println("Mapper split byte size: " + mapperSplitByteSize);
+				FileInputFormat.setMaxInputSplitSize(j, mapperSplitByteSize);
+			}
 			enableCompression(j, SequenceFile.CompressionType.BLOCK);
 			boolean succeeded = j.waitForCompletion(true);
 			if (!succeeded)
@@ -61,6 +74,15 @@ public class CreateRunner extends TaskRunner {
 		} finally {
 			tier.unlock();
 		}
+	}
+
+	private long byteSize(Path dataPath) throws IOException {
+		FileSystem fs = dataPath.getFileSystem(tree.getConf());
+		long res = 0;
+		for (FileStatus f : fs.listStatus(dataPath)) {
+			res += f.getLen();
+		}
+		return res;
 	}
 
 	@Override
