@@ -10,24 +10,6 @@
 	<artifactId>GamesmanJava-parallel</artifactId>
 	<dependencies>
 		<dependency>
-			<groupId>org.apache.thrift</groupId>
-			<artifactId>libthrift</artifactId>
-			<version>unknown</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/../lib/libthrift.jar</systemPath>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>1.6.4</version>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-			<version>1.6.4</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
 			<groupId>edu.berkeley.gamesman</groupId>
 			<artifactId>GamesmanJava-propogater</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
