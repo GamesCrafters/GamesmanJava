@@ -3,6 +3,7 @@ package edu.berkeley.gamesman.parallel.size.changer;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Partitioner;
@@ -19,6 +20,7 @@ import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.parallel.ranges.Suffix;
 import edu.berkeley.gamesman.parallel.writable.WritableTreeMap;
 import edu.berkeley.gamesman.propogater.common.ConfParser;
+import edu.berkeley.gamesman.propogater.solver.Solver;
 import edu.berkeley.gamesman.propogater.solver.TaskRunner;
 import edu.berkeley.gamesman.propogater.writable.FixedLengthWritable;
 
@@ -41,6 +43,12 @@ public class ChangeSizeRunner {
 	private static <S extends GenState, GR extends FixedLengthWritable> void runJob(
 			Configuration conf, Path inputFolder, Path outputFolder)
 			throws IOException, InterruptedException, ClassNotFoundException {
+		Path[] foldFolders = FileUtil.stat2Paths(inputFolder
+				.getFileSystem(conf).listStatus(inputFolder,
+						Solver.underscoreFilter));
+		for (int i = 0; i < foldFolders.length; i++) {
+			foldFolders[i] = new Path(foldFolders[i], "data");
+		}
 		RangeTree<S, GR> tree = (RangeTree<S, GR>) ConfParser
 				.<Suffix<S>, MainRecords<GR>, ChildMap, WritableTreeMap<GR>, WritableTreeMap<GR>, ChildMap> newTree(conf);
 		tree.prepareRun(conf);
@@ -51,9 +59,11 @@ public class ChangeSizeRunner {
 		Class<? extends Partitioner<Suffix<S>, MainRecords<GR>>> partitionerClass = ConfParser
 				.<Suffix<S>, MainRecords<GR>> getCleanupPartitionerClass(conf);
 		j.setPartitionerClass(partitionerClass);
-		FileInputFormat.setInputPaths(j, inputFolder);
+		FileInputFormat.setInputPaths(j, foldFolders);
 		FileOutputFormat.setOutputPath(j, outputFolder);
 		TaskRunner.enableCompression(j, tree.getCleanupCompressionType());
+		j.setOutputKeyClass(Suffix.class);
+		j.setOutputValueClass(MainRecords.class);
 		j.waitForCompletion(true);
 	}
 }

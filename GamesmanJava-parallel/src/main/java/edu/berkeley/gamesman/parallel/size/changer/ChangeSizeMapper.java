@@ -29,7 +29,7 @@ public class ChangeSizeMapper<S extends GenState, GR extends FixedLengthWritable
 	@Override
 	public void setup(Context context) {
 		Configuration conf = context.getConfiguration();
-		newVarLen = conf.getInt("new.var.length", -1);
+		newVarLen = conf.getInt("new.var.len", -1);
 		if (newVarLen == -1)
 			throw new RuntimeException("No var len set");
 		tree = (RangeTree<S, GR>) ConfParser
@@ -49,7 +49,7 @@ public class ChangeSizeMapper<S extends GenState, GR extends FixedLengthWritable
 		key.firstPosition(hasher, pos);
 		int curPlace = 0;
 
-		while (curPlace < key.length()) {
+		while (curPlace < value.length()) {
 			suffix.set(pos, newSuffLen);
 			long longStepSize = hasher.step(pos, 1, newVarLen);
 			if (longStepSize > Integer.MAX_VALUE)
@@ -60,7 +60,7 @@ public class ChangeSizeMapper<S extends GenState, GR extends FixedLengthWritable
 			curPlace += stepSize;
 		}
 
-		if (curPlace != key.length())
+		if (curPlace != value.length())
 			throw new RuntimeException("Sizes are wrong");
 	}
 
