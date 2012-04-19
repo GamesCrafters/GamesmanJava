@@ -63,4 +63,13 @@ public class MainRecords<GR extends FixedLengthWritable> extends Configured
 	public void reset(boolean adding) {
 		myList.reset(adding);
 	}
+
+	public void ensureSize(int records) {
+		myList.ensureSize(records);
+	}
+
+	public void setCopyOfRange(MainRecords<? extends GR> other, int offset,
+			int size) {
+		myList.setCopyOfRange(other.myList, offset, size);
+	}
 }

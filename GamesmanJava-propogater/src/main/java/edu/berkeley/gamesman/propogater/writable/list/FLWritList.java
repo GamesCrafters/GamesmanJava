@@ -70,10 +70,14 @@ public class FLWritList<T extends FixedLengthWritable> implements Writable,
 	}
 
 	private void ensureByteSize(int byteLength) {
-		if (myBytes.length < byteLength) {
-			myBytes = new byte[Math.max(byteLength, myBytes.length * 2)];
-			bais = new ByteArrayInputStream(myBytes);
-			dis = new DataInputStream(bais);
+		if (adding) {
+			baos.ensureSize(byteLength);
+		} else {
+			if (myBytes.length < byteLength) {
+				myBytes = new byte[Math.max(byteLength, myBytes.length * 2)];
+				bais = new ByteArrayInputStream(myBytes);
+				dis = new DataInputStream(bais);
+			}
 		}
 	}
 
@@ -141,5 +145,18 @@ public class FLWritList<T extends FixedLengthWritable> implements Writable,
 
 	public boolean isEmpty() {
 		return length == 0;
+	}
+
+	public void ensureSize(int records) {
+		ensureByteSize(records << objLengthBits);
+	}
+
+	public void setCopyOfRange(FLWritList<? extends T> other, int offset,
+			int size) {
+		adding = false;
+		ensureSize(size);
+		System.arraycopy(other.myBytes, offset << objLengthBits, myBytes, 0,
+				size << objLengthBits);
+		length = size;
 	}
 }

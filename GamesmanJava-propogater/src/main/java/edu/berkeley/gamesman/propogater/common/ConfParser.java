@@ -158,10 +158,10 @@ public class ConfParser {
 		}
 	}
 
-	public static Class<? extends Partitioner> getCleanupPartitionerClass(
+	public static <K, V> Class<? extends Partitioner<K, V>> getCleanupPartitionerClass(
 			Configuration conf) {
-		return conf.getClass("propogater.cleanup.partitioner", null,
-				Partitioner.class);
+		return (Class<Partitioner<K, V>>) conf.getClass(
+				"propogater.cleanup.partitioner", null, Partitioner.class);
 	}
 
 	public static Path getOutputParametersPath(Configuration conf) {
@@ -181,7 +181,7 @@ public class ConfParser {
 
 	public static <KEY extends WritableComparable, VALUE extends Writable> Partitioner<KEY, VALUE> getPartitionerInstance(
 			Configuration conf) {
-		return ReflectionUtils.newInstance(getCleanupPartitionerClass(conf),
-				conf);
+		return ReflectionUtils.newInstance(
+				ConfParser.<KEY, VALUE> getCleanupPartitionerClass(conf), conf);
 	}
 }

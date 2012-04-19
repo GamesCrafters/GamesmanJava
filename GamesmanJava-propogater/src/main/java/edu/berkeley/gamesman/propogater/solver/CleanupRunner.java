@@ -5,6 +5,8 @@ import java.util.Collection;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -17,7 +19,8 @@ import edu.berkeley.gamesman.propogater.tree.Tree;
 
 public class CleanupRunner extends TaskRunner {
 
-	public CleanupRunner(Configuration conf, Tree<?,?,?,?,?,?> tree, TierGraph graph) {
+	public CleanupRunner(Configuration conf, Tree<?, ?, ?, ?, ?, ?> tree,
+			TierGraph graph) {
 		super(conf, tree, CLEANUP, graph);
 	}
 
@@ -28,8 +31,8 @@ public class CleanupRunner extends TaskRunner {
 		Job job = new Job(treeConf, "Cleanup");
 		job.setMapperClass(CleanupMapper.class);
 		job.setReducerClass(tree.getCleanupReducerClass());
-		Class<? extends Partitioner> partitionerClass = ConfParser
-				.getCleanupPartitionerClass(treeConf);
+		Class<? extends Partitioner<?, ?>> partitionerClass = ConfParser
+				.<WritableComparable, Writable> getCleanupPartitionerClass(treeConf);
 		if (partitionerClass != null) {
 			job.setPartitionerClass(partitionerClass);
 		} else {
