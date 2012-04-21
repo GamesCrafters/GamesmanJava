@@ -13,6 +13,7 @@ import edu.berkeley.gamesman.hasher.counting.CountingState;
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
 import edu.berkeley.gamesman.parallel.FlipRecord;
+import edu.berkeley.gamesman.parallel.game.connect4.C4Hasher;
 import edu.berkeley.gamesman.parallel.game.connect4.C4State;
 import edu.berkeley.gamesman.parallel.game.connect4.Connect4;
 import edu.berkeley.gamesman.parallel.game.connections.ConnectionsHasher;
@@ -25,10 +26,10 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 		SolveReader<CountingState, FlipRecord> {
 	private Move[] myMoves;
 	private ConnectionsHasher myHasher;
-	private int width = 4;
+	private int width = 3;
 	private int height = 7;
 	private int gameSize = 21;
-	private int suffLen;
+//	private int suffLen;
 
 	public String getString(CountingState position) {
 		StringBuilder sb = new StringBuilder(gameSize);
@@ -86,7 +87,7 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 		return s;
 	}
 
-	private CountingState newState() {
+	CountingState newState() {
 		return myHasher.newState();
 	}
 
@@ -260,14 +261,12 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 
 	@Override
 	public GenHasher<CountingState> getHasher() {
-		// TODO Auto-generated method stub
-		return null;
+		return myHasher;
 	}
 
 	@Override
 	protected Move[] getMoves() {
-		// TODO Auto-generated method stub
-		return null;
+		return myMoves;
 	}
 
 	@Override
@@ -302,52 +301,26 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 		return null;
 	}
 
-	@Override
 	public void rangeTreeConfigure(Configuration conf) {
-		width = conf.getInt("gamesman.game.width", 4);
-		height = conf.getInt("gamesman.game.height", 4);
+		width = conf.getInt("gamesman.game.width", 3);
+		height = conf.getInt("gamesman.game.height", 7);
 		gameSize = width * height;
 		if (gameSize + 2 >= Byte.MAX_VALUE)
 			throw new RuntimeException("gameSize is too large");
-		myHasher = new ConnectionsHasher(16); // board size is 4x4
-		ArrayList<Move>[] columnMoveList = new ArrayList[width];
-
-		// ###############JUST GENERATED
-		Move[][] colMoves = new Move[width][];
-		for (int i = 0; i < width; i++) {
-			columnMoveList[i] = new ArrayList<Move>();
-		}
+		myHasher = new ConnectionsHasher(gameSize);
+		ArrayList<Move> moveList = new ArrayList<Move>();
 		for (int numPieces = 0; numPieces < gameSize; numPieces++) {
 			int turn = getTurn(numPieces);
 			for (int row = 0; row < height; row++) {
 				for (int col = 0; col < width; col++) {
 					int place = getPlace(row, col);
-//					if (isBottom(row, col)) {
-//						columnMoveList[col].add(new Move(place, 0, turn,
-//								gameSize, numPieces, numPieces + 1));
-//					} else {
-						columnMoveList[col].add(new Move(place - 1, 1, 1,
-								place, 0, turn, gameSize, numPieces,
-								numPieces + 1));
-						columnMoveList[col].add(new Move(place - 1, 2, 2,
-								place, 0, turn, gameSize, numPieces,
-								numPieces + 1));
-//					}
+					moveList.add(new Move(place, 0, turn, gameSize, numPieces, numPieces + 1));
 				}
 			}
 		}
-		ArrayList<Move> allMoves = new ArrayList<Move>();
-		for (int i = 0; i < width; i++) {
-			colMoves[i] = columnMoveList[i].toArray(new Move[columnMoveList[i]
-					.size()]);
-			allMoves.addAll(columnMoveList[i]);
-		}
-		myMoves = allMoves.toArray(new Move[allMoves.size()]);
-		int varianceLength = conf.getInt("gamesman.game.variance.length", 10);
-		suffLen = Math.max(1, gameSize + 1 - varianceLength);
+		myMoves = moveList.toArray(new Move[moveList.size()]);
 	}
 
-	// #################Just generated
 
 	private static int getTurn(int numPieces) {
 		return (numPieces % 2) + 1;
@@ -368,7 +341,7 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 		return made;
 	}
 
-	int getTurn(CountingState state) {
+	public int getTurn(CountingState state) {
 		return getTurn(numPieces(state));
 	}
 
@@ -390,4 +363,7 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 	protected int maxVarianceLength() {
 		return gameSize;
 	}
+	
+	
+	
 }
