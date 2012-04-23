@@ -276,7 +276,55 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 	 * @return
 	 */
 	private TOEnum checkPattern(CountingState state) {
-		// TODO Auto-generated method stub
+		boolean tootFound, ottoFound, horizontalPossible, downPossible;
+		boolean verticalPossible,topLeftBotRightPossible,botLeftTopRightPossible;
+		tootFound=false;
+		ottoFound=false;
+		horizontalPossible=false;//don't bother checking if it would run off the board
+		verticalPossible=false;//don't bother checking if it would run off the board
+							   //if either is false don't need to check diagonal
+		// TODO Auto-generated method stub Will loop over stuff here
+		for (int i=0; i < gameSize; i++)
+		{
+			if(i != 0)//if i isn't blank
+			{
+				verticalPossible=((height -(i % height))>=4); 
+				horizontalPossible=((width - (i/height))>=4);
+				downPossible=((i%height)>=3);
+				
+			}
+			if(i==2){
+				if (verticalPossible){
+					if((state.get(i+1))==1 && (state.get(i+2))==1 && (state.get(i+3))==2)ottoFound=true;
+				}
+				if (horizontalPossible){
+					if((state.get(i+height))==1 && (state.get(i+2*height))==1 && (state.get(i+3*height))==2)ottoFound=true;
+				}
+				if (horizontalPossible&&verticalPossible){
+					if((state.get(i+1+height))==1 && (state.get(i+2*height +1))==1 && (state.get(i+3*height +1))==2)ottoFound=true;
+				}
+				if (horizontalPossible&&verticalPossible){
+					if((state.get(i+height -1))==1 && (state.get(i+2*height -1 ))==1 && (state.get(i+3*height -1))==2)ottoFound=true;
+				}
+			}else{//starting with a 1 looking for toot
+				if (verticalPossible){
+					if((state.get(i+1))==2 && (state.get(i+2))==2 && (state.get(i+3))==1)tootFound=true;
+				}
+				if (horizontalPossible){
+					if((state.get(i+height))==2 && (state.get(i+2*height))==2 && (state.get(i+3*height))==1)tootFound=true;
+				}
+				if (horizontalPossible&&verticalPossible){
+					if((state.get(i+1+height))==2 && (state.get(i+2*height +1))==2 && (state.get(i+3*height +1))==1)tootFound=true;
+				}
+				if (horizontalPossible&&verticalPossible){
+					if((state.get(i+height -1))==2 && (state.get(i+2*height -1 ))==2 && (state.get(i+3*height -1))==1)tootFound=true;
+				}
+				
+			}
+		}
+		if(tootFound && ottoFound)return TOEnum.BOTH;
+		if(tootFound)return TOEnum.TOOT;
+		if(ottoFound)return TOEnum.OTTO;
 		return TOEnum.NONE;
 	}
 
