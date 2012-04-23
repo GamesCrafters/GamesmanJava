@@ -9,9 +9,10 @@ import edu.berkeley.gamesman.hasher.genhasher.DBInvCalculator;
 public class ConnectionsHasher extends OptimizingInvariantHasher<CountingState> {
 
 	/*
-	 * this class exists b/c not every player can place in any of the edges, so this game is not strictly a dartboard game.
-	 * override getInv to return -1 if the wrong player's piece is in one of the edges
-	 * b/c in order to surround, players should be able to place in edges
+	 * this class exists b/c not every player can place in any of the edges, so
+	 * this game is not strictly a dartboard game. override getInv to return -1
+	 * if the wrong player's piece is in one of the edges b/c in order to
+	 * surround, players should be able to place in edges
 	 */
 	private final int boardSize;
 	private final DBInvCalculator calc;
@@ -40,8 +41,16 @@ public class ConnectionsHasher extends OptimizingInvariantHasher<CountingState> 
 	}
 
 	@Override
-	protected long getInvariant(CountingState state) { // this needs to change
-		return calc.getInv(state);
+	protected long getInvariant(CountingState state) { 
+		if (state.get(0) == 2 || state.get(1) == 2 || state.get(19) == 2
+				|| state.get(20) == 2) {
+			return -1;
+		} else if (state.get(5) == 1 || state.get(8) == 1 || state.get(9) == 1
+				|| state.get(12) == 1) {
+			return -1;
+		} else {
+			return calc.getInv(state);
+		}
 	}
 
 	@Override
@@ -55,5 +64,5 @@ public class ConnectionsHasher extends OptimizingInvariantHasher<CountingState> 
 		return num1 + num2 == state.get(boardSize)
 				&& (num1 - num2 == 1 || num1 - num2 == 0);
 	}
-	
+
 }

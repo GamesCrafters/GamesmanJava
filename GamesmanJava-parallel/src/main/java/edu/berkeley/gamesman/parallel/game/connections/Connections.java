@@ -13,6 +13,7 @@ import edu.berkeley.gamesman.hasher.counting.CountingState;
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
 import edu.berkeley.gamesman.parallel.FlipRecord;
+import edu.berkeley.gamesman.parallel.SingleRecord;
 import edu.berkeley.gamesman.parallel.game.connect4.C4Hasher;
 import edu.berkeley.gamesman.parallel.game.connect4.C4State;
 import edu.berkeley.gamesman.parallel.game.connect4.Connect4;
@@ -29,7 +30,8 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 	private int width = 3;
 	private int height = 7;
 	private int gameSize = 21;
-//	private int suffLen;
+
+	// private int suffLen;
 
 	public String getString(CountingState position) {
 		StringBuilder sb = new StringBuilder(gameSize);
@@ -197,10 +199,10 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 	private static boolean hasSurroundHelper(CountingState state, int lastTurn,
 			int currX, int currY, ArrayList<Pair<Integer, Integer>> used,
 			int origX, int origY, int currDepth) {
-		if (currX == origX && currY == origY && currDepth != 0 && currDepth != 2) {
+		if (currX == origX && currY == origY && currDepth != 0
+				&& currDepth != 2) {
 			return true;
-		}
-		else if (currX == origX && currY == origY && currDepth == 2) {
+		} else if (currX == origX && currY == origY && currDepth == 2) {
 			return false;
 		}
 		boolean hasSurround = false;
@@ -271,34 +273,44 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 
 	@Override
 	public GameRecord getRecord(CountingState position, FlipRecord fetchedRec) {
-		// TODO Auto-generated method stub
-		return null;
+		return SingleRecord.getRecord((SingleRecord) fetchedRec, gameSize
+				- numPieces(position));
 	}
 
 	@Override
 	protected boolean setNewRecordAndHasChildren(CountingState state,
 			FlipRecord rec) {
-		// TODO Auto-generated method stub
-		return false;
+		GameValue val = getValue(state);
+		if (val == null) {
+			rec.set(GameValue.DRAW);
+			return true;
+		} else {
+			if (val == GameValue.TIE)
+				rec.set(GameValue.TIE, 0);
+			else if (val == GameValue.LOSE)
+				rec.set(GameValue.LOSE, 0);
+			else
+				throw new RuntimeException("No other primitives");
+			return false;
+		}
 	}
 
 	@Override
 	protected boolean combineValues(QuickLinkedList<FlipRecord> grList,
 			FlipRecord gr) {
-		// TODO Auto-generated method stub
-		return false;
+		return SingleRecord.combineValues((QuickLinkedList) grList,
+				(SingleRecord) gr);
 	}
 
 	@Override
 	protected void previousPosition(FlipRecord gr, FlipRecord toFill) {
-		// TODO Auto-generated method stub
+		toFill.previousPosition(gr);
 
 	}
 
 	@Override
-	protected Class<FlipRecord> getGameRecordClass() {
-		// TODO Auto-generated method stub
-		return null;
+	protected Class<? extends FlipRecord> getGameRecordClass() {
+		return SingleRecord.class;
 	}
 
 	public void rangeTreeConfigure(Configuration conf) {
@@ -314,13 +326,13 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 			for (int row = 0; row < height; row++) {
 				for (int col = 0; col < width; col++) {
 					int place = getPlace(row, col);
-					moveList.add(new Move(place, 0, turn, gameSize, numPieces, numPieces + 1));
+					moveList.add(new Move(place, 0, turn, gameSize, numPieces,
+							numPieces + 1));
 				}
 			}
 		}
 		myMoves = moveList.toArray(new Move[moveList.size()]);
 	}
-
 
 	private static int getTurn(int numPieces) {
 		return (numPieces % 2) + 1;
@@ -363,7 +375,5 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 	protected int maxVarianceLength() {
 		return gameSize;
 	}
-	
-	
-	
+
 }
