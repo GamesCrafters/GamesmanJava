@@ -282,7 +282,7 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 		ottoFound=false;
 		horizontalPossible=false;//don't bother checking if it would run off the board
 		verticalPossible=false;//don't bother checking if it would run off the board
-							   //if either is false don't need to check diagonal
+		downPossible=false;  					   //if either is false don't need to check diagonal
 		// TODO Auto-generated method stub Will loop over stuff here
 		for (int i=0; i < gameSize; i++)
 		{
@@ -301,10 +301,10 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 					if((state.get(i+height))==1 && (state.get(i+2*height))==1 && (state.get(i+3*height))==2)ottoFound=true;
 				}
 				if (horizontalPossible&&verticalPossible){
-					if((state.get(i+1+height))==1 && (state.get(i+2*height +1))==1 && (state.get(i+3*height +1))==2)ottoFound=true;
+					if((state.get(i+1+height))==1 && (state.get(i+2*height +2))==1 && (state.get(i+3*height +3))==2)ottoFound=true;
 				}
-				if (horizontalPossible&&verticalPossible){
-					if((state.get(i+height -1))==1 && (state.get(i+2*height -1 ))==1 && (state.get(i+3*height -1))==2)ottoFound=true;
+				if (horizontalPossible&&downPossible){
+					if((state.get(i+height -1))==1 && (state.get(i+2*height -2 ))==1 && (state.get(i+3*height -3))==2)ottoFound=true;
 				}
 			}else{//starting with a 1 looking for toot
 				if (verticalPossible){
@@ -314,10 +314,10 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 					if((state.get(i+height))==2 && (state.get(i+2*height))==2 && (state.get(i+3*height))==1)tootFound=true;
 				}
 				if (horizontalPossible&&verticalPossible){
-					if((state.get(i+1+height))==2 && (state.get(i+2*height +1))==2 && (state.get(i+3*height +1))==1)tootFound=true;
+					if((state.get(i+1+height))==2 && (state.get(i+2*height +2))==2 && (state.get(i+3*height +3))==1)tootFound=true;
 				}
-				if (horizontalPossible&&verticalPossible){
-					if((state.get(i+height -1))==2 && (state.get(i+2*height -1 ))==2 && (state.get(i+3*height -1))==1)tootFound=true;
+				if (horizontalPossible&&downPossible){
+					if((state.get(i+height -1))==2 && (state.get(i+2*height -2 ))==2 && (state.get(i+3*height -3))==1)tootFound=true;
 				}
 				
 			}
