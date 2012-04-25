@@ -25,6 +25,8 @@ import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 
 public class Connections extends RangeTree<CountingState, FlipRecord> implements
 		SolveReader<CountingState, FlipRecord> {
+	// Scoring guidelines: win, lose or tie from the GameValue class (enumerations).
+	// Note about CountingState: only positions that can be played in. (1-D array)
 	private Move[] myMoves;
 	private ConnectionsHasher myHasher;
 	private int width = 3;
@@ -33,6 +35,7 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 
 	// private int suffLen;
 
+	// Converts CountingState into an API string.
 	public String getString(CountingState position) {
 		StringBuilder sb = new StringBuilder(gameSize);
 		for (int row = 0; row < height; row++) {
@@ -42,7 +45,8 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 		}
 		return sb.toString();
 	}
-
+	
+	// Converts from our representation to API representation
 	private static Object charFor(int piece) {
 		switch (piece) {
 		case 0:
@@ -55,7 +59,8 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 			return '?';
 		}
 	}
-
+	
+	// Converts from API representation to our representation
 	private static int pieceFor(char c) {
 		switch (c) {
 		case ' ':
@@ -69,6 +74,7 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 		}
 	}
 
+	// Takes API string and converts into CountingState, which we will use
 	@Override
 	public CountingState getPosition(String board) {
 		assert board.length() == gameSize;
@@ -89,10 +95,12 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 		return s;
 	}
 
+	// Resets. Returns a blank board.
 	CountingState newState() {
 		return myHasher.newState();
 	}
 
+	// Returns an arrayList of all the possible CountingState children, given a current CountingState (or board representation)
 	@Override
 	public Collection<Pair<String, CountingState>> getChildren(
 			CountingState position) {
@@ -108,17 +116,20 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 		return children;
 	}
 
+	// Finds the primitive value of the CountingState.
 	@Override
 	public GameValue getValue(CountingState state) {
 		return getValueHelper(state, opposite(getTurn(state)));
 	}
-
+	
+	// Checks if there is a connection or a surround. Called by getValue.
 	private GameValue getValueHelper(CountingState state, int lastTurn) {
 		// assert isComplete();
 		return (hasSurround(state, lastTurn) || hasConnection(state, lastTurn)) ? GameValue.LOSE
 				: (numPieces(state) == 45 ? GameValue.TIE : null);
 	}
 
+	// Checks to see if there is a connection. Uses a maze-traversal method. Called by getValueHelper.
 	private static boolean hasConnection(CountingState state, int lastTurn) {
 		if ((Character) charFor(lastTurn) == 'X') {
 			for (int startingX = 1; startingX <= 5; startingX = startingX + 2) {
@@ -175,6 +186,9 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 
 	}
 
+	// Checks to see if a loop around an opponent's pieces exists. Called by getValueHelper.
+	// Only checks certain cycles. In our case, only three from middle row or column. 
+	
 	public static boolean hasSurround(CountingState state, int lastTurn) {
 		if ((Character) charFor(lastTurn) == 'X') {
 			return hasSurroundHelper(state, lastTurn, 3, 0,
@@ -196,6 +210,8 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 		}
 	}
 
+	// Traverses every filled in line, starting from (origX, origY). Uses flood-fill (recursive).
+	
 	private static boolean hasSurroundHelper(CountingState state, int lastTurn,
 			int currX, int currY, ArrayList<Pair<Integer, Integer>> used,
 			int origX, int origY, int currDepth) {
@@ -220,6 +236,8 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 		return hasSurround;
 	}
 
+	// Utility method called by hasSurroundHelper. Checks to see if we visited the square yet in our current connection that we are checking.
+	
 	private static boolean isIn(Pair<Integer, Integer> pair,
 			ArrayList<Pair<Integer, Integer>> list) {
 		for (Pair<Integer, Integer> p : list) {
@@ -230,6 +248,8 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 		return false;
 	}
 
+	// Translates full-board representation to CountingState representation (going from a "fake CountingState" that represents the entire board to one that just represents playable positions)
+	
 	private static char getChar(CountingState state, int x, int y) {
 		if (x < 1 || x > 5 || y < 1 || y > 5) {
 			return (Character) null;
@@ -253,30 +273,109 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 			return (Character) null;
 		}
 	}
+	// Gets all possible moves, and assigns them to the array myMoves.
+		public void rangeTreeConfigure(Configuration conf) {
+			width = conf.getInt("gamesman.game.width", 3);
+			height = conf.getInt("gamesman.game.height", 7);
+			gameSize = width * height;
+			if (gameSize + 2 >= Byte.MAX_VALUE)
+				throw new RuntimeException("gameSize is too large");
+			myHasher = new ConnectionsHasher(gameSize);
+			ArrayList<Move> moveList = new ArrayList<Move>();
+			for (int numPieces = 0; numPieces < gameSize; numPieces++) {
+				int turn = getTurn(numPieces);
+				for (int row = 0; row < height; row++) {
+					for (int col = 0; col < width; col++) {
+						int place = getPlace(row, col);
+						moveList.add(new Move(place, 0, turn, gameSize, numPieces,
+								numPieces + 1));
+					}
+				}
+			}
+			myMoves = moveList.toArray(new Move[moveList.size()]);
+		}
+		// getter.
+		private static int getTurn(int numPieces) {
+			return (numPieces % 2) + 1;
+		}
+		// getter.
+		private int getPlace(int row, int col) {
+			return col * height + row;
+		}
 
+		// Changes CountingState: i is index of the move, takes move from myMoves array and applies it.
+		public boolean playMove(CountingState state, int i) {
+			boolean made = false;
+			Move m = myMoves[i];
+			if (m.matches(state) == -1) {
+				myHasher.makeMove(state, m);
+				made = true;
+			}
+
+			return made;
+		}
+
+		// getter.
+		public int getTurn(CountingState state) {
+			return getTurn(numPieces(state));
+		}
+		// Returns number of pieces on the board (in the CountingState).
+		int numPieces(CountingState state) {
+			return state.get(gameSize);
+		}
+
+		// Returns the opposite of the turn. (i.e., blue's turn -> red's turn)
+		private static int opposite(int turn) {
+			switch (turn) {
+			case 1:
+				return 2;
+			case 2:
+				return 1;
+			default:
+				throw new IllegalArgumentException(Integer.toString(turn));
+			}
+		}
+
+		// Returns the max variance length. :)
+		protected int maxVarianceLength() {
+			return gameSize;
+		}
+		
+		
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * #######################################
+	 * This is stuff that we did not change.
+	 * #######################################
+	 * @see edu.berkeley.gamesman.parallel.ranges.RangeTree#getStartingPositions()
+	 */
+
+	// As name describes.
 	@Override
 	public Collection<CountingState> getStartingPositions() {
 		CountingState result = myHasher.newState(); // newState() calls the
 													// CountingState constructor
 		return Collections.singleton(result);
 	}
-
+	// getter.
 	@Override
 	public GenHasher<CountingState> getHasher() {
 		return myHasher;
 	}
-
+	// getter.
 	@Override
 	protected Move[] getMoves() {
 		return myMoves;
 	}
-
+	// getter.
 	@Override
 	public GameRecord getRecord(CountingState position, FlipRecord fetchedRec) {
 		return SingleRecord.getRecord((SingleRecord) fetchedRec, gameSize
 				- numPieces(position));
 	}
-
+	// David's method. ~\('v')/~
+	// Sets new record.
 	@Override
 	protected boolean setNewRecordAndHasChildren(CountingState state,
 			FlipRecord rec) {
@@ -311,69 +410,6 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 	@Override
 	protected Class<? extends FlipRecord> getGameRecordClass() {
 		return SingleRecord.class;
-	}
-
-	public void rangeTreeConfigure(Configuration conf) {
-		width = conf.getInt("gamesman.game.width", 3);
-		height = conf.getInt("gamesman.game.height", 7);
-		gameSize = width * height;
-		if (gameSize + 2 >= Byte.MAX_VALUE)
-			throw new RuntimeException("gameSize is too large");
-		myHasher = new ConnectionsHasher(gameSize);
-		ArrayList<Move> moveList = new ArrayList<Move>();
-		for (int numPieces = 0; numPieces < gameSize; numPieces++) {
-			int turn = getTurn(numPieces);
-			for (int row = 0; row < height; row++) {
-				for (int col = 0; col < width; col++) {
-					int place = getPlace(row, col);
-					moveList.add(new Move(place, 0, turn, gameSize, numPieces,
-							numPieces + 1));
-				}
-			}
-		}
-		myMoves = moveList.toArray(new Move[moveList.size()]);
-	}
-
-	private static int getTurn(int numPieces) {
-		return (numPieces % 2) + 1;
-	}
-
-	private int getPlace(int row, int col) {
-		return col * height + row;
-	}
-
-	public boolean playMove(CountingState state, int i) {
-		boolean made = false;
-		Move m = myMoves[i];
-		if (m.matches(state) == -1) {
-			myHasher.makeMove(state, m);
-			made = true;
-		}
-
-		return made;
-	}
-
-	public int getTurn(CountingState state) {
-		return getTurn(numPieces(state));
-	}
-
-	int numPieces(CountingState state) {
-		return state.get(gameSize);
-	}
-
-	private static int opposite(int turn) {
-		switch (turn) {
-		case 1:
-			return 2;
-		case 2:
-			return 1;
-		default:
-			throw new IllegalArgumentException(Integer.toString(turn));
-		}
-	}
-
-	protected int maxVarianceLength() {
-		return gameSize;
 	}
 
 }

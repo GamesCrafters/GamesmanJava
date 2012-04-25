@@ -40,7 +40,7 @@ public class ConnectionsHasher extends OptimizingInvariantHasher<CountingState> 
 		return new CountingState(this, boardSize);
 	}
 
-	@Override
+	// We changed this: it will not let you play an illegal move.
 	protected long getInvariant(CountingState state) { 
 		if (state.get(0) == 2 || state.get(1) == 2 || state.get(19) == 2
 				|| state.get(20) == 2) {
