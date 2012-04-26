@@ -64,8 +64,7 @@ public class TOHasher extends OptimizingInvariantHasher<CountingState> {
 
 	@Override
 	protected CountingState genHasherNewState() {
-		// TODO Auto-generated method stub
-		return null;
+		return new CountingState(this, boardSize);
 	}
 
 }
