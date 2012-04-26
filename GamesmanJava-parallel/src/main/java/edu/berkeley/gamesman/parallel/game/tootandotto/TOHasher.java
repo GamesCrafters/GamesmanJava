@@ -40,6 +40,7 @@ public class TOHasher extends OptimizingInvariantHasher<CountingState> {
 	 * 
 	 * @param width
 	 * @param height
+	 * @param maxPieces the max Ts and Os each can have
 	 * @return
 	 */
 	private static int[] makeDigitBase(int width, int height, int maxPieces) {
