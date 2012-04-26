@@ -4,13 +4,13 @@ import java.util.Arrays;
 
 import edu.berkeley.gamesman.hasher.DBHasher;
 import edu.berkeley.gamesman.hasher.counting.CountingState;
-import edu.berkeley.gamesman.hasher.genhasher.DBInvCalculator;
+import edu.berkeley.gamesman.hasher.genhasher.GravityHashUtil;
 import edu.berkeley.gamesman.hasher.invhasher.OptimizingInvariantHasher;
 
 public class TOHasher extends OptimizingInvariantHasher<CountingState> {
 	private final int width, height;
 	public final int boardSize; // TODO: why not private?
-	private final DBInvCalculator calc;
+	private final GravityHashUtil<CountingState> myUtil;
 
 	public TOHasher(int width, int height, int maxPieces) {
 		this(width, height, maxPieces, 0);
@@ -31,7 +31,7 @@ public class TOHasher extends OptimizingInvariantHasher<CountingState> {
 		this.width = width;
 		this.height = height;
 		boardSize = width * height;
-		calc = new DBInvCalculator(boardSize);
+		myUtil = new GravityHashUtil<CountingState>(width, height);
 	}
 
 	/**
@@ -53,8 +53,7 @@ public class TOHasher extends OptimizingInvariantHasher<CountingState> {
 
 	@Override
 	protected long getInvariant(CountingState state) {
-		// TODO Auto-generated method stub
-		return 0;
+		return isEmpty(state) ? 0 : myUtil.getInv(this, state);
 	}
 
 	@Override
