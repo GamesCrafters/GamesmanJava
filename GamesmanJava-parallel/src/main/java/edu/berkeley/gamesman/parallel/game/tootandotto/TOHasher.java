@@ -2,6 +2,7 @@ package edu.berkeley.gamesman.parallel.game.tootandotto;
 
 import java.util.Arrays;
 
+import edu.berkeley.gamesman.hasher.DBHasher;
 import edu.berkeley.gamesman.hasher.counting.CountingState;
 import edu.berkeley.gamesman.hasher.genhasher.DBInvCalculator;
 import edu.berkeley.gamesman.hasher.invhasher.OptimizingInvariantHasher;
@@ -58,8 +59,7 @@ public class TOHasher extends OptimizingInvariantHasher<CountingState> {
 
 	@Override
 	protected boolean valid(CountingState state) {
-		// TODO Auto-generated method stub
-		return false;
+		return getInvariant(state) >= 0 && DBHasher.dbValid(state, boardSize);
 	}
 
 	@Override
