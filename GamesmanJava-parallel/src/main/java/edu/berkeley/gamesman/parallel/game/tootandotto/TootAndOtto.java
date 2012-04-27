@@ -11,6 +11,7 @@ import edu.berkeley.gamesman.game.type.GameValue;
 import edu.berkeley.gamesman.hasher.counting.CountingState;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
 import edu.berkeley.gamesman.parallel.GameRecordCombiner;
+import edu.berkeley.gamesman.parallel.game.connect4.C4State;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.parallel.ranges.Suffix;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
@@ -497,5 +498,27 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 
 	protected int maxVarianceLength() {
 		return gameSize;
+	}
+	
+	/**
+	 * Returns whose turn it is for this state (for testing)
+	 * 
+	 * @param state
+	 * @return
+	 */
+	int getTurn(CountingState state) {
+		return getTurn(numPieces(state));
+	}
+	/**
+	 * Given a state, fetches the piece at row-col (0 empty, 1 T, 2
+	 * O) (for testing)
+	 * 
+	 * @param state
+	 * @param row
+	 * @param col
+	 * @return
+	 */
+	int get(CountingState state, int row, int col) {
+		return state.get(col * height + row);
 	}
 }
