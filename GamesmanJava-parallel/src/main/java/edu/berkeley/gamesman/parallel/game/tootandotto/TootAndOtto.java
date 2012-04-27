@@ -35,6 +35,7 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 	private TOHasher myHasher;
 	private int width, height;
 	private int gameSize;
+	// maxPieces is the max number of T or Os a single player can play
 	private int maxPieces;
 	private int tootPlayer;
 	private boolean misere;
@@ -75,15 +76,28 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 		misere = conf.getBoolean("gamesman.game.misere", false);
 	}
 
-	// TODO: does this work now? and how can it be cleaned up more.
+	/**
+	 * generates moves that can be made from the current board configuration
+	 * @param numPieces	number of pieces on the board
+	 * @param player1T	number of T for player 1
+	 * @param player1O	number of O for player 1
+	 * @param player2T	number of T for player 2
+	 * @param player2O 	number of O for player 2
+	 * @param columnMoveList	the list of moves generated so far that we will append to
+	 */
 	private void generateMoves(int numPieces, int player1T, int player1O,
 			int player2T, int player2O, ArrayList<Move>[] columnMoveList) {
+		// figure out who is playing
 		int turn = getTurn(numPieces);
+		
+		// Assume it is the first player's turn
 		int TIndex = gameSize + 3;
 		int OIndex = gameSize + 2;
 		int numT = player1T;
 		int numO = player1O;
 		int numPiecesIndex = gameSize + 4;
+		
+		// If it is the second player's turn, set the info accordingly
 		if (turn == 2) {
 			TIndex -= 2;
 			OIndex -= 2;
