@@ -219,8 +219,13 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 
 	@Override
 	public String getString(CountingState position) {
-		// TODO Auto-generated method stub
-		return null;
+		StringBuilder sb = new StringBuilder(gameSize);
+		for (int row = 0; row < height; row++) {
+			for (int col = 0; col < width; col++) {
+				sb.append(charFor(position.get(col * height + row)));
+			}
+		}
+		return sb.toString();
 	}
 
 	/**
