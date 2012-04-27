@@ -11,6 +11,7 @@ import edu.berkeley.gamesman.game.type.GameValue;
 import edu.berkeley.gamesman.hasher.counting.CountingState;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
 import edu.berkeley.gamesman.parallel.GameRecordCombiner;
+import edu.berkeley.gamesman.parallel.game.connect4.C4State;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.parallel.ranges.Suffix;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
@@ -209,13 +210,33 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 	public CountingState newState() {
 		return myHasher.newState();
 	}
-
+	/* TODO: Do we need to do this?
 	@Override
 	public Collection<Pair<String, CountingState>> getChildren(
 			CountingState position) {
-		// TODO Auto-generated method stub
-		return null;
+		ArrayList<Pair<String, CountingState>> children = new ArrayList<Pair<String, CountingState>>();
+		for (int col = 0; col < width; col++) {
+			CountingState s = newState();
+			getHasher().set(s, position);
+			if (playMove(s, col)) {
+				children.add(new Pair<String, CountingState>(Integer.toString(col), s));
+			}
+		}
+		return children;
 	}
+	
+	public boolean playMove(CountingState state, int col) {
+		boolean made = false;
+		for (Move m : colMoves[col]) {
+			if (m.matches(state) == -1) {
+				myHasher.makeMove(state, m);
+				made = true;
+				break;
+			}
+		}
+		return made;
+	}
+	*/
 
 	@Override
 	public String getString(CountingState position) {
