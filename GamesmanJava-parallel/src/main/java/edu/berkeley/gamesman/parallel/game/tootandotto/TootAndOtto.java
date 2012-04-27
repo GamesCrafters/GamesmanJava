@@ -11,7 +11,6 @@ import edu.berkeley.gamesman.game.type.GameValue;
 import edu.berkeley.gamesman.hasher.counting.CountingState;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
 import edu.berkeley.gamesman.parallel.GameRecordCombiner;
-import edu.berkeley.gamesman.parallel.game.connect4.C4State;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
 import edu.berkeley.gamesman.parallel.ranges.Suffix;
 import edu.berkeley.gamesman.solve.reader.SolveReader;
