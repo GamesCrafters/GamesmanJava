@@ -210,7 +210,7 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 	public CountingState newState() {
 		return myHasher.newState();
 	}
-	/* TODO: Do we need to do this?
+
 	@Override
 	public Collection<Pair<String, CountingState>> getChildren(
 			CountingState position) {
@@ -236,7 +236,6 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 		}
 		return made;
 	}
-	*/
 
 	@Override
 	public String getString(CountingState position) {
