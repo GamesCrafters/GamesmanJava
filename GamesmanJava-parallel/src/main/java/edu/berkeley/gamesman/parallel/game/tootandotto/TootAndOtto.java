@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
+import junit.framework.Assert;
+
 import org.apache.hadoop.conf.Configuration;
 
 import edu.berkeley.gamesman.game.type.GameRecord;
@@ -39,6 +41,9 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 	private int maxPieces;
 	private int tootPlayer;
 	private boolean misere;
+
+
+	
 
 	@Override
 	public void rangeTreeConfigure(Configuration conf) {
@@ -326,9 +331,9 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 	 * @param state
 	 * @return
 	 */
-	private TOEnum checkPattern(CountingState state) {
+	protected TOEnum checkPattern(CountingState state) {
 		boolean tootFound, ottoFound, horizontalPossible, downPossible;
-		boolean verticalPossible, topLeftBotRightPossible, botLeftTopRightPossible;
+		boolean verticalPossible;
 		tootFound = false;
 		ottoFound = false;
 		horizontalPossible = false;// don't bother checking if it would run off
@@ -338,14 +343,14 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 		downPossible = false; // if either is false don't need to check diagonal
 		// TODO Auto-generated method stub Will loop over stuff here
 		for (int i = 0; i < gameSize; i++) {
-			if (i != 0)// if i isn't blank
+			if (state.get(i) != 0)// if i isn't blank
 			{
-				verticalPossible = ((height - (i % height)) >= 4);
-				horizontalPossible = ((width - (i / height)) >= 4);
+				verticalPossible = ((height - (i % height)) >= 3);
+				horizontalPossible = ((width - (i / height)) >= 3);
 				downPossible = ((i % height) >= 3);
 
 			}
-			if (i == 2) {
+			if (state.get(i) == 2) {
 				if (verticalPossible) {
 					if ((state.get(i + 1)) == 1 && (state.get(i + 2)) == 1
 							&& (state.get(i + 3)) == 2)
@@ -369,7 +374,7 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 							&& (state.get(i + 3 * height - 3)) == 2)
 						ottoFound = true;
 				}
-			} else {// starting with a 1 looking for toot
+			} else if(state.get(i)==1){// starting with a 1 looking for toot
 				if (verticalPossible) {
 					if ((state.get(i + 1)) == 2 && (state.get(i + 2)) == 2
 							&& (state.get(i + 3)) == 1)
