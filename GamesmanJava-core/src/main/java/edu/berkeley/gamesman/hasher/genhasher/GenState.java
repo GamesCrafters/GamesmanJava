@@ -94,10 +94,7 @@ public class GenState implements State<GenState>, Comparable<GenState> {
 	protected boolean incr(int dir) {
 		assert dir == 1 || dir == -1;
 		sequence[startPoint] += dir;
-		if (sequence[startPoint] < 0 || sequence[startPoint] >= lsBase()) {
-			return false;
-		} else
-			return true;
+		return validLS();
 	}
 
 	/**

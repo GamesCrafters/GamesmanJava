@@ -9,7 +9,8 @@ import org.apache.hadoop.io.WritableComparable;
 import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.hasher.genhasher.GenState;
 
-public class Suffix<S extends GenState> implements WritableComparable<Suffix<S>> {
+public class Suffix<S extends GenState> implements
+		WritableComparable<Suffix<S>> {
 	private final IntArrWritable suffix = new IntArrWritable();
 
 	public Suffix() {
@@ -59,6 +60,10 @@ public class Suffix<S extends GenState> implements WritableComparable<Suffix<S>>
 
 	public boolean firstPosition(GenHasher<S> hasher, S toFill) {
 		return suffix.<S> firstPosition(hasher, toFill);
+	}
+
+	public long numPositions(GenHasher<S> hasher) {
+		return suffix.numPositions(hasher);
 	}
 
 	@Override

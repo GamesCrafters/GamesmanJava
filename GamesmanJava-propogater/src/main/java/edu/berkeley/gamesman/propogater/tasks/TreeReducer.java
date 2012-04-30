@@ -38,11 +38,11 @@ public class TreeReducer<K extends WritableComparable<K>, V extends Writable, PI
 			value.combineWith(node);
 		int division = tree.getDivision(key);
 		combine(key, value, division);
-		addRecord(division);
+		addRecord(division, key);
 		context.write(key, value);
 	}
 
-	private void addRecord(int division) {
+	private void addRecord(int division, K key) {
 		tempDiv.set(division);
 		LongWritable val = recordCount.get(tempDiv);
 		if (val == null) {
@@ -50,10 +50,11 @@ public class TreeReducer<K extends WritableComparable<K>, V extends Writable, PI
 			val = new LongWritable(0L);
 			recordCount.put(newVal, val);
 		}
-		val.set(val.get() + 1L);
+		val.set(val.get() + tree.sizeof(key));
 	}
 
-	protected void combine(K key, TreeNode<K, V, PI, UM, CI, DM> value, int division) {
+	protected void combine(K key, TreeNode<K, V, PI, UM, CI, DM> value,
+			int division) {
 	}
 
 	@Override

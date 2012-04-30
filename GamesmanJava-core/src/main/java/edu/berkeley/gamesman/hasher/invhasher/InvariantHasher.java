@@ -30,13 +30,17 @@ public abstract class InvariantHasher<S extends GenState> extends GenHasher<S> {
 
 	@Override
 	protected long innerCountCompletions(S state) {
+		return fillCompletions(state, true);
+	}
+
+	private long fillCompletions(S state, boolean numMatters) {
 		int start = getStart(state);
 		long inv = getInvariant(state);
 		if (inv < 0)
 			return 0L;
 		tempVal.value = inv;
 		Long count = invariantCounts[start].get(tempVal);
-		if (count != null) {
+		if (count != null && (!numMatters || count >= 0)) {
 			return count;
 		}
 		long posCount;
@@ -48,24 +52,37 @@ public abstract class InvariantHasher<S extends GenState> extends GenHasher<S> {
 			}
 		} else {
 			S tempState = getPoolPref();
-			tempState.set(state);
-			assert validLS(tempState);
-			addOn(tempState, false);
-			posCount = 0L;
-			do {
-				long completions = countCompletions(tempState);
-				assert Long.MAX_VALUE - completions > posCount;
-				posCount += completions;
-			} while (incr(tempState, 1));
-			releasePref(tempState);
+			try {
+				tempState.set(state);
+				assert validLS(tempState);
+				addOn(tempState, false);
+				posCount = 0L;
+				do {
+					long completions = fillCompletions(tempState, numMatters);
+					if (!numMatters && completions != 0) {
+						posCount = -1;
+						break;
+					} else {
+						assert Long.MAX_VALUE - completions > posCount;
+						posCount += completions;
+					}
+				} while (incr(tempState, 1));
+			} finally {
+				releasePref(tempState);
+			}
 		}
 		if (countingPlace == start) {
-			if (posCount > 0)
+			if (posCount != 0)
 				posCount = 1;
 		}
 		Long prevVal = invariantCounts[start].put(new LongSet(inv), posCount);
-		assert prevVal == null;
+		assert prevVal == null || (numMatters && prevVal == -1);
 		return posCount;
+	}
+
+	@Override
+	protected boolean validPref(S state) {
+		return fillCompletions(state, false) != 0;
 	}
 
 	/**

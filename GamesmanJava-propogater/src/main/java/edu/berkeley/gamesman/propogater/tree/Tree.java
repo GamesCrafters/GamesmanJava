@@ -241,4 +241,8 @@ public abstract class Tree<K extends WritableComparable<K>, V extends Writable, 
 	public long getMapperMaxSplitSize(Configuration conf, int tier) {
 		return conf.getLong("creation.mapper.split.size", -1);
 	}
+
+	public long sizeof(K key) {
+		return 1L;
+	}
 }

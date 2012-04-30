@@ -3,7 +3,6 @@ package edu.berkeley.gamesman.parallel.game.connect4;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
@@ -308,62 +307,5 @@ public class Connect4 extends RangeTree<C4State, FlipRecord> implements
 
 	protected int maxVarianceLength() {
 		return gameSize;
-	}
-
-	@Override
-	public long getCleanupSplitSize(Configuration conf) {
-		return toSplits(super.getCleanupSplitSize(conf));
-	}
-
-	@Override
-	public long getCombineSplitSize(Configuration conf, int tier) {
-		return toSplits(super.getCombineSplitSize(conf, tier), tier);
-	}
-
-	@Override
-	public long getCreateSplitSize(Configuration conf, int tier) {
-		return toSplits(super.getCreateSplitSize(conf, tier), tier);
-	}
-
-	@Override
-	public long getPropogateSplitSize(Configuration conf, Set<Integer> tiers) {
-		return toSplits(super.getPropogateSplitSize(conf, tiers), tiers);
-	}
-
-	@Override
-	public long getMapperMaxSplitSize(Configuration conf, int tier) {
-		long mapperMaxSplitSize = super.getMapperMaxSplitSize(conf, tier);
-		if (mapperMaxSplitSize == -1)
-			return -1;
-		else
-			return toSplits(mapperMaxSplitSize, tier);
-	}
-
-	private long toSplits(long positions) {
-		HashSet<Integer> tierList = new HashSet<Integer>(gameSize + 1);
-		for (int i = 0; i <= gameSize; i++) {
-			tierList.add(i);
-		}
-		return toSplits(positions, tierList);
-	}
-
-	private long toSplits(long positions, int tier) {
-		return toSplits(positions, Collections.singleton(tier));
-	}
-
-	private synchronized long toSplits(long positions, Set<Integer> tiers) {
-		C4Hasher h1 = new C4Hasher(width, height, gameSize + 1 - suffLen());
-		long numSum = 0;
-		double numRanges = 0;
-		int[] use = new int[1];
-		for (int tier : tiers) {
-			use[0] = tier;
-			numSum += myHasher.numPositions(use);
-			numRanges += h1.numPositions(use);
-		}
-		System.out.println(tiers);
-		System.out.printf("\tAverage item = %.3f", numSum / numRanges);
-		System.out.println();
-		return Math.max((long) (positions * numRanges / numSum), 1);
 	}
 }

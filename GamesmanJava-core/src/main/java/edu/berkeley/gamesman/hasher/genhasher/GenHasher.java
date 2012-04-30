@@ -677,7 +677,7 @@ public abstract class GenHasher<S extends GenState> {
 		return numCompletions;
 	}
 
-	public boolean firstPosition(int[] suffix, int suffLen, S toFill) {
+	public final boolean firstPosition(int[] suffix, int suffLen, S toFill) {
 		toFill.clear();
 		for (int i = suffLen - 1; i >= 0; i--) {
 			toFill.addLS(suffix[i]);
