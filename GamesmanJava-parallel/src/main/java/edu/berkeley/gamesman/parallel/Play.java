@@ -34,27 +34,39 @@ public final class Play {
 		Configuration conf = parser.getConfiguration();
 		String[] remainArgs = parser.getRemainingArgs();
 		Path p = new Path(remainArgs[0]);
+		boolean hasDatabase = remainArgs.length > 1 ? Boolean
+				.parseBoolean(remainArgs[1]) : false;
 		ConfParser.addParameters(conf, p, false);
 		Tree<K, ?, ?, ?, ?, ?> tree = ConfParser
 				.<K, Writable, Writable, Writable, Writable, Writable> newTree(conf);
 		tree.prepareRun(conf);
 		if (tree instanceof GameTree) {
-			Play.<K> subMain(conf, (GameTree) tree);
+			Play.<K> subMain(conf, (GameTree) tree, hasDatabase);
 		} else if (tree instanceof RangeTree) {
-			Play.<GenState, GR> rangeSubMain(conf, (RangeTree) tree);
+			Play.<GenState, GR> rangeSubMain(conf, (RangeTree) tree,
+					hasDatabase);
 		}
 	}
 
 	private static <K extends WritableComparable<K>> void subMain(
-			Configuration conf, GameTree<K> tree) throws IOException,
-			ClassNotFoundException {
+			Configuration conf, GameTree<K> tree, boolean hasDatabase)
+			throws IOException, ClassNotFoundException {
 		K position = tree.getRoots().iterator().next();
-		Path[] outPath = new Path[1];
-		outPath[0] = ConfParser.getOutputPath(conf);
-		FileSystem fs = outPath[0].getFileSystem(conf);
-		Path[] readers = MapFileOutputFormat.getFileNames(fs, outPath, conf);
-		Partitioner<K, GameRecord> partitioner = ConfParser
-				.<K, GameRecord> getPartitionerInstance(conf);
+		FileSystem fs;
+		Path[] readers;
+		Partitioner<K, GameRecord> partitioner;
+		if (hasDatabase) {
+			Path[] outPath = new Path[1];
+			outPath[0] = ConfParser.getOutputPath(conf);
+			fs = outPath[0].getFileSystem(conf);
+			readers = MapFileOutputFormat.getFileNames(fs, outPath, conf);
+			partitioner = ConfParser
+					.<K, GameRecord> getPartitionerInstance(conf);
+		} else {
+			fs = null;
+			readers = null;
+			partitioner = null;
+		}
 		String gameName = GamesmanParser.getGameName(conf);
 		SolveReader<K, GameRecord> gameReader = SolveReaders
 				.<K, GameRecord> get(conf, gameName);
@@ -64,9 +76,11 @@ public final class Play {
 		GameValue primVal = tree.getPrimitiveValue(position);
 		while (primVal == null) {
 			System.out.println(position.toString());
-			MapFileOutputFormat.getEntry(fs, conf, readers, partitioner,
-					position, storeRecord);
-			System.out.println(storeRecord);
+			if (hasDatabase) {
+				MapFileOutputFormat.getEntry(fs, conf, readers, partitioner,
+						position, storeRecord);
+				System.out.println(storeRecord);
+			}
 			Collection<Pair<String, K>> moves = gameReader
 					.getChildren(position);
 			StringBuilder availableMoves = new StringBuilder(
@@ -91,20 +105,30 @@ public final class Play {
 		}
 		if (primVal != null) {
 			System.out.println(position.toString());
+			System.out.println(primVal);
 			System.out.println("Game over");
 		}
 	}
 
 	private static <S extends GenState, GR extends FixedLengthWritable> void rangeSubMain(
-			Configuration conf, RangeTree<S, GR> tree) throws IOException,
-			ClassNotFoundException {
+			Configuration conf, RangeTree<S, GR> tree, boolean hasDatabase)
+			throws IOException, ClassNotFoundException {
 		Suffix<S> posRange = tree.getRoots().iterator().next();
-		Path[] outPath = new Path[1];
-		outPath[0] = ConfParser.getOutputPath(conf);
-		FileSystem fs = outPath[0].getFileSystem(conf);
-		Path[] readers = MapFileOutputFormat.getFileNames(fs, outPath, conf);
-		Partitioner<Suffix<S>, MainRecords<GR>> partitioner = ConfParser
-				.<Suffix<S>, MainRecords<GR>> getPartitionerInstance(conf);
+		FileSystem fs;
+		Path[] readers;
+		Partitioner<Suffix<S>, MainRecords<GR>> partitioner;
+		if (hasDatabase) {
+			Path[] outPath = new Path[1];
+			outPath[0] = ConfParser.getOutputPath(conf);
+			fs = outPath[0].getFileSystem(conf);
+			readers = MapFileOutputFormat.getFileNames(fs, outPath, conf);
+			partitioner = ConfParser
+					.<Suffix<S>, MainRecords<GR>> getPartitionerInstance(conf);
+		} else {
+			fs = null;
+			readers = null;
+			partitioner = null;
+		}
 		String gameName = GamesmanParser.getGameName(conf);
 		SolveReader<S, GR> gameReader = SolveReaders
 				.<S, GR> get(conf, gameName);
@@ -113,14 +137,17 @@ public final class Play {
 		MainRecords<GR> recs = new MainRecords<GR>(conf);
 		S position = tree.getStartingPositions().iterator().next();
 		boolean gameFinished = true;
-		while (tree.getValue(position) == null) {
+		GameValue primValue = tree.getValue(position);
+		while (primValue == null) {
 			System.out.println(position.toString());
-			MapFileOutputFormat.getEntry(fs, conf, readers, partitioner,
-					posRange, recs);
-			GR unparsedRecord = tree.getRecord(posRange, position, recs);
-			GameRecord record = gameReader.getRecord(position, unparsedRecord);
-			System.out.println(record);
-
+			if (hasDatabase) {
+				MapFileOutputFormat.getEntry(fs, conf, readers, partitioner,
+						posRange, recs);
+				GR unparsedRecord = tree.getRecord(posRange, position, recs);
+				GameRecord record = gameReader.getRecord(position,
+						unparsedRecord);
+				System.out.println(record);
+			}
 			Collection<Pair<String, S>> moves = gameReader
 					.getChildren(position);
 			StringBuilder availableMoves = new StringBuilder(
@@ -143,9 +170,11 @@ public final class Play {
 				break;
 			}
 			posRange = tree.makeContainingRange(position);
+			primValue = tree.getValue(position);
 		}
 		if (gameFinished) {
 			System.out.println(position.toString());
+			System.out.println(primValue);
 			System.out.println("Game over");
 		}
 	}

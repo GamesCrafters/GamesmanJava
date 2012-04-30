@@ -10,7 +10,7 @@ import java.util.Arrays;
  * 
  */
 public class Move {
-	private static class Triplet {
+	private static class Triplet implements Comparable<Triplet> {
 		int place, from, to;
 
 		@Override
@@ -23,6 +23,11 @@ public class Move {
 			Triplet tw = (Triplet) other;
 			return place == tw.place && from == tw.from && to == tw.to;
 		}
+
+		@Override
+		public int compareTo(Triplet o) {
+			return place - o.place;
+		}
 	}
 
 	private final Triplet[] changeList;
@@ -34,12 +39,12 @@ public class Move {
 		for (int i = 0; i < changeList.length; i++) {
 			Triplet writ = new Triplet();
 			writ.place = changes[3 * i];
-			assert writ.place > lastPlace;
 			lastPlace = writ.place;
 			writ.from = changes[3 * i + 1];
 			writ.to = changes[3 * i + 2];
 			changeList[i] = writ;
 		}
+		Arrays.sort(changeList);
 		hashCode = Arrays.hashCode(changes);
 	}
 

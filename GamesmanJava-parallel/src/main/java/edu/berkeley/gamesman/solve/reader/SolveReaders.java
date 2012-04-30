@@ -1,8 +1,10 @@
 package edu.berkeley.gamesman.solve.reader;
 
 import edu.berkeley.gamesman.parallel.game.connect4.Connect4;
+import edu.berkeley.gamesman.parallel.game.ninemensmorris.NineMensMorris;
 import edu.berkeley.gamesman.parallel.game.reversi.Reversi;
 import edu.berkeley.gamesman.parallel.game.tictactoe.TicTacToe;
+import edu.berkeley.gamesman.parallel.game.tootandotto.TootAndOtto;
 import edu.berkeley.gamesman.propogater.tree.Tree;
 
 import java.io.IOException;
@@ -24,6 +26,8 @@ public class SolveReaders {
 		gameClasses.put("ttt", TicTacToe.class);
 		gameClasses.put("reversi", Reversi.class);
 		gameClasses.put("connect4", Connect4.class);
+		gameClasses.put("tootnotto", TootAndOtto.class);
+		gameClasses.put("ninemensmorris", NineMensMorris.class);
 		// TODO Add more games here
 	}
 

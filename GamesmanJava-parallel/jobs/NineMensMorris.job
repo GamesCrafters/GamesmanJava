@@ -1,0 +1,2 @@
+gamesman.hadoop.game.name=ninemensmorris
+propogater.tree.class=edu.berkeley.gamesman.parallel.game.ninemensmorris.NineMensMorris

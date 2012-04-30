@@ -235,7 +235,7 @@ SolveReader<NMMState, NMMRecord>	{
 				}
 			}
 		}
-		return (Move[]) allMoves.toArray();
+		return allMoves.toArray(new Move[allMoves.size()]);
 	}
 
 	@Override
