@@ -1,5 +1,6 @@
 package edu.berkeley.gamesman.parallel.game.ninemensmorris;
 
+import edu.berkeley.gamesman.hasher.DBHasher;
 import edu.berkeley.gamesman.hasher.invhasher.OptimizingInvariantHasher;
 
 public class NMMHasher extends OptimizingInvariantHasher<NMMState> {
@@ -9,6 +10,8 @@ public class NMMHasher extends OptimizingInvariantHasher<NMMState> {
 	/* 9 - blackPiecesPlaced = black Pieces that haven't been placed
 	 * blackPiecesPlaced-blackPiecesCaptured = black pieces on the board.
 	 */
+	
+	
 
 	public NMMHasher(int[] digitBase) {
 		super(digitBase);
@@ -24,14 +27,21 @@ public class NMMHasher extends OptimizingInvariantHasher<NMMState> {
 	@Override
 	protected long getInvariant(NMMState state) {
 		// TODO Auto-generated method stub
+		
 		return 0;
 	}
 
 	
-	//Let's just write a valid method within state and call it on itself
+	/*
+	 * *******************************************
+	 * I ALSO WROTE VALID
+	 */
+	
 	@Override
 	protected boolean valid(NMMState state) {
-		// TODO Auto-generated method stub
-		return false;
+		return state.valid();
+
+		
+		
 	}	
 }

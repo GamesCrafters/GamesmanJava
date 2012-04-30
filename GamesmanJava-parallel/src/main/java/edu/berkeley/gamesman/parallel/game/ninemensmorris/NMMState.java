@@ -25,27 +25,56 @@ public class NMMState extends CountingState {
 		return null;
 	}
 	
-	//this method returns whether the given state is valid.
 	public boolean valid() {
-		/* invariants of being valid
-		 * the blackPiecesPlaced + blackPiecesCaptured <= 9
-		 * the whitePiecesPlaced + whitePiecesCaptured <= 9
-		 */
-		return false;
-	}
-	
-	//WRITE LATER
-	public char getXPiecesToBePlacedAsChar() {
-		return ' ';
-	}
-	
-	//WRITE LATER
-	public char getOPiecesToBePlacedAsChar() {
-		return ' ';
+		
+		int oToPlace = get(boardSize);
+		int xToPlace = get(boardSize + 1);
+		int oOnBoard = get(boardSize + 2);
+		int xOnBoard = get(boardSize + 3);
+		int actualXonBoard = 0;
+		int actualOonBoard = 0;
+		boolean rightNumberPieces, oOnBoardIsCorrect, xOnBoardIsCorrect, toPlaceCorrect;
+		
+		//count how many Xs and Os are on the board to check if it matches the prefix.
+		for (int i=0; i<boardSize; i++) {
+			if (get(i) == 1)
+				actualXonBoard++;
+			else if (get(i) == 2)
+				actualOonBoard++;
+		}
+		oOnBoardIsCorrect = actualOonBoard == oOnBoard;
+		xOnBoardIsCorrect = actualXonBoard == xOnBoard;
+		toPlaceCorrect = (Math.abs(oToPlace - xToPlace)) <= 1;
+		rightNumberPieces = (xOnBoard + xToPlace <= 9) && (oOnBoard + oToPlace <= 9);
+		return oOnBoardIsCorrect && xOnBoardIsCorrect && toPlaceCorrect && rightNumberPieces;
+		
 	}
 
-	//WRITE LATER
-	public GameValue getValue() {
+	public char getXPiecesToBePlacedAsChar() {
+		return new Integer(get(boardSize+1)).toString().charAt(0);
+	}
+	
+
+	public char getOPiecesToBePlacedAsChar() {
+		return new Integer(get(boardSize)).toString().charAt(0);
+	}
+
+	
+	public GameValue getValue(int lastTurn) {
+		int thisTurn;
+		int thisTurnPiecesLeft;
+		int thisTurnPiecesToPlace;
+		if (lastTurn == 1) {
+			thisTurnPiecesLeft = get(boardSize+2);
+			thisTurnPiecesToPlace = get(boardSize);
+		} else {
+			thisTurnPiecesLeft = get(boardSize+3);
+			thisTurnPiecesToPlace = get(boardSize+1);
+		}
+		
+		if (thisTurnPiecesToPlace == 0 && thisTurnPiecesLeft < 3)
+			return GameValue.LOSE;
+			
 		return null;
 	}
 }

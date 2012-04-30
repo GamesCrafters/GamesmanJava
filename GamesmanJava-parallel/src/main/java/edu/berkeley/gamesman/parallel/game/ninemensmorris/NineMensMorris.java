@@ -14,6 +14,7 @@ import edu.berkeley.gamesman.hasher.genhasher.Move;
 //import edu.berkeley.gamesman.parallel.ranges.MoveWritable;
 //import edu.berkeley.gamesman.parallel.ranges.Range;
 //import edu.berkeley.gamesman.parallel.ranges.RangeReducer;
+import edu.berkeley.gamesman.parallel.FlipRecord;
 import edu.berkeley.gamesman.parallel.game.connect4.C4Hasher;
 import edu.berkeley.gamesman.parallel.game.connect4.C4State;
 import edu.berkeley.gamesman.parallel.game.connect4.Connect4;
@@ -24,13 +25,13 @@ import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 
 public class NineMensMorris extends RangeTree<NMMState, NMMRecord> implements 
 SolveReader<NMMState, NMMRecord>	{
-	
+
 	private NMMHasher myHasher;
 	private final int levelsOfBoxes = 3; //represents how many boxes are in the board. in Typical NMM there are three concentric boxes
 	private final int elementsInABox = 8; // each box has 8 elements in it.
 	private int gameSize = levelsOfBoxes*elementsInABox;
 	private Configuration conf;
-	
+
 	@Override
 	/* We assume that the String board is in the following format:
 	 * The first 24 characters in the string or either X or O, corresponding to pieces on the board
@@ -38,7 +39,7 @@ SolveReader<NMMState, NMMRecord>	{
 	 * the last character is an int that has the number of O to be placed
 	 */
 	public NMMState getPosition(String board) {
-		
+
 		assert board.length() == gameSize;
 		int[] pos = new int[gameSize + 4];
 		int xCount = 0;
@@ -64,7 +65,7 @@ SolveReader<NMMState, NMMRecord>	{
 		getHasher().set(s, pos);
 		return s;
 	}
-	
+
 	// WRITE THIS METHOD ALSO
 	private NMMState newState() {
 		// TODO Auto-generated method stub
@@ -83,7 +84,7 @@ SolveReader<NMMState, NMMRecord>	{
 			throw new IllegalArgumentException();
 		}
 	}
-	
+
 
 	@Override
 	public Collection<Pair<String, NMMState>> getChildren(NMMState position) {
@@ -91,7 +92,7 @@ SolveReader<NMMState, NMMRecord>	{
 		return null;
 	}
 
-	
+
 	/* We assume that the String board is in the following format:
 	 * The first 24 characters in the string or either x or o, corresponding to pieces on the board
 	 * the second to last character is an int that has the number of X pieces to be placed
@@ -109,7 +110,7 @@ SolveReader<NMMState, NMMRecord>	{
 		return sb.toString();
 
 	}
-	
+
 	static char charFor(int piece) {
 		switch (piece) {
 		case 0:
@@ -123,9 +124,12 @@ SolveReader<NMMState, NMMRecord>	{
 		}
 	}
 
+
+	// ISSUE WE NEED TO KNOW WHO'S TURN IT IS
+	// WE HAVE TO HANDLE THIS -1 IS NOT CORRECT
 	@Override
 	public GameValue getValue(NMMState state) {
-		return state.getValue();
+		return state.getValue(-1);
 	}
 
 	@Override 
@@ -139,12 +143,12 @@ SolveReader<NMMState, NMMRecord>	{
 		return myHasher;
 	}
 
-	
+
 	@Override
 	protected Move[] getMoves() {
 
 		ArrayList<Move> allMoves = new ArrayList<Move>();
-		
+
 		//generate moves that put a new piece on the board
 		for (int place=0; place < gameSize; place++) {
 			for (int toPlace = 0; toPlace < 9; toPlace++ ) {
@@ -154,28 +158,78 @@ SolveReader<NMMState, NMMRecord>	{
 				}
 			}
 		}
-		
-		// ACTUALY WE ARE HERE NOW!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+		/*
+		 * ***************** <> <> <> <> <> <> <> <> <><> *********************************
+		 * Andrew, I corrected our moves such that we generate moves that remove the opponent's piece
+		 * only if it forms a NEW 3-in-a-row.
+		 * 
+		 * also i corrected it such that a player can only make a move if she has NO more pieces to place on the board
+		 */
 		//generate moves that move one piece to another
-		for (int moveFrom=0; moveFrom<gameSize; moveFrom++) {
-			for (int moveTo =0; moveTo<gameSize; moveTo++) {
-				if(moveFrom != moveTo ) {
-					//make the move without removing a piece from board
-					allMoves.add(new Move(moveFrom,1,0, moveTo,0,1));
-					allMoves.add(new Move(moveFrom,2,0, moveTo,0,2));
-					
-					//go through all possible pieces to get rid of and pieces on board and make the move
-					/* actually this is incorrect, we need to make sure that a three in a row exists (where moved)
-					 * there are only horizontal or vertical possible 3-in a rows
-					 * if the element is a corner of box, check those ones
-					 * if it's in the middle of a box, check those ones
-					 * check it with the same element in the other boxes (for all boxes != its box)
-					 * add the existance of those same-colored pieces to the move
-					 */
-					for (int removeFrom=0; removeFrom<gameSize; removeFrom++) {
-						for (int onBoard = 0; onBoard < 9; onBoard++) {
-						allMoves.add(new Move(moveFrom,1,0, moveTo,0,1, removeFrom,2,0, gameSize+2,onBoard,onBoard-1));
-						allMoves.add(new Move(moveFrom,2,0, moveTo,0,2, removeFrom,1,0, gameSize+3,onBoard,onBoard-1));
+		int moveTo;
+		for (int boxLevelofMoveTo = 0; boxLevelofMoveTo < levelsOfBoxes; boxLevelofMoveTo++) {
+			for (int elementInBoxofMoveTo = 0; elementInBoxofMoveTo < elementsInABox; elementInBoxofMoveTo++) {
+				moveTo = boxLevelofMoveTo * elementsInABox + elementInBoxofMoveTo;
+				for (int moveFrom = 0; moveFrom<gameSize; moveFrom++) {
+					if(moveFrom != moveTo ) {
+						//make the move without removing a piece from board
+						allMoves.add(new Move(moveFrom,1,0, moveTo,0,1, gameSize+1,0,0));
+						allMoves.add(new Move(moveFrom,2,0, moveTo,0,2, gameSize,0,0));
+
+						//go through all possible pieces to get rid of and pieces on board and make the move
+						/* actually this is incorrect, we need to make sure that a three in a row exists (where moved)
+						 * there are only horizontal or vertical possible 3-in a rows
+						 * if the element is a corner of box, check those ones
+						 * if it's in the middle of a box, check those ones
+						 * check it with the same element in the other boxes (for all boxes != its box)
+						 * add the existance of those same-colored pieces to the move
+						 */
+						for (int removeFrom=0; removeFrom<gameSize; removeFrom++) {
+							for (int onBoard = 0; onBoard < 9; onBoard++) {	
+								int mid1,corner1,mid2,corner2; //midX and cornerX form a possible three-in-a-row with the position of moveTo
+								//if moveTo is a middle piece, then corner1-corner2 from a 3inarow, and corner3 and corner 4 do the same
+								int diag1, diag2; //this is used to detect diagnol three in a rows
+								if (elementInBoxofMoveTo % 2 == 0)  {//if it is on the corner.
+
+									mid1 = ((elementInBoxofMoveTo + 1) % elementsInABox) + boxLevelofMoveTo*elementsInABox;
+									corner1 = ((elementInBoxofMoveTo + 2) % elementsInABox) + boxLevelofMoveTo*elementsInABox;
+									mid2 = ((elementInBoxofMoveTo - 1) % elementsInABox) + boxLevelofMoveTo*elementsInABox;
+									corner2 = ((elementInBoxofMoveTo - 2) % elementsInABox) + boxLevelofMoveTo*elementsInABox;
+
+									allMoves.add(new Move(moveFrom,1,0, moveTo,0,1, mid1,1,1, corner1,1,1,
+											removeFrom,2,0, gameSize+2,onBoard,onBoard-1, gameSize+1,0,0));
+									allMoves.add(new Move(moveFrom,1,0, moveTo,0,1, mid2,1,1, corner2,1,1,
+											removeFrom,2,0, gameSize+2,onBoard,onBoard-1, gameSize+1,0,0));
+
+									allMoves.add(new Move(moveFrom,2,0, moveTo,0,2, mid1,2,2, corner1,2,2,
+											removeFrom,1,0, gameSize+3,onBoard,onBoard-1, gameSize,0,0));
+									allMoves.add(new Move(moveFrom,2,0, moveTo,0,2, mid2,2,2, corner2,2,2,
+											removeFrom,1,0, gameSize+3,onBoard,onBoard-1, gameSize,0,0));
+
+								}
+
+								else { //we are looking at a piece in the middle of a box so add the 3-in-a-row
+									corner1 = ((elementInBoxofMoveTo + 1) % elementsInABox) + boxLevelofMoveTo*elementsInABox;
+									corner2 = ((elementInBoxofMoveTo - 1) % elementsInABox) + boxLevelofMoveTo*elementsInABox;
+
+									allMoves.add(new Move(moveFrom,1,0, moveTo,0,1, corner1,1,1, corner2,1,1,
+											removeFrom,2,0, gameSize+2,onBoard,onBoard-1, gameSize+1,0,0));
+
+									allMoves.add(new Move(moveFrom,2,0, moveTo,0,2, corner1,2,2, corner2,2,2,
+											removeFrom,1,0, gameSize+3,onBoard,onBoard-1, gameSize,0,0));
+
+								}
+								// here we look at the "diagnols" the three in a rows that occur across different box levels
+								diag1 = ((boxLevelofMoveTo + 1) % levelsOfBoxes)*elementsInABox + elementInBoxofMoveTo;
+								diag2 = ((boxLevelofMoveTo + 2) % levelsOfBoxes)*elementsInABox + elementInBoxofMoveTo;
+
+								allMoves.add(new Move(moveFrom,1,0, moveTo,0,1, diag1,1,1, diag2,1,1,
+										removeFrom,2,0, gameSize+2,onBoard,onBoard-1, gameSize+1,0,0));
+								allMoves.add(new Move(moveFrom,2,0, moveTo,0,2, diag1,2,2, diag2,2,2,
+										removeFrom,1,0, gameSize+3,onBoard,onBoard-1, gameSize,0,0));		
+
+							}
 						}
 					}
 				}
@@ -199,32 +253,34 @@ SolveReader<NMMState, NMMRecord>	{
 				throw new RuntimeException("No other primitives");
 			return false;
 		}
-		
+
 	}
 
 	@Override
 	protected boolean combineValues(QuickLinkedList<NMMRecord> grList,
 			NMMRecord gr) {
-		// TODO Auto-generated method stub
-		return false;
+		return NMMRecord.combineValues(grList, gr);
 	}
 
 	@Override
 	protected void previousPosition(NMMRecord gr, NMMRecord toFill) {
-		// TODO Auto-generated method stub
-		
+		toFill.previousPosition(gr);
+
 	}
 
 	@Override
 	protected Class<NMMRecord> getGameRecordClass() {
-		// TODO Auto-generated method stub
-		return null;
+		return NMMRecord.class;
+
+	}
+	
+	int numPieces(NMMState state) {
+		return state.get(gameSize+2) + state.get(gameSize+3);
 	}
 
 	@Override
 	public GameRecord getRecord(NMMState position, NMMRecord fetchedRec) {
-		// TODO Auto-generated method stub
-		return null;
+		return NMMRecord.getRecord(fetchedRec, gameSize - numPieces(position));
 	}
 	
 	protected int maxVarianceLength() {
