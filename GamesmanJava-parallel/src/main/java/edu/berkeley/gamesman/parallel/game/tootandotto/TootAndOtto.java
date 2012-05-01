@@ -83,25 +83,32 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 
 	/**
 	 * generates moves that can be made from the current board configuration
-	 * @param numPieces	number of pieces on the board
-	 * @param player1T	number of T for player 1
-	 * @param player1O	number of O for player 1
-	 * @param player2T	number of T for player 2
-	 * @param player2O 	number of O for player 2
-	 * @param columnMoveList	the list of moves generated so far that we will append to
+	 * 
+	 * @param numPieces
+	 *            number of pieces on the board
+	 * @param player1T
+	 *            number of T for player 1
+	 * @param player1O
+	 *            number of O for player 1
+	 * @param player2T
+	 *            number of T for player 2
+	 * @param player2O
+	 *            number of O for player 2
+	 * @param columnMoveList
+	 *            the list of moves generated so far that we will append to
 	 */
 	private void generateMoves(int numPieces, int player1T, int player1O,
 			int player2T, int player2O, ArrayList<Move>[] columnMoveList) {
 		// figure out who is playing
 		int turn = getTurn(numPieces);
-		
+
 		// Assume it is the first player's turn
 		int TIndex = gameSize + 3;
 		int OIndex = gameSize + 2;
 		int numT = player1T;
 		int numO = player1O;
 		int numPiecesIndex = gameSize + 4;
-		
+
 		// If it is the second player's turn, set the info accordingly
 		if (turn == 2) {
 			TIndex -= 2;
@@ -193,6 +200,40 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 		return (numPieces % 2) + 1;
 	}
 
+	/**
+	 * returns the T index for specified player
+	 * 
+	 * @param player
+	 * @return
+	 */
+	int getPlayerTIndex(int player) {
+		switch (player) {
+		case 1:
+			return gameSize + 3;
+		case 2:
+			return gameSize + 1;
+		default:
+			throw new IllegalArgumentException();
+		}
+	}
+
+	/**
+	 * returns the O index for specified player
+	 * 
+	 * @param player
+	 * @return
+	 */
+	int getPlayerOIndex(int player) {
+		switch (player) {
+		case 1:
+			return gameSize + 2;
+		case 2:
+			return gameSize;
+		default:
+			throw new IllegalArgumentException();
+		}
+	}
+
 	@Override
 	public CountingState getPosition(String board) {
 		assert board.length() == gameSize + 4;
@@ -239,27 +280,47 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 	public Collection<Pair<String, CountingState>> getChildren(
 			CountingState position) {
 		ArrayList<Pair<String, CountingState>> children = new ArrayList<Pair<String, CountingState>>();
+		int playerInTurn = getTurn(position);
 		for (int col = 0; col < width; col++) {
-			CountingState s = newState();
-			getHasher().set(s, position);
-			if (playMove(s, col)) {
-				children.add(new Pair<String, CountingState>(Integer
-						.toString(col), s));
+			if (!isColumnFull(position, col)) {
+				for (int row = 0; row < height; row++) {
+					if (get(position, row, col) == 0) {
+						int place = getPlace(row, col);
+						int TIndex = getPlayerTIndex(playerInTurn);
+						int OIndex = getPlayerOIndex(playerInTurn);
+						int numT = position.get(TIndex);
+						int numO = position.get(OIndex);
+						int numPiecesIndex = gameSize + 4;
+						int numPieces = position.get(numPiecesIndex);
+
+						if (numT < maxPieces) {
+							CountingState s = newState();
+							getHasher().set(s, position);
+							myHasher.makeMove(s, new Move(place, 0, 1, TIndex,
+									numT, numT + 1, numPiecesIndex, numPieces,
+									numPieces + 1));
+							children.add(new Pair<String, CountingState>(
+									Integer.toString(col), s));
+						}
+						if (numO < maxPieces) {
+							CountingState s = newState();
+							getHasher().set(s, position);
+							myHasher.makeMove(s, new Move(place, 0, 1, OIndex,
+									numO, numO + 1, numPiecesIndex, numPieces,
+									numPieces + 1));
+							children.add(new Pair<String, CountingState>(
+									Integer.toString(col), s));
+						}
+						break;
+					}
+				}
 			}
 		}
 		return children;
 	}
 
-	public boolean playMove(CountingState state, int col) {
-		boolean made = false;
-		for (Move m : colMoves[col]) {
-			if (m.matches(state) == -1) {
-				myHasher.makeMove(state, m);
-				made = true;
-				break;
-			}
-		}
-		return made;
+	boolean isColumnFull(CountingState state, int col) {
+		return get(state, col, height - 1) != 0;
 	}
 
 	@Override
@@ -504,7 +565,7 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 	protected int maxVarianceLength() {
 		return gameSize;
 	}
-	
+
 	/**
 	 * Returns whose turn it is for this state (for testing)
 	 * 
@@ -514,9 +575,10 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 	int getTurn(CountingState state) {
 		return getTurn(numPieces(state));
 	}
+
 	/**
-	 * Given a state, fetches the piece at row-col (0 empty, 1 T, 2
-	 * O) (for testing)
+	 * Given a state, fetches the piece at row-col (0 empty, 1 T, 2 O) (for
+	 * testing)
 	 * 
 	 * @param state
 	 * @param row
