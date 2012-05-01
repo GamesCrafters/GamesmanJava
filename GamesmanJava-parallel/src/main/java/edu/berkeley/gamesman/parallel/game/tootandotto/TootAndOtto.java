@@ -262,17 +262,17 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 							myHasher.makeMove(s, new Move(place, 0, 1, TIndex,
 									numT, numT + 1, numPiecesIndex, numPieces,
 									numPieces + 1));
-							children.add(new Pair<String, CountingState>(
+							children.add(new Pair<String, CountingState>("T at "+
 									Integer.toString(col), s));
 						}
 						if (numO < maxPieces) {
 							CountingState s = newState();
 							getHasher().set(s, position);
-							myHasher.makeMove(s, new Move(place, 0, 1, OIndex,
+							myHasher.makeMove(s, new Move(place, 0, 2, OIndex,
 									numO, numO + 1, numPiecesIndex, numPieces,
 									numPieces + 1));
 							children.add(new Pair<String, CountingState>(
-									Integer.toString(col), s));
+									"O at "+Integer.toString(col), s));
 						}
 						break;
 					}
