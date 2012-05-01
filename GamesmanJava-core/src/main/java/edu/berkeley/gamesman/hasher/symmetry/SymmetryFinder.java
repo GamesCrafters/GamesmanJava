@@ -1,5 +1,14 @@
 package edu.berkeley.gamesman.hasher.symmetry; 
-
+/**
+ * Abstract class for RectanularSymmetryFinder and SquareSymmetryFinder.
+ * Creates public interface for using thesymmetry tools, but leaves
+ * board specific methods to be implemented.
+ *
+ * findLargestTransformation is given a Mapping (index, row, and column)
+ * and returns the largest index that it could transform into i.e.
+ * a Mapping of the bottom right corner piece would return 3, the largest
+ * index of a corner (bottom left).
+ */
 public abstract class SymmetryFinder {
 
   protected int height;

@@ -1,7 +1,22 @@
 package edu.berkeley.gamesman.hasher.symmetry; 
 
 import java.util.ArrayList;
-
+/**
+ * This is a symmetry tool for square boards.
+ * Rotational, vertical, and horizontal symmetry are equivalent, so they
+ * are all checked by default.
+ *
+ * getBoardIndices will give you an int[][] with indices that represent
+ * the numbering of each location on the board.
+ * Board locations that are symmetrically equivalent will be in consecutive
+ * order i.e. the 4 corners will have consecutive numbers,
+ * and so will the (width-2)/2 and (height-2)/2 side pieces, ..etc
+ *
+ * getFixedPoints will return an int[] that contains the fixed points
+ * of the board. The array is indexed in reverse, just like the hashers.
+ * The number in location i is either the largest index that i can rotate
+ * or reflect to, or the number in location i-1, whichever is larger.
+ */
 public class SquareSymmetryFinder extends SymmetryFinder {
 
   private ArrayList<Mapping> mappings;
