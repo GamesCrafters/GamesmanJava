@@ -47,7 +47,7 @@ public class TOHasher extends OptimizingInvariantHasher<CountingState> {
 		int boardSize = width * height;
 		int[] digitBase = new int[boardSize + 5];
 		Arrays.fill(digitBase, 3);
-		Arrays.fill(digitBase, boardSize + 3, boardSize, maxPieces);
+		Arrays.fill(digitBase, boardSize, boardSize + 3, maxPieces);
 		digitBase[boardSize+  4] = boardSize + 1;
 		return digitBase;
 	}
