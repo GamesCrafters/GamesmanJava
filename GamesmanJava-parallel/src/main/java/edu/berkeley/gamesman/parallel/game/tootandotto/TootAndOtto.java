@@ -8,7 +8,6 @@ import org.apache.hadoop.conf.Configuration;
 
 import edu.berkeley.gamesman.game.type.GameRecord;
 import edu.berkeley.gamesman.game.type.GameValue;
-import edu.berkeley.gamesman.hasher.counting.CountingState;
 import edu.berkeley.gamesman.hasher.genhasher.Move;
 import edu.berkeley.gamesman.parallel.GameRecordCombiner;
 import edu.berkeley.gamesman.parallel.ranges.RangeTree;
@@ -18,17 +17,17 @@ import edu.berkeley.gamesman.util.Pair;
 import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 
 /**
- * Similar to the C4State for connect 4, the CountingState for TootAndOtto holds
- * the game as a list of pieces in col-major order. The highest index in the
- * array is the number of pieces on the board. The second and third highest,
+ * Similar to the C4State for connect 4, the TootNOttoState for TootAndOtto
+ * holds the game as a list of pieces in col-major order. The highest index in
+ * the array is the number of pieces on the board. The second and third highest,
  * respectively, are the number of Ts and Os placed by player 1. The fourth and
  * fifth are the number of Ts and Os placed by player 2. The length of the array
  * is gameSize + 5.
  * 
  * @author williamshen
  */
-public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
-		SolveReader<CountingState, GameRecord> {
+public class TootAndOtto extends RangeTree<TootNOttoState, GameRecord>
+		implements SolveReader<TootNOttoState, GameRecord> {
 	private Move[] myMoves;
 	private Move[][] colMoves;
 	private TOHasher myHasher;
@@ -82,7 +81,8 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 						int o1 = player1Total - t1;
 						for (int t2 = player2TMax; t2 >= 0; t2--) {
 							int o2 = player2Total - t2;
-							// Dont have to worry about floating pieces because gravity hasher will take care of it
+							// Dont have to worry about floating pieces because
+							// gravity hasher will take care of it
 							if (isValid(t1 + 1, o1, t2, o2, numPieces + 1)) {
 								columnMoveList[col].add(new Move(place, 0, 1,
 										t1Index, t1, t1 + 1, t2Index, t2, t2,
@@ -198,7 +198,7 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 	}
 
 	@Override
-	public CountingState getPosition(String board) {
+	public TootNOttoState getPosition(String board) {
 		assert board.length() == gameSize + 4;
 		int[] pos = new int[gameSize + 5];
 		int pieceCount = 0;
@@ -217,7 +217,7 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 		pos[gameSize + 2] = board.charAt(gameSize + 2);
 		pos[gameSize + 3] = board.charAt(gameSize + 3);
 		pos[gameSize + 4] = pieceCount;
-		CountingState s = newState();
+		TootNOttoState s = newState();
 		getHasher().set(s, pos);
 		return s;
 	}
@@ -235,14 +235,14 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 		}
 	}
 
-	public CountingState newState() {
+	public TootNOttoState newState() {
 		return myHasher.newState();
 	}
 
 	@Override
-	public Collection<Pair<String, CountingState>> getChildren(
-			CountingState position) {
-		ArrayList<Pair<String, CountingState>> children = new ArrayList<Pair<String, CountingState>>();
+	public Collection<Pair<String, TootNOttoState>> getChildren(
+			TootNOttoState position) {
+		ArrayList<Pair<String, TootNOttoState>> children = new ArrayList<Pair<String, TootNOttoState>>();
 		int playerInTurn = getTurn(position);
 		for (int col = 0; col < width; col++) {
 			if (!isColumnFull(position, col)) {
@@ -257,22 +257,22 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 						int numPieces = position.get(numPiecesIndex);
 
 						if (numT < maxPieces) {
-							CountingState s = newState();
+							TootNOttoState s = newState();
 							getHasher().set(s, position);
 							myHasher.makeMove(s, new Move(place, 0, 1, TIndex,
 									numT, numT + 1, numPiecesIndex, numPieces,
 									numPieces + 1));
-							children.add(new Pair<String, CountingState>("T at "+
-									Integer.toString(col), s));
+							children.add(new Pair<String, TootNOttoState>(
+									"T at " + Integer.toString(col), s));
 						}
 						if (numO < maxPieces) {
-							CountingState s = newState();
+							TootNOttoState s = newState();
 							getHasher().set(s, position);
 							myHasher.makeMove(s, new Move(place, 0, 2, OIndex,
 									numO, numO + 1, numPiecesIndex, numPieces,
 									numPieces + 1));
-							children.add(new Pair<String, CountingState>(
-									"O at "+Integer.toString(col), s));
+							children.add(new Pair<String, TootNOttoState>(
+									"O at " + Integer.toString(col), s));
 						}
 						break;
 					}
@@ -282,12 +282,12 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 		return children;
 	}
 
-	boolean isColumnFull(CountingState state, int col) {
+	boolean isColumnFull(TootNOttoState state, int col) {
 		return get(state, height - 1, col) != 0;
 	}
 
 	@Override
-	public String getString(CountingState position) {
+	public String getString(TootNOttoState position) {
 		StringBuilder sb = new StringBuilder(gameSize + 4);
 		for (int row = 0; row < height; row++) {
 			for (int col = 0; col < width; col++) {
@@ -312,7 +312,7 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 	 * @return W/L/T or null (if not primitive)
 	 */
 	@Override
-	public GameValue getValue(CountingState state) {
+	public GameValue getValue(TootNOttoState state) {
 		int numPieces = state.get(gameSize + 4);
 		int lastPlayed = getTurn(numPieces);
 		TOEnum pattern = checkPattern(state);
@@ -355,7 +355,7 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 	 * @param state
 	 * @return
 	 */
-	protected TOEnum checkPattern(CountingState state) {
+	protected TOEnum checkPattern(TootNOttoState state) {
 		boolean tootFound, ottoFound, horizontalPossible, downPossible;
 		boolean verticalPossible;
 		tootFound = false;
@@ -435,8 +435,8 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 	}
 
 	@Override
-	public Collection<CountingState> getStartingPositions() {
-		CountingState result = myHasher.newState();
+	public Collection<TootNOttoState> getStartingPositions() {
+		TootNOttoState result = myHasher.newState();
 		return Collections.singleton(result);
 	}
 
@@ -451,7 +451,7 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 	}
 
 	@Override
-	protected boolean setNewRecordAndHasChildren(CountingState state,
+	protected boolean setNewRecordAndHasChildren(TootNOttoState state,
 			GameRecord rec) {
 		GameValue val = getValue(state);
 		if (val == null) {
@@ -490,7 +490,7 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 	 * Returns the tier which is just the last element of the sequence.
 	 */
 	@Override
-	public int getDivision(Suffix<CountingState> suff) {
+	public int getDivision(Suffix<TootNOttoState> suff) {
 		assert suff.length() == suffLen();
 		return suff.get(suffLen() - 1);
 	}
@@ -509,7 +509,7 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 	}
 
 	@Override
-	public GameRecord getRecord(CountingState position, GameRecord fetchedRec) {
+	public GameRecord getRecord(TootNOttoState position, GameRecord fetchedRec) {
 		return fetchedRec;
 	}
 
@@ -521,7 +521,7 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 	 *            The state
 	 * @return The number of pieces/tier for this state
 	 */
-	int numPieces(CountingState state) {
+	int numPieces(TootNOttoState state) {
 		return state.get(gameSize + 4);
 	}
 
@@ -535,7 +535,7 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 	 * @param state
 	 * @return
 	 */
-	int getTurn(CountingState state) {
+	int getTurn(TootNOttoState state) {
 		return getTurn(numPieces(state));
 	}
 
@@ -548,7 +548,11 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 	 * @param col
 	 * @return
 	 */
-	int get(CountingState state, int row, int col) {
-		return state.get(col * height + row);
+	int get(TootNOttoState state, int row, int col) {
+		return get(state, row, col, height);
+	}
+
+	public static int get(TootNOttoState state, int row, int col, int gameHeight) {
+		return state.get(col * gameHeight + row);
 	}
 }

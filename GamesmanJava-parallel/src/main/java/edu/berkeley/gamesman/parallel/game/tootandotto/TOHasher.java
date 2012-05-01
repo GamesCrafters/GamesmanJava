@@ -3,14 +3,13 @@ package edu.berkeley.gamesman.parallel.game.tootandotto;
 import java.util.Arrays;
 
 import edu.berkeley.gamesman.hasher.DBHasher;
-import edu.berkeley.gamesman.hasher.counting.CountingState;
 import edu.berkeley.gamesman.hasher.genhasher.GravityHashUtil;
 import edu.berkeley.gamesman.hasher.invhasher.OptimizingInvariantHasher;
 
-public class TOHasher extends OptimizingInvariantHasher<CountingState> {
-	private final int width, height;
+public class TOHasher extends OptimizingInvariantHasher<TootNOttoState> {
+	final int width, height;
 	public final int boardSize; // TODO: why not private?
-	private final GravityHashUtil<CountingState> myUtil;
+	private final GravityHashUtil<TootNOttoState> myUtil;
 
 	public TOHasher(int width, int height, int maxPieces) {
 		this(width, height, maxPieces, 0);
@@ -31,7 +30,7 @@ public class TOHasher extends OptimizingInvariantHasher<CountingState> {
 		this.width = width;
 		this.height = height;
 		boardSize = width * height;
-		myUtil = new GravityHashUtil<CountingState>(width, height);
+		myUtil = new GravityHashUtil<TootNOttoState>(width, height);
 	}
 
 	/**
@@ -40,7 +39,8 @@ public class TOHasher extends OptimizingInvariantHasher<CountingState> {
 	 * 
 	 * @param width
 	 * @param height
-	 * @param maxPieces the max Ts and Os each can have
+	 * @param maxPieces
+	 *            the max Ts and Os each can have
 	 * @return
 	 */
 	private static int[] makeDigitBase(int width, int height, int maxPieces) {
@@ -48,23 +48,24 @@ public class TOHasher extends OptimizingInvariantHasher<CountingState> {
 		int[] digitBase = new int[boardSize + 5];
 		Arrays.fill(digitBase, 3);
 		Arrays.fill(digitBase, boardSize, boardSize + 3, maxPieces);
-		digitBase[boardSize+  4] = boardSize + 1;
+		digitBase[boardSize + 4] = boardSize + 1;
 		return digitBase;
 	}
 
 	@Override
-	protected long getInvariant(CountingState state) {
-		return isEmpty(state) ? 0 : myUtil.getInv(this, state);
+	protected long getInvariant(TootNOttoState state) {
+		// TODO Change 0 to a unique value based on the highest four entries
+		return isEmpty(state) ? 0 : myUtil.getInv(this, 0L, state);
 	}
 
 	@Override
-	protected boolean valid(CountingState state) {
+	protected boolean valid(TootNOttoState state) {
 		return getInvariant(state) >= 0 && DBHasher.dbValid(state, boardSize);
 	}
 
 	@Override
-	protected CountingState genHasherNewState() {
-		return new CountingState(this, boardSize);
+	protected TootNOttoState genHasherNewState() {
+		return new TootNOttoState(this, boardSize);
 	}
 
 }
