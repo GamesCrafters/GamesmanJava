@@ -62,7 +62,7 @@ public class NMMHasher extends OptimizingInvariantHasher<NMMState> {
 				invariant |= state.get(i);
 			}
 			invariant <<= 1;
-			invariant |= state.get(boardSize+5);
+			invariant |= state.get(boardSize+4);
 			return myUtil.getInv(invariant, state);
 		}
 	}
@@ -79,4 +79,9 @@ public class NMMHasher extends OptimizingInvariantHasher<NMMState> {
 		
 		
 	}	
+
+	public static void main(String[] args) {
+		NMMHasher h = new NMMHasher(3, 8, 9);
+		System.out.println(h.numPositions(new int[0]));
+	}
 }

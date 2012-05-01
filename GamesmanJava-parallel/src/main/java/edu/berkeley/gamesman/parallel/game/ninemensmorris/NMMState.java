@@ -55,12 +55,13 @@ public class NMMState extends CountingState {
 		}
 		oOnBoardIsCorrect = actualOonBoard == oOnBoard;
 		xOnBoardIsCorrect = actualXonBoard == xOnBoard;
-		if(get(boardSize+5) == 1 ) {
+		if(get(boardSize+4) == 1 ) {
 			toPlaceCorrect = (oToPlace==xToPlace);	
 		}
-		else
+		else{
+			assert get(boardSize+4)==0;
 			toPlaceCorrect =(oToPlace==xToPlace+1);
-
+		}
 		rightNumberPieces = (xOnBoard + xToPlace <= pieces) && (oOnBoard + oToPlace <= pieces);
 		return oOnBoardIsCorrect && xOnBoardIsCorrect && toPlaceCorrect && rightNumberPieces;
 		
