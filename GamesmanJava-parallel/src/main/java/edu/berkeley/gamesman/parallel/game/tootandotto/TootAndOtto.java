@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
-
 import org.apache.hadoop.conf.Configuration;
 
 import edu.berkeley.gamesman.game.type.GameRecord;
@@ -40,9 +39,6 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 	private int tootPlayer;
 	private boolean misere;
 
-
-	
-
 	@Override
 	public void rangeTreeConfigure(Configuration conf) {
 		// Defaulting game size to the standard 6x4 unless set by conf file
@@ -68,7 +64,60 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 		for (int i = 0; i < width; i++) {
 			columnMoveList[i] = new ArrayList<Move>();
 		}
-		generateMoves(0, 0, 0, 0, 0, columnMoveList);
+		for (int numPieces = 0; numPieces < gameSize; numPieces++) {
+			int t1Index = getPlayerTIndex(1);
+			int o1Index = getPlayerOIndex(1);
+			int t2Index = getPlayerTIndex(2);
+			int o2Index = getPlayerOIndex(2);
+			int numPiecesIndex = gameSize + 4;
+			int player1Total = (numPieces - (numPieces % 2)) / 2
+					+ (numPieces % 2);
+			int player2Total = numPieces - player1Total;
+			int player1TMax = Math.min(player1Total, maxPieces);
+			int player2TMax = Math.min(player2Total, maxPieces);
+			for (int row = 0; row < height; row++) {
+				for (int col = 0; col < width; col++) {
+					int place = getPlace(row, col);
+					for (int t1 = 0; t1 <= player1TMax; t1++) {
+						int o1 = player1Total - t1;
+						for (int t2 = player2TMax; t2 >= 0; t2--) {
+							int o2 = player2Total - t2;
+							// Dont have to worry about floating pieces because gravity hasher will take care of it
+							if (isValid(t1 + 1, o1, t2, o2, numPieces + 1)) {
+								columnMoveList[col].add(new Move(place, 0, 1,
+										t1Index, t1, t1 + 1, t2Index, t2, t2,
+										o1Index, o1, o1, o2Index, o2, o2,
+										numPiecesIndex, numPieces,
+										numPieces + 1));
+							}
+							if (isValid(t1, o1 + 1, t2, o2, numPieces + 1)) {
+								columnMoveList[col].add(new Move(place, 0, 2,
+										t1Index, t1, t1, t2Index, t2, t2,
+										o1Index, o1, o1 + 1, o2Index, o2, o2,
+										numPiecesIndex, numPieces,
+										numPieces + 1));
+							}
+							if (isValid(t1, o1, t2 + 1, o2, numPieces + 1)) {
+								columnMoveList[col].add(new Move(place, 0, 1,
+										t1Index, t1, t1, t2Index, t2, t2 + 1,
+										o1Index, o1, o1, o2Index, o2, o2,
+										numPiecesIndex, numPieces,
+										numPieces + 1));
+
+							}
+							if (isValid(t1, o1, t2, o2 + 1, numPieces + 1)) {
+								columnMoveList[col].add(new Move(place, 0, 2,
+										t1Index, t1, t1, t2Index, t2, t2,
+										o1Index, o1, o1, o2Index, o2, o2 + 1,
+										numPiecesIndex, numPieces,
+										numPieces + 1));
+							}
+						}
+					}
+				}
+			}
+		}
+
 		ArrayList<Move> allMoves = new ArrayList<Move>();
 		for (int i = 0; i < width; i++) {
 			colMoves[i] = columnMoveList[i].toArray(new Move[columnMoveList[i]
@@ -79,100 +128,16 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 		misere = conf.getBoolean("gamesman.game.misere", false);
 	}
 
-	/**
-	 * generates moves that can be made from the current board configuration
-	 * 
-	 * @param numPieces
-	 *            number of pieces on the board
-	 * @param player1T
-	 *            number of T for player 1
-	 * @param player1O
-	 *            number of O for player 1
-	 * @param player2T
-	 *            number of T for player 2
-	 * @param player2O
-	 *            number of O for player 2
-	 * @param columnMoveList
-	 *            the list of moves generated so far that we will append to
-	 */
-	private void generateMoves(int numPieces, int player1T, int player1O,
-			int player2T, int player2O, ArrayList<Move>[] columnMoveList) {
-		// figure out who is playing
-		int turn = getTurn(numPieces);
-
-		// Assume it is the first player's turn
-		int TIndex = gameSize + 3;
-		int OIndex = gameSize + 2;
-		int numT = player1T;
-		int numO = player1O;
-		int numPiecesIndex = gameSize + 4;
-
-		// If it is the second player's turn, set the info accordingly
-		if (turn == 2) {
-			TIndex -= 2;
-			OIndex -= 2;
-			numT = player2T;
-			numO = player2O;
-		}
-
-		for (int row = 0; row < height; row++) {
-			for (int col = 0; col < width; col++) {
-				int place = getPlace(row, col);
-				if (numT < maxPieces) {
-					if (isBottom(row, col)) {
-						columnMoveList[col].add(new Move(place, 0, 1, TIndex,
-								numT, numT + 1, numPiecesIndex, numPieces,
-								numPieces + 1));
-					} else {
-						columnMoveList[col].add(new Move(place - 1, 1, 1,
-								place, 0, 1, TIndex, numT, numT + 1,
-								numPiecesIndex, numPieces, numPieces + 1));
-						columnMoveList[col].add(new Move(place - 1, 2, 2,
-								place, 0, 1, TIndex, numT, numT + 1,
-								numPiecesIndex, numPieces, numPieces + 1));
-					}
-					if (turn == 1) {
-						generateMoves(numPieces + 1, player1T + 1, player1O,
-								player2T, player2O, columnMoveList);
-					} else {
-						generateMoves(numPieces + 1, player1T, player1O,
-								player2T + 1, player2O, columnMoveList);
-					}
-				}
-				if (numO < maxPieces) {
-					if (isBottom(row, col)) {
-						columnMoveList[col].add(new Move(place, 0, 2, OIndex,
-								numO, numO + 1, numPiecesIndex, numPieces,
-								numPieces + 1));
-					} else {
-						columnMoveList[col].add(new Move(place - 1, 1, 1,
-								place, 0, 2, OIndex, numO, numO + 1,
-								numPiecesIndex, numPieces, numPieces + 1));
-						columnMoveList[col].add(new Move(place - 1, 2, 2,
-								place, 0, 2, OIndex, numO, numO + 1,
-								numPiecesIndex, numPieces, numPieces + 1));
-					}
-				}
-				if (turn == 1) {
-					generateMoves(numPieces + 1, player1T, player1O + 1,
-							player2T, player2O, columnMoveList);
-				} else {
-					generateMoves(numPieces + 1, player1T, player1O, player2T,
-							player2O + 1, columnMoveList);
-				}
-			}
-		}
-	}
-
-	/**
-	 * Determine if we are at the bottom of the column
-	 * 
-	 * @param row
-	 * @param col
-	 * @return true if the position (row, col) is at the bottom of a column
-	 */
-	private boolean isBottom(int row, int col) {
-		return row == 0;
+	boolean isValid(int player1TCount, int player1OCount, int player2TCount,
+			int player2OCount, int numPieces) {
+		return player1TCount <= maxPieces
+				&& player2TCount <= maxPieces
+				&& player1OCount <= maxPieces
+				&& player2OCount <= maxPieces
+				&& player1TCount + player1OCount + player2TCount
+						+ player2OCount == numPieces
+				&& (numPieces - (numPieces % 2)) / 2 == player2TCount
+						+ player2OCount;
 	}
 
 	/**
@@ -433,7 +398,7 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 							&& (state.get(i + 3 * height - 3)) == 2)
 						ottoFound = true;
 				}
-			} else if(state.get(i)==1){// starting with a 1 looking for toot
+			} else if (state.get(i) == 1) {// starting with a 1 looking for toot
 				if (verticalPossible) {
 					if ((state.get(i + 1)) == 2 && (state.get(i + 2)) == 2
 							&& (state.get(i + 3)) == 1)
