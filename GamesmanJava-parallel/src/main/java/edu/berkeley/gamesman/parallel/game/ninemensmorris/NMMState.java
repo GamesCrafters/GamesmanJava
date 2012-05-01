@@ -7,22 +7,22 @@ import edu.berkeley.gamesman.hasher.genhasher.GenHasher;
 import edu.berkeley.gamesman.parallel.game.connect4.C4Hasher;
 
 public class NMMState extends CountingState {
-	private final int levelsOfBoxes, elementsInABox, boardSize;
+	private final int levelsOfBoxes, elementsInABox, boardSize, pieces;
 
 	
 	public NMMState(NMMHasher myHasher, int levels, int elements) {
 		
 		super(myHasher, levels * elements);
 		this.levelsOfBoxes = levels;
+		this.pieces = myHasher.pieces;
 		this.elementsInABox = elements;
 		this.boardSize = levels * elements;			
 		//changePlace = boardSize - 1;
 		//this.myBoard = new BitSetBoard(elements, levels);
 	}
 	
-	@Override //FOR DEBUGGING PURPOSES REWRITE THIS LATER
-	public String toString() {
-		return null;
+	public int getTurn() {
+		return get(boardSize+4)+1;
 	}
 	
 	public boolean valid() {
@@ -44,8 +44,13 @@ public class NMMState extends CountingState {
 		}
 		oOnBoardIsCorrect = actualOonBoard == oOnBoard;
 		xOnBoardIsCorrect = actualXonBoard == xOnBoard;
-		toPlaceCorrect = (Math.abs(oToPlace - xToPlace)) <= 1;
-		rightNumberPieces = (xOnBoard + xToPlace <= 9) && (oOnBoard + oToPlace <= 9);
+		if(get(boardSize+5) == 1 ) {
+			toPlaceCorrect = (oToPlace==xToPlace);	
+		}
+		else
+			toPlaceCorrect =(oToPlace==xToPlace+1);
+
+		rightNumberPieces = (xOnBoard + xToPlace <= pieces) && (oOnBoard + oToPlace <= pieces);
 		return oOnBoardIsCorrect && xOnBoardIsCorrect && toPlaceCorrect && rightNumberPieces;
 		
 	}
@@ -76,5 +81,10 @@ public class NMMState extends CountingState {
 			return GameValue.LOSE;
 			
 		return null;
+	}
+
+	public char getTurnAsChar() {
+		
+		return new Integer(get(boardSize+4)).toString().charAt(0);
 	}
 }

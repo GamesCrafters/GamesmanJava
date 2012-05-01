@@ -6,13 +6,7 @@ import edu.berkeley.gamesman.propogater.writable.FixedLengthWritable;
 import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 
 public class NMMRecord extends GameRecord implements FixedLengthWritable{
-
-	@Override
-	public int size() {
-		return 1;
-	}
-
-
+	
 	public static boolean combineValues(QuickLinkedList<NMMRecord> grList,
 			NMMRecord gr) {
 		QuickLinkedList<NMMRecord>.QLLIterator iter = grList.iterator();
