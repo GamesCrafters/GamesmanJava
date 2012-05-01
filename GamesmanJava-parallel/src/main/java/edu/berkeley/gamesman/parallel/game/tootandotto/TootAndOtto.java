@@ -283,7 +283,7 @@ public class TootAndOtto extends RangeTree<CountingState, GameRecord> implements
 	}
 
 	boolean isColumnFull(CountingState state, int col) {
-		return get(state, col, height - 1) != 0;
+		return get(state, height - 1, col) != 0;
 	}
 
 	@Override
