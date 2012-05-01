@@ -44,7 +44,10 @@ public class NMMHasher extends OptimizingInvariantHasher<NMMState> {
 	@Override
 	protected NMMState genHasherNewState() {
 		// TODO Auto-generated method stub
-		return new NMMState(this, levels, elements);
+		
+		NMMState toReturn = new NMMState(this, levels, elements);
+		toReturn.initialize();
+		return toReturn;
 	}
 
 	@Override

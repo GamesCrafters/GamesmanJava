@@ -16,9 +16,20 @@ public class NMMState extends CountingState {
 		this.levelsOfBoxes = levels;
 		this.pieces = myHasher.pieces;
 		this.elementsInABox = elements;
-		this.boardSize = levels * elements;			
+		this.boardSize = levels * elements;	
+		
 		//changePlace = boardSize - 1;
 		//this.myBoard = new BitSetBoard(elements, levels);
+	}
+	
+	public void initialize() {
+		
+		set(boardSize, pieces);
+		set(boardSize+1, pieces);
+		set(boardSize+2, 0);
+		set(boardSize+3, 0);
+		set(boardSize+4, 1);
+
 	}
 	
 	public int getTurn() {

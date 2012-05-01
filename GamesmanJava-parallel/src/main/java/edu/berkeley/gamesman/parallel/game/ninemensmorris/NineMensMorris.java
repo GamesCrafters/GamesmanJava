@@ -83,6 +83,7 @@ public class NineMensMorris extends RangeTree<NMMState, NMMRecord> implements
 
 	private NMMState newState() {
 		return myHasher.genHasherNewState();
+		
 	}
 
 	private static int pieceFor(char c) {
