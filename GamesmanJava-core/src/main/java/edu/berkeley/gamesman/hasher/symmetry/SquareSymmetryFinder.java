@@ -2,6 +2,8 @@ package edu.berkeley.gamesman.hasher.symmetry;
 
 import java.util.ArrayList;
 /**
+ * @author choochootrain
+ * 
  * This is a symmetry tool for square boards.
  * Rotational, vertical, and horizontal symmetry are equivalent, so they
  * are all checked by default.

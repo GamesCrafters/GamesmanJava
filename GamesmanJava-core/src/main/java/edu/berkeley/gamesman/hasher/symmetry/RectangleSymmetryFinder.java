@@ -2,6 +2,8 @@ package edu.berkeley.gamesman.hasher.symmetry;
 
 import java.util.ArrayList;
 /**
+ * @author choochootrain
+ * 
  * This is a symmetry tool for rectangular boards.
  * You can specify properties such as rotational, vertical and 
  * horizontal symmetry through the constructor.
