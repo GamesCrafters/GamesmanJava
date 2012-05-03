@@ -105,12 +105,12 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 	public Collection<Pair<String, CountingState>> getChildren(
 			CountingState position) {
 		ArrayList<Pair<String, CountingState>> children = new ArrayList<Pair<String, CountingState>>();
-		for (int i = 0; i < gameSize; i++) {
+		for (int i = 0; i < gameSize * gameSize; i++) {
 			CountingState s = newState();
 			getHasher().set(s, position);
 			if (playMove(s, i)) {
 				children.add(new Pair<String, CountingState>(Integer
-						.toString(i), s));
+						.toString(i % gameSize), s));
 			}
 		}
 		return children;
@@ -131,6 +131,7 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 
 	// Checks to see if there is a connection. Uses a maze-traversal method. Called by getValueHelper.
 	private static boolean hasConnection(CountingState state, int lastTurn) {
+//		System.out.println("hasConnection call");
 		if ((Character) charFor(lastTurn) == 'X') {
 			for (int startingX = 1; startingX <= 5; startingX = startingX + 2) {
 				int currXDir = -1;
@@ -139,18 +140,54 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 				int currY = 0;
 				while (!(currXDir == 0 && currYDir == -1 && currY == 0)
 						&& currY != 6) {
+					System.out.println(currXDir);
+					System.out.println(currYDir);
+					System.out.println(currX);
+					System.out.println(currY);
+					System.out.println();
 					if ((Character) getChar(state, currX + currXDir, currY
 							+ currYDir) == charFor(lastTurn)) {
+//						System.out.println("here");
 						currX = currX + 2 * currXDir;
 						currY = currY + 2 * currYDir;
-						currXDir = (currXDir + 3) % 3 - 1;
-						currYDir = (currYDir + 2) % 3 - 1;
+						if (currXDir == 0 && currYDir == 1) {
+							currXDir = -1;
+							currYDir = 0;
+						}
+						else if (currXDir == -1 && currYDir == 0) {
+							currXDir = 0;
+							currYDir = 1;
+						}
+						else if (currXDir == 0 && currYDir == 1) {
+							currXDir = 1;
+							currYDir = 0;
+						}
+						else if (currXDir == 1 && currYDir == 0) {
+							currXDir = 0;
+							currYDir = 1;
+						}
 					} else {
-						currXDir = (currXDir + 2) % 3 - 1;
-						currYDir = (currYDir + 3) % 3 - 1;
+//						System.out.println("there");
+						if (currXDir == 0 && currYDir == 1) {
+							currXDir = 1;
+							currYDir = 0;
+						}
+						else if (currXDir == 1 && currYDir == 0) {
+							currXDir = 0;
+							currYDir = -1;
+						}
+						else if (currXDir == 0 && currYDir == -1) {
+							currXDir = -1;
+							currYDir = 0;
+						}
+						else if (currXDir == -1 && currYDir == 0) {
+							currXDir = 0;
+							currYDir = 1;
+						}
 					}
 				}
 				if (currY == 6) {
+					System.out.println("has connect");
 					return true;
 				}
 			}
@@ -161,20 +198,59 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 				int currYDir = 1;
 				int currX = 0;
 				int currY = startingY;
+
 				while (!(currXDir == -1 && currYDir == 0 && currX == 0)
 						&& currX != 6) {
+					System.out.println(currXDir);
+					System.out.println(currYDir);
+					System.out.println(currX);
+					System.out.println(currY);
+					System.out.println();
 					if ((Character) getChar(state, currX + currXDir, currY
 							+ currYDir) == charFor(lastTurn)) {
+//						System.out.println("here");
+
 						currX = currX + 2 * currXDir;
 						currY = currY + 2 * currYDir;
-						currXDir = (currXDir + 3) % 3 - 1;
-						currYDir = (currYDir + 2) % 3 - 1;
+						if (currXDir == 0 && currYDir == 1) {
+							currXDir = -1;
+							currYDir = 0;
+						}
+						else if (currXDir == -1 && currYDir == 0) {
+							currXDir = 0;
+							currYDir = 1;
+						}
+						else if (currXDir == 0 && currYDir == 1) {
+							currXDir = 1;
+							currYDir = 0;
+						}
+						else if (currXDir == 1 && currYDir == 0) {
+							currXDir = 0;
+							currYDir = 1;
+						}
 					} else {
-						currXDir = (currXDir + 2) % 3 - 1;
-						currYDir = (currYDir + 3) % 3 - 1;
+//						System.out.println("there");
+
+						if (currXDir == 0 && currYDir == 1) {
+							currXDir = 1;
+							currYDir = 0;
+						}
+						else if (currXDir == 1 && currYDir == 0) {
+							currXDir = 0;
+							currYDir = -1;
+						}
+						else if (currXDir == 0 && currYDir == -1) {
+							currXDir = -1;
+							currYDir = 0;
+						}
+						else if (currXDir == -1 && currYDir == 0) {
+							currXDir = 0;
+							currYDir = 1;
+						}
 					}
 				}
 				if (currY == 6) {
+					System.out.println("has connect 1");
 					return true;
 				}
 			}
@@ -190,6 +266,8 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 	// Only checks certain cycles. In our case, only three from middle row or column. 
 	
 	public static boolean hasSurround(CountingState state, int lastTurn) {
+//		System.out.println("hasSurround call");
+
 		if ((Character) charFor(lastTurn) == 'X') {
 			return hasSurroundHelper(state, lastTurn, 3, 0,
 					new ArrayList<Pair<Integer, Integer>>(1), 3, 0, 0)
@@ -215,8 +293,11 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 	private static boolean hasSurroundHelper(CountingState state, int lastTurn,
 			int currX, int currY, ArrayList<Pair<Integer, Integer>> used,
 			int origX, int origY, int currDepth) {
+		System.out.println("hasSurroundHelper call");
+
 		if (currX == origX && currY == origY && currDepth != 0
 				&& currDepth != 2) {
+			System.out.println("has surround");
 			return true;
 		} else if (currX == origX && currY == origY && currDepth == 2) {
 			return false;
@@ -252,7 +333,7 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 	
 	private static char getChar(CountingState state, int x, int y) {
 		if (x < 1 || x > 5 || y < 1 || y > 5) {
-			return (Character) null;
+			return '?';
 		}
 		switch (x) {
 		case 0:
@@ -293,6 +374,7 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 				}
 			}
 			myMoves = moveList.toArray(new Move[moveList.size()]);
+//			System.out.println(myMoves.length);
 		}
 		// getter.
 		private static int getTurn(int numPieces) {
@@ -305,9 +387,12 @@ public class Connections extends RangeTree<CountingState, FlipRecord> implements
 
 		// Changes CountingState: i is index of the move, takes move from myMoves array and applies it.
 		public boolean playMove(CountingState state, int i) {
+//			System.out.println(myMoves.length);
 			boolean made = false;
 			Move m = myMoves[i];
-			if (m.matches(state) == -1) {
+			int match = m.matches(state);
+//			System.out.println(match);
+			if (match == -1) {
 				myHasher.makeMove(state, m);
 				made = true;
 			}
