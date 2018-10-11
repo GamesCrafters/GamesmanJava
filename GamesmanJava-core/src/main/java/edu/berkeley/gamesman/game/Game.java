@@ -13,11 +13,11 @@ import edu.berkeley.gamesman.util.qll.Pool;
 
 /**
  * Public interface that all Games must implement to be solvable
- * 
+ *
  * @author David Spies
  * @param <S>
  *            The object used to represent a Game State
- * 
+ *
  */
 @SuppressWarnings("rawtypes")
 public abstract class Game<S extends State> {
@@ -90,7 +90,7 @@ public abstract class Game<S extends State> {
 
 	/**
 	 * Generates all the valid starting positions
-	 * 
+	 *
 	 * @return a Collection of all valid starting positions
 	 */
 	public abstract Collection<S> startingPositions();
@@ -100,7 +100,7 @@ public abstract class Game<S extends State> {
 	 * the given state. The String indicates in some sense what move is made to
 	 * reach that position. Also override the other validMoves (to be used by
 	 * the solver)
-	 * 
+	 *
 	 * @param pos
 	 *            The board state to start from
 	 * @return A <move,state> pair for all valid board states one move forward
@@ -112,7 +112,7 @@ public abstract class Game<S extends State> {
 	 * A synchronized implementation of validMoves for JSONInterface (When
 	 * solving, the game is cloned to ensure there are no synchronization
 	 * problems)
-	 * 
+	 *
 	 * @param pos
 	 *            The current position
 	 * @return A collection of each move along with its identifying string
@@ -125,7 +125,7 @@ public abstract class Game<S extends State> {
 	/**
 	 * Valid moves without instantiation. Pass in a State array which the
 	 * children will be stored in.
-	 * 
+	 *
 	 * @param pos
 	 *            The board state to start from
 	 * @param children
@@ -141,7 +141,7 @@ public abstract class Game<S extends State> {
 
 	/**
 	 * Applies move to pos
-	 * 
+	 *
 	 * @deprecated Use validMoves instead
 	 * @param pos
 	 *            The State on which to apply move
@@ -161,7 +161,7 @@ public abstract class Game<S extends State> {
 	 * winning/losing position is equal. Otherwise, return the value of this
 	 * endgame such that the best possible ending state is 0 and worse states
 	 * are higher.
-	 * 
+	 *
 	 * @param pos
 	 *            The primitive State
 	 * @return the score of this position
@@ -174,7 +174,7 @@ public abstract class Game<S extends State> {
 	 * A synchronized implementation of primitiveScore for JSONInterface (When
 	 * solving, the game is cloned to ensure there are no synchronization
 	 * problems)
-	 * 
+	 *
 	 * @param pos
 	 *            The position
 	 * @return The position's score
@@ -197,7 +197,7 @@ public abstract class Game<S extends State> {
 	 * will be used repeatedly by the solver. For instance, in Chess this
 	 * version of primitiveValue should probably be
 	 * "Has the king been captured?" rather than "Is it Checkmate?"
-	 * 
+	 *
 	 * @param pos
 	 *            The primitive State
 	 * @return the primitive value of the state
@@ -209,7 +209,7 @@ public abstract class Game<S extends State> {
 	 * words, this should return LOSE for a checkmate position (Note that
 	 * remoteness 2 from capture the king is not sufficient for a checkmate. You
 	 * also must verify that the king is in check or else it's a stalemate).
-	 * 
+	 *
 	 * @param pos
 	 *            The primitive State
 	 * @return the primitive value of the state
@@ -230,7 +230,7 @@ public abstract class Game<S extends State> {
 
 	/**
 	 * Unhash a given hashed value and return the corresponding Board
-	 * 
+	 *
 	 * @param hash
 	 *            The hash given
 	 * @return the State represented
@@ -243,7 +243,7 @@ public abstract class Game<S extends State> {
 
 	/**
 	 * Hash a given state into a hashed value
-	 * 
+	 *
 	 * @param pos
 	 *            The State given
 	 * @return The hash that represents that State
@@ -254,7 +254,7 @@ public abstract class Game<S extends State> {
 	 * A synchronized implementation of stateToHash for JSONInterface (When
 	 * solving, the game is cloned to ensure there are no synchronization
 	 * problems)
-	 * 
+	 *
 	 * @param pos
 	 *            The position
 	 * @return The position's hash
@@ -266,7 +266,7 @@ public abstract class Game<S extends State> {
 	/**
 	 * Produce a machine-parsable String representing the state. This function
 	 * must be the exact opposite of stringToState
-	 * 
+	 *
 	 * @param pos
 	 *            the State given
 	 * @return a String
@@ -278,7 +278,7 @@ public abstract class Game<S extends State> {
 	 * A synchronized implementation of stateToString for JSONInterface (When
 	 * solving, the game is cloned to ensure there are no synchronization
 	 * problems)
-	 * 
+	 *
 	 * @param pos
 	 *            The position
 	 * @return A string representing the position
@@ -289,7 +289,7 @@ public abstract class Game<S extends State> {
 
 	/**
 	 * "Pretty-print" a State for display to the user
-	 * 
+	 *
 	 * @param pos
 	 *            The state to display
 	 * @return a pretty-printed string
@@ -303,7 +303,7 @@ public abstract class Game<S extends State> {
 	 * . Do not use a
 	 * <table>
 	 * here!
-	 * 
+	 *
 	 * @param pos
 	 *            The GameState to format.
 	 * @return The html-like formatting of the string.
@@ -315,7 +315,7 @@ public abstract class Game<S extends State> {
 	/**
 	 * Given a String construct a State. This <i>must</i> be compatible with
 	 * stateToString as it is used to send states over the network.
-	 * 
+	 *
 	 * @param pos
 	 *            The String given
 	 * @return a State
@@ -327,7 +327,7 @@ public abstract class Game<S extends State> {
 	 * A synchronized implementation of stringToState for JSONInterface (When
 	 * solving, the game is cloned to ensure there are no synchronization
 	 * problems)
-	 * 
+	 *
 	 * @param pos
 	 *            The position as a string
 	 * @return The resulting state
@@ -354,7 +354,7 @@ public abstract class Game<S extends State> {
 
 	/**
 	 * For mutable states. Avoids needing to instantiate new states.
-	 * 
+	 *
 	 * @param hash
 	 *            The hash to use
 	 * @param s
@@ -369,7 +369,7 @@ public abstract class Game<S extends State> {
 
 	/**
 	 * Convenience method which clones a state using its set method
-	 * 
+	 *
 	 * @param orig
 	 *            The state to clone
 	 * @return The new state
@@ -412,7 +412,7 @@ public abstract class Game<S extends State> {
 	 * A synchronized implementation of stateToString for JSONInterface (When
 	 * solving, the game is cloned to ensure there are no synchronization
 	 * problems)
-	 * 
+	 *
 	 * @param recordState
 	 *            The state corresponding to this record
 	 * @param record
@@ -477,7 +477,7 @@ public abstract class Game<S extends State> {
 
 	/**
 	 * A new array of record objects
-	 * 
+	 *
 	 * @param len
 	 *            The length of the array
 	 * @return A length of instantiated records with length len
@@ -492,7 +492,7 @@ public abstract class Game<S extends State> {
 
 	/**
 	 * Finds the "best" record in a set and returns it.
-	 * 
+	 *
 	 * @param records
 	 *            An array of record objects
 	 * @param firstRecord
@@ -513,7 +513,7 @@ public abstract class Game<S extends State> {
 
 	/**
 	 * Equivalent to combine(records, 0, records.length)
-	 * 
+	 *
 	 * @param records
 	 *            An array of records
 	 * @return The record with the best possible outcome
@@ -546,7 +546,7 @@ public abstract class Game<S extends State> {
 
 	/**
 	 * Synchronizes the call to startingPositions in case necessary
-	 * 
+	 *
 	 * @return A collection of all possible starting positions
 	 */
 	public final synchronized Collection<S> synchronizedStartingPositions() {
