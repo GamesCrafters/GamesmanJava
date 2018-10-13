@@ -23,64 +23,6 @@ import edu.berkeley.gamesman.util.qll.Pool;
 public abstract class Game<S extends State> {
 
 	/**
-	 * The configuration object associated with this game
-	 */
-	protected final Configuration conf;
-
-	private final Pool<S> statePool = new Pool<S>(new Factory<S>() {
-
-		@Override
-		public S newObject() {
-			return newState();
-		}
-
-		@Override
-		public void reset(S t) {
-		}
-
-	});
-
-	private final Pool<S[]> childStateArrayPool = new Pool<S[]>(
-			new Factory<S[]>() {
-
-				@Override
-				public S[] newObject() {
-					return newStateArray(maxChildren());
-				}
-
-				@Override
-				public void reset(S[] t) {
-				}
-			});
-
-	private final Pool<Record> recordPool = new Pool<Record>(
-			new Factory<Record>() {
-
-				@Override
-				public Record newObject() {
-					return newRecord();
-				}
-
-				@Override
-				public void reset(Record t) {
-				}
-
-			});
-
-	private final Pool<Record[]> recordArrayPool = new Pool<Record[]>(
-			new Factory<Record[]>() {
-
-				@Override
-				public Record[] newObject() {
-					return newRecordArray(maxChildren());
-				}
-
-				@Override
-				public void reset(Record[] t) {
-				}
-			});
-
-	/**
 	 * @param conf
 	 *            The configuration object
 	 */
@@ -88,12 +30,51 @@ public abstract class Game<S extends State> {
 		this.conf = conf;
 	}
 
+	// Configuration
+
+	/**
+	 * The configuration object associated with this game
+	 */
+	protected final Configuration conf;
+
+	/**
+	 * @return Whether it makes sense to include value for this game
+	 */
+	public boolean hasValue() {
+		return true;
+	}
+
+	/**
+	 * @return Whether it makes sense to include remoteness for this game
+	 */
+	public boolean hasRemoteness() {
+		return true;
+	}
+
+	/**
+	 * @return Whether it makes sense to include score for this game
+	 */
+	public boolean hasScore() {
+		return false;
+	}
+
+	// Game Logic
+
 	/**
 	 * Generates all the valid starting positions
 	 *
 	 * @return a Collection of all valid starting positions
 	 */
 	public abstract Collection<S> startingPositions();
+
+	/**
+	 * Synchronizes the call to startingPositions in case necessary
+	 *
+	 * @return A collection of all possible starting positions
+	 */
+	public final synchronized Collection<S> synchronizedStartingPositions() {
+		return startingPositions();
+	}
 
 	/**
 	 * Given a board state, generates all valid board states one move away from
@@ -228,139 +209,7 @@ public abstract class Game<S extends State> {
 		return strictPrimitiveValue(pos);
 	}
 
-	/**
-	 * Unhash a given hashed value and return the corresponding Board
-	 *
-	 * @param hash
-	 *            The hash given
-	 * @return the State represented
-	 */
-	public final S hashToState(long hash) {
-		S res = newState();
-		hashToState(hash, res);
-		return res;
-	}
-
-	/**
-	 * Hash a given state into a hashed value
-	 *
-	 * @param pos
-	 *            The State given
-	 * @return The hash that represents that State
-	 */
-	public abstract long stateToHash(S pos);
-
-	/**
-	 * A synchronized implementation of stateToHash for JSONInterface (When
-	 * solving, the game is cloned to ensure there are no synchronization
-	 * problems)
-	 *
-	 * @param pos
-	 *            The position
-	 * @return The position's hash
-	 */
-	public synchronized final long synchronizedStateToHash(S pos) {
-		return stateToHash(pos);
-	}
-
-	/**
-	 * Produce a machine-parsable String representing the state. This function
-	 * must be the exact opposite of stringToState
-	 *
-	 * @param pos
-	 *            the State given
-	 * @return a String
-	 * @see Game#stringToState(String)
-	 */
-	public abstract String stateToString(S pos);
-
-	/**
-	 * A synchronized implementation of stateToString for JSONInterface (When
-	 * solving, the game is cloned to ensure there are no synchronization
-	 * problems)
-	 *
-	 * @param pos
-	 *            The position
-	 * @return A string representing the position
-	 */
-	public synchronized final String synchronizedStateToString(S pos) {
-		return stateToString(pos);
-	}
-
-	/**
-	 * "Pretty-print" a State for display to the user
-	 *
-	 * @param pos
-	 *            The state to display
-	 * @return a pretty-printed string
-	 */
-	public abstract String displayState(S pos);
-
-	/**
-	 * "Pretty-print" a State for display by Graphviz/Dotty. See
-	 * http://www.graphviz.org/Documentation.php for documentation. By default,
-	 * replaces newlines with <br />
-	 * . Do not use a
-	 * <table>
-	 * here!
-	 *
-	 * @param pos
-	 *            The GameState to format.
-	 * @return The html-like formatting of the string.
-	 */
-	public String displayHTML(S pos) {
-		return displayState(pos).replaceAll("\n", "<br align=\"left\"/>");
-	}
-
-	/**
-	 * Given a String construct a State. This <i>must</i> be compatible with
-	 * stateToString as it is used to send states over the network.
-	 *
-	 * @param pos
-	 *            The String given
-	 * @return a State
-	 * @see Game#stateToString(State)
-	 */
-	public abstract S stringToState(String pos);
-
-	/**
-	 * A synchronized implementation of stringToState for JSONInterface (When
-	 * solving, the game is cloned to ensure there are no synchronization
-	 * problems)
-	 *
-	 * @param pos
-	 *            The position as a string
-	 * @return The resulting state
-	 */
-	public synchronized final S synchronizedStringToState(String pos) {
-		return stringToState(pos);
-	}
-
-	/**
-	 * @return a String that uniquely describes the setup of this Game
-	 *         (including any variant information, game size, etc)
-	 */
-	public abstract String describe();
-
-	/**
-	 * @return The total number of hashes
-	 */
-	public abstract long numHashes();
-
-	/**
-	 * @return The total number of possible states a record could be
-	 */
-	public abstract long recordStates();
-
-	/**
-	 * For mutable states. Avoids needing to instantiate new states.
-	 *
-	 * @param hash
-	 *            The hash to use
-	 * @param s
-	 *            The state to store the result in
-	 */
-	public abstract void hashToState(long hash, S s);
+	// States
 
 	/**
 	 * @return A new empty state
@@ -397,43 +246,114 @@ public abstract class Game<S extends State> {
 		return arr;
 	}
 
+	// Long State Converters
+
+    /**
+     * @return The total number of hashes
+     */
+    public abstract long numHashes();
+
 	/**
-	 * @param recordState
-	 *            The state corresponding to this record
-	 * @param record
-	 *            A long representing the record
-	 * @param toStore
-	 *            The record to store the result in (as opposed to returning a
-	 *            newly instantiated record)
+	 * Hash a given state into a hashed value
+	 *
+	 * @param pos
+	 *            The State given
+	 * @return The hash that represents that State
 	 */
-	public abstract void longToRecord(S recordState, long record, Record toStore);
+	public abstract long stateToHash(S pos);
+
+	/**
+	 * A synchronized implementation of stateToHash for JSONInterface (When
+	 * solving, the game is cloned to ensure there are no synchronization
+	 * problems)
+	 *
+	 * @param pos
+	 *            The position
+	 * @return The position's hash
+	 */
+	public synchronized final long synchronizedStateToHash(S pos) {
+		return stateToHash(pos);
+	}
+
+	/**
+	 * Unhash a given hashed value and return the corresponding Board
+	 *
+	 * @param hash
+	 *            The hash given
+	 * @return the State represented
+	 */
+	public final S hashToState(long hash) {
+		S res = newState();
+		hashToState(hash, res);
+		return res;
+	}
+
+	/**
+	 * For mutable states. Avoids needing to instantiate new states.
+	 *
+	 * @param hash
+	 *            The hash to use
+	 * @param s
+	 *            The state to store the result in
+	 */
+	public abstract void hashToState(long hash, S s);
+
+	// String State Converters
+
+	/**
+	 * Produce a machine-parsable String representing the state. This function
+	 * must be the exact opposite of stringToState
+	 *
+	 * @param pos
+	 *            the State given
+	 * @return a String
+	 * @see Game#stringToState(String)
+	 */
+	public abstract String stateToString(S pos);
 
 	/**
 	 * A synchronized implementation of stateToString for JSONInterface (When
 	 * solving, the game is cloned to ensure there are no synchronization
 	 * problems)
 	 *
-	 * @param recordState
-	 *            The state corresponding to this record
-	 * @param record
-	 *            A long representing the record (extracted from a database)
-	 * @param toStore
-	 *            The record to store the result in (as opposed to returning a
-	 *            newly instantiated record)
+	 * @param pos
+	 *            The position
+	 * @return A string representing the position
 	 */
-	public final synchronized void synchronizedLongToRecord(S recordState,
-			long record, Record toStore) {
-		longToRecord(recordState, record, toStore);
+	public synchronized final String synchronizedStateToString(S pos) {
+		return stateToString(pos);
 	}
 
 	/**
-	 * @param recordState
-	 *            The state corresponding to this record
-	 * @param fromRecord
-	 *            The record to extract the long from
-	 * @return A long representing the record (to be stored in a database)
+	 * Given a String construct a State. This <i>must</i> be compatible with
+	 * stateToString as it is used to send states over the network.
+	 *
+	 * @param pos
+	 *            The String given
+	 * @return a State
+	 * @see Game#stateToString(State)
 	 */
-	public abstract long recordToLong(S recordState, Record fromRecord);
+	public abstract S stringToState(String pos);
+
+	/**
+	 * A synchronized implementation of stringToState for JSONInterface (When
+	 * solving, the game is cloned to ensure there are no synchronization
+	 * problems)
+	 *
+	 * @param pos
+	 *            The position as a string
+	 * @return The resulting state
+	 */
+	public synchronized final S synchronizedStringToState(String pos) {
+		return stringToState(pos);
+	}
+
+	// Records
+
+	/**
+	 * @return The total number of possible states a record could be
+	 */
+	public abstract long recordStates();
 
 	/**
 	 * @return A new Record object (if you wish to subclass Record for your
@@ -441,38 +361,6 @@ public abstract class Game<S extends State> {
 	 */
 	public Record newRecord() {
 		return new Record(conf);
-	}
-
-	public final Record getPoolRecord() {
-		return recordPool.get();
-	}
-
-	public final void release(Record r) {
-		recordPool.release(r);
-	}
-
-	public final S getPoolState() {
-		return statePool.get();
-	}
-
-	public final void release(S state) {
-		statePool.release(state);
-	}
-
-	public final S[] getPoolChildStateArray() {
-		return childStateArrayPool.get();
-	}
-
-	public final void release(S[] childStateArray) {
-		childStateArrayPool.release(childStateArray);
-	}
-
-	public final Record[] getPoolRecordArray() {
-		return recordArrayPool.get();
-	}
-
-	public final void release(Record[] recordArray) {
-		recordArrayPool.release(recordArray);
 	}
 
 	/**
@@ -523,33 +411,163 @@ public abstract class Game<S extends State> {
 		return combine(records, 0, records.length);
 	}
 
-	/**
-	 * @return Whether it makes sense to include value for this game
-	 */
-	public boolean hasValue() {
-		return true;
-	}
+	// Long Record Converters
 
 	/**
-	 * @return Whether it makes sense to include remoteness for this game
+	 * @param recordState
+	 *            The state corresponding to this record
+	 * @param fromRecord
+	 *            The record to extract the long from
+	 * @return A long representing the record (to be stored in a database)
 	 */
-	public boolean hasRemoteness() {
-		return true;
-	}
+	public abstract long recordToLong(S recordState, Record fromRecord);
 
 	/**
-	 * @return Whether it makes sense to include score for this game
+	 * @param recordState
+	 *            The state corresponding to this record
+	 * @param record
+	 *            A long representing the record
+	 * @param toStore
+	 *            The record to store the result in (as opposed to returning a
+	 *            newly instantiated record)
 	 */
-	public boolean hasScore() {
-		return false;
-	}
+	public abstract void longToRecord(S recordState, long record, Record toStore);
 
 	/**
-	 * Synchronizes the call to startingPositions in case necessary
+	 * A synchronized implementation of stateToString for JSONInterface (When
+	 * solving, the game is cloned to ensure there are no synchronization
+	 * problems)
 	 *
-	 * @return A collection of all possible starting positions
+	 * @param recordState
+	 *            The state corresponding to this record
+	 * @param record
+	 *            A long representing the record (extracted from a database)
+	 * @param toStore
+	 *            The record to store the result in (as opposed to returning a
+	 *            newly instantiated record)
 	 */
-	public final synchronized Collection<S> synchronizedStartingPositions() {
-		return startingPositions();
+	public final synchronized void synchronizedLongToRecord(S recordState,
+			long record, Record toStore) {
+		longToRecord(recordState, record, toStore);
 	}
+
+	// Pretty Print
+
+	/**
+	 * "Pretty-print" a State for display to the user
+	 *
+	 * @param pos
+	 *            The state to display
+	 * @return a pretty-printed string
+	 */
+	public abstract String displayState(S pos);
+
+	/**
+	 * "Pretty-print" a State for display by Graphviz/Dotty. See
+	 * http://www.graphviz.org/Documentation.php for documentation. By default,
+	 * replaces newlines with <br />
+	 * . Do not use a
+	 * <table>
+	 * here!
+	 *
+	 * @param pos
+	 *            The GameState to format.
+	 * @return The html-like formatting of the string.
+	 */
+	public String displayHTML(S pos) {
+		return displayState(pos).replaceAll("\n", "<br align=\"left\"/>");
+	}
+
+	/**
+	 * @return a String that uniquely describes the setup of this Game
+	 *         (including any variant information, game size, etc)
+	 */
+	public abstract String describe();
+
+	// Pool
+
+	public final Record getPoolRecord() {
+		return recordPool.get();
+	}
+
+	public final void release(Record r) {
+		recordPool.release(r);
+	}
+
+	public final S getPoolState() {
+		return statePool.get();
+	}
+
+	public final void release(S state) {
+		statePool.release(state);
+	}
+
+	public final S[] getPoolChildStateArray() {
+		return childStateArrayPool.get();
+	}
+
+	public final void release(S[] childStateArray) {
+		childStateArrayPool.release(childStateArray);
+	}
+
+	public final Record[] getPoolRecordArray() {
+		return recordArrayPool.get();
+	}
+
+	public final void release(Record[] recordArray) {
+		recordArrayPool.release(recordArray);
+	}
+
+	private final Pool<S> statePool = new Pool<S>(new Factory<S>() {
+
+		@Override
+		public S newObject() {
+			return newState();
+		}
+
+		@Override
+		public void reset(S t) {
+		}
+
+	});
+
+	private final Pool<S[]> childStateArrayPool = new Pool<S[]>(
+			new Factory<S[]>() {
+
+				@Override
+				public S[] newObject() {
+					return newStateArray(maxChildren());
+				}
+
+				@Override
+				public void reset(S[] t) {
+				}
+			});
+
+	private final Pool<Record> recordPool = new Pool<Record>(
+			new Factory<Record>() {
+
+				@Override
+				public Record newObject() {
+					return newRecord();
+				}
+
+				@Override
+				public void reset(Record t) {
+				}
+
+			});
+
+	private final Pool<Record[]> recordArrayPool = new Pool<Record[]>(
+			new Factory<Record[]>() {
+
+				@Override
+				public Record[] newObject() {
+					return newRecordArray(maxChildren());
+				}
+
+				@Override
+				public void reset(Record[] t) {
+				}
+			});
 }
