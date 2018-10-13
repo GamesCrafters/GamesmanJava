@@ -19,8 +19,7 @@ import edu.berkeley.gamesman.util.qll.Pool;
  *            The object used to represent a Game State
  *
  */
-@SuppressWarnings("rawtypes")
-public abstract class Game<S extends State> {
+public abstract class Game<S extends State<S>> {
 
 	/**
 	 * @param conf
@@ -113,7 +112,12 @@ public abstract class Game<S extends State> {
 	 *            The array to store all valid board states one move forward
 	 * @return The number of children for this position
 	 */
-	public abstract int validMoves(S pos, S[] children);
+	public int validMoves(S pos, S[] children) {
+		int i = 0;
+		for (Pair<String, S> move : validMoves(pos))
+			children[i++].set(move.cdr);
+		return i;
+	}
 
 	/**
 	 * @return The maximum number of child states for any position
