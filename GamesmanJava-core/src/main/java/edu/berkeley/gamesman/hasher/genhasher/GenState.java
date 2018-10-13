@@ -24,7 +24,7 @@ import edu.berkeley.gamesman.util.Util;
  * 
  * @author dnspies
  */
-public class GenState implements State<GenState>, Comparable<GenState> {
+public class GenState<S extends GenState<S>> implements State<S>, Comparable<S> {
 	/**
 	 * The sequence representing this board-state
 	 */

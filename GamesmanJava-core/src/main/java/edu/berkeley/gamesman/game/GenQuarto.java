@@ -117,7 +117,7 @@ public class GenQuarto extends Game<GenQuartoState> {
 
 }
 
-class GenQuartoState extends GenState {
+class GenQuartoState extends GenState<GenQuartoState> {
 	private final BitSet usedPieces = new BitSet(16);
 	private int extraPiece = -1;
 	private int numPieces;
