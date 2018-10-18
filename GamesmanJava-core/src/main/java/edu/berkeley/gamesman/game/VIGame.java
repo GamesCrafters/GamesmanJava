@@ -16,7 +16,7 @@ public abstract class VIGame extends MutaGame {
 
 	@Override
 	public int validMoves(HashState pos, HashState[] children) {
-		setToHash(pos.hash);
+		setFromHash(pos.hash);
 		if (this.children == null)
 			this.children = new long[maxChildren()];
 		int numChildren = validMoves(this.children);
@@ -45,7 +45,7 @@ public abstract class VIGame extends MutaGame {
 
 	@Override
 	public Collection<Pair<String, HashState>> validMoves(HashState pos) {
-		setToHash(pos.hash);
+		setFromHash(pos.hash);
 		return validMoves();
 	}
 

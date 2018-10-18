@@ -133,7 +133,7 @@ public final class TopDownGame<S extends State<S>> extends TopDownMutaGame {
 	}
 
 	@Override
-	public void setToHash(long hash) {
+	public void setFromHash(long hash) {
 		clearLists();
 		S state = myGame.getPoolState();
 		myGame.hashToState(hash, state);

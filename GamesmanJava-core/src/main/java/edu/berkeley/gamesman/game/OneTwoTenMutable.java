@@ -34,7 +34,7 @@ public class OneTwoTenMutable extends TopDownMutaGame {
 	}
 
 	@Override
-	public void setToHash(long hash) {
+	public void setFromHash(long hash) {
 		value = (int) hash;
 	}
 

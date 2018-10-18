@@ -197,7 +197,7 @@ public class VISolver extends Solver {
 			primRec = myGame.getPoolRecord();
 			hash = firstIndex;
 			initialize();
-			myGame.setToHash(firstIndex);
+			myGame.setFromHash(firstIndex);
 			boolean next = true;
 			for (long count = 0; count < numIndices; count++) {
 				assert next;
