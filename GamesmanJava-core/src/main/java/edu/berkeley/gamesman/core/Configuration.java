@@ -159,6 +159,13 @@ public final class Configuration {
 		return (Game<T>) g;
 	}
 
+	/**
+	 * @return The game for this configuration
+	 */
+	public Game<?> getGame() {
+		return g;
+	}
+
 	public String toString() {
 		return "Config[" + props + "," + g + "]";
 	}
@@ -381,13 +388,6 @@ public final class Configuration {
 		} catch (ClassNotFoundException e) {
 			throw new Error(e);
 		}
-	}
-
-	/**
-	 * @return The game for this configuration
-	 */
-	public Game<?> getGame() {
-		return g;
 	}
 
 	/**
