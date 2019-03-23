@@ -13,7 +13,10 @@ import edu.berkeley.gamesman.util.Util;
 /**
  * A Solver is responsible for solving a Game and storing the result to a
  * Database
- * 
+ *
+ * Subclasses are required to implement the following method,
+ * @see #nextAvailableJob()
+ *
  * @author David Spies
  */
 public abstract class Solver {
@@ -60,16 +63,15 @@ public abstract class Solver {
 
 	/**
 	 * Set the Database to use for this solver
-	 * 
-	 * @param conf
-	 *            The configuration object
+	 *
+	 * @param conf The configuration object
+	 * @param db A backing database
 	 */
 	public Solver(Configuration conf, Database db) {
 		this.db = db;
 		this.conf = conf;
 		nThreads = conf.getInteger("gamesman.threads", 1);
-		stepSize = conf.getInteger("gamesman.solver.step.size",
-				DEFAULT_STEP_SIZE);
+		stepSize = conf.getInteger("gamesman.solver.step.size", DEFAULT_STEP_SIZE);
 	}
 
 	private final Runnable getNextJob() throws InterruptedException {
@@ -83,11 +85,10 @@ public abstract class Solver {
 	/**
 	 * Returns the next job which must be executed before completing the solve.
 	 * This method may block while waiting for other jobs to finish.
-	 * 
+	 *
 	 * @return The next job necessary to solve this game or null if all jobs
-	 *         have been returned already
-	 * @throws InterruptedException
-	 *             If the thread is interrupted while waiting.
+	 * have been returned already
+	 * @throws InterruptedException If the thread is interrupted while waiting.
 	 */
 	public abstract Runnable nextAvailableJob() throws InterruptedException;
 
