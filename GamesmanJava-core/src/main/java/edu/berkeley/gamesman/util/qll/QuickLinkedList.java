@@ -6,8 +6,16 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Queue;
 
+/**
+ * A linked list whose objects are recycled rather than re-instantiated
+ *
+ * @param <T> Type of objects
+ */
 public class QuickLinkedList<T> implements List<T>, Queue<T> {
 
+	/**
+	 * Iterator for the linked list
+	 */
 	public class QLLIterator implements ListIterator<T> {
 		Node<T> nextNode;
 		boolean lastCallWasPrevious;
@@ -119,10 +127,16 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 		}
 	}
 
+	/**
+	 * Sentinels for the linked list
+	 */
 	private final Node<T> beforeFirst, afterLast;
+
 	private final QLLNullPool<T> pool;
+
 	private final Pool<QLLIterator> iterPool = new Pool<QLLIterator>(
 			new Factory<QLLIterator>() {
+
 				@Override
 				public QLLIterator newObject() {
 					return new QLLIterator();
@@ -131,8 +145,14 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 				@Override
 				public void reset(QLLIterator t) {
 				}
+
 			});
+
 	int size;
+
+	/**
+	 * Underlying iterator kept for making changes to the linked list
+	 */
 	final QLLIterator myIterator;
 
 	public QuickLinkedList() {
@@ -149,22 +169,11 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 		this.pool = pool;
 	}
 
-	public void addBack(Node<T> n) {
-		n.next.previous = n;
-		n.previous.next = n;
-		size++;
+	public int size() {
+		return size;
 	}
 
-	public void remove(Node<T> n) {
-		removeNode(n);
-		pool.giveBack(n);
-	}
-
-	void removeNode(Node<T> n) {
-		n.next.previous = n.previous;
-		n.previous.next = n.next;
-		size--;
-	}
+	// Add
 
 	public boolean add(T e) {
 		myIterator.toEnd();
@@ -175,6 +184,39 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 	public void add(int index, T element) {
 		myIterator.toIndex(index);
 		myIterator.add(element);
+	}
+
+	public void addBack(Node<T> n) {
+		n.next.previous = n;
+		n.previous.next = n;
+		size++;
+	}
+
+	public void addFirst(T e) {
+		myIterator.toStart();
+		myIterator.add(e);
+	}
+
+	public void addLast(T e) {
+		add(e);
+	}
+
+	public void push(T e) {
+		addFirst(e);
+	}
+
+	public boolean addAll(Collection<? extends T> c) {
+		myIterator.toEnd();
+		for (T t : c)
+			myIterator.add(t);
+		return c.size() > 0;
+	}
+
+	public boolean addAll(int index, Collection<? extends T> c) {
+		myIterator.toIndex(index);
+		for (T t : c)
+			myIterator.add(t);
+		return c.size() > 0;
 	}
 
 	public boolean stealAll(QuickLinkedList<T> c) {
@@ -196,42 +238,10 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 		return true;
 	}
 
-	public boolean addAll(Collection<? extends T> c) {
-		myIterator.toEnd();
-		for (T t : c)
-			myIterator.add(t);
-		return c.size() > 0;
-	}
+	// Get
 
-	public boolean addAll(int index, Collection<? extends T> c) {
-		myIterator.toIndex(index);
-		for (T t : c)
-			myIterator.add(t);
-		return c.size() > 0;
-	}
-
-	public void clear() {
-		if (size > 0) {
-			pool.giveBack(beforeFirst.next, afterLast.previous, size);
-			beforeFirst.next = afterLast;
-			afterLast.previous = beforeFirst;
-			size = 0;
-		}
-	}
-
-	public boolean contains(Object o) {
-		myIterator.toStart();
-		while (myIterator.hasNext())
-			if (myIterator.next().equals(o))
-				return true;
-		return false;
-	}
-
-	public boolean containsAll(Collection<?> c) {
-		for (Object o : c)
-			if (!contains(o))
-				return false;
-		return true;
+	public boolean isEmpty() {
+		return size == 0;
 	}
 
 	public T get(int index) {
@@ -250,14 +260,6 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 		return -1;
 	}
 
-	public boolean isEmpty() {
-		return size == 0;
-	}
-
-	public QLLIterator iterator() {
-		return listIterator();
-	}
-
 	public int lastIndexOf(Object o) {
 		myIterator.toEnd();
 		int i = size - 1;
@@ -267,107 +269,6 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 			else
 				i--;
 		return -1;
-	}
-
-	public QLLIterator listIterator() {
-		QLLIterator qllIterator = iterPool.get();
-		qllIterator.reset();
-		return qllIterator;
-	}
-
-	public void release(QLLIterator iter) {
-		iterPool.release(iter);
-	}
-
-	public QLLIterator listIterator(int index) {
-		QLLIterator qll = listIterator();
-		qll.toIndex(index);
-		return qll;
-	}
-
-	public boolean remove(Object o) {
-		myIterator.toStart();
-		while (myIterator.hasNext())
-			if (myIterator.next().equals(o)) {
-				myIterator.remove();
-				return true;
-			}
-		return false;
-	}
-
-	public T remove(int index) {
-		myIterator.toIndex(index);
-		T result = myIterator.next();
-		myIterator.remove();
-		return result;
-	}
-
-	public boolean removeAll(Collection<?> c) {
-		boolean changed = false;
-		for (Object o : c) {
-			if (remove(o))
-				changed = true;
-		}
-		return changed;
-	}
-
-	public boolean retainAll(Collection<?> c) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
-	}
-
-	public T set(int index, T element) {
-		myIterator.toIndex(index);
-		T last = myIterator.next();
-		myIterator.set(element);
-		return last;
-	}
-
-	public int size() {
-		return size;
-	}
-
-	public List<T> subList(int fromIndex, int toIndex) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
-	}
-
-	public Object[] toArray() {
-		Object[] objs = new Object[size];
-		myIterator.toStart();
-		int i = 0;
-		while (myIterator.hasNext())
-			objs[i++] = myIterator.next();
-		return objs;
-	}
-
-	@SuppressWarnings({ "unchecked", "hiding" })
-	public <T> T[] toArray(T[] a) {
-		if (a.length >= size) {
-			for (int i = size; i < a.length; i++)
-				a[i] = null;
-		} else
-			a = (T[]) Array.newInstance(a.getClass().getComponentType(), size);
-		int i = 0;
-		myIterator.toStart();
-		while (myIterator.hasNext())
-			a[i++] = (T) myIterator.next();
-		return a;
-	}
-
-	public void addFirst(T e) {
-		myIterator.toStart();
-		myIterator.add(e);
-	}
-
-	public void addLast(T e) {
-		add(e);
-	}
-
-	public QLLIterator descendingIterator() {
-		QLLIterator qll = listIterator();
-		qll.toEnd();
-		return qll;
 	}
 
 	public T element() {
@@ -442,12 +343,21 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 		return removeFirst();
 	}
 
-	public void push(T e) {
-		addFirst(e);
+	// Set
+
+	public T set(int index, T element) {
+		myIterator.toIndex(index);
+		T last = myIterator.next();
+		myIterator.set(element);
+		return last;
 	}
 
-	public T remove() {
-		return removeFirst();
+	// Remove
+
+	void removeNode(Node<T> n) {
+		n.next.previous = n.previous;
+		n.previous.next = n.next;
+		size--;
 	}
 
 	public T removeFirst() {
@@ -461,17 +371,6 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 		}
 	}
 
-	public boolean removeFirstOccurrence(Object o) {
-		myIterator.toStart();
-		while (myIterator.hasNext()) {
-			if (myIterator.next().equals(o)) {
-				myIterator.remove();
-				return true;
-			}
-		}
-		return false;
-	}
-
 	public T removeLast() {
 		if (size == 0)
 			throw new NullPointerException("List is empty");
@@ -483,6 +382,43 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 		}
 	}
 
+	public void remove(Node<T> n) {
+		removeNode(n);
+		pool.giveBack(n);
+	}
+
+	public boolean remove(Object o) {
+		myIterator.toStart();
+		while (myIterator.hasNext())
+			if (myIterator.next().equals(o)) {
+				myIterator.remove();
+				return true;
+			}
+		return false;
+	}
+
+	public T remove(int index) {
+		myIterator.toIndex(index);
+		T result = myIterator.next();
+		myIterator.remove();
+		return result;
+	}
+
+	public T remove() {
+		return removeFirst();
+	}
+
+	public boolean removeFirstOccurrence(Object o) {
+		myIterator.toStart();
+		while (myIterator.hasNext()) {
+			if (myIterator.next().equals(o)) {
+				myIterator.remove();
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public boolean removeLastOccurrence(Object o) {
 		myIterator.toEnd();
 		while (myIterator.hasPrevious()) {
@@ -492,6 +428,94 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 			}
 		}
 		return false;
+	}
+
+	public boolean removeAll(Collection<?> c) {
+		boolean changed = false;
+		for (Object o : c) {
+			if (remove(o))
+				changed = true;
+		}
+		return changed;
+	}
+
+	public void clear() {
+		if (size > 0) {
+			pool.giveBack(beforeFirst.next, afterLast.previous, size);
+			beforeFirst.next = afterLast;
+			afterLast.previous = beforeFirst;
+			size = 0;
+		}
+	}
+
+	// Contain
+
+	public boolean contains(Object o) {
+		myIterator.toStart();
+		while (myIterator.hasNext())
+			if (myIterator.next().equals(o))
+				return true;
+		return false;
+	}
+
+	public boolean containsAll(Collection<?> c) {
+		for (Object o : c)
+			if (!contains(o))
+				return false;
+		return true;
+	}
+
+	// Iterators
+
+	public QLLIterator iterator() {
+		return listIterator();
+	}
+
+	public QLLIterator listIterator() {
+		QLLIterator qllIterator = iterPool.get();
+		qllIterator.reset();
+		return qllIterator;
+	}
+
+	public QLLIterator listIterator(int index) {
+		QLLIterator qll = listIterator();
+		qll.toIndex(index);
+		return qll;
+	}
+
+	public QLLIterator descendingIterator() {
+		QLLIterator qll = listIterator();
+		qll.toEnd();
+		return qll;
+	}
+
+	public void release(QLLIterator iter) {
+		iterPool.release(iter);
+	}
+
+	// Conversions
+
+	public Object[] toArray() {
+		Object[] objs = new Object[size];
+		myIterator.toStart();
+		int i = 0;
+		while (myIterator.hasNext())
+			objs[i++] = myIterator.next();
+		return objs;
+	}
+
+	@SuppressWarnings({"unchecked", "hiding"})
+	public <T> T[] toArray(T[] a) {
+		if (a.length >= size) {
+			for (int i = size; i < a.length; i++)
+				a[i] = null;
+		} else
+			a = (T[]) Array.newInstance(a.getClass().getComponentType(), size);
+		int i = 0;
+		myIterator.toStart();
+		while (myIterator.hasNext())
+			a[i++] = (T) myIterator.next();
+		return a;
 	}
 
 	@Override
@@ -512,5 +536,17 @@ public class QuickLinkedList<T> implements List<T>, Queue<T> {
 		} finally {
 			release(myIterator);
 		}
+	}
+
+	// Other operations
+
+	public boolean retainAll(Collection<?> c) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException();
+	}
+
+	public List<T> subList(int fromIndex, int toIndex) {
+		// TODO Auto-generated method stub
+		throw new UnsupportedOperationException();
 	}
 }
