@@ -1,0 +1,9 @@
+# 1,2...10
+
+gamesman.game = OneTwoTen
+gamesman.solver = TopDownSolver
+gamesman.database = GZippedFileDatabase
+gamesman.database.writing.wrapper = MemoryDatabase
+gamesman.db.uri = onetwoten.db
+gamesman.debug.SOLVER = true
+gamesman.debug.DATABASE = true
