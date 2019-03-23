@@ -12,12 +12,13 @@ import edu.berkeley.gamesman.database.DummyDatabase;
 import edu.berkeley.gamesman.game.Game;
 
 /**
- * Outcomes = edu.berkeley.gamesman.core.Value displayBoard =
- * edu.berkeley.gamesman.game.Game.displayState getCurrentOutcome = {Hash
- * position, fetch record from database, unhash it}
+ * Outcomes = edu.berkeley.gamesman.core.Value
+ * displayBoard = edu.berkeley.gamesman.game.Game.displayState
+ * getCurrentOutcome = {Hash position, fetch record from database, unhash it}
  * getNumberOfMovesForCurrentOutcome = {Look at the size of the collection
- * returned by validMoves} getValidMoves =
- * edu.berkeley.gamesman.game.Game.validMoves {with only one argument}
+ *                                      returned by validMoves}
+ * getValidMoves = edu.berkeley.gamesman.game.Game.validMoves
+ *                 {with only one argument}
  */
 public final class DatabaseExplorer {
 	/**

@@ -12,8 +12,8 @@ import java.util.Properties;
  */
 public abstract class GamesmanApplication {
 	/**
-	 * A constructor with no arguments. A GamesmanConfigurableApplication must
-	 * have this.
+	 * A constructor with no arguments.
+	 * A GamesmanConfigurableApplication must have this.
 	 */
 	public GamesmanApplication() {
 	}

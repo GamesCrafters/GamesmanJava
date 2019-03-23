@@ -9,29 +9,34 @@ import edu.berkeley.gamesman.core.Configuration;
 import edu.berkeley.gamesman.util.Util;
 
 /**
- * An entry main for all of gamesman-java. The main class to use when solving on
- * a single machine
+ * An entry main for all of gamesman-java.
+ * The main class to use when solving on a single machine
  * 
  * @author Jeremy Fleischman
- * 
  */
 public class Gamesman {
+	/**
+	 * Gamesman applications
+	 */
 	private static final HashMap<String, String> APPLICATION_MAP = new HashMap<String, String>();
+
 	static {
 		APPLICATION_MAP.put("gamesmanmain", GamesmanMain.class.getName());
 		APPLICATION_MAP.put("jythoninterface", JythonInterface.class.getName());
 	}
 
 	/**
-	 * @param args
-	 *            The command line arguments. Should just be a job file.
+	 * @param args The command line arguments. Should just be a job file, or a
+	 *             target Gamesman application that optionally takes a job file.
 	 */
 	public static void main(String[] args) {
 		String jobFile = null, entryPoint = null;
+
+		// Default to GamesmanMain application
 		if (args.length == 1) {
 			String arg = args[0];
 			if (APPLICATION_MAP.containsKey(arg.toLowerCase())) {
-				// we have a GamesmanApplication
+				// we have a Gamesman application
 				entryPoint = arg.toLowerCase();
 			} else {
 				// if we just have a job file, use GamesmanMain
@@ -42,19 +47,19 @@ public class Gamesman {
 			entryPoint = args[0];
 			jobFile = args[1];
 		} else {
-			System.out
-					.println("Usage: Gamesman [entry point] [job file]"
+			System.out.println("Usage: Gamesman [entry point] [job file]"
 							+ "\n\tAvailable entry points (some require a job file, some don't): "
 							+ APPLICATION_MAP.keySet()
 							+ "\n\tIf a job file is given, but no entry point is, entry point defaults to GamesmanMain.");
 			return;
 		}
-
 		if (!APPLICATION_MAP.containsKey(entryPoint)) {
 			System.out.println("Couldn't find " + entryPoint + " in "
 					+ APPLICATION_MAP.keySet());
 			return;
 		}
+
+		// Read properties from job file if specified
 		Properties props = null;
 		if (jobFile != null) {
 			try {
@@ -65,6 +70,7 @@ public class Gamesman {
 			DebugSetup.setup(props);
 		}
 
+		// Load & run the target Gamesman application
 		Class<? extends GamesmanApplication> cls;
 		GamesmanApplication ga;
 		try {

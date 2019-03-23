@@ -27,6 +27,8 @@ public final class GamesmanMain extends GamesmanApplication {
 
 	@Override
 	public int run(Properties props) {
+
+		// Get configuration from properties
 		try {
 			this.conf = new Configuration(props);
 		} catch (ClassNotFoundException e) {
@@ -36,10 +38,12 @@ public final class GamesmanMain extends GamesmanApplication {
 
 		assert Util.debug(DebugFacility.CORE, "Preloading classes...");
 
+		// Try to execute the specified command or fallback to solving
 		String cmd = conf.getProperty("gamesman.command", null);
 		if (cmd != null) {
 			try {
-				this.getClass().getMethod("execute" + cmd, (Class<?>[]) null)
+				this.getClass()
+						.getMethod("execute" + cmd, (Class<?>[]) null)
 						.invoke(this);
 			} catch (NoSuchMethodException nsme) {
 				System.out.println("Don't know how to execute command " + nsme);
@@ -52,6 +56,8 @@ public final class GamesmanMain extends GamesmanApplication {
 			}
 		} else {
 			assert Util.debug(DebugFacility.CORE, "Defaulting to solve...");
+
+			// Attempt to open the database
 			String uri = conf.getProperty("gamesman.db.uri", null);
 			Database db;
 			try {
@@ -59,6 +65,8 @@ public final class GamesmanMain extends GamesmanApplication {
 			} catch (IOException e) {
 				throw new Error(e);
 			}
+
+			// Initialize the solver & solve the game
 			Solver solve = makeSolver(db);
 			try {
 				solve.solve();
@@ -67,31 +75,34 @@ public final class GamesmanMain extends GamesmanApplication {
 				e.printStackTrace();
 				System.exit(-1);
 			}
+
 		}
 
 		assert Util.debug(DebugFacility.CORE, "Finished run");
 		return 0;
 	}
 
+	/**
+	 * @param db Database to back the solver
+	 * @return Solver backed by the database using the configuration
+	 */
 	private Solver makeSolver(Database db) {
 		String solverName;
 		solverName = conf.getProperty("gamesman.solver");
 		if (solverName == null)
-			throw new Error(
-					"You must specify a solver with the property gamesman.solver");
+			throw new Error("You must specify a solver with the property gamesman.solver");
 
-		Class<? extends Solver> s = null;
+		Class<? extends Solver> s;
 		try {
 			s = Util.typedForName("edu.berkeley.gamesman.solver." + solverName,
 					Solver.class);
 		} catch (ClassNotFoundException e) {
 			throw new Error(e);
 		}
+
 		try {
-			Solver solve = s
-					.getConstructor(Configuration.class, Database.class)
+			return s.getConstructor(Configuration.class, Database.class)
 					.newInstance(conf, db);
-			return solve;
 		} catch (IllegalArgumentException e) {
 			throw new Error(e);
 		} catch (SecurityException e) {
@@ -109,9 +120,8 @@ public final class GamesmanMain extends GamesmanApplication {
 
 	/**
 	 * Diagnostic call to unhash an arbitrary value to a game board
-	 * 
-	 * @param <T>
-	 *            The state type of the game
+	 *
+	 * @param <T> The state type of the game
 	 */
 	public <T extends State<T>> void executeunhash() {
 		Game<T> gm = conf.getCheckedGame();
@@ -122,9 +132,8 @@ public final class GamesmanMain extends GamesmanApplication {
 
 	/**
 	 * Diagnostic call to view all child moves of a given hashed game state
-	 * 
-	 * @param <T>
-	 *            The state type of the game
+	 *
+	 * @param <T> The state type of the game
 	 */
 	public <T extends State<T>> void executegenmoves() {
 		Game<T> gm = conf.getCheckedGame();
@@ -138,9 +147,8 @@ public final class GamesmanMain extends GamesmanApplication {
 
 	/**
 	 * Hash a single board with the given hasher and print it.
-	 * 
-	 * @param <T>
-	 *            The state type of the game
+	 *
+	 * @param <T> The state type of the game
 	 */
 	public <T extends State<T>> void executehash() {
 		Game<T> gm = conf.getCheckedGame();
@@ -152,9 +160,8 @@ public final class GamesmanMain extends GamesmanApplication {
 
 	/**
 	 * Evaluate a single board and return its primitive value.
-	 * 
-	 * @param <T>
-	 *            The state type of the game
+	 *
+	 * @param <T> The state type of the game
 	 */
 	public <T extends State<T>> void executeevaluate() {
 		Game<T> gm = conf.getCheckedGame();
