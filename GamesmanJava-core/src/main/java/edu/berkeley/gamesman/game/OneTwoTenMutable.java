@@ -11,7 +11,7 @@ import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 
 /**
  * An implementation of OneTwoTen optimized for the top-down solver
- * 
+ *
  * @author dnspies
  */
 public class OneTwoTenMutable extends TopDownMutaGame {
@@ -20,9 +20,8 @@ public class OneTwoTenMutable extends TopDownMutaGame {
 
 	/**
 	 * The default constructor
-	 * 
-	 * @param conf
-	 *            The configuration object
+	 *
+	 * @param conf The configuration object
 	 */
 	public OneTwoTenMutable(Configuration conf) {
 		super(conf);

@@ -14,16 +14,13 @@ import edu.berkeley.gamesman.util.qll.Pool;
 /**
  * Public interface that all Games must implement to be solvable
  *
+ * @param <S> Type of game state
  * @author David Spies
- * @param <S>
- *            The object used to represent a Game State
- *
  */
 public abstract class Game<S extends State<S>> {
 
 	/**
-	 * @param conf
-	 *            The configuration object
+	 * @param conf The configuration object
 	 */
 	public Game(Configuration conf) {
 		this.conf = conf;
@@ -81,10 +78,9 @@ public abstract class Game<S extends State<S>> {
 	 * reach that position. Also override the other validMoves (to be used by
 	 * the solver)
 	 *
-	 * @param pos
-	 *            The board state to start from
+	 * @param pos The board state to start from
 	 * @return A <move,state> pair for all valid board states one move forward
-	 * @see Game#validMoves(State,State[])
+	 * @see Game#validMoves(State, State[])
 	 */
 	public abstract Collection<Pair<String, S>> validMoves(S pos);
 
@@ -93,12 +89,10 @@ public abstract class Game<S extends State<S>> {
 	 * solving, the game is cloned to ensure there are no synchronization
 	 * problems)
 	 *
-	 * @param pos
-	 *            The current position
+	 * @param pos The current position
 	 * @return A collection of each move along with its identifying string
 	 */
-	public synchronized final Collection<Pair<String, S>> synchronizedValidMoves(
-			S pos) {
+	public synchronized final Collection<Pair<String, S>> synchronizedValidMoves(S pos) {
 		return validMoves(pos);
 	}
 
@@ -106,10 +100,8 @@ public abstract class Game<S extends State<S>> {
 	 * Valid moves without instantiation. Pass in a State array which the
 	 * children will be stored in.
 	 *
-	 * @param pos
-	 *            The board state to start from
-	 * @param children
-	 *            The array to store all valid board states one move forward
+	 * @param pos      The board state to start from
+	 * @param children The array to store all valid board states one move forward
 	 * @return The number of children for this position
 	 */
 	public int validMoves(S pos, S[] children) {
@@ -127,12 +119,10 @@ public abstract class Game<S extends State<S>> {
 	/**
 	 * Applies move to pos
 	 *
-	 * @deprecated Use validMoves instead
-	 * @param pos
-	 *            The State on which to apply move
-	 * @param move
-	 *            A String for the move to apply to pos
+	 * @param pos  The State on which to apply move
+	 * @param move A String for the move to apply to pos
 	 * @return The resulting State, or null if it isn't found in validMoves()
+	 * @deprecated Use validMoves instead
 	 */
 	public S doMove(S pos, String move) {
 		for (Pair<String, S> next : validMoves(pos))
@@ -147,8 +137,7 @@ public abstract class Game<S extends State<S>> {
 	 * endgame such that the best possible ending state is 0 and worse states
 	 * are higher.
 	 *
-	 * @param pos
-	 *            The primitive State
+	 * @param pos The primitive State
 	 * @return the score of this position
 	 */
 	public int primitiveScore(S pos) {
@@ -160,8 +149,7 @@ public abstract class Game<S extends State<S>> {
 	 * solving, the game is cloned to ensure there are no synchronization
 	 * problems)
 	 *
-	 * @param pos
-	 *            The position
+	 * @param pos The position
 	 * @return The position's score
 	 */
 	public synchronized final int synchronizedPrimitiveScore(S pos) {
@@ -183,8 +171,7 @@ public abstract class Game<S extends State<S>> {
 	 * version of primitiveValue should probably be
 	 * "Has the king been captured?" rather than "Is it Checkmate?"
 	 *
-	 * @param pos
-	 *            The primitive State
+	 * @param pos The primitive State
 	 * @return the primitive value of the state
 	 */
 	public abstract Value primitiveValue(S pos);
@@ -195,8 +182,7 @@ public abstract class Game<S extends State<S>> {
 	 * remoteness 2 from capture the king is not sufficient for a checkmate. You
 	 * also must verify that the king is in check or else it's a stalemate).
 	 *
-	 * @param pos
-	 *            The primitive State
+	 * @param pos The primitive State
 	 * @return the primitive value of the state
 	 */
 	public Value strictPrimitiveValue(S pos) {
@@ -204,10 +190,9 @@ public abstract class Game<S extends State<S>> {
 	}
 
 	/**
-	 * @param pos
-	 *            The current position
+	 * @param pos The current position
 	 * @return The primitive value of the position. Generally LOSE,TIE, or
-	 *         UNDECIDED (for positions which aren't primitive)
+	 * UNDECIDED (for positions which aren't primitive)
 	 */
 	public synchronized final Value synchronizedStrictPrimitiveValue(S pos) {
 		return strictPrimitiveValue(pos);
@@ -223,8 +208,7 @@ public abstract class Game<S extends State<S>> {
 	/**
 	 * Convenience method which clones a state using its set method
 	 *
-	 * @param orig
-	 *            The state to clone
+	 * @param orig The state to clone
 	 * @return The new state
 	 */
 	@SuppressWarnings("unchecked")
@@ -235,8 +219,7 @@ public abstract class Game<S extends State<S>> {
 	}
 
 	/**
-	 * @param len
-	 *            The number of states
+	 * @param len The number of states
 	 * @return A new array with len states
 	 */
 	@SuppressWarnings("unchecked")
@@ -252,16 +235,15 @@ public abstract class Game<S extends State<S>> {
 
 	// Long State Converters
 
-    /**
-     * @return The total number of hashes
-     */
-    public abstract long numHashes();
+	/**
+	 * @return The total number of hashes
+	 */
+	public abstract long numHashes();
 
 	/**
 	 * Hash a given state into a hashed value
 	 *
-	 * @param pos
-	 *            The State given
+	 * @param pos The State given
 	 * @return The hash that represents that State
 	 */
 	public abstract long stateToHash(S pos);
@@ -271,8 +253,7 @@ public abstract class Game<S extends State<S>> {
 	 * solving, the game is cloned to ensure there are no synchronization
 	 * problems)
 	 *
-	 * @param pos
-	 *            The position
+	 * @param pos The position
 	 * @return The position's hash
 	 */
 	public synchronized final long synchronizedStateToHash(S pos) {
@@ -282,8 +263,7 @@ public abstract class Game<S extends State<S>> {
 	/**
 	 * Unhash a given hashed value and return the corresponding Board
 	 *
-	 * @param hash
-	 *            The hash given
+	 * @param hash The hash given
 	 * @return the State represented
 	 */
 	public final S hashToState(long hash) {
@@ -295,10 +275,8 @@ public abstract class Game<S extends State<S>> {
 	/**
 	 * For mutable states. Avoids needing to instantiate new states.
 	 *
-	 * @param hash
-	 *            The hash to use
-	 * @param s
-	 *            The state to store the result in
+	 * @param hash The hash to use
+	 * @param s    The state to store the result in
 	 */
 	public abstract void hashToState(long hash, S s);
 
@@ -308,8 +286,7 @@ public abstract class Game<S extends State<S>> {
 	 * Produce a machine-parsable String representing the state. This function
 	 * must be the exact opposite of stringToState
 	 *
-	 * @param pos
-	 *            the State given
+	 * @param pos the State given
 	 * @return a String
 	 * @see Game#stringToState(String)
 	 */
@@ -320,8 +297,7 @@ public abstract class Game<S extends State<S>> {
 	 * solving, the game is cloned to ensure there are no synchronization
 	 * problems)
 	 *
-	 * @param pos
-	 *            The position
+	 * @param pos The position
 	 * @return A string representing the position
 	 */
 	public synchronized final String synchronizedStateToString(S pos) {
@@ -332,8 +308,7 @@ public abstract class Game<S extends State<S>> {
 	 * Given a String construct a State. This <i>must</i> be compatible with
 	 * stateToString as it is used to send states over the network.
 	 *
-	 * @param pos
-	 *            The String given
+	 * @param pos The String given
 	 * @return a State
 	 * @see Game#stateToString(State)
 	 */
@@ -344,8 +319,7 @@ public abstract class Game<S extends State<S>> {
 	 * solving, the game is cloned to ensure there are no synchronization
 	 * problems)
 	 *
-	 * @param pos
-	 *            The position as a string
+	 * @param pos The position as a string
 	 * @return The resulting state
 	 */
 	public synchronized final S synchronizedStringToState(String pos) {
@@ -361,7 +335,7 @@ public abstract class Game<S extends State<S>> {
 
 	/**
 	 * @return A new Record object (if you wish to subclass Record for your
-	 *         game, you should over-ride this)
+	 * game, you should over-ride this)
 	 */
 	public Record newRecord() {
 		return new Record(conf);
@@ -370,8 +344,7 @@ public abstract class Game<S extends State<S>> {
 	/**
 	 * A new array of record objects
 	 *
-	 * @param len
-	 *            The length of the array
+	 * @param len The length of the array
 	 * @return A length of instantiated records with length len
 	 */
 	public final Record[] newRecordArray(int len) {
@@ -385,12 +358,9 @@ public abstract class Game<S extends State<S>> {
 	/**
 	 * Finds the "best" record in a set and returns it.
 	 *
-	 * @param records
-	 *            An array of record objects
-	 * @param firstRecord
-	 *            The first element of the array to consider
-	 * @param numRecords
-	 *            The total number of records to consider
+	 * @param records     An array of record objects
+	 * @param firstRecord The first element of the array to consider
+	 * @param numRecords  The total number of records to consider
 	 * @return The record with the best possible outcome
 	 */
 	public Record combine(Record[] records, int firstRecord, int numRecords) {
@@ -406,8 +376,7 @@ public abstract class Game<S extends State<S>> {
 	/**
 	 * Equivalent to combine(records, 0, records.length)
 	 *
-	 * @param records
-	 *            An array of records
+	 * @param records An array of records
 	 * @return The record with the best possible outcome
 	 * @see #combine(Record[], int, int)
 	 */
@@ -418,22 +387,17 @@ public abstract class Game<S extends State<S>> {
 	// Long Record Converters
 
 	/**
-	 * @param recordState
-	 *            The state corresponding to this record
-	 * @param fromRecord
-	 *            The record to extract the long from
+	 * @param recordState The state corresponding to this record
+	 * @param fromRecord  The record to extract the long from
 	 * @return A long representing the record (to be stored in a database)
 	 */
 	public abstract long recordToLong(S recordState, Record fromRecord);
 
 	/**
-	 * @param recordState
-	 *            The state corresponding to this record
-	 * @param record
-	 *            A long representing the record
-	 * @param toStore
-	 *            The record to store the result in (as opposed to returning a
-	 *            newly instantiated record)
+	 * @param recordState The state corresponding to this record
+	 * @param record      A long representing the record
+	 * @param toStore     The record to store the result in (as opposed to returning a
+	 *                    newly instantiated record)
 	 */
 	public abstract void longToRecord(S recordState, long record, Record toStore);
 
@@ -442,16 +406,13 @@ public abstract class Game<S extends State<S>> {
 	 * solving, the game is cloned to ensure there are no synchronization
 	 * problems)
 	 *
-	 * @param recordState
-	 *            The state corresponding to this record
-	 * @param record
-	 *            A long representing the record (extracted from a database)
-	 * @param toStore
-	 *            The record to store the result in (as opposed to returning a
-	 *            newly instantiated record)
+	 * @param recordState The state corresponding to this record
+	 * @param record      A long representing the record (extracted from a database)
+	 * @param toStore     The record to store the result in (as opposed to returning a
+	 *                    newly instantiated record)
 	 */
 	public final synchronized void synchronizedLongToRecord(S recordState,
-			long record, Record toStore) {
+															long record, Record toStore) {
 		longToRecord(recordState, record, toStore);
 	}
 
@@ -460,8 +421,7 @@ public abstract class Game<S extends State<S>> {
 	/**
 	 * "Pretty-print" a State for display to the user
 	 *
-	 * @param pos
-	 *            The state to display
+	 * @param pos The state to display
 	 * @return a pretty-printed string
 	 */
 	public abstract String displayState(S pos);
@@ -474,8 +434,7 @@ public abstract class Game<S extends State<S>> {
 	 * <table>
 	 * here!
 	 *
-	 * @param pos
-	 *            The GameState to format.
+	 * @param pos The GameState to format.
 	 * @return The html-like formatting of the string.
 	 */
 	public String displayHTML(S pos) {
@@ -484,11 +443,11 @@ public abstract class Game<S extends State<S>> {
 
 	/**
 	 * @return a String that uniquely describes the setup of this Game
-	 *         (including any variant information, game size, etc)
+	 * (including any variant information, game size, etc)
 	 */
 	public abstract String describe();
 
-	// Pool
+	// Record Pool
 
 	public final Record getPoolRecord() {
 		return recordPool.get();
@@ -498,6 +457,20 @@ public abstract class Game<S extends State<S>> {
 		recordPool.release(r);
 	}
 
+	private final Pool<Record> recordPool = new Pool<Record>(
+			new Factory<Record>() {
+				@Override
+				public Record newObject() {
+					return newRecord();
+				}
+
+				@Override
+				public void reset(Record t) {
+				}
+			});
+
+	// State Pool
+
 	public final S getPoolState() {
 		return statePool.get();
 	}
@@ -505,6 +478,20 @@ public abstract class Game<S extends State<S>> {
 	public final void release(S state) {
 		statePool.release(state);
 	}
+
+	private final Pool<S> statePool = new Pool<S>(
+			new Factory<S>() {
+				@Override
+				public S newObject() {
+					return newState();
+				}
+
+				@Override
+				public void reset(S t) {
+				}
+			});
+
+	// Child State Array Pool
 
 	public final S[] getPoolChildStateArray() {
 		return childStateArrayPool.get();
@@ -514,30 +501,8 @@ public abstract class Game<S extends State<S>> {
 		childStateArrayPool.release(childStateArray);
 	}
 
-	public final Record[] getPoolRecordArray() {
-		return recordArrayPool.get();
-	}
-
-	public final void release(Record[] recordArray) {
-		recordArrayPool.release(recordArray);
-	}
-
-	private final Pool<S> statePool = new Pool<S>(new Factory<S>() {
-
-		@Override
-		public S newObject() {
-			return newState();
-		}
-
-		@Override
-		public void reset(S t) {
-		}
-
-	});
-
 	private final Pool<S[]> childStateArrayPool = new Pool<S[]>(
 			new Factory<S[]>() {
-
 				@Override
 				public S[] newObject() {
 					return newStateArray(maxChildren());
@@ -548,23 +513,18 @@ public abstract class Game<S extends State<S>> {
 				}
 			});
 
-	private final Pool<Record> recordPool = new Pool<Record>(
-			new Factory<Record>() {
+	// Record Array Pool
 
-				@Override
-				public Record newObject() {
-					return newRecord();
-				}
+	public final Record[] getPoolRecordArray() {
+		return recordArrayPool.get();
+	}
 
-				@Override
-				public void reset(Record t) {
-				}
-
-			});
+	public final void release(Record[] recordArray) {
+		recordArrayPool.release(recordArray);
+	}
 
 	private final Pool<Record[]> recordArrayPool = new Pool<Record[]>(
 			new Factory<Record[]>() {
-
 				@Override
 				public Record[] newObject() {
 					return newRecordArray(maxChildren());

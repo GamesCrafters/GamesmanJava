@@ -16,15 +16,15 @@ import edu.berkeley.gamesman.util.qll.QuickLinkedList;
 
 /**
  * A wrapper for using the top-down solver with any game
- * 
+ *
+ * @param <S> The game state
  * @author dnspies
- * 
- * @param <S>
- *            The game state
  */
 public final class TopDownGame<S extends State<S>> extends TopDownMutaGame {
 	private final Game<S> myGame;
+
 	private final QuickLinkedList<SIterator> moveLists = new QuickLinkedList<SIterator>();
+
 	private final Pool<SIterator> moveArrayPool = new Pool<SIterator>(
 			new Factory<SIterator>() {
 
@@ -37,7 +37,9 @@ public final class TopDownGame<S extends State<S>> extends TopDownMutaGame {
 				}
 
 			});
+
 	private final QuickLinkedList<S> stateList = new QuickLinkedList<S>();
+
 	private final S[] startingPositions;
 
 	private class SIterator implements Iterator<S> {
@@ -74,8 +76,7 @@ public final class TopDownGame<S extends State<S>> extends TopDownMutaGame {
 	}
 
 	/**
-	 * @param g
-	 *            The game to wrap
+	 * @param g The game to wrap
 	 */
 	public TopDownGame(Game<S> g) {
 		super(g.conf);
@@ -86,23 +87,16 @@ public final class TopDownGame<S extends State<S>> extends TopDownMutaGame {
 				.newStateArray(startingPositions.size()));
 	}
 
+	// Game Logic
+
 	@Override
-	public boolean changeMove() {
-		if (!moveLists.getFirst().hasNext())
-			return false;
-		S m = moveLists.getFirst().next();
-		stateList.getFirst().set(m);
-		return true;
+	public int numStartingPositions() {
+		return startingPositions.length;
 	}
 
 	@Override
-	public String displayState() {
-		return myGame.displayState(stateList.getFirst());
-	}
-
-	@Override
-	public long getHash() {
-		return myGame.stateToHash(stateList.getFirst());
+	public void setStartingPosition(int i) {
+		setFromState(startingPositions[i]);
 	}
 
 	@Override
@@ -123,13 +117,47 @@ public final class TopDownGame<S extends State<S>> extends TopDownMutaGame {
 	}
 
 	@Override
+	public boolean changeMove() {
+		if (!moveLists.getFirst().hasNext())
+			return false;
+		S m = moveLists.getFirst().next();
+		stateList.getFirst().set(m);
+		return true;
+	}
+
+	@Override
+	public void undoMove() {
+		moveArrayPool.release(moveLists.pop());
+		myGame.release(stateList.pop());
+	}
+
+	@Override
 	public Value primitiveValue() {
 		return myGame.primitiveValue(stateList.getFirst());
 	}
 
 	@Override
-	public void setFromString(String pos) {
-		setToState(myGame.stringToState(pos));
+	public List<String> moveNames() {
+		// TODO: Find some way to ensure these are returned in the correct order
+		Collection<Pair<String, S>> validMoves = myGame.validMoves(stateList
+				.getFirst());
+		ArrayList<String> moveNames = new ArrayList<String>(validMoves.size());
+		for (Pair<String, S> move : validMoves) {
+			moveNames.add(move.car);
+		}
+		return moveNames;
+	}
+
+	// Long State Converters
+
+	@Override
+	public long numHashes() {
+		return myGame.numHashes();
+	}
+
+	@Override
+	public long getHash() {
+		return myGame.stateToHash(stateList.getFirst());
 	}
 
 	@Override
@@ -140,12 +168,54 @@ public final class TopDownGame<S extends State<S>> extends TopDownMutaGame {
 		stateList.push(state);
 	}
 
-	private void setToState(S pos) {
+	@Override
+	public int maxChildren() {
+		return myGame.maxChildren();
+	}
+
+	// String State Converters
+
+	@Override
+	public void setFromString(String pos) {
+		setFromState(myGame.stringToState(pos));
+	}
+
+	private void setFromState(S pos) {
 		clearLists();
 		S state = myGame.getPoolState();
 		state.set(pos);
 		stateList.push(state);
 	}
+
+	// Records
+
+	@Override
+	public long recordStates() {
+		return myGame.recordStates();
+	}
+
+	@Override
+	public long recordToLong(Record fromRecord) {
+		return myGame.recordToLong(stateList.getFirst(), fromRecord);
+	}
+	@Override
+	public void longToRecord(long record, Record toStore) {
+		myGame.longToRecord(stateList.getFirst(), record, toStore);
+	}
+
+	// Pretty Print
+
+	@Override
+	public String describe() {
+		return myGame.describe();
+	}
+
+	@Override
+	public String displayState() {
+		return myGame.displayState(stateList.getFirst());
+	}
+
+	// Misc
 
 	private void clearLists() {
 		while (!stateList.isEmpty()) {
@@ -154,63 +224,5 @@ public final class TopDownGame<S extends State<S>> extends TopDownMutaGame {
 		while (!moveLists.isEmpty()) {
 			moveArrayPool.release(moveLists.pop());
 		}
-	}
-
-	@Override
-	public void undoMove() {
-		moveArrayPool.release(moveLists.pop());
-		myGame.release(stateList.pop());
-	}
-
-	// TODO: Find some way to ensure these are returned in the correct order
-	@Override
-	public List<String> moveNames() {
-		Collection<Pair<String, S>> validMoves = myGame.validMoves(stateList
-				.getFirst());
-		ArrayList<String> moveNames = new ArrayList<String>(validMoves.size());
-		for (Pair<String, S> move : validMoves) {
-			moveNames.add(move.car);
-		}
-		return moveNames;
-	}
-
-	@Override
-	public int numStartingPositions() {
-		return startingPositions.length;
-	}
-
-	@Override
-	public void setStartingPosition(int i) {
-		setToState(startingPositions[i]);
-	}
-
-	@Override
-	public void longToRecord(long record, Record toStore) {
-		myGame.longToRecord(stateList.getFirst(), record, toStore);
-	}
-
-	@Override
-	public long recordToLong(Record fromRecord) {
-		return myGame.recordToLong(stateList.getFirst(), fromRecord);
-	}
-
-	@Override
-	public int maxChildren() {
-		return myGame.maxChildren();
-	}
-
-	@Override
-	public String describe() {
-		return myGame.describe();
-	}
-
-	@Override
-	public long numHashes() {
-		return myGame.numHashes();
-	}
-
-	@Override
-	public long recordStates() {
-		return myGame.recordStates();
 	}
 }

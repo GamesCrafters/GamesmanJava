@@ -8,17 +8,17 @@ import edu.berkeley.gamesman.core.Record;
 import edu.berkeley.gamesman.core.Value;
 
 /**
- * This is the super class for all games which contain their own state, but
- * should be solved via the top-down solver
- * 
+ * This is the super class for all games which contain their own state
+ *
+ * <p>Note that the states are not passed into methods as in {@link Game}.
+ *
  * @author dnspies
  */
 public abstract class MutaGame extends Game<HashState> {
 	/**
 	 * The default constructor
-	 * 
-	 * @param conf
-	 *            The configuration object
+	 *
+	 * @param conf The configuration object
 	 */
 	public MutaGame(Configuration conf) {
 		super(conf);
@@ -47,26 +47,29 @@ public abstract class MutaGame extends Game<HashState> {
 	/**
 	 * Sets the internal state to the ith starting position
 	 *
-	 * @param i
-	 *            The starting position to set to
+	 * @param i The starting position to set to
 	 */
 	public abstract void setStartingPosition(int i);
 
-	@Override
-	public Value primitiveValue(HashState pos) {
-		setFromHash(pos.hash);
-		return primitiveValue();
-	}
-
 	/**
+	 * Returns the primitive value of the given position
+	 *
 	 * @return The primitive value of the current position
 	 */
 	public abstract Value primitiveValue();
 
+	/**
+	 * Returns the primitive value of the given position
+	 *
+	 * <p>Calling this method could affect the internal game state
+	 *
+	 * @param pos The primitive State
+	 * @return The primitive value of the given position
+	 */
 	@Override
-	public Value strictPrimitiveValue(HashState pos) {
+	public Value primitiveValue(HashState pos) {
 		setFromHash(pos.hash);
-		return strictPrimitiveValue();
+		return primitiveValue();
 	}
 
 	/**
@@ -77,6 +80,20 @@ public abstract class MutaGame extends Game<HashState> {
 	 */
 	public Value strictPrimitiveValue() {
 		return primitiveValue();
+	}
+
+	/**
+	 * Returns the actual primitive value according to the rules for the given state
+	 *
+	 * <p>Calling this method could affect the internal game state
+	 *
+	 * @param pos The primitive State
+	 * @return The value of the given state
+	 */
+	@Override
+	public Value strictPrimitiveValue(HashState pos) {
+		setFromHash(pos.hash);
+		return strictPrimitiveValue();
 	}
 
 	// States
@@ -110,8 +127,7 @@ public abstract class MutaGame extends Game<HashState> {
 	/**
 	 * Sets the board position to the passed hash
 	 *
-	 * @param hash
-	 *            The hash to match
+	 * @param hash The hash to match
 	 */
 	public abstract void setFromHash(long hash);
 
@@ -123,6 +139,14 @@ public abstract class MutaGame extends Game<HashState> {
 		return toString();
 	}
 
+	/**
+	 * Convert the string to a state object
+	 *
+	 * <p>Calling this method could affect the internal game state
+	 *
+	 * @param pos The String given
+	 * @return New state from the given string
+	 */
 	@Override
 	public HashState stringToState(String pos) {
 		setFromString(pos);
@@ -132,13 +156,21 @@ public abstract class MutaGame extends Game<HashState> {
 	/**
 	 * Sets the board to the position passed in string form
 	 *
-	 * @param pos
-	 *            The position to set to
+	 * @param pos The position to set to
 	 */
 	public abstract void setFromString(String pos);
 
 	// Records
 
+	/**
+	 * Hashes a record using the current position as the game state
+	 *
+	 * <p>Calling this method could affect the internal game state
+	 *
+	 * @param recordState The state corresponding to this record
+	 * @param fromRecord  The record to extract the long from
+	 * @return The hashed value
+	 */
 	@Override
 	public long recordToLong(HashState recordState, Record fromRecord) {
 		setFromHash(recordState.hash);
@@ -146,10 +178,9 @@ public abstract class MutaGame extends Game<HashState> {
 	}
 
 	/**
-	 * Hashes a record using the current position as the game state.
+	 * Hashes a record using the current position as the game state
 	 *
-	 * @param fromRecord
-	 *            The record to hash
+	 * @param fromRecord The record to hash
 	 * @return The hashed value
 	 */
 	public abstract long recordToLong(Record fromRecord);
@@ -163,10 +194,8 @@ public abstract class MutaGame extends Game<HashState> {
 	/**
 	 * Unhashes a record using the current position as the game state
 	 *
-	 * @param record
-	 *            The hash of the record
-	 * @param toStore
-	 *            The record to store the result in
+	 * @param record  The hash of the record
+	 * @param toStore The record to store the result in
 	 */
 	public abstract void longToRecord(long record, Record toStore);
 
@@ -180,7 +209,7 @@ public abstract class MutaGame extends Game<HashState> {
 
 	/**
 	 * "Pretty-print" the current State for display to the user
-	 * 
+	 *
 	 * @return a pretty-printed string
 	 */
 	public abstract String displayState();

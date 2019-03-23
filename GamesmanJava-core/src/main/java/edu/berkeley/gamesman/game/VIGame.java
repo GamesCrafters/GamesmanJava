@@ -7,6 +7,10 @@ import edu.berkeley.gamesman.database.Database;
 import edu.berkeley.gamesman.database.cache.VICache;
 import edu.berkeley.gamesman.util.Pair;
 
+/**
+ * It's not clearly documented the function of VIGame; the earliest trace can
+ * be found at @66dc44. Its subclass VIQuickCross is deleted at @cf8f82.
+ */
 public abstract class VIGame extends MutaGame {
 	public VIGame(Configuration conf) {
 		super(conf);

@@ -39,8 +39,8 @@ public class OneTwoTen extends Game<OneTwoTenState> {
 		if (pos.numXs == 0)
 			return Collections.emptySet();
 		else {
-			ArrayList<Pair<String, OneTwoTenState>> moves = new ArrayList<Pair<String, OneTwoTenState>>(
-					2);
+			ArrayList<Pair<String, OneTwoTenState>> moves =
+					new ArrayList<Pair<String, OneTwoTenState>>(2);
 			OneTwoTenState newState = newState();
 			newState.set(pos);
 			newState.makeMove(1);
@@ -56,25 +56,15 @@ public class OneTwoTen extends Game<OneTwoTenState> {
 	}
 
 	@Override
-	public int validMoves(OneTwoTenState pos, OneTwoTenState[] children) {
-		Collection<Pair<String, OneTwoTenState>> moves = validMoves(pos);
-		int i = 0;
-		for (Pair<String, OneTwoTenState> move : moves) {
-			children[i++].set(move.cdr);
-		}
-		return i;
-	}
-
-	@Override
 	public int maxChildren() {
 		return 2;
 	}
 
 	@Override
 	public Value primitiveValue(OneTwoTenState pos) {
-		if (pos.numXs == 0) {
+		if (pos.numXs == 0)
 			return Value.LOSE;
-		} else
+		else
 			return Value.UNDECIDED;
 	}
 
@@ -91,10 +81,9 @@ public class OneTwoTen extends Game<OneTwoTenState> {
 	@Override
 	public String displayState(OneTwoTenState pos) {
 		StringBuilder sb = new StringBuilder(10);
-		sb.append((pos.turn == OneTwoTenState.LEFT ? "L" : "R") + "\t");
-		for (int i = 0; i < pos.numXs; i++) {
+		sb.append(pos.turn == OneTwoTenState.LEFT ? "L" : "R").append("\t");
+		for (int i = 0; i < pos.numXs; i++)
 			sb.append('X');
-		}
 		return sb.toString();
 	}
 
