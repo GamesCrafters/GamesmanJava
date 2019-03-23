@@ -86,12 +86,17 @@ public class LoopyTierMaster implements Runnable {
 	}
 
 	private void solve(int tier) throws IOException {
+
+		// Check if database for specified tier already exists
 		String tierUri = dbUri + "_" + tier + ".db";
 		boolean doneAlready = fs.exists(new Path(tierUri));
 		if (doneAlready) {
 			setLastTierUri(tier);
 			return;
 		}
+
+		// Attempt to solve the tier
+
 		hadoopConf.setInt("tier", tier);
 		job = new Job(hadoopConf, game.getClass().getSimpleName()
 				+ " solver for tier " + tier);
@@ -103,6 +108,7 @@ public class LoopyTierMaster implements Runnable {
 		job.setReducerClass(HadoopTierReducer.class);
 		job.setInputFormatClass(TierInput.class);
 		FileOutputFormat.setOutputPath(job, outputDirectory);
+
 		boolean interrupted;
 		do {
 			interrupted = false;
@@ -117,6 +123,7 @@ public class LoopyTierMaster implements Runnable {
 				throw new Error(e);
 			}
 		} while (interrupted);
+
 		System.out.println("Tier " + tier + " successful");
 		fs.delete(outputDirectory, true);
 		setLastTierUri(tier);

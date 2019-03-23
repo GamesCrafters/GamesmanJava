@@ -65,9 +65,13 @@ public class HadoopTierMaster {
 			Path outputPath = new Path(outputDirectory);
 			if (fs.exists(outputPath))
 				fs.delete(outputPath, true);
+
+			// Solve all tiers
 			for (int tier = game.numberOfTiers() - 1; tier >= 0; tier--) {
 				solve(tier);
 			}
+
+			// Write final database file
 			String uri = gamesmanConf.getProperty("gamesman.db.uri");
 			SplitDBMaker outputDB = new SplitDBMaker(uri, gamesmanConf);
 			for (int tier = 0; tier < game.numberOfTiers(); tier++) {
@@ -77,6 +81,7 @@ public class HadoopTierMaster {
 						game.numHashesForTier(tier));
 			}
 			outputDB.close();
+
 		} catch (IOException e) {
 			throw new Error(e);
 		} catch (URISyntaxException e) {
@@ -84,7 +89,16 @@ public class HadoopTierMaster {
 		}
 	}
 
+	/**
+	 * Solve one tier
+	 *
+	 * @param tier The index of the tier to be solved
+	 * @throws IOException
+	 * @throws URISyntaxException
+	 */
 	private void solve(int tier) throws IOException, URISyntaxException {
+
+		// Check if database for specified tier already exists
 		String tierUri = dbUri + "_" + tier + ".db";
 		FileSystem tierFS = HDFSInfo.getHDFS(tierUri);
 		boolean doneAlready = tierFS.exists(new Path(tierUri));
@@ -92,6 +106,9 @@ public class HadoopTierMaster {
 			setLastTierUri(tier);
 			return;
 		}
+
+		// Attempt to solve the tier
+
 		hadoopConf.setInt("tier", tier);
 		job = new Job(hadoopConf, game.getClass().getSimpleName()
 				+ " solver for tier " + tier);
@@ -104,6 +121,7 @@ public class HadoopTierMaster {
 		job.setInputFormatClass(TierInput.class);
 		Path outputPath = new Path(outputDirectory);
 		FileOutputFormat.setOutputPath(job, outputPath);
+
 		boolean interrupted;
 		do {
 			interrupted = false;
@@ -118,6 +136,7 @@ public class HadoopTierMaster {
 				throw new Error(e);
 			}
 		} while (interrupted);
+
 		System.out.println("Tier " + tier + " successful");
 		FileSystem outputFs = HDFSInfo.getHDFS(outputDirectory);
 		outputFs.delete(outputPath, true);
