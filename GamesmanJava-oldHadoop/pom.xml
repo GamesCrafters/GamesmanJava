@@ -13,14 +13,20 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>edu.berkeley.gamesman</groupId>
-			<artifactId>GamesmanJava-core</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
-		<dependency>
 			<groupId>org.apache.hadoop</groupId>
 			<artifactId>hadoop-core</artifactId>
 			<version>0.20.205.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.codehaus.jackson</groupId>
+			<artifactId>jackson-mapper-asl</artifactId>
+			<version>1.8.11</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>edu.berkeley.gamesman</groupId>
+			<artifactId>GamesmanJava-core</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>edu.berkeley.gamesman</groupId>
