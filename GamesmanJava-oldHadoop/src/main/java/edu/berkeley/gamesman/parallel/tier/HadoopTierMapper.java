@@ -92,6 +92,8 @@ public class HadoopTierMapper extends
 		String foldUri = conf.getProperty("gamesman.hadoop.dbfolder");
 		File folder = new File(foldUri);
 		String[] fList = folder.list();
+
+		if (fList == null) return;
 		for (String f : fList) {
 			if (f.startsWith("s") && f.contains("_")) {
 				String tierString = f.substring(1, f.indexOf("_"));
