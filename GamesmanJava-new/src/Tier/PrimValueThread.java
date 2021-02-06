@@ -22,13 +22,13 @@ public class PrimValueThread implements PairFunction<Tuple2<Long, Piece[]>, Long
     long[] offsets;
     private long[][][] savedRearrange;
 
-    public PrimValueThread(int w, int h, int win, Piece nextP, int tier) {
+    public PrimValueThread(int w, int h, int win, Piece nextP, int tier, Connect4 game) {
         this.w = w;
         this.h = h;
         this.win = win;
         this.nextP = nextP;
         this.tier = tier;
-        this.game = new Connect4(w,h,win);
+        this.game = game;
     }
 
     @Override
