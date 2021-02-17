@@ -5,12 +5,11 @@ import Helpers.Piece;
 
 import Helpers.Primitive;
 import Helpers.Tuple;
-import org.apache.commons.math3.util.CombinatoricsUtils;
 import org.apache.spark.api.java.function.PairFunction;
 import scala.Tuple2;
 
 
-public class PrimValueThread implements PairFunction<Tuple2<Long, Piece[]>, Long, Byte> {
+public class PrimValueThread implements PairFunction<Tuple2<Long, Piece[]>, Long, Tuple<Byte, Piece[]>> {
 
 
     int w;
@@ -32,8 +31,8 @@ public class PrimValueThread implements PairFunction<Tuple2<Long, Piece[]>, Long
     }
 
     @Override
-    public Tuple2<Long, Byte> call(Tuple2<Long, Piece[]> longTuple2){
-        return new Tuple2<>(longTuple2._1, byteValue(game.isPrimitive(longTuple2._2, nextP)));
+    public Tuple2<Long, Tuple<Byte, Piece[]>> call(Tuple2<Long, Piece[]> longTuple2){
+        return new Tuple2<>(longTuple2._1, new Tuple<>(byteValue(game.isPrimitive(longTuple2._2, nextP)), longTuple2._2));
     }
 
 
