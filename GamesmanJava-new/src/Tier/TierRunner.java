@@ -12,6 +12,7 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.function.*;
 import scala.Tuple2;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,12 +28,16 @@ public class TierRunner {
         int numTiers = w*h;
         SparkConf conf = new SparkConf().setAppName("Connect4Solver").setMaster("local");
         JavaSparkContext sc = new JavaSparkContext(conf);
+
         List<Tuple2<Long, Piece[]>> data = new ArrayList<>();
         Tuple2<Long, Piece[]> temp = new Tuple2<>(0L, game.getStartingPositions());
         data.add(temp);
         JavaPairRDD<Long, Piece[]> distData = sc.parallelizePairs(data);
 
-        String id = String.format("%sby%swin%s", w, h, win);
+        List<JavaPairRDD<Long, Piece[]>> savedData = new ArrayList<>(numTiers);
+
+        String id = String.format("SPARK_OUT/%sby%swin%s_%s", w, h, win, System.currentTimeMillis());
+        new File(id).mkdirs();
         Piece nextP = Piece.BLUE;
         for (int i = 1; i <= numTiers; i++) {
 
@@ -42,45 +47,52 @@ public class TierRunner {
             // Map to the next function and eliminate duplicates
             JavaPairRDD<Long, Piece[]> next = distData.flatMapToPair(func).reduceByKey((v1, v2) -> v1);
 
-            distData = distData.filter(new PrimitiveFilter(w, h, win, nextP, game));
-            distData.saveAsObjectFile(String.format("SPARK/%S/TIERS/%s/DOWN", id, i - 1)); // Save tier primitives
+            distData = distData.filter(new PrimitiveFilter(w, h, win, nextP.opposite(), game));
 
+            //distData.saveAsTextFile(String.format("SPARK/%S/TIERS/%s/DOWN", id, i - 1)); // Save tier primitives
+            savedData.add(distData);
             distData = next;
             nextP = nextP.opposite();
         }
-        // Undo the switch that was made
-        nextP = nextP.opposite();
 
-        // We only care about primitives, so filter those out
-        //distData.filter(new PrimitiveFilter(w, h, win, nextP, game));// Unnecessary when bottom teir is all primitive
+        // Undo the switch that was made
+        Piece placed = nextP.opposite();
+
 
         // Now map bottom tier primitives to a tuple of location and value
-        PairFunction<Tuple2<Long, Piece[]>, Long, Tuple<Byte, Piece[]>> primValue = new PrimValueThread(w, h, win, nextP, numTiers, game);
+        PairFunction<Tuple2<Long, Piece[]>, Long, Tuple<Byte, Piece[]>> primValue = new PrimValueThread(w, h, win, placed, numTiers, game);
         JavaPairRDD<Long, Tuple<Byte, Piece[]>> pastPrimValues = distData.mapToPair(primValue);
+
         // NEED TO SAVE TO FILE HERE ???
 
 
-        for (int i = numTiers - 1; i > 0; i--) {
+        for (int i = numTiers - 1; i >= 0; i--) {
             //if (i % 4 == (numTiers - 3) % 4) { // Use if saving time/space
-                pastPrimValues.foreachPartitionAsync(new OutputFunc(i));  // Write last tier to file
+                pastPrimValues.foreachPartition(new OutputFunc(id, i + 1));  // Write last tier to file
             //}
 
 
-            PairFlatMapFunction<Tuple2<Long, Tuple<Byte, Piece[]>>, Long, Tuple<Byte, Piece[]>> parentFunc = new ParentFunc(w, h, win, nextP, false, game, i); // Parent of non primitive
+            PairFlatMapFunction<Tuple2<Long, Tuple<Byte, Piece[]>>, Long, Tuple<Byte, Piece[]>> parentFunc = new ParentFunc(w, h, win, placed, true, game, i); // Parent of non primitive
 
             pastPrimValues = pastPrimValues.flatMapToPair(parentFunc);
+            System.out.println(pastPrimValues.count());
+            placed = placed.opposite();
 
+            //parentFunc = new ParentFunc(w, h, win, nextP, true, game, i); // Parent of primitive
 
-            parentFunc = new ParentFunc(w, h, win, nextP, true, game, i); // Parent of primitive
-            JavaPairRDD<Long, Piece[]> next = JavaPairRDD.fromJavaRDD(sc.objectFile(String.format("SPARK/%S/TIERS/%s/DOWN", id, i)));
-            pastPrimValues.union(next.mapToPair(primValue).flatMapToPair(parentFunc));
+            //JavaPairRDD<Long, Piece[]> next = JavaPairRDD.fromJavaRDD(sc.textFile(String.format("SPARK/%S/TIERS/%s/DOWN", id, i)));
+            primValue = new PrimValueThread(w, h, win, placed, numTiers, game);
+            JavaPairRDD<Long, Piece[]> next = savedData.remove(savedData.size() - 1);
+            pastPrimValues = pastPrimValues.union(next.mapToPair(primValue));
+            System.out.println(pastPrimValues.count());
 
             Function2<Tuple<Byte, Piece[]>, Tuple<Byte, Piece[]>, Tuple<Byte, Piece[]>> combFunc = new ParentCombineFunc();
-            pastPrimValues.reduceByKey(combFunc);
-            nextP = nextP.opposite();
+            pastPrimValues = pastPrimValues.reduceByKey(combFunc);
+            System.out.println(pastPrimValues.count());
+
         }
 
-        pastPrimValues.foreachPartitionAsync(new OutputFunc(0)); // Write last thing
+        pastPrimValues.foreachPartition(new OutputFunc(id, 0)); // Write last thing
     }
 
 

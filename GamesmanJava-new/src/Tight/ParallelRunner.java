@@ -8,9 +8,9 @@ import java.util.List;
 public class ParallelRunner {
 
     public static void main(String[] args) {
-        int w = 4;
-        int h = 4;
-        int win = 4;
+        int w = 3;
+        int h = 3;
+        int win = 3;
         long start = System.currentTimeMillis();
         SharedVars sharedVars = new SharedVars();
         int n = Runtime.getRuntime().availableProcessors();

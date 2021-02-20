@@ -62,7 +62,7 @@ public class ParentFunc implements PairFlatMapFunction<Tuple2<Long, Tuple<Byte, 
             default:
                 throw new IllegalStateException("At this point all values should be set");
         }
-        Integer newRemote = oldVal.y - 1;
+        Integer newRemote = oldVal.y + 1;
         Byte b = toByte(newP, newRemote);
         if (childPrim) {
             retList = parentsWL(longTuple2._2().y, b);
@@ -131,7 +131,7 @@ public class ParentFunc implements PairFlatMapFunction<Tuple2<Long, Tuple<Byte, 
                     Piece[] newpos = pos.clone();
                     newpos[j] = Piece.EMPTY;
                     if (game.isPrimitive(newpos, placed.opposite()).x == Primitive.NOT_PRIMITIVE) {
-                        retList.add(new Tuple2<>(calculateLocationSym(newpos, tier - 1), new Tuple<>(val, newpos)));
+                        retList.add(new Tuple2<>(calculateLocation(newpos, tier), new Tuple<>(val, newpos)));
                     }
                 } else {
                     break;
@@ -152,7 +152,7 @@ public class ParentFunc implements PairFlatMapFunction<Tuple2<Long, Tuple<Byte, 
                 if (atJ == placed) {
                     Piece[] newpos = pos.clone();
                     newpos[j] = Piece.EMPTY;
-                    retList.add(new Tuple2<>(calculateLocationSym(newpos, tier - 1), new Tuple<>(val, newpos)));
+                    retList.add(new Tuple2<>(calculateLocation(newpos, tier), new Tuple<>(val, newpos)));
                 } else {
                     break;
                 }

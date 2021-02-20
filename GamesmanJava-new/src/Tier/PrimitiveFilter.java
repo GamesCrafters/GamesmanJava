@@ -25,6 +25,7 @@ public class PrimitiveFilter implements Function<Tuple2<Long, Piece[]>, Boolean>
 
     @Override
     public Boolean call(Tuple2<Long, Piece[]> longTuple2) {
-        return game.isPrimitive(longTuple2._2, placed).x != Primitive.NOT_PRIMITIVE;
+        Tuple<Primitive, Integer> tup = game.isPrimitive(longTuple2._2, placed);
+        return tup.x != Primitive.NOT_PRIMITIVE;
     }
 }

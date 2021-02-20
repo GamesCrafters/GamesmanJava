@@ -22,22 +22,19 @@ public class OutputFunc implements VoidFunction<Iterator<Tuple2<Long, Tuple<Byte
     SeekableByteChannel channel;
     Path path = null;
     int tier;
-    OutputFunc(int tier) {
+    String id;
+    OutputFunc(String id, int tier) {
         this.tier = tier;
+        this.id = id;
     }
 
     @Override
     public void call(Iterator<Tuple2<Long, Tuple<Byte, Piece[]>>> iter) throws IOException {
-        path = Paths.get("tier_" + tier);
+        path = Paths.get(id + "/tier_" + tier);
         try {
             channel = Files.newByteChannel(path, EnumSet.of(CREATE_NEW, WRITE, SPARSE, READ));
         } catch (Exception e) {
-            try {
                 channel = Files.newByteChannel(path, EnumSet.of(WRITE, READ));
-            } catch (Exception e1) {
-                throw new IllegalStateException("File opening went funky");
-            }
-
         }
         while (iter.hasNext()) {
             Tuple2<Long, Tuple<Byte, Piece[]>> tup = iter.next();

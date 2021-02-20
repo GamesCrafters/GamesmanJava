@@ -3,6 +3,7 @@ package Tier;
 import Games.Connect4;
 import Helpers.Piece;
 
+import Helpers.Primitive;
 import org.apache.commons.math3.util.CombinatoricsUtils;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.PairFlatMapFunction;
@@ -43,6 +44,9 @@ public class DownwardThread implements PairFlatMapFunction<Tuple2<Long, Piece[]>
 
     @Override
     public Iterator<Tuple2<Long, Piece[]>> call(Tuple2<Long, Piece[]> longTuple2){
+        if (game.isPrimitive(longTuple2._2(), nextP.opposite()).x != Primitive.NOT_PRIMITIVE) {
+            return Collections.emptyIterator();
+        }
         List<Tuple2<Long, Piece[]>> nextTier = new ArrayList<>();
         List<Integer> moves = game.generateMoves(longTuple2._2);
         for (int move: moves) {
