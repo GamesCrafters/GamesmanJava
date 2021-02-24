@@ -21,8 +21,8 @@ public class TierRunner {
 
     public static void main(String[] args) {
         int w = 3;
-        int h = 3;
-        int win = 3;
+        int h = 4;
+        int win = 4;
         int TIERLIMITNUM = 3;
         Connect4 game = new Connect4(w,h,win);
         int numTiers = w*h;
@@ -75,7 +75,7 @@ public class TierRunner {
             PairFlatMapFunction<Tuple2<Long, Tuple<Byte, Piece[]>>, Long, Tuple<Byte, Piece[]>> parentFunc = new ParentFunc(w, h, win, placed, true, game, i); // Parent of non primitive
 
             pastPrimValues = pastPrimValues.flatMapToPair(parentFunc);
-            System.out.println(pastPrimValues.count());
+
             placed = placed.opposite();
 
             //parentFunc = new ParentFunc(w, h, win, nextP, true, game, i); // Parent of primitive
@@ -84,11 +84,11 @@ public class TierRunner {
             primValue = new PrimValueThread(w, h, win, placed, numTiers, game);
             JavaPairRDD<Long, Piece[]> next = savedData.remove(savedData.size() - 1);
             pastPrimValues = pastPrimValues.union(next.mapToPair(primValue));
-            System.out.println(pastPrimValues.count());
+
 
             Function2<Tuple<Byte, Piece[]>, Tuple<Byte, Piece[]>, Tuple<Byte, Piece[]>> combFunc = new ParentCombineFunc();
             pastPrimValues = pastPrimValues.reduceByKey(combFunc);
-            System.out.println(pastPrimValues.count());
+
 
         }
 

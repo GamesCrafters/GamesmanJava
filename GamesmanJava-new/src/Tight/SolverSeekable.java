@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 import static java.nio.file.StandardOpenOption.*;
@@ -75,7 +76,7 @@ public class SolverSeekable extends Thread {
         game = new Connect4(width, height, win);
         setOffsets();
         fileName = "connect4_by_" + width + "_by_" + height + "_win_" + win + "_sparse";
-        Path path = null;//Path.of(fileName);
+        Path path = Paths.get(fileName);
 
         try {
             channel = Files.newByteChannel(path, EnumSet.of(CREATE_NEW, WRITE, SPARSE, READ));
