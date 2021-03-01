@@ -20,9 +20,9 @@ import java.util.List;
 public class TierRunner {
 
     public static void main(String[] args) {
-        int w = 3;
-        int h = 4;
-        int win = 4;
+        int w = 2;
+        int h = 2;
+        int win = 2;
         int TIERLIMITNUM = 3;
         Connect4 game = new Connect4(w,h,win);
         int numTiers = w*h;

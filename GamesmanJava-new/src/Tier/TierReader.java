@@ -112,6 +112,7 @@ public class TierReader {
                     System.out.print("Move: ");
                 }
             }
+
             board = game.doMove(board, move - 1, nextp);
             nextp = nextp.opposite();
         }
