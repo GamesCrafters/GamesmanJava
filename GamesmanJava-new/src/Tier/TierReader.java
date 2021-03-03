@@ -106,14 +106,25 @@ public class TierReader {
             while (true) {
                 try  {
                     move = Integer.parseInt(scanner.next());
-                    break;
+                    if (board[(h * move) - 1] != Piece.EMPTY) {
+                        System.out.println("Cannot add to full column");
+                    } else {
+                        break;
+                    }
                 } catch (NumberFormatException ignored) {
                     System.out.println("Invalid move");
                     System.out.print("Move: ");
                 }
-            }
 
-            board = game.doMove(board, move - 1, nextp);
+            }
+            int actual_move = (h * (move - 1));
+            for (int i = (h * move) - 1; i != (h * (move - 1)) - 1; i --) {
+                if (board[i] != Piece.EMPTY) {
+                    actual_move = i + 1;
+                    break;
+                }
+            }
+            board = game.doMove(board, actual_move, nextp);
             nextp = nextp.opposite();
         }
 
