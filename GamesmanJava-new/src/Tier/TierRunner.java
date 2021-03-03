@@ -2,14 +2,13 @@ package Tier;
 
 import Games.Connect4;
 import Helpers.Piece;
-
-import Helpers.Primitive;
 import Helpers.Tuple;
+import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.function.*;
+import org.apache.spark.api.java.function.Function2;
+import org.apache.spark.api.java.function.PairFlatMapFunction;
+import org.apache.spark.api.java.function.PairFunction;
 import scala.Tuple2;
 
 import java.io.File;
@@ -20,9 +19,9 @@ import java.util.List;
 public class TierRunner {
 
     public static void main(String[] args) {
-        int w = 2;
-        int h = 2;
-        int win = 2;
+        int w = Integer.parseInt(args[0]);
+        int h = Integer.parseInt(args[1]);
+        int win = Integer.parseInt(args[2]);
         int TIERLIMITNUM = 3;
         Connect4 game = new Connect4(w,h,win);
         int numTiers = w*h;
