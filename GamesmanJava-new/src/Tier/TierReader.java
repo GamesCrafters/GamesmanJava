@@ -93,6 +93,10 @@ public class TierReader {
             Piece.printBoard(board, w, h);
             Tuple<Primitive, Integer> value = getValue(board, tier);
             System.out.printf("%s in %s%n", value.x, value.y);
+            if (value.y == 0) {
+                System.out.println("Game OVER!!!!");
+                break;
+            }
             System.out.print("Move: ");
             int move;
             while (true) {
@@ -118,6 +122,7 @@ public class TierReader {
             }
             board = game.doMove(board, actual_move, nextp);
             nextp = nextp.opposite();
+            tier += 1;
         }
 
     }
