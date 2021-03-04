@@ -19,8 +19,8 @@ public class ParentCombineFunc implements Function2<Tuple<Byte, Piece[]>, Tuple<
             return b1;
         }
 
-        Tuple<Primitive, Integer> tup1 = toTuple(b1);
-        Tuple<Primitive, Integer> tup2 = toTuple(b2);
+        Tuple<Primitive, Integer> tup1 = Tuple.byteToTuple(b1);
+        Tuple<Primitive, Integer> tup2 = Tuple.byteToTuple(b1);
         // WINS
         if (tup1.x == Primitive.WIN || tup2.x == Primitive.WIN) {
             if (tup2.x != Primitive.WIN) {
@@ -57,28 +57,6 @@ public class ParentCombineFunc implements Function2<Tuple<Byte, Piece[]>, Tuple<
     }
 
 
-    private Tuple<Primitive, Integer> toTuple(Byte b) {
-        int val = Byte.toUnsignedInt(b);
-        int remoteness = (val << 26) >>> 26;
-        Primitive p;
-        switch((val) >>> 6) {
-            case 0:
-                p = Primitive.NOT_PRIMITIVE;
-                break;
-            case 1:
-                p = Primitive.LOSS;
-                break;
-            case 2:
-                p = Primitive.WIN;
-                break;
-            case 3:
-                p = Primitive.TIE;
-                break;
-            default:
-               throw new IllegalStateException("Should only have these options");
-        }
-        return new Tuple<>(p, remoteness);
-    }
 
 
 }

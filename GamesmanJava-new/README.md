@@ -16,6 +16,7 @@ Optimize c4 hash/board state
 Bug fixing
 Setup on savio machine
 
+Add documentation
 
 Justins group
 C stuff
