@@ -19,9 +19,13 @@ import java.util.List;
 public class TierRunner {
 
     public static void main(String[] args) {
-        int w = Integer.parseInt(args[0]);
-        int h = Integer.parseInt(args[1]);
-        int win = Integer.parseInt(args[2]);
+//        int w = Integer.parseInt(args[0]);
+//        int h = Integer.parseInt(args[1]);
+//        int win = Integer.parseInt(args[2]);
+
+        int w = 1;
+        int h = 1;
+        int win = 1;
 
         Connect4 game = new Connect4(w,h,win);
         int numTiers = w*h;

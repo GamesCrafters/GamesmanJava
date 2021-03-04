@@ -23,7 +23,7 @@ public class DownwardThread implements PairFlatMapFunction<Tuple2<Long, Piece[]>
     LocationCalc locator;
 
     public DownwardThread(int w, int h, int win, Piece nextP, int tier) {
-        this.locator = new LocationCalc(w,h);
+        this.locator = new LocationCalc(w, h);
         this.w = w;
         this.h = h;
         this.win = win;

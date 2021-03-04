@@ -2,7 +2,9 @@ package Helpers;
 
 import org.apache.commons.math3.util.CombinatoricsUtils;
 
-public class LocationCalc {
+import java.io.Serializable;
+
+public class LocationCalc implements Serializable {
 
     private final long[] offsets;
     private final long[][][] savedRearrange;
