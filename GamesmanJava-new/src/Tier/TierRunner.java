@@ -10,7 +10,6 @@ import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFlatMapFunction;
 import org.apache.spark.api.java.function.PairFunction;
 import scala.Tuple2;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -80,7 +79,7 @@ public class TierRunner {
             //parentFunc = new ParentFunc(w, h, win, nextP, true, game, i); // Parent of primitive
 
             //JavaPairRDD<Long, Piece[]> next = JavaPairRDD.fromJavaRDD(sc.textFile(String.format("SPARK/%S/TIERS/%s/DOWN", id, i)));
-            primValue = new PrimValueThread(w, h, win, placed, numTiers, game);
+            primValue = new PrimValueThread(w, h, win, placed, i, game);
             JavaPairRDD<Long, Piece[]> next = savedData.remove(savedData.size() - 1);
             pastPrimValues = pastPrimValues.union(next.mapToPair(primValue));
 

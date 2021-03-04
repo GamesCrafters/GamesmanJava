@@ -10,6 +10,7 @@ import org.apache.spark.api.java.function.PairFlatMapFunction;
 import scala.Tuple2;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -67,6 +68,11 @@ public class ParentFunc implements PairFlatMapFunction<Tuple2<Long, Tuple<Byte, 
 
 
     private List<Tuple2<Long, Tuple<Byte, Piece[]>>> parentsWL(Piece[] pos, Byte val) {
+        if (Arrays.equals(pos, new Piece[]{Piece.BLUE, Piece.RED, Piece.BLUE,
+                                                  Piece.BLUE, Piece.RED, Piece.EMPTY,
+                                                  Piece.RED, Piece.BLUE, Piece.EMPTY})) {
+            int i = 0;
+        }
         List<Tuple2<Long, Tuple<Byte, Piece[]>>> retList = new ArrayList<>();
         for (int i = height - 1; i < width * height; i += height) {
             for (int j = i; j != i - height; j --) {
@@ -80,9 +86,8 @@ public class ParentFunc implements PairFlatMapFunction<Tuple2<Long, Tuple<Byte, 
                     if (game.isPrimitive(newpos, placed.opposite()).x == Primitive.NOT_PRIMITIVE) {
                         retList.add(new Tuple2<>(locator.calculateLocation(newpos, tier), new Tuple<>(val, newpos)));
                     }
-                } else {
-                    break;
                 }
+                break;
             }
         }
         return retList;
