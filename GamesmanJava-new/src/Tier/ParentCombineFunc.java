@@ -20,7 +20,7 @@ public class ParentCombineFunc implements Function2<Tuple<Byte, Piece[]>, Tuple<
         }
 
         Tuple<Primitive, Integer> tup1 = Tuple.byteToTuple(b1);
-        Tuple<Primitive, Integer> tup2 = Tuple.byteToTuple(b1);
+        Tuple<Primitive, Integer> tup2 = Tuple.byteToTuple(b2);
         // WINS
         if (tup1.x == Primitive.WIN || tup2.x == Primitive.WIN) {
             if (tup2.x != Primitive.WIN) {
@@ -49,7 +49,7 @@ public class ParentCombineFunc implements Function2<Tuple<Byte, Piece[]>, Tuple<
         }
 
         //Both are LOSS
-        if (tup1.y < tup2.y) {
+        if (tup1.y > tup2.y) {
             return b1;
         } else {
             return b2;
