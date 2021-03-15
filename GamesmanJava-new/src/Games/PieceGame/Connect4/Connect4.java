@@ -1,6 +1,7 @@
 package Games.PieceGame.Connect4;
 
 import Games.PieceGame.PieceGame;
+import Games.PieceGame.RectanglePieceLocator;
 import Helpers.Piece;
 import Helpers.Primitive;
 import Helpers.Tuple;
@@ -12,13 +13,20 @@ public class Connect4 extends PieceGame implements Serializable {
     int width;
     int height;
     int win;
+    RectanglePieceLocator locator;
     Piece[] gameStartingPosition;
 
     /* Pieces stored in column major order, starting from bottom right */
-    public Connect4(int w, int h, int wi) {
+    public Connect4(String[] args) {
+        int w = Integer.parseInt(args[0]);
+        int h = Integer.parseInt(args[1]);
+        int wi = Integer.parseInt(args[2]);
+
+
         width = w;
         height = h;
         win = wi;
+        locator = new RectanglePieceLocator(w,h);
         gameStartingPosition = new Piece[w*h];
         Arrays.fill(gameStartingPosition, Piece.EMPTY);
     }
@@ -28,6 +36,15 @@ public class Connect4 extends PieceGame implements Serializable {
         return gameStartingPosition;
     }
 
+    @Override
+    public long calculateLocation(Piece[] board) {
+        return locator.calculateLocation(board, getTier());
+    }
+
+    @Override
+    public int getNumTiers() {
+        return width * height;
+    }
 
     @Override
     public Piece[] doMove(Piece[] position, int move, Piece p) {
@@ -341,7 +358,7 @@ public class Connect4 extends PieceGame implements Serializable {
         }
     }
     public static void main(String[] args) {
-        Connect4 c = new Connect4(5,4,3);
+        Connect4 c = new Connect4(new String[]{"5","4","3"});
         Piece[] pos = c.getStartingPosition();
         HashSet<Long> hashset = new HashSet<>();
         recurse(hashset, pos, c, "", Piece.BLUE);

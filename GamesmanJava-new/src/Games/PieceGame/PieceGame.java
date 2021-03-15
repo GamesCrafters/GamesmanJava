@@ -1,31 +1,65 @@
 package Games.PieceGame;
 
-import Games.Interfaces.Game;
-import Games.Interfaces.Locator;
+import Games.Interfaces.KeyValueGame;
 import Helpers.Piece;
 import Helpers.Primitive;
 import Helpers.Tuple;
+import Tier.PrimitiveFilter;
+import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.PairFlatMapFunction;
+import scala.Tuple2;
 
 import java.util.List;
 
 /**
- * Represents a game played using the Helpers.Piece class.
+ * Represents a game played where position is represented by a Piece[]
  */
-public abstract class PieceGame implements Game {
+public abstract class PieceGame extends KeyValueGame {
 
-    Locator locator;
-
-    /**
-     * Used to start of the first position of the game
-     * @return The starting position of the game
-     */
-    abstract public Piece[] getStartingPosition();
-
+    Piece nextP;
+    int tier;
 
     @Override
-    public Locator getLocator() {
-        return locator;
+    public PairFlatMapFunction<Tuple2<Long, Object>, Long, Object> getDownwardFunc() {
+        return new DownwardThread(nextP, tier, this);
     }
+
+    @Override
+    public Function<Tuple2<Long, Object>, Boolean> getPrimitiveFunc() {
+        return new PrimitiveFilter(nextP, this);
+    }
+
+    @Override
+    public void solveStarting() {
+        tier = 0;
+        nextP = Piece.RED;
+    }
+
+    @Override
+    public void solveStepDown() {
+        tier += 1;
+        nextP = nextP.opposite();
+    }
+
+    @Override
+    public long calculateLocation(Object board) {
+        return calculateLocation((Piece[]) board);
+    }
+
+    public int getTier() {
+        return tier;
+    }
+
+    @Override
+    public void printBoard(Object board) {
+        printBoard((Piece[]) board);
+    }
+
+    /**
+     * Calculates the location of a certain board state
+     * @return The byte offset of the state
+     */
+    abstract public long calculateLocation(Piece[] board);
 
     /**
      * Use a created move and place it on the board
@@ -73,15 +107,6 @@ public abstract class PieceGame implements Game {
      */
     abstract public int getSize();
 
-    /**
-     * @return The name of the game
-     */
-    abstract public String getName();
-
-    /**
-     * @return The name of the variant
-     */
-    abstract public String getVariant();
 
     /**
      * Prints the current board state
