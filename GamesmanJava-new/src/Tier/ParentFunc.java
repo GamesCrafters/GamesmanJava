@@ -1,16 +1,14 @@
 package Tier;
 
-import Games.Connect4;
+import Games.Connect4.Connect4;
 import Helpers.LocationCalc;
 import Helpers.Piece;
 import Helpers.Primitive;
 import Helpers.Tuple;
-import org.apache.commons.math3.util.CombinatoricsUtils;
 import org.apache.spark.api.java.function.PairFlatMapFunction;
 import scala.Tuple2;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 

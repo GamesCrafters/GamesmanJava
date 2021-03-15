@@ -1,11 +1,10 @@
 package Tier;
 
-import Games.Connect4;
+import Games.Connect4.Connect4;
 import Helpers.LocationCalc;
 import Helpers.Piece;
 import Helpers.Primitive;
 import Helpers.Tuple;
-import org.apache.commons.math3.util.CombinatoricsUtils;
 
 import java.io.File;
 import java.io.RandomAccessFile;
@@ -107,7 +106,7 @@ public class TierReader {
                     } else {
                         break;
                     }
-                } catch (NumberFormatException ignored) {
+                } catch (Exception ignored) {
                     System.out.println("Invalid move");
                     System.out.print("Move: ");
                 }

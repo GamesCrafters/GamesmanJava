@@ -1,6 +1,6 @@
 package Tier;
 
-import Games.Connect4;
+import Games.Connect4.Connect4;
 import Helpers.Piece;
 import Helpers.Tuple;
 import org.apache.spark.SparkConf;
@@ -13,6 +13,8 @@ import scala.Tuple2;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.apache.spark.api.java.StorageLevels.MEMORY_AND_DISK;
 
 
 public class TierRunner {
@@ -39,18 +41,23 @@ public class TierRunner {
         Piece nextP = Piece.BLUE;
         for (int i = 1; i <= numTiers; i++) {
 
+
             // Make the function that will generate next positions
             PairFlatMapFunction<Tuple2<Long, Piece[]>, Long, Piece[]> func = new DownwardThread(w, h, win, nextP, i);
 
             // Map to the next function and eliminate duplicates
-            JavaPairRDD<Long, Piece[]> next = distData.flatMapToPair(func).reduceByKey((v1, v2) -> v1);
+            JavaPairRDD<Long, Piece[]> next = distData.flatMapToPair(func).reduceByKey((v1, v2) -> v1).persist(MEMORY_AND_DISK);
+            System.out.printf("Completed computing %d positions for tier: %d\n", next.count(), i);
 
-            distData = distData.filter(new PrimitiveFilter(w, h, win, nextP.opposite(), game));
+            // Filter out the primitives from the previous tier
+            distData = distData.filter(new PrimitiveFilter(w, h, win, nextP.opposite(), game)).persist(MEMORY_AND_DISK);
+            System.out.printf("Completed computing %d primitive positions for tier: %d\n", distData.count(), i - 1);
 
-            //distData.saveAsTextFile(String.format("SPARK/%S/TIERS/%s/DOWN", id, i - 1)); // Save tier primitives
+            // Store the primitives
             savedData.add(distData);
             distData = next;
             nextP = nextP.opposite();
+
         }
 
         // Undo the switch that was made
@@ -65,8 +72,9 @@ public class TierRunner {
 
 
         for (int i = numTiers - 1; i >= 0; i--) {
+            System.out.printf("Starting writing tier: %d to disk\n", i + 1);
             //if (i % 4 == (numTiers - 3) % 4) { // Use if saving time/space
-                pastPrimValues.foreachPartition(new OutputFunc(id, i + 1));  // Write last tier to file
+                pastPrimValues.foreachPartitionAsync(new OutputFunc(id, i + 1));  // Write last tier to file
             //}
 
 
@@ -83,6 +91,7 @@ public class TierRunner {
             JavaPairRDD<Long, Piece[]> next = savedData.remove(savedData.size() - 1);
             pastPrimValues = pastPrimValues.union(next.mapToPair(primValue));
 
+            next.unpersist();
 
             Function2<Tuple<Byte, Piece[]>, Tuple<Byte, Piece[]>, Tuple<Byte, Piece[]>> combFunc = new ParentCombineFunc();
             pastPrimValues = pastPrimValues.reduceByKey(combFunc);

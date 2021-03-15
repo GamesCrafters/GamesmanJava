@@ -3,7 +3,7 @@ package Tight;
 import java.io.*;
 import java.util.*;
 
-import Games.Connect4;
+import Games.Connect4.Connect4;
 import Helpers.Piece;
 import Helpers.Primitive;
 import Helpers.Tuple;

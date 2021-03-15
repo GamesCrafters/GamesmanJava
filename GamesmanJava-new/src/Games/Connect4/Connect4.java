@@ -1,5 +1,6 @@
-package Games;
+package Games.Connect4;
 
+import Games.Interfaces.PieceGame;
 import Helpers.Piece;
 import Helpers.Primitive;
 import Helpers.Tuple;
@@ -7,13 +8,13 @@ import Helpers.Tuple;
 import java.io.Serializable;
 import java.util.*;
 
-public class Connect4 implements Serializable {
+public class Connect4 implements Serializable, PieceGame {
     int width;
     int height;
     int win;
     Piece[] gameStartingPosition;
 
-    /** Pieces stored in column major order, starting from bottom right*/
+    /* Pieces stored in column major order, starting from bottom right */
     public Connect4(int w, int h, int wi) {
         width = w;
         height = h;
@@ -22,11 +23,13 @@ public class Connect4 implements Serializable {
         Arrays.fill(gameStartingPosition, Piece.EMPTY);
     }
 
+    @Override
     public Piece[] getStartingPositions() {
         return gameStartingPosition;
     }
 
 
+    @Override
     public Piece[] doMove(Piece[] position, int move, Piece p) {
         Piece[] newPosition = new Piece[getSize()];
         System.arraycopy(position, 0, newPosition, 0, position.length);
@@ -35,6 +38,7 @@ public class Connect4 implements Serializable {
     }
 
 
+    @Override
     public List<Integer> generateMoves(Piece[] position) {
         List<Integer> ret = new ArrayList<>();
         for (int i = 0; i < getSize(); i++) {
@@ -47,6 +51,7 @@ public class Connect4 implements Serializable {
         return ret;
     }
 
+    @Override
     public Tuple<Primitive, Integer> isPrimitive(Piece[] position, Piece placed) {
         boolean full = true;
         for (int column = 0; column < width; column++) {
@@ -151,6 +156,7 @@ public class Connect4 implements Serializable {
     }
 
     // The same as isPrimitive(position, placed) except we only check the one location we need to
+    @Override
     public Tuple<Primitive, Integer> isPrimitive(Piece[] position, Piece placed, int location) {
         if (location == -1) {
             return isPrimitive(position, placed);
@@ -254,14 +260,27 @@ public class Connect4 implements Serializable {
     }
 
 
+    @Override
     public int symMove(int move) {
         return (move % height) + (width - (move / height) - 1) * height;
     }
 
+    @Override
     public int getSize() {
         return width*height;
     }
 
+    @Override
+    public String getName() {
+        return "Connect 4";
+    }
+
+    @Override
+    public String getVariant() {
+        return String.format("%d x %d win in %d", width, height, win);
+    }
+
+    @Override
     public void printBoard(Piece[] board) {
         StringBuilder stb = new StringBuilder();
         for (int r = height - 1; r >= 0; r--) {
