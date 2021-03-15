@@ -1,7 +1,7 @@
 package Tier;
 
-import Games.Connect4.Connect4;
-import Helpers.LocationCalc;
+import Games.PieceGame.Connect4.Connect4;
+import Games.PieceGame.RectanglePieceLocator;
 import Helpers.Piece;
 import Helpers.Primitive;
 import Helpers.Tuple;
@@ -22,10 +22,10 @@ public class ParentFunc implements PairFlatMapFunction<Tuple2<Long, Tuple<Byte, 
     Connect4 game;
     int tier;
 
-    LocationCalc locator;
+    RectanglePieceLocator locator;
 
     public ParentFunc(int w, int h, int win, Piece nextP, boolean isPrimitive, Connect4 game, int tier) {
-        locator = new LocationCalc(w, h);
+        locator = new RectanglePieceLocator(w, h);
         width = w;
         height = h;
         this.win = win;

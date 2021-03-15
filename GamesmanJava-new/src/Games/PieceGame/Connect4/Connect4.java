@@ -1,6 +1,6 @@
-package Games.Connect4;
+package Games.PieceGame.Connect4;
 
-import Games.Interfaces.PieceGame;
+import Games.PieceGame.PieceGame;
 import Helpers.Piece;
 import Helpers.Primitive;
 import Helpers.Tuple;
@@ -8,7 +8,7 @@ import Helpers.Tuple;
 import java.io.Serializable;
 import java.util.*;
 
-public class Connect4 implements Serializable, PieceGame {
+public class Connect4 extends PieceGame implements Serializable {
     int width;
     int height;
     int win;
@@ -24,7 +24,7 @@ public class Connect4 implements Serializable, PieceGame {
     }
 
     @Override
-    public Piece[] getStartingPositions() {
+    public Piece[] getStartingPosition() {
         return gameStartingPosition;
     }
 
@@ -342,7 +342,7 @@ public class Connect4 implements Serializable, PieceGame {
     }
     public static void main(String[] args) {
         Connect4 c = new Connect4(5,4,3);
-        Piece[] pos = c.getStartingPositions();
+        Piece[] pos = c.getStartingPosition();
         HashSet<Long> hashset = new HashSet<>();
         recurse(hashset, pos, c, "", Piece.BLUE);
         System.out.printf("Number of primitives: %d", hashset.size());

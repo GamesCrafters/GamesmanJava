@@ -1,7 +1,7 @@
 package Tier;
 
-import Games.Connect4.Connect4;
-import Helpers.LocationCalc;
+import Games.PieceGame.Connect4.Connect4;
+import Games.PieceGame.RectanglePieceLocator;
 import Helpers.Piece;
 import Helpers.Primitive;
 import Helpers.Tuple;
@@ -17,7 +17,7 @@ public class TierReader {
     int h;
     int w;
     int win;
-    LocationCalc locator;
+    RectanglePieceLocator locator;
     File folder;
     boolean comp;
 
@@ -77,7 +77,7 @@ public class TierReader {
 
         this.folder = folder;
         this.comp = comp;
-        locator = new LocationCalc(w, h);
+        locator = new RectanglePieceLocator(w, h);
     }
 
     private void play () {

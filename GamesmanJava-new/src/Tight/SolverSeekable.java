@@ -1,6 +1,6 @@
 package Tight;
 
-import Games.Connect4.Connect4;
+import Games.PieceGame.Connect4.Connect4;
 import Helpers.Piece;
 import Helpers.Primitive;
 import Helpers.Tuple;

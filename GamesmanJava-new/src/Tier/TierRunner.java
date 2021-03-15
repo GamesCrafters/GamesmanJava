@@ -1,6 +1,6 @@
 package Tier;
 
-import Games.Connect4.Connect4;
+import Games.PieceGame.Connect4.Connect4;
 import Helpers.Piece;
 import Helpers.Tuple;
 import org.apache.spark.SparkConf;
@@ -30,7 +30,7 @@ public class TierRunner {
         JavaSparkContext sc = new JavaSparkContext(conf);
 
         List<Tuple2<Long, Piece[]>> data = new ArrayList<>();
-        Tuple2<Long, Piece[]> temp = new Tuple2<>(0L, game.getStartingPositions());
+        Tuple2<Long, Piece[]> temp = new Tuple2<>(0L, game.getStartingPosition());
         data.add(temp);
         JavaPairRDD<Long, Piece[]> distData = sc.parallelizePairs(data);
 

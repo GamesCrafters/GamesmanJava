@@ -1,7 +1,7 @@
 package Tier;
 
-import Games.Connect4.Connect4;
-import Helpers.LocationCalc;
+import Games.PieceGame.Connect4.Connect4;
+import Games.PieceGame.RectanglePieceLocator;
 import Helpers.Piece;
 
 import Helpers.Primitive;
@@ -20,10 +20,10 @@ public class DownwardThread implements PairFlatMapFunction<Tuple2<Long, Piece[]>
     Piece nextP;
     int tier;
     Connect4 game;
-    LocationCalc locator;
+    RectanglePieceLocator locator;
 
     public DownwardThread(int w, int h, int win, Piece nextP, int tier) {
-        this.locator = new LocationCalc(w, h);
+        this.locator = new RectanglePieceLocator(w, h);
         this.w = w;
         this.h = h;
         this.win = win;
