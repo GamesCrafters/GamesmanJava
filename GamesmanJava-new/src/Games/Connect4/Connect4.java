@@ -306,7 +306,48 @@ public class Connect4 implements Serializable, PieceGame {
         System.out.println(stb.toString());
     }
 
+    private long getHash(Piece[] board) {
+        long hash = 0;
+        long opphash = 0;
+        for(int i = 0; i < width; i++)
+        {
+            int val = 1;
+            for(int j = 0; j < height;j++)
+            {
+                if(board[i*height+j] == Piece.BLUE) val = val << 1;
+                else if(board[i*height+j] == Piece.RED) val = (val << 1) + 1;
+            }
+            hash += ((long)(val))<<(i*(height+1));
+            opphash += ((long)(val))<<((width-i-1)*(height+1));
+        }
+        return Math.min(hash, opphash);
+    }
 
+    private static void recurse(HashSet<Long> primitives, Piece[] position, Connect4 c, String move, Piece piece) {
+        if(move.length() < 5) System.out.println(move);
+        List<Integer> moves = c.generateMoves(position);
+        for(int i = 0; i < moves.size();i++)
+        {
+            if(moves.get(i) == -1) return;
+            Piece[] newpos = c.doMove(position, moves.get(i), piece);
+            if(c.isPrimitive(newpos, piece, moves.get(i)).x != Primitive.NOT_PRIMITIVE)
+            {
+                primitives.add(c.getHash(newpos));
+            }
+            else
+            {
+                recurse(primitives,newpos, c, move+Integer.toString(i), piece == Piece.BLUE ? Piece.RED : Piece.BLUE);
+            }
+        }
+    }
+    public static void main(String[] args) {
+        Connect4 c = new Connect4(5,4,3);
+        Piece[] pos = c.getStartingPositions();
+        HashSet<Long> hashset = new HashSet<>();
+        recurse(hashset, pos, c, "", Piece.BLUE);
+        System.out.printf("Number of primitives: %d", hashset.size());
+
+    }
 
 }
 
