@@ -102,23 +102,29 @@ public class Connect4Optimized implements Serializable {
         //At this point, the position should contain 1s only on the places that match the most recent move.
         int x = mostrecentmove/(HEIGHT+1), y=mostrecentmove%(HEIGHT+1);
         //Vertical check
-        if((y >= XINAROW-1)&& isawin(position, VERTICALWIN<<(mostrecentmove-(XINAROW-1)))) return Primitive.LOSS;
+        if((y >= XINAROW-1)&& isawin(position, VERTICALWIN<<(mostrecentmove-(XINAROW-1))))
+            return Primitive.LOSS;
         //Horizontal and diagonal checks
         for(int i = 0; i < XINAROW; i++) {
             if (x >= i && (x + ((XINAROW - 1) - i)) < WIDTH) {
                 //Horizontal check
-                if (isawin(position, HORIZONTALWIN << (mostrecentmove - i * (HEIGHT + 1)))) return Primitive.LOSS;
+                if (isawin(position, HORIZONTALWIN << (mostrecentmove - i * (HEIGHT + 1))))
+                    return Primitive.LOSS;
                 if (y >= i && (y + ((XINAROW - 1) - i)) < HEIGHT) {
                     //Up Diagonal check
-                    if (isawin(position, UPDIAGWIN << (mostrecentmove - i * (HEIGHT + 2)))) return Primitive.LOSS;
+                    if (isawin(position, UPDIAGWIN << (mostrecentmove - i * (HEIGHT + 2))))
+                        return Primitive.LOSS;
                 }
                 if (y + i < HEIGHT && (y - ((XINAROW - 1) - i)) >= 0) {
                     //Down Diagonal check
-                    if (isawin(position, DOWNDIAGWIN << (mostrecentmove - i * (HEIGHT)))) return Primitive.LOSS;
+                    if (isawin(position, DOWNDIAGWIN << (mostrecentmove - i * (HEIGHT))))
+                        return Primitive.LOSS;
                 }
             }
         }
-        if((origpos & (INITIALPOSITION << HEIGHT)) == INITIALPOSITION << HEIGHT) {return Primitive.TIE;}
+        if((origpos & (INITIALPOSITION << HEIGHT)) == INITIALPOSITION << HEIGHT) {
+            return Primitive.TIE;
+        }
         return Primitive.NOT_PRIMITIVE;
     }
 

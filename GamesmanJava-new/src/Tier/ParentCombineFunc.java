@@ -1,10 +1,9 @@
 package Tier;
 
 import Helpers.Piece;
-import Helpers.Primitive;
 import Helpers.Tuple;
 import org.apache.spark.api.java.function.Function2;
-import scala.Tuple2;
+import Helpers.Primitive;
 
 public class ParentCombineFunc implements Function2<Tuple<Byte, Piece[]>, Tuple<Byte, Piece[]>, Tuple<Byte, Piece[]>> {
 
@@ -15,6 +14,10 @@ public class ParentCombineFunc implements Function2<Tuple<Byte, Piece[]>, Tuple<
     }
 
     public Byte call(Byte b1, Byte b2) {
+        /*
+        return b1 >= b2 ? b1 : b2;
+    }
+         */
         if (b1.equals(b2)) {
             return b1;
         }
@@ -55,7 +58,6 @@ public class ParentCombineFunc implements Function2<Tuple<Byte, Piece[]>, Tuple<
             return b2;
         }
     }
-
 
 
 

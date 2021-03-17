@@ -1,11 +1,18 @@
 package Helpers;
 
 public enum Primitive {
-    NOT_PRIMITIVE,
-    WIN,
-    LOSS,
-    TIE;
+    NOT_PRIMITIVE((byte)-1),
+    WIN((byte)127),
+    LOSS((byte)-64),
+    DRAW((byte)-63),
+    TIE((byte)64);
 
+    private byte value;
+
+    Primitive(byte b) {
+        this.value = b;
+    }
+    /*
     public static byte toByte(Primitive p, Integer i) {
         Integer temp;
         switch (p) {
@@ -28,4 +35,6 @@ public enum Primitive {
         temp += i;
         return temp.byteValue();
     }
+
+     */
 }
