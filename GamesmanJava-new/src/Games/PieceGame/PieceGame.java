@@ -2,6 +2,7 @@ package Games.PieceGame;
 
 import Games.Interfaces.KeyValueGame;
 import Games.Interfaces.Locator;
+import Games.PieceGame.Connect4.ParentFunc;
 import Games.PieceGame.Functions.*;
 import Helpers.Piece;
 import Helpers.Primitive;

@@ -1,4 +1,4 @@
-package Games.PieceGame.Functions;
+package Games.PieceGame.Connect4;
 
 import Games.Interfaces.Locator;
 import Games.PieceGame.Connect4.Connect4;

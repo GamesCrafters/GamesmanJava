@@ -16,7 +16,7 @@ public class PrimitiveFilter implements Function<Tuple2<Long, Object>, Boolean> 
 
     public PrimitiveFilter(Piece placed, PieceGame game) {
 
-        this.placed = placed;
+        this.placed = placed.opposite();
         this.game = game;
     }
 
