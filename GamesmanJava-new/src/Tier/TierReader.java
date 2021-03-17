@@ -10,6 +10,7 @@ import org.apache.commons.math3.util.CombinatoricsUtils;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
 
@@ -82,7 +83,6 @@ public class TierReader {
     }
 
     private void play () {
-        Scanner scanner = new Scanner(System.in);
         Piece[] board = new Piece[w*h];
         Arrays.fill(board, Piece.EMPTY);
         Connect4 game = new Connect4(w, h, win);
@@ -99,32 +99,59 @@ public class TierReader {
             }
             System.out.print("Move: ");
             int move;
-            while (true) {
-                try  {
-                    move = Integer.parseInt(scanner.next());
-                    if (board[(h * move) - 1] != Piece.EMPTY) {
-                        System.out.println("Cannot add to full column");
-                    } else {
-                        break;
-                    }
-                } catch (NumberFormatException ignored) {
-                    System.out.println("Invalid move");
-                    System.out.print("Move: ");
-                }
-
+            if (nextp == Piece.BLUE || !this.comp) {
+                move = makePersonMove(board);
+            } else {
+                move = makeComputerMove(board, game, nextp, tier);
             }
-            int actual_move = (h * (move - 1));
-            for (int i = (h * move) - 1; i != (h * (move - 1)) - 1; i --) {
-                if (board[i] != Piece.EMPTY) {
-                    actual_move = i + 1;
-                    break;
-                }
-            }
-            board = game.doMove(board, actual_move, nextp);
+            board = game.doMove(board, move, nextp);
             nextp = nextp.opposite();
             tier += 1;
         }
 
+    }
+
+    private int makeComputerMove(Piece[] board, Connect4 game, Piece nextp, int tier) {
+        Primitive bestResult = Primitive.WIN;
+        int number = 0;
+        int bestMove = 0;
+        List<Integer> l = game.generateMoves(board);
+        for (Integer move : l) {
+            Piece[] newBoard = game.doMove(board, move, nextp);
+            Tuple<Primitive, Integer> value = getValue(newBoard, tier + 1);
+            if((bestResult == Primitive.WIN || number > value.y) || (bestResult == Primitive.WIN && number < value.y)){
+                bestResult = value.x;
+                number = value.y;
+                bestMove = move;
+            }
+        }
+        return bestMove;
+    }
+
+    private int makePersonMove(Piece[] board) {
+        Scanner scanner = new Scanner(System.in);
+        int move;
+        while (true) {
+            try  {
+                move = Integer.parseInt(scanner.next());
+                if (board[(h * move) - 1] != Piece.EMPTY) {
+                    System.out.println("Cannot add to full column");
+                } else {
+                    break;
+                }
+            } catch (NumberFormatException ignored) {
+                System.out.println("Invalid move");
+                System.out.print("Move: ");
+            }
+        }
+        int actual_move = (h * (move - 1));
+        for (int i = (h * move) - 1; i != (h * (move - 1)) - 1; i --) {
+            if (board[i] != Piece.EMPTY) {
+                actual_move = i + 1;
+                break;
+            }
+        }
+        return actual_move;
     }
 
     private Tuple<Primitive, Integer> getValue(Piece[] board, int tier) {
