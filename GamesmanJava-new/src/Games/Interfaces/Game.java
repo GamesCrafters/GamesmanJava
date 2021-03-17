@@ -41,6 +41,11 @@ public interface Game {
     void solveStepDown();
 
     /**
+     * Adjusts data so that the  game is changed state such that a move is UNMADE
+     */
+    void solveStepUp();
+
+    /**
      * Prints the board state
      * @param board The current board state
      */

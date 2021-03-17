@@ -1,5 +1,6 @@
 package Games.PieceGame.Connect4;
 
+import Games.Interfaces.Locator;
 import Games.PieceGame.PieceGame;
 import Games.PieceGame.RectanglePieceLocator;
 import Helpers.Piece;
@@ -10,19 +11,18 @@ import java.io.Serializable;
 import java.util.*;
 
 public class Connect4 extends PieceGame implements Serializable {
-    int width;
-    int height;
-    int win;
+    public int width;
+    public int height;
+    public int win;
     RectanglePieceLocator locator;
     Piece[] gameStartingPosition;
 
     /* Pieces stored in column major order, starting from bottom right */
     public Connect4(String[] args) {
-        int w = Integer.parseInt(args[0]);
-        int h = Integer.parseInt(args[1]);
-        int wi = Integer.parseInt(args[2]);
+        this(Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]));
+    }
 
-
+    public Connect4(int w, int h, int wi) {
         width = w;
         height = h;
         win = wi;
@@ -39,6 +39,15 @@ public class Connect4 extends PieceGame implements Serializable {
     @Override
     public long calculateLocation(Piece[] board) {
         return locator.calculateLocation(board, getTier());
+    }
+
+    public long calculateLocation(Piece[] board, int numPiece) {
+        return locator.calculateLocation(board, numPiece);
+    }
+
+    @Override
+    public Locator getLocator() {
+        return locator;
     }
 
     @Override
@@ -289,12 +298,12 @@ public class Connect4 extends PieceGame implements Serializable {
 
     @Override
     public String getName() {
-        return "Connect 4";
+        return "Connect_4";
     }
 
     @Override
     public String getVariant() {
-        return String.format("%d x %d win in %d", width, height, win);
+        return String.format("%d_x_%d_win_in_%d", width, height, win);
     }
 
     @Override

@@ -2,8 +2,7 @@ package Tier;
 
 import Games.Interfaces.Game;
 import Games.Interfaces.KeyValueGame;
-import Games.PieceGame.DownwardThread;
-import Helpers.Piece;
+import Games.PieceGame.Functions.OutputFunc;
 import Helpers.Tuple;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -70,13 +69,13 @@ public class TierRunner {
             kvGame.solveStarting();
             for (int i = 1; i <= numTiers; i++) {
                 kvGame.solveStepDown();
-
+                PairFlatMapFunction<Tuple2<Long, Object>, Long, Object> func = kvGame.getDownwardFunc();
                 // Map to the next function and eliminate duplicates
-                JavaPairRDD<Long, Object> next = distData.flatMapToPair(kvGame.getDownwardFunc()).reduceByKey((v1, v2) -> v1).persist(MEMORY_AND_DISK);
+                JavaPairRDD<Long, Object> next = distData.flatMapToPair(func).reduceByKey((v1, v2) -> v1).persist(MEMORY_AND_DISK);
                 System.out.printf("Completed computing %d positions for tier: %d\n", next.count(), i);
 
                 // Filter out the primitives from the previous tier
-                distData = distData.filter(kvGame.getPrimitiveFunc()).persist(MEMORY_AND_DISK);
+                distData = distData.filter(kvGame.getPrimitiveCheck()).persist(MEMORY_AND_DISK);
                 System.out.printf("Completed computing %d primitive positions for tier: %d\n", distData.count(), i - 1);
 
                 // Store the primitives
@@ -86,8 +85,8 @@ public class TierRunner {
             }
 
             // Now map bottom tier primitives to a tuple of location and value
-            PairFunction<Tuple2<Long, Piece[]>, Long, Tuple<Byte, Piece[]>> primValue = new PrimValueThread(w, h, win, placed, numTiers, game);
-            JavaPairRDD<Long, Tuple<Byte, Piece[]>> pastPrimValues = distData.mapToPair(primValue);
+            PairFunction<Tuple2<Long, Object>, Long, Tuple<Byte, Object>> primValue = kvGame.getPrimitiveFunc();
+            JavaPairRDD<Long, Tuple<Byte, Object>> pastPrimValues = distData.mapToPair(primValue);
 
             // NEED TO SAVE TO FILE HERE ???
 
@@ -95,26 +94,23 @@ public class TierRunner {
             for (int i = numTiers - 1; i >= 0; i--) {
                 System.out.printf("Starting writing tier: %d to disk\n", i + 1);
                 //if (i % 4 == (numTiers - 3) % 4) { // Use if saving time/space
-                pastPrimValues.foreachPartitionAsync(new OutputFunc(id, i + 1));  // Write last tier to file
+                pastPrimValues.foreachPartitionAsync(kvGame.getOutputFunction(id));  // Write last tier to file
                 //}
+                kvGame.solveStepUp();
 
 
-                PairFlatMapFunction<Tuple2<Long, Tuple<Byte, Piece[]>>, Long, Tuple<Byte, Piece[]>> parentFunc = new ParentFunc(w, h, win, placed, true, game, i); // Parent of non primitive
-
-                pastPrimValues = pastPrimValues.flatMapToPair(parentFunc);
-
-                placed = placed.opposite();
+                pastPrimValues = pastPrimValues.flatMapToPair(kvGame.getParentFunction());
 
                 //parentFunc = new ParentFunc(w, h, win, nextP, true, game, i); // Parent of primitive
 
                 //JavaPairRDD<Long, Piece[]> next = JavaPairRDD.fromJavaRDD(sc.textFile(String.format("SPARK/%S/TIERS/%s/DOWN", id, i)));
-                primValue = new PrimValueThread(w, h, win, placed, i, game);
-                JavaPairRDD<Long, Piece[]> next = savedData.remove(savedData.size() - 1);
+                primValue = kvGame.getPrimitiveFunc();
+                JavaPairRDD<Long, Object> next = savedData.remove(savedData.size() - 1);
                 pastPrimValues = pastPrimValues.union(next.mapToPair(primValue));
 
                 next.unpersist();
 
-                Function2<Tuple<Byte, Piece[]>, Tuple<Byte, Piece[]>, Tuple<Byte, Piece[]>> combFunc = new ParentCombineFunc();
+                Function2<Tuple<Byte, Object>, Tuple<Byte, Object>, Tuple<Byte, Object>> combFunc = kvGame.getCombineFunc();
                 pastPrimValues = pastPrimValues.reduceByKey(combFunc);
 
 

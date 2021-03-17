@@ -71,9 +71,6 @@ public class TierReader {
         }
         String name = folder.getName();
 
-        w = Integer.parseInt(String.valueOf(name.charAt(0)));
-        h = Integer.parseInt(String.valueOf(name.charAt(3)));
-        win = Integer.parseInt(String.valueOf(name.charAt(7)));
 
         this.folder = folder;
         this.comp = comp;
@@ -85,6 +82,9 @@ public class TierReader {
         Piece[] board = new Piece[w*h];
         Arrays.fill(board, Piece.EMPTY);
         Connect4 game = new Connect4(w, h, win);
+        w = game.width;
+        h = game.height;
+        win = game.win;
         int tier = 0;
         Piece nextp = Piece.BLUE;
         while (true) {

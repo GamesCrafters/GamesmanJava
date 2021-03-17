@@ -25,7 +25,7 @@ public class FindValueThread implements Function<Piece[], Byte> {
         this.w = w;
         this.h = h;
         this.win = win;
-        this.game = new Connect4(w,h,win);
+        //this.game = new Connect4(w,h,win);
         this.placed = placed;
         this.tier = tier;
         this.pastPrimValues = pastPrimValues;

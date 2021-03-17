@@ -1,4 +1,4 @@
-package Tier;
+package Games.Interfaces;
 
 import Helpers.Piece;
 import Helpers.Primitive;
@@ -6,11 +6,11 @@ import Helpers.Tuple;
 import org.apache.spark.api.java.function.Function2;
 import scala.Tuple2;
 
-public class ParentCombineFunc implements Function2<Tuple<Byte, Piece[]>, Tuple<Byte, Piece[]>, Tuple<Byte, Piece[]>> {
+public class ParentCombineFunc implements Function2<Tuple<Byte, Object>, Tuple<Byte, Object>, Tuple<Byte, Object>> {
 
 
     @Override
-    public Tuple<Byte, Piece[]> call(Tuple<Byte, Piece[]> byteTuple, Tuple<Byte, Piece[]> byteTuple2){
+    public Tuple<Byte, Object> call(Tuple<Byte, Object> byteTuple, Tuple<Byte, Object> byteTuple2){
         return new Tuple<>(call(byteTuple.x, byteTuple2.x), byteTuple.y);
     }
 

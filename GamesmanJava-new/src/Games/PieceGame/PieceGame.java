@@ -1,14 +1,18 @@
 package Games.PieceGame;
 
 import Games.Interfaces.KeyValueGame;
+import Games.Interfaces.Locator;
+import Games.PieceGame.Functions.*;
 import Helpers.Piece;
 import Helpers.Primitive;
 import Helpers.Tuple;
-import Tier.PrimitiveFilter;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.PairFlatMapFunction;
+import org.apache.spark.api.java.function.PairFunction;
+import org.apache.spark.api.java.function.VoidFunction;
 import scala.Tuple2;
 
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -21,12 +25,33 @@ public abstract class PieceGame extends KeyValueGame {
 
     @Override
     public PairFlatMapFunction<Tuple2<Long, Object>, Long, Object> getDownwardFunc() {
-        return new DownwardThread(nextP, tier, this);
+        return new DownwardThread(nextP, tier, this, getLocator());
     }
 
     @Override
-    public Function<Tuple2<Long, Object>, Boolean> getPrimitiveFunc() {
+    public Function<Tuple2<Long, Object>, Boolean> getPrimitiveCheck() {
         return new PrimitiveFilter(nextP, this);
+    }
+
+    @Override
+    public PairFunction<Tuple2<Long, Object>, Long, Tuple<Byte, Object>> getPrimitiveFunc() {
+        return new PrimValueThread(nextP, this);
+    }
+
+    @Override
+    public VoidFunction<Iterator<Tuple2<Long, Tuple<Byte, Object>>>> getOutputFunction(String id) {
+        return new OutputFunc(id, tier);
+    }
+
+    @Override
+    public PairFlatMapFunction<Tuple2<Long, Tuple<Byte, Object>>, Long, Tuple<Byte, Object>> getParentFunction() {
+        return new ParentFunc(this);
+    }
+
+    @Override
+    public void solveStepUp() {
+        tier -= 1;
+        nextP = nextP.opposite();
     }
 
     @Override
@@ -41,10 +66,17 @@ public abstract class PieceGame extends KeyValueGame {
         nextP = nextP.opposite();
     }
 
+    public Piece getPiece() {
+        return nextP;
+    }
+
     @Override
     public long calculateLocation(Object board) {
         return calculateLocation((Piece[]) board);
     }
+
+    abstract public Locator getLocator();
+
 
     public int getTier() {
         return tier;
@@ -60,6 +92,13 @@ public abstract class PieceGame extends KeyValueGame {
      * @return The byte offset of the state
      */
     abstract public long calculateLocation(Piece[] board);
+
+    /**
+     * Calculates the location of a certain board state given a number of pieces
+     * @return The byte offset of the state
+     */
+    abstract public long calculateLocation(Piece[] board, int numPiece);
+
 
     /**
      * Use a created move and place it on the board
