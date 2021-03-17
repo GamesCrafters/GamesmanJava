@@ -1,11 +1,10 @@
 package Tier;
 
-import Games.Connect4;
-import Helpers.LocationCalc;
+import Games.PieceGame.Connect4.Connect4;
+import Games.PieceGame.RectanglePieceLocator;
 import Helpers.Piece;
 import Helpers.Primitive;
 import Helpers.Tuple;
-import org.apache.commons.math3.util.CombinatoricsUtils;
 
 import java.io.File;
 import java.io.RandomAccessFile;
@@ -18,7 +17,7 @@ public class TierReader {
     int h;
     int w;
     int win;
-    LocationCalc locator;
+    RectanglePieceLocator locator;
     File folder;
     boolean comp;
 
@@ -72,20 +71,22 @@ public class TierReader {
         }
         String name = folder.getName();
 
-        w = Integer.parseInt(String.valueOf(name.charAt(0)));
-        h = Integer.parseInt(String.valueOf(name.charAt(3)));
-        win = Integer.parseInt(String.valueOf(name.charAt(7)));
 
         this.folder = folder;
         this.comp = comp;
-        locator = new LocationCalc(w, h);
+        w = 4;
+        h = 4;
+        win = 4;
+        locator = new RectanglePieceLocator(w, h);
     }
 
     private void play () {
+        Connect4 game = new Connect4(w, h, win);
+
         Scanner scanner = new Scanner(System.in);
         Piece[] board = new Piece[w*h];
         Arrays.fill(board, Piece.EMPTY);
-        Connect4 game = new Connect4(w, h, win);
+
         int tier = 0;
         Piece nextp = Piece.BLUE;
         while (true) {
@@ -107,7 +108,7 @@ public class TierReader {
                     } else {
                         break;
                     }
-                } catch (NumberFormatException ignored) {
+                } catch (Exception ignored) {
                     System.out.println("Invalid move");
                     System.out.print("Move: ");
                 }

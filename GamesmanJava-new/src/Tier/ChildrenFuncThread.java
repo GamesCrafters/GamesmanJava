@@ -1,7 +1,7 @@
 package Tier;
 
-import Games.Connect4;
-import Helpers.LocationCalc;
+import Games.PieceGame.Connect4.Connect4;
+import Games.PieceGame.RectanglePieceLocator;
 import Helpers.Piece;
 import org.apache.spark.api.java.function.Function;
 
@@ -15,15 +15,15 @@ public class ChildrenFuncThread implements Function<Piece[], List<Long>> {
     int win;
     Connect4 game;
     Piece nextP;
-    LocationCalc locator;
+    RectanglePieceLocator locator;
     int tier;
 
     public ChildrenFuncThread(int w, int h, int win, Piece nextP, int tier) {
-        locator = new LocationCalc(w, h);
+        locator = new RectanglePieceLocator(w, h);
         this.w = w;
         this.h = h;
         this.win = win;
-        this.game = new Connect4(w,h,win);
+        //this.game = new Connect4(w,h,win);
         this.nextP = nextP;
         this.tier = tier;
     }
