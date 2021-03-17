@@ -1,5 +1,6 @@
 package Games.PieceGame.Functions;
 
+import Games.Interfaces.Locator;
 import Games.PieceGame.Connect4.Connect4;
 import Games.PieceGame.PieceGame;
 import Games.PieceGame.RectanglePieceLocator;
@@ -21,7 +22,7 @@ public class ParentFunc implements PairFlatMapFunction<Tuple2<Long, Tuple<Byte, 
     Piece placed;
     Connect4 game;
     int tier;
-
+    Locator locator;
 
     public ParentFunc(PieceGame g) {
         this.game = (Connect4) g;
@@ -30,6 +31,7 @@ public class ParentFunc implements PairFlatMapFunction<Tuple2<Long, Tuple<Byte, 
         this.tier = game.getTier();
         width = game.width;
         height = game.height;
+        locator = game.getLocator();
     }
 
     @Override
@@ -74,7 +76,7 @@ public class ParentFunc implements PairFlatMapFunction<Tuple2<Long, Tuple<Byte, 
                     Piece[] newpos = pos.clone();
                     newpos[j] = Piece.EMPTY;
                     if (game.isPrimitive(newpos, placed.opposite()).x == Primitive.NOT_PRIMITIVE) {
-                        retList.add(new Tuple2<>(game.calculateLocation(newpos, tier), new Tuple<>(val, newpos)));
+                        retList.add(new Tuple2<>(locator.calculateLocation(newpos, tier), new Tuple<>(val, newpos)));
                     }
                 }
                 break;
@@ -94,7 +96,7 @@ public class ParentFunc implements PairFlatMapFunction<Tuple2<Long, Tuple<Byte, 
                 if (atJ == placed) {
                     Piece[] newpos = pos.clone();
                     newpos[j] = Piece.EMPTY;
-                    retList.add(new Tuple2<>(game.calculateLocation(newpos, tier), new Tuple<>(val, newpos)));
+                    retList.add(new Tuple2<>(locator.calculateLocation(newpos, tier), new Tuple<>(val, newpos)));
                 } else {
                     break;
                 }

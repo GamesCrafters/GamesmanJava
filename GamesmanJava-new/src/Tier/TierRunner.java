@@ -22,6 +22,9 @@ import static org.apache.spark.api.java.StorageLevels.MEMORY_AND_DISK;
 
 public class TierRunner {
 
+
+    // Args should be: {Class Path of Game} args0 args1 ...
+    // Example: Games.PieceGame.Connect4.Connect4 4 4 4
     public static void main(String[] args) {
         Game game;
         try {

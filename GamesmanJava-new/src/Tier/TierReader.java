@@ -74,17 +74,19 @@ public class TierReader {
 
         this.folder = folder;
         this.comp = comp;
+        w = 4;
+        h = 4;
+        win = 4;
         locator = new RectanglePieceLocator(w, h);
     }
 
     private void play () {
+        Connect4 game = new Connect4(w, h, win);
+
         Scanner scanner = new Scanner(System.in);
         Piece[] board = new Piece[w*h];
         Arrays.fill(board, Piece.EMPTY);
-        Connect4 game = new Connect4(w, h, win);
-        w = game.width;
-        h = game.height;
-        win = game.win;
+
         int tier = 0;
         Piece nextp = Piece.BLUE;
         while (true) {
