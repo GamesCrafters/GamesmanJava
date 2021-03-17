@@ -119,7 +119,17 @@ public class TierReader {
         for (Integer move : l) {
             Piece[] newBoard = game.doMove(board, move, nextp);
             Tuple<Primitive, Integer> value = getValue(newBoard, tier + 1);
-            if((bestResult == Primitive.WIN || number > value.y) || (bestResult == Primitive.WIN && number < value.y)){
+            boolean update = false;
+            if (bestResult == Primitive.WIN) {
+                if (value.x == Primitive.LOSS || (value.x == Primitive.WIN && number < value.y)) {
+                    update = true;
+                }
+            } else {
+                if (value.x == Primitive.LOSS && number > value.y) {
+                    update = true;
+                }
+            }
+            if(update){
                 bestResult = value.x;
                 number = value.y;
                 bestMove = move;
