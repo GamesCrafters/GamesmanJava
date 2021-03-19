@@ -20,7 +20,8 @@ public class TierReader {
     int win;
     RectanglePieceLocator locator;
     File folder;
-    boolean comp;
+    boolean comp1;
+    boolean comp2;
 
     public static void main (String[] args) {
         File folder = new File("SPARK_OUT");
@@ -47,26 +48,40 @@ public class TierReader {
                 break;
             }
         }
-        boolean computer;
-        System.out.println("Play vs computer? (y/n)");
+        boolean comp1;
+        boolean comp2;
+        System.out.println("Player 1 computer? (y/n)");
         while (true) {
             String next = scanner.next();
             if (next.equalsIgnoreCase("y")) {
-                computer = true;
+                comp1 = true;
                 break;
             }
             if (next.equalsIgnoreCase("n")) {
-                computer = false;
+                comp1 = false;
                 break;
             }
             System.out.println("Enter 'y' or 'n'");
-
         }
-        TierReader reader = new TierReader(solves[choice], computer);
+
+        System.out.println("Player 2 computer? (y/n)");
+        while (true) {
+            String next = scanner.next();
+            if (next.equalsIgnoreCase("y")) {
+                comp2 = true;
+                break;
+            }
+            if (next.equalsIgnoreCase("n")) {
+                comp2 = false;
+                break;
+            }
+            System.out.println("Enter 'y' or 'n'");
+        }
+        TierReader reader = new TierReader(solves[choice], comp1, comp2);
         reader.play();
     }
 
-    TierReader(File folder, boolean comp) {
+    TierReader(File folder, boolean comp1, boolean comp2) {
         if (!folder.exists()) {
             throw new IllegalStateException("Error reading data");
         }
@@ -74,10 +89,11 @@ public class TierReader {
 
 
         this.folder = folder;
-        this.comp = comp;
+        this.comp1 = comp1;
+        this.comp2 = comp2;
         w = 4;
         h = 4;
-        win = 4;
+        win = 3;
         locator = new RectanglePieceLocator(w, h);
     }
 
@@ -101,7 +117,8 @@ public class TierReader {
             }
             System.out.print("Move: ");
             int move;
-            if (nextp == Piece.BLUE || !this.comp) {
+            boolean comp = (nextp == Piece.BLUE ? this.comp1 : this.comp2);
+            if (!comp) {
                 move = makePersonMove(board);
             } else {
                 move = makeComputerMove(board, game, nextp, tier);
@@ -109,6 +126,11 @@ public class TierReader {
             board = game.doMove(board, move, nextp);
             nextp = nextp.opposite();
             tier += 1;
+            try {
+                Thread.sleep(1000);
+            } catch(InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
         }
 
     }
