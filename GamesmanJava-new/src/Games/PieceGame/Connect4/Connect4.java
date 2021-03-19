@@ -1,5 +1,8 @@
-package Games;
+package Games.PieceGame.Connect4;
 
+import Games.Interfaces.Locator;
+import Games.PieceGame.PieceGame;
+import Games.PieceGame.RectanglePieceLocator;
 import Helpers.Piece;
 import Helpers.Primitive;
 import Helpers.Tuple;
@@ -7,26 +10,52 @@ import Helpers.Tuple;
 import java.io.Serializable;
 import java.util.*;
 
-public class Connect4 implements Serializable {
-    int width;
-    int height;
-    int win;
+public class Connect4 extends PieceGame implements Serializable {
+    public int width;
+    public int height;
+    public int win;
+    RectanglePieceLocator locator;
     Piece[] gameStartingPosition;
 
-    /** Pieces stored in column major order, starting from bottom right*/
+    /* Pieces stored in column major order, starting from bottom right */
+    public Connect4(String[] args) {
+        this(Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]));
+    }
+
     public Connect4(int w, int h, int wi) {
         width = w;
         height = h;
         win = wi;
+        locator = new RectanglePieceLocator(w,h);
         gameStartingPosition = new Piece[w*h];
         Arrays.fill(gameStartingPosition, Piece.EMPTY);
     }
 
-    public Piece[] getStartingPositions() {
+    @Override
+    public Piece[] getStartingPosition() {
         return gameStartingPosition;
     }
 
+    @Override
+    public long calculateLocation(Piece[] board) {
+        return locator.calculateLocation(board, getTier());
+    }
 
+    public long calculateLocation(Piece[] board, int numPiece) {
+        return locator.calculateLocation(board, numPiece);
+    }
+
+    @Override
+    public Locator getLocator() {
+        return locator;
+    }
+
+    @Override
+    public int getNumTiers() {
+        return width * height;
+    }
+
+    @Override
     public Piece[] doMove(Piece[] position, int move, Piece p) {
         Piece[] newPosition = new Piece[getSize()];
         System.arraycopy(position, 0, newPosition, 0, position.length);
@@ -35,6 +64,7 @@ public class Connect4 implements Serializable {
     }
 
 
+    @Override
     public List<Integer> generateMoves(Piece[] position) {
         List<Integer> ret = new ArrayList<>();
         for (int i = 0; i < getSize(); i++) {
@@ -47,6 +77,7 @@ public class Connect4 implements Serializable {
         return ret;
     }
 
+    @Override
     public Tuple<Primitive, Integer> isPrimitive(Piece[] position, Piece placed) {
         boolean full = true;
         for (int column = 0; column < width; column++) {
@@ -151,6 +182,7 @@ public class Connect4 implements Serializable {
     }
 
     // The same as isPrimitive(position, placed) except we only check the one location we need to
+    @Override
     public Tuple<Primitive, Integer> isPrimitive(Piece[] position, Piece placed, int location) {
         if (location == -1) {
             return isPrimitive(position, placed);
@@ -254,14 +286,27 @@ public class Connect4 implements Serializable {
     }
 
 
+    @Override
     public int symMove(int move) {
         return (move % height) + (width - (move / height) - 1) * height;
     }
 
+    @Override
     public int getSize() {
         return width*height;
     }
 
+    @Override
+    public String getName() {
+        return "Connect_4";
+    }
+
+    @Override
+    public String getVariant() {
+        return String.format("%d_x_%d_win_in_%d", width, height, win);
+    }
+
+    @Override
     public void printBoard(Piece[] board) {
         StringBuilder stb = new StringBuilder();
         for (int r = height - 1; r >= 0; r--) {
@@ -322,8 +367,8 @@ public class Connect4 implements Serializable {
         }
     }
     public static void main(String[] args) {
-        Connect4 c = new Connect4(5,4,3);
-        Piece[] pos = c.getStartingPositions();
+        Connect4 c = new Connect4(new String[]{"5","4","3"});
+        Piece[] pos = c.getStartingPosition();
         HashSet<Long> hashset = new HashSet<>();
         recurse(hashset, pos, c, "", Piece.BLUE);
         System.out.printf("Number of primitives: %d", hashset.size());

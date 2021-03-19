@@ -1,17 +1,18 @@
-package Helpers;
+package Games.PieceGame;
 
+import Helpers.Piece;
 import org.apache.commons.math3.util.CombinatoricsUtils;
 
 import java.io.Serializable;
 
-public class LocationCalc implements Serializable {
+public class RectanglePieceLocator implements Games.Interfaces.Locator, Serializable {
 
     private final long[] offsets;
     private final long[][][] savedRearrange;
     private final int w;
     private final int h;
 
-    public LocationCalc(int w, int h) {
+    public RectanglePieceLocator(int w, int h) {
         this.w = w;
         this.h = h;
         savedRearrange = new long[2 + w*h / 2][2 + w*h/2][w*h + 1];
@@ -37,7 +38,13 @@ public class LocationCalc implements Serializable {
         offsets[0] = 0;
 
     }
-    public long calculateLocation(Piece[] position, int numPieces) {
+
+    @Override
+    public long calculateLocation(Object position, int numPieces) {
+        return calculateLocation((Piece[]) position, numPieces);
+    }
+
+    private long calculateLocation(Piece[] position, int numPieces) {
         long location = offsets[numPieces];
         int numX = (numPieces / 2) + (numPieces % 2);
         int numO = numPieces / 2;

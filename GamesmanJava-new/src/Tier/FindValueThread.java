@@ -1,7 +1,7 @@
 package Tier;
 
-import Games.Connect4;
-import Helpers.LocationCalc;
+import Games.PieceGame.Connect4.Connect4;
+import Games.PieceGame.RectanglePieceLocator;
 import Helpers.Piece;
 import Helpers.Primitive;
 import Helpers.Tuple;
@@ -17,15 +17,15 @@ public class FindValueThread implements Function<Piece[], Byte> {
     int win;
     Connect4 game;
     Piece placed;
-    LocationCalc locator;
+    RectanglePieceLocator locator;
     int tier;
     JavaPairRDD<Long, Byte> pastPrimValues;
     public FindValueThread(int w, int h, int win, Piece placed, int tier, JavaPairRDD<Long, Byte> pastPrimValues) {
-        locator = new LocationCalc(w,h);
+        locator = new RectanglePieceLocator(w,h);
         this.w = w;
         this.h = h;
         this.win = win;
-        this.game = new Connect4(w,h,win);
+        //this.game = new Connect4(w,h,win);
         this.placed = placed;
         this.tier = tier;
         this.pastPrimValues = pastPrimValues;

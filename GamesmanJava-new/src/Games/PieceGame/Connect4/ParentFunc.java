@@ -1,45 +1,42 @@
-package Tier;
+package Games.PieceGame.Connect4;
 
-import Games.Connect4;
-import Helpers.LocationCalc;
+import Games.Interfaces.Locator;
+import Games.PieceGame.Connect4.Connect4;
+import Games.PieceGame.PieceGame;
+import Games.PieceGame.RectanglePieceLocator;
 import Helpers.Piece;
 import Helpers.Primitive;
 import Helpers.Tuple;
-import org.apache.commons.math3.util.CombinatoricsUtils;
 import org.apache.spark.api.java.function.PairFlatMapFunction;
 import scala.Tuple2;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-public class ParentFunc implements PairFlatMapFunction<Tuple2<Long, Tuple<Byte, Piece[]>>, Long, Tuple<Byte, Piece[]>> {
+public class ParentFunc implements PairFlatMapFunction<Tuple2<Long, Tuple<Byte, Object>>, Long, Tuple<Byte, Object>> {
 
     boolean childPrim;
     int width;
     int height;
-    int win;
     Piece placed;
     Connect4 game;
     int tier;
+    Locator locator;
 
-    LocationCalc locator;
-
-    public ParentFunc(int w, int h, int win, Piece nextP, boolean isPrimitive, Connect4 game, int tier) {
-        locator = new LocationCalc(w, h);
-        width = w;
-        height = h;
-        this.win = win;
-        placed = nextP;
-        childPrim = isPrimitive;
-        this.game = game;
-        this.tier = tier;
+    public ParentFunc(PieceGame g) {
+        this.game = (Connect4) g;
+        placed = game.getPiece().opposite();
+        childPrim = true;
+        this.tier = game.getTier();
+        width = game.width;
+        height = game.height;
+        locator = game.getLocator();
     }
 
     @Override
-    public Iterator<Tuple2<Long, Tuple<Byte, Piece[]>>> call(Tuple2<Long, Tuple<Byte, Piece[]>> longTuple2) {
-        List<Tuple2<Long, Tuple<Byte, Piece[]>>> retList;
+    public Iterator<Tuple2<Long, Tuple<Byte, Object>>> call(Tuple2<Long, Tuple<Byte, Object>> longTuple2) {
+        List<Tuple2<Long, Tuple<Byte, Object>>> retList;
         Tuple<Primitive, Integer> oldVal = Tuple.byteToTuple(longTuple2._2().x);
         Primitive newP;
         switch (oldVal.x) {
@@ -58,17 +55,17 @@ public class ParentFunc implements PairFlatMapFunction<Tuple2<Long, Tuple<Byte, 
         Integer newRemote = oldVal.y + 1;
         Byte b = Primitive.toByte(newP, newRemote);
         if (childPrim) {
-            retList = parentsWL(longTuple2._2().y, b);
+            retList = parentsWL((Piece[]) longTuple2._2().y, b);
         } else {
-            retList = parentsNotWL(longTuple2._2().y, b);
+            retList = parentsNotWL((Piece[]) longTuple2._2().y, b);
         }
 
         return retList.iterator();
     }
 
 
-    private List<Tuple2<Long, Tuple<Byte, Piece[]>>> parentsWL(Piece[] pos, Byte val) {
-        List<Tuple2<Long, Tuple<Byte, Piece[]>>> retList = new ArrayList<>();
+    private List<Tuple2<Long, Tuple<Byte, Object>>> parentsWL(Piece[] pos, Byte val) {
+        List<Tuple2<Long, Tuple<Byte, Object>>> retList = new ArrayList<>();
         for (int i = height - 1; i < width * height; i += height) {
             for (int j = i; j != i - height; j --) {
                 Piece atJ = pos[j];
@@ -88,8 +85,8 @@ public class ParentFunc implements PairFlatMapFunction<Tuple2<Long, Tuple<Byte, 
         return retList;
     }
 
-    private List<Tuple2<Long, Tuple<Byte, Piece[]>>> parentsNotWL(Piece[] pos, Byte val) {
-        List<Tuple2<Long, Tuple<Byte, Piece[]>>> retList = new ArrayList<>();
+    private List<Tuple2<Long, Tuple<Byte, Object>>> parentsNotWL(Piece[] pos, Byte val) {
+        List<Tuple2<Long, Tuple<Byte, Object>>> retList = new ArrayList<>();
         for (int i = height - 1; i < width * height; i += height) {
             for (int j = i; j != i - height; j --) {
                 Piece atJ = pos[j];
