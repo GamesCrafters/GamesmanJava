@@ -121,21 +121,15 @@ public class TierReader {
             Tuple<Primitive, Integer> value = getValue(newBoard, tier + 1);
             boolean update = false;
             if (bestResult == Primitive.WIN) {
-                if (value.x == Primitive.LOSS || value.x == Primitive.TIE || (value.x == Primitive.WIN && number < value.y)) {
-                    update = true;
-                }
+                update = (value.x == Primitive.LOSS || value.x == Primitive.TIE || (value.x == Primitive.WIN && number < value.y));
             } else if (bestResult == Primitive.LOSS) {
-                if (value.x == Primitive.LOSS && number > value.y) {
-                    update = true;
-                }
+                update = (value.x == Primitive.LOSS && number > value.y);
             } else if (bestResult == Primitive.TIE) {
-                if (value.x == Primitive.LOSS) {
-                    update = true;
-                }
+                update = (value.x == Primitive.LOSS);
             } else {
                 System.out.println("Primitive not found");
             }
-            if(update){
+            if (update) {
                 bestResult = value.x;
                 number = value.y;
                 bestMove = move;
