@@ -1,12 +1,14 @@
 package Tier;
 
 import Games.Interfaces.Game;
+import Games.Interfaces.HashlessGame;
 import Games.Interfaces.KeyValueGame;
-import Games.PieceGame.Functions.OutputFunc;
 import Helpers.Tuple;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFlatMapFunction;
 import org.apache.spark.api.java.function.PairFunction;
@@ -55,8 +57,67 @@ public class TierRunner {
 
         int numTiers = game.getNumTiers();
 
-        if (game.positionIsLocation()) {
-            System.out.println("Unimplemented");
+        if (game instanceof HashlessGame) {
+            HashlessGame hashlessGame = (HashlessGame) game;
+
+
+            List<Long> data = new ArrayList<>();
+            data.add(hashlessGame.getStartingPosition());
+            JavaRDD<Long> distData = sc.parallelize(data);
+
+            List<JavaRDD<Long>> savedData = new ArrayList<>(numTiers);
+
+
+            hashlessGame.solveStarting();
+            for (int i = 1; i <= numTiers; i++) {
+                hashlessGame.solveStepDown();
+                FlatMapFunction<Long, Long> func = hashlessGame.getDownwardFunc();
+                // Map to the next function and eliminate duplicates
+                JavaRDD<Long> next = distData.flatMap(func).distinct().persist(MEMORY_AND_DISK);
+                System.out.printf("Completed computing %d positions for tier: %d\n", next.count(), i);
+
+                // Filter out the primitives from the previous tier
+                distData = distData.filter(hashlessGame.getPrimitiveCheck()).persist(MEMORY_AND_DISK);
+                System.out.printf("Completed computing %d primitive positions for tier: %d\n", distData.count(), i - 1);
+
+                // Store the primitives
+                savedData.add(distData);
+                distData = next;
+
+            }
+
+            // Now map bottom tier primitives to a tuple of location and value
+            PairFunction<Long, Long, Byte> primValue = hashlessGame.getPrimitiveFunc();
+            JavaPairRDD<Long, Byte> pastPrimValues = distData.mapToPair(primValue);
+
+            // NEED TO SAVE TO FILE HERE ???
+
+
+            for (int i = numTiers - 1; i >= 0; i--) {
+                System.out.printf("Starting writing tier: %d to disk\n", i + 1);
+                //if (i % 4 == (numTiers - 3) % 4) { // Use if saving time/space
+                pastPrimValues.foreachPartitionAsync(hashlessGame.getOutputFunction(id));  // Write last tier to file
+                //}
+                hashlessGame.solveStepUp();
+
+                PairFlatMapFunction<Tuple2<Long, Byte>, Long, Byte> function = hashlessGame.getParentFunction();
+                pastPrimValues = pastPrimValues.flatMapToPair(function);
+
+                primValue = hashlessGame.getPrimitiveFunc();
+                JavaRDD<Long> next = savedData.remove(savedData.size() - 1);
+                pastPrimValues = pastPrimValues.union(next.mapToPair(primValue));
+
+                next.unpersist();
+
+                Function2<Byte, Byte, Byte> combFunc = hashlessGame.getCombineFunc();
+                pastPrimValues = pastPrimValues.reduceByKey(combFunc);
+
+
+            }
+
+            pastPrimValues.foreachPartition(hashlessGame.getOutputFunction(id)); // Write last thing
+
+
         } else {
             KeyValueGame kvGame = (KeyValueGame) game;
 
@@ -104,9 +165,7 @@ public class TierRunner {
 
                 pastPrimValues = pastPrimValues.flatMapToPair(kvGame.getParentFunction());
 
-                //parentFunc = new ParentFunc(w, h, win, nextP, true, game, i); // Parent of primitive
 
-                //JavaPairRDD<Long, Piece[]> next = JavaPairRDD.fromJavaRDD(sc.textFile(String.format("SPARK/%S/TIERS/%s/DOWN", id, i)));
                 primValue = kvGame.getPrimitiveFunc();
                 JavaPairRDD<Long, Object> next = savedData.remove(savedData.size() - 1);
                 pastPrimValues = pastPrimValues.union(next.mapToPair(primValue));
@@ -119,7 +178,7 @@ public class TierRunner {
 
             }
 
-            pastPrimValues.foreachPartition(new OutputFunc(id, 0)); // Write last thing
+            pastPrimValues.foreachPartition(kvGame.getOutputFunction(id)); // Write last thing
         }
 
     }
