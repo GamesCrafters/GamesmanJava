@@ -7,11 +7,12 @@ public enum Primitive {
     DRAW((byte)-63),
     TIE((byte)64);
 
-    private byte value;
+    public byte value;
 
     Primitive(byte b) {
         this.value = b;
     }
+
     /*
     public static byte toByte(Primitive p, Integer i) {
         Integer temp;
@@ -35,6 +36,5 @@ public enum Primitive {
         temp += i;
         return temp.byteValue();
     }
-
-     */
+        */
 }

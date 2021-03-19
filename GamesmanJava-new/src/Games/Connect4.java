@@ -47,7 +47,7 @@ public class Connect4 implements Serializable {
         return ret;
     }
 
-    public Tuple<Primitive, Integer> isPrimitive(Piece[] position, Piece placed) {
+    public Primitive isPrimitive(Piece[] position, Piece placed) {
         boolean full = true;
         for (int column = 0; column < width; column++) {
             int row = height - 1;
@@ -70,7 +70,7 @@ public class Connect4 implements Serializable {
                         break;
                     }
                     if (r == row - win + 1) {
-                        return new Tuple<>(Primitive.LOSS, 0);
+                        return Primitive.LOSS;
                     }
                 }
             }
@@ -93,7 +93,7 @@ public class Connect4 implements Serializable {
                     }
                 }
                 if (in_a_row >= win) {
-                    return new Tuple<>(Primitive.LOSS, 0);
+                    return Primitive.LOSS;
                 }
             }
 
@@ -116,7 +116,7 @@ public class Connect4 implements Serializable {
                     }
                 }
                 if (in_a_diag >= win) {
-                    return new Tuple<>(Primitive.LOSS, 0);
+                    return Primitive.LOSS;
                 }
             }
 
@@ -139,19 +139,19 @@ public class Connect4 implements Serializable {
                     }
                 }
                 if (in_a_diag >= win) {
-                    return new Tuple<>(Primitive.LOSS, 0);
+                    return Primitive.LOSS;
                 }
             }
         }
         if (full) {
-            return new Tuple<>(Primitive.TIE, 0);
+            return Primitive.TIE;
         } else {
-            return new Tuple<>(Primitive.NOT_PRIMITIVE, 0);
+            return Primitive.NOT_PRIMITIVE;
         }
     }
 
     // The same as isPrimitive(position, placed) except we only check the one location we need to
-    public Tuple<Primitive, Integer> isPrimitive(Piece[] position, Piece placed, int location) {
+    public Primitive isPrimitive(Piece[] position, Piece placed, int location) {
         if (location == -1) {
             return isPrimitive(position, placed);
         }
@@ -173,7 +173,7 @@ public class Connect4 implements Serializable {
                     break;
                 }
                 if (r == row - win + 1) {
-                    return new Tuple<>(Primitive.LOSS, 0);
+                    return Primitive.LOSS;
                 }
             }
         }
@@ -196,7 +196,7 @@ public class Connect4 implements Serializable {
                 }
             }
             if (in_a_row >= win) {
-                return new Tuple<>(Primitive.LOSS, 0);
+                return Primitive.LOSS;
             }
         }
 
@@ -219,7 +219,7 @@ public class Connect4 implements Serializable {
                 }
             }
             if (in_a_diag >= win) {
-                return new Tuple<>(Primitive.LOSS, 0);
+                return Primitive.LOSS;
             }
         }
 
@@ -242,14 +242,14 @@ public class Connect4 implements Serializable {
                 }
             }
             if (in_a_diag >= win) {
-                return new Tuple<>(Primitive.LOSS, 0);
+                return Primitive.LOSS;
             }
 
         }
         if (full) {
-            return new Tuple<>(Primitive.TIE, 0);
+            return Primitive.TIE;
         } else {
-            return new Tuple<>(Primitive.NOT_PRIMITIVE, 0);
+            return Primitive.NOT_PRIMITIVE;
         }
     }
 
@@ -311,7 +311,7 @@ public class Connect4 implements Serializable {
         {
             if(moves.get(i) == -1) return;
             Piece[] newpos = c.doMove(position, moves.get(i), piece);
-            if(c.isPrimitive(newpos, piece, moves.get(i)).x != Primitive.NOT_PRIMITIVE)
+            if(c.isPrimitive(newpos, piece, moves.get(i)) != Primitive.NOT_PRIMITIVE)
             {
                 primitives.add(c.getHash(newpos));
             }

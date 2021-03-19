@@ -30,8 +30,7 @@ public class PrimValueThread implements PairFunction<Tuple2<Long, Piece[]>, Long
 
     @Override
     public Tuple2<Long, Tuple<Byte, Piece[]>> call(Tuple2<Long, Piece[]> longTuple2){
-        Tuple<Primitive, Integer> temp = game.isPrimitive(longTuple2._2, nextP);
-        return new Tuple2<>(longTuple2._1, new Tuple<>(Primitive.toByte(temp.x, temp.y), longTuple2._2));
+        return new Tuple2<>(longTuple2._1, new Tuple<>(game.isPrimitive(longTuple2._2, nextP).value, longTuple2._2));
     }
 
 }

@@ -33,9 +33,9 @@ public class FindValueThread implements Function<Piece[], Byte> {
 
     @Override
     public Byte call(Piece[] pieces) {
-        Tuple<Primitive, Integer> p = game.isPrimitive(pieces, placed);
-        if (p.x != Primitive.NOT_PRIMITIVE) {
-            return Primitive.toByte(p.x, p.y);
+        Primitive p = game.isPrimitive(pieces, placed);
+        if (p != Primitive.NOT_PRIMITIVE) {
+            return p.value;
         }
         List<Byte> childrenBytes = new ArrayList<>();
         List<Integer> moves = game.generateMoves(pieces);
@@ -58,13 +58,13 @@ public class FindValueThread implements Function<Piece[], Byte> {
         }
         if (lossRemote != Integer.MAX_VALUE) {
             Tuple<Primitive, Integer> temp = new Tuple<>(Primitive.WIN, lossRemote + 1);
-            return Primitive.toByte(temp.x, temp.y);
+            return temp.x.value;
         } else if (tieRemote != -1) {
             Tuple<Primitive, Integer> temp = new Tuple<>(Primitive.TIE, tieRemote + 1);
-            return Primitive.toByte(temp.x, temp.y);
+            return temp.x.value;
         } else {
             Tuple<Primitive, Integer> temp = new Tuple<>(Primitive.LOSS, winRemote + 1);
-            return Primitive.toByte(temp.x, temp.y);
+            return temp.x.value;
         }
     }
 

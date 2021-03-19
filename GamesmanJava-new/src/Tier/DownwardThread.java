@@ -35,7 +35,7 @@ public class DownwardThread implements PairFlatMapFunction<Tuple2<Long, Piece[]>
 
     @Override
     public Iterator<Tuple2<Long, Piece[]>> call(Tuple2<Long, Piece[]> longTuple2){
-        if (game.isPrimitive(longTuple2._2(), nextP.opposite()).x != Primitive.NOT_PRIMITIVE) {
+        if (game.isPrimitive(longTuple2._2(), nextP.opposite()) != Primitive.NOT_PRIMITIVE) {
             return Collections.emptyIterator();
         }
         List<Tuple2<Long, Piece[]>> nextTier = new ArrayList<>();
