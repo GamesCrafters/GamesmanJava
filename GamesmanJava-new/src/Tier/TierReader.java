@@ -115,10 +115,10 @@ public class TierReader {
                 System.out.println("Game OVER!!!!");
                 break;
             }
-            System.out.print("Move: ");
             int move;
             boolean comp = (nextp == Piece.BLUE ? this.comp1 : this.comp2);
             if (!comp) {
+                System.out.print("Move: ");
                 move = makePersonMove(board);
             } else {
                 move = makeComputerMove(board, game, nextp, tier);
@@ -126,10 +126,12 @@ public class TierReader {
             board = game.doMove(board, move, nextp);
             nextp = nextp.opposite();
             tier += 1;
-            try {
-                Thread.sleep(1000);
-            } catch(InterruptedException ex) {
-                Thread.currentThread().interrupt();
+            if (this.comp1 && this.comp2) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
             }
         }
 
