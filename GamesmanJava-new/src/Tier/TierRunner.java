@@ -151,7 +151,7 @@ public class TierRunner {
             // Now map bottom tier primitives to a tuple of location and value
             PairFunction<Tuple2<Long, Object>, Long, Tuple<Byte, Object>> primValue = kvGame.getPrimitiveFunc();
             JavaPairRDD<Long, Tuple<Byte, Object>> pastPrimValues = distData.mapToPair(primValue);
-
+            System.out.printf("Completed computing %d primitive positions for tier: %d\n", distData.count(), numTiers);
             // NEED TO SAVE TO FILE HERE ???
 
 
