@@ -1,0 +1,6 @@
+gameClass=Games.PieceGame.Connect4.Connect4
+outputFolder=/global/scratch/<username>
+classArg=4
+classArg=4
+classArg=4
+
