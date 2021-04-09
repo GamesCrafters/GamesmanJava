@@ -75,18 +75,26 @@ public class TierRunner {
             return;
         }
         String id = String.format("%s/%s_%s", folder, game.getName(), game.getVariant());
-        if (!new File(id).mkdirs()) {
+        File topFolder = new File(id);
+        int numTiers = game.getNumTiers();
+        if (!topFolder.mkdirs()) {
             System.out.println("Game already solved");
             return;
+        } else {
+            for (int i = 0; i <= numTiers; i++) {
+                if (!new File(topFolder.getPath() + "/tier_" + i).mkdir()) {
+                    throw new IllegalStateException("Could not create all sub-folders");
+                }
+            }
         }
 
 
 
 
-        SparkConf conf = new SparkConf().setAppName(String.format("%s_Solver", game.getName())).setMaster("local");
+        SparkConf conf = new SparkConf().setAppName(String.format("%s_Solver", game.getName()));
         JavaSparkContext sc = new JavaSparkContext(conf);
 
-        int numTiers = game.getNumTiers();
+
 
         if (game instanceof HashlessGame) {
             HashlessGame hashlessGame = (HashlessGame) game;
@@ -122,8 +130,6 @@ public class TierRunner {
             JavaPairRDD<Long, Byte> pastPrimValues = distData.mapToPair(primValue);
 
             // NEED TO SAVE TO FILE HERE ???
-
-
             for (int i = numTiers - 1; i >= 0; i--) {
                 System.out.printf("Starting writing tier: %d to disk\n", i + 1);
                 //if (i % 4 == (numTiers - 3) % 4) { // Use if saving time/space
