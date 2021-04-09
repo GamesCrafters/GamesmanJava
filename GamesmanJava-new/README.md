@@ -49,7 +49,7 @@ If running on windows use spark-submit.cmd instead
 
 
 local example if running from the GamesmanJava-new dir:/
-spark-submit --master local[8] GamesmanJava-new-1.0-jar-with-dependencies.jar SolverArgs.txt
+spark-submit --master local[8] GamesmanJava-new-1.0-jar-with-dependencies.jar SolverArgsLocal.txt
 
 If you are getting an error about being unable to find spark submit, make sure that your SPARK/bin
 directory is added to your PATH 

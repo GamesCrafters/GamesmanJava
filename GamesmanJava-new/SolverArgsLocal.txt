@@ -1,5 +1,5 @@
 gameClass=Games.PieceGame.Connect4.Connect4
-outputFolder=/global/scratch/jordanmbell
+outputFolder=SPARK_OUT
 classArg=4
 classArg=4
 classArg=4

@@ -14,10 +14,12 @@ import org.apache.spark.api.java.function.PairFlatMapFunction;
 import org.apache.spark.api.java.function.PairFunction;
 import scala.Tuple2;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 import static org.apache.spark.api.java.StorageLevels.MEMORY_AND_DISK;
 
@@ -29,21 +31,50 @@ public class TierRunner {
     // Example: Games.PieceGame.Connect4.Connect4 4 4 4
     public static void main(String[] args) {
         Game game;
+        String folder = "";
+        List<String> cArgsTemp = new ArrayList<>();
         try {
-            Class<?> clazz = Class.forName(args[0]);
-            if (Game.class.isAssignableFrom(clazz)) {
+            Class<?> clazz = null;
+            File argFile = new File(args[0]);
+            Scanner fscanner = new Scanner(argFile);
+            while (fscanner.hasNextLine()) {
+                String line = fscanner.nextLine();
+                if (line.isEmpty()) {
+                    continue;
+                }
+                if (line.startsWith("gameClass=")) {
+                    clazz = Class.forName(line.substring(10));
+                } else if (line.startsWith("outputFolder=")) {
+                    folder = line.substring(13);
+                } else if (line.startsWith("classArg=")) {
+                    cArgsTemp.add(line.substring(9));
+                } else {
+                    throw new IllegalArgumentException("Cannot read line from arg file: " + line);
+                }
+
+            }
+            if (folder.isEmpty()) {
+                throw new IllegalArgumentException("Folder argument not provided");
+            }
+
+            if (clazz != null && Game.class.isAssignableFrom(clazz)) {
                 Constructor<?> ctor = clazz.getConstructor(String[].class);
-                String[] cArgs = new String[args.length - 1];
-                System.arraycopy(args, 1, cArgs, 0, args.length - 1);
+                String[] cArgs = new String[cArgsTemp.size()];
+                for (int i = 0; i < cArgs.length; ++i) {
+                    cArgs[i] = cArgsTemp.get(i);
+                }
                 game = (Game) ctor.newInstance((Object) cArgs);
             } else {
                 throw new ClassNotFoundException("Class cannot be a game");
             }
+        } catch (FileNotFoundException e) {
+            System.out.println("Unable to open arg file");
+            return;
         } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
             System.out.println("Cannot find class " + args[0]);
             return;
         }
-        String id = String.format("SPARK_OUT/%s_%s", game.getName(), game.getVariant());
+        String id = String.format("%s/%s_%s", folder, game.getName(), game.getVariant());
         if (!new File(id).mkdirs()) {
             System.out.println("Game already solved");
             return;
