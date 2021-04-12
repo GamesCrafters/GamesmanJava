@@ -1,0 +1,6 @@
+gameClass=Games.PieceGame.Connect4.Connect4
+outputFolder=SPARK_OUT
+classArg=5
+classArg=5
+classArg=4
+

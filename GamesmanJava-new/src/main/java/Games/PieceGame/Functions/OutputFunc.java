@@ -2,6 +2,7 @@ package Games.PieceGame.Functions;
 
 import Helpers.Piece;
 import Helpers.Tuple;
+import org.apache.spark.TaskContext;
 import org.apache.spark.api.java.function.VoidFunction;
 import scala.Tuple2;
 
@@ -30,7 +31,11 @@ public class OutputFunc implements VoidFunction<Iterator<Tuple2<Long, Tuple<Byte
 
     @Override
     public void call(Iterator<Tuple2<Long, Tuple<Byte, Object>>> iter) throws IOException {
+        if (!iter.hasNext()) {
+            return;
+        }
         path = Paths.get(id + "/tier_" + tier);
+        path = Paths.get(String.format("%s/tier_%d/part_%s", id, tier, TaskContext.getPartitionId()));
         try {
             channel = Files.newByteChannel(path, EnumSet.of(CREATE_NEW, WRITE, SPARSE, READ));
         } catch (Exception e) {
