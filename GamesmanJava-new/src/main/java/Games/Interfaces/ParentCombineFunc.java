@@ -1,10 +1,7 @@
 package Games.Interfaces;
 
-import Helpers.Piece;
-import Helpers.Primitive;
 import Helpers.Tuple;
 import org.apache.spark.api.java.function.Function2;
-import scala.Tuple2;
 
 public class ParentCombineFunc implements Function2<Tuple<Byte, Object>, Tuple<Byte, Object>, Tuple<Byte, Object>> {
 
@@ -13,7 +10,11 @@ public class ParentCombineFunc implements Function2<Tuple<Byte, Object>, Tuple<B
     public Tuple<Byte, Object> call(Tuple<Byte, Object> byteTuple, Tuple<Byte, Object> byteTuple2){
         return new Tuple<>(call(byteTuple.x, byteTuple2.x), byteTuple.y);
     }
+    public Byte call(Byte b1, Byte b2) {
+        return b1 > b2 ? b1 : b2;
+    }
 
+    /*
     public Byte call(Byte b1, Byte b2) {
         if (b1.equals(b2)) {
             return b1;
@@ -55,7 +56,7 @@ public class ParentCombineFunc implements Function2<Tuple<Byte, Object>, Tuple<B
             return b2;
         }
     }
-
+    */
 
 
 

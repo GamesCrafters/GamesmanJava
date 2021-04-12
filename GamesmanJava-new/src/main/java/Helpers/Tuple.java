@@ -10,26 +10,30 @@ public class Tuple<X, Y> implements Serializable {
         this.y = y;
     }
 
+
+
     public static Tuple<Primitive, Integer> byteToTuple(Byte b) {
-        int val = Byte.toUnsignedInt(b);
-        int remoteness = (val << 26) >>> 26;
         Primitive p;
-        switch((val) >>> 6) {
-            case 0:
-                p = Primitive.NOT_PRIMITIVE;
-                break;
-            case 1:
-                p = Primitive.LOSS;
-                break;
-            case 2:
+        Integer remoteness;
+        Integer x = Byte.toUnsignedInt(b);
+        if (x >= 128) {
+            if (x >= 192) {
                 p = Primitive.WIN;
-                break;
-            case 3:
+                remoteness = 255-x;
+            } else {
                 p = Primitive.TIE;
-                break;
-            default:
-                throw new IllegalStateException("two bits should only have those options");
+                remoteness = x-128;
+            }
+        } else {
+            if (x <= 63) {
+                p = Primitive.LOSS;
+                remoteness = x;
+            } else {
+                p = Primitive.NOT_PRIMITIVE;
+                remoteness = 0;
+            }
         }
+
         return new Tuple<>(p, remoteness);
     }
 
