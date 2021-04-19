@@ -1,0 +1,19 @@
+#!/bin/bash
+#SBATCH --job-name=connect4_solve
+#SBATCH --partition=savio
+#SBATCH --account=fc_gamecrafters
+#SBATCH --qos=savio_normal
+#SBATCH --nodes=1
+#SBATCH --time=00:01:00
+
+module load java spark
+source /global/home/groups/allhands/bin/spark_helper.sh
+
+# Start Spark On Demand
+spark-start
+
+# Example 1
+spark-submit --master $SPARK_URL GamesmanJava/GamesmanJava-new/solver.jar GamesmanJava/GamesmanJava-new/SolverArgs.txt
+
+# Stop Spark On Demand
+spark-stop
