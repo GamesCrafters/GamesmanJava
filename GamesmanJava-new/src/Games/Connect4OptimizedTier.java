@@ -6,7 +6,7 @@ import Helpers.Primitive;
 import java.io.Serializable;
 import java.util.*;
 
-public class Connect4Optimized implements Serializable {
+public class Connect4OptimizedTier implements Serializable {
     final int WIDTH = 5;
     final int HEIGHT = 4;
     final int XINAROW = 3;
@@ -15,13 +15,14 @@ public class Connect4Optimized implements Serializable {
     final long UPDIAGWIN;
     final long DOWNDIAGWIN;
     final long INITIALPOSITION;
-    long position;
+    final long PARALLELPOSITION;
+    byte tier;
 
     /** Each sequence of 7 bits stores a column as follows:
      * Everything up to and including the first 1 are empty. After that, 0 is yellow, 1 is red
      * For example, the string 0b0001011 means ----YRR. Columns are stored left to right or right to left,
      * depending on which yields a lower hash. Bit 63 is used to store the current player.*/
-    public Connect4Optimized() {
+    public Connect4OptimizedTier() {
         long l = 0;
         for(int i = 0; i < WIDTH; i++) l |= 1L<<((HEIGHT+1)*i);
         long down=0, left=0, updiag=0, downdiag = 0;
@@ -37,12 +38,22 @@ public class Connect4Optimized implements Serializable {
         VERTICALWIN = down;
         UPDIAGWIN = updiag;
         INITIALPOSITION = l;
-        position = INITIALPOSITION;
+        PARALLELPOSITION = (WIDTH%2 == 0) ? l:l^(1L<<((HEIGHT+1)*(WIDTH/2)));
+        tier = 0;
     }
 
-    public long getStartingPositions() {
+    public long getStartingPosition() {
         return INITIALPOSITION;
     }
+
+    public String getName() {return "Connect 4";}
+    public String getVariant() {return String.format("%s by %s grid, win by %s in a row", WIDTH, HEIGHT, XINAROW);}
+
+    public int getMaxTiers() {return WIDTH * HEIGHT;}
+
+    public void refresh() {tier = 0;}
+    public void solveStepDown() {tier = (byte)~tier;}
+    public void solveStepUp() {tier = (byte)~tier;}
 
     /** Returns the result of moving at the given position
      * Bit 63 is flipped to change current player
@@ -52,7 +63,7 @@ public class Connect4Optimized implements Serializable {
      * 0b0001011 + 1<<(move+1) = 0b0011011 = ---RYRR*/
     public long doMove(long position, byte move) {
 
-        return (position ^ 0x8000000000000000L)+(1L<<(move+(position >>> 63)));
+        return (position)+(1L<<(move+(tier % 2)));
 
     }
 
@@ -69,6 +80,7 @@ public class Connect4Optimized implements Serializable {
                 ret[j] = start;
                 j++;
             }
+            if(i == WIDTH/2 && (position&PARALLELPOSITION) == PARALLELPOSITION) break;
         }
         if(j<WIDTH) ret[j] = -1;
         return ret;
@@ -154,7 +166,7 @@ public class Connect4Optimized implements Serializable {
         return hash | ((long) ((getSize()-emptyspots)%2)) << 63;
     }
 
-    private static void recurse(HashSet<Long> primitives, long position, Connect4Optimized c, String move) {
+    private static void recurse(HashSet<Long> primitives, long position, Connect4OptimizedTier c, String move) {
         if(move.length() < 5) System.out.println(move);
         byte[] moves = c.generateMoves(position);
         c.generateMoves(position);
@@ -176,8 +188,8 @@ public class Connect4Optimized implements Serializable {
         }
     }
     public static void main(String[] args) {
-        Connect4Optimized c = new Connect4Optimized();
-        long pos = c.getStartingPositions();
+        Connect4OptimizedTier c = new Connect4OptimizedTier();
+        long pos = c.getStartingPosition();
         HashSet<Long> hashset = new HashSet<>();
         recurse(hashset, pos, c, "");
         System.out.printf("Number of primitives: %d", hashset.size());
