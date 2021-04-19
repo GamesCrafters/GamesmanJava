@@ -7,9 +7,9 @@ import scala.Tuple2;
 import java.util.Iterator;
 
 /**
- * A Game whose position and location are not the same
+ * A TieredGame whose position and location are not the same
  */
-public abstract class KeyValueGame implements Game {
+public abstract class KeyValueGame implements TieredGame {
 
     /**
      * Calculates the location of a certain board state

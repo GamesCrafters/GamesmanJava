@@ -56,7 +56,7 @@ public abstract class PieceGame extends KeyValueGame {
     }
 
     @Override
-    public void solveStarting() {
+    public void refresh() {
         tier = 0;
         nextP = Piece.RED;
     }
