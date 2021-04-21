@@ -1,4 +1,4 @@
-package Games;
+package main.java.Games;
 
 
 import Helpers.Primitive;
@@ -21,7 +21,7 @@ public class Connect4OptimizedTier implements Serializable {
     /** Each sequence of 7 bits stores a column as follows:
      * Everything up to and including the first 1 are empty. After that, 0 is yellow, 1 is red
      * For example, the string 0b0001011 means ----YRR. Columns are stored left to right or right to left,
-     * depending on which yields a lower hash. Bit 63 is used to store the current player.*/
+     * depending on which yields a lower hash.*/
     public Connect4OptimizedTier() {
         long l = 0;
         for(int i = 0; i < WIDTH; i++) l |= 1L<<((HEIGHT+1)*i);
@@ -56,7 +56,6 @@ public class Connect4OptimizedTier implements Serializable {
     public void solveStepUp() {tier = (byte)~tier;}
 
     /** Returns the result of moving at the given position
-     * Bit 63 is flipped to change current player
      * Move is assumed to be the bit position of the empty cell.
      * As such, we add 1<<move for a yellow, and 1<<(move+1) for red
      * 0b0001011 + 1<<move = 0b0010011 = ---YYRR
@@ -145,14 +144,7 @@ public class Connect4OptimizedTier implements Serializable {
     }
 
     public long getHash(long position) {
-        long newpos= position & 0x7FFFFFFFFFFFFFFFL;
-        long oppositepos = 0;
-        for(int i = 0; i < WIDTH; i++)
-        {
-            long val = (newpos>>>(i*(HEIGHT+1)))&((1L<<(HEIGHT+1))-1);
-            oppositepos |= val<<((HEIGHT+1)*(WIDTH-i-1));
-        }
-        return Math.min(oppositepos, newpos);
+        return position;
     }
 
     public long hashToPosition(long hash) {

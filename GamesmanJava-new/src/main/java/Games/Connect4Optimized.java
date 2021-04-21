@@ -1,4 +1,4 @@
-package Games;
+package main.java.Games;
 
 
 import Helpers.Primitive;
