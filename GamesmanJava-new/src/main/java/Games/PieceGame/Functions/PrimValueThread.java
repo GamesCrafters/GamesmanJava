@@ -10,7 +10,7 @@ import org.apache.spark.api.java.function.PairFunction;
 import scala.Tuple2;
 
 
-public class PrimValueThread implements PairFunction<Tuple2<Long, Object>, Long, Tuple<Byte,Object>> {
+public class PrimValueThread implements PairFunction<Tuple2<Long, Piece[]>, Long, Tuple<Byte,Piece[]>> {
 
 
 
@@ -23,8 +23,8 @@ public class PrimValueThread implements PairFunction<Tuple2<Long, Object>, Long,
     }
 
     @Override
-    public Tuple2<Long, Tuple<Byte, Object>> call(Tuple2<Long, Object> longTuple2){
-        Tuple<Primitive, Integer> temp = game.isPrimitive((Piece[]) longTuple2._2, nextP);
+    public Tuple2<Long, Tuple<Byte, Piece[]>> call(Tuple2<Long, Piece[]> longTuple2){
+        Tuple<Primitive, Integer> temp = game.isPrimitive(longTuple2._2, nextP);
         return new Tuple2<>(longTuple2._1, new Tuple<>(Primitive.toByte(temp.x, temp.y), longTuple2._2));
     }
 

@@ -19,33 +19,33 @@ import java.util.List;
 /**
  * Represents a game played where position is represented by a Piece[]
  */
-public abstract class PieceGame extends KeyValueGame {
+public abstract class PieceGame extends KeyValueGame<Piece[]> {
 
     Piece nextP;
     int tier;
 
     @Override
-    public PairFlatMapFunction<Tuple2<Long, Object>, Long, Object> getDownwardFunc() {
+    public PairFlatMapFunction<Tuple2<Long, Piece[]>, Long, Piece[]> getDownwardFunc() {
         return new DownwardThread(nextP, tier, this, getLocator());
     }
 
     @Override
-    public Function<Tuple2<Long, Object>, Boolean> getPrimitiveCheck() {
+    public Function<Tuple2<Long, Piece[]>, Boolean> getPrimitiveCheck() {
         return new PrimitiveFilter(nextP, this);
     }
 
     @Override
-    public PairFunction<Tuple2<Long, Object>, Long, Tuple<Byte, Object>> getPrimitiveFunc() {
+    public PairFunction<Tuple2<Long, Piece[]>, Long, Tuple<Byte, Piece[]>> getPrimitiveFunc() {
         return new PrimValueThread(nextP, this);
     }
 
     @Override
-    public VoidFunction<Iterator<Tuple2<Long, Tuple<Byte, Object>>>> getOutputFunction(String id) {
+    public VoidFunction<Iterator<Tuple2<Long, Tuple<Byte, Piece[]>>>> getOutputFunction(String id) {
         return new OutputFunc(id, tier);
     }
 
     @Override
-    public PairFlatMapFunction<Tuple2<Long, Tuple<Byte, Object>>, Long, Tuple<Byte, Object>> getParentFunction() {
+    public PairFlatMapFunction<Tuple2<Long, Tuple<Byte, Piece[]>>, Long, Tuple<Byte, Piece[]>> getParentFunction() {
         return new ParentFunc(this);
     }
 
@@ -71,11 +71,6 @@ public abstract class PieceGame extends KeyValueGame {
         return nextP;
     }
 
-    @Override
-    public long calculateLocation(Object board) {
-        return calculateLocation((Piece[]) board);
-    }
-
     abstract public Locator getLocator();
 
 
@@ -83,15 +78,11 @@ public abstract class PieceGame extends KeyValueGame {
         return tier;
     }
 
-    @Override
-    public void printBoard(Object board) {
-        printBoard((Piece[]) board);
-    }
-
     /**
      * Calculates the location of a certain board state
      * @return The byte offset of the state
      */
+    @Override
     abstract public long calculateLocation(Piece[] board);
 
     /**
@@ -151,5 +142,6 @@ public abstract class PieceGame extends KeyValueGame {
     /**
      * Prints the current board state
      */
+    @Override
     abstract public void printBoard(Piece[] board);
 }

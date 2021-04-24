@@ -9,7 +9,7 @@ import Helpers.Tuple;
 import org.apache.spark.api.java.function.Function;
 import scala.Tuple2;
 
-public class PrimitiveFilter implements Function<Tuple2<Long, Object>, Boolean> {
+public class PrimitiveFilter implements Function<Tuple2<Long, Piece[]>, Boolean> {
 
     Piece placed;
     PieceGame game;
@@ -21,8 +21,8 @@ public class PrimitiveFilter implements Function<Tuple2<Long, Object>, Boolean> 
     }
 
     @Override
-    public Boolean call(Tuple2<Long, Object> longTuple2) {
-        Tuple<Primitive, Integer> tup = game.isPrimitive((Piece[]) longTuple2._2, placed);
+    public Boolean call(Tuple2<Long, Piece[]> longTuple2) {
+        Tuple<Primitive, Integer> tup = game.isPrimitive(longTuple2._2, placed);
         return tup.x != Primitive.NOT_PRIMITIVE;
     }
 }

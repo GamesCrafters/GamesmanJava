@@ -1,8 +1,8 @@
 package Tier;
 
-import Games.Interfaces.Game;
 import Games.Interfaces.HashlessGame;
 import Games.Interfaces.KeyValueGame;
+import Games.Interfaces.TieredGame;
 import Helpers.Tuple;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -30,7 +30,7 @@ public class TierRunner {
     // Args should be: {Class Path of Game} args0 args1 ...
     // Example: Games.PieceGame.Connect4.Connect4 4 4 4
     public static void main(String[] args) {
-        Game game;
+        TieredGame game;
         String folder = "";
         List<String> cArgsTemp = new ArrayList<>();
         try {
@@ -57,13 +57,13 @@ public class TierRunner {
                 throw new IllegalArgumentException("Folder argument not provided");
             }
 
-            if (clazz != null && Game.class.isAssignableFrom(clazz)) {
+            if (clazz != null && TieredGame.class.isAssignableFrom(clazz)) {
                 Constructor<?> ctor = clazz.getConstructor(String[].class);
                 String[] cArgs = new String[cArgsTemp.size()];
                 for (int i = 0; i < cArgs.length; ++i) {
                     cArgs[i] = cArgsTemp.get(i);
                 }
-                game = (Game) ctor.newInstance((Object) cArgs);
+                game = (TieredGame) ctor.newInstance((Object) cArgs);
             } else {
                 throw new ClassNotFoundException("Class cannot be a game");
             }
@@ -76,7 +76,7 @@ public class TierRunner {
         }
         String id = String.format("%s/%s_%s", folder, game.getName(), game.getVariant());
         File topFolder = new File(id);
-        int numTiers = game.getNumTiers();
+        int numTiers = game.getMaxTiers();
         if (!topFolder.mkdirs()) {
             System.out.println("Game already solved");
             return;
@@ -107,7 +107,7 @@ public class TierRunner {
             List<JavaRDD<Long>> savedData = new ArrayList<>(numTiers);
 
 
-            hashlessGame.solveStarting();
+            hashlessGame.refresh();
             for (int i = 1; i <= numTiers; i++) {
                 hashlessGame.solveStepDown();
                 FlatMapFunction<Long, Long> func = hashlessGame.getDownwardFunc();
@@ -167,7 +167,7 @@ public class TierRunner {
             List<JavaPairRDD<Long, Object>> savedData = new ArrayList<>(numTiers);
 
 
-            kvGame.solveStarting();
+            kvGame.refresh();
             for (int i = 1; i <= numTiers; i++) {
                 kvGame.solveStepDown();
                 PairFlatMapFunction<Tuple2<Long, Object>, Long, Object> func = kvGame.getDownwardFunc();

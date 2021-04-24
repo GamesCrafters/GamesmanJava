@@ -18,7 +18,7 @@ import java.util.Iterator;
 import static java.nio.file.StandardOpenOption.*;
 import static java.nio.file.StandardOpenOption.READ;
 
-public class OutputFunc implements VoidFunction<Iterator<Tuple2<Long, Tuple<Byte, Object>>>> {
+public class OutputFunc implements VoidFunction<Iterator<Tuple2<Long, Tuple<Byte, Piece[]>>>> {
 
     SeekableByteChannel channel;
     Path path = null;
@@ -30,7 +30,7 @@ public class OutputFunc implements VoidFunction<Iterator<Tuple2<Long, Tuple<Byte
     }
 
     @Override
-    public void call(Iterator<Tuple2<Long, Tuple<Byte, Object>>> iter) throws IOException {
+    public void call(Iterator<Tuple2<Long, Tuple<Byte, Piece[]>>> iter) throws IOException {
         if (!iter.hasNext()) {
             return;
         }
@@ -42,7 +42,7 @@ public class OutputFunc implements VoidFunction<Iterator<Tuple2<Long, Tuple<Byte
             channel = Files.newByteChannel(path, EnumSet.of(WRITE, READ));
         }
         while (iter.hasNext()) {
-            Tuple2<Long, Tuple<Byte, Object>> tup = iter.next();
+            Tuple2<Long, Tuple<Byte, Piece[]>> tup = iter.next();
             ByteBuffer buf = ByteBuffer.allocate(1);
             channel.position(tup._1());
             Byte temp = tup._2().x;
