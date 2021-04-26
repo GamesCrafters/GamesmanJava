@@ -94,7 +94,8 @@ public class TierRunner {
         SparkConf conf = new SparkConf().setAppName(String.format("%s_Solver", game.getName()));
         conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
         conf.registerKryoClasses(new Class<?>[] {Helpers.Tuple.class, Helpers.Primitive.class,
-                Helpers.Piece.class, Helpers.BinaryReader.class}); // Add classes that need to be registered here
+                Helpers.Piece.class, Helpers.BinaryReader.class, Helpers.Piece[].class,
+                Games.PieceGame.RectanglePieceLocator.class, Games.PieceGame.Connect4.Connect4.class}); // Add classes that need to be registered here
         conf.set("spark.kryo.registrationRequired", "true");
 
         JavaSparkContext sc = new JavaSparkContext(conf);
