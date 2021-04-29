@@ -92,9 +92,9 @@ public class TierReader {
         this.folder = folder;
         this.comp1 = comp1;
         this.comp2 = comp2;
-        w = 4;
-        h = 4;
-        win = 3;
+        w = Integer.parseInt(String.valueOf(folder.getName().charAt(10)));
+        h = Integer.parseInt(String.valueOf(folder.getName().charAt(14)));
+        win = Integer.parseInt(String.valueOf(folder.getName().charAt(23)));
         locator = new RectanglePieceLocator(w, h);
     }
 
