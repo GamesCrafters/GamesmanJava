@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class ParentFunc implements PairFlatMapFunction<Tuple2<Long, Tuple<Byte, Object>>, Long, Tuple<Byte, Object>> {
+public class ParentFunc implements PairFlatMapFunction<Tuple2<Long, Tuple<Byte, Piece[]>>, Long, Tuple<Byte, Piece[]>> {
 
     boolean childPrim;
     int width;
@@ -35,8 +35,8 @@ public class ParentFunc implements PairFlatMapFunction<Tuple2<Long, Tuple<Byte, 
     }
 
     @Override
-    public Iterator<Tuple2<Long, Tuple<Byte, Object>>> call(Tuple2<Long, Tuple<Byte, Object>> longTuple2) {
-        List<Tuple2<Long, Tuple<Byte, Object>>> retList;
+    public Iterator<Tuple2<Long, Tuple<Byte, Piece[]>>> call(Tuple2<Long, Tuple<Byte, Piece[]>> longTuple2) {
+        List<Tuple2<Long, Tuple<Byte, Piece[]>>> retList;
         Tuple<Primitive, Integer> oldVal = Tuple.byteToTuple(longTuple2._2().x);
         Primitive newP;
         switch (oldVal.x) {
@@ -55,17 +55,17 @@ public class ParentFunc implements PairFlatMapFunction<Tuple2<Long, Tuple<Byte, 
         Integer newRemote = oldVal.y + 1;
         Byte b = Primitive.toByte(newP, newRemote);
         if (childPrim) {
-            retList = parentsWL((Piece[]) longTuple2._2().y, b);
+            retList = parentsWL(longTuple2._2().y, b);
         } else {
-            retList = parentsNotWL((Piece[]) longTuple2._2().y, b);
+            retList = parentsNotWL(longTuple2._2().y, b);
         }
 
         return retList.iterator();
     }
 
 
-    private List<Tuple2<Long, Tuple<Byte, Object>>> parentsWL(Piece[] pos, Byte val) {
-        List<Tuple2<Long, Tuple<Byte, Object>>> retList = new ArrayList<>();
+    private List<Tuple2<Long, Tuple<Byte, Piece[]>>> parentsWL(Piece[] pos, Byte val) {
+        List<Tuple2<Long, Tuple<Byte, Piece[]>>> retList = new ArrayList<>();
         for (int i = height - 1; i < width * height; i += height) {
             for (int j = i; j != i - height; j --) {
                 Piece atJ = pos[j];
@@ -85,8 +85,8 @@ public class ParentFunc implements PairFlatMapFunction<Tuple2<Long, Tuple<Byte, 
         return retList;
     }
 
-    private List<Tuple2<Long, Tuple<Byte, Object>>> parentsNotWL(Piece[] pos, Byte val) {
-        List<Tuple2<Long, Tuple<Byte, Object>>> retList = new ArrayList<>();
+    private List<Tuple2<Long, Tuple<Byte, Piece[]>>> parentsNotWL(Piece[] pos, Byte val) {
+        List<Tuple2<Long, Tuple<Byte, Piece[]>>> retList = new ArrayList<>();
         for (int i = height - 1; i < width * height; i += height) {
             for (int j = i; j != i - height; j --) {
                 Piece atJ = pos[j];

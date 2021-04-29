@@ -51,7 +51,7 @@ public class Connect4 extends PieceGame implements Serializable {
     }
 
     @Override
-    public int getNumTiers() {
+    public int getMaxTiers() {
         return width * height;
     }
 

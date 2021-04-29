@@ -1,6 +1,6 @@
 package Games.Interfaces;
 
-public interface Game {
+public interface TieredGame<GameObject> {
 
 
 
@@ -8,7 +8,7 @@ public interface Game {
      * Used to start of the first position of the game
      * @return The starting position of the game
      */
-    Object getStartingPosition();
+    GameObject getStartingPosition();
 
     /**
      * @return The name of the game
@@ -21,19 +21,15 @@ public interface Game {
     String getVariant();
 
     /**
-     * @return The name of the variant
+     * @return The value of the highest tier in the game
      */
-    int getNumTiers();
+    int getMaxTiers();
 
-    /**
-     * @return If the position and location are the same
-     */
-    boolean positionIsLocation();
 
     /**
      * Initializes any data that may be needed to start a new solve
      */
-    void solveStarting();
+    void refresh();
 
     /**
      * Adjusts data so that the game is changed state such that a move is made
@@ -49,5 +45,5 @@ public interface Game {
      * Prints the board state
      * @param board The current board state
      */
-    void printBoard(Object board);
+    void printBoard(GameObject board);
 }
