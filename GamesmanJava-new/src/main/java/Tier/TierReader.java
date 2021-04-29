@@ -5,6 +5,7 @@ import Games.PieceGame.RectanglePieceLocator;
 import Helpers.Piece;
 import Helpers.Primitive;
 import Helpers.Tuple;
+import org.apache.commons.lang.ArrayUtils;
 
 import java.io.File;
 import java.io.RandomAccessFile;
@@ -140,20 +141,29 @@ public class TierReader {
             throw new IllegalStateException("Cannot find data for tier " + tier);
         }
 
-        RandomAccessFile raf;
-        try {
-            raf = new RandomAccessFile(data, "r");
-        } catch (Exception e) {
-            throw new IllegalStateException("Cannot find data for tier " + tier);
-        }
 
         long loc = locator.calculateLocation(board, tier);
-        byte b;
-        try {
-            raf.seek(loc);
-            b = (byte) raf.readUnsignedByte();
-        } catch (Exception e) {
-            throw new IllegalStateException("Cannot find data for tier " + tier + " at loc " + loc);
+        byte b = 0;
+
+        //Loop through part files till b is not nonzero, return value. If did not get a value through all parts, throw exception
+        for (File f: Objects.requireNonNull(data.listFiles())) {
+            RandomAccessFile raf;
+            try {
+                raf = new RandomAccessFile(f, "r");
+            } catch (Exception e) {
+                throw new IllegalStateException("Cannot find data for tier " + tier);
+            }
+            try {
+                raf.seek(loc);
+                b = (byte) raf.readUnsignedByte();
+                if (b != 0) {
+                    break;
+                }
+            } catch (Exception e) {
+                if (ArrayUtils.indexOf(data.listFiles(), f) == Objects.requireNonNull(data.listFiles()).length - 1) {
+                    throw new IllegalStateException("Cannot find data for tier " + tier + " at loc " + loc);
+                }
+            }
         }
         return toTuple(b);
     }
