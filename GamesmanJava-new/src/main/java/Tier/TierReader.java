@@ -5,10 +5,12 @@ import Games.PieceGame.RectanglePieceLocator;
 import Helpers.Piece;
 import Helpers.Primitive;
 import Helpers.Tuple;
+import org.apache.commons.lang.ArrayUtils;
 
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
 
@@ -19,7 +21,8 @@ public class TierReader {
     int win;
     RectanglePieceLocator locator;
     File folder;
-    boolean comp;
+    boolean comp1;
+    boolean comp2;
 
     public static void main (String[] args) {
         File folder = new File("SPARK_OUT");
@@ -46,26 +49,40 @@ public class TierReader {
                 break;
             }
         }
-        boolean computer;
-        System.out.println("Play vs computer? (y/n)");
+        boolean comp1;
+        boolean comp2;
+        System.out.println("Player 1 computer? (y/n)");
         while (true) {
             String next = scanner.next();
             if (next.equalsIgnoreCase("y")) {
-                computer = true;
+                comp1 = true;
                 break;
             }
             if (next.equalsIgnoreCase("n")) {
-                computer = false;
+                comp1 = false;
                 break;
             }
             System.out.println("Enter 'y' or 'n'");
-
         }
-        TierReader reader = new TierReader(solves[choice], computer);
+
+        System.out.println("Player 2 computer? (y/n)");
+        while (true) {
+            String next = scanner.next();
+            if (next.equalsIgnoreCase("y")) {
+                comp2 = true;
+                break;
+            }
+            if (next.equalsIgnoreCase("n")) {
+                comp2 = false;
+                break;
+            }
+            System.out.println("Enter 'y' or 'n'");
+        }
+        TierReader reader = new TierReader(solves[choice], comp1, comp2);
         reader.play();
     }
 
-    TierReader(File folder, boolean comp) {
+    TierReader(File folder, boolean comp1, boolean comp2) {
         if (!folder.exists()) {
             throw new IllegalStateException("Error reading data");
         }
@@ -73,10 +90,11 @@ public class TierReader {
 
 
         this.folder = folder;
-        this.comp = comp;
-        w = 4;
-        h = 4;
-        win = 4;
+        this.comp1 = comp1;
+        this.comp2 = comp2;
+        w = Integer.parseInt(String.valueOf(folder.getName().charAt(10)));
+        h = Integer.parseInt(String.valueOf(folder.getName().charAt(14)));
+        win = Integer.parseInt(String.valueOf(folder.getName().charAt(23)));
         locator = new RectanglePieceLocator(w, h);
     }
 
@@ -98,34 +116,79 @@ public class TierReader {
                 System.out.println("Game OVER!!!!");
                 break;
             }
-            System.out.print("Move: ");
             int move;
-            while (true) {
-                try  {
-                    move = Integer.parseInt(scanner.next());
-                    if (board[(h * move) - 1] != Piece.EMPTY) {
-                        System.out.println("Cannot add to full column");
-                    } else {
-                        break;
-                    }
-                } catch (Exception ignored) {
-                    System.out.println("Invalid move");
-                    System.out.print("Move: ");
-                }
-
+            boolean comp = (nextp == Piece.BLUE ? this.comp1 : this.comp2);
+            if (!comp) {
+                System.out.print("Move: ");
+                move = makePersonMove(board);
+            } else {
+                move = makeComputerMove(board, game, nextp, tier);
             }
-            int actual_move = (h * (move - 1));
-            for (int i = (h * move) - 1; i != (h * (move - 1)) - 1; i --) {
-                if (board[i] != Piece.EMPTY) {
-                    actual_move = i + 1;
-                    break;
-                }
-            }
-            board = game.doMove(board, actual_move, nextp);
+            board = game.doMove(board, move, nextp);
             nextp = nextp.opposite();
             tier += 1;
+            if (this.comp1 && this.comp2) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+            }
         }
 
+    }
+
+    private int makeComputerMove(Piece[] board, Connect4 game, Piece nextp, int tier) {
+        Primitive bestResult = Primitive.WIN;
+        int number = 0;
+        int bestMove = 0;
+        List<Integer> l = game.generateMoves(board);
+        for (Integer move : l) {
+            Piece[] newBoard = game.doMove(board, move, nextp);
+            Tuple<Primitive, Integer> value = getValue(newBoard, tier + 1);
+            boolean update = false;
+            if (bestResult == Primitive.WIN) {
+                update = (value.x == Primitive.LOSS || value.x == Primitive.TIE || (value.x == Primitive.WIN && number < value.y));
+            } else if (bestResult == Primitive.LOSS) {
+                update = (value.x == Primitive.LOSS && number > value.y);
+            } else if (bestResult == Primitive.TIE) {
+                update = (value.x == Primitive.LOSS);
+            } else {
+                System.out.println("Primitive not found");
+            }
+            if (update) {
+                bestResult = value.x;
+                number = value.y;
+                bestMove = move;
+            }
+        }
+        return bestMove;
+    }
+
+    private int makePersonMove(Piece[] board) {
+        Scanner scanner = new Scanner(System.in);
+        int move;
+        while (true) {
+            try  {
+                move = Integer.parseInt(scanner.next());
+                if (board[(h * move) - 1] != Piece.EMPTY) {
+                    System.out.println("Cannot add to full column");
+                } else {
+                    break;
+                }
+            } catch (NumberFormatException ignored) {
+                System.out.println("Invalid move");
+                System.out.print("Move: ");
+            }
+        }
+        int actual_move = (h * (move - 1));
+        for (int i = (h * move) - 1; i != (h * (move - 1)) - 1; i --) {
+            if (board[i] != Piece.EMPTY) {
+                actual_move = i + 1;
+                break;
+            }
+        }
+        return actual_move;
     }
 
     private Tuple<Primitive, Integer> getValue(Piece[] board, int tier) {
@@ -140,20 +203,29 @@ public class TierReader {
             throw new IllegalStateException("Cannot find data for tier " + tier);
         }
 
-        RandomAccessFile raf;
-        try {
-            raf = new RandomAccessFile(data, "r");
-        } catch (Exception e) {
-            throw new IllegalStateException("Cannot find data for tier " + tier);
-        }
 
         long loc = locator.calculateLocation(board, tier);
-        byte b;
-        try {
-            raf.seek(loc);
-            b = (byte) raf.readUnsignedByte();
-        } catch (Exception e) {
-            throw new IllegalStateException("Cannot find data for tier " + tier + " at loc " + loc);
+        byte b = 0;
+
+        //Loop through part files till b is not nonzero, return value. If did not get a value through all parts, throw exception
+        for (File f: Objects.requireNonNull(data.listFiles())) {
+            RandomAccessFile raf;
+            try {
+                raf = new RandomAccessFile(f, "r");
+            } catch (Exception e) {
+                throw new IllegalStateException("Cannot find data for tier " + tier);
+            }
+            try {
+                raf.seek(loc);
+                b = (byte) raf.readUnsignedByte();
+                if (b != 0) {
+                    break;
+                }
+            } catch (Exception e) {
+                if (ArrayUtils.indexOf(data.listFiles(), f) == Objects.requireNonNull(data.listFiles()).length - 1) {
+                    throw new IllegalStateException("Cannot find data for tier " + tier + " at loc " + loc);
+                }
+            }
         }
         return toTuple(b);
     }
