@@ -112,6 +112,7 @@ public class TierReader {
                 } catch (Exception ex) {
                     throw new IllegalStateException("Invalid game name");
                 }
+                break;
             }
         }
     }
