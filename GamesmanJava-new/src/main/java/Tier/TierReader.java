@@ -1,7 +1,9 @@
 package Tier;
 
 import Games.PieceGame.Connect4.Connect4;
+import Games.PieceGame.PieceGame;
 import Games.PieceGame.RectanglePieceLocator;
+import Games.PieceGame.TicTacToe.TicTacToe;
 import Helpers.Piece;
 import Helpers.Primitive;
 import Helpers.Tuple;
@@ -9,10 +11,8 @@ import org.apache.commons.lang.ArrayUtils;
 
 import java.io.File;
 import java.io.RandomAccessFile;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Scanner;
+import java.util.*;
+import java.util.stream.Stream;
 
 public class TierReader {
 
@@ -23,8 +23,15 @@ public class TierReader {
     File folder;
     boolean comp1;
     boolean comp2;
+    PieceGame game;
+
+    static HashMap<String, Class<?>> games = new HashMap<>();
 
     public static void main (String[] args) {
+        //add games here
+        games.put("Connect_4", Connect4.class);
+        games.put("Tic_Tac_Toe", TicTacToe.class);
+
         File folder = new File("SPARK_OUT");
         File[] solves = folder.listFiles();
         Scanner scanner = new Scanner(System.in);
@@ -88,7 +95,6 @@ public class TierReader {
         }
         String name = folder.getName();
 
-
         this.folder = folder;
         this.comp1 = comp1;
         this.comp2 = comp2;
@@ -96,11 +102,21 @@ public class TierReader {
         h = Integer.parseInt(String.valueOf(folder.getName().charAt(14)));
         win = Integer.parseInt(String.valueOf(folder.getName().charAt(23)));
         locator = new RectanglePieceLocator(w, h);
+
+        for (String gameName : games.keySet()) {
+            if (name.startsWith(gameName)) {
+                try {
+                    game = (PieceGame) games.get(gameName)
+                            .getConstructor(new Class[]{int.class,int.class,int.class})
+                            .newInstance(w, h, win);
+                } catch (Exception ex) {
+                    throw new IllegalStateException("Invalid game name");
+                }
+            }
+        }
     }
 
     private void play () {
-        Connect4 game = new Connect4(w, h, win);
-
         Scanner scanner = new Scanner(System.in);
         Piece[] board = new Piece[w*h];
         Arrays.fill(board, Piece.EMPTY);
@@ -138,7 +154,7 @@ public class TierReader {
 
     }
 
-    private int makeComputerMove(Piece[] board, Connect4 game, Piece nextp, int tier) {
+    private int makeComputerMove(Piece[] board, PieceGame game, Piece nextp, int tier) {
         Primitive bestResult = Primitive.WIN;
         int number = 0;
         int bestMove = 0;
